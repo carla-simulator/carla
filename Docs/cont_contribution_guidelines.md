@@ -6,9 +6,9 @@ Take a look and don't hesitate!
 
 *   [__Report bugs__](#report-bugs)  
 *   [__Request features__](#request-features)  
+*   [__Code contributions__](#code-contributions)  
 *   [__Art contributions__](#art-contributions)  
 *   [__Docs contributions__](#docs-contributions)  
-*   [__Code contributions__](#code-contributions)  
 
 ---
 ## Report bugs
@@ -29,64 +29,6 @@ __2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding 
 Ideas for new features are also a great way to contribute. Any suggestion that could improve the users' experience  can be submitted in the corresponding GitHub section [here][frlink].
 
 [frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Acomments-desc
-
----
-## Art contributions
-
-Art contributions include vehicles, walkers, maps or any other type of assets to be used in CARLA. These are stored in a BitBucket repository, which has some account space limitations. For said reason, the contributor will have to get in touch with the CARLA team, and ask them to create a branch on the content repository for the contributions.  
-
-__1. Create a BitBucket account.__ Visit the [Bitbucket page](https://bitbucket.org).  
-
-__2. Contact the art team to get access to the content repository.__ Join the [Discord server](https://discord.com/invite/8kqACuC). Go to the __Contributors__ channel and request for access to the content repostory.  
-
-__3. A branch will be created for each contributor.__ The branch will be named as `contributors/contributor_name`. All the contributions made by said user should be made in that corresponding branch.  
-
-__4. Build CARLA.__ In order to contribute, a CARLA build is necessary. Follow the instructions to build either in [Linux](https://carla.readthedocs.io/en/latest/build_linux/) or [Windows](https://carla.readthedocs.io/en/latest/build_windows/).  
-
-__5. Download the content repository.__ Follow the instructions to update the content in [here](https://carla.readthedocs.io/en/latest/build_update/#get-development-assets).
-
-__6. Update the branch to be in sync with master.__ The branch should always be updated with the latest changes in master.  
-
-__7. Upload the contribution.__ Do the corresponding changes and push the branch to origin.  
-
-__8. Wait for the art team to check it up.__ Once the contribution is uploaded, the team will check that everything is prepared to be merged with master.  
-
-
----
-## Docs contributions
-
-If some documentation is missing, vague or imprecise, it can be reported as with any other bug (read the previous section on [how to report bugs](#report-bugs)). However, users can contribute by writing documentation.  
-
-The documentation is written with a mix of [Markdown](https://www.markdownguide.org/) and HTML tags, with a some extra CSS code for features such as tables or the [town slider](https://carla.readthedocs.io/en/latest/core_map/#carla-maps). Follow the steps below to start writing documentation. 
-
-__1. Build CARLA from source.__ Follow the steps in the docs to build on [Linux](build_linux.md) or [Windows](build_windows.md).  
-
-
-__2. Install [MkDocs](http://www.mkdocs.org/).__ MkDocs is a static site generator used to build documentation. 
-
-```sh
-sudo pip install mkdocs
-```
-
-__3. Visualize the docs.__ In the main CARLA folder, run the following command and click the link that appears in the terminal (http://127.0.0.1:8000) to open a local visualization of the documentation.  
-
-```sh
-mkdocs serve
-```
-__4. Create a git branch.__ Make sure to be in the master branch (updated to latest changes) when creating a new one. 
-
-```sh
-git checkout -b <contributor_name>/<branch_name>
-```
-
-__5. Write the docs.__ Edit the files following the guidelines in the [documentation standard](cont_doc_standard.md) page.  
-
-__6. Submit the changes.__ Create a pull request in the GitHub repository, and add one of the suggested reviewers. Try to be as descriptive as possible when filling the pull-request description.  
-
-__7. Wait for review.__ The team will check if everything is ready to be merged or any changes are needed.  
-
-!!! Warning
-    The local repository must be updated with the latest updates in the master branch.  
 
 ---
 ## Code contributions
@@ -127,3 +69,64 @@ Once the contribution is merged in `dev`, it can be tested with the rest of new 
 *   [ ] Extended the README/documentation, if necessary.  
 *   [ ] Code compiles correctly.  
 *   [ ] All tests passing with `make check`.  
+
+---
+## Art contributions
+
+Art contributions include vehicles, walkers, maps or any other type of assets to be used in CARLA. These are stored in a BitBucket repository, which has some account space limitations. For said reason, the contributor will have to get in touch with the CARLA team, and ask them to create a branch on the content repository for the contributions.  
+
+__1. Create a BitBucket account.__ Visit the [Bitbucket page](https://bitbucket.org).  
+
+__2. Contact the art team to get access to the content repository.__ Join the [Discord server](https://discord.com/invite/8kqACuC). Go to the __Contributors__ channel and request for access to the content repostory.  
+
+__3. A branch will be created for each contributor.__ The branch will be named as `contributors/contributor_name`. All the contributions made by said user should be made in that corresponding branch.  
+
+__4. Build CARLA.__ In order to contribute, a CARLA build is necessary. Follow the instructions to build either in [Linux](https://carla.readthedocs.io/en/latest/build_linux/) or [Windows](https://carla.readthedocs.io/en/latest/build_windows/).  
+
+__5. Download the content repository.__ Follow the instructions to update the content in [here](https://carla.readthedocs.io/en/latest/build_update/#get-development-assets).
+
+__6. Update the branch to be in sync with master.__ The branch should always be updated with the latest changes in master.  
+
+__7. Upload the contribution.__ Do the corresponding changes and push the branch to origin.  
+
+__8. Wait for the art team to check it up.__ Once the contribution is uploaded, the team will check that everything is prepared to be merged with master.  
+
+
+---
+## Docs contributions
+
+If some documentation is missing, vague or imprecise, it can be reported as with any other bug (read the previous section on [how to report bugs](#report-bugs)). However, users can contribute by writing documentation.  
+
+The documentation is written with a mix of [Markdown](https://www.markdownguide.org/) and HTML tags, with a some extra CSS code for features such as tables or the [town slider](https://carla.readthedocs.io/en/latest/core_map/#carla-maps). Follow the steps below to start writing documentation. 
+
+!!! Important
+    To submit docs contributions, follow the same workflow explained right above in [code contributions](#submission). To sum up, contributions are made in a child branch from `dev` and merged to said branch.  
+
+__1. Build CARLA from source.__ Follow the steps in the docs to build on [Linux](build_linux.md) or [Windows](build_windows.md).  
+
+
+__2. Install [MkDocs](http://www.mkdocs.org/).__ MkDocs is a static site generator used to build documentation. 
+
+```sh
+sudo pip install mkdocs
+```
+
+__3. Visualize the docs.__ In the main CARLA folder, run the following command and click the link that appears in the terminal (http://127.0.0.1:8000) to open a local visualization of the documentation.  
+
+```sh
+mkdocs serve
+```
+__4. Create a git branch.__ Make sure to be in the `dev` branch (updated to latest changes) when creating a new one. 
+
+```sh
+git checkout -b <contributor_name>/<branch_name>
+```
+
+__5. Write the docs.__ Edit the files following the guidelines in the [documentation standard](cont_doc_standard.md) page.  
+
+__6. Submit the changes.__ Create a pull request in the GitHub repository, and add one of the suggested reviewers. Try to be as descriptive as possible when filling the pull-request description.  
+
+__7. Wait for review.__ The team will check if everything is ready to be merged or any changes are needed.  
+
+!!! Warning
+    The local repository must be updated with the latest updates in the `dev` branch.  
