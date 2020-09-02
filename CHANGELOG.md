@@ -11,6 +11,8 @@
   * Fixed recorder determinism problems
   * Added function to stop the replayer
   * Added Light ids
+  * Added new semantic segmenation tags: `RailTrack`, `GuardRail`, `TrafficLight`, `Static`, `Dynamic`, `Water` and `Terrain`
+  * Fixed several untagged and mistagged objects
   * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
