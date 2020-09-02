@@ -2,7 +2,7 @@
 
 *  [__Requirements__](#requirements)  
 *  [__Bridge installation__](#bridge-installation)  
-	* [A. Using deb repository](#a-using-deb-repository)  
+	* [A. Using Debian repository](#a-using-debian-repository)  
 	* [B. Using source repository](#b-using-source-repository)  
 *  [__Run the ROS bridge__](#run-the-ros-bridge)  
 *  [__Setting CARLA__](#setting-carla)  
@@ -13,7 +13,7 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ## Requirements
 ### ROS Kinetic/Melodic
 
-*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.  
+*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.j  
 *  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform. 
 
 !!! Important
@@ -22,22 +22,22 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ---
 ## Bridge installation 
 
-### A. Using deb repository
+### A. Using Debian repository
 
-Set up the deb repository in the system.
+Set up the Debian repository in the system.
 ```sh
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
 sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
 ```
-Install CARLA and check for the installation in the `/opt/` folder.
+Install the ROS bridge, and check for the installation in the `/opt/` folder.
 ```sh
-sudo apt-get update # Update the repository
+sudo apt-get update # Update the Debian package index
 sudo apt-get install carla-ros-bridge # Install the latest ROS bridge version, or update the current installation
 ```
 
 This repository contains features from CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
-sudo apt-get install carla-ros-bridge==0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "-1" to a deb tag, which usually will always be the same.  
+sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "1" to the Debian revision.  
 ```
 
 !!! Important

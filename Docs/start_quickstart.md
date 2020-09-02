@@ -3,7 +3,7 @@
 * __[Installation summary](#installation-summary)__  
 * __[Requirements](#requirements)__  
 * __[CARLA installation](#carla-installation)__  
-	* [A. deb CARLA installation](#a-deb-carla-installation)  
+	* [A. Debian CARLA installation](#a-debian-carla-installation)  
 	* [B. Package installation](#b-package-installation)  
 * __[Import additional assets](#import-additional-assets)__  
 * __[Running CARLA](#running-carla)__  
@@ -25,13 +25,13 @@
 
 # There are two different ways to install CARLA. 
 
-# Option A) deb package installation
+# Option A) Debian package installation
 # This repository contains CARLA 0.9.10 and later. To install previous CARLA versions, change to a previous version of the docs using the pannel in the bottom right part of the window.
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
 sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
 sudo apt-get update
 sudo apt-get install carla-simulator # Install the latest CARLA version or update the current installation. 
-sudo apt-get install carla-simulator==0.9.10-1 # install a specific CARLA version. 
+sudo apt-get install carla-simulator=0.9.10-1 # install a specific CARLA version. 
 cd /opt/carla-simulator/bin
 ./CarlaUE4.sh
 
@@ -70,26 +70,26 @@ To install both modules using [pip](https://pip.pypa.io/en/stable/installing/), 
 ---
 ## CARLA installation
 
-The __deb installation__ is the easiest way to get the latest release in Linux.  
+The __Debian installation__ is the easiest way to get the latest release in Linux.  
 __Download the GitHub repository__ to get either a specific release or the Windows version of CARLA.  
 
-### A. deb CARLA installation
+### A. Debian CARLA installation
 
-Set up the deb repository in the system.
+Set up the Debian repository in the system.
 ```sh
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
 sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
 ```
 Install CARLA and check for the installation in the `/opt/` folder.
 ```sh
-sudo apt-get update # Update the repository
+sudo apt-get update # Update the Debian package index
 sudo apt-get install carla-simulator # Install the latest CARLA version, or update the current installation
 cd /opt/carla-simulator # Open the folder where CARLA is installed
 ```
 
 This repository contains CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
-sudo apt-get install carla-simulator==0.9.10-1 # In this case, "0.9.10" refers to a CARLA version, and "-1" to a deb tag, which usually will always be the same.  
+sudo apt-get install carla-simulator=0.9.10-1 # In this case, "0.9.10" refers to a CARLA version, and "1" to the Debian revision.
 ```
 
 !!! Important
@@ -137,7 +137,7 @@ Open a terminal in the main CARLA folder. Run the following command to execute t
 > CarlaUE4.exe
 ```
 !!! Important
-    In the __deb installation__, `CarlaUE4.sh` will be in `/opt/carla/bin/`, instead of the main `carla/` folder where it normally is. 
+    In the __Debian installation__, `CarlaUE4.sh` will be in `/opt/carla-simulator`, instead of the main `carla/` folder where it normally is. 
 
 A window containing a view over the city will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys (while clicking). The server simulator is now running and waiting for a client to connect and interact with the world.  
 Now it is time to start running scripts. The following example will spawn some life into the city: 
