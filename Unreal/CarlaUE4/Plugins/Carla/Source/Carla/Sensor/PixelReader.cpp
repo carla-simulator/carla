@@ -151,7 +151,12 @@ void FPixelReader::WritePixelsToBuffer(
   }
 #endif // CARLA_WITH_VULKAN_SUPPORT
 
-  FRHITexture2D *Texture = RenderTarget.GetRenderTargetResource()->GetRenderTargetTexture();
+  FTextureRenderTargetResource* RenderTargetResource = RenderTarget.GetRenderTargetResource();
+  if(!RenderTargetResource)
+  {
+    return;
+  }
+  FRHITexture2D *Texture = RenderTargetResource->GetRenderTargetTexture();
   checkf(Texture != nullptr, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
 
   const uint32 BytesPerPixel = 4u; // PF_R8G8B8A8
@@ -182,7 +187,10 @@ void FPixelReader::WritePixelsToBuffer(
   {
     check(ExpectedStride == SrcStride);
     const uint8 *Source = Lock.Source;
-    Buffer.copy_from(Offset, Source, ExpectedStride * Height);
+    if(Source)
+    {
+      Buffer.copy_from(Offset, Source, ExpectedStride * Height);
+    }
   }
 }
 

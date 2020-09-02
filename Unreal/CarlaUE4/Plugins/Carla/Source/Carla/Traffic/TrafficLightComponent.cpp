@@ -43,6 +43,9 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
         // Get 90% of the half size of the width of the lane
         float BoxSize = static_cast<float>(
             0.9f*Map.GetLaneWidth(signal_waypoint)*0.5);
+        // Prevent a situation where the road width is 0,
+        // this could happen in a lane that is just appearing
+        BoxSize = std::max(0.01f, BoxSize);
         // Get min and max
         double LaneLength = Map.GetLane(signal_waypoint).GetLength();
         double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();

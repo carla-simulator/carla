@@ -567,7 +567,7 @@ bool ASceneCaptureSensor::CopyTextureFromAtlas(
   // and our image has been initialized
   uint32 ExpectedSize = (uint32)(PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight);
   uint32 TotalSize = (uint32)AtlasImage.Num();
-  if(AtlasImage.GetData() && TotalSize < ExpectedSize)
+  if(!AtlasImage.GetData() || TotalSize == 0 || TotalSize < ExpectedSize)
   {
     return false;
   }

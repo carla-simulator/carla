@@ -205,7 +205,8 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  CaptureAtlasDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
+  // CaptureAtlasDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
+  CaptureAtlasDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ACarlaGameModeBase::SendAtlas);
 
 }
 
@@ -219,7 +220,7 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
     Recorder->Tick(DeltaSeconds);
   }
 
-  SendAtlas();
+  //SendAtlas();
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

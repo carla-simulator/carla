@@ -41,13 +41,15 @@ SMOKE_TESTS_2=false
 SMOKE_TESTS_3=false
 RUN_BENCHMARK=false
 
-OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,smoke-2,smoke-3,benchmark -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api-2,python-api-3,smoke-2,smoke-3,benchmark,python3-version:, -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
 eval set -- "$OPTS"
 
-while true; do
+PY3_VERSION=3
+
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --gdb )
       GDB="gdb --args";
@@ -89,13 +91,16 @@ while true; do
       RUN_BENCHMARK=true;
       GTEST_ARGS="--gtest_filter=benchmark*";
       shift ;;
+    --python3-version )
+      PY3_VERSION="$2"
+      shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
       echo -e "$USAGE_STRING"
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
@@ -197,7 +202,7 @@ if ${PYTHON_API_3} ; then
 
   log "Running Python API for Python 3 unit tests."
 
-  /usr/bin/env python3 -m nose2 ${EXTRA_ARGS}
+  /usr/bin/env python${PY3_VERSION} -m nose2 ${EXTRA_ARGS}
 
   if ${XML_OUTPUT} ; then
     mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/python-api-3.xml
@@ -242,7 +247,7 @@ if ${SMOKE_TESTS_3} ; then
 
   log "Running smoke tests for Python 3."
 
-  /usr/bin/env python3 -m nose2 ${EXTRA_ARGS}
+  /usr/bin/env python${PY3_VERSION} -m nose2 ${EXTRA_ARGS}
 
   if ${XML_OUTPUT} ; then
     mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/smoke-tests-3.xml
