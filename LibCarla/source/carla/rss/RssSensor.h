@@ -27,11 +27,12 @@ namespace rss {
 
 /// forward declaration of the RoadBoundariesMode
 enum class RoadBoundariesMode;
-/// forward declaration of the VisualizationMode
-enum class VisualizationMode;
 /// forward declaration of the RssCheck class
 class RssCheck;
-
+/// forward declaration of the ActorContellationResult struct
+struct ActorConstellationResult;
+/// forward declaration of the ActorContellationData struct
+struct ActorConstellationData;
 }  // namespace rss
 
 namespace client {
@@ -42,11 +43,18 @@ class RssSensor : public Sensor {
 public:
   using Sensor::Sensor;
 
+  using ActorConstellationCallbackFunctionType =
+      std::function<::carla::rss::ActorConstellationResult(carla::SharedPtr<::carla::rss::ActorConstellationData>)>;
+
   /// @brief constructor
   explicit RssSensor(ActorInitializer init);
 
   /// @brief destructor
   ~RssSensor();
+
+  /// Register a @a callback to be executed for each actor within each measurement to be processed
+  /// to decide on the operation of the RSS sensor in respect to the ego vehicle to actor constellation
+  void RegisterActorConstellationCallback(ActorConstellationCallbackFunctionType callback);
 
   /// Register a @a callback to be executed each time a new measurement is
   /// received.
@@ -66,6 +74,9 @@ public:
     return _on_tick_register_id != 0u;
   }
 
+  /// @brief sets the current log level
+  void SetLogLevel(const uint8_t &log_level);
+
   /// @returns the currently used dynamics of the ego vehicle (@see also
   /// RssCheck::GetEgoVehicleDynamics())
   const ::ad::rss::world::RssDynamics &GetEgoVehicleDynamics() const;
@@ -79,6 +90,13 @@ public:
   /// @brief sets the ego vehicle dynamics to be used by other vehicles (@see
   /// also RssCheck::SetOtherVehicleDynamics())
   void SetOtherVehicleDynamics(const ::ad::rss::world::RssDynamics &other_vehicle_dynamics);
+
+  /// @returns the currently used dynamics of pedestrians (@see also
+  /// RssCheck::GetPedestrianDynamics())
+  const ::ad::rss::world::RssDynamics &GetPedestrianDynamics() const;
+  /// @brief sets the ego vehicle dynamics to be used by pedestrians (@see
+  /// also RssCheck::SetPedestrianDynamics())
+  void SetPedestrianDynamics(const ::ad::rss::world::RssDynamics &pedestrian_dynamics);
 
   /// @returns the current mode for respecting the road boundaries (@see also
   /// RssCheck::GetRoadBoundariesMode())
@@ -97,13 +115,6 @@ public:
   /// RssCheck::ResetRoutingTargets())
   void ResetRoutingTargets();
 
-  /// @brief sets the visualization mode (@see also
-  /// RssCheck::SetVisualizationMode())
-  void SetVisualizationMode(const ::carla::rss::VisualizationMode &visualization_mode);
-  /// @returns get the current visualization mode (@see also
-  /// RssCheck::GetVisualizationMode())
-  const ::carla::rss::VisualizationMode &GetVisualizationMode() const;
-
   /// @brief drop the current route (@see also RssCheck::DropRoute())
   void DropRoute();
 
@@ -114,15 +125,20 @@ private:
   /// the id got when registering for the on tick event
   std::size_t _on_tick_register_id;
 
-  /// the mutex to protect the actual RSS processing and decouple the (slow)
-  /// visualization
+  /// the mutex to protect the actual RSS processing and in case it takes too long to process ever frame
   std::mutex _processing_lock;
 
   //// the object actually performing the RSS processing
   std::shared_ptr<::carla::rss::RssCheck> _rss_check;
 
+  //// the rss actor constellation callback function
+  ActorConstellationCallbackFunctionType _rss_actor_constellation_callback;
+
   /// reqired to store DropRoute() requests until next sensor tick
   bool _drop_route;
+
+  /// last processed frame
+  std::size_t _last_processed_frame;
 };
 
 }  // namespace client

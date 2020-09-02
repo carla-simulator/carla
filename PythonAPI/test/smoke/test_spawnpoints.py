@@ -11,18 +11,18 @@ from . import SyncSmokeTest
 
 class TestSpawnpoints(SyncSmokeTest):
     def test_spawn_points(self):
-        
+        print("TestSpawnpoints.test_spawn_points")
         self.world = self.client.get_world()
         blueprints = self.world.get_blueprint_library().filter("vehicle.*")
-        
+
         # get all available maps
         maps = self.client.get_available_maps()
         for m in maps:
-            
+
             # load the map
             self.client.load_world(m)
             self.world = self.client.get_world()
-            
+
             # get all spawn points
             spawn_points = self.world.get_map().get_spawn_points()
 
@@ -61,6 +61,6 @@ class TestSpawnpoints(SyncSmokeTest):
                     self.assertAlmostEqual(t0.rotation.pitch, t1.rotation.pitch, places=2)
                     self.assertAlmostEqual(t0.rotation.yaw, t1.rotation.yaw, places=2)
                     self.assertAlmostEqual(t0.rotation.roll, t1.rotation.roll, places=2)
-                
+
                 self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in ids], True)
                 frame = self.world.tick()

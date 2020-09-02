@@ -179,6 +179,14 @@ copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\rational.hpp" "%INSTALLATION_DIR%b
 copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\read.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\geometry\io\wkt\read.hpp"
 
 rem ============================================================================
+rem -- Download and install Xercesc ----------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing Xercesc...
+call "%INSTALLERS_DIR%install_xercesc.bat"^
+ --build-dir "%INSTALLATION_DIR%"^
+
+rem ============================================================================
 rem -- Assets download URL -----------------------------------------------------
 rem ============================================================================
 

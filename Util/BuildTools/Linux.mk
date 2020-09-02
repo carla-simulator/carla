@@ -28,15 +28,19 @@ clean.PythonAPI:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 clean.CarlaUE4Editor:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
-clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla
+clean.osm2odr:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
+clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla clean.osm2odr
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild
 
 hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --hard-clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
@@ -79,28 +83,28 @@ CarlaUE4Editor: LibCarla.server.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
 
 .PHONY: PythonAPI
-PythonAPI: LibCarla.client.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3
+PythonAPI: LibCarla.client.release osm2odr
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 $(ARGS)
 
-PythonAPI.2: LibCarla.client.release
+PythonAPI.2: LibCarla.client.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2
 
-PythonAPI.3: LibCarla.client.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
+PythonAPI.3: LibCarla.client.release osm2odr
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 $(ARGS)
 
-PythonAPI.rebuild: LibCarla.client.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild
+PythonAPI.rebuild: LibCarla.client.release osm2odr
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
 
-PythonAPI.rss: LibCarla.client.rss.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 --rss
+PythonAPI.rss: LibCarla.client.rss.release osm2odr
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --py3 --rss $(ARGS)
 
-PythonAPI.rss.2: LibCarla.client.rss.release
+PythonAPI.rss.2: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py2 --rss
 
-PythonAPI.rss.3: LibCarla.client.rss.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 --rss
+PythonAPI.rss.3: LibCarla.client.rss.release osm2odr
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3 --rss $(ARGS)
 
-PythonAPI.rss.rebuild: LibCarla.client.rss.release
+PythonAPI.rss.rebuild: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild --rss
 
 PythonAPI.docs:
@@ -131,8 +135,12 @@ LibCarla.client.rss.debug: setup ad-rss
 LibCarla.client.rss.release: setup ad-rss
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --client --release --rss
 
+.PHONY: Plugins
+plugins:
+	@${CARLA_BUILD_TOOLS_FOLDER}/Plugins.sh $(ARGS)
+
 setup:
-	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh
+	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh $(ARGS)
 
 ad-rss:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh
@@ -145,3 +153,6 @@ pretty:
 
 build.utils: PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
+
+osm2odr:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build

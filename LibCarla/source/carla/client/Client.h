@@ -108,6 +108,10 @@ namespace client {
       return _simulator->ReplayFile(name, start, duration, follow_id);
     }
 
+    void StopReplayer(bool keep_actors) {
+      _simulator->StopReplayer(keep_actors);
+    }
+
     void SetReplayerTimeFactor(double time_factor) {
       _simulator->SetReplayerTimeFactor(time_factor);
     }

@@ -11,20 +11,22 @@ export CXX=clang++-8
 
 DOC_STRING="Build and package CARLA Python API."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--py2] [--py3] [--clean]"
+USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--py2] [--py3] [--clean] [--python3-version=VERSION]"
 
 REMOVE_INTERMEDIATE=false
 BUILD_FOR_PYTHON2=false
 BUILD_FOR_PYTHON3=false
 BUILD_RSS_VARIANT=false
 
-OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss,python3-version:,packages:,clean-intermediate,all,xml, -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
 eval set -- "$OPTS"
 
-while true; do
+PY3_VERSION=3
+
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;
@@ -37,6 +39,9 @@ while true; do
     --py3 )
       BUILD_FOR_PYTHON3=true;
       shift ;;
+    --python3-version )
+      PY3_VERSION="$2"
+      shift 2 ;;
     --rss )
       BUILD_RSS_VARIANT=true;
       shift ;;
@@ -49,11 +54,11 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
-if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_FOR_PYTHON2} || ${BUILD_FOR_PYTHON3}; }; then
+if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_FOR_PYTHON2} || ${BUILD_FOR_PYTHON3} ; }; then
   fatal_error "Nothing selected to be done."
 fi
 
@@ -94,7 +99,7 @@ if ${BUILD_FOR_PYTHON3} ; then
 
   log "Building Python API for Python 3."
 
-  /usr/bin/env python3 setup.py bdist_egg
+  /usr/bin/env python${PY3_VERSION} setup.py bdist_egg
 
 fi
 

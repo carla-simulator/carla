@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:element name="routes">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="route" type="routeType" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+ 
+    <xsd:complexType name="routeType">
+        <xsd:sequence>
+            <xsd:element name="link" type="linkType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/>
+    </xsd:complexType>
+    
+    <xsd:complexType name="linkType">
+        <xsd:attribute name="id" type="xsd:unsignedInt" use="required"/>
+    </xsd:complexType>
+    
+</xsd:schema>

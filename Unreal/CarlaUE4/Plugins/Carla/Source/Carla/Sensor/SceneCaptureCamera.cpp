@@ -20,10 +20,16 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
 {
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+
+  Offset = carla::sensor::SensorRegistry::get<ASceneCaptureCamera*>::type::header_offset;
 }
 
-void ASceneCaptureCamera::Tick(float DeltaTime)
+void ASceneCaptureCamera::SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
 {
-  Super::Tick(DeltaTime);
-  FPixelReader::SendPixelsInRenderThread(*this);
+#if !UE_BUILD_SHIPPING
+  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
+  if(!GameMode->IsCameraStreamEnabled()) return;
+#endif
+
+  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
 }

@@ -41,6 +41,9 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
         // Get 90% of the half size of the width of the lane
         float BoxSize = static_cast<float>(
             0.9*Map.GetLaneWidth(signal_waypoint)*0.5);
+        // Prevent a situation where the road width is 0,
+        // this could happen in a lane that is just appearing
+        BoxSize = std::max(0.01f, BoxSize);
         // Get min and max
         double LaneLength = Map.GetLane(signal_waypoint).GetLength();
         double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
@@ -103,6 +106,9 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
             auto NextWaypoint = CurrentWaypoint;
             float BoxSize = static_cast<float>(
                 0.9*Map.GetLaneWidth(NextWaypoint)*0.5);
+            // Prevent a situation where the road width is 0
+            // This could happen in a lane that is just appearing
+            BoxSize = std::max(0.01f, BoxSize);
             float UEBoxSize = 100*BoxSize;
             GenerateCheckBox(Map.ComputeTransform(NextWaypoint), UEBoxSize);
             while (true)
@@ -165,6 +171,7 @@ void UStopSignComponent::GenerateStopBox(const FTransform BoxTransform,
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
   BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapBeginStopEffectBox);
   BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapEndStopEffectBox);
+  AddEffectTriggerVolume(BoxComponent);
 }
 
 void UStopSignComponent::GenerateCheckBox(const FTransform BoxTransform,

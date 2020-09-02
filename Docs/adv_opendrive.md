@@ -48,7 +48,7 @@ python3 config.py -x opendrive/TownBig.xodr
 ```
 
 !!! Important
-    __[carla.OpendriveGenerationParameters](python_api.md#carla.OpendriveGenerationParameters)__ uses __content of the OpenDRIVE file parsed as string__. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__.
+    __[client.generate_opendrive_world()](python_api.md#carla.Client.generate_opendrive_world)__ uses __content of the OpenDRIVE file parsed as string__. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__.
 
 ---
 ## Mesh generation

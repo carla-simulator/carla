@@ -28,7 +28,7 @@ nav:
   - 'PTV-Vissim co-simulation': 'adv_ptv.md'
   - 'Recorder': 'adv_recorder.md'
   - 'Rendering options': 'adv_rendering_options.md'
-  - 'RSS sensor': 'adv_rss.md'
+  - 'RSS': 'adv_rss.md'
   - 'SUMO co-simulation': 'adv_sumo.md'
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
   - 'Traffic Manager': 'adv_traffic_manager.md'
@@ -39,6 +39,8 @@ nav:
   - 'C++ reference' : 'ref_cpp.md'
   - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'
   - "Sensors reference": 'ref_sensors.md'  
+- Plugins:
+  - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
 - ROS bridge:
   - 'ROS bridge installation': 'ros_installation.md'
   - 'CARLA messages reference': 'ros_msgs.md'
@@ -47,6 +49,7 @@ nav:
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
   - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
+  - 'Generate maps with OpenStreetMap': 'tuto_G_openstreetmap.md'
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
 - Tutorials (assets):
   - 'Add a new map': 'tuto_A_add_map.md'
@@ -59,6 +62,7 @@ nav:
 - Tutorials (developers):
   - 'Contribute with assets': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'
+  - 'Generate detailed colliders': 'tuto_D_generate_colliders.md'
   - 'Make a release': 'tuto_D_make_release.md'
   - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
 - Contributing:

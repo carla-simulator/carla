@@ -1,6 +1,37 @@
 #! /bin/bash
 
 # ==============================================================================
+# -- Parse arguments -----------------------------------------------------------
+# ==============================================================================
+
+DOC_STRING="Download and install the required libraries for carla."
+
+USAGE_STRING="Usage: $0 [--python3-version=VERSION]"
+
+OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss,python3-version:,packages:,clean-intermediate,all,xml -n 'parse-options' -- "$@"`
+
+if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+
+eval set -- "$OPTS"
+
+PY3_VERSION=3
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --python3-version )
+      PY3_VERSION="$2";
+      shift 2 ;;
+    -h | --help )
+      echo "$DOC_STRING"
+      echo "$USAGE_STRING"
+      exit 1
+      ;;
+    * )
+      shift ;;
+  esac
+done
+
+# ==============================================================================
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
@@ -139,7 +170,7 @@ else
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
-  py3="/usr/bin/env python3"
+  py3="/usr/bin/env python${PY3_VERSION}"
   py3_root=`${py3} -c "import sys; print(sys.prefix)"`
   pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
@@ -149,9 +180,9 @@ else
       --with-python=${py3} --with-python-root=${py3_root}
 
   if ${TRAVIS} ; then
-    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > ${HOME}/user-config.jam
+    echo "using python : ${pyv} : ${py3_root}/bin/python${PY3_VERSION} ;" > ${HOME}/user-config.jam
   else
-    echo "using python : ${pyv} : ${py3_root}/bin/python3 ;" > project-config.jam
+    echo "using python : ${pyv} : ${py3_root}/bin/python${PY3_VERSION} ;" > project-config.jam
   fi
 
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
@@ -175,7 +206,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c2
+RPCLIB_PATCH=v2.2.1_c3
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
@@ -397,8 +428,9 @@ cat >${LIBSTDCPP_TOOLCHAIN_FILE}.gen <<EOL
 set(CMAKE_C_COMPILER ${CC})
 set(CMAKE_CXX_COMPILER ${CXX})
 
+# disable -Werror since the boost 1.72 doesn't compile with ad_rss without warnings (i.e. the geometry headers)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wpedantic" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wdeprecated -Wshadow -Wuninitialized -Wunreachable-code" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wpessimizing-move -Wold-style-cast -Wnull-dereference" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wduplicate-enum -Wnon-virtual-dtor -Wheader-hygiene" CACHE STRING "" FORCE)

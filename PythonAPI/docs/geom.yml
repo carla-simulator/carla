@@ -318,7 +318,7 @@
         doc: >
           Location in the space to which the transformation will be applied.
       doc: >
-        Translates a 3D point from global to local coordinates using the current transformation as frame of reference.
+        Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
     # --------------------------------------
     - def_name: get_forward_vector
       return: carla.Vector3D

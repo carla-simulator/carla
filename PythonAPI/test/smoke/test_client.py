@@ -10,4 +10,5 @@ from . import SmokeTest
 
 class TestClient(SmokeTest):
     def test_version(self):
+        print("TestClient.test_version")
         self.assertEqual(self.client.get_client_version(), self.client.get_server_version())
