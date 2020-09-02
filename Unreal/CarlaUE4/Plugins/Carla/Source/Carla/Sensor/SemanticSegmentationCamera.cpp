@@ -33,5 +33,7 @@ void ASemanticSegmentationCamera::SendPixels(const TArray<FColor>& AtlasImage, u
   if(!GameMode->IsCameraStreamEnabled()) return;
 #endif
 
-  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
+  //SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
+
+  FPixelReader::SendPixelsInRenderThread(*this);
 }
