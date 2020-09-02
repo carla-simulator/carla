@@ -14,7 +14,7 @@ In order to smooth the process of developing, training and validating driving sy
 ## The simulator
 
 The CARLA simulator consists of a scalable client-server architecture.  
-The server is responsible of everything related with the simulation itself: sensor rendering, computation of physics, updates on the world-state and its actors and much more. As it aims for realistic results, the best fit would be running the server with a dedicated GPU, especially when dealing with machine learning.  
+The server is responsible for everything related with the simulation itself: sensor rendering, computation of physics, updates on the world-state and its actors and much more. As it aims for realistic results, the best fit would be running the server with a dedicated GPU, especially when dealing with machine learning.  
 The client side consists of a sum of client modules controlling the logic of actors on scene and setting world conditions. This is achieved by leveraging the CARLA API (in Python or C++), a layer that mediates between server and client that is constantly evolving to provide new functionalities.
 
 ![CARLA Modules](img/carla_modules.png)
