@@ -131,6 +131,7 @@ RssCheck::RssCheck(float maximum_steering_angle)
   _timing_logger->set_level(spdlog::level::off);
 
   SetLogLevel(spdlog::level::warn);
+  SetMapLogLevel(spdlog::level::warn);
 
   _default_actor_constellation_callback_ego_vehicle_dynamics = GetDefaultVehicleDynamics();
   _default_actor_constellation_callback_other_vehicle_dynamics = GetDefaultVehicleDynamics();
@@ -208,6 +209,7 @@ RssCheck::RssCheck(float maximum_steering_angle,
   _timing_logger->set_level(spdlog::level::off);
 
   SetLogLevel(spdlog::level::warn);
+  SetMapLogLevel(spdlog::level::warn);
 
   _carla_rss_state.ego_match_object = GetMatchObject(carla_ego_actor, ::ad::physics::Distance(2.0));
   UpdateDefaultRssDynamics(_carla_rss_state);
@@ -220,8 +222,11 @@ RssCheck::~RssCheck() {}
 void RssCheck::SetLogLevel(const spdlog::level::level_enum &log_level) {
   spdlog::set_level(log_level);
   _logger->set_level(log_level);
-  ::ad::map::access::getLogger()->set_level(log_level);
-  ::ad::rss::map::getLogger()->set_level(log_level);
+}
+
+void RssCheck::SetMapLogLevel(const spdlog::level::level_enum &map_log_level) {
+  ::ad::map::access::getLogger()->set_level(map_log_level);
+  ::ad::rss::map::getLogger()->set_level(map_log_level);
 }
 
 const ::ad::rss::world::RssDynamics &RssCheck::GetDefaultActorConstellationCallbackEgoVehicleDynamics() const {
@@ -337,7 +342,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
 
     _carla_rss_state.ego_match_object = ego_match_object;
 
-    _logger->debug("MapMatch:: {}", _carla_rss_state.ego_match_object);
+    _logger->trace("MapMatch:: {}", _carla_rss_state.ego_match_object);
 
 #if DEBUG_TIMING
     t_end = std::chrono::high_resolution_clock::now();
@@ -471,7 +476,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
 }
 
 void RssCheck::UpdateRoute(CarlaRssState &carla_rss_state) {
-  _logger->debug("Update route start: {}", carla_rss_state.ego_route);
+  _logger->trace("Update route start: {}", carla_rss_state.ego_route);
 
   // remove the parts of the route already taken, try to prepend route sections
   // (i.e. when driving backwards)
@@ -588,7 +593,7 @@ void RssCheck::UpdateRoute(CarlaRssState &carla_rss_state) {
     }
   }
 
-  _logger->debug("Update route result: {}", carla_rss_state.ego_route);
+  _logger->trace("Update route result: {}", carla_rss_state.ego_route);
 }
 
 EgoDynamicsOnRoute RssCheck::CalculateEgoDynamicsOnRoute(
@@ -819,7 +824,7 @@ void RssCheck::RssObjectChecker::operator()(
   try {
     auto other_match_object = _rss_check.GetMatchObject(other_traffic_participant, ::ad::physics::Distance(2.0));
 
-    _rss_check._logger->debug("OtherVehicleMapMatching: {} {}", other_traffic_participant->GetId(),
+    _rss_check._logger->trace("OtherVehicleMapMatching: {} {}", other_traffic_participant->GetId(),
                               other_match_object.mapMatchedBoundingBox);
 
     carla::SharedPtr<ActorConstellationData> actor_constellation_data{new ActorConstellationData{
@@ -1005,7 +1010,7 @@ void RssCheck::AnalyseCheckResults(CarlaRssState &carla_rss_state) const {
     carla_rss_state.ego_dynamics_on_route.crossing_border = true;
   }
 
-  _logger->debug("RouteResponse: {}", carla_rss_state.proper_response);
+  _logger->trace("RouteResponse: {}", carla_rss_state.proper_response);
 }
 
 }  // namespace rss

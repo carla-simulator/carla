@@ -102,7 +102,6 @@ try:
     from pygame.locals import K_q
     from pygame.locals import K_r
     from pygame.locals import K_s
-    from pygame.locals import K_t
     from pygame.locals import K_w
     from pygame.locals import K_l
     from pygame.locals import K_i
@@ -420,12 +419,6 @@ class VehicleControl(object):
                 elif event.key == K_g:
                     if self._world and self._world.rss_sensor:
                         self._world.rss_sensor.drop_route()
-                elif event.key == K_t:
-                    if self._world and self._world.rss_sensor:
-                        if self._world.rss_sensor.assertive_parameters:
-                            self._world.rss_sensor.set_default_parameters()
-                        else:
-                            self._world.rss_sensor.set_assertive_parameters()
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1
