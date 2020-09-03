@@ -51,6 +51,7 @@
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
   * Improved the performance on capture sensors.
   * Fixed minor typo in the introduction section of documentation.
+  * Fixed a bug at the local planner when changing the route, causing it to maintain the first part of the previous one. This was only relevant when using very large buffer sizes.
 
 ## CARLA 0.9.9
 
