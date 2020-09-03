@@ -143,8 +143,7 @@ class World(object):
                 control = self.action_converter.get_control(self.player.get_control(), action)
                 self.player.apply_control(control)                
 
-                # Gather observations 
-                
+                # Gather observations                 
                 obs = self.get_observation()
                 
                 # Get the reward
@@ -238,6 +237,9 @@ class World(object):
         self.reward = Reward()
         self.action_converter = ActionConverter()
         self.done = False
+
+        obs = self.get_observation()
+        return obs
 
     def get_observation(self):        
         transform = self.player.get_transform()
@@ -626,6 +628,6 @@ def main():
         print('\nCancelled by user. Bye!')
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    main()
+#     main()
