@@ -1,7 +1,11 @@
 
 import gym
 from gym import spaces
-from rl_control import World
+from stable_baselines3 import PPO
+import logging
+import cv2
+import carla
+from rl_control import World, HUD
 try:
     import pygame
 except ImportError:
@@ -11,20 +15,36 @@ class CarlaEnv(gym.Env):
     """Custom Environment that follows gym interface"""
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, carla_world, hud, clock, display, args):
-        super(CustomEnv, self).__init__()
+    def __init__(self, args):
+        super(CarlaEnv, self).__init__()
         # Define action and observation space
         # They must be gym.spaces objects
         # Example when using discrete actions:
-        self.action_space = spaces.Discrete(N_DISCRETE_ACTIONS)
+        self.action_space = spaces.Discrete(4)
         # Example for using image as input:
         self.observation_space = spaces.Box(low=0, high=255,
                                             shape=(HEIGHT, WIDTH, N_CHANNELS), dtype=np.uint8)
         # TODO: action and obs space
-        self.world = World(carla_world=client.get_world(), hud=hud, clock=clock, display=display, args=args)
+        
+        pygame.init()
+        pygame.font.init()
+        self.world = None
+        try:
+            self.client = carla.Client(args.host, args.port)
+            self.client.set_timeout(2.0)  
+            self.display = pygame.display.set_mode(
+                (args.width, args.height),
+                pygame.HWSURFACE | pygame.DOUBLEBUF)
 
+            self.hud = HUD(args.width, args.height)
+            self.clock = pygame.time.Clock()
+            self.world = World(carla_world=self.client.get_world(), hud=self.hud, clock=self.clock, display=self.display, args=args)
+        except Exception as e:
+            print(e)
+            return
 
     def step(self, action):
+        self.clock.tick_busy_loop(60)
         observation, reward, done, info = self.world.step(action)
         return observation, reward, done, info
 
@@ -37,13 +57,13 @@ class CarlaEnv(gym.Env):
             cv2.imwrite(("data/source_domain/images/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.rgb_img)
             cv2.imwrite(("data/source_domain/depth/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.depth_log_img)
             cv2.imwrite(("data/source_domain/segmentation/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.seg_csp_img)
-        self.world.tick(clock)
-        self.world.render(display)
+        self.world.tick(self.clock)
+        self.world.render(self.display)
         pygame.display.flip()
 
     def close (self):
-        if (self.world and world.recording_enabled):
-            client.stop_recorder()
+        if (self.world and self.world.recording_enabled):
+            self.client.stop_recorder()
         if self.world is not None:
             self.world.destroy()
         pygame.quit()
@@ -117,24 +137,10 @@ def main():
         print('\nCancelled by user. Bye!')
 
 
-def game_loops(args):
-    pygame.init()
-    pygame.font.init()
+def game_loop(args):
     env = None
-
     try:
-        client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
-
-        display = pygame.display.set_mode(
-            (args.width, args.height),
-            pygame.HWSURFACE | pygame.DOUBLEBUF)
-
-        hud = HUD(args.width, args.height)
-        clock = pygame.time.Clock()
-        # world = World(carla_world=client.get_world(), hud=hud, clock=clock, display=display, args=args)
-        
-        env = CarlaEnv(carla_world=client.get_world(), hud=hud, clock=clock, display=display, args=args) # TODO
+        env = CarlaEnv(args=args) # TODO
         model = PPO('CnnPolicy', env, verbose=1)
         model.learn(total_timesteps=10000)
         obs = env.reset()
@@ -143,7 +149,6 @@ def game_loops(args):
             print("Starting episode %d" % episode)
             done = False
             while not done: 
-                clock.tick_busy_loop(60)
                 action, _states = model.predict(obs, deterministic=True)
                 obs, reward, done, info = env.step(action)
                 env.render()
@@ -155,7 +160,8 @@ def game_loops(args):
         print(e)
         return
     finally:
-        env.close()
+        if env is not None:
+            env.close()
 
 
 if __name__ == '__main__':
