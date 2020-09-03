@@ -400,6 +400,40 @@ fi
 unset RECAST_BASENAME
 
 # ==============================================================================
+# -- Get and compile libpng 1.6.37 ------------------------------
+# ==============================================================================
+
+LIBPNG_VERSION=1.6.37
+LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
+LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
+LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
+
+LIBPNG_INCLUDE=${PWD}/${LIBPNG_BASENAME}-install/include/libpng16
+LIBPNG_LIBPATH=${PWD}/${LIBPNG_BASENAME}-install/lib
+
+if [[ -d ${LIBPNG_INSTALL} ]] ; then
+  log "Libpng already installed."
+else
+  log "Retrieving libpng."
+  wget ${LIBPNG_REPO}
+
+  log "Extracting libpng."
+  tar -xf libpng-${LIBPNG_VERSION}.tar.xz
+  mv ${LIBPNG_BASENAME} ${LIBPNG_BASENAME}-source
+
+  pushd ${LIBPNG_BASENAME}-source >/dev/null
+
+  ./configure --prefix=${CARLA_BUILD_FOLDER}/${LIBPNG_INSTALL}
+  make install
+
+  popd >/dev/null
+
+  rm -Rf libpng-${LIBPNG_VERSION}.tar.xz
+  rm -Rf ${LIBPNG_BASENAME}-source
+fi
+
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
@@ -495,6 +529,8 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
   set(RECAST_INCLUDE_PATH "${RECAST_INCLUDE}")
   set(RECAST_LIB_PATH "${RECAST_LIBPATH}")
+  set(LIBPNG_INCLUDE_PATH "${LIBPNG_INCLUDE}")
+  set(LIBPNG_LIB_PATH "${LIBPNG_LIBPATH}")
 endif ()
 
 EOL
