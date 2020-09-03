@@ -408,7 +408,7 @@ LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERS
 LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
 LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
 
-LIBPNG_INCLUDE=${PWD}/${LIBPNG_BASENAME}-install/include/libpng16
+LIBPNG_INCLUDE=${PWD}/${LIBPNG_BASENAME}-install/include/
 LIBPNG_LIBPATH=${PWD}/${LIBPNG_BASENAME}-install/lib
 
 if [[ -d ${LIBPNG_INSTALL} ]] ; then
