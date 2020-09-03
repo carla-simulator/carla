@@ -36,9 +36,7 @@ RUN apt-get update ; \
     libxml2-dev \
     aria2 \
     libxerces-c-dev && \
-  pip2 install setuptools && \
   pip3 install -Iv setuptools==47.3.1 && \
-  pip2 install distro && \
   pip3 install distro && \
   update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 && \
   update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
