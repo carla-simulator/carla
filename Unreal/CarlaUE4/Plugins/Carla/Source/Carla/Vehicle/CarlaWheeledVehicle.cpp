@@ -16,6 +16,8 @@
 #include "TireConfig.h"
 #include "VehicleWheel.h"
 
+#include "Rendering/SkeletalMeshRenderData.h"
+
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -79,6 +81,62 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
+}
+
+void ACarlaWheeledVehicle::AdjustVehicleBounds()
+{
+  USkeletalMeshComponent *SkMeshComp = GetMesh();
+  USkeletalMesh* SkeletalMesh = SkMeshComp->SkeletalMesh;
+  if(!SkeletalMesh)
+  {
+    UE_LOG(LogCarla, Error, TEXT("AdjustVehicleBounds no SkeletalMesh"));
+    return;
+  }
+
+  // Get Vertex postion information from LOD 0 of the Skeletal Mesh
+  FPositionVertexBuffer& FPositionVertexBuffer = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].StaticVertexBuffers.PositionVertexBuffer;
+  uint32 NumVertices = FPositionVertexBuffer.GetNumVertices();
+
+  UE_LOG(LogCarla, Warning, TEXT("AdjustVehicleBounds NumVertices %d"), NumVertices);
+
+  // Look for Skeletal Mesh bounds (vertex perfect)
+  FVector MaxVertex(TNumericLimits<float>::Min());
+  FVector MinVertex(TNumericLimits<float>::Max());
+  for(uint32 i = 0; i < NumVertices; i++)
+  {
+    FVector& Pos = FPositionVertexBuffer.VertexPosition(i);
+    MaxVertex.X = (Pos.X > MaxVertex.X) ? Pos.X : MaxVertex.X;
+    MaxVertex.Y = (Pos.Y > MaxVertex.Y) ? Pos.Y : MaxVertex.Y;
+    MaxVertex.Z = (Pos.Z > MaxVertex.Z) ? Pos.Z : MaxVertex.Z;
+    MinVertex.X = (Pos.X < MinVertex.X) ? Pos.X : MinVertex.X;
+    MinVertex.Y = (Pos.Y < MinVertex.Y) ? Pos.Y : MinVertex.Y;
+    MinVertex.Z = (Pos.Z < MinVertex.Z) ? Pos.Z : MinVertex.Z;
+  }
+
+  // Calculate middle point
+  FVector Origin (
+    (MaxVertex.X + MinVertex.X) * 0.5f,
+    (MaxVertex.Y + MinVertex.Y) * 0.5f,
+    (MaxVertex.Z + MinVertex.Z) * 0.5f
+  );
+
+  // Calculate box extent
+  FVector Extent (
+    (MaxVertex.X - MinVertex.X) * 0.5f,
+    (MaxVertex.Y - MinVertex.Y) * 0.5f,
+    (MaxVertex.Z - MinVertex.Z) * 0.5f
+  );
+
+  // UE_LOG(LogCarla, Warning, TEXT("Max Vertex %s"), *MaxVertex.ToString());
+  // UE_LOG(LogCarla, Warning, TEXT("Min Vertex %s"), *MinVertex.ToString());
+  // UE_LOG(LogCarla, Warning, TEXT("Origin %s"), *Origin.ToString());
+  // UE_LOG(LogCarla, Warning, TEXT("Extent %s"), *Extent.ToString());
+
+  // Prepare Box Collisions
+  FTransform Transform;
+  Transform.SetTranslation(Origin);
+  VehicleBounds->SetRelativeTransform(Transform);
+  VehicleBounds->SetBoxExtent(Extent);
 }
 
 // =============================================================================
