@@ -77,6 +77,9 @@ public:
   /// @brief sets the current log level
   void SetLogLevel(const uint8_t &log_level);
 
+  /// @brief sets the current map log level
+  void SetMapLogLevel(const uint8_t &map_log_level);
+
   /// @returns the currently used dynamics of the ego vehicle (@see also
   /// RssCheck::GetEgoVehicleDynamics())
   const ::ad::rss::world::RssDynamics &GetEgoVehicleDynamics() const;
