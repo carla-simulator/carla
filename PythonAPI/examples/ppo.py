@@ -2,7 +2,9 @@
 import gym
 from gym import spaces
 from stable_baselines3 import PPO
+import numpy as np
 import logging
+import argparse
 import cv2
 import carla
 from rl_control import World, HUD
@@ -23,11 +25,12 @@ class CarlaEnv(gym.Env):
         self.action_space = spaces.Discrete(4)
         # Example for using image as input:
         self.observation_space = spaces.Box(low=0, high=255,
-                                            shape=(HEIGHT, WIDTH, N_CHANNELS), dtype=np.uint8)
+                                            shape=(720, 1280, 3), dtype=np.uint8)
         # TODO: action and obs space
         
         pygame.init()
         pygame.font.init()
+        print(args)
         self.world = None
         try:
             self.client = carla.Client(args.host, args.port)
@@ -45,11 +48,13 @@ class CarlaEnv(gym.Env):
 
     def step(self, action):
         self.clock.tick_busy_loop(60)
-        observation, reward, done, info = self.world.step(action)
+        raw_obs, reward, done, info = self.world.step(action)
+        observation = raw_obs.sensor_data.rgb_img
         return observation, reward, done, info
 
     def reset(self):
-        observation = self.world.reset() 
+        raw_obs = self.world.reset() 
+        observation = raw_obs.sensor_data.rgb_img
         return observation  # reward, done, info can't be included
 
     def render(self, mode='human'):
@@ -141,6 +146,7 @@ def game_loop(args):
     env = None
     try:
         env = CarlaEnv(args=args) # TODO
+        print(env)
         model = PPO('CnnPolicy', env, verbose=1)
         model.learn(total_timesteps=10000)
         obs = env.reset()
