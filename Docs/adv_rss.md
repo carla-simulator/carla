@@ -2,13 +2,13 @@
 
 CARLA integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in the client library. This feature allows users to investigate behaviours of RSS without having to implement anything. CARLA will take care of providing the input, and applying the output to the AD systems on the fly.  
 
-*	[__Overview__](#overview)  
-*	[__Compilation__](#compilation)  
-	*	[Dependencies](#dependencies)  
-	*	[Build](#build)  
+*   [__Overview__](#overview)  
+*   [__Compilation__](#compilation)  
+	*   [Dependencies](#dependencies)  
+	*   [Build](#build)  
 *	[__Current state__](#current-state)  
-	*	[RssSensor](#rsssensor)  
-	*	[RssRestrictor](#rssrestrictor)  
+	*   [RssSensor](#rsssensor)  
+	*   [RssRestrictor](#rssrestrictor)  
 
 !!! Important
     This feature is a work in progress. Right now, it is only available for the Linux build.

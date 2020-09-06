@@ -7,6 +7,11 @@ Take a look and don't hesitate!
 *   [__Report bugs__](#report-bugs)  
 *   [__Request features__](#request-features)  
 *   [__Code contributions__](#code-contributions)  
+	*   [Learn about Unreal Engine](#learn-about-unreal-engine)  
+	*   [Before getting started](#before-getting-started)  
+	*   [Coding standard](#coding-standard)  
+	*   [Submission](#submission)  
+	*   [Checklist](#checklist)  
 *   [__Art contributions__](#art-contributions)  
 *   [__Docs contributions__](#docs-contributions)  
 
@@ -24,7 +29,7 @@ __2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding 
 [faqlink]: build_faq.md
 
 ---
-## Feature requests
+## Request features
 
 Ideas for new features are also a great way to contribute. Any suggestion that could improve the users' experience  can be submitted in the corresponding GitHub section [here][frlink].
 
@@ -44,7 +49,7 @@ A basic introduction to C++ programming with UE4 can be found at Unreal's [C++ P
 [ue4tutorials]: https://docs.unrealengine.com/latest/INT/Programming/Tutorials/
 [ue4course]: https://www.udemy.com/unrealcourse/
 
-### What should I know before I get started?
+### Before getting started
 
 Check out the [CARLA Design](index.md)<!-- @todo --> document to get an idea on the different modules that compose CARLA. Choose the most appropriate one
 to hold the new feature. Feel free to contact the team in the [Discord server](https://discord.com/invite/8kqACuC) in case any doubt arises during the process.  

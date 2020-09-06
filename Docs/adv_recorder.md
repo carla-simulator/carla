@@ -2,14 +2,14 @@
 
 This feature allows to record and reenact a previous simulation. All the events happened are registered in the [recorder file](ref_recorder_binary_file_format.md). There are some high-level queries to trace and study those events.  
 
-* [__Recording__](#recording)  
-* [__Simulation playback__](#simulation-playback)  
-	* [Setting a time factor](#setting-a-time-factor)  
-* [__Recorded file__](#recorded-file)  
-* [__Queries__](#queries)  
-	* [Collisions](#collisions)  
-	* [Blocked actors](#blocked-actors)  
-* [__Sample Python scripts__](#sample-python-scripts)  
+*   [__Recording__](#recording)  
+*   [__Simulation playback__](#simulation-playback)  
+	*   [Setting a time factor](#setting-a-time-factor)  
+*   [__Recorded file__](#recorded-file)  
+*   [__Queries__](#queries)  
+	*   [Collisions](#collisions)  
+	*   [Blocked actors](#blocked-actors)  
+*   [__Sample Python scripts__](#sample-python-scripts)  
 
 ---
 ## Recording

@@ -5,10 +5,10 @@ This page introduces the main features and modules in CARLA. Detailed explanatio
 In order to learn about the different classes and methods in the API, take a look at the [Python API reference](python_api.md). Besides, the [Code recipes](ref_code_recipes.md) reference contains some common code chunks, specially useful during these first steps. 
 
 *   [__First steps__](#first-steps)  
-	*   [1st- World and client](#1st-world-and-client)
-	*   [2nd- Actors and blueprints](#2nd-actors-and-blueprints)
-	*   [3rd- Maps and navigation](#3rd-maps-and-navigation)
-	*   [4th- Sensors and data](#4th-sensors-and-data)
+	*   [1st- World and client](#1st-world-and-client)  
+	*   [2nd- Actors and blueprints](#2nd-actors-and-blueprints)  
+	*   [3rd- Maps and navigation](#3rd-maps-and-navigation)  
+	*   [4th- Sensors and data](#4th-sensors-and-data)  
   *   [__Advanced steps__](#advanced-steps)  
 
 !!! Important
