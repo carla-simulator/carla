@@ -1,18 +1,18 @@
 # Sensors reference
 
-*   [__Collision detector__](#collision-detector)
-*   [__Depth camera__](#depth-camera)
-*   [__GNSS sensor__](#gnss-sensor)
-*   [__IMU sensor__](#imu-sensor)
-*   [__Lane invasion detector__](#lane-invasion-detector)
-*   [__LIDAR sensor__](#lidar-sensor)
+*   [__Collision detector__](#collision-detector)  
+*   [__Depth camera__](#depth-camera)  
+*   [__GNSS sensor__](#gnss-sensor)  
+*   [__IMU sensor__](#imu-sensor)  
+*   [__Lane invasion detector__](#lane-invasion-detector)  
+*   [__LIDAR sensor__](#lidar-sensor)  
 *   [__Obstacle detector__](#obstacle-detector)  
-*   [__Radar sensor__](#radar-sensor)
-*   [__RGB camera__](#rgb-camera)
-*   [__RSS sensor__](#rss-sensor)
-*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
-*   [__Semantic segmentation camera__](#semantic-segmentation-camera)
-*   [__DVS camera__](#dvs-camera)
+*   [__Radar sensor__](#radar-sensor)  
+*   [__RGB camera__](#rgb-camera)  
+*   [__RSS sensor__](#rss-sensor)  
+*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)  
+*   [__Semantic segmentation camera__](#semantic-segmentation-camera)  
+*   [__DVS camera__](#dvs-camera)  
 
 ---
 ## Collision detector

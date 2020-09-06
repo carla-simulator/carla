@@ -1,16 +1,16 @@
 # Linux build
 
-* [__Linux build command summary__](#linux-build-command-summary)
-* [__Requirements__](#requirements)
-	* [System specifics](#system-specifics)
-	* [Dependencies](#dependencies)
-* [__GitHub__](#github)
-* [__Unreal Engine__](#unreal-engine)
-* [__CARLA build__](#carla-build)
-	* [Clone repository](#clone-repository)
-	* [Get assets](#get-assets)
-	* [Set the environment variable](#set-the-environment-variable)
-	* [make CARLA](#make-carla)
+*   [__Linux build command summary__](#linux-build-command-summary)  
+*   [__Requirements__](#requirements)  
+	*   [System specifics](#system-specifics)  
+	*   [Dependencies](#dependencies)  
+*   [__GitHub__](#github)  
+*   [__Unreal Engine__](#unreal-engine)  
+*   [__CARLA build__](#carla-build)  
+	*   [Clone repository](#clone-repository)  
+	*   [Get assets](#get-assets)  
+	*   [Set the environment variable](#set-the-environment-variable)  
+	*   [make CARLA](#make-carla)  
 
 The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community.
 
