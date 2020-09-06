@@ -3,12 +3,12 @@
 
 CARLA has developed a co-simulation feature with SUMO. This allows to distribute the tasks at will, and exploit the capabilities of each simulation in favour of the user.
 
-*   [__Requisites__](#requisites)
-*   [__Run a custom co-simulation__](#run-a-custom-co-simulation)
-	*   [Create CARLA vtypes](#create-carla-vtypes)
-	*   [Create the SUMO net](#create-the-sumo-net)
-	*   [Run the synchronization](#run-the-synchronization)
-*   [__Spawn NPCs controlled by SUMO__](#spawn-npcs-controlled-by-sumo)
+*   [__Requisites__](#requisites)  
+*   [__Run a custom co-simulation__](#run-a-custom-co-simulation)  
+	*   [Create CARLA vtypes](#create-carla-vtypes)  
+	*   [Create the SUMO net](#create-the-sumo-net)  
+	*   [Run the synchronization](#run-the-synchronization)  
+*   [__Spawn NPCs controlled by SUMO__](#spawn-npcs-controlled-by-sumo)  
 
 ---
 ## Requisites

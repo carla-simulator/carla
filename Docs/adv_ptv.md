@@ -4,8 +4,8 @@ CARLA has developed a co-simulation feature with PTV-Vissim. This allows to dist
 
 *   [__Requisites__](#requisites)  
 *   [__Run a co-simulation__](#run-the-co-simulation)  
-	*   [Create a new network](#create-a-new-network)
-	
+	*   [Create a new network](#create-a-new-network)  
+
 ---
 ## Requisites
 
