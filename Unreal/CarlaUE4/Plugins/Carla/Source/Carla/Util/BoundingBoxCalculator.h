@@ -30,10 +30,13 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FBoundingBox GetActorBoundingBox(const AActor *Actor);
 
-  UFUNCTION(Category = "Carla Actor", BlueprintCallable, CallInEditor)
-  static FBoundingBox GetSkeletalMeshBoundingBox(USkeletalMesh* SkeletalMesh);
+  UFUNCTION(Category = "Carla Util", BlueprintCallable, CallInEditor)
+  static FBoundingBox GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh);
 
-  UFUNCTION(Category = "Carla Actor", BlueprintCallable, CallInEditor)
-  static FBoundingBox GetStaticMeshBoundingBox(UStaticMesh* StaticMesh);
+  UFUNCTION(Category = "Carla Util", BlueprintCallable, CallInEditor)
+  static FBoundingBox GetStaticMeshBoundingBox(const UStaticMesh* StaticMesh);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable, CallInEditor)
+  static TArray<FBoundingBox> GetBoundingBoxOfActors(TArray<AActor*> Actors);
 
 };
