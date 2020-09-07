@@ -57,22 +57,30 @@ __Props__ need the following parameters.
 	*   `medium`  
 	*   `big`  
 	*   `huge`  
-*   __tag__ value for the semantic segmentation. If the tag is misspelled, it will be read as `None`. 
-	*   `None`
-	*   `Buildings`
-	*   `Fences`
-	*   `Pedestrians`
+*   __tag__ value for the semantic segmentation. If the tag is misspelled, it will be read as `Unlabeled`. 
+	*   `Bridge`
+	*   `Building`
+	*   `Dynamic`
+	*   `Fence`
+	*   `Ground`
+	*   `GuardRail`
+	*   `Other`
+	*   `Pedestrian`
 	*   `Pole`
-	*   `Props`
 	*   `RailTrack`
 	*   `Road`
-	*   `RoadLines`
-	*   `Sidewalk`
+	*   `RoadLine`
+	*   `SideWalk`
+	*   `Sky`
+	*   `Static`
 	*   `Terrain`
-	*   `TrafficSigns`
+	*   `TrafficLight`
+	*   `TrafficSign`
+	*   `Unlabeled`
 	*   `Vegetation`
 	*   `Vehicles`
-	*   `Walls`
+	*   `Wall`
+	*   `Water`
 
 In the end, the `.json` should look similar to the one below.
 
