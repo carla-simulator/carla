@@ -64,7 +64,7 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
 }
 
 // TODO: update to calculate current animation pose
-FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(USkeletalMesh* SkeletalMesh)
+FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh)
 {
   if(!SkeletalMesh)
   {
@@ -107,7 +107,7 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(USkeletalMesh* S
   return {Origin, Extent};
 }
 
-FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(UStaticMesh* StaticMesh)
+FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(const UStaticMesh* StaticMesh)
 {
   if(!StaticMesh)
   {
@@ -117,9 +117,67 @@ FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(UStaticMesh* Stati
 
   FBox Box = StaticMesh->GetBoundingBox();
 
-  UE_LOG(LogCarla, Warning, TEXT("Origin %s"), *Box.GetCenter().ToString());
-  UE_LOG(LogCarla, Warning, TEXT("Extent %s"), *Box.GetExtent().ToString());
-
   return {Box.GetCenter(), Box.GetExtent()};
 
+}
+
+// TODO: can we convert it to list? makes sense?
+// TODO: Dynamic vehicle, avoid SM of collision
+// TODO: Folliage actors
+TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(TArray<AActor*> Actors)
+{
+  TArray<FBoundingBox> Result;
+
+  //TArray<AActor*> FoundActors;
+  //// Get all actors of the level
+  //UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+
+  for(AActor* Actor : Actors)
+  {
+
+    TArray<UMeshComponent*> MeshComps;
+    Actor->GetComponents<UMeshComponent>(MeshComps);
+
+    UE_LOG(LogCarla, Warning, TEXT("%s %d"), *Actor->GetName(), MeshComps.Num());
+    if(MeshComps.Num() > 0)
+    {
+      UE_LOG(LogCarla, Warning, TEXT("  %s"), *MeshComps[0]->GetClass()->GetName());
+    }
+
+    FVector WorldLocation = Actor->GetActorLocation();
+    FVector WorldScale = Actor->GetActorScale();
+    FRotator WorldRotation = Actor->GetActorRotation();
+
+    // Find if there is some geometry component
+    TArray<UStaticMeshComponent*> StaticMeshComps;
+    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+
+    // Calculate FBoundingBox of SM
+    for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
+    {
+      UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
+      FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
+      BoundingBox.Origin *= WorldScale;
+      BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
+      BoundingBox.Extent *= WorldScale;
+      BoundingBox.Rotation = WorldRotation;
+      Result.Add(BoundingBox);
+    }
+
+    // Calculate FBoundingBox of SK_M
+    for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
+    {
+      USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
+      FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+      BoundingBox.Origin *= WorldScale;
+      BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
+      BoundingBox.Extent *= WorldScale;
+      BoundingBox.Rotation = WorldRotation;
+      Result.Add(BoundingBox);
+    }
+  }
+
+  return Result;
 }
