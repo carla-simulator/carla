@@ -29,4 +29,11 @@ public:
   /// @warning Traffic signs return its trigger box instead.
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FBoundingBox GetActorBoundingBox(const AActor *Actor);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable, CallInEditor)
+  static FBoundingBox GetSkeletalMeshBoundingBox(USkeletalMesh* SkeletalMesh);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable, CallInEditor)
+  static FBoundingBox GetStaticMeshBoundingBox(UStaticMesh* StaticMesh);
+
 };
