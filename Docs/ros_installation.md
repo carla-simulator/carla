@@ -73,7 +73,7 @@ catkin_make
 __1) Run CARLA.__ The way to do so depends on the CARLA installation.
 
 *  __Quick start/release package.__ `./CarlaUE4.sh` in `carla/`. 
-*  __apt installation.__ `./CarlaUE4.sh` in `opt/carla/bin/`. 
+*  __Debian installation.__ `./CarlaUE4.sh` in `opt/carla-simulator/`. 
 *  __Build installation.__ `make launch` in `carla/`. 
 
 __2) Add the source path.__ The source path for the workspace has to be added, so that the ROS bridge can be used from a terminal.  
