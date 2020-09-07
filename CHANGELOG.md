@@ -46,6 +46,7 @@
   * Added configurable noise to Lidar sensor
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
   * Improved the performance on capture sensors.
+  * Added automatic calculation of vehicle's BB
 
 ## CARLA 0.9.9
 
