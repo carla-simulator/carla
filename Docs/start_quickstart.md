@@ -32,7 +32,7 @@ sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_rele
 sudo apt-get update
 sudo apt-get install carla-simulator # Install the latest CARLA version or update the current installation. 
 sudo apt-get install carla-simulator=0.9.10-1 # install a specific CARLA version. 
-cd /opt/carla-simulator/bin
+cd /opt/carla-simulator
 ./CarlaUE4.sh
 
 # Option B) Package installation
