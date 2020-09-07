@@ -97,8 +97,6 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
   FPositionVertexBuffer& FPositionVertexBuffer = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].StaticVertexBuffers.PositionVertexBuffer;
   uint32 NumVertices = FPositionVertexBuffer.GetNumVertices();
 
-  UE_LOG(LogCarla, Warning, TEXT("AdjustVehicleBounds NumVertices %d"), NumVertices);
-
   // Look for Skeletal Mesh bounds (vertex perfect)
   FVector MaxVertex(TNumericLimits<float>::Min());
   FVector MinVertex(TNumericLimits<float>::Max());
@@ -126,11 +124,6 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
     (MaxVertex.Y - MinVertex.Y) * 0.5f,
     (MaxVertex.Z - MinVertex.Z) * 0.5f
   );
-
-  // UE_LOG(LogCarla, Warning, TEXT("Max Vertex %s"), *MaxVertex.ToString());
-  // UE_LOG(LogCarla, Warning, TEXT("Min Vertex %s"), *MinVertex.ToString());
-  // UE_LOG(LogCarla, Warning, TEXT("Origin %s"), *Origin.ToString());
-  // UE_LOG(LogCarla, Warning, TEXT("Extent %s"), *Extent.ToString());
 
   // Prepare Box Collisions
   FTransform Transform;
