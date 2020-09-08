@@ -477,3 +477,29 @@ void ACarlaGameModeBase::SendAtlas()
   }
 
 }
+
+
+void ACarlaGameModeBase::GetAllBBsOfLevel()
+{
+
+  UWorld* World = GetWorld();
+
+  // Get all actors of the level
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
+
+  TArray<FBoundingBox> BoundingBoxes;
+  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors);
+
+  for(FBoundingBox& Box : BoundingBoxes)
+  {
+    UKismetSystemLibrary::DrawDebugBox(
+      World,
+      Box.Origin,
+      Box.Extent,
+      FLinearColor::Red,
+      Box.Rotation,
+      10.0f);
+  }
+
+}

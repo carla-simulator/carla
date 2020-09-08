@@ -52,6 +52,9 @@ public:
   UFUNCTION(BlueprintCallable, Category = "CARLA Game Mode")
   ATrafficLightManager* GetTrafficLightManager();
 
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  void GetAllBBsOfLevel();
+
   void AddSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor);
 
   void RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor);
