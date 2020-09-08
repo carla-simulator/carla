@@ -37,6 +37,6 @@ public:
   static FBoundingBox GetStaticMeshBoundingBox(const UStaticMesh* StaticMesh);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable, CallInEditor)
-  static TArray<FBoundingBox> GetBoundingBoxOfActors(TArray<AActor*> Actors);
+  static TArray<FBoundingBox> GetBoundingBoxOfActors(const TArray<AActor*>& Actors);
 
 };
