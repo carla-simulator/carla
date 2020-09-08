@@ -121,61 +121,101 @@ FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(const UStaticMesh*
 
 }
 
-// TODO: can we convert it to list? makes sense?
 // TODO: Dynamic vehicle, avoid SM of collision
-// TODO: Folliage actors
-TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(TArray<AActor*> Actors)
+TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray<AActor*>& Actors)
 {
   TArray<FBoundingBox> Result;
 
-  //TArray<AActor*> FoundActors;
-  //// Get all actors of the level
-  //UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
-
+  int ActorIndex = 0;
   for(AActor* Actor : Actors)
   {
+    UE_LOG(LogCarla, Warning, TEXT(" %d / %d"), ActorIndex, Actors.Num());
+    ActorIndex++;
 
-    TArray<UMeshComponent*> MeshComps;
-    Actor->GetComponents<UMeshComponent>(MeshComps);
-
-    UE_LOG(LogCarla, Warning, TEXT("%s %d"), *Actor->GetName(), MeshComps.Num());
-    if(MeshComps.Num() > 0)
+    AInstancedFoliageActor* InstancedFolliageActor = Cast<AInstancedFoliageActor>(Actor);
+    if(InstancedFolliageActor != nullptr)
     {
-      UE_LOG(LogCarla, Warning, TEXT("  %s"), *MeshComps[0]->GetClass()->GetName());
+      TMap<UFoliageType*, FFoliageInfo*> FoliageInstancesMap = InstancedFolliageActor->GetAllInstancesFoliageType();
+
+
+      UE_LOG(LogCarla, Warning, TEXT("FolliageActor with %d FoliageTypes"), FoliageInstancesMap.Num());
+
+      int FoliageIndex = 0;
+      for(auto& FoliagePair: FoliageInstancesMap)
+      {
+
+        const UFoliageType* FoliageType = FoliagePair.Key;
+        const UFoliageType_InstancedStaticMesh* FoliageType_ISM = Cast<UFoliageType_InstancedStaticMesh>(FoliageType);
+
+        const FFoliageInfo* FoliageInfo = FoliagePair.Value;
+        UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo->GetComponent();
+
+        UStaticMesh *Mesh = FoliageType_ISM->GetStaticMesh();
+        FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
+
+        int32 NumHISMInstances = HISMComp->GetNumRenderInstances();
+
+        UE_LOG(LogCarla, Warning, TEXT("   %d/%d : NumHISMInstances = %d"),
+          FoliageIndex, FoliageInstancesMap.Num(), NumHISMInstances);
+        FoliageIndex++;
+
+        const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  HISMComp->PerInstanceSMData;
+
+        for(auto& InstSMIData : PerInstanceSMData)
+        {
+          FTransform Transform = FTransform(InstSMIData.Transform);
+          FRotator Rotation = Transform.GetRotation().Rotator();
+          FVector Translation = Transform.GetLocation();
+          FVector Scale = Transform.GetScale3D();
+
+          FBoundingBox BoundingBox = SMBoundingBox;
+          BoundingBox.Origin *= Scale;
+          BoundingBox.Origin = Rotation.RotateVector(BoundingBox.Origin) + Translation;
+          BoundingBox.Extent *= Scale;
+          BoundingBox.Rotation = Rotation;
+          Result.Add(BoundingBox);
+        }
+      }
+
     }
-
-    FVector WorldLocation = Actor->GetActorLocation();
-    FVector WorldScale = Actor->GetActorScale();
-    FRotator WorldRotation = Actor->GetActorRotation();
-
-    // Find if there is some geometry component
-    TArray<UStaticMeshComponent*> StaticMeshComps;
-    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
-
-    // Calculate FBoundingBox of SM
-    for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
+    else
     {
-      UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
-      FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
-      BoundingBox.Origin *= WorldScale;
-      BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
-      BoundingBox.Extent *= WorldScale;
-      BoundingBox.Rotation = WorldRotation;
-      Result.Add(BoundingBox);
-    }
+      TArray<UMeshComponent*> MeshComps;
+      Actor->GetComponents<UMeshComponent>(MeshComps);
 
-    // Calculate FBoundingBox of SK_M
-    for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
-    {
-      USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
-      FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
-      BoundingBox.Origin *= WorldScale;
-      BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
-      BoundingBox.Extent *= WorldScale;
-      BoundingBox.Rotation = WorldRotation;
-      Result.Add(BoundingBox);
+      FVector WorldLocation = Actor->GetActorLocation();
+      FVector WorldScale = Actor->GetActorScale();
+      FRotator WorldRotation = Actor->GetActorRotation();
+
+      // Find if there is some geometry component
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+      Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+      Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+
+      // Calculate FBoundingBox of SM
+      for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
+      {
+        UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
+        FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
+        BoundingBox.Origin *= WorldScale;
+        BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
+        BoundingBox.Extent *= WorldScale;
+        BoundingBox.Rotation = WorldRotation;
+        Result.Add(BoundingBox);
+      }
+
+      // Calculate FBoundingBox of SK_M
+      for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
+      {
+        USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
+        FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+        BoundingBox.Origin *= WorldScale;
+        BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
+        BoundingBox.Extent *= WorldScale;
+        BoundingBox.Rotation = WorldRotation;
+        Result.Add(BoundingBox);
+      }
     }
   }
 
