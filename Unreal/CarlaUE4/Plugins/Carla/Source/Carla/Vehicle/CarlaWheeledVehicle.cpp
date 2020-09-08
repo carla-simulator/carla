@@ -111,18 +111,18 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
     MinVertex.Z = (Pos.Z < MinVertex.Z) ? Pos.Z : MinVertex.Z;
   }
 
-  // Calculate middle point
-  FVector Origin (
-    (MaxVertex.X + MinVertex.X) * 0.5f,
-    (MaxVertex.Y + MinVertex.Y) * 0.5f,
-    (MaxVertex.Z + MinVertex.Z) * 0.5f
-  );
-
   // Calculate box extent
   FVector Extent (
     (MaxVertex.X - MinVertex.X) * 0.5f,
     (MaxVertex.Y - MinVertex.Y) * 0.5f,
     (MaxVertex.Z - MinVertex.Z) * 0.5f
+  );
+
+  // Calculate middle point
+  FVector Origin (
+    (MinVertex.X + Extent.X),
+    (MinVertex.Y + Extent.Y),
+    (MinVertex.Z + Extent.Z)
   );
 
   // Prepare Box Collisions
