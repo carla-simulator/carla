@@ -27,13 +27,13 @@ Run a CARLA simulation with __Town04__.
 cd ~/carla
 ./CarlaUE4.sh
 cd PythonAPI/util
-python config.py --map Town04
+python3 config.py --map Town04
 ```
 
 Then, run the SUMO co-simulation example.  
 ```sh
 cd ~/carla/Co-Simulation/Sumo
-python run_synchronization.py examples/Town04.sumocfg  --sumo-gui
+python3 run_synchronization.py examples/Town04.sumocfg  --sumo-gui
 ```
 !!! Important
     
@@ -83,7 +83,7 @@ Once a simulation is ready and saved as a `.sumocfg`, it is ready to run. There 
 *   __`--tls-manager`__ *(default: none)* — Choose which simulator should manage the traffic lights. The other will update those accordingly. The options are `carla`, `sumo`, and `none`. If `none` is chosen, traffic lights will not be synchronized. Each vehicle would only obey the traffic lights in the simulator that spawn it. 
 
 ```sh
-python run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
+python3 run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
 ```
 
 !!! Warning
@@ -114,7 +114,7 @@ As the script runs a synchronous simulation, and spawns vehicles in it, the argu
 # Spawn 10 vehicles, that will be managed by SUMO instead of Traffic Manager.
 # CARLA in charge of traffic lights.
 # Open a window for SUMO visualization.
-python spawn_sumo_npc.py -n 10 --tls-manager carla --sumo-gui
+python3 spawn_sumo_npc.py -n 10 --tls-manager carla --sumo-gui
 ```
 
 ---
