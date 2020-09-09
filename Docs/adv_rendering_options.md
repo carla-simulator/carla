@@ -76,15 +76,15 @@ world.apply_settings(settings)
 ```
 And here is an example on how to disable and then enable rendering using the `config.py`. 
 ```sh
-cd PythonAPI/util && ./config.py --no-rendering
+cd PythonAPI/util && python3 config.py --no-rendering
 ```
 ```sh
-cd PythonAPI/util && ./config.py --rendering
+cd PythonAPI/util && python3 config.py --rendering
 ```
 
 The script `PythonAPI/examples/no_rendering_mode.py` will enable no-rendering mode, and use __Pygame__ to create an aerial view using simple graphics. 
 ```sh
-cd PythonAPI/examples && ./no_rendering_mode.py
+cd PythonAPI/examples && python3 no_rendering_mode.py
 ```
 
 !!! Warning

@@ -111,7 +111,7 @@ roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch
    </summary>
 
 The path to CARLA Python is missing. The apt installation does this automatically, but it may be missing for other installations. Execute the following command with the complete path to the <i>.egg</i> file (included). Use the one supported by the Python version installed.
-<br>
+<br><br>
 <i><small><b>Note: </b>.egg files may be either in `/PythonAPI/` or `/PythonAPI/dist/` depending on the CARLA installation.</small></i>  
 
 ```sh
@@ -120,7 +120,7 @@ The path to CARLA Python is missing. The apt installation does this automaticall
 
 Import CARLA from Python and wait for a sucess message to check the installation.
 ```sh
-python -c 'import carla;print("Success")'
+python3 -c 'import carla;print("Success")'
 ```
 </details>
 

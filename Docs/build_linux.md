@@ -87,7 +87,7 @@ make PythonAPI
 
 # Press play in the Editor to initialize the server, and run an example script to test CARLA.
 cd PythonAPI/examples
-python3 spawn_npc.py
+python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 ```
 </details>
 
@@ -264,7 +264,7 @@ The project may ask to build other instances such as `UE4Editor-Carla.dll` the f
 * __make PythonAPI__ compiles the API client, necessary to grant control over the simulation. It is only needed the first time. Remember to run it again when updating CARLA. Scripts will be able to run after this command is executed. The following example will spawn some life into the town.
 
 ```sh
-make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py
+make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py  # Support for Python2 was provided until 0.9.10 (not included)
 ```
 !!! Important
     If the simulation is running at very low FPS rates, go to `Edit/Editor preferences/Performance` in the UE editor and disable __Use less CPU when in background__.

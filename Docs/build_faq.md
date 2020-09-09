@@ -238,7 +238,7 @@ Go to `Edit/Editor Preferences/Performance` in the editor preferences, and disab
 	
 Some scripts have requirements. These are listed in files named __Requirements.txt__, in the same path as the script itself. Be sure to check these in order to run the script. The majority of them can be installed with a simple `pip` command.  
 
-Sometimes on Windows, scripts cannot run with just `> script_name.py`. Try adding `> python script_name.py`, and make sure to be in the right directory.  
+Sometimes on Windows, scripts cannot run with just `> script_name.py`. Try adding `> python3 script_name.py`, and make sure to be in the right directory.  
 
   </details>
 

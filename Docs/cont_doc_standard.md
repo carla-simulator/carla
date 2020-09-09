@@ -27,7 +27,7 @@ This will re-generate the respective Markdown files inside `carla/Docs/`, which 
 ---
 ## Exceptions
 
-  * Documentation generated via python scripts like PythonAPI reference
+  * Documentation generated via Python scripts like PythonAPI reference
 
 Handy markdown [cheatsheet][cheatlink].
 
