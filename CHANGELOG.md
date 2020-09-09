@@ -52,6 +52,7 @@
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
   * Improved the performance on capture sensors.
   * Fixed minor typo in the introduction section of documentation.
+  * Added automatic calculation of vehicle's BB
 
 ## CARLA 0.9.9
 
