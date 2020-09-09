@@ -73,7 +73,10 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalM
   }
 
   // Get Vertex postion information from LOD 0 of the Skeletal Mesh
-  FPositionVertexBuffer& FPositionVertexBuffer = SkeletalMesh->GetResourceForRendering()->LODRenderData[0].StaticVertexBuffers.PositionVertexBuffer;
+  FSkeletalMeshRenderData* SkeletalMeshRenderData = SkeletalMesh->GetResourceForRendering();
+  FSkeletalMeshLODRenderData& LODRenderData = SkeletalMeshRenderData->LODRenderData[0];
+  FStaticMeshVertexBuffers& StaticMeshVertexBuffers = LODRenderData.StaticVertexBuffers;
+  FPositionVertexBuffer& FPositionVertexBuffer = StaticMeshVertexBuffers.PositionVertexBuffer;
   uint32 NumVertices = FPositionVertexBuffer.GetNumVertices();
 
   // Look for Skeletal Mesh bounds (vertex perfect)
@@ -129,13 +132,13 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray
   int ActorIndex = 0;
   for(AActor* Actor : Actors)
   {
-    UE_LOG(LogCarla, Warning, TEXT(" %d / %d"), ActorIndex, Actors.Num());
+    //UE_LOG(LogCarla, Warning, TEXT(" %d / %d"), ActorIndex, Actors.Num());
     ActorIndex++;
 
     AInstancedFoliageActor* InstancedFolliageActor = Cast<AInstancedFoliageActor>(Actor);
     if(InstancedFolliageActor != nullptr)
     {
-      TMap<UFoliageType*, FFoliageInfo*> FoliageInstancesMap = InstancedFolliageActor->GetAllInstancesFoliageType();
+      TMap<UFoliageType*, TUniqueObj<FFoliageInfo>>& FoliageInstancesMap = InstancedFolliageActor->FoliageInfos;
 
 
       UE_LOG(LogCarla, Warning, TEXT("FolliageActor with %d FoliageTypes"), FoliageInstancesMap.Num());
@@ -143,12 +146,11 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray
       int FoliageIndex = 0;
       for(auto& FoliagePair: FoliageInstancesMap)
       {
-
         const UFoliageType* FoliageType = FoliagePair.Key;
+        const FFoliageInfo& FoliageInfo = FoliagePair.Value.Get();
         const UFoliageType_InstancedStaticMesh* FoliageType_ISM = Cast<UFoliageType_InstancedStaticMesh>(FoliageType);
 
-        const FFoliageInfo* FoliageInfo = FoliagePair.Value;
-        UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo->GetComponent();
+        UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo.GetComponent();
 
         UStaticMesh *Mesh = FoliageType_ISM->GetStaticMesh();
         FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
@@ -198,11 +200,19 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray
       {
         UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
         FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
-        BoundingBox.Origin *= WorldScale;
-        BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
-        BoundingBox.Extent *= WorldScale;
-        BoundingBox.Rotation = WorldRotation;
-        Result.Add(BoundingBox);
+
+        if(BoundingBox.Extent.IsZero())
+        {
+          UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Actor->GetName());
+        }
+        else
+        {
+          BoundingBox.Origin *= WorldScale;
+          BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
+          BoundingBox.Extent *= WorldScale;
+          BoundingBox.Rotation = WorldRotation;
+          Result.Add(BoundingBox);
+        }
       }
 
       // Calculate FBoundingBox of SK_M
