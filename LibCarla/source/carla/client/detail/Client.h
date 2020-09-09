@@ -256,6 +256,9 @@ namespace detail {
         std::vector<rpc::LightState>& lights,
         bool discard_client = false) const;
 
+    /// Returns all the BBs of all the elements of the level
+    std::vector<geom::BoundingBox> GetLevelBBs() const;
+
   private:
 
     class Pimpl;
