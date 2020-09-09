@@ -143,7 +143,7 @@ Look up in the output for other instances of `.egg` files in a route similar to 
 sudo apt-get purge carla-simulator
 ```  
 
-Ultimately there is the option to add the `.egg` file of your build to the PythonPATH using the `~/.bashrc`. This is not the recommended way. It would be better to have a clear PythonPATH,and simply add the path to the necessary `.egg` files in the scripts.  
+Ultimately there is the option to add the `.egg` file of your build to the PythonPATH using the `~/.bashrc`. This is not the recommended way. It would be better to have a clear PythonPATH and simply add the path to the necessary `.egg` files in the scripts.  
 
 First, open the `~/.bashrc`.
 ```sh
