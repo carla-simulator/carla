@@ -136,23 +136,27 @@ python3 dynamic_weather.py
 If the error persists, the problem is probably related with your PythonPATH. These scripts automatically look for the `.egg` file associated with the build, so maybe there is any other `.egg` file in your PythonPATH interfering with the process. Show the content of the PythonPATH with the following command.  
 
 ```sh
-python -c "import sys; print('\n'.join(sys.path))"
+echo $PYTHONPATH
 ```
-Look up in the output for other instances of `.egg` files in a route similar to `PythonAPI/carla/dist`, and get rid of these. They probably belong to other instances of CARLA installations.  
+Look up in the output for other instances of `.egg` files in a route similar to `PythonAPI/carla/dist`, and get rid of these. They probably belong to other instances of CARLA installations. For example, if you also installed CARLA via *apt-get*, you can remove it with the following command, and the PythonPATH will be cleaned too.  
+```sh
+sudo apt-get purge carla-simulator
+```  
 
-Ultimately there is the option to add the `.egg` file of your build to the PythonPATH using the `~/.bashrc`. This is not the recommended way, as the path will need an update for every new release.  
+Ultimately there is the option to add the `.egg` file of your build to the PythonPATH using the `~/.bashrc`. This is not the recommended way. It would be better to have a clear PythonPATH,and simply add the path to the necessary `.egg` files in the scripts.  
 
 First, open the `~/.bashrc`.
 ```sh
 gedit ~/.bashrc
 ``` 
-Edit the following line to match your CARLA and Python version. In other words, change `carla-0.9.10-py3.6-linux-x86_64.egg` for the name of your `.egg` file. 
-```
-export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla/dist/carla-0.9.10-py3.6-linux-x86_64.egg:${CARLA_ROOT}/PythonAPI/carla/agents:${CARLA_ROOT}/PythonAPI/carla
-```
-Add the line to the `~/.bashrc`, save the file, and reset the terminal for changes to be effective.
 
-After cleaning the PythonPATH or adding the path to the new `.egg` file, all the example scripts should work properly.  
+Add the following lines to the `~/.bashrc`. These store the path to the build `.egg` file, so that Python can automatically find it. Save the file, and reset the terminal for changes to be effective.
+```
+export PYTHONPATH=$PYTHONPATH:"${CARLA_ROOT}/PythonAPI/carla/dist/$(ls ${CARLA_ROOT}/PythonAPI/carla/dist | grep py3.)"
+export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
+```
+
+After cleaning the PythonPATH or adding the path to the build `.egg` file, all the example scripts should work properly.  
 
   </details>
 
