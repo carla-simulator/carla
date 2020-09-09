@@ -150,6 +150,9 @@ namespace client {
 
     void FreezeAllTrafficLights(bool frozen);
 
+    /// Returns all the BBs of all the elements of the level
+    std::vector<geom::BoundingBox> GetLevelBBs() const;
+
   private:
 
     detail::EpisodeProxy _episode;
