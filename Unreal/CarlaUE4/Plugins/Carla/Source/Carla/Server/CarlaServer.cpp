@@ -275,7 +275,6 @@ void FCarlaServer::FPimpl::BindActions()
     return Result;
   };
 
-
   BIND_SYNC(get_episode_settings) << [this]() -> R<cr::EpisodeSettings>
   {
     REQUIRE_CARLA_EPISODE();
@@ -305,6 +304,19 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("internal error: unable to find spectator");
     }
     return Episode->SerializeActor(ActorView);
+  };
+
+  BIND_SYNC(get_all_level_BBs) << [this]() -> R<std::vector<cg::BoundingBox>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    TArray<FBoundingBox> Result;
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    Result = GameMode->GetAllBBsOfLevel();
+    return MakeVectorFromTArray<cg::BoundingBox>(Result);
   };
 
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
