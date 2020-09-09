@@ -479,9 +479,8 @@ void ACarlaGameModeBase::SendAtlas()
 }
 
 
-void ACarlaGameModeBase::GetAllBBsOfLevel()
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel()
 {
-
   UWorld* World = GetWorld();
 
   // Get all actors of the level
@@ -502,4 +501,5 @@ void ACarlaGameModeBase::GetAllBBsOfLevel()
       10.0f);
   }
 
+  return BoundingBoxes;
 }
