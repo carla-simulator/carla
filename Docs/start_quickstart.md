@@ -137,7 +137,7 @@ Open a terminal in the main CARLA folder. Run the following command to execute t
 > CarlaUE4.exe
 ```
 !!! Important
-    In the __Debian installation__, `CarlaUE4.sh` will be in `/opt/carla-simulator`, instead of the main `carla/` folder where it normally is. 
+    In the __deb installation__, `CarlaUE4.sh` will be in `/opt/carla-simulator/bin/`, instead of the main `carla/` folder where it normally is. 
 
 A window containing a view over the city will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys (while clicking). The server simulator is now running and waiting for a client to connect and interact with the world.  
 Now it is time to start running scripts. The following example will spawn some life into the city: 
