@@ -23,8 +23,8 @@ ACarlaMapGenerator::ACarlaMapGenerator(const FObjectInitializer& ObjectInitializ
   SET_STATIC_MESH(RoadTwoLanes_LaneRight,          PREFIX_FOLDER "Road",        "St_Road_TileRoad_RoadR");
   SET_STATIC_MESH(RoadTwoLanes_SidewalkLeft,       PREFIX_FOLDER "SideWalk",    "St_Road_TileRoad_SidewalkL");
   SET_STATIC_MESH(RoadTwoLanes_SidewalkRight,      PREFIX_FOLDER "SideWalk",    "St_Road_TileRoad_SidewalkR");
-  SET_STATIC_MESH(RoadTwoLanes_LaneMarkingSolid,   PREFIX_FOLDER "RoadLines",   "St_Road_TileRoad_LaneMarkingSolid");
-  SET_STATIC_MESH(RoadTwoLanes_LaneMarkingBroken,  PREFIX_FOLDER "RoadLines",   "St_Road_TileRoad_LaneMarkingBroken");
+  SET_STATIC_MESH(RoadTwoLanes_LaneMarkingSolid,   PREFIX_FOLDER "RoadLine",   "St_Road_TileRoad_LaneMarkingSolid");
+  SET_STATIC_MESH(RoadTwoLanes_LaneMarkingBroken,  PREFIX_FOLDER "RoadLine",   "St_Road_TileRoad_LaneMarkingBroken");
 
   SET_STATIC_MESH(Road90DegTurn_Lane0,             PREFIX_FOLDER "Road",        "St_Road_Curve_Road0");
   SET_STATIC_MESH(Road90DegTurn_Lane1,             PREFIX_FOLDER "Road",        "St_Road_Curve_Road1");
@@ -40,7 +40,7 @@ ACarlaMapGenerator::ACarlaMapGenerator(const FObjectInitializer& ObjectInitializ
   SET_STATIC_MESH(Road90DegTurn_Sidewalk1,         PREFIX_FOLDER "SideWalk",    "St_Road_Curve_Sidewalk2");
   SET_STATIC_MESH(Road90DegTurn_Sidewalk2,         PREFIX_FOLDER "SideWalk",    "St_Road_Curve_Sidewalk3");
   SET_STATIC_MESH(Road90DegTurn_Sidewalk3,         PREFIX_FOLDER "SideWalk",    "St_Road_Curve_Sidewalk4");
-  SET_STATIC_MESH(Road90DegTurn_LaneMarking,       PREFIX_FOLDER "RoadLines",   "St_Road_Curve_LaneMarking");
+  SET_STATIC_MESH(Road90DegTurn_LaneMarking,       PREFIX_FOLDER "RoadLine",   "St_Road_Curve_LaneMarking");
 
   SET_STATIC_MESH(RoadTIntersection_Lane0,         PREFIX_FOLDER "Road",        "St_Road_TCross_Road0");
   SET_STATIC_MESH(RoadTIntersection_Lane1,         PREFIX_FOLDER "Road",        "St_Road_TCross_Road1");
@@ -56,7 +56,7 @@ ACarlaMapGenerator::ACarlaMapGenerator(const FObjectInitializer& ObjectInitializ
   SET_STATIC_MESH(RoadTIntersection_Sidewalk1,     PREFIX_FOLDER "SideWalk",    "St_Road_TCross_Sidewalk2");
   SET_STATIC_MESH(RoadTIntersection_Sidewalk2,     PREFIX_FOLDER "SideWalk",    "St_Road_TCross_Sidewalk3");
   SET_STATIC_MESH(RoadTIntersection_Sidewalk3,     PREFIX_FOLDER "SideWalk",    "St_Road_TCross_Sidewalk4");
-  SET_STATIC_MESH(RoadTIntersection_LaneMarking,   PREFIX_FOLDER "RoadLines",   "St_Road_TCross_LaneMarking");
+  SET_STATIC_MESH(RoadTIntersection_LaneMarking,   PREFIX_FOLDER "RoadLine",   "St_Road_TCross_LaneMarking");
 
   SET_STATIC_MESH(RoadXIntersection_Lane0,         PREFIX_FOLDER "Road",        "St_Road_XCross_Road0");
   SET_STATIC_MESH(RoadXIntersection_Lane1,         PREFIX_FOLDER "Road",        "St_Road_XCross_Road1");
@@ -72,7 +72,7 @@ ACarlaMapGenerator::ACarlaMapGenerator(const FObjectInitializer& ObjectInitializ
   SET_STATIC_MESH(RoadXIntersection_Sidewalk1,     PREFIX_FOLDER "SideWalk",    "St_Road_XCross_Sidewalk2");
   SET_STATIC_MESH(RoadXIntersection_Sidewalk2,     PREFIX_FOLDER "SideWalk",    "St_Road_XCross_Sidewalk3");
   SET_STATIC_MESH(RoadXIntersection_Sidewalk3,     PREFIX_FOLDER "SideWalk",    "St_Road_XCross_Sidewalk4");
-  SET_STATIC_MESH(RoadXIntersection_LaneMarking,   PREFIX_FOLDER "RoadLines",   "St_Road_XCross_LaneMarking");
+  SET_STATIC_MESH(RoadXIntersection_LaneMarking,   PREFIX_FOLDER "RoadLine",   "St_Road_XCross_LaneMarking");
 
 #undef PREFIX_FOLDER
 #undef SET_STATIC_MESH

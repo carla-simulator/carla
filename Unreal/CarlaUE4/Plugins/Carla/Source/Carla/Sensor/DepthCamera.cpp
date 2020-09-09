@@ -37,5 +37,7 @@ void ADepthCamera::SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasText
   if(!GameMode->IsCameraStreamEnabled()) return;
 #endif
 
-  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
+  // SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
+
+  FPixelReader::SendPixelsInRenderThread(*this);
 }

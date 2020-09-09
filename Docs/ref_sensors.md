@@ -1448,55 +1448,95 @@ The following tags are currently available:
 <tbody>
 <td><code>0</code> </td>
 <td>Unlabeled</td>
-<td>(  0,   0,   0)</td>
+<td><code>(0, 0, 0)</code></td>
 <tr>
 <td><code>1</code> </td>
 <td>Building</td>
-<td>( 70,  70,  70)</td>
+<td><code>(70, 70, 70)</code></td>
 <tr>
 <td><code>2</code> </td>
 <td>Fence</td>
-<td>(190, 153, 153)</td>
+<td><code>(100, 40, 40)</code></td>
 <tr>
 <td><code>3</code> </td>
 <td>Other</td>
-<td>(250, 170, 160)</td>
+<td><code>(55, 90, 80)</code></td>
 <tr>
 <td><code>4</code> </td>
 <td>Pedestrian</td>
-<td>(220,  20,  60)</td>
+<td><code>(220,  20,  60)</code></td>
 <tr>
 <td><code>5</code> </td>
 <td>Pole</td>
-<td>(153, 153, 153)</td>
+<td><code>(153, 153, 153)</code></td>
 <tr>
 <td><code>6</code> </td>
-<td>Road line</td>
-<td>(157, 234,  50)</td>
+<td>RoadLine</td>
+<td><code>(157, 234, 50)</code></td>
 <tr>
 <td><code>7</code> </td>
 <td>Road</td>
-<td>(128,  64, 128)</td>
+<td><code>(128, 64, 128)</code></td>
 <tr>
 <td><code>8</code> </td>
-<td>Sidewalk</td>
-<td>(244,  35, 232)</td>
+<td>SideWalk</td>
+<td><code>(244, 35, 232)</code></td>
 <tr>
 <td><code>9</code> </td>
 <td>Vegetation</td>
-<td>(107, 142,  35)</td>
+<td><code>(107, 142, 35)</code></td>
 <tr>
 <td><code>10</code> </td>
-<td>Car</td>
-<td>(  0,   0, 142)</td>
+<td>Vehicles</td>
+<td><code>(0, 0, 142)</code></td>
 <tr>
 <td><code>11</code> </td>
 <td>Wall</td>
-<td>(102, 102, 156)</td>
+<td><code>(102, 102, 156)</code></td>
 <tr>
 <td><code>12</code> </td>
-<td>Traffic sign</td>
-<td>(220, 220,   0)</td>
+<td>TrafficSign</td>
+<td><code>(220, 220, 0)</code></td>
+<tr>
+<td><code>13</code> </td>
+<td>Sky</td>
+<td><code>(70, 130, 180)</code></td>
+<tr>
+<td><code>14</code> </td>
+<td>Ground</td>
+<td><code>(81, 0, 81)</code></td>
+<tr>
+<td><code>15</code> </td>
+<td>Bridge</td>
+<td><code>(150, 100, 100)</code></td>
+<tr>
+<td><code>16</code> </td>
+<td>RailTrack</td>
+<td><code>(230, 150, 140)</code></td>
+<tr>
+<td><code>17</code> </td>
+<td>GuardRail</td>
+<td><code>(180, 165, 180)</code></td>
+<tr>
+<td><code>18</code> </td>
+<td>TrafficLight</td>
+<td><code>(250, 170, 30)</code></td>
+<tr>
+<td><code>19</code> </td>
+<td>Static</td>
+<td><code>(110, 190, 160)</code></td>
+<tr>
+<td><code>20</code> </td>
+<td>Dynamic</td>
+<td><code>(170, 120, 50)</code></td>
+<tr>
+<td><code>21</code> </td>
+<td>Water</td>
+<td><code>(45, 60, 150)</code></td>
+<tr>
+<td><code>22</code> </td>
+<td>Terrain</td>
+<td><code>(145, 170, 100)</code></td>
 </tbody>
 </table>
 <br>

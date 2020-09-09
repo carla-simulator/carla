@@ -299,29 +299,6 @@ class RssSensor(object):
         self.debug_visualizer.toggleMode()
 
     @staticmethod
-    def get_assertive_parameters():
-        ego_dynamics = rss.RssDynamics()
-        ego_dynamics.alphaLon.accelMax = 4.1
-        ego_dynamics.alphaLon.brakeMax = -8.03
-        ego_dynamics.alphaLon.brakeMin = -4.64
-        ego_dynamics.alphaLon.brakeMinCorrect = -1.76
-        ego_dynamics.alphaLat.accelMax = 0.43
-        ego_dynamics.alphaLat.brakeMin = -0.96
-        ego_dynamics.lateralFluctuationMargin = 0.07
-        ego_dynamics.responseTime = 0.25  # paper: 0.53
-        ego_dynamics.maxSpeedOnAcceleration = 100
-        ego_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
-        ego_dynamics.unstructuredSettings.driveAwayMaxAngle = 2.4
-        ego_dynamics.unstructuredSettings.vehicleYawRateChange = 0.3
-        ego_dynamics.unstructuredSettings.vehicleMinRadius = 3.5
-        ego_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
-        return ego_dynamics
-
-    def set_assertive_parameters(self):
-        print("Use 'assertive' RSS Parameters")
-        self.current_vehicle_parameters = self.get_assertive_parameters()
-
-    @staticmethod
     def get_default_parameters():
         ego_dynamics = rss.RssDynamics()
         ego_dynamics.alphaLon.accelMax = 3.5
@@ -331,13 +308,18 @@ class RssSensor(object):
         ego_dynamics.alphaLat.accelMax = 0.2
         ego_dynamics.alphaLat.brakeMin = -0.8
         ego_dynamics.lateralFluctuationMargin = 0.1
-        ego_dynamics.responseTime = 1.0
+        ego_dynamics.responseTime = 0.5
         ego_dynamics.maxSpeedOnAcceleration = 100
         ego_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
         ego_dynamics.unstructuredSettings.driveAwayMaxAngle = 2.4
         ego_dynamics.unstructuredSettings.vehicleYawRateChange = 0.3
         ego_dynamics.unstructuredSettings.vehicleMinRadius = 3.5
         ego_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
+        ego_dynamics.unstructuredSettings.vehicleFrontIntermediateRatioSteps = 4
+        ego_dynamics.unstructuredSettings.vehicleBackIntermediateRatioSteps = 0
+        ego_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 0
+        ego_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 0
+        ego_dynamics.unstructuredSettings.vehicleResponseTimeIntermediateAccelerationSteps = 4
         return ego_dynamics
 
     def set_default_parameters(self):
@@ -358,9 +340,17 @@ class RssSensor(object):
         pedestrian_dynamics.maxSpeedOnAcceleration = 10
         pedestrian_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
         pedestrian_dynamics.unstructuredSettings.driveAwayMaxAngle = 2.4
+
+        #not used:
         pedestrian_dynamics.unstructuredSettings.vehicleYawRateChange = 0.3
         pedestrian_dynamics.unstructuredSettings.vehicleMinRadius = 3.5
         pedestrian_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
+        pedestrian_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
+        pedestrian_dynamics.unstructuredSettings.vehicleFrontIntermediateRatioSteps = 4
+        pedestrian_dynamics.unstructuredSettings.vehicleBackIntermediateRatioSteps = 0
+        pedestrian_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 0
+        pedestrian_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 0
+        pedestrian_dynamics.unstructuredSettings.vehicleResponseTimeIntermediateAccelerationSteps = 4
         return pedestrian_dynamics
 
     def get_steering_ranges(self):
