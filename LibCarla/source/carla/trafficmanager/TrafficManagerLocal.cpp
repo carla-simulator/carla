@@ -54,6 +54,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                           simulation_state,
                                           buffer_map,
                                           parameters,
+                                          world,
                                           tl_frame,
                                           random_devices)),
 
@@ -69,6 +70,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       localization_frame,
                                       collision_frame,
                                       tl_frame,
+                                      world,
                                       control_frame)),
 
     alsm(ALSM(registered_vehicles,
@@ -135,9 +137,9 @@ void TrafficManagerLocal::Run() {
     if (!synchronous_mode && hybrid_physics_mode) {
       TimePoint current_instance = chr::system_clock::now();
       chr::duration<float> elapsed_time = current_instance - previous_update_instance;
-      float time_to_wait = HYBRID_MODE_DT - elapsed_time.count();
-      if (time_to_wait > 0.0f) {
-        std::this_thread::sleep_for(chr::duration<float>(time_to_wait));
+      chr::duration<float> time_to_wait = chr::duration<float>(HYBRID_MODE_DT) - elapsed_time;
+      if (time_to_wait > chr::duration<float>(0.0f)) {
+        std::this_thread::sleep_for(time_to_wait);
       }
       previous_update_instance = current_instance;
     }
