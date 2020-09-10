@@ -2,6 +2,7 @@
 
 
   * Upgraded carla Docker image to Ubuntu 18.04
+  * Fixed memory leak on manual_control scripts (sensor listenning was not stoped before destroying)
   * Added PythonAPI `carla.Osm2Odr.convert()` function and `calra.Osm2OdrSettings` class to support Open Street Maps to OpenDRIVE conversions
   * Upgraded to AD RSS v4.1.0 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
   * Fixed a bug in `spawn_npc_sumo` script computing not allowed routes for a given vehicle class
