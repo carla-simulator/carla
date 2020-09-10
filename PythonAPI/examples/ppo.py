@@ -1,7 +1,8 @@
-
 import gym
 from gym import spaces
 from stable_baselines3 import PPO
+from stable_baselines3.common.cmd_util import make_vec_env
+from stable_baselines3.common.env_checker import check_env
 import numpy as np
 import logging
 import argparse
@@ -34,7 +35,7 @@ class CarlaEnv(gym.Env):
         self.world = None
         try:
             self.client = carla.Client(args.host, args.port)
-            self.client.set_timeout(2.0)  
+            self.client.set_timeout(100.0)  
             self.display = pygame.display.set_mode(
                 (args.width, args.height),
                 pygame.HWSURFACE | pygame.DOUBLEBUF)
@@ -58,10 +59,10 @@ class CarlaEnv(gym.Env):
         return observation  # reward, done, info can't be included
 
     def render(self, mode='human'):
-        if self.world.steps % 900 == 0:
-            cv2.imwrite(("data/source_domain/images/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.rgb_img)
-            cv2.imwrite(("data/source_domain/depth/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.depth_log_img)
-            cv2.imwrite(("data/source_domain/segmentation/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.seg_csp_img)
+        # if self.world.steps % 900 == 0:
+        #     cv2.imwrite(("data/source_domain/images/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.rgb_img)
+        #     cv2.imwrite(("data/source_domain/depth/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.depth_log_img)
+        #     cv2.imwrite(("data/source_domain/segmentation/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.seg_csp_img)
         self.world.tick(self.clock)
         self.world.render(self.display)
         pygame.display.flip()
@@ -146,7 +147,10 @@ def game_loop(args):
     env = None
     try:
         env = CarlaEnv(args=args) # TODO
+        env = make_vec_env(lambda: env, n_envs=1)
         print(env)
+        # check_env(env)
+        # print("Finish check env")
         model = PPO('CnnPolicy', env, verbose=1)
         model.learn(total_timesteps=10000)
         obs = env.reset()
