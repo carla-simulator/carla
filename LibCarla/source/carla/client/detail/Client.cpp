@@ -413,6 +413,11 @@ namespace detail {
     _pimpl->AsyncCall("update_lights_state", _pimpl->endpoint, std::move(lights), discard_client);
   }
 
+  std::vector<geom::BoundingBox> Client::GetLevelBBs() const {
+    using return_t = std::vector<geom::BoundingBox>;
+    return _pimpl->CallAndWait<return_t>("get_all_level_BBs");
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
