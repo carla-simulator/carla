@@ -152,6 +152,11 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray
 
         UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo.GetComponent();
 
+        if(!HISMComp)
+        {
+          continue;
+        }
+
         UStaticMesh *Mesh = FoliageType_ISM->GetStaticMesh();
         FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
 
