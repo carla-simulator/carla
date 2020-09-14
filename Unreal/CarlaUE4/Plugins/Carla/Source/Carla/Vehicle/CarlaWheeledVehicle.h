@@ -196,6 +196,9 @@ protected:
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshLightState(const FVehicleLightState &VehicleLightState);
 
+  UFUNCTION(BlueprintCallable, CallInEditor)
+  void AdjustVehicleBounds();
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).

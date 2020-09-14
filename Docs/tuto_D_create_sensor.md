@@ -5,6 +5,19 @@ the necessary steps to implement a sensor in Unreal Engine 4 (UE4) and expose
 its data via CARLA's Python API. We'll follow all the steps by creating a new
 sensor as an example.
 
+*   [__Prerequisites__](#prerequisites)  
+*   [__Introduction__](#introduction)  
+*   [__Creating a new sensor__](#creating-a-new-sensor)  
+	*   [1- Sensor actor](#1-sensor-actor)  
+	*   [2- Sensor data serializer](#2-sensor-data-serializer)  
+	*   [3- Sensor data object](#3-sensor-data-object)  
+	*   [4- Register your sensor](#4-register-your-sensor)  
+	*   [5- Usage example](#5-usage-example)  
+*   [__Appendix__](#appendix)  
+	*   [Reusing buffers](#reusing-buffers)  
+	*   [Sending data asynchronously](#sending-data-asynchronously)  
+	*   [Client-side sensors](#client-side-sensors)  
+
 ---
 ## Prerequisites
 
@@ -71,8 +84,7 @@ _For the sake of simplicity we're not going to take into account all the edge
 cases, nor it will be implemented in the most efficient way. This is just an
 illustrative example._
 
----
-### 1. The sensor actor
+### 1- Sensor actor
 
 This is the most complicated class we're going to create. Here we're running
 inside Unreal Engine framework, knowledge of UE4 API will be very helpful but
@@ -295,8 +307,7 @@ that, the data is going to travel through several layers. First of them will be
 the serializer that we have to create next. We'll fully understand this part
 once we have completed the `Serialize` function in the next section.
 
----
-### 2. The sensor data serializer
+### 2- Sensor data serializer
 
 This class is actually rather simple, it's only required to have two static
 methods, `Serialize` and `Deserialize`. We'll add two files for it, this time to
@@ -365,8 +376,8 @@ SharedPtr<SensorData> SafeDistanceSerializer::Deserialize(RawData &&data) {
 
 except for the fact that we haven't defined yet what's a `SafeDistanceEvent`.
 
----
-### 3. The sensor data object
+
+### 3- Sensor data object
 
 We need to create a data object for the users of this sensor, representing the
 data of a _safe distance event_. We'll add this file to
@@ -431,8 +442,7 @@ What we're doing here is exposing some C++ methods in Python. Just with this,
 the Python API will be able to recognise our new event and it'll behave similar
 to an array in Python, except that cannot be modified.
 
----
-### 4. Register your sensor
+### 4- Register your sensor
 
 Now that the pipeline is complete, we're ready to register our new sensor. We do
 so in _LibCarla/source/carla/sensor/SensorRegistry.h_. Follow the instruction in
@@ -454,8 +464,7 @@ be a bit cryptic.
 make rebuild
 ```
 
----
-### 5. Usage example
+### 5- Usage example
 
 Finally, we have the sensor included and we have finished recompiling, our
 sensor by now should be available in Python.
@@ -493,7 +502,9 @@ Vehicle too close: vehicle.mercedes-benz.coupe
 That's it, we have a new sensor working!
 
 ---
-## Appendix: Reusing buffers
+## Appendix 
+
+### Reusing buffers
 
 In order to optimize memory usage, we can use the fact that each sensor sends
 buffers of similar size; in particularly, in the case of cameras, the size of
@@ -530,8 +541,7 @@ buffer.reset(512u);  // (size  512 bytes, capacity 1024 bytes)
 buffer.reset(2048u); // (size 2048 bytes, capacity 2048 bytes) -> allocates
 ```
 
----
-## Appendix: Sending data asynchronously
+### Sending data asynchronously
 
 Some sensors may require to send data asynchronously, either for performance or
 because the data is generated in a different thread, for instance, camera sensors send
@@ -554,8 +564,7 @@ void MySensor::Tick(float DeltaSeconds)
 }
 ```
 
----
-## Appendix: Client-side sensors
+### Client-side sensors
 
 Some sensors do not require the simulator to do their measurements, those
 sensors may run completely in the client-side freeing the simulator from extra

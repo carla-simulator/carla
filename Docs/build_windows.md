@@ -1,17 +1,17 @@
 # Windows build
 
-* [__Windows build command summary__](#windows-build-command-summary)  
-* [__Requirements__](#requirements)  
-	* System specifics
-* [__Necessary software__](#necessary-software)  
-	* Minor installations: CMake, git, make, Python3 x64  
-	* Visual Studio 2017
-	* Unreal Engine 4.24 
-* [__CARLA build__](#carla-build)  
-	* Clone repository  
-	* Get assets  
-	* Set the environment variable  
-	* make CARLA  
+*   [__Windows build command summary__](#windows-build-command-summary)  
+*   [__Requirements__](#requirements)  
+	*   [System specifics](#system-specifics)  
+*   [__Necessary software__](#necessary-software)  
+	*   [Minor installations (CMake, git, make, Python3 x64)](#minor-installations)  
+	*   [Visual Studio 2017](#visual-studio-2017)  
+	*   [Unreal Engine (4.24)](#unreal-engine)  
+*   [__CARLA build__](#carla-build)  
+	*   [Clone repository](#clone-repository)  
+	*   [Get assets](#get-assets)  
+	*   [Set the environment variable](#set-the-environment-variable)  
+	*   [make CARLA](#make-carla)  
 
 The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community. 
 
@@ -28,6 +28,9 @@ CARLA forum</a>
 <details>
 <summary> Show command lines to build on Windows</summary>
 
+!!! Important
+    To execute the ```make``` commands below, you **must** use the Visual Studio 2017 native console x64 **with** administrator rights, otherwise you may be getting permission errors.
+	
 ```sh
 # Make sure to meet the minimum requirements.
 
@@ -86,7 +89,7 @@ Get the 2017 version from [here](https://developerinsider.co/download-visual-stu
 !!! Important
     Other Visual Studio versions may cause conflict. Even if these have been uninstalled, some registers may persist. To completely clean Visual Studio from the computer, go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`  
 
-### Unreal Engine 4.24
+### Unreal Engine
 
 Go to [Unreal Engine](https://www.unrealengine.com/download) and download the _Epic Games Launcher_. In `Engine versions/Library`, download __Unreal Engine 4.24.x__. Make sure to run it in order to check that everything was properly installed.  
 

@@ -119,6 +119,17 @@ void RssSensor::SetLogLevel(const uint8_t &log_level) {
   }
 }
 
+void RssSensor::SetMapLogLevel(const uint8_t &map_log_level) {
+  if (!bool(_rss_check)) {
+    log_error(GetDisplayId(), ": not yet listening. SetMapLogLevel has no effect.");
+    return;
+  }
+
+  if (map_log_level < spdlog::level::n_levels) {
+    _rss_check->SetMapLogLevel(spdlog::level::level_enum(map_log_level));
+  }
+}
+
 const ::ad::rss::world::RssDynamics &RssSensor::GetEgoVehicleDynamics() const {
   static auto default_vehicle_dynamics = rss::RssCheck::GetDefaultVehicleDynamics();
   if (!bool(_rss_check)) {

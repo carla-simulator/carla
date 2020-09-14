@@ -33,21 +33,28 @@ VIRIDIS = np.array(cm.get_cmap('plasma').colors)
 VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
 LABEL_COLORS = np.array([
     (255, 255, 255), # None
-    (70, 70, 70),    # Buildings
-    (190, 153, 153), # Fences
-    (250, 170, 160), # Other
-    (220, 20, 60),   # Pedestrians
-    (153, 153, 153), # Poles
+    (70, 70, 70),    # Building
+    (100, 40, 40),   # Fences
+    (55, 90, 80),    # Other
+    (220, 20, 60),   # Pedestrian
+    (153, 153, 153), # Pole
     (157, 234, 50),  # RoadLines
-    (128, 64, 128),  # Roads
-    (244, 35, 232),  # Sidewalks
+    (128, 64, 128),  # Road
+    (244, 35, 232),  # Sidewalk
     (107, 142, 35),  # Vegetation
-    (0, 0, 142),     # Car
-    (102, 102, 156), # Walls
+    (0, 0, 142),     # Vehicle
+    (102, 102, 156), # Wall
     (220, 220, 0),   # TrafficSign
     (70, 130, 180),  # Sky
     (81, 0, 81),     # Ground
-    (150, 100, 100)  # Bridge
+    (150, 100, 100), # Bridge
+    (230, 150, 140), # RailTrack
+    (180, 165, 180), # GuardRail
+    (250, 170, 30),  # TrafficLight
+    (110, 190, 160), # Static
+    (170, 120, 50),  # Dynamic
+    (45, 60, 150),   # Water
+    (145, 170, 100), # Terrain
 ]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
 
 

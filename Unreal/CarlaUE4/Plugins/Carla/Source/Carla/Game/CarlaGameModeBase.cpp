@@ -205,7 +205,8 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  CaptureAtlasDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
+  // CaptureAtlasDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
+  CaptureAtlasDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ACarlaGameModeBase::SendAtlas);
 
 }
 
@@ -219,7 +220,7 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
     Recorder->Tick(DeltaSeconds);
   }
 
-  SendAtlas();
+  //SendAtlas();
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -475,4 +476,19 @@ void ACarlaGameModeBase::SendAtlas()
     Sensor->SendPixels(AtlasImage, AtlasTextureWidth);
   }
 
+}
+
+
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel()
+{
+  UWorld* World = GetWorld();
+
+  // Get all actors of the level
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
+
+  TArray<FBoundingBox> BoundingBoxes;
+  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors);
+
+  return BoundingBoxes;
 }

@@ -1,9 +1,9 @@
 # Running CARLA in a Docker
 
-* [__Docker installation__](#docker-installation)  
-	* Docker CE
-	* NVIDIA-Docker2
-* [__Running CARLA container__](#running-carla-container)  
+*   [__Docker installation__](#docker-installation)  
+	*   [Docker CE](#docker-ce)  
+	*   [NVIDIA-Docker2](#nvidia-docker2)  
+*   [__Running CARLA container__](#running-carla-container)  
 
 This tutorial is designed for:
 
