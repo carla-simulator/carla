@@ -712,11 +712,11 @@
       type: float
       var_units: meters
       doc: >
-        Pitch rotation (Y-axis) of the signal.
+        Pitch rotation of the signal (Y-axis in [UE coordinates system](https://carla.readthedocs.io/en/latest/python_api/#carlarotation)).
     - var_name: roll
       type: float
       doc: >
-        Roll rotation (X-axis) of the signal.
+        Roll rotation of the signal (X-axis in [UE coordinates system](https://carla.readthedocs.io/en/latest/python_api/#carlarotation)).
     - var_name: waypoint
       type: carla.Waypoint
       doc: >
