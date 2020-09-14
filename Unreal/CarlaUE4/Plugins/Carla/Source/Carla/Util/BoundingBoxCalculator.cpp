@@ -15,6 +15,24 @@
 
 #include "Rendering/SkeletalMeshRenderData.h"
 
+
+static FBoundingBox ApplyTransformToBB(
+    const FBoundingBox& InBoundingBox,
+    const FTransform& Transform)
+{
+  const FRotator Rotation = Transform.GetRotation().Rotator();
+  const FVector Translation = Transform.GetLocation();
+  const FVector Scale = Transform.GetScale3D();
+
+  FBoundingBox BoundingBox = InBoundingBox;
+  BoundingBox.Origin *= Scale;
+  BoundingBox.Origin = Rotation.RotateVector(BoundingBox.Origin) + Translation;
+  BoundingBox.Extent *= Scale;
+  BoundingBox.Rotation = Rotation;
+
+  return BoundingBox;
+}
+
 FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
 {
   if (Actor != nullptr)
@@ -25,6 +43,7 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
     {
       FVector Origin = Vehicle->GetVehicleBoundingBoxTransform().GetTranslation();
       FVector Extent = Vehicle->GetVehicleBoundingBoxExtent();
+      UE_LOG(LogCarla, Warning, TEXT("GetActorBoundingBox vehicle %s %s"), *Origin.ToString(), *Extent.ToString());
       return {Origin, Extent};
     }
     // Walker.
@@ -59,6 +78,8 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
         return {};
       }
     }
+
+
   }
   return {};
 }
@@ -119,116 +140,130 @@ FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(const UStaticMesh*
   }
 
   FBox Box = StaticMesh->GetBoundingBox();
-
   return {Box.GetCenter(), Box.GetExtent()};
 
 }
 
+void UBoundingBoxCalculator::GetHISMBoundingBox(
+    UHierarchicalInstancedStaticMeshComponent* HISMComp,
+    TArray<FBoundingBox>& OutBoundingBox)
+{
+  if(!HISMComp)
+  {
+    UE_LOG(LogCarla, Error, TEXT("GetHISMBoundingBox no HISMComp"));
+    return;
+  }
+
+  const UStaticMesh *Mesh = HISMComp->GetStaticMesh();
+  const FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
+
+  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  HISMComp->PerInstanceSMData;
+
+  for(auto& InstSMIData : PerInstanceSMData)
+  {
+    const FTransform Transform = FTransform(InstSMIData.Transform);
+    FBoundingBox BoundingBox = ApplyTransformToBB(SMBoundingBox, Transform);
+    OutBoundingBox.Add(BoundingBox);
+  }
+}
+
+void UBoundingBoxCalculator::GetFolliageBoundingBox(
+    AInstancedFoliageActor* InstancedFolliageActor,
+    TArray<FBoundingBox>& OutBoundingBox)
+{
+  if(!InstancedFolliageActor)
+  {
+    UE_LOG(LogCarla, Error, TEXT("GetFolliageBoundingBox no InstancedFolliageActor"));
+    return;
+  }
+
+  const TMap<UFoliageType*, TUniqueObj<FFoliageInfo>>& FoliageInstancesMap =
+      InstancedFolliageActor->FoliageInfos;
+
+  for(auto& FoliagePair: FoliageInstancesMap)
+  {
+    const UFoliageType* FoliageType = FoliagePair.Key;
+    const FFoliageInfo& FoliageInfo = FoliagePair.Value.Get();
+    const UFoliageType_InstancedStaticMesh* FoliageType_ISM =
+        Cast<UFoliageType_InstancedStaticMesh>(FoliageType);
+
+    UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo.GetComponent();
+
+    GetHISMBoundingBox(HISMComp, OutBoundingBox);
+  }
+}
+
+// TODO: Add tag to the querry
 // TODO: Dynamic vehicle, avoid SM of collision
 TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray<AActor*>& Actors)
 {
   TArray<FBoundingBox> Result;
 
-  int ActorIndex = 0;
   for(AActor* Actor : Actors)
   {
-    //UE_LOG(LogCarla, Warning, TEXT(" %d / %d"), ActorIndex, Actors.Num());
-    ActorIndex++;
+
+    // Filter actors by tag
+    //TSet<ECityObjectLabel> Tags;
+    //ATagger::GetTagsOfTaggedActor(Actor, Tags)
 
     AInstancedFoliageActor* InstancedFolliageActor = Cast<AInstancedFoliageActor>(Actor);
     if(InstancedFolliageActor != nullptr)
     {
-      TMap<UFoliageType*, TUniqueObj<FFoliageInfo>>& FoliageInstancesMap = InstancedFolliageActor->FoliageInfos;
-
-
-      UE_LOG(LogCarla, Warning, TEXT("FolliageActor with %d FoliageTypes"), FoliageInstancesMap.Num());
-
-      int FoliageIndex = 0;
-      for(auto& FoliagePair: FoliageInstancesMap)
-      {
-        const UFoliageType* FoliageType = FoliagePair.Key;
-        const FFoliageInfo& FoliageInfo = FoliagePair.Value.Get();
-        const UFoliageType_InstancedStaticMesh* FoliageType_ISM = Cast<UFoliageType_InstancedStaticMesh>(FoliageType);
-
-        UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo.GetComponent();
-
-        if(!HISMComp)
-        {
-          continue;
-        }
-
-        UStaticMesh *Mesh = FoliageType_ISM->GetStaticMesh();
-        FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
-
-        int32 NumHISMInstances = HISMComp->GetNumRenderInstances();
-
-        UE_LOG(LogCarla, Warning, TEXT("   %d/%d : NumHISMInstances = %d"),
-          FoliageIndex, FoliageInstancesMap.Num(), NumHISMInstances);
-        FoliageIndex++;
-
-        const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  HISMComp->PerInstanceSMData;
-
-        for(auto& InstSMIData : PerInstanceSMData)
-        {
-          FTransform Transform = FTransform(InstSMIData.Transform);
-          FRotator Rotation = Transform.GetRotation().Rotator();
-          FVector Translation = Transform.GetLocation();
-          FVector Scale = Transform.GetScale3D();
-
-          FBoundingBox BoundingBox = SMBoundingBox;
-          BoundingBox.Origin *= Scale;
-          BoundingBox.Origin = Rotation.RotateVector(BoundingBox.Origin) + Translation;
-          BoundingBox.Extent *= Scale;
-          BoundingBox.Rotation = Rotation;
-          Result.Add(BoundingBox);
-        }
-      }
-
+      GetFolliageBoundingBox(InstancedFolliageActor, Result);
+      continue;
     }
-    else
+
+    const FTransform& ActorTransform = Actor->GetActorTransform();
+    FBoundingBox BoundingBox = GetActorBoundingBox(Actor);
+    if(!BoundingBox.Extent.IsZero())
     {
-      TArray<UMeshComponent*> MeshComps;
-      Actor->GetComponents<UMeshComponent>(MeshComps);
+      BoundingBox = ApplyTransformToBB(BoundingBox, ActorTransform);
+      Result.Add(BoundingBox);
+      continue;
+    }
 
-      FVector WorldLocation = Actor->GetActorLocation();
-      FVector WorldScale = Actor->GetActorScale();
-      FRotator WorldRotation = Actor->GetActorRotation();
+    // Any other actor
+    TArray<UMeshComponent*> MeshComps;
+    Actor->GetComponents<UMeshComponent>(MeshComps);
+    // FVector WorldLocation = Actor->GetActorLocation();
+    // FVector WorldScale = Actor->GetActorScale();
+    // FRotator WorldRotation = Actor->GetActorRotation();
 
-      // Find if there is some geometry component
-      TArray<UStaticMeshComponent*> StaticMeshComps;
-      TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-      Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-      Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+    // Find if there is some geometry component
+    TArray<UStaticMeshComponent*> StaticMeshComps;
+    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
 
-      // Calculate FBoundingBox of SM
-      for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
+    // Calculate FBoundingBox of SM
+    for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
+    {
+      UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
+      BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
+
+      if(BoundingBox.Extent.IsZero())
       {
-        UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
-        FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
-
-        if(BoundingBox.Extent.IsZero())
-        {
-          UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Actor->GetName());
-        }
-        else
-        {
-          BoundingBox.Origin *= WorldScale;
-          BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
-          BoundingBox.Extent *= WorldScale;
-          BoundingBox.Rotation = WorldRotation;
-          Result.Add(BoundingBox);
-        }
+        UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Actor->GetName());
       }
-
-      // Calculate FBoundingBox of SK_M
-      for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
+      else
       {
-        USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
-        FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
-        BoundingBox.Origin *= WorldScale;
-        BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
-        BoundingBox.Extent *= WorldScale;
-        BoundingBox.Rotation = WorldRotation;
+        BoundingBox = ApplyTransformToBB(BoundingBox, ActorTransform);
+        Result.Add(BoundingBox);
+      }
+    }
+
+    // Calculate FBoundingBox of SK_M
+    for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
+    {
+      USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
+      BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+      if(BoundingBox.Extent.IsZero())
+      {
+        UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Actor->GetName());
+      }
+      else
+      {
+        BoundingBox = ApplyTransformToBB(BoundingBox, ActorTransform);
         Result.Add(BoundingBox);
       }
     }
