@@ -51,6 +51,7 @@
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
   * Improved the performance on capture sensors.
   * Fixed minor typo in the introduction section of documentation.
+  * Retrieve BBs of all the elements of the level
 
 ## CARLA 0.9.9
 
