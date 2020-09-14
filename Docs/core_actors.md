@@ -74,9 +74,12 @@ The world has two different methods to spawn actors.
 * [`try_spawn_actor()`](python_api.md#carla.World.try_spawn_actor) returns `None` if the spawning fails.
 
 ```py
-transform = Transform(Location(x=230, y=195, z=40), Rotation(yaw=180))
+transform = Transform(Location(x=230, y=195, z=40), Rotation(0,180,0))
 actor = world.spawn_actor(blueprint, transform)
 ```
+
+!!! Note
+    CARLA uses the [Unreal Engine coordinates system](https://carla.readthedocs.io/en/latest/python_api/#carlarotation), and rotations are declared in a specific order, `(pitch,yaw,roll)`, which is different in the Unreal Engine Editor. 
 
 The actor will not be spawned in case of collision at the specified location. No matter if this happens with a static object or another actor. It is possible to try avoiding these undesired spawning collisions.  
 

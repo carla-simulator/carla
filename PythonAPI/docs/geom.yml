@@ -214,11 +214,13 @@
   - class_name: Rotation
     # - DESCRIPTION ------------------------
     doc: >
-      Class that represents a 3D rotation and therefore, an orientation in space.
+      Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system. However, the declaration order of the axis' rotation is different in CARLA than in Unreal Engine.<br>
 
-
+      <br>__CARLA:__ (pitch, yaw, roll) which correspond to (Y,Z,X) rotations.
+      <br>__UE4:__ (roll, pitch, yaw) which correspond to (X,Y,Z) rotations.
+      <br><br>
       ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
-      _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_
+      *Unreal Engine's coordinates system*
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: pitch
@@ -258,6 +260,7 @@
         param_units: degrees
         doc: >
           X-axis rotation angle.
+      warning: The declaration order is different in CARLA <code>(pitch,yaw,roll)</code> and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. 
     # --------------------------------------
     - def_name: get_forward_vector
       params:
@@ -310,6 +313,7 @@
         Describes a point in the coordinate system.
     - var_name: rotation
       type: carla.Rotation
+      var_units: degrees (pitch, yaw, roll)
       doc: >
         Describes a rotation for an object according to Unreal Engine's axis system.
     # - METHODS ----------------------------
@@ -320,6 +324,7 @@
         type: carla.Location
       - param_name: rotation
         type: carla.Rotation
+        param_units: degrees (pitch, yaw, roll)
     # --------------------------------------
     - def_name: transform
       params:

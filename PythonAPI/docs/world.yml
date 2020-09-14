@@ -465,7 +465,7 @@
           Object containing a location and the length of a box for every axis. 
       - param_name: rotation
         type: carla.Rotation
-        param_units: degrees
+        param_units: degrees (pitch,yaw,roll)
         doc: >
           Orientation of the box according to Unreal Engine's axis system. 
       - param_name: thickness

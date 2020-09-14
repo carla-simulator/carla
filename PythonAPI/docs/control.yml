@@ -119,7 +119,7 @@
         type: carla.Vector3D
       - param_name: speed
         default: 0.0
-        param_Units: m/s
+        param_units: m/s
         type: float
       - param_name: jump
         default: False
