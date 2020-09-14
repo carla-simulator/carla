@@ -39,6 +39,7 @@
       params:
       - param_name: impulse
         type: carla.Vector3D
+        param_units: N * s
       doc: >
         Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     # --------------------------------------
@@ -46,6 +47,7 @@
       params:
       - param_name: impulse
         type: carla.Vector3D
+        param_units: N * m * s
       doc: >
         Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     # --------------------------------------
@@ -58,16 +60,19 @@
     # --------------------------------------
     - def_name: get_acceleration
       return: carla.Vector3D
+      return_units: m/s<sup>2</sup>
       doc: >
         Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
+      return_units: rad/s
       doc: >
         Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_location
       return: carla.Location
+      return_units: meters
       doc: >
         Returns the actor's location the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
@@ -78,6 +83,7 @@
     # --------------------------------------
     - def_name: get_velocity
       return: carla.Vector3D
+      return_units: m/s
       doc: >
         Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
@@ -97,6 +103,7 @@
       params:
       - param_name: location
         type: carla.Location
+        param_units: meters
       doc: >
         Teleports the actor to a given location.
     # --------------------------------------
@@ -198,7 +205,7 @@
       return: carla.VehicleLightState
       doc: >
         Returns a flag representing the vehicle light state,
-        this represents which lights are active or not
+        this represents which lights are active or not.
     # --------------------------------------
     - def_name: get_physics_control
       return: carla.VehiclePhysicsControl
@@ -208,6 +215,7 @@
     # --------------------------------------
     - def_name: get_speed_limit
       return: float
+      return_units: m/s
       doc: >
         The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
     # --------------------------------------
@@ -291,6 +299,7 @@
       params:
       - param_name: destination
         type: carla.Location
+        param_units: meters
       doc: >
         Sets the destination that the pedestrian will reach.
     # --------------------------------------
@@ -307,8 +316,9 @@
       - param_name: speed
         type: float
         default: 1.4
+        param_units: m/s
         doc: >
-          speed in m/s. An easy walking speed is set by default. 
+          An easy walking speed is set by default. 
       doc: >
         Sets a speed for the walker in meters per second.
     # --------------------------------------
@@ -369,6 +379,7 @@
     # --------------------------------------
     - def_name: get_elapsed_time
       return: float
+      return_units: seconds
       doc: >
         The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.
     # --------------------------------------
@@ -397,18 +408,21 @@
     # --------------------------------------
     - def_name: get_green_time
       return: float
+      return_units: seconds 
       doc: >
-        The client returns the seconds set for the traffic light to be green according to last tick. The method does not call the simulator.
+        The client returns the time set for the traffic light to be green, according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_red_time
       return: float
+      return_units: seconds
       doc: >
-        The client returns the seconds set for the traffic light to be red according to last tick. The method does not call the simulator.
+        The client returns the time set for the traffic light to be red, according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_yellow_time
       return: float
+      return_units: seconds
       doc: >
-        The client returns the the seconds set for the traffic light to be yellow according to last tick. The method does not call the simulator.
+        The client returns the time set for the traffic light to be yellow, according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: set_state
       params:
@@ -421,22 +435,25 @@
       params:
       - param_name: green_time
         type: float
+        param_units: seconds
         doc: >
-          Sets a given time (in seconds) for the green light to be active.
+          Sets a given time for the green light to be active.
     # --------------------------------------
     - def_name: set_red_time
       params:
       - param_name: red_time
         type: float
+        param_units: seconds
       doc: >
-        Sets a given time (in seconds) for the red state to be active.
+        Sets a given time for the red state to be active.
     # --------------------------------------
     - def_name: set_yellow_time
       params:
       - param_name: yellow_time
         type: float
+        param_units: seconds
       doc: >
-        Sets a given time (in seconds) for the yellow light to be active.
+        Sets a given time for the yellow light to be active.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

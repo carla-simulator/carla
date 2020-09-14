@@ -24,6 +24,7 @@
         Frame count when the data was generated.
     - var_name: timestamp
       type: float
+      var_units: seconds
       doc: >
         Simulation-time when the data was generated.
     - var_name: transform
@@ -60,8 +61,9 @@
     instance_variables:
     - var_name: fov
       type: float
+      var_units: degrees
       doc: >
-        Horizontal field of view of the image in degrees.
+        Horizontal field of view of the image.
     - var_name: height
       type: int
       doc: >
@@ -127,8 +129,9 @@
         Number of lasers shot.
     - var_name: horizontal_angle
       type: float
+      var_units: radians
       doc: >
-        Horizontal angle the LIDAR is rotated at the time of the measurement (in radians).
+        Horizontal angle the LIDAR is rotated at the time of the measurement.
     - var_name: raw_data
       type: bytes
       doc: >
@@ -176,13 +179,14 @@
     instance_variables:
     - var_name: point
       type: carla.Location
+      var_units: meters
       doc: >
         Point in xyz coordinates.
     # --------------------------------------
     - var_name: intensity
       type: float
       doc: >
-        Computed intensity for this point.
+        Computed intensity for this point as a scalar value between [0.0 , 1.0].
     # - METHODS ----------------------------
     methods:
     - def_name: __str__
@@ -250,6 +254,7 @@
     instance_variables:
     - var_name: point
       type: carla.Location
+      var_units: meters
       doc: >
         [x,y,z] coordinates of the point.
     # --------------------------------------
@@ -261,12 +266,12 @@
     - var_name: object_idx
       type: uint
       doc: >
-        Carla index of the hit actor.
+        [CARLA index](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) of the hit actor.
     # --------------------------------------
     - var_name: object_tag
       type: uint
       doc: >
-        Semantic tag of the hit component.
+        [Semantic tag](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) of the hit component.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__
@@ -289,6 +294,7 @@
         The second actor involved in the collision.
     - var_name: normal_impulse
       type: carla.Vector3D
+      var_units: N*m
       doc: >
         Normal impulse resulting of the collision.
 
@@ -309,6 +315,7 @@
         The actor or object considered to be an obstacle.
     - var_name: distance
       type: float
+      var_units: meters
       doc: >
         Distance between `actor` and `other`.
     # - METHODS ----------------------------
@@ -345,14 +352,17 @@
     instance_variables:
     - var_name: altitude
       type: float
+      var_units: meters
       doc: >
         Height regarding ground level.
     - var_name: latitude
       type: float
+      var_units: degrees
       doc: >
         North/South value of a point on the map.
     - var_name: longitude
       type: float
+      var_units: degrees
       doc: >
         West/East value of a point on the map.
     # - METHODS ----------------------------
@@ -369,16 +379,19 @@
     instance_variables:
     - var_name: accelerometer
       type: carla.Vector3D
+      var_units: m*s<sup>2</sup>
       doc: >
-        Linear acceleration in m/s^2.
+        Linear acceleration.
     - var_name: compass
       type: float
+      var_units: radians
       doc: >
-        Orientation with regard to the North ((0.0, -1.0, 0.0) in Unreal Engine) in radians.
+        Orientation with regard to the North ([0.0, -1.0, 0.0] in Unreal Engine).
     - var_name: gyroscope
       type: carla.Vector3D
+      var_units: rad/s
       doc: >
-        Angular velocity in rad/sec.
+        Angular velocity.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__
@@ -428,23 +441,27 @@
     instance_variables:
     - var_name: altitude
       type: float
+      var_units: radians
       doc: >
-        Altitude angle of the detection in radians.
+        Altitude angle of the detection.
     # --------------------------------------
     - var_name: azimuth
       type: float
+      var_units: radians
       doc: >
-        Azimuth angle of the detection in radians.
+        Azimuth angle of the detection.
     # --------------------------------------
     - var_name: depth
       type: float
+      var_units: meters
       doc: >
-        Distance in meters from the sensor to the detection position.
+        Distance from the sensor to the detection position.
     # --------------------------------------
     - var_name: velocity
       type: float
+      var_units: m/s
       doc: >
-        The velocity of the detected object towards the sensor in m/s.
+        The velocity of the detected object towards the sensor.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__
@@ -688,8 +705,9 @@
     instance_variables:
     - var_name: fov
       type: float
+      var_units: degrees
       doc: >
-        Horizontal field of view of the image in degrees.
+        Horizontal field of view of the image.
     # --------------------------------------
     - var_name: height
       type: int

@@ -19,6 +19,7 @@
         Simulation frame in which the snapshot was taken. 
     - var_name: timestamp
       type: carla.Timestamp
+      var_units: seconds
       doc: >
          Precise moment in time when snapshot was taken. This class works in seconds as given by the operative system. 
     # - METHODS ----------------------------
@@ -79,11 +80,13 @@
     methods:
     - def_name: get_acceleration
       return: carla.Vector3D
+      return_units: m/s<sup>2</sup>
       doc: >
         Returns the acceleration vector registered for an actor in that tick. 
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
+      return_units: rad/s
       doc: >
         Returns the angular velocity vector registered for an actor in that tick.
     # --------------------------------------
@@ -94,6 +97,7 @@
     # --------------------------------------
     - def_name: get_velocity
       return: carla.Vector3D
+      return_units: m/s
       doc: > 
         Returns the velocity vector registered for an actor in that tick.
     # --------------------------------------
