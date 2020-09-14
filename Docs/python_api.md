@@ -583,7 +583,7 @@ Draws an arrow from `begin` to `end` pointing in that direction.
 Draws a box, ussually to act for object colliders.  
     - **Parameters:**
         - `box` (_[carla.BoundingBox](#carla.BoundingBox)_) – Object containing a location and the length of a box for every axis.  
-        - `rotation` (_[carla.Rotation](#carla.Rotation)<small> – degrees</small>_) – Orientation of the box according to Unreal Engine's axis system.  
+        - `rotation` (_[carla.Rotation](#carla.Rotation)<small> – degrees (pitch,yaw,roll)</small>_) – Orientation of the box according to Unreal Engine's axis system.  
         - `thickness` (_float<small> – meters</small>_) – Density of the lines that define the box.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
@@ -794,9 +794,9 @@ Additional text in the signal.
 - <a name="carla.Landmark.h_offset"></a>**<font color="#f8805a">h_offset</font>** (_float<small> – meters</small>_)  
 Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE.  
 - <a name="carla.Landmark.pitch"></a>**<font color="#f8805a">pitch</font>** (_float<small> – meters</small>_)  
-Pitch rotation (Y-axis) of the signal.  
+Pitch rotation of the signal (Y-axis in [UE coordinates system](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/python_api/#carlarotation)).  
 - <a name="carla.Landmark.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
-Roll rotation (X-axis) of the signal.  
+Roll rotation of the signal (X-axis in [UE coordinates system](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/python_api/#carlarotation)).  
 - <a name="carla.Landmark.waypoint"></a>**<font color="#f8805a">waypoint</font>** (_[carla.Waypoint](#carla.Waypoint)_)  
 A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective.  
 - <a name="carla.Landmark.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
@@ -1483,9 +1483,8 @@ Retrieves the number of entries generated, same as **<font color="#7fb800">\__st
 ---
 
 ## carla.Rotation<a name="carla.Rotation"></a>
-Class that represents a 3D rotation and therefore, an orientation in space.
-
-![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_.  
+Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system. However, the declaration order of the axis' rotation is different in CARLA than in Unreal Engine.<br>
+<br>__CARLA:__ (pitch, yaw, roll) which correspond to (Y,Z,X) rotations. <br>__UE4:__ (roll, pitch, yaw) which correspond to (X,Y,Z) rotations. <br><br> ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) *Unreal Engine's coordinates system*.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Rotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float<small> – degrees</small>_)  
@@ -1501,6 +1500,7 @@ X-axis rotation angle.
         - `pitch` (_float<small> – degrees</small>_) – Y-axis rotation angle.  
         - `yaw` (_float<small> – degrees</small>_) – Z-axis rotation angle.  
         - `roll` (_float<small> – degrees</small>_) – X-axis rotation angle.  
+    - **Warning:** <font color="#ED2F2F">_The declaration order is different in CARLA <code>(pitch,yaw,roll)</code> and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>._</font>  
 
 <h5 style="margin-top: -20px">Getters</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2038,14 +2038,14 @@ Class that defines a transformation, a combination of location and rotation, wit
 <h3>Instance Variables</h3>
 - <a name="carla.Transform.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)  
 Describes a point in the coordinate system.  
-- <a name="carla.Transform.rotation"></a>**<font color="#f8805a">rotation</font>** (_[carla.Rotation](#carla.Rotation)_)  
+- <a name="carla.Transform.rotation"></a>**<font color="#f8805a">rotation</font>** (_[carla.Rotation](#carla.Rotation)<small> – degrees (pitch, yaw, roll)</small>_)  
 Describes a rotation for an object according to Unreal Engine's axis system.  
 
 <h3>Methods</h3>
 - <a name="carla.Transform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**rotation**</font>)  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
-        - `rotation` (_[carla.Rotation](#carla.Rotation)_)  
+        - `rotation` (_[carla.Rotation](#carla.Rotation)<small> – degrees (pitch, yaw, roll)</small>_)  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
 Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**
@@ -2418,7 +2418,7 @@ If <b>True</b>, the walker will perform a jump.
 - <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**direction**=[1.0, 0.0, 0.0]</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**jump**=False</font>)  
     - **Parameters:**
         - `direction` (_[carla.Vector3D](#carla.Vector3D)_)  
-        - `speed` (_float_)  
+        - `speed` (_float<small> – m/s</small>_)  
         - `jump` (_bool_)  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
