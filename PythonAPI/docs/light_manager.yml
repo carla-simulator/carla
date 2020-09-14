@@ -28,8 +28,9 @@
     instance_variables:
     - var_name: intensity
       type: float
+      var_units: lumens
       doc: >
-        Intensity of a light in lumens.
+        Intensity of a light.
     # --------------------------------------
     - var_name: color
       type: carla.Color
@@ -52,8 +53,9 @@
       - param_name: intensity
         type: float
         default: 0.0
+        param_units: lumens
         doc: >
-          Intensity of the light in lumens. Default is `0.0`.
+          Intensity of the light. Default is `0.0`.
     # --------------------------------------
       - param_name: color
         type: carla.Color
@@ -94,8 +96,9 @@
     # --------------------------------------
     - var_name: intensity
       type: float
+      var_units: lumens
       doc: >
-        Intensity of the light in lumens.
+        Intensity of the light.
     # --------------------------------------
     - var_name: is_on
       type: bool
@@ -104,6 +107,7 @@
     # --------------------------------------
     - var_name: location
       type: carla.Location
+      var_units: meters
       doc: >
         Position of the light.
     # --------------------------------------
@@ -139,6 +143,7 @@
       params:
       - param_name: intensity
         type: float
+        param_units: lumens
     # --------------------------------------
     - def_name: set_light_group
       doc: >
@@ -222,6 +227,7 @@
         doc:
           List of lights to be queried.
       return: list(float)
+      return_units: lumens
     # --------------------------------------
     - def_name: get_light_group
       doc: >
@@ -312,6 +318,7 @@
           List of lights to be changed.
       - param_name: intensity
         type: float
+        param_units: lumens
         doc:
           Intensity to be applied.
     # --------------------------------------
@@ -325,6 +332,7 @@
           List of lights to be changed.
       - param_name: intensities
         type: list(float)
+        param_units: lumens
         doc:
           List of intensities to be applied.
     # --------------------------------------

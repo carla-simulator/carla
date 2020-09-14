@@ -156,6 +156,7 @@
       params:
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
           Approximate distance between waypoints.
       return: list(carla.Waypoint)
@@ -235,6 +236,7 @@
       params:
       - param_name: location
         type: carla.Location
+        param_units: meters
         doc: >
           Location used as reference for the carla.Waypoint.
       - param_name: project_to_road
@@ -263,6 +265,7 @@
           ID of the lane to get the waypoint.
       - param_name: s
         type: float
+        param_units: meters
         doc: >
           Specify the length from the road start.
       return: carla.Waypoint
@@ -322,6 +325,7 @@
         OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. For more information refer to OpenDRIVE [documentation](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
     - var_name: s
       type: float
+      param_units: meters
       doc: >
         OpenDRIVE <b>s</b> value of the current position.
     - var_name: is_junction
@@ -330,6 +334,7 @@
         <b>True</b> if the current Waypoint is on a junction as defined by OpenDRIVE.
     - var_name: lane_width
       type: float
+      param_units: meters
       doc: >
         Horizontal size of the road at current <b>s</b>.
     - var_name: lane_change
@@ -354,6 +359,7 @@
       params:
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
           The approximate distance where to get the next waypoints.
       return: list(carla.Waypoint)
@@ -366,8 +372,9 @@
       params:
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
-          The approximate distance between waypoints
+          The approximate distance between waypoints.
       return: list(carla.Waypoint)
       doc: >
         Returns a list of waypoints from this to the end of the lane separated by a certain `distance`.
@@ -376,6 +383,7 @@
       params:
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
           The approximate distance where to get the previous waypoints.
       return: list(carla.Waypoint)
@@ -388,8 +396,9 @@
       params:
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
-          The approximate distance between waypoints
+          The approximate distance between waypoints.
       return: list(carla.Waypoint)
       doc: >
         Returns a list of waypoints from this to the start of the lane separated by a certain `distance`.
@@ -403,6 +412,7 @@
       params:
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
           The maximum distance to search for landmarks from the current waypoint.
       - param_name: stop_at_junction
@@ -417,6 +427,7 @@
     - def_name: get_landmarks_of_type
       params:
       - param_name: distance
+        param_units: meters
         type: float
         doc: >
           The maximum distance to search for landmarks from the current waypoint.
@@ -623,14 +634,17 @@
         <small>Example: a traffic light is defined in one of the divergent roads in a junction, but it affects all the possible routes</small>
     - var_name: distance
       type: float
+      var_units: meters
       doc: >
         Distance between the landmark and the waypoint creating the object (querying `get_landmarks` or `get_landmarks_of_type`).
     - var_name: s
       type: float
+      var_units: meters
       doc: >
         Distance where the landmark is positioned along the geometry of the road `road_id`.
     - var_name: t
       type: float
+      var_units: meters
       doc: >
         Lateral distance where the landmark is positioned from the edge of the road `road_id`.
     - var_name: id
@@ -647,10 +661,12 @@
         Indicates if the landmark has state changes over time such as traffic lights.
     - var_name: orientation
       type: carla.LandmarkOrientation
+      var_units: degrees
       doc: >
         Indicates which lanes the landmark is facing towards to.
     - var_name: z_offset
       type: float
+      var_units: meters
       doc: >
         Height where the landmark is placed.
     - var_name: country
@@ -675,10 +691,12 @@
         Units of measurement for the attribute `value`.
     - var_name: height
       type: float
+      var_units: meters
       doc: >
         Total height of the signal.
     - var_name: width
       type: float
+      var_units: meters
       doc: >
         Total width of the signal.
     - var_name: text
@@ -687,16 +705,18 @@
         Additional text in the signal.
     - var_name: h_offset
       type: float
+      var_units: meters
       doc: >
         Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE.
     - var_name: pitch
       type: float
+      var_units: meters
       doc: >
-        Pitch rotation of the signal.
+        Pitch rotation (Y-axis) of the signal.
     - var_name: roll
       type: float
       doc: >
-        Roll rotation of the signal.
+        Roll rotation (X-axis) of the signal.
     - var_name: waypoint
       type: carla.Waypoint
       doc: >

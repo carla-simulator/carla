@@ -32,13 +32,15 @@
     # --------------------------------------
     - var_name: sun_azimuth_angle
       type: float
+      var_units: degrees
       doc: >
-        The azimuth angle of the sun in degrees. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine. 
+        The azimuth angle of the sun. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine. 
     # --------------------------------------
     - var_name: sun_altitude_angle
       type: float
+      var_units: degrees
       doc: >
-        Altitude angle of the sun in degrees. Values range from -90 to 90 corresponding to midnight and midday each.
+        Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each.
     # --------------------------------------
     - var_name: fog_density
       type: float
@@ -47,8 +49,9 @@
     # --------------------------------------
     - var_name: fog_distance
       type: float
+      var_units: meters
       doc: >
-        Fog start distance (in meters). Values range from 0 to infinite.
+        Fog start distance. Values range from 0 to infinite.
     # --------------------------------------
     - var_name: wetness
       type: float
@@ -87,11 +90,13 @@
       - param_name: sun_azimuth_angle
         type: float
         default: 0.0
+        param_units: degrees
         doc: >
           0 is an arbitrary North, 180 its corresponding South.  
       - param_name: sun_altitude_angle
         type: float
         default: 0.0
+        param_units: degrees
         doc: >
           90 is midday, -90 is midnight.  
       - param_name: fog_density
@@ -102,6 +107,7 @@
       - param_name: fog_distance
         type: float
         default: 0.0
+        param_units: meters
         doc: >
           Distance where the fog starts in meters.  
       - param_name: wetness
