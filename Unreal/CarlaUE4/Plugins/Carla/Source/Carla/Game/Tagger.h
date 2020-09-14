@@ -28,6 +28,13 @@ enum class ECityObjectLabel : uint8
   Sky          =  13u,
   Ground       =  14u,
   Bridge       =  15u,
+  RailTrack    =  16u,
+  GuardRail    =  17u,
+  TrafficLight =  18u,
+  Static       =  19u,
+  Dynamic      =  20u,
+  Water        =  21u,
+  Terrain      =  22u,
 };
 
 /// Sets actors' custom depth stencil value for semantic segmentation according

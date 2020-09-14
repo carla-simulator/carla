@@ -6,20 +6,20 @@
 
 DOC_STRING="Download and install the required libraries for carla."
 
-USAGE_STRING="Usage: $0 [--python3-version=VERSION]"
+USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,rebuild,py2,py3,clean,rss,python3-version:,packages:,clean-intermediate,all,xml -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,clean,rss,python-version:,packages:,clean-intermediate,all,xml -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 
 eval set -- "$OPTS"
 
-PY3_VERSION=3
+PY_VERSION=3
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --python3-version )
-      PY3_VERSION="$2";
+    --python-version )
+      PY_VERSION="$2";
       shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -106,10 +106,19 @@ BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 
-if [[ -d "${BOOST_BASENAME}-install" ]] ; then
-  log "${BOOST_BASENAME} already installed."
-else
+SHOULD_BUILD_BOOST=true
 
+PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V)
+LIB_NAME=${PYTHON_VERSION:7:3}
+LIB_NAME=${LIB_NAME//.}
+if [[ -d "${BOOST_BASENAME}-install" ]] ; then
+  if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
+    SHOULD_BUILD_BOOST=false
+    log "${BOOST_BASENAME} already installed."
+  fi
+fi
+
+if { ${SHOULD_BUILD_BOOST} ; } ; then
   rm -Rf ${BOOST_BASENAME}-source
 
   BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
@@ -122,7 +131,7 @@ else
     wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
   fi
 
-  log "Extracting boost for Python 2."
+  log "Extracting boost for Python ${PY_VERSION}."
   tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
   mkdir -p ${BOOST_BASENAME}-install/include
   mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
@@ -136,53 +145,19 @@ else
   BOOST_TOOLSET="clang-8.0"
   BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
-  py2="/usr/bin/env python2"
-  py2_root=`${py2} -c "import sys; print(sys.prefix)"`
-  pyv=`$py2 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
-  ./bootstrap.sh \
-      --with-toolset=clang \
-      --prefix=../boost-install \
-      --with-libraries=python,filesystem,system,program_options \
-      --with-python=${py2} --with-python-root=${py2_root}
-
-  if ${TRAVIS} ; then
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
-  else
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
-  fi
-
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
-
-  # Get rid of  python2 build artifacts completely & do a clean build for python3
-  popd >/dev/null
-  rm -Rf ${BOOST_BASENAME}-source
-
-  log "Extracting boost for Python 3."
-  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
-  mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-  # Boost patch for exception handling
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
-  # ---
-
-  pushd ${BOOST_BASENAME}-source >/dev/null
-
-  py3="/usr/bin/env python${PY3_VERSION}"
+  py3="/usr/bin/env python${PY_VERSION}"
   py3_root=`${py3} -c "import sys; print(sys.prefix)"`
   pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python \
+      --with-libraries=python,filesystem,system,program_options \
       --with-python=${py3} --with-python-root=${py3_root}
 
   if ${TRAVIS} ; then
-    echo "using python : ${pyv} : ${py3_root}/bin/python${PY3_VERSION} ;" > ${HOME}/user-config.jam
+    echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > ${HOME}/user-config.jam
   else
-    echo "using python : ${pyv} : ${py3_root}/bin/python${PY3_VERSION} ;" > project-config.jam
+    echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > project-config.jam
   fi
 
   ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
@@ -197,6 +172,12 @@ else
   cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
   cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
   # ---
+
+  # Install boost dependencies
+  mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system"
+  mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib"
+  cp -rf ${BOOST_BASENAME}-install/include/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system
+  cp -rf ${BOOST_BASENAME}-install/lib/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib
 
 fi
 
@@ -400,6 +381,40 @@ fi
 unset RECAST_BASENAME
 
 # ==============================================================================
+# -- Get and compile libpng 1.6.37 ------------------------------
+# ==============================================================================
+
+LIBPNG_VERSION=1.6.37
+LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
+LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
+LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
+
+LIBPNG_INCLUDE=${PWD}/${LIBPNG_BASENAME}-install/include/
+LIBPNG_LIBPATH=${PWD}/${LIBPNG_BASENAME}-install/lib
+
+if [[ -d ${LIBPNG_INSTALL} ]] ; then
+  log "Libpng already installed."
+else
+  log "Retrieving libpng."
+  wget ${LIBPNG_REPO}
+
+  log "Extracting libpng."
+  tar -xf libpng-${LIBPNG_VERSION}.tar.xz
+  mv ${LIBPNG_BASENAME} ${LIBPNG_BASENAME}-source
+
+  pushd ${LIBPNG_BASENAME}-source >/dev/null
+
+  ./configure --prefix=${CARLA_BUILD_FOLDER}/${LIBPNG_INSTALL}
+  make install
+
+  popd >/dev/null
+
+  rm -Rf libpng-${LIBPNG_VERSION}.tar.xz
+  rm -Rf ${LIBPNG_BASENAME}-source
+fi
+
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
@@ -495,6 +510,8 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
   set(RECAST_INCLUDE_PATH "${RECAST_INCLUDE}")
   set(RECAST_LIB_PATH "${RECAST_LIBPATH}")
+  set(LIBPNG_INCLUDE_PATH "${LIBPNG_INCLUDE}")
+  set(LIBPNG_LIB_PATH "${LIBPNG_LIBPATH}")
 endif ()
 
 EOL

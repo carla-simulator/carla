@@ -43,7 +43,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make setup ARGS="--python3-version=3.7"'
+                                sh 'make setup ARGS="--python-version=3.7"'
                             }
                         }
                         stage('ubuntu build')
@@ -51,7 +51,7 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI ARGS="--python3-version=3.7"'
+                                sh 'make PythonAPI ARGS="--python-version=3.7"'
                                 sh 'make CarlaUE4Editor'
                                 sh 'make examples'
                             }
@@ -68,7 +68,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make check ARGS="--all --xml --python3-version=3.7"'
+                                sh 'make check ARGS="--all --xml --python-version=3.7"'
                             }
                             post
                             {
@@ -90,8 +90,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python3-version=3.7"'
-                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python3-version=3.7"'
+                                sh 'make package ARGS="--python-version=3.7"'
+                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -121,6 +121,7 @@ pipeline
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
                                 sh '''
                                     cd ~/carla-simulator.github.io
+                                    git remote set-url origin git@github.com:carla-simulator/carla-simulator.github.io.git
                                     git fetch
                                     git checkout -B master origin/master
                                 '''

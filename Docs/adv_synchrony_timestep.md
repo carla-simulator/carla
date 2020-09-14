@@ -2,15 +2,15 @@
 
 This section deals with two fundamental concepts in CARLA. Their configuration defines how does time go by in the simulation, and how does the server make the simulation move forward.  
 
-* [__Simulation time-step__](#simulation-time-step)  
-	* Variable time-step  
-	* Fixed time-step  
-	* Tips when recording the simulation  
-	* Time-step limitations  
-* [__Client-server synchrony__](#client-server-synchrony)  
-	* Setting synchronous mode  
-	* Using synchronous mode  
-* [__Possible configurations__](#possible-configurations)  
+*   [__Simulation time-step__](#simulation-time-step)  
+	*   [Variable time-step](#variable-time-step)  
+	*   [Fixed time-step](#fixed-time-step)  
+	*   [Tips when recording the simulation](#tips-when-recording-the-simulation)  
+	*   [Time-step limitations](#time-step-limitations)  
+*   [__Client-server synchrony__](#client-server-synchrony)  
+	*   [Setting synchronous mode](#setting-synchronous-mode)  
+	*   [Using synchronous mode](#using-synchronous-mode)  
+*   [__Possible configurations__](#possible-configurations)  
 
 ---
 ## Simulation time-step

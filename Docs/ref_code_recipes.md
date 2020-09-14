@@ -7,6 +7,17 @@ which is divided into those in which the recipe is centered, and those that need
 
 There are more recipes to come!
 
+*   [__Actor Spectator Recipe__](#actor-spectator-recipe)  
+*   [__Attach Sensors Recipe__](#attach-sensors-recipe)  
+*   [__Actor Attribute Recipe__](#actor-attribute-recipe)  
+*   [__Converted Image Recipe__](#converted-image-recipe)  
+*   [__Lanes Recipe__](#lanes-recipe)  
+*   [__Debug Bounding Box Recipe__](#debug-bounding-box-recipe)  
+*   [__Debug Vehicle Trail Recipe__](#debug-vehicle-trail-recipe)  
+*   [__Parsing Client Arguments Recipe__](#parsing-client-arguments-recipe)  
+*   [__Traffic Light Recipe__](#traffic-light-recipe)  
+*   [__Walker Batch Recipe__](#walker-batch-recipe)  
+
 ---
 ## Actor Spectator Recipe
 
@@ -222,7 +233,7 @@ path it was following and the speed at each waypoint.
 ![debug_trail_recipe](img/recipe_debug_trail.jpg)
 
 ---
-## Parse client creation arguments
+## Parsing Client Arguments Recipe
 
 This recipe shows in every script provided in `PythonAPI/Examples` and it is used to parse the client creation arguments when running the script. 
 
@@ -261,7 +272,7 @@ Used:<br>
 ```
 
 ---
-## Traffic lights Recipe
+## Traffic Light Recipe
 
 This recipe changes from red to green the traffic light that affects the vehicle.
 This is done by detecting if the vehicle actor is at a traffic light.
@@ -286,7 +297,7 @@ if vehicle_actor.is_at_traffic_light():
 ![tl_recipe](img/tl_recipe.gif)
 
 ---
-## Walker batch recipe
+## Walker Batch Recipe
 
 ```py
 # 0. Choose a blueprint fo the walkers
