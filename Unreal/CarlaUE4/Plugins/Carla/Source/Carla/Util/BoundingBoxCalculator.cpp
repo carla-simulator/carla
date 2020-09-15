@@ -33,7 +33,7 @@ static FBoundingBox ApplyTransformToBB(
   return BoundingBox;
 }
 
-FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
+FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, uint8 InTagQueried)
 {
   if (Actor != nullptr)
   {
@@ -43,7 +43,6 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
     {
       FVector Origin = Vehicle->GetVehicleBoundingBoxTransform().GetTranslation();
       FVector Extent = Vehicle->GetVehicleBoundingBoxExtent();
-      UE_LOG(LogCarla, Warning, TEXT("GetActorBoundingBox vehicle %s %s"), *Origin.ToString(), *Extent.ToString());
       return {Origin, Extent};
     }
     // Walker.
@@ -167,49 +166,39 @@ void UBoundingBoxCalculator::GetHISMBoundingBox(
   }
 }
 
-void UBoundingBoxCalculator::GetFolliageBoundingBox(
-    AInstancedFoliageActor* InstancedFolliageActor,
-    TArray<FBoundingBox>& OutBoundingBox)
-{
-  if(!InstancedFolliageActor)
-  {
-    UE_LOG(LogCarla, Error, TEXT("GetFolliageBoundingBox no InstancedFolliageActor"));
-    return;
-  }
-
-  const TMap<UFoliageType*, TUniqueObj<FFoliageInfo>>& FoliageInstancesMap =
-      InstancedFolliageActor->FoliageInfos;
-
-  for(auto& FoliagePair: FoliageInstancesMap)
-  {
-    const UFoliageType* FoliageType = FoliagePair.Key;
-    const FFoliageInfo& FoliageInfo = FoliagePair.Value.Get();
-    const UFoliageType_InstancedStaticMesh* FoliageType_ISM =
-        Cast<UFoliageType_InstancedStaticMesh>(FoliageType);
-
-    UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo.GetComponent();
-
-    GetHISMBoundingBox(HISMComp, OutBoundingBox);
-  }
-}
-
 // TODO: Add tag to the querry
 // TODO: Dynamic vehicle, avoid SM of collision
-TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray<AActor*>& Actors)
+TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
+  const TArray<AActor*>& Actors,
+  uint8 InTagQueried)
 {
   TArray<FBoundingBox> Result;
+  ECityObjectLabel TagQueried = (ECityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != ECityObjectLabel::None);
 
   for(AActor* Actor : Actors)
   {
 
     // Filter actors by tag
+    //ATagger::GetTagOfTaggedComponent()
     //TSet<ECityObjectLabel> Tags;
-    //ATagger::GetTagsOfTaggedActor(Actor, Tags)
+    //ATagger::GetTagsOfTaggedActor(*Actor, Tags);
+    //UE_LOG(LogCarla, Error, TEXT("%s %d"), *Actor->GetName(), Tags.Num() );
+    //for(ECityObjectLabel Tag : Tags)
+    //{
+    //  UE_LOG(LogCarla, Error, TEXT(" - %s"), *ATagger::GetTagAsString(Tag));
+    //}
 
     AInstancedFoliageActor* InstancedFolliageActor = Cast<AInstancedFoliageActor>(Actor);
     if(InstancedFolliageActor != nullptr)
     {
-      GetFolliageBoundingBox(InstancedFolliageActor, Result);
+      TArray<UHierarchicalInstancedStaticMeshComponent *> HISMComps;
+      InstancedFolliageActor->GetComponents<UHierarchicalInstancedStaticMeshComponent>(HISMComps);
+      UE_LOG(LogCarla, Warning, TEXT("InstancedFolliageActor, num HISMComps = %d "), HISMComps.Num() );
+      for(auto* HISMComp: HISMComps)
+      {
+        GetHISMBoundingBox(HISMComp, Result);
+      }
       continue;
     }
 
@@ -218,7 +207,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray
     if(!BoundingBox.Extent.IsZero())
     {
       BoundingBox = ApplyTransformToBB(BoundingBox, ActorTransform);
-      Result.Add(BoundingBox);
+      //Result.Add(BoundingBox);
       continue;
     }
 
@@ -238,6 +227,10 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray
     // Calculate FBoundingBox of SM
     for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
     {
+      // Filter by tag
+      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*StaticMeshComp);
+      if(FilterByTagEnabled && Tag != TagQueried) continue;
+
       UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
       BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
 
@@ -255,6 +248,10 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray
     // Calculate FBoundingBox of SK_M
     for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
     {
+      // Filter by tag
+      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*SkeletalMeshComp);
+      if(FilterByTagEnabled && Tag != TagQueried) continue;
+
       USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
       BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
       if(BoundingBox.Extent.IsZero())

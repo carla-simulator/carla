@@ -28,7 +28,9 @@ public:
   ///
   /// @warning Traffic signs return its trigger box instead.
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
-  static FBoundingBox GetActorBoundingBox(const AActor *Actor);
+  static FBoundingBox GetActorBoundingBox(
+    const AActor *Actor,
+    uint8 InTagQueried = 0);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh);
@@ -42,11 +44,8 @@ public:
     TArray<FBoundingBox>& OutBoundingBox);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
-  static void GetFolliageBoundingBox(
-    AInstancedFoliageActor* InstancedFolliageActor,
-    TArray<FBoundingBox>& OutBoundingBox);
-
-  UFUNCTION(Category = "Carla Util", BlueprintCallable)
-  static TArray<FBoundingBox> GetBoundingBoxOfActors(const TArray<AActor*>& Actors);
+  static TArray<FBoundingBox> GetBoundingBoxOfActors(
+    const TArray<AActor*>& Actors,
+    uint8 InTagQueried = 0);
 
 };

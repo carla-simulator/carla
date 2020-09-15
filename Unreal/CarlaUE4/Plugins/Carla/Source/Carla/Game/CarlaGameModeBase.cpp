@@ -478,8 +478,8 @@ void ACarlaGameModeBase::SendAtlas()
 
 }
 
-
-TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel()
+// TODO: add tag type to query
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
 {
   UWorld* World = GetWorld();
 
@@ -488,7 +488,18 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel()
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
   TArray<FBoundingBox> BoundingBoxes;
-  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors);
-
+  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, TagQueried);
+/*
+  for(FBoundingBox& Box : BoundingBoxes)
+  {
+    UKismetSystemLibrary::DrawDebugBox(
+      World,
+      Box.Origin,
+      Box.Extent,
+      FLinearColor::Red,
+      Box.Rotation,
+      10.0f);
+  }
+*/
   return BoundingBoxes;
 }
