@@ -39,7 +39,7 @@
       params:
       - param_name: impulse
         type: carla.Vector3D
-        param_units: N * s
+        param_units: N*s
       doc: >
         Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     # --------------------------------------
@@ -47,7 +47,7 @@
       params:
       - param_name: impulse
         type: carla.Vector3D
-        param_units: N * m * s
+        param_units: degrees
       doc: >
         Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     # --------------------------------------
