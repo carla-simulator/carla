@@ -158,8 +158,8 @@ namespace client {
     _episode.Lock()->FreezeAllTrafficLights(frozen);
   }
 
-  std::vector<geom::BoundingBox> World::GetLevelBBs() const {
-    return _episode.Lock()->GetLevelBBs();
+  std::vector<geom::BoundingBox> World::GetLevelBBs(uint8_t queried_tag) const {
+    return _episode.Lock()->GetLevelBBs(queried_tag);
   }
 
 } // namespace client
