@@ -270,7 +270,7 @@
         Actor affected by the command. 
     - var_name: impulse
       type: carla.Vector3D
-      var_units: N * s
+      var_units: N*s
       doc: >
         Impulse applied to the actor. 
     # - METHODS ----------------------------
@@ -283,7 +283,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: impulse
         type: carla.Vector3D
-        param_units: N * s
+        param_units: N*s
     # --------------------------------------
 
   - class_name: ApplyAngularImpulse
@@ -298,7 +298,7 @@
         Actor affected by the command. 
     - var_name: impulse
       type: carla.Vector3D
-      var_units: N * m * s
+      var_units: degrees
       doc: >
         Angular impulse applied to the actor. Determines magnitude and global axis where it is applied.  
     # - METHODS ----------------------------
@@ -311,7 +311,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: impulse
         type: carla.Vector3D
-        param_units: N * m * s
+        param_units: degrees
     # --------------------------------------
 
   - class_name: SetSimulatePhysics

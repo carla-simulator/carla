@@ -22,11 +22,11 @@ The identifier of the blueprint this actor was based on, e.g. "vehicle.ford.must
 - <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
 Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     - **Parameters:**
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N * s</small>_)  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
 - <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
 Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     - **Parameters:**
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N * m * s</small>_)  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_)  
 - <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
 Tells the simulator to destroy this actor and returns <b>True</b> if it was successful. It has no effect if it was already destroyed.  
     - **Return:** _bool_  
@@ -462,7 +462,7 @@ Sets the maxixum time a network call is allowed before blocking it and raising a
 The actor the sensor is attached to, the one that measured the collision.  
 - <a name="carla.CollisionEvent.other_actor"></a>**<font color="#f8805a">other_actor</font>** (_[carla.Actor](#carla.Actor)_)  
 The second actor involved in the collision.  
-- <a name="carla.CollisionEvent.normal_impulse"></a>**<font color="#f8805a">normal_impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N*m</small>_)  
+- <a name="carla.CollisionEvent.normal_impulse"></a>**<font color="#f8805a">normal_impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
 Normal impulse resulting of the collision.  
 
 ---
@@ -685,7 +685,7 @@ West/East value of a point on the map.
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the data registered by a <b>sensor.other.imu</b>, regarding the sensor's transformation according to the current [carla.World](#carla.World). It essentially acts as accelerometer, gyroscope and compass.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.IMUMeasurement.accelerometer"></a>**<font color="#f8805a">accelerometer</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – m*s<sup>2</sup></small>_)  
+- <a name="carla.IMUMeasurement.accelerometer"></a>**<font color="#f8805a">accelerometer</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – m/s<sup>2</sup></small>_)  
 Linear acceleration.  
 - <a name="carla.IMUMeasurement.compass"></a>**<font color="#f8805a">compass</font>** (_float<small> – radians</small>_)  
 Orientation with regard to the North ([0.0, -1.0, 0.0] in Unreal Engine).  
@@ -2802,14 +2802,14 @@ Command adaptation of **<font color="#7fb800">add_angular_impulse()</font>** in 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyAngularImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 Actor affected by the command.  
-- <a name="command.ApplyAngularImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N * m * s</small>_)  
+- <a name="command.ApplyAngularImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_)  
 Angular impulse applied to the actor. Determines magnitude and global axis where it is applied.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyAngularImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N * m * s</small>_)  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_)  
 
 ---
 
@@ -2836,14 +2836,14 @@ Command adaptation of **<font color="#7fb800">add_impulse()</font>** in [carla.A
 <h3>Instance Variables</h3>
 - <a name="command.ApplyImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 Actor affected by the command.  
-- <a name="command.ApplyImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N * s</small>_)  
+- <a name="command.ApplyImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
 Impulse applied to the actor.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N * s</small>_)  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
 
 ---
 

@@ -294,7 +294,7 @@
         The second actor involved in the collision.
     - var_name: normal_impulse
       type: carla.Vector3D
-      var_units: N*m
+      var_units: N*s
       doc: >
         Normal impulse resulting of the collision.
 
@@ -379,7 +379,7 @@
     instance_variables:
     - var_name: accelerometer
       type: carla.Vector3D
-      var_units: m*s<sup>2</sup>
+      var_units: m/s<sup>2</sup>
       doc: >
         Linear acceleration.
     - var_name: compass
