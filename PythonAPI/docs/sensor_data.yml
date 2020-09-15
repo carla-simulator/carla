@@ -205,8 +205,9 @@
         Number of lasers shot.
     - var_name: horizontal_angle
       type: float
+      var_units: radians
       doc: >
-        Horizontal angle the LIDAR is rotated at the time of the measurement (in radians).
+        Horizontal angle the LIDAR is rotated at the time of the measurement.
     - var_name: raw_data
       type: bytes
       doc: >
@@ -266,12 +267,12 @@
     - var_name: object_idx
       type: uint
       doc: >
-        [CARLA index](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) of the hit actor.
+        ID of the actor hit by the ray.
     # --------------------------------------
     - var_name: object_tag
       type: uint
       doc: >
-        [Semantic tag](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) of the hit component.
+        [Semantic tag](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) of the component hit by the ray.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__
