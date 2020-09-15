@@ -12,6 +12,7 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/post.hpp>
 
 #include <atomic>
 
@@ -45,7 +46,7 @@ namespace tcp {
     /// is closed.
     template <typename FunctorT1, typename FunctorT2>
     void Listen(FunctorT1 on_session_opened, FunctorT2 on_session_closed) {
-      _io_context.post([=]() {
+      boost::asio::post(_io_context, [=]() {
         OpenSession(
             _timeout,
             std::move(on_session_opened),

@@ -12,6 +12,7 @@
 #include "carla/Time.h"
 
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
 
 #include <future>
 #include <thread>
@@ -40,7 +41,7 @@ namespace carla {
     std::future<ResultT> Post(FunctorT &&functor) {
       auto task = std::packaged_task<ResultT()>(std::forward<FunctorT>(functor));
       auto future = task.get_future();
-      _io_context.post(carla::MoveHandler(task));
+      boost::asio::post(_io_context, carla::MoveHandler(task));
       return future;
     }
 
