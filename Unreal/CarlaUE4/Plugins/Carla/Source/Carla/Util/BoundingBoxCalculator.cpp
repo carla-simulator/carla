@@ -16,6 +16,8 @@
 #include "Rendering/SkeletalMeshRenderData.h"
 
 
+namespace crp = carla::rpc;
+
 static FBoundingBox ApplyTransformToBB(
     const FBoundingBox& InBoundingBox,
     const FTransform& Transform)
@@ -180,8 +182,8 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   uint8 InTagQueried)
 {
   TArray<FBoundingBox> Result;
-  ECityObjectLabel TagQueried = (ECityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != ECityObjectLabel::None);
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
   for(AActor* Actor : Actors)
   {
@@ -203,7 +205,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
 
       // Filter by tag
-      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
       USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
@@ -256,7 +258,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     for(UStaticMeshComponent* Comp : StaticMeshComps)
     {
       // Filter by tag
-      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
       UStaticMesh* StaticMesh = Comp->GetStaticMesh();
@@ -280,7 +282,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
     {
       // Filter by tag
-      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
       USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
@@ -302,7 +304,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     for(UInstancedStaticMeshComponent* Comp: ISMComps)
     {
       // Filter by tag
-      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
       GetISMBoundingBox(Comp, Result);
