@@ -237,7 +237,6 @@ private:
     std::lock_guard<std::mutex> lock(_mutex);
     auto it = _tm_map.find(port);
     if (it != _tm_map.end()) {
-      _mutex.unlock();
       return it->second;
     }
     return nullptr;
