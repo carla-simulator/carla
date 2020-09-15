@@ -185,34 +185,9 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
 
   for(AActor* Actor : Actors)
   {
-    const FTransform& ActorTransform = Actor->GetActorTransform();
-
-    // Filter actors by tag
-    //ATagger::GetTagOfTaggedComponent()
-    //TSet<ECityObjectLabel> Tags;
-    //ATagger::GetTagsOfTaggedActor(*Actor, Tags);
-    //UE_LOG(LogCarla, Error, TEXT("%s %d"), *Actor->GetName(), Tags.Num() );
-    //for(ECityObjectLabel Tag : Tags)
-    //{
-    //  UE_LOG(LogCarla, Error, TEXT(" - %s"), *ATagger::GetTagAsString(Tag));
-    //}
-
-    /*
-    FBoundingBox BoundingBox = GetActorBoundingBox(Actor);
-    if(!BoundingBox.Extent.IsZero())
-    {
-      BoundingBox = ApplyTransformToBB(BoundingBox, ActorTransform);
-      //Result.Add(BoundingBox);
-      continue;
-    }
-    */
-
     // Any other actor
     TArray<UMeshComponent*> MeshComps;
     Actor->GetComponents<UMeshComponent>(MeshComps);
-    // FVector WorldLocation = Actor->GetActorLocation();
-    // FVector WorldScale = Actor->GetActorScale();
-    // FRotator WorldRotation = Actor->GetActorRotation();
 
     // Find if there is some geometry component
     TArray<UStaticMeshComponent*> StaticMeshComps;
@@ -223,13 +198,13 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
 
     // Calculate FBoundingBox of SM
-    for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
+    for(UStaticMeshComponent* Comp : StaticMeshComps)
     {
       // Filter by tag
-      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*StaticMeshComp);
+      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
-      UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
+      UStaticMesh* StaticMesh = Comp->GetStaticMesh();
       FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
 
       if(BoundingBox.Extent.IsZero())
@@ -238,19 +213,22 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       }
       else
       {
-        BoundingBox = ApplyTransformToBB(BoundingBox, ActorTransform);
+        // Component-to-world transform for this component
+        const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+
+        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
         Result.Add(BoundingBox);
       }
     }
 
     // Calculate FBoundingBox of SK_M
-    for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
+    for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
     {
       // Filter by tag
-      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*SkeletalMeshComp);
+      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
-      USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
+      USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
       FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
       if(BoundingBox.Extent.IsZero())
       {
@@ -258,20 +236,21 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       }
       else
       {
-        BoundingBox = ApplyTransformToBB(BoundingBox, ActorTransform);
+        // Component-to-world transform for this component
+        const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
         Result.Add(BoundingBox);
       }
     }
 
     // Calculate FBoundingBox of ISM
-    for(UInstancedStaticMeshComponent* ISMComp: ISMComps)
+    for(UInstancedStaticMeshComponent* Comp: ISMComps)
     {
       // Filter by tag
-      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*ISMComp);
-      UE_LOG(LogCarla, Error, TEXT("%s - %s"), *Actor->GetName(), *ATagger::GetTagAsString(Tag));
+      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
-      GetISMBoundingBox(ISMComp, Result);
+      GetISMBoundingBox(Comp, Result);
     }
 
   }
