@@ -195,6 +195,34 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     if(ClassName.Contains("BP_Procedural_Bulding")) continue;
 
 
+    // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
+    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+    if (Vehicle != nullptr)
+    {
+      UActorComponent *ActorComp = Vehicle->GetComponentByClass<USkeletalMeshComponent>();
+      USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
+
+      // Filter by tag
+      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+      if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+      USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+      FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+      if(BoundingBox.Extent.IsZero())
+      {
+        UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Actor->GetName());
+      }
+      else
+      {
+        // Component-to-world transform for this component
+        const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+        Result.Add(BoundingBox);
+      }
+      continue;
+    }
+
+
     // Find if there is some geometry component
     TArray<UStaticMeshComponent*> StaticMeshComps;
     TArray<USkeletalMeshComponent*> SkeletalMeshComps;
