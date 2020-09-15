@@ -197,9 +197,9 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
 
     // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
-    if (Vehicle != nullptr)
+    if (Vehicle)
     {
-      UActorComponent *ActorComp = Vehicle->GetComponentByClass<USkeletalMeshComponent>();
+      UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
       USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
 
       // Filter by tag
@@ -220,6 +220,27 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
         Result.Add(BoundingBox);
       }
       continue;
+    }
+
+    // Pedestrians, we just use the capsule component at the moment.
+    ACharacter* Character = Cast<ACharacter>(Actor);
+    if (Character)
+    {
+      UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+      if (Capsule)
+      {
+        const float Radius = Capsule->GetScaledCapsuleRadius();
+        const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+        FBoundingBox BoundingBox;
+        // Characters have the pivot point centered.
+        BoundingBox.Origin = {0.0f, 0.0f, 0.0f};
+        BoundingBox.Extent = {Radius, Radius, HalfHeight};
+        // Component-to-world transform for this component
+        const FTransform& CompToWorldTransform = Capsule->GetComponentTransform();
+        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+        Result.Add(BoundingBox);
+        continue;
+      }
     }
 
 
