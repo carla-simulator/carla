@@ -143,20 +143,26 @@ FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(const UStaticMesh*
 
 }
 
-void UBoundingBoxCalculator::GetHISMBoundingBox(
-    UHierarchicalInstancedStaticMeshComponent* HISMComp,
+void UBoundingBoxCalculator::GetISMBoundingBox(
+    UInstancedStaticMeshComponent* ISMComp,
     TArray<FBoundingBox>& OutBoundingBox)
 {
-  if(!HISMComp)
+  if(!ISMComp)
   {
-    UE_LOG(LogCarla, Error, TEXT("GetHISMBoundingBox no HISMComp"));
+    UE_LOG(LogCarla, Error, TEXT("GetISMBoundingBox no ISMComp"));
     return;
   }
 
-  const UStaticMesh *Mesh = HISMComp->GetStaticMesh();
+  const UStaticMesh *Mesh = ISMComp->GetStaticMesh();
   const FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
 
-  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  HISMComp->PerInstanceSMData;
+  if(SMBoundingBox.Extent.IsZero())
+  {
+    UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName());
+    return;
+  }
+
+  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  ISMComp->PerInstanceSMData;
 
   for(auto& InstSMIData : PerInstanceSMData)
   {
@@ -164,6 +170,7 @@ void UBoundingBoxCalculator::GetHISMBoundingBox(
     FBoundingBox BoundingBox = ApplyTransformToBB(SMBoundingBox, Transform);
     OutBoundingBox.Add(BoundingBox);
   }
+
 }
 
 // TODO: Add tag to the querry
@@ -178,6 +185,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
 
   for(AActor* Actor : Actors)
   {
+    const FTransform& ActorTransform = Actor->GetActorTransform();
 
     // Filter actors by tag
     //ATagger::GetTagOfTaggedComponent()
@@ -189,20 +197,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     //  UE_LOG(LogCarla, Error, TEXT(" - %s"), *ATagger::GetTagAsString(Tag));
     //}
 
-    AInstancedFoliageActor* InstancedFolliageActor = Cast<AInstancedFoliageActor>(Actor);
-    if(InstancedFolliageActor != nullptr)
-    {
-      TArray<UHierarchicalInstancedStaticMeshComponent *> HISMComps;
-      InstancedFolliageActor->GetComponents<UHierarchicalInstancedStaticMeshComponent>(HISMComps);
-      UE_LOG(LogCarla, Warning, TEXT("InstancedFolliageActor, num HISMComps = %d "), HISMComps.Num() );
-      for(auto* HISMComp: HISMComps)
-      {
-        GetHISMBoundingBox(HISMComp, Result);
-      }
-      continue;
-    }
-
-    const FTransform& ActorTransform = Actor->GetActorTransform();
+    /*
     FBoundingBox BoundingBox = GetActorBoundingBox(Actor);
     if(!BoundingBox.Extent.IsZero())
     {
@@ -210,6 +205,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       //Result.Add(BoundingBox);
       continue;
     }
+    */
 
     // Any other actor
     TArray<UMeshComponent*> MeshComps;
@@ -221,8 +217,10 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     // Find if there is some geometry component
     TArray<UStaticMeshComponent*> StaticMeshComps;
     TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    TArray<UInstancedStaticMeshComponent *> ISMComps;
     Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
     Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+    Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
 
     // Calculate FBoundingBox of SM
     for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
@@ -232,7 +230,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
       UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
-      BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
+      FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
 
       if(BoundingBox.Extent.IsZero())
       {
@@ -253,7 +251,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       if(FilterByTagEnabled && Tag != TagQueried) continue;
 
       USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
-      BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+      FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
       if(BoundingBox.Extent.IsZero())
       {
         UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Actor->GetName());
@@ -264,6 +262,18 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
         Result.Add(BoundingBox);
       }
     }
+
+    // Calculate FBoundingBox of ISM
+    for(UInstancedStaticMeshComponent* ISMComp: ISMComps)
+    {
+      // Filter by tag
+      ECityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*ISMComp);
+      UE_LOG(LogCarla, Error, TEXT("%s - %s"), *Actor->GetName(), *ATagger::GetTagAsString(Tag));
+      if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+      GetISMBoundingBox(ISMComp, Result);
+    }
+
   }
 
   return Result;

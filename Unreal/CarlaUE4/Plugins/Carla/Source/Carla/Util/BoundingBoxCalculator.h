@@ -39,8 +39,8 @@ public:
   static FBoundingBox GetStaticMeshBoundingBox(const UStaticMesh* StaticMesh);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
-  static void GetHISMBoundingBox(
-    UHierarchicalInstancedStaticMeshComponent* HISMComp,
+  static void GetISMBoundingBox(
+    UInstancedStaticMeshComponent* HISMComp,
     TArray<FBoundingBox>& OutBoundingBox);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
