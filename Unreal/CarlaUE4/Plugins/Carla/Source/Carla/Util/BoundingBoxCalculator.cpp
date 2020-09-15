@@ -175,6 +175,68 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
 
 }
 
+void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
+    const TArray<UStaticMeshComponent*>& StaticMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried)
+{
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+
+  for(UStaticMeshComponent* Comp : StaticMeshComps)
+  {
+    // Filter by tag
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    UStaticMesh* StaticMesh = Comp->GetStaticMesh();
+    FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
+
+    if(BoundingBox.Extent.IsZero())
+    {
+      UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Comp->GetOwner()->GetName());
+    }
+    else
+    {
+      // Component-to-world transform for this component
+      const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+
+      BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+      OutBB.Add(BoundingBox);
+    }
+  }
+}
+
+void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
+    const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried)
+{
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+
+  for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
+  {
+    // Filter by tag
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+    FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+    if(BoundingBox.Extent.IsZero())
+    {
+      UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Comp->GetOwner()->GetName());
+    }
+    else
+    {
+      // Component-to-world transform for this component
+      const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+      BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+      OutBB.Add(BoundingBox);
+    }
+  }
+}
+
 // TODO: Add tag to the querry
 // TODO: Dynamic vehicle, avoid SM of collision
 TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
@@ -245,62 +307,19 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       }
     }
 
-
-    // Find if there is some geometry component
-    TArray<UStaticMeshComponent*> StaticMeshComps;
-    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-    TArray<UInstancedStaticMeshComponent *> ISMComps;
-    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
-    Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
-
     // Calculate FBoundingBox of SM
-    for(UStaticMeshComponent* Comp : StaticMeshComps)
-    {
-      // Filter by tag
-      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-      if(FilterByTagEnabled && Tag != TagQueried) continue;
-
-      UStaticMesh* StaticMesh = Comp->GetStaticMesh();
-      FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
-
-      if(BoundingBox.Extent.IsZero())
-      {
-        UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Actor->GetName());
-      }
-      else
-      {
-        // Component-to-world transform for this component
-        const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
-
-        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
-        Result.Add(BoundingBox);
-      }
-    }
+    TArray<UStaticMeshComponent*> StaticMeshComps;
+    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
 
     // Calculate FBoundingBox of SK_M
-    for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
-    {
-      // Filter by tag
-      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-      if(FilterByTagEnabled && Tag != TagQueried) continue;
-
-      USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
-      FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
-      if(BoundingBox.Extent.IsZero())
-      {
-        UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Actor->GetName());
-      }
-      else
-      {
-        // Component-to-world transform for this component
-        const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
-        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
-        Result.Add(BoundingBox);
-      }
-    }
+    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
 
     // Calculate FBoundingBox of ISM
+    TArray<UInstancedStaticMeshComponent *> ISMComps;
+    Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
     for(UInstancedStaticMeshComponent* Comp: ISMComps)
     {
       // Filter by tag
