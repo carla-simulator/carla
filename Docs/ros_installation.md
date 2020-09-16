@@ -1,6 +1,7 @@
 # ROS bridge installation
 
 *  [__Requirements__](#requirements)  
+	* [Python2](#python2)  
 *  [__Bridge installation__](#bridge-installation)  
 	* [A. Using Debian repository](#a-using-debian-repository)  
 	* [B. Using source repository](#b-using-source-repository)  
@@ -11,7 +12,6 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 
 ---
 ## Requirements
-### ROS Kinetic/Melodic
 
 *  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.j  
 *  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform. 
@@ -19,8 +19,21 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 !!! Important
     Make sure that both CARLA and ROS work properly before continuing with the installation. 
 
+### Python2
+
+Those using ROS Kinetic or Melodic will need Python2 in order to run the ROS bridge. This is no problem for previous versions of CARLA. However, since 0.9.10 (included), CARLA does not provide support for Python2. 
+
+In order to compile the necessary `.egg` file of the PythonAPI for Python2, run the following command in the root CARLA directory.
+
+```sh
+make PythonAPI ARGS="--python-version=2"
+```
+
 ---
 ## Bridge installation 
+
+!!! Important
+    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
 
 ### A. Using Debian repository
 
@@ -39,9 +52,6 @@ This repository contains features from CARLA 0.9.10 and later versions. To insta
 ```sh
 sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "1" to the Debian revision.  
 ```
-
-!!! Important
-    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
 
 ### B. Using source repository
 

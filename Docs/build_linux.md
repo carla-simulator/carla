@@ -86,8 +86,13 @@ cd PythonAPI/examples
 python3 spawn_npc.py 
 # Terminal B
 cd PythonAPI/examples
+python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 python3 dynamic_weather.py # Support for Python2 was provided until 0.9.10 (not included)
+
+# Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
+make PythonAPI ARGS="--python-version=2"
 ```
+
 </details>
 
 ---
@@ -299,6 +304,12 @@ python3 dynamic_weather.py
 ```
 !!! Important
     If the simulation is running at very low FPS rates, go to `Edit/Editor preferences/Performance` in the UE editor and disable __Use less CPU when in background__.
+
+Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
+
+```sh
+make PythonAPI ARGS="--python-version=2"
+```
 
 Now CARLA is ready to go. Here is a brief summary of the most useful `make` commands available.
 
