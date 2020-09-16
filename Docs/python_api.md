@@ -308,14 +308,16 @@ Parses the identifiers for every blueprint to string.
 ---
 
 ## carla.BoundingBox<a name="carla.BoundingBox"></a>
-Helper class defining a box location and its dimensions that will later be used by [carla.DebugHelper](#carla.DebugHelper) or a [carla.Client](#carla.Client) to draw shapes and detect collisions. Bounding boxes normally act for object colliders. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
+Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by [carla.DebugHelper](#carla.DebugHelper) or a [carla.Client](#carla.Client) to draw their shapes for debugging. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – meters</small>_)  
 Vector from the center of the box to one vertex. The value in each axis equals half the size of the box for that axis.
 `extent.x * 2` would return the size of the box in the X-axis.  
 - <a name="carla.BoundingBox.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> – meters</small>_)  
-The center of the bounding box relative to its parent actor.  
+The center of the bounding box.  
+- <a name="carla.BoundingBox.rotation"></a>**<font color="#f8805a">rotation</font>** (_[carla.Rotation](#carla.Rotation)_)  
+The orientation of the bounding box.  
 
 <h3>Methods</h3>
 - <a name="carla.BoundingBox.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**extent**</font>)  
@@ -349,6 +351,36 @@ Returns true if either location or extent are different for this and `other`.
 - <a name="carla.BoundingBox.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 Parses the location and extent of the bounding box to string.  
     - **Return:** _str_  
+
+---
+
+## carla.CityObjectLabel<a name="carla.CityObjectLabel"></a>
+Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.  
+
+<h3>Instance Variables</h3>
+- <a name="carla.CityObjectLabel.None"></a>**<font color="#f8805a">None</font>**  
+- <a name="carla.CityObjectLabel.Buildings"></a>**<font color="#f8805a">Buildings</font>**  
+- <a name="carla.CityObjectLabel.Fences"></a>**<font color="#f8805a">Fences</font>**  
+- <a name="carla.CityObjectLabel.Other"></a>**<font color="#f8805a">Other</font>**  
+- <a name="carla.CityObjectLabel.Pedestrians"></a>**<font color="#f8805a">Pedestrians</font>**  
+- <a name="carla.CityObjectLabel.Poles"></a>**<font color="#f8805a">Poles</font>**  
+- <a name="carla.CityObjectLabel.RoadLines"></a>**<font color="#f8805a">RoadLines</font>**  
+- <a name="carla.CityObjectLabel.Roads"></a>**<font color="#f8805a">Roads</font>**  
+- <a name="carla.CityObjectLabel.Sidewalks"></a>**<font color="#f8805a">Sidewalks</font>**  
+- <a name="carla.CityObjectLabel.TrafficSigns"></a>**<font color="#f8805a">TrafficSigns</font>**  
+- <a name="carla.CityObjectLabel.Vegetation"></a>**<font color="#f8805a">Vegetation</font>**  
+- <a name="carla.CityObjectLabel.Vehicles"></a>**<font color="#f8805a">Vehicles</font>**  
+- <a name="carla.CityObjectLabel.Walls"></a>**<font color="#f8805a">Walls</font>**  
+- <a name="carla.CityObjectLabel.Sky"></a>**<font color="#f8805a">Sky</font>**  
+- <a name="carla.CityObjectLabel.Ground"></a>**<font color="#f8805a">Ground</font>**  
+- <a name="carla.CityObjectLabel.Bridge"></a>**<font color="#f8805a">Bridge</font>**  
+- <a name="carla.CityObjectLabel.RailTrack"></a>**<font color="#f8805a">RailTrack</font>**  
+- <a name="carla.CityObjectLabel.GuardRail"></a>**<font color="#f8805a">GuardRail</font>**  
+- <a name="carla.CityObjectLabel.TrafficLight"></a>**<font color="#f8805a">TrafficLight</font>**  
+- <a name="carla.CityObjectLabel.Static"></a>**<font color="#f8805a">Static</font>**  
+- <a name="carla.CityObjectLabel.Dynamic"></a>**<font color="#f8805a">Dynamic</font>**  
+- <a name="carla.CityObjectLabel.Water"></a>**<font color="#f8805a">Water</font>**  
+- <a name="carla.CityObjectLabel.Terrain"></a>**<font color="#f8805a">Terrain</font>**  
 
 ---
 
@@ -2173,7 +2205,7 @@ Returns the axis values for the vector parsed as string.
 
 <h3>Instance Variables</h3>
 - <a name="carla.Vehicle.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
-The vehicle's collider volume.  
+Bounding box containing the geometry of the vehicle. Its location and rotation are relative to the vehicle it is attached to.  
 
 <h3>Methods</h3>
 - <a name="carla.Vehicle.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
@@ -2357,7 +2389,7 @@ VehiclePhysicsControl constructor.
 
 <h3>Instance Variables</h3>
 - <a name="carla.Walker.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
-The walker's collider defined by a bounding box.  
+Bounding box containing the geometry of the walker. Its location and rotation are relative to the walker it is attached to.  
 
 <h3>Methods</h3>
 - <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
@@ -2699,6 +2731,11 @@ Returns a list of actor blueprints available to ease the spawn of these into the
 - <a name="carla.World.get_vehicles_light_states"></a>**<font color="#7fb800">get_vehicles_light_states</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a dict where the keys are [carla.Actor](#carla.Actor) IDs and the values are [carla.VehicleLightState](#carla.VehicleLightState) of that vehicle.  
     - **Return:** _dict_  
+- <a name="carla.World.get_level_bbs"></a>**<font color="#7fb800">get_level_bbs</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_type**=None</font>)  
+Returns an array of bounding boxes with location and rotation in world space. The function returns all the bounding boxes in the level by default, but the result can be filtered using semantic tags with the argument `actor_type`.  
+    - **Parameters:**
+        - `actor_type` (_[carla.CityObjectLabel](#carla.CityObjectLabel)_) – Semantic tag of the elements contained in the bounding boxes that are returned.  
+    - **Return:** _array([carla.BoundingBox](#carla.BoundingBox))_  
 - <a name="carla.World.get_lightmanager"></a>**<font color="#7fb800">get_lightmanager</font>**(<font color="#00a6ed">**self**</font>)  
 Returns an instance of [carla.LightManager](#carla.LightManager) that can be used to handle the lights in the scene.  
     - **Return:** _[carla.LightManager](#carla.LightManager)_  
