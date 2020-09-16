@@ -53,7 +53,7 @@ public:
   ATrafficLightManager* GetTrafficLightManager();
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FBoundingBox> GetAllBBsOfLevel(uint8_t TagQueried = 0);
+  TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
 
 protected:
 
