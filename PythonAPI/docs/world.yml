@@ -330,6 +330,17 @@
       doc: >
         Returns a dict where the keys are carla.Actor IDs and the values are carla.VehicleLightState of that vehicle.
     # --------------------------------------
+    - def_name: get_level_bbs
+      params:
+      - param_name: actor_type
+        type: carla.CityObjectLabel
+        default: None
+        doc: > 
+          Semantic tag of the elements contained in the bounding boxes that are returned. 
+      return: array(carla.BoundingBox)
+      doc: >
+        Returns an array of bounding boxes with location and rotation in world space. The function returns all the bounding boxes in the level by default, but the result can be filtered using semantic tags with the argument `actor_type`. 
+    # --------------------------------------
     - def_name: get_lightmanager
       return: carla.LightManager
       doc: >

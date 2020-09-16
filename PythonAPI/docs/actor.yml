@@ -220,7 +220,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        The vehicle's collider volume.
+        Bounding box containing the geometry of the vehicle. Its location and rotation are relative to the vehicle it is attached to. 
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
@@ -309,7 +309,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        The walker's collider defined by a bounding box.
+        Bounding box containing the geometry of the walker. Its location and rotation are relative to the walker it is attached to. 
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
