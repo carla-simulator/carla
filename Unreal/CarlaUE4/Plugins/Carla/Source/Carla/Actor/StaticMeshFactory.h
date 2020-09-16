@@ -11,16 +11,14 @@
 
 #include "StaticMeshFactory.generated.h"
 
-/// Factory in charge of spawning sensors. This factory is able to spawn every
-/// sensor registered in carla::sensor::SensorRegistry.
+/// Factory in charge of spawning static meshes. This factory is able to spawn
+/// any mesh in content.
 UCLASS()
 class CARLA_API AStaticMeshFactory : public ACarlaActorFactory
 {
   GENERATED_BODY()
 
-  /// Retrieve the definitions of all the sensors registered in the
-  /// SensorRegistry. Sensors must implement a GetSensorDefinition() static
-  /// method.
+  /// Retrieve the definitions of the static mesh actor
   TArray<FActorDefinition> GetDefinitions() final;
 
   FActorSpawnResult SpawnActor(
