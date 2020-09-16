@@ -428,7 +428,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMode;
     ExposureMode.Id = TEXT("exposure_mode");
     ExposureMode.Type = EActorAttributeType::String;
-    ExposureMode.RecommendedValues = { TEXT("manual"), TEXT("histogram") };
+    ExposureMode.RecommendedValues = { TEXT("histogram"), TEXT("manual") };
     ExposureMode.bRestrictToRecommended = true;
 
     // Logarithmic adjustment for the exposure. Only used if a tonemapper is
@@ -1403,7 +1403,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     Camera->SetShutterSpeed(
         RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 200.0f));
     Camera->SetISO(
-        RetrieveActorAttributeToFloat("iso", Description.Variations, 200.0f));
+        RetrieveActorAttributeToFloat("iso", Description.Variations, 100.0f));
     Camera->SetAperture(
         RetrieveActorAttributeToFloat("fstop", Description.Variations, 1.4f));
 
