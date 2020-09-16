@@ -22,7 +22,7 @@ The identifier of the blueprint this actor was based on, e.g. "vehicle.ford.must
 - <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
 Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     - **Parameters:**
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_)  
 - <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
 Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
     - **Parameters:**
@@ -462,7 +462,7 @@ Sets the maxixum time a network call is allowed before blocking it and raising a
 The actor the sensor is attached to, the one that measured the collision.  
 - <a name="carla.CollisionEvent.other_actor"></a>**<font color="#f8805a">other_actor</font>** (_[carla.Actor](#carla.Actor)_)  
 The second actor involved in the collision.  
-- <a name="carla.CollisionEvent.normal_impulse"></a>**<font color="#f8805a">normal_impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
+- <a name="carla.CollisionEvent.normal_impulse"></a>**<font color="#f8805a">normal_impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_)  
 Normal impulse resulting of the collision.  
 
 ---
@@ -1483,8 +1483,8 @@ Retrieves the number of entries generated, same as **<font color="#7fb800">\__st
 ---
 
 ## carla.Rotation<a name="carla.Rotation"></a>
-Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system. However, the declaration order of the axis' rotation is different in CARLA than in Unreal Engine.<br>
-<br>__CARLA:__ (pitch, yaw, roll) which correspond to (Y,Z,X) rotations. <br>__UE4:__ (roll, pitch, yaw) which correspond to (X,Y,Z) rotations. <br><br> ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) *Unreal Engine's coordinates system*.  
+Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
+<br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br> <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) *Unreal Engine's coordinates system*.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Rotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float<small> – degrees</small>_)  
@@ -1500,7 +1500,7 @@ X-axis rotation angle.
         - `pitch` (_float<small> – degrees</small>_) – Y-axis rotation angle.  
         - `yaw` (_float<small> – degrees</small>_) – Z-axis rotation angle.  
         - `roll` (_float<small> – degrees</small>_) – X-axis rotation angle.  
-    - **Warning:** <font color="#ED2F2F">_The declaration order is different in CARLA <code>(pitch,yaw,roll)</code> and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>._</font>  
+    - **Warning:** <font color="#ED2F2F">_The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations._</font>  
 
 <h5 style="margin-top: -20px">Getters</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2819,14 +2819,14 @@ Command adaptation of **<font color="#7fb800">set_angular_velocity()</font>** in
 <h3>Instance Variables</h3>
 - <a name="command.ApplyAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 Actor affected by the command.  
-- <a name="command.ApplyAngularVelocity.angular_velocity"></a>**<font color="#f8805a">angular_velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – rad/s</small>_)  
+- <a name="command.ApplyAngularVelocity.angular_velocity"></a>**<font color="#f8805a">angular_velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
 The 3D angular velocity that will be applied to the actor.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – rad/s</small>_)  
+        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
 
 ---
 
@@ -2836,14 +2836,14 @@ Command adaptation of **<font color="#7fb800">add_impulse()</font>** in [carla.A
 <h3>Instance Variables</h3>
 - <a name="command.ApplyImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 Actor affected by the command.  
-- <a name="command.ApplyImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
+- <a name="command.ApplyImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_)  
 Impulse applied to the actor.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_)  
 
 ---
 
