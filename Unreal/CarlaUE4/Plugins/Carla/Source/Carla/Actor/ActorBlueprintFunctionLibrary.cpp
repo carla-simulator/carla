@@ -441,7 +441,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("-2.2") };
+    ExposureCompensation.RecommendedValues = { TEXT("-1.8") };
     ExposureCompensation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -468,7 +468,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Aperture; // N
     Aperture.Id = TEXT("fstop");
     Aperture.Type = EActorAttributeType::Float;
-    Aperture.RecommendedValues = { TEXT("8.0") };
+    Aperture.RecommendedValues = { TEXT("1.4") };
     Aperture.bRestrictToRecommended = false;
 
     // - Histogram ---------------------------------------------
@@ -478,7 +478,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMinBright;
     ExposureMinBright.Id = TEXT("exposure_min_bright");
     ExposureMinBright.Type = EActorAttributeType::Float;
-    ExposureMinBright.RecommendedValues = { TEXT("0.1") };
+    ExposureMinBright.RecommendedValues = { TEXT("7.0") };
     ExposureMinBright.bRestrictToRecommended = false;
 
     // The maximum brightness for auto exposure that limits the upper
@@ -486,7 +486,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMaxBright;
     ExposureMaxBright.Id = TEXT("exposure_max_bright");
     ExposureMaxBright.Type = EActorAttributeType::Float;
-    ExposureMaxBright.RecommendedValues = { TEXT("2.0") };
+    ExposureMaxBright.RecommendedValues = { TEXT("20.0") };
     ExposureMaxBright.bRestrictToRecommended = false;
 
     // The speed at which the adaptation occurs from a dark environment
@@ -1389,8 +1389,8 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 0.1f));
     Camera->SetBloomIntensity(
         RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.675f));
-    // Exposure
-    if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "manual") == "histogram")
+    // Exposure, histogram mode by default
+    if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "histogram") == "histogram")
     {
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Histogram);
     }
@@ -1399,18 +1399,18 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, -2.2f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, -1.8f));
     Camera->SetShutterSpeed(
         RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 200.0f));
     Camera->SetISO(
         RetrieveActorAttributeToFloat("iso", Description.Variations, 200.0f));
     Camera->SetAperture(
-        RetrieveActorAttributeToFloat("fstop", Description.Variations, 8.0f));
+        RetrieveActorAttributeToFloat("fstop", Description.Variations, 1.4f));
 
     Camera->SetExposureMinBrightness(
-        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 0.1f));
+        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 7.0f));
     Camera->SetExposureMaxBrightness(
-        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 2.0f));
+        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 20.0f));
     Camera->SetExposureSpeedUp(
         RetrieveActorAttributeToFloat("exposure_speed_up", Description.Variations, 3.0f));
     Camera->SetExposureSpeedDown(

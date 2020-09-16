@@ -115,7 +115,7 @@ void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 #if PLATFORM_LINUX
   CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
 #else
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 2.2f;
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 1.8f;
 #endif
 }
 
