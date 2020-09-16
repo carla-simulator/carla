@@ -214,12 +214,10 @@
   - class_name: Rotation
     # - DESCRIPTION ------------------------
     doc: >
-      Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system. However, the declaration order of the axis' rotation is different in CARLA than in Unreal Engine.<br>
-
-      <br>__CARLA:__ (pitch, yaw, roll) which correspond to (Y,Z,X) rotations.
-      <br>__UE4:__ (roll, pitch, yaw) which correspond to (X,Y,Z) rotations.
-      <br><br>
-      ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
+      Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
+      
+      <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br>
+      <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
       *Unreal Engine's coordinates system*
     # - PROPERTIES -------------------------
     instance_variables:
@@ -260,7 +258,7 @@
         param_units: degrees
         doc: >
           X-axis rotation angle.
-      warning: The declaration order is different in CARLA <code>(pitch,yaw,roll)</code> and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. 
+      warning: The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations.  
     # --------------------------------------
     - def_name: get_forward_vector
       params:

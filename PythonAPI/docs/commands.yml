@@ -242,7 +242,7 @@
         Actor affected by the command. 
     - var_name: angular_velocity
       type: carla.Vector3D
-      var_units: rad/s
+      var_units: deg/s
       doc: >
         The 3D angular velocity that will be applied to the actor. 
     # - METHODS ----------------------------
@@ -255,7 +255,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: angular_velocity
         type: carla.Vector3D
-        param_units: rad/s
+        param_units: deg/s
     # --------------------------------------
 
   - class_name: ApplyImpulse
@@ -270,7 +270,7 @@
         Actor affected by the command. 
     - var_name: impulse
       type: carla.Vector3D
-      var_units: N*s
+      var_units: N
       doc: >
         Impulse applied to the actor. 
     # - METHODS ----------------------------
@@ -283,7 +283,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: impulse
         type: carla.Vector3D
-        param_units: N*s
+        param_units: N
     # --------------------------------------
 
   - class_name: ApplyAngularImpulse
