@@ -102,6 +102,52 @@ pipeline
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
+                                success
+                                {
+                                    node('master')
+                                    {
+                                        script
+                                        {
+                                            JOB_ID = "${env.BUILD_TAG}"
+                                            jenkinsLib = load("/home/jenkins/jenkins.groovy")
+                                            
+                                            jenkinsLib.CreateUbuntuTestNode(JOB_ID)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        stage('ubuntu smoke tests')
+                        {
+                            agent { label "ubuntu && gpu && ${JOB_ID}" }
+                            steps
+                            {
+                                unstash name: 'ubuntu_eggs'
+                                unstash name: 'ubuntu_package'
+                                unstash name: 'ubuntu_examples'
+                                sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
+                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'make smoke_tests ARGS="--xml"'
+                                sh 'make run-examples ARGS="localhost 3654"'
+                            }
+                            post
+                            {
+                                always
+                                {
+                                    archiveArtifacts 'CarlaUE4.log'
+                                    junit 'Build/test-results/smoke-tests-*.xml'
+                                    deleteDir()
+                                    node('master')
+                                    {
+                                        script
+                                        {
+                                            JOB_ID = "${env.BUILD_TAG}"
+                                            jenkinsLib = load("/home/jenkins/jenkins.groovy")
+                                            
+                                            jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
+                                        }
+                                    }
+                                }                               
                             }
                         }
                         stage('ubuntu deploy dev')
