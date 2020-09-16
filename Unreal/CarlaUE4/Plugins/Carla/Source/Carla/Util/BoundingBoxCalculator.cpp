@@ -390,8 +390,6 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
   }
 }
 
-// TODO: Add tag to the querry
-// TODO: Dynamic vehicle, avoid SM of collision
 TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   const TArray<AActor*>& Actors,
   uint8 InTagQueried)
@@ -403,14 +401,12 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   for(AActor* Actor : Actors)
   {
     FString ClassName = Actor->GetClass()->GetName();
-    //UE_LOG(LogCarla, Warning, TEXT("%s %s"), *Actor->GetName() , *ClassName );
 
     // Avoid the BP_Procedural_Building to avoid duplication with their child actors
     // When improved the BP_Procedural_Building this maybe should be removed
     // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
     //       than getting the UClass of the BP to cast the actor.
     if(ClassName.Contains("BP_Procedural_Bulding")) continue;
-
 
     // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
