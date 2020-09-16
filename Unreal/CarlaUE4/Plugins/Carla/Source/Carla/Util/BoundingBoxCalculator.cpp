@@ -220,10 +220,22 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     if(BBsToCombine.Num() > 0)
     {
       BBsToCombine.Emplace(BB1);
+      IndicesDiscarded.Emplace(i);
       FBoundingBox MergedBB = CombineBBs(BBsToCombine);
+      MergedBB.Rotation = BB1.Rotation;
       OutBB.Add(MergedBB);
     }
   }
+
+  // Add the BB of the meshes that didn't need to combine (ie: poles)
+  for(int i = 0; i < BBsOfTL.Num(); i++)
+  {
+    // Check if the index was used to merge a previous BB
+    if(IndicesDiscarded.Contains(i)) continue;
+    FBoundingBox& BB = BBsOfTL[i];
+    OutBB.Add(BB);
+  }
+
 }
 
 
