@@ -49,6 +49,9 @@ cd /opt/carla-simulator
 cd PythonAPI/examples
 python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 
+# Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
+make PythonAPI ARGS="--python-version=2"
+
 ```
 </details>
 
@@ -147,6 +150,12 @@ Now it is time to start running scripts. The following example will spawn some l
 > cd PythonAPI/examples
 
 > python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
+```
+
+Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
+
+```sh
+make PythonAPI ARGS="--python-version=2"
 ```
 
 #### Command-line options
