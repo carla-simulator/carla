@@ -21,22 +21,29 @@ static auto CastEnum(T label)
 }
 
 ECityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
-  if      (String == "Buildings")       return ECityObjectLabel::Buildings;
-  else if (String == "Fences")          return ECityObjectLabel::Fences;
-  else if (String == "Pedestrians")     return ECityObjectLabel::Pedestrians;
-  else if (String == "Pole")            return ECityObjectLabel::Poles;
-  else if (String == "Props")           return ECityObjectLabel::Other;
-  else if (String == "Road")            return ECityObjectLabel::Roads;
-  else if (String == "RoadLines")       return ECityObjectLabel::RoadLines;
-  else if (String == "SideWalk")        return ECityObjectLabel::Sidewalks;
-  else if (String == "TrafficSigns")    return ECityObjectLabel::TrafficSigns;
-  else if (String == "Vegetation")      return ECityObjectLabel::Vegetation;
-  else if (String == "Vehicles")        return ECityObjectLabel::Vehicles;
-  else if (String == "Walls")           return ECityObjectLabel::Walls;
-  else if (String == "Sky")             return ECityObjectLabel::Sky;
-  else if (String == "Ground")          return ECityObjectLabel::Ground;
-  else if (String == "Bridge")          return ECityObjectLabel::Bridge;
-  else                                  return ECityObjectLabel::None;
+  if      (String == "Building")     return ECityObjectLabel::Buildings;
+  else if (String == "Fence")        return ECityObjectLabel::Fences;
+  else if (String == "Pedestrian")   return ECityObjectLabel::Pedestrians;
+  else if (String == "Pole")         return ECityObjectLabel::Poles;
+  else if (String == "Other")        return ECityObjectLabel::Other;
+  else if (String == "Road")         return ECityObjectLabel::Roads;
+  else if (String == "RoadLine")     return ECityObjectLabel::RoadLines;
+  else if (String == "SideWalk")     return ECityObjectLabel::Sidewalks;
+  else if (String == "TrafficSign")  return ECityObjectLabel::TrafficSigns;
+  else if (String == "Vegetation")   return ECityObjectLabel::Vegetation;
+  else if (String == "Vehicles")     return ECityObjectLabel::Vehicles;
+  else if (String == "Wall")         return ECityObjectLabel::Walls;
+  else if (String == "Sky")          return ECityObjectLabel::Sky;
+  else if (String == "Ground")       return ECityObjectLabel::Ground;
+  else if (String == "Bridge")       return ECityObjectLabel::Bridge;
+  else if (String == "RailTrack")    return ECityObjectLabel::RailTrack;
+  else if (String == "GuardRail")    return ECityObjectLabel::GuardRail;
+  else if (String == "TrafficLight") return ECityObjectLabel::TrafficLight;
+  else if (String == "Static")       return ECityObjectLabel::Static;
+  else if (String == "Dynamic")      return ECityObjectLabel::Dynamic;
+  else if (String == "Water")        return ECityObjectLabel::Water;
+  else if (String == "Terrain")      return ECityObjectLabel::Terrain;
+  else                               return ECityObjectLabel::None;
 }
 
 void ATagger::SetStencilValue(
@@ -126,6 +133,13 @@ FString ATagger::GetTagAsString(const ECityObjectLabel Label)
     CARLA_GET_LABEL_STR(Sky)
     CARLA_GET_LABEL_STR(Ground)
     CARLA_GET_LABEL_STR(Bridge)
+    CARLA_GET_LABEL_STR(RailTrack)
+    CARLA_GET_LABEL_STR(GuardRail)
+    CARLA_GET_LABEL_STR(TrafficLight)
+    CARLA_GET_LABEL_STR(Static)
+    CARLA_GET_LABEL_STR(Dynamic)
+    CARLA_GET_LABEL_STR(Water)
+    CARLA_GET_LABEL_STR(Terrain)
 #undef CARLA_GET_LABEL_STR
   }
 }

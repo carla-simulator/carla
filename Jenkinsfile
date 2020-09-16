@@ -20,7 +20,7 @@ pipeline
                 {
                     JOB_ID = "${env.BUILD_TAG}"
                     jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                    
+
                     jenkinsLib.CreateUbuntuBuildNode(JOB_ID)
                     jenkinsLib.CreateWindowsBuildNode(JOB_ID)
                 }
@@ -43,7 +43,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make setup'
+                                sh 'make setup ARGS="--python-version=3.7"'
                             }
                         }
                         stage('ubuntu build')
@@ -51,7 +51,7 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI'
+                                sh 'make PythonAPI ARGS="--python-version=3.7"'
                                 sh 'make CarlaUE4Editor'
                                 sh 'make examples'
                             }
@@ -68,7 +68,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make check ARGS="--all --xml"'
+                                sh 'make check ARGS="--all --xml --python-version=3.7"'
                             }
                             post
                             {
@@ -90,13 +90,13 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package'
-                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate"'
+                                sh 'make package ARGS="--python-version=3.7"'
+                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
-                            post 
+                            post
                             {
-                                always 
+                                always
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
@@ -121,6 +121,7 @@ pipeline
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
                                 sh '''
                                     cd ~/carla-simulator.github.io
+                                    git remote set-url origin git@github.com:carla-simulator/carla-simulator.github.io.git
                                     git fetch
                                     git checkout -B master origin/master
                                 '''
@@ -142,11 +143,11 @@ pipeline
                             }
                         }
                     }
-                    post 
+                    post
                     {
-                        always 
-                        { 
-                            deleteDir() 
+                        always
+                        {
+                            deleteDir()
 
                             node('master')
                             {
@@ -154,7 +155,7 @@ pipeline
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
                                     jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                    
+
                                     jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
                                 }
                             }
@@ -247,11 +248,11 @@ pipeline
                             }
                         }
                     }
-                    post 
+                    post
                     {
-                        always 
-                        { 
-                            deleteDir() 
+                        always
+                        {
+                            deleteDir()
 
                             node('master')
                             {
@@ -259,7 +260,7 @@ pipeline
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
                                     jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                    
+
                                     jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
                                 }
                             }

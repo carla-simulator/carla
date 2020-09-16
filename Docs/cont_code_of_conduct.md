@@ -1,5 +1,12 @@
 # Contributor Covenant Code of Conduct
 
+*   [__Our pledge__](#our-pledge)  
+*   [__Our standards__](#our-standards)  
+*   [__Our responsibilities__](#our-responsibilities)  
+*   [__Scope__](#scope)  
+*   [__Enforcement__](#enforcement)  
+*   [__Attribution__](#attribution)  
+
 ---
 ## Our Pledge
 

@@ -2,15 +2,15 @@
 
 There are few details to take into account at the time of configuring a simulation. This page covers the more important ones.
 
-* [__Graphics quality__](#graphics-quality)  
-	* Vulkan vs OpenGL  
-	* Quality levels  
-* [__No-rendering mode__](#no-rendering-mode)  
-* [__Off-screen mode__](#off-screen-mode)  
-	* Off-screen Vs no-rendering  
-* [__Running off-screen using a preferred GPU__](#running-off-screen-using-a-preferred-gpu)  
-	* Docker: recommended approach  
-	* Deprecated: emulate the virtual display  
+*   [__Graphics quality__](#graphics-quality)  
+	*   [Vulkan vs OpenGL](#vulkan-vs-opengl)  
+	*   [Quality levels](#quality-levels)  
+*   [__No-rendering mode__](#no-rendering-mode)  
+*   [__Off-screen mode__](#off-screen-mode)  
+	*   [Off-screen Vs no-rendering](#off-screen-vs-no-rendering)  
+*   [__Running off-screen using a preferred GPU__](#running-off-screen-using-a-preferred-gpu)  
+	*   [Docker - recommended approach](#docker-recommended-approach)  
+	*   [Deprecated - emulate the virtual display](#deprecated-emulate-the-virtual-display)  
 
 
 !!! Important
@@ -117,16 +117,19 @@ DISPLAY= ./CarlaUE4.sh -opengl
 ---
 ## Running off-screen using a preferred GPU  
 
-### Docker: recommended approach 
+### Docker - recommended approach 
 
 The best way to run a headless CARLA and select the GPU is to [__run CARLA in a Docker__](build_docker.md).  
 
 This section contains an alternative tutorial, but this method is deprecated and performance is much worse. It is here only for those who Docker is not an option. 
 
+
+### Deprecated - emulate the virtual display
+
   <details>
-    <summary><h4 style="display:inline">
-    Deprecated: emulate the virtual display
-    </h4></summary>
+    <summary>
+    Show deprecated tutorial on how to emulate the virtual display
+    </summary>
 
 !!! Warning
     This tutorial is deprecated. To run headless CARLA, please [__run CARLA in a Docker__](build_docker.md). 

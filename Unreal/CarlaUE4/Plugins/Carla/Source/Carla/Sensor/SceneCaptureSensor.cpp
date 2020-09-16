@@ -110,7 +110,13 @@ EAutoExposureMethod ASceneCaptureSensor::GetExposureMethod() const
 void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 {
   check(CaptureComponent2D != nullptr);
+  // Looks like windows and linux have different outputs with the
+  // same exposure compensation
+#if PLATFORM_LINUX
   CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
+#else
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 2.2f;
+#endif
 }
 
 float ASceneCaptureSensor::GetExposureCompensation() const
@@ -567,7 +573,7 @@ bool ASceneCaptureSensor::CopyTextureFromAtlas(
   // and our image has been initialized
   uint32 ExpectedSize = (uint32)(PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight);
   uint32 TotalSize = (uint32)AtlasImage.Num();
-  if(AtlasImage.GetData() && TotalSize < ExpectedSize)
+  if(!AtlasImage.GetData() || TotalSize == 0 || TotalSize < ExpectedSize)
   {
     return false;
   }

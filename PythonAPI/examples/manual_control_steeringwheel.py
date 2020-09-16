@@ -187,16 +187,17 @@ class World(object):
         self.hud.render(display)
 
     def destroy(self):
-        actors = [
+        sensors = [
             self.camera_manager.sensor,
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
-            self.gnss_sensor.sensor,
-            self.player]
-        for actor in actors:
-            if actor is not None:
-                actor.destroy()
-
+            self.gnss_sensor.sensor]
+        for sensor in sensors:
+            if sensor is not None:
+                sensor.stop()
+                sensor.destroy()
+        if self.player is not None:
+            self.player.destroy()
 
 # ==============================================================================
 # -- DualControl -----------------------------------------------------------
