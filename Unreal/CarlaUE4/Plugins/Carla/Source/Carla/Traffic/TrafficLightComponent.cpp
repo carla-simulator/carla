@@ -97,9 +97,16 @@ void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
       {
         Controller->SetTrafficLight(nullptr);
       }
+      // workarround for tm not supporting off state
+      if (LightState == ETrafficLightState::Off)
+      {
+        Controller->SetTrafficLightState(ETrafficLightState::Green);
+        Controller->SetTrafficLight(nullptr);
+      }
     }
   }
-  if (LightState == ETrafficLightState::Green)
+  if (LightState == ETrafficLightState::Green ||
+      LightState == ETrafficLightState::Off)
   {
     Vehicles.Empty();
   }
@@ -153,11 +160,17 @@ void UTrafficLightComponent::OnOverlapTriggerBox(UPrimitiveComponent *Overlapped
     if (VehicleController)
     {
       VehicleController->SetTrafficLightState(LightState);
-      if (LightState != ETrafficLightState::Green)
+      if (LightState != ETrafficLightState::Green &&
+          LightState != ETrafficLightState::Off)
       {
         Vehicles.Add(VehicleController);
         VehicleController->SetTrafficLight(
             Cast<ATrafficLightBase>(GetOwner()));
+      }
+      // workarround for tm not supporting off state
+      if (LightState == ETrafficLightState::Off)
+      {
+        VehicleController->SetTrafficLightState(ETrafficLightState::Green);
       }
     }
   }

@@ -38,7 +38,9 @@ Ideas for new features are also a great way to contribute. Any suggestion that c
 ---
 ## Code contributions
 
-Before starting hands-on on coding, please check out the [issue board][issueboard] to check what is the team already working on, to avoid overlapping. In case of doubt or to discuss how to proceed, please contact one of us (or send an email to <carla.simulator@gmail.com>).
+Before starting hands-on on coding, please check out the [issue board][issueboard] to check what is the team already working on, to avoid overlapping. In case of doubt or to discuss how to proceed, please contact one of us (or send an email to <carla.simulator@gmail.com>).  
+
+In order to start working, [fork the CARLA repository](https://docs.github.com/en/enterprise/2.13/user/articles/fork-a-repo), and clone said fork in your computer. Remember to [keep your fork in sync](https://docs.github.com/en/enterprise/2.13/user/articles/syncing-a-fork) with the original repository.  
 
 [issueboard]: https://github.com/carla-simulator/carla/issues
 
