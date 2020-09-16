@@ -460,7 +460,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ISO; // S
     ISO.Id = TEXT("iso");
     ISO.Type = EActorAttributeType::Float;
-    ISO.RecommendedValues = { TEXT("200.0") };
+    ISO.RecommendedValues = { TEXT("100.0") };
     ISO.bRestrictToRecommended = false;
 
     // Defines the size of the opening for the camera lens.
