@@ -342,17 +342,6 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel()
 
   TArray<FBoundingBox> BoundingBoxes;
   BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, TagQueried);
-/*
-  for(FBoundingBox& Box : BoundingBoxes)
-  {
-    UKismetSystemLibrary::DrawDebugBox(
-      World,
-      Box.Origin,
-      Box.Extent,
-      FLinearColor::Red,
-      Box.Rotation,
-      10.0f);
-  }
-*/
+
   return BoundingBoxes;
 }
