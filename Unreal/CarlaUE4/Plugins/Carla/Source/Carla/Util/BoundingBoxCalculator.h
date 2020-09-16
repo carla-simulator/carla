@@ -47,17 +47,17 @@ public:
   static void GetBBsOfStaticMeshComponents(
     const TArray<UStaticMeshComponent*>& StaticMeshComps,
     TArray<FBoundingBox>& OutBB,
-    uint8 InTagQueried);
+    uint8_t InTagQueried);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static void GetBBsOfSkeletalMeshComponents(
     const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
     TArray<FBoundingBox>& OutBB,
-    uint8 InTagQueried);
+    uint8_t InTagQueried);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static TArray<FBoundingBox> GetBoundingBoxOfActors(
     const TArray<AActor*>& Actors,
-    uint8 InTagQueried = 0);
+    uint8_t InTagQueried = 0);
 
 };
