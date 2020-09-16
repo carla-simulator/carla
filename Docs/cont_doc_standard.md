@@ -1,7 +1,10 @@
 # Documentation Standard
 
-This document will serve as a guide and example of some rules that need to be
-followed in order to contribute to the documentation.
+This document will serve as a guide and example of some rules that need to be followed in order to contribute to the documentation.
+
+*   [__Docs structure__](#docs-structure)  
+*   [__Rules__](#rules)  
+*   [__Exceptions__](#exceptions)  
 
 ---
 ## Docs structure

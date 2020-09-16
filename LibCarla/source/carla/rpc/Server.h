@@ -12,6 +12,7 @@
 #include "carla/rpc/Response.h"
 
 #include <boost/asio/io_context.hpp>
+#include <boost/asio/post.hpp>
 
 #include <rpc/server.h>
 
@@ -107,12 +108,12 @@ namespace detail {
         });
         if (metadata.IsResponseIgnored()) {
           // Post task and ignore result.
-          io.post(MoveHandler(task));
+          boost::asio::post(io, MoveHandler(task));
           return R();
         } else {
           // Post task and wait for result.
           auto result = task.get_future();
-          io.post(MoveHandler(task));
+          boost::asio::post(io, MoveHandler(task));
           return result.get();
         }
       };
