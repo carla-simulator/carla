@@ -47,7 +47,7 @@ cd /opt/carla-simulator
 
 # Run a script to test CARLA.
 cd PythonAPI/examples
-python3 spawn_npc.py
+python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 
 ```
 </details>
@@ -146,8 +146,9 @@ Now it is time to start running scripts. The following example will spawn some l
 # Go to the folder containing example scripts
 > cd PythonAPI/examples
 
-> python3 spawn_npc.py
+> python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 ```
+
 #### Command-line options
 
 There are some configuration options available when launching CARLA.  
