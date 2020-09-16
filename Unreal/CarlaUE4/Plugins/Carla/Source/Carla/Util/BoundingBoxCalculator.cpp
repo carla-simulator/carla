@@ -119,6 +119,114 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
   return {};
 }
 
+FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
+    const ACarlaWheeledVehicle* Vehicle,
+    uint8 InTagQueried)
+{
+  check(Vehicle);
+
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+
+  UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+  USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
+
+  // Filter by tag
+  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+  if(FilterByTagEnabled && Tag != TagQueried) return {};
+
+  USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+  FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+  if(BoundingBox.Extent.IsZero())
+  {
+    UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Vehicle->GetName());
+    return {};
+  }
+
+  // Component-to-world transform for this component
+  const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+  BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+
+  return BoundingBox;
+}
+
+FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
+    const ACharacter* Character,
+    uint8 InTagQueried)
+{
+  check(Character);
+
+  UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+  if (Capsule)
+  {
+    const float Radius = Capsule->GetScaledCapsuleRadius();
+    const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+    FBoundingBox BoundingBox;
+    // Characters have the pivot point centered.
+    BoundingBox.Origin = {0.0f, 0.0f, 0.0f};
+    BoundingBox.Extent = {Radius, Radius, HalfHeight};
+    // Component-to-world transform for this component
+    const FTransform& CompToWorldTransform = Capsule->GetComponentTransform();
+    BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+
+    return BoundingBox;
+  }
+
+  return {};
+}
+
+void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
+    const ATrafficLightBase* TrafficLight,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried)
+{
+  check(TrafficLight);
+
+  TArray<FBoundingBox> BBsOfTL;
+  TArray<UStaticMeshComponent*> StaticMeshComps;
+  TrafficLight->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+  GetBBsOfStaticMeshComponents(StaticMeshComps, BBsOfTL, InTagQueried);
+
+  // This kind of a magic number relying that the lights of a TL are not bigger than 100.
+  // and we are gonna compare against a squared distance
+  const float DistanceThreshold = 100.0f * 100.0f;
+
+  // The BBs of the TL are calculated per light, so we need to merge the full-box
+  TSet<int> IndicesDiscarded;
+  for(int i = 0; i < BBsOfTL.Num(); i++)
+  {
+    // Check if the index was used to merge a previous BB
+    if(IndicesDiscarded.Contains(i)) continue;
+
+    TArray<FBoundingBox> BBsToCombine;
+    FBoundingBox& BB1 = BBsOfTL[i];
+
+    for(int j = i + 1; j < BBsOfTL.Num(); j++)
+    {
+      // Check if the index was used to merge a previous BB
+      if(IndicesDiscarded.Contains(j)) continue;
+
+      FBoundingBox& BB2 = BBsOfTL[j];
+
+      float Distance = FVector::DistSquared(BB1.Origin, BB2.Origin);
+
+      // If the lights are close enough, we merge it
+      if(Distance <= DistanceThreshold)
+      {
+        BBsToCombine.Emplace(BB2);
+        IndicesDiscarded.Emplace(j);
+      }
+    }
+    if(BBsToCombine.Num() > 0)
+    {
+      BBsToCombine.Emplace(BB1);
+      FBoundingBox MergedBB = CombineBBs(BBsToCombine);
+      OutBB.Add(MergedBB);
+    }
+  }
+}
+
+
 // TODO: update to calculate current animation pose
 FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh)
 {
@@ -296,97 +404,32 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
     if (Vehicle)
     {
-      UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-      USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
-
-      // Filter by tag
-      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-      if(FilterByTagEnabled && Tag != TagQueried) continue;
-
-      USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
-      FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
-      if(BoundingBox.Extent.IsZero())
+      FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
+      if(!BoundingBox.Extent.IsZero())
       {
-        UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Actor->GetName());
-      }
-      else
-      {
-        // Component-to-world transform for this component
-        const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
-        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
         Result.Add(BoundingBox);
       }
       continue;
     }
 
+
     // Pedestrians, we just use the capsule component at the moment.
     ACharacter* Character = Cast<ACharacter>(Actor);
     if (Character)
     {
-      UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
-      if (Capsule)
+      FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
+      if(!BoundingBox.Extent.IsZero())
       {
-        const float Radius = Capsule->GetScaledCapsuleRadius();
-        const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
-        FBoundingBox BoundingBox;
-        // Characters have the pivot point centered.
-        BoundingBox.Origin = {0.0f, 0.0f, 0.0f};
-        BoundingBox.Extent = {Radius, Radius, HalfHeight};
-        // Component-to-world transform for this component
-        const FTransform& CompToWorldTransform = Capsule->GetComponentTransform();
-        BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
         Result.Add(BoundingBox);
-        continue;
       }
+      continue;
     }
 
-
-    // TrafficLights, we need to join all the BB of the lights in one
+    // TrafficLight, we need to join all the BB of the lights in one
     ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
     if(TrafficLight)
     {
-      TArray<FBoundingBox> BBsOfTL;
-      TArray<UStaticMeshComponent*> StaticMeshComps;
-      TrafficLight->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-      GetBBsOfStaticMeshComponents(StaticMeshComps, BBsOfTL, InTagQueried);
-
-      // This kind of a magic number relying that the lights of a TL are not bigger than 100.
-      // and we are gonna compare against a squared distance
-      const float DistanceThreshold = 100.0f * 100.0f;
-
-      // The BB of the TL are calculated per light, so we need to merge the full-box
-      TSet<int> IndicesDiscarded;
-      for(int i = 0; i < BBsOfTL.Num(); i++)
-      {
-        // Check if the index was used to merge a previous BB
-        if(IndicesDiscarded.Contains(i)) continue;
-
-        TArray<FBoundingBox> BBsToCombine;
-        FBoundingBox& BB1 = BBsOfTL[i];
-
-        for(int j = i + 1; j < BBsOfTL.Num(); j++) {
-          // Check if the index was used to merge a previous BB
-          if(IndicesDiscarded.Contains(j)) continue;
-
-          FBoundingBox& BB2 = BBsOfTL[j];
-
-          float Distance = FVector::DistSquared(BB1.Origin, BB2.Origin);
-
-          // If the lights are close enough, we merge it
-          if(Distance <= DistanceThreshold)
-          {
-            BBsToCombine.Emplace(BB2);
-            IndicesDiscarded.Emplace(j);
-          }
-        }
-        if(BBsToCombine.Num() > 0)
-        {
-          BBsToCombine.Emplace(BB1);
-          FBoundingBox MergedBB = CombineBBs(BBsToCombine);
-          Result.Add(MergedBB);
-        }
-      }
-
+      GetTrafficLightBoundingBox(TrafficLight, Result, InTagQueried);
       continue;
     }
 
