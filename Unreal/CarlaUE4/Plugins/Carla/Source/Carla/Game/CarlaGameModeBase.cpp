@@ -478,7 +478,7 @@ void ACarlaGameModeBase::SendAtlas()
 
 }
 
-TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8_t TagQueried)
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
 {
   UWorld* World = GetWorld();
 
