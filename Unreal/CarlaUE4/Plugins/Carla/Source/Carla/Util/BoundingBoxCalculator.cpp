@@ -178,7 +178,7 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
 void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
     const TArray<UStaticMeshComponent*>& StaticMeshComps,
     TArray<FBoundingBox>& OutBB,
-    uint8 InTagQueried)
+    uint8_t TagQueried)
 {
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
@@ -210,7 +210,7 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
     const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
     TArray<FBoundingBox>& OutBB,
-    uint8 InTagQueried)
+    uint8_t TagQueried)
 {
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
@@ -241,7 +241,7 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
 // TODO: Dynamic vehicle, avoid SM of collision
 TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   const TArray<AActor*>& Actors,
-  uint8 InTagQueried)
+  uint8_t InTagQueried)
 {
   TArray<FBoundingBox> Result;
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
