@@ -526,13 +526,17 @@ namespace SceneCaptureSensor_local_ns {
 
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
-    PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
+    PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Histogram;
     PostProcessSettings.bOverride_AutoExposureBias = true;
     PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
     PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
     PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
     PostProcessSettings.bOverride_AutoExposureCalibrationConstant = true;
+    PostProcessSettings.bOverride_HistogramLogMin = true;
+    PostProcessSettings.HistogramLogMin = 1.0f;
+    PostProcessSettings.bOverride_HistogramLogMax = true;
+    PostProcessSettings.HistogramLogMax = 12.0f;
 
     // Camera
     PostProcessSettings.bOverride_CameraShutterSpeed = true;
