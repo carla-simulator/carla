@@ -214,6 +214,9 @@ public:
 
   /// Method to set hybrid physics radius.
   void SetHybridPhysicsRadius(const float radius);
+
+  /// Method to set Open Street Map mode.
+  void SetOSMMode(const bool mode_switch);
 };
 
 } // namespace traffic_manager
