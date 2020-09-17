@@ -178,6 +178,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   // if we don't need to load a new map, then start
   if (!Autoplay.Enabled)
   {
+    Helper.RemoveStaticProps();
     // process all events until the time
     ProcessToTime(TimeStart, true);
     // mark as enabled
@@ -236,6 +237,8 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
 
   // apply time factor
   TimeFactor = Autoplay.TimeFactor;
+
+  Helper.RemoveStaticProps();
 
   // process all events until the time
   ProcessToTime(TimeStart, true);

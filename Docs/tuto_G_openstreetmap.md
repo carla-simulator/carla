@@ -91,7 +91,7 @@ world = client.generate_opendrive_world(
 
 __b) Using `config.py`__ — The script can load an OpenStreetMap file directly into CARLA using a new argument.  
 ```
-config.py --osm-file=/path/to/OSM/file
+python3 config.py --osm-file=/path/to/OSM/file
 ```
 !!! Warning
     [client.generate_opendrive_world()](python_api.md#carla.Client.generate_opendrive_world) requires the __content of the OpenDRIVE file parsed as string__, and allows parameterization. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__ and always uses default parameters.
