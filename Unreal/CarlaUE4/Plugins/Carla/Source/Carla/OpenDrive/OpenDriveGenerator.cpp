@@ -84,13 +84,8 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     {
       continue;
     }
-    // AActor *TempActor = GetWorld()->SpawnActor<AActor>();
-    // UProceduralMeshComponent *TempPMC = NewObject<UProceduralMeshComponent>(TempActor);
     AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
     UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
-    // TempPMC->RegisterComponent();
-    // TempPMC->AttachToComponent(
-    //     TempActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
     TempPMC->bUseAsyncCooking = true;
     TempPMC->bUseComplexAsSimpleCollision = true;
     TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
