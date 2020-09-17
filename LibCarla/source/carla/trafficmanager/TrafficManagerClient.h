@@ -193,6 +193,12 @@ public:
     _client->call("set_hybrid_physics_radius", radius);
   }
 
+  /// Method to set Open Street Map mode.
+  void SetOSMMode(const bool mode_switch) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_osm_mode", mode_switch);
+  }
+
 private:
 
   /// RPC client.

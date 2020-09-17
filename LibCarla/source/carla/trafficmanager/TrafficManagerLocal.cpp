@@ -335,6 +335,10 @@ void TrafficManagerLocal::SetHybridPhysicsRadius(const float radius) {
   parameters.SetHybridPhysicsRadius(radius);
 }
 
+void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
+  parameters.SetOSMMode(mode_switch);
+}
+
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   for (auto &elem : tl_to_freeze) {
     if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
