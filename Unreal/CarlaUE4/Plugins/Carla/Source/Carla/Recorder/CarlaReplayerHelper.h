@@ -65,6 +65,8 @@ public:
   // set the animation speed for walkers
   void SetWalkerSpeed(uint32_t ActorId, float Speed);
 
+  void RemoveStaticProps();
+
 private:
 
   UCarlaEpisode *Episode {nullptr};
