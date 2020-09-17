@@ -276,7 +276,7 @@ if __name__ == '__main__':
                            metavar='P',
                            default=None,
                            type=int,
-                           help='TCP port to liston to (default: 8813)')
+                           help='TCP port to listen to (default: 8813)')
     argparser.add_argument('--sumo-gui', action='store_true', help='run the gui version of sumo')
     argparser.add_argument('--step-length',
                            default=0.05,

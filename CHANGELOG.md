@@ -1,7 +1,10 @@
 ## CARLA 0.9.10
 
+
+  * Upgraded carla Docker image to Ubuntu 18.04
+  * Fixed memory leak on manual_control scripts (sensor listenning was not stoped before destroying)
   * Added PythonAPI `carla.Osm2Odr.convert()` function and `calra.Osm2OdrSettings` class to support Open Street Maps to OpenDRIVE conversions
-  * Upgraded to AD RSS v4.0.1 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
+  * Upgraded to AD RSS v4.1.0 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
   * Fixed a bug in `spawn_npc_sumo` script computing not allowed routes for a given vehicle class
   * Fixed a bug where `get_traffic_light` would always return `None`
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
@@ -9,11 +12,14 @@
   * Fixed recorder determinism problems
   * Added function to stop the replayer
   * Added Light ids
+  * Added new semantic segmenation tags: `RailTrack`, `GuardRail`, `TrafficLight`, `Static`, `Dynamic`, `Water` and `Terrain`
+  * Fixed several untagged and mistagged objects
   * Added vehicle light and street light data to recorder
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
   * Fixed assets import pipeline
   * Fixed Update.sh from failing when the root folder contains a space on it
+  * Fixed dynamic meshes not moving to initial position when replaying
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
@@ -46,6 +52,10 @@
   * Added configurable noise to Lidar sensor
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
   * Improved the performance on capture sensors.
+  * Fixed minor typo in the introduction section of documentation.
+  * Fixed a bug at the local planner when changing the route, causing it to maintain the first part of the previous one. This was only relevant when using very large buffer sizes.
+  * Added automatic calculation of vehicle's BB
+
 
 ## CARLA 0.9.9
 

@@ -158,5 +158,9 @@ namespace client {
     _episode.Lock()->FreezeAllTrafficLights(frozen);
   }
 
+  std::vector<geom::BoundingBox> World::GetLevelBBs() const {
+    return _episode.Lock()->GetLevelBBs();
+  }
+
 } // namespace client
 } // namespace carla

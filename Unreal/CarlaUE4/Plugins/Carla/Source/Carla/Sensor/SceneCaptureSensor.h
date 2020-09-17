@@ -270,26 +270,6 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
-  void CopyTextureToAtlas();
-
-  bool CopyTextureFromAtlas(carla::Buffer &Buffer, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth);
-
-  virtual void SendPixels(const TArray<FColor>& /* AtlasImage */, uint32 /* AtlasTextureWidth */) {}
-
-  template <typename TSensor>
-  void SendPixelsInStream(TSensor &Sensor, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
-  {
-    auto Stream = GetDataStream(Sensor);
-    carla::Buffer Buffer = Stream.PopBufferFromPool();
-
-    CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth);
-
-    {
-      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-      Stream.Send(Sensor, std::move(Buffer));
-    }
-  }
-
 protected:
 
   virtual void BeginPlay() override;
@@ -300,6 +280,10 @@ protected:
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
 
+  virtual void SendPixels() {}
+
+  FDelegateHandle SendPixelsDelegate;
+
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)
   UTextureRenderTarget2D *CaptureRenderTarget = nullptr;
@@ -307,8 +291,6 @@ protected:
   /// Scene capture component.
   UPROPERTY(EditAnywhere)
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
-
-  FIntVector PositionInAtlas;
 
   UPROPERTY(EditAnywhere)
   float TargetGamma = 2.2f;
@@ -320,8 +302,6 @@ protected:
   /// Image height in pixels.
   UPROPERTY(EditAnywhere)
   uint32 ImageHeight = 600u;
-
-  uint32 Offset = 0u;
 
   /// Whether to render the post-processing effects present in the scene.
   UPROPERTY(EditAnywhere)

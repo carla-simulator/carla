@@ -104,6 +104,63 @@ make PythonAPI.docs
   </details>
 
 
+<!-- ======================================================================= -->
+  <details>
+    <summary><h5 style="display:inline">
+    Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version" 
+    </h5></summary>
+
+![faq_rpc_error](img/faq_rpc_error.jpg)
+
+If running a script returns an output similar to this, there is a problem with the `.egg` file in the PythonAPI. 
+
+First of all, open `<root_carla>/PythonAPI/carla/dist`. There should be an `.egg` file for the corresponding CARLA and Python version you are using (similar to `carla-0.X.X-pyX.X-linux-x86_64.egg`). Make sure the file matches the Python version you are using. To check your Python version use the following command.  
+
+```sh
+python3 --version # CARLA no longer provides support for Python2, so we are dismissing it here
+```
+
+If either the file is missing or you think it could be corrupted, try rebuilding again.  
+```sh
+make clean
+make PythonAPI
+make launch
+``` 
+Now try one of the example scripts again. 
+
+```sh
+cd PythonAPI/examples
+python3 dynamic_weather.py
+```
+
+If the error persists, the problem is probably related with your PythonPATH. These scripts automatically look for the `.egg` file associated with the build, so maybe there is any other `.egg` file in your PythonPATH interfering with the process. Show the content of the PythonPATH with the following command.  
+
+```sh
+echo $PYTHONPATH
+```
+Look up in the output for other instances of `.egg` files in a route similar to `PythonAPI/carla/dist`, and get rid of these. They probably belong to other instances of CARLA installations. For example, if you also installed CARLA via *apt-get*, you can remove it with the following command, and the PythonPATH will be cleaned too.  
+```sh
+sudo apt-get purge carla-simulator
+```  
+
+Ultimately there is the option to add the `.egg` file of your build to the PythonPATH using the `~/.bashrc`. This is not the recommended way. It would be better to have a clear PythonPATH and simply add the path to the necessary `.egg` files in the scripts.  
+
+First, open the `~/.bashrc`.
+```sh
+gedit ~/.bashrc
+``` 
+
+Add the following lines to the `~/.bashrc`. These store the path to the build `.egg` file, so that Python can automatically find it. Save the file, and reset the terminal for changes to be effective.
+```
+export PYTHONPATH=$PYTHONPATH:"${CARLA_ROOT}/PythonAPI/carla/dist/$(ls ${CARLA_ROOT}/PythonAPI/carla/dist | grep py3.)"
+export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
+```
+
+After cleaning the PythonPATH or adding the path to the build `.egg` file, all the example scripts should work properly.  
+
+  </details>
+
+
 ---
 ## Windows build
 
@@ -238,7 +295,7 @@ Go to `Edit/Editor Preferences/Performance` in the editor preferences, and disab
 	
 Some scripts have requirements. These are listed in files named __Requirements.txt__, in the same path as the script itself. Be sure to check these in order to run the script. The majority of them can be installed with a simple `pip` command.  
 
-Sometimes on Windows, scripts cannot run with just `> script_name.py`. Try adding `> python script_name.py`, and make sure to be in the right directory.  
+Sometimes on Windows, scripts cannot run with just `> script_name.py`. Try adding `> python3 script_name.py`, and make sure to be in the right directory.  
 
   </details>
 

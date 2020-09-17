@@ -75,6 +75,11 @@ if (WIN32)
     # Install zlib lib.
     file(GLOB libpng_libraries "${LIBPNG_LIB_PATH}/*")
     install(FILES ${libpng_libraries} DESTINATION lib)
+else ()
+  # Install libpng library
+  install(DIRECTORY "${LIBPNG_INCLUDE_PATH}" DESTINATION include/system)
+  file(GLOB libcarla_carla_libpnglib "${LIBPNG_LIB_PATH}/*.*")
+  install(FILES ${libcarla_carla_libpnglib} DESTINATION lib)
 endif (WIN32)
 
 # Add sources.
@@ -257,7 +262,8 @@ if (LIBCARLA_BUILD_RELEASE)
   target_include_directories(carla_client${carla_target_postfix} SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${RECAST_INCLUDE_PATH}")
+      "${RECAST_INCLUDE_PATH}"
+      "${LIBPNG_INCLUDE_PATH}")
 
   if (BUILD_RSS_VARIANT)
     target_compile_definitions(carla_client${carla_target_postfix} PRIVATE RSS_ENABLED RSS_USE_TBB)
@@ -296,7 +302,8 @@ if (LIBCARLA_BUILD_DEBUG)
   target_include_directories(carla_client${carla_target_postfix}_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${RECAST_INCLUDE_PATH}")
+      "${RECAST_INCLUDE_PATH}"
+      "${LIBPNG_INCLUDE_PATH}")
 
   if (BUILD_RSS_VARIANT)
     target_compile_definitions(carla_client${carla_target_postfix}_debug PRIVATE RSS_ENABLED RSS_USE_TBB)

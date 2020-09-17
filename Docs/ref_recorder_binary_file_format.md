@@ -2,6 +2,23 @@
 
 The recorder system saves all the info needed to replay the simulation in a binary file,
 using little endian byte order for the multibyte values.
+
+*   [__1- Strings in binary__](#1-strings-in-binary)  
+*   [__2- Info header__](#2-info-header)  
+*   [__3- Packets__](#3-packets)  
+	*   [Packet 0 - Frame Start](#packet-0-frame-start)  
+	*   [Packet 1 - Frame End](#packet-1-frame-end)  
+	*   [Packet 2 - Event Add](#packet-2-event-add)  
+	*   [Packet 3 - Event Del](#packet-3-event-del)  
+	*   [Packet 4 - Event Parent](#packet-4-event-parent)  
+	*   [Packet 5 - Event Collision](#packet-5-event-collision)  
+	*   [Packet 6 - Position](#packet-6-position)  
+	*   [Packet 7 - TrafficLight](#packet-7-trafficlight)  
+	*   [Packet 8 - Vehicle Animation](#packet-8-vehicle-animation)  
+	*   [Packet 9 - Walker Animation](#packet-9-walker-animation)  
+*   [__4- Frame Layout__](#4-frame-layout)  
+*   [__5- File Layout__](#5-file-layout)  
+
 In the next image representing the file format, we can get a quick view of all the detailed
 information. Each part that is visualized in the image will be explained in the following sections:
 
@@ -14,7 +31,7 @@ In summary, the file format has a small header with general info
 ![global file format](img/RecorderFileFormat3.jpg)
 
 ---
-## 1. Strings in binary
+## 1- Strings in binary
 
 Strings are encoded first with the length of it, followed by its characters without null
 character ending. For example, the string 'Town06' will be saved
@@ -23,7 +40,7 @@ as hex values: 06 00 54 6f 77 6e 30 36
 ![binary dynamic string](img/RecorderString.jpg)
 
 ---
-## 2. Info header
+## 2- Info header
 
 The info header has general information about the recorded file. Basically, it contains the version
 and a magic string to identify the file as a recorder file. If the header changes then the version
@@ -37,7 +54,7 @@ A sample info header is:
 ![info header sample](img/RecorderHeader.jpg)
 
 ---
-## 3. Packets
+## 3- Packets
 
 Each packet starts with a little header of two fields (5 bytes):
 
@@ -64,7 +81,7 @@ The types of packets are:
 We suggest to use **id** over 100 for user custom packets, because this list will keep growing in
 the future.
 
-### 3.1 Packet 0: Frame Start
+### Packet 0 - Frame Start
 
 This packet marks the start of a new frame, and it will be the first one to start each frame.
 All packets need to be placed between a **Frame Start** and a **Frame End**.
@@ -73,7 +90,7 @@ All packets need to be placed between a **Frame Start** and a **Frame End**.
 
 So, elapsed + durationThis = elapsed time for next frame
 
-### 3.2 Packet 1: Frame End
+### Packet 1 - Frame End
 
 This frame has no data and it only marks the end of the current frame. That helps the replayer
 to know the end of each frame just before the new one starts.
@@ -81,7 +98,7 @@ Usually, the next frame should be a Frame Start packet to start a new frame.
 
 ![frame end](img/RecorderFrameEnd.jpg)
 
-### 3.3 Packet 2: Event Add
+### Packet 2 - Event Add
 
 This packet says how many actors we need to create at current frame.
 
@@ -110,7 +127,7 @@ The number of attributes is variable and should look similar to this:
 * color = 79,33,85
 * role_name = autopilot
 
-### 3.4 Packet 3: Event Del
+### Packet 3 - Event Del
 
 This packet says how many actors need to be destroyed this frame.
 
@@ -128,7 +145,7 @@ the next 16 bytes and will be directly to the start of the next packet.
 The next 3 says the total records that follows, and each record is the id of the actor to remove.
 So, we need to remove at this frame the actors 100, 101 and 120.
 
-### 3.5 Packet 4: Event Parent
+### Packet 4 - Event Parent
 
 This packet says which actor is the child of another (the parent).
 
@@ -136,7 +153,7 @@ This packet says which actor is the child of another (the parent).
 
 The first id is the child actor, and the second one will be the parent actor.
 
-### 3.6 Packet 5: Event Collision
+### Packet 5 - Event Collision
 
 If a collision happens between two actors, it will be registered in this packet. Currently only
 actors with a collision sensor will report collisions, so currently only hero vehicles have that
@@ -148,28 +165,28 @@ The **id** is just a sequence to identify each collision internally.
 Several collisions between the same pair of actors can happen in the same frame, because physics
 frame rate is fixed and usually there are several physics substeps in the same rendered frame.
 
-### 3.7 Packet 6: Position
+### Packet 6 - Position
 
 This packet records the position and orientation of all actors of type **vehicle** and
 **walker** that exist in the scene.
 
 ![position](img/RecorderPosition.jpg)
 
-### 3.8 Packet 7: TrafficLight
+### Packet 7 - TrafficLight
 
 This packet records the state of all **traffic lights** in the scene. Which means that it
 stores the state (red, orange or green) and the time it is waiting to change to a new state.
 
 ![state](img/RecorderTrafficLight.jpg)
 
-### 3.9 Packet 8: Vehicle animation
+### Packet 8 - Vehicle animation
 
 This packet records the animation of the vehicles, bikes and cycles. This packet stores the
 **throttle**, **sterring**, **brake**, **handbrake** and **gear** inputs, and then set them at playback.
 
 ![state](img/RecorderVehicle.jpg)
 
-### 3.10 Packet 9: Walker animation
+### Packet 9 - Walker animation
 
 This packet records the animation of the walker. It just saves the **speed** of the walker
 that is used in the animation.
@@ -177,7 +194,7 @@ that is used in the animation.
 ![state](img/RecorderWalker.jpg)
 
 ---
-## 4. Frame Layout
+## 4- Frame Layout
 
 A frame consists of several packets, where all of them are optional, except the ones that
 have the **start** and **end** in that frame, that must be there always.
@@ -195,7 +212,7 @@ The **animation** packets are also optional, but by default they are recorded. T
 are animated and also the vehicle wheels follow the direction of the vehicles.
 
 ---
-## 5. File Layout
+## 5- File Layout
 
 The layout of the file starts with the **info header** and then follows a collection of packets in
 groups. The first in each group is the **Frame Start** packet, and the last in the group is

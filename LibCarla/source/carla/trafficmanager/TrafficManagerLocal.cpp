@@ -125,7 +125,7 @@ void TrafficManagerLocal::Run() {
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
       std::unique_lock<std::mutex> lock(step_execution_mutex);
-      step_begin_trigger.wait(lock, [this]() {return step_begin.load();});
+      step_begin_trigger.wait(lock, [this]() {return step_begin.load() || !run_traffic_manger.load();});
       step_begin.store(false);
     }
 
@@ -220,6 +220,9 @@ bool TrafficManagerLocal::SynchronousTick() {
 void TrafficManagerLocal::Stop() {
 
   run_traffic_manger.store(false);
+  if (parameters.GetSynchronousMode()) {
+    step_begin_trigger.notify_one();
+  }
 
   if (worker_thread) {
     if (worker_thread->joinable()) {
@@ -388,7 +391,12 @@ void TrafficManagerLocal::ResetAllTrafficLights() {
 }
 
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {
+  const bool previous_mode = parameters.GetSynchronousMode();
   parameters.SetSynchronousMode(mode);
+  if (previous_mode && !mode) {
+    step_begin.store(true);
+    step_begin_trigger.notify_one();
+  }
 }
 
 void TrafficManagerLocal::SetSynchronousModeTimeOutInMiliSecond(double time) {

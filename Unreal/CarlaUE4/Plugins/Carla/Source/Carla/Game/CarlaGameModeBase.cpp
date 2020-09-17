@@ -42,57 +42,6 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
-void ACarlaGameModeBase::AddSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor)
-{
-  uint32 ImageWidth = SceneCaptureSensor->ImageWidth;
-  uint32 ImageHeight = SceneCaptureSensor->ImageHeight;
-
-  if(AtlasTextureWidth < ImageWidth)
-  {
-    IsAtlasTextureValid = false;
-    AtlasTextureWidth = ImageWidth;
-  }
-
-  if(AtlasTextureHeight < (CurrentAtlasTextureHeight + ImageHeight) )
-  {
-    IsAtlasTextureValid = false;
-    AtlasTextureHeight = CurrentAtlasTextureHeight + ImageHeight;
-  }
-
-  SceneCaptureSensor->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
-  CurrentAtlasTextureHeight += ImageHeight;
-
-  SceneCaptureSensors.Add(SceneCaptureSensor);
-
-  UE_LOG(LogCarla, Warning, TEXT("ACarlaGameModeBase::AddSceneCaptureSensor %d %dx%d"), SceneCaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
-}
-
-void ACarlaGameModeBase::RemoveSceneCaptureSensor(ASceneCaptureSensor* SceneCaptureSensor)
-{
-  FlushRenderingCommands();
-
-  // Remove camera
-  SceneCaptureSensors.Remove(SceneCaptureSensor);
-
-  // Recalculate PositionInAtlas for each camera
-  AtlasTextureWidth = 0u;
-  CurrentAtlasTextureHeight = 0u;
-  for(ASceneCaptureSensor* Camera :  SceneCaptureSensors)
-  {
-    Camera->PositionInAtlas = FIntVector(0, CurrentAtlasTextureHeight, 0);
-    CurrentAtlasTextureHeight += Camera->ImageHeight;
-
-    if(AtlasTextureWidth < Camera->ImageWidth)
-    {
-      AtlasTextureWidth = Camera->ImageWidth;
-    }
-
-  }
-  AtlasTextureHeight = CurrentAtlasTextureHeight;
-
-  IsAtlasTextureValid = false;
-}
-
 void ACarlaGameModeBase::InitGame(
     const FString &MapName,
     const FString &Options,
@@ -204,9 +153,6 @@ void ACarlaGameModeBase::BeginPlay()
   {
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
-
-  CaptureAtlasDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ACarlaGameModeBase::CaptureAtlas);
-
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -218,8 +164,6 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
   {
     Recorder->Tick(DeltaSeconds);
   }
-
-  SendAtlas();
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -233,8 +177,6 @@ void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
   {
     CarlaSettingsDelegate->Reset();
   }
-
-  FCoreDelegates::OnEndFrame.Remove(CaptureAtlasDelegate);
 }
 
 void ACarlaGameModeBase::SpawnActorFactories()
@@ -390,89 +332,16 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
 
 }
 
-void ACarlaGameModeBase::CreateAtlasTextures()
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel()
 {
-  if(AtlasTextureWidth > 0 && AtlasTextureHeight > 0)
-  {
-    FRHIResourceCreateInfo CreateInfo;
-    CamerasAtlasTexture = RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_CPUReadback, CreateInfo);
+  UWorld* World = GetWorld();
 
-    AtlasImage.Init(FColor(), AtlasTextureWidth * AtlasTextureHeight);
+  // Get all actors of the level
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
-    IsAtlasTextureValid = true;
-  }
-}
+  TArray<FBoundingBox> BoundingBoxes;
+  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors);
 
-void ACarlaGameModeBase::CaptureAtlas()
-{
-
-  ACarlaGameModeBase* This = this;
-
-  if(!SceneCaptureSensors.Num()) return;
-
-  // Be sure that the atlas texture is ready
-  if(!IsAtlasTextureValid)
-  {
-    CreateAtlasTextures();
-    return;
-  }
-
-  // Enqueue the commands to copy the captures to the atlas
-  for(ASceneCaptureSensor* Sensor : SceneCaptureSensors)
-  {
-    Sensor->CopyTextureToAtlas();
-  }
-
-  // Download Atlas texture
-  ENQUEUE_RENDER_COMMAND(ACarlaGameModeBase_CaptureAtlas)
-  (
-    [This](FRHICommandListImmediate& RHICmdList) mutable
-    {
-      FTexture2DRHIRef AtlasTexture = This->CamerasAtlasTexture;
-
-      if (!AtlasTexture)
-      {
-        UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBase::CaptureAtlas: Missing atlas texture"));
-        return;
-      }
-
-      FIntRect Rect = FIntRect(0, 0, This->AtlasTextureWidth, This->AtlasTextureHeight);
-
-#if !UE_BUILD_SHIPPING
-      if(This->ReadSurfaceMode == 2) Rect = FIntRect(0, 0, This->SurfaceW, This->SurfaceH);
-#endif
-
-#if !UE_BUILD_SHIPPING
-      if (This->ReadSurfaceMode == 0) return;
-#endif
-
-      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
-      RHICmdList.ReadSurfaceData(
-        AtlasTexture,
-        Rect,
-        This->AtlasImage,
-        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
-    }
-  );
-
-
-}
-
-void ACarlaGameModeBase::SendAtlas()
-{
-
-#if !UE_BUILD_SHIPPING
-  if(!AtlasCopyToCamera)
-  {
-    return;
-  }
-#endif
-
-  for(int32 Index = 0; Index < SceneCaptureSensors.Num(); Index++)
-  {
-    ASceneCaptureSensor* Sensor = SceneCaptureSensors[Index];
-    Sensor->SendPixels(AtlasImage, AtlasTextureWidth);
-  }
-
+  return BoundingBoxes;
 }

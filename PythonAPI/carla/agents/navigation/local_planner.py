@@ -191,10 +191,29 @@ class LocalPlanner(object):
             self._waypoints_queue.append((next_waypoint, road_option))
 
     def set_global_plan(self, current_plan):
+        """
+        Resets the waypoint queue and buffer to match the new plan. Also
+        sets the global_plan flag to avoid creating more waypoints
+
+        :param current_plan: list of (carla.Waypoint, RoadOption)
+        :return:
+        """
+
+        # Reset the queue
         self._waypoints_queue.clear()
         for elem in current_plan:
             self._waypoints_queue.append(elem)
         self._target_road_option = RoadOption.LANEFOLLOW
+
+        # and the buffer
+        self._waypoint_buffer.clear()
+        for _ in range(self._buffer_size):
+            if self._waypoints_queue:
+                self._waypoint_buffer.append(
+                    self._waypoints_queue.popleft())
+            else:
+                break
+
         self._global_plan = True
 
     def run_step(self, debug=False):
@@ -203,7 +222,7 @@ class LocalPlanner(object):
         follow the waypoints trajectory.
 
         :param debug: boolean flag to activate waypoints debugging
-        :return:
+        :return: control to be applied
         """
 
         # not enough waypoints in the horizon? => add more!
@@ -222,7 +241,7 @@ class LocalPlanner(object):
 
         #   Buffering the waypoints
         if not self._waypoint_buffer:
-            for i in range(self._buffer_size):
+            for _ in range(self._buffer_size):
                 if self._waypoints_queue:
                     self._waypoint_buffer.append(
                         self._waypoints_queue.popleft())
@@ -253,6 +272,11 @@ class LocalPlanner(object):
         return control
 
     def done(self):
+        """
+        Returns whether or not the planner has finished
+
+        :return: boolean
+        """
         return len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0
 
 def _retrieve_options(list_waypoints, current_waypoint):
