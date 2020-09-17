@@ -295,7 +295,7 @@
         The second actor involved in the collision.
     - var_name: normal_impulse
       type: carla.Vector3D
-      var_units: N
+      var_units: N*s
       doc: >
         Normal impulse resulting of the collision.
 
