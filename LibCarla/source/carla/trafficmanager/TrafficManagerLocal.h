@@ -109,6 +109,7 @@ private:
   std::condition_variable step_end_trigger;
   /// Single worker thread for sequential execution of sub-components.
   std::unique_ptr<std::thread> worker_thread;
+  std::vector<ActorId> marked_for_removal;
 
   /// Method to check if all traffic lights are frozen in a group.
   bool CheckAllFrozen(TLGroup tl_to_freeze);

@@ -273,7 +273,7 @@ bool Parameters::GetHybridPhysicsMode() const {
   return hybrid_physics_mode.load();
 }
 
-bool Parameters::GetOSMMode() {
+bool Parameters::GetOSMMode() const {
 
   return osm_mode.load();
 }
