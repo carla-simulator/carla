@@ -37,6 +37,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          track_traffic,
                                          local_map,
                                          parameters,
+                                         marked_for_removal,
                                          localization_frame,
                                          debug_helper)),
 
@@ -71,6 +72,7 @@ TrafficManagerLocal::TrafficManagerLocal(
     alsm(ALSM(registered_vehicles,
               buffer_map,
               track_traffic,
+              marked_for_removal,
               parameters,
               world,
               local_map,

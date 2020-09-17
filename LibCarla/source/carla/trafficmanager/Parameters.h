@@ -176,7 +176,7 @@ public:
   bool GetHybridPhysicsMode() const;
 
   /// Method to get Open Street Map mode.
-  bool GetOSMMode();
+  bool GetOSMMode() const;
 
   /// Synchronous mode time out variable.
   std::chrono::duration<double, std::milli> synchronous_time_out;

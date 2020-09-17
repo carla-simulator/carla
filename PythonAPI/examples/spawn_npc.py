@@ -85,6 +85,10 @@ def main():
         action='store_true',
         help='Enanble')
     argparser.add_argument(
+        '--osm',
+        action='store_true',
+        help='Open Street Map mode')
+    argparser.add_argument(
         '--car-lights-on',
         action='store_true',
         default=False,
@@ -107,6 +111,9 @@ def main():
         traffic_manager.set_global_distance_to_leading_vehicle(2.0)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
+
+        if args.osm:
+            traffic_manager.set_osm_mode(True)
 
         if args.sync:
             settings = world.get_settings()
