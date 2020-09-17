@@ -463,3 +463,20 @@ void CarlaReplayerHelper::SetWalkerSpeed(uint32_t ActorId, float Speed)
     }
   }
 }
+
+void CarlaReplayerHelper::RemoveStaticProps()
+{
+  check(Episode != nullptr);
+  auto World = Episode->GetWorld();
+  for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+  {
+    auto Actor = *It;
+    check(Actor != nullptr);
+    auto MeshComponent = Actor->GetStaticMeshComponent();
+    check(MeshComponent != nullptr);
+    if (MeshComponent->Mobility == EComponentMobility::Movable)
+    {
+      Actor->Destroy();
+    }
+  }
+}

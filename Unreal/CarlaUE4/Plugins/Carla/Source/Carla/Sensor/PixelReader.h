@@ -64,11 +64,6 @@ public:
   template <typename TSensor>
   static void SendPixelsInRenderThread(TSensor &Sensor);
 
-  static void WritePixelsToArray(
-      UTextureRenderTarget2D &RenderTarget,
-      TArray<FColor>& Pixels,
-      FRHICommandListImmediate &InRHICmdList);
-
 private:
 
   /// Copy the pixels in @a RenderTarget into @a Buffer.
