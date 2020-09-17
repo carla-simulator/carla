@@ -2,6 +2,7 @@ import gym
 from gym import spaces
 from stable_baselines3 import PPO
 from stable_baselines3.common.cmd_util import make_vec_env
+from stable_baselines3.common.vec_env import VecFrameStack, SubprocVecEnv, VecNormalize, DummyVecEnv, VecEnv
 from stable_baselines3.common.env_checker import check_env
 import numpy as np
 import logging
@@ -147,7 +148,9 @@ def game_loop(args):
     env = None
     try:
         env = CarlaEnv(args=args) # TODO
-        env = make_vec_env(lambda: env, n_envs=1)
+        # env = make_vec_env(lambda: env, n_envs=1)
+        # env = VecFrameStack(env, 4)
+        # env = VecTransposeImage(env)
         print(env)
         # check_env(env)
         # print("Finish check env")
