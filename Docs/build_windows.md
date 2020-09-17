@@ -20,10 +20,9 @@ The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** 
 
 <details>
 <summary> Show command lines to build on Windows</summary>
+<br>
+To execute the <code>make</code> commands below, you <b>must</b> use the Visual Studio 2017 native console x64 <b>with</b> administrator rights, otherwise you may be getting permission errors.
 
-!!! Important
-    To execute the ```make``` commands below, you **must** use the Visual Studio 2017 native console x64 **with** administrator rights, otherwise you may be getting permission errors.
-	
 ```sh
 # Make sure to meet the minimum requirements.
 
@@ -156,14 +155,16 @@ make launch
 The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the city will not show properly until then.
 
 
-Finally, let's test the simulator. Inside `PythonAPI/examples` and `PythonAPI/util` there are some example scripts that may be especially useful for starteres. The following commands will spawn some life into the town, and create a weather cycle. Each script should be run in one terminal 
+Finally, let's test the simulator. Inside `PythonAPI/examples` and `PythonAPI/util` there are some example scripts that may be especially useful for starters. The following commands will spawn some life into the town, and create a weather cycle. Each script should be run in one terminal 
 
 ```sh
 # Support for Python2 was provided until 0.9.10 (not included)
 # Terminal A 
-cd PythonAPI/examples && python3 spawn_npc.py  
+cd PythonAPI/examples
+python3 spawn_npc.py  
 # Terminal B
-cd ~/carla/PythonAPI/examples && python3 dynamic_weather.py 
+cd PythonAPI/examples
+python3 dynamic_weather.py 
 ```
 !!! Important
     If the simulation is running at very low FPS rates, go to `Edit/Editor preferences/Performance` in the UE editor and disable __Use less CPU when in background__.
