@@ -1,18 +1,18 @@
 # Sensors reference
 
-*   [__Collision detector__](#collision-detector)
-*   [__Depth camera__](#depth-camera)
-*   [__GNSS sensor__](#gnss-sensor)
-*   [__IMU sensor__](#imu-sensor)
-*   [__Lane invasion detector__](#lane-invasion-detector)
-*   [__LIDAR sensor__](#lidar-sensor)
+*   [__Collision detector__](#collision-detector)  
+*   [__Depth camera__](#depth-camera)  
+*   [__GNSS sensor__](#gnss-sensor)  
+*   [__IMU sensor__](#imu-sensor)  
+*   [__Lane invasion detector__](#lane-invasion-detector)  
+*   [__LIDAR sensor__](#lidar-sensor)  
 *   [__Obstacle detector__](#obstacle-detector)  
-*   [__Radar sensor__](#radar-sensor)
-*   [__RGB camera__](#rgb-camera)
-*   [__RSS sensor__](#rss-sensor)
-*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
-*   [__Semantic segmentation camera__](#semantic-segmentation-camera)
-*   [__DVS camera__](#dvs-camera)
+*   [__Radar sensor__](#radar-sensor)  
+*   [__RGB camera__](#rgb-camera)  
+*   [__RSS sensor__](#rss-sensor)  
+*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)  
+*   [__Semantic segmentation camera__](#semantic-segmentation-camera)  
+*   [__DVS camera__](#dvs-camera)  
 
 ---
 ## Collision detector
@@ -495,7 +495,7 @@ For a better realism, points in the cloud can be dropped off. This is an easy wa
 
 Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
 
-The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python config.py --fps=10`.  
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 config.py --fps=10`.  
 
 ![LidarPointCloud](img/lidar_point_cloud.jpg)
 
@@ -1329,7 +1329,7 @@ for detection in semantic_lidar_measurement:
 
 The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> 
 __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> 
-__2.__ Run the simulation using `python config.py --fps=10`.
+__2.__ Run the simulation using `python3 config.py --fps=10`.
 
 ![LidarPointCloud](img/semantic_lidar_point_cloud.jpg)
 

@@ -477,3 +477,18 @@ void ACarlaGameModeBase::SendAtlas()
   }
 
 }
+
+
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel()
+{
+  UWorld* World = GetWorld();
+
+  // Get all actors of the level
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
+
+  TArray<FBoundingBox> BoundingBoxes;
+  BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors);
+
+  return BoundingBoxes;
+}

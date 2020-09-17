@@ -1,9 +1,16 @@
 # How to model vehicles
 
+*   [__4-wheeled Vehicles__](#4-wheeled-vehicles)  
+	*   [Modelling](#modelling)  
+	*   [Naming materials](#naming-materials)  
+	*   [Texturing](#texturing)  
+	*   [Rigging](#rigging)  
+	*   [LODs](#lods)  
+
 ---
 ## 4-Wheeled Vehicles
 
-#### Modelling
+### Modelling
 
 Vehicles must have a minimum of 10.000 and a maximum of 17.000 Tris
 approximately. We model the vehicles using the size and scale of actual cars.
@@ -36,7 +43,7 @@ The vehicle must be divided in 6 materials:
     Put a rectangular plane with this size 29-12 cm, for the licence Plate. 
     We assign the license plate texture.
 
-#### Nomenclature of Material
+### Naming materials
 
 * M(Material)_"CarName"_Bodywork(part of car)
 
@@ -50,7 +57,7 @@ The vehicle must be divided in 6 materials:
 
 * M_"CarName"_LicencePlate
 
-#### Textures
+### Texturing
 
 The size of the textures is 2048x2048.
 
@@ -71,7 +78,7 @@ TEXTURES
 MATERIAL
 * M_Tesla3_BodyWork
 
-#### RIG
+### Rigging
 
 The easiest way is to copy the "General4WheeledVehicleSkeleton" present in our project,
 either by exporting it and copying it to your model or by creating your skeleton

@@ -2,8 +2,8 @@
 
 *  [__Requirements__](#requirements)  
 *  [__Bridge installation__](#bridge-installation)  
-	* a) using apt repository  
-	* b) using source repository  
+	* [A. Using Debian repository](#a-using-debian-repository)  
+	* [B. Using source repository](#b-using-source-repository)  
 *  [__Run the ROS bridge__](#run-the-ros-bridge)  
 *  [__Setting CARLA__](#setting-carla)  
  
@@ -13,7 +13,7 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ## Requirements
 ### ROS Kinetic/Melodic
 
-*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.  
+*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.j  
 *  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform. 
 
 !!! Important
@@ -22,29 +22,28 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ---
 ## Bridge installation 
 
-### a) Using apt repository
+### A. Using Debian repository
 
-Add the apt repository.
-
-*  __Bridge for ROS Melodic.__
+Set up the Debian repository in the system.
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 81061A1A042F527D &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-ros-bridge-melodic/ bionic main"
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
+sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
+```
+Install the ROS bridge, and check for the installation in the `/opt/` folder.
+```sh
+sudo apt-get update # Update the Debian package index
+sudo apt-get install carla-ros-bridge # Install the latest ROS bridge version, or update the current installation
 ```
 
-*  __Bridge for ROS Kinetic.__
+This repository contains features from CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9BE2A0CDC0161D6C &&
-sudo add-apt-repository "deb [arch=amd64 trusted=yes] http://dist.carla.org/carla-ros-bridge-kinetic xenial main"
+sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "1" to the Debian revision.  
 ```
 
-Install the ROS bridge.
-```sh
-sudo apt update &&
-sudo apt install carla-ros-bridge-<melodic or kinetic>
-```
+!!! Important
+    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
 
-### b) Using source repository
+### B. Using source repository
 
 A catkin workspace is needed to use the ROS bridge. It should be cloned and built in there. The following code creates a new workspace, and clones the repository in there.  
 
@@ -74,7 +73,7 @@ catkin_make
 __1) Run CARLA.__ The way to do so depends on the CARLA installation.
 
 *  __Quick start/release package.__ `./CarlaUE4.sh` in `carla/`. 
-*  __apt installation.__ `./CarlaUE4.sh` in `opt/carla/bin/`. 
+*  __Debian installation.__ `./CarlaUE4.sh` in `opt/carla-simulator/`. 
 *  __Build installation.__ `make launch` in `carla/`. 
 
 __2) Add the source path.__ The source path for the workspace has to be added, so that the ROS bridge can be used from a terminal.  
@@ -111,7 +110,7 @@ roslaunch carla_ros_bridge carla_ros_bridge_with_example_ego_vehicle.launch
    </summary>
 
 The path to CARLA Python is missing. The apt installation does this automatically, but it may be missing for other installations. Execute the following command with the complete path to the <i>.egg</i> file (included). Use the one supported by the Python version installed.
-<br>
+<br><br>
 <i><small><b>Note: </b>.egg files may be either in `/PythonAPI/` or `/PythonAPI/dist/` depending on the CARLA installation.</small></i>  
 
 ```sh
@@ -120,7 +119,7 @@ The path to CARLA Python is missing. The apt installation does this automaticall
 
 Import CARLA from Python and wait for a sucess message to check the installation.
 ```sh
-python -c 'import carla;print("Success")'
+python3 -c 'import carla;print("Success")'
 ```
 </details>
 

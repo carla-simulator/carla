@@ -70,6 +70,15 @@ static auto GetVehiclesLightStates(carla::client::World &self) {
   return dict;
 }
 
+static auto GetLevelBBs(const carla::client::World &self) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  boost::python::list result;
+  for (const auto &bb : self.GetLevelBBs()) {
+    result.append(bb);
+  }
+  return result;
+}
+
 void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -168,6 +177,7 @@ void export_world() {
     .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
+    .def("get_level_bbs", &GetLevelBBs)
     .def(self_ns::str(self_ns::self))
   ;
 

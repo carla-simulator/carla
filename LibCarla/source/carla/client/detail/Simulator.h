@@ -226,6 +226,11 @@ namespace detail {
       return _client.GetVehicleLightState(vehicle.GetId());
     }
 
+    /// Returns all the BBs of all the elements of the level
+    std::vector<geom::BoundingBox> GetLevelBBs() const {
+      return _client.GetLevelBBs();
+    }
+
     /// @}
     // =========================================================================
     /// @name AI

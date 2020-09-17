@@ -1,16 +1,16 @@
 # Linux build
 
-* [__Linux build command summary__](#linux-build-command-summary)
-* [__Requirements__](#requirements)
-	* [System specifics](#system-specifics)
-	* [Dependencies](#dependencies)
-* [__GitHub__](#github)
-* [__Unreal Engine__](#unreal-engine)
-* [__CARLA build__](#carla-build)
-	* [Clone repository](#clone-repository)
-	* [Get assets](#get-assets)
-	* [Set the environment variable](#set-the-environment-variable)
-	* [make CARLA](#make-carla)
+*   [__Linux build command summary__](#linux-build-command-summary)  
+*   [__Requirements__](#requirements)  
+	*   [System specifics](#system-specifics)  
+	*   [Dependencies](#dependencies)  
+*   [__GitHub__](#github)  
+*   [__Unreal Engine__](#unreal-engine)  
+*   [__CARLA build__](#carla-build)  
+	*   [Clone repository](#clone-repository)  
+	*   [Get assets](#get-assets)  
+	*   [Set the environment variable](#set-the-environment-variable)  
+	*   [make CARLA](#make-carla)  
 
 The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community.
 
@@ -87,7 +87,7 @@ make PythonAPI
 
 # Press play in the Editor to initialize the server, and run an example script to test CARLA.
 cd PythonAPI/examples
-python3 spawn_npc.py
+python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 ```
 </details>
 
@@ -264,7 +264,7 @@ The project may ask to build other instances such as `UE4Editor-Carla.dll` the f
 * __make PythonAPI__ compiles the API client, necessary to grant control over the simulation. It is only needed the first time. Remember to run it again when updating CARLA. Scripts will be able to run after this command is executed. The following example will spawn some life into the town.
 
 ```sh
-make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py
+make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py  # Support for Python2 was provided until 0.9.10 (not included)
 ```
 !!! Important
     If the simulation is running at very low FPS rates, go to `Edit/Editor preferences/Performance` in the UE editor and disable __Use less CPU when in background__.

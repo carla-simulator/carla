@@ -2,15 +2,15 @@
 
 This section deals with two fundamental concepts in CARLA. Their configuration defines how does time go by in the simulation, and how does the server make the simulation move forward.  
 
-* [__Simulation time-step__](#simulation-time-step)  
-	* Variable time-step  
-	* Fixed time-step  
-	* Tips when recording the simulation  
-	* Time-step limitations  
-* [__Client-server synchrony__](#client-server-synchrony)  
-	* Setting synchronous mode  
-	* Using synchronous mode  
-* [__Possible configurations__](#possible-configurations)  
+*   [__Simulation time-step__](#simulation-time-step)  
+	*   [Variable time-step](#variable-time-step)  
+	*   [Fixed time-step](#fixed-time-step)  
+	*   [Tips when recording the simulation](#tips-when-recording-the-simulation)  
+	*   [Time-step limitations](#time-step-limitations)  
+*   [__Client-server synchrony__](#client-server-synchrony)  
+	*   [Setting synchronous mode](#setting-synchronous-mode)  
+	*   [Using synchronous mode](#using-synchronous-mode)  
+*   [__Possible configurations__](#possible-configurations)  
 
 ---
 ## Simulation time-step
@@ -35,7 +35,7 @@ world.apply_settings(settings)
 ```
 `PythonAPI/util/config.py` sets the time-step using an argument. Zero equals variable time-step. 
 ```sh
-cd PythonAPI/util && ./config.py --delta-seconds 0
+cd PythonAPI/util && python3 config.py --delta-seconds 0
 ``` 
 
 ### Fixed time-step
@@ -52,7 +52,7 @@ world.apply_settings(settings)
 This can also be set using the provided script `PythonAPI/util/config.py`.
 
 ```sh
-cd PythonAPI/util && ./config.py --delta-seconds 0.05
+cd PythonAPI/util && python3 config.py --delta-seconds 0.05
 ``` 
 
 ### Tips when recording the simulation
@@ -101,7 +101,7 @@ world.apply_settings(settings)
 
 To disable synchronous mode just set the variable to false or use the script `PythonAPI/util/config.py`. 
 ```sh
-cd PythonAPI/util && ./config.py --no-sync # Disables synchronous mode
+cd PythonAPI/util && python3 config.py --no-sync # Disables synchronous mode
 ``` 
 Synchronous mode cannot be enabled using the script, only disabled. Enabling the synchronous mode makes the server wait for a client tick. Using this script, the user cannot send ticks when desired. 
 
