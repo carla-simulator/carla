@@ -19,6 +19,7 @@
   * Fixed rain drop spawn issues when spawning camera sensors
   * Fixed assets import pipeline
   * Fixed Update.sh from failing when the root folder contains a space on it
+  * Fixed dynamic meshes not moving to initial position when replaying
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
@@ -52,8 +53,10 @@
   * Replace deprectated `platform.dist()` with recommended `distro.linux_distribution()`
   * Improved the performance on capture sensors.
   * Fixed minor typo in the introduction section of documentation.
+  * Fixed a bug at the local planner when changing the route, causing it to maintain the first part of the previous one. This was only relevant when using very large buffer sizes.
   * Added automatic calculation of vehicle's BB
   * Retrieve BBs of all the elements of the level
+
 
 ## CARLA 0.9.9
 
