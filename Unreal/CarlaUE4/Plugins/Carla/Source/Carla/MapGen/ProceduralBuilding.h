@@ -20,11 +20,11 @@
 struct FloorMeshCollection
 {
   TArray<UStaticMesh*>* MainMeshes = nullptr;
-  TArray<UClass*>* MainBPs = nullptr;
+  TArray<TSubclassOf<AActor>>* MainBPs = nullptr;
   TArray<UStaticMesh*>* CornerMeshes = nullptr;
-  TArray<UClass*>* CornerBPs = nullptr;
+  TArray<TSubclassOf<AActor>>* CornerBPs = nullptr;
   TArray<UStaticMesh*>* AuxiliarMeshes = nullptr;
-  TArray<UClass*>* AuxiliarBPs = nullptr;
+  TArray<TSubclassOf<AActor>>* AuxiliarBPs = nullptr;
 };
 
 UCLASS()
@@ -42,6 +42,7 @@ protected:
   // Called when the game starts or when spawned
   virtual void BeginPlay() override;
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
   void CreateBuilding();
 
   // Map containing the pair with the name of the mesh and the component that uses it
@@ -112,7 +113,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the base floor
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Base")
-  TArray<UClass*> BaseBPs;
+  TArray<TSubclassOf<AActor>> BaseBPs;
 
   // Pool of meshes to be randomly selected for doors
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Base")
@@ -120,7 +121,7 @@ protected:
 
   // Pool of BPs to be randomly selected for doors
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Base")
-  TArray<UClass*> DoorBPs;
+  TArray<TSubclassOf<AActor>> DoorBPs;
 
   // Pool of meshes to be randomly selected for the corners of the base floor
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Base")
@@ -128,7 +129,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the corners of the base floor
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Base")
-  TArray<UClass*> CornerBaseBPs;
+  TArray<TSubclassOf<AActor>> CornerBaseBPs;
 
   /**
    *  Meshes | Body
@@ -140,7 +141,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the body
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Body")
-  TArray<UClass*> BodyBPs;
+  TArray<TSubclassOf<AActor>> BodyBPs;
 
   // Pool of meshes to be randomly selected for the walls of the body
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Body")
@@ -148,7 +149,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the body walls of the body
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Body")
-  TArray<UClass*> WallBPs;
+  TArray<TSubclassOf<AActor>> WallBPs;
 
   // Pool of meshes to be randomly selected for the corners of the body floor
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Body")
@@ -156,7 +157,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the corners of the body floor
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Body")
-  TArray<UClass*> CornerBodyBPs;
+  TArray<TSubclassOf<AActor>> CornerBodyBPs;
 
   /**
    *  Meshes | Top
@@ -168,7 +169,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the top
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Top")
-  TArray<UClass*> TopBPs;
+  TArray<TSubclassOf<AActor>> TopBPs;
 
   // Pool of meshes to be randomly selected for the corners of the top
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Top")
@@ -176,7 +177,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the corners of the top
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Top")
-  TArray<UClass*> CornerTopBPs;
+  TArray<TSubclassOf<AActor>> CornerTopBPs;
 
   // Pool of meshes to be randomly selected for the roof
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Top")
@@ -184,7 +185,7 @@ protected:
 
   // Pool of BPs to be randomly selected for the roof
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Meshes|Top")
-  TArray<UClass*> RoofBPs;
+  TArray<TSubclassOf<AActor>> RoofBPs;
 
 private:
 
@@ -213,15 +214,34 @@ private:
 
   // Choose randomly between the Mesh and BP containers, only one option will be returned.
   void ChooseGeometryToSpawn(
-    const TArray<UStaticMesh*>* InMeshes,
-    const TArray<UClass*>* InMainBPs,
+    const TArray<UStaticMesh*>& InMeshes,
+    const TArray<TSubclassOf<AActor>>& InMainBPs,
     UStaticMesh* OutMesh,
-    UClass* OutBP);
+    TSubclassOf<AActor> OutBP);
 
-  float AddGeometry(
+  // Add one part on the side
+  float AddChunck(
     const UStaticMesh* SelectedMesh,
-    const UClass* SelectedBP,
-    bool Visible);
+    const TSubclassOf<AActor> SelectedBP,
+    bool Visible,
+    FBox& OutSelectedMeshBounds);
+
+  // Add the Static Mesh on the transform location with the transform orientation
+  void AddMeshToBuilding(const UStaticMesh* SM);
+
+  // Looks for the HISMComp on the HISMComps Map that uses the SelectedMesh and returns it.
+  // If doesn't exist its created
+  UHierarchicalInstancedStaticMeshComponent* GetHISMComp(const UStaticMesh* SM);
+
+  // Calculate the Bounds for the Static Mesh
+  FVector GetMeshBound(const UStaticMesh* SM);
+
+  void UpdateTransformPositionToNextChunk(const FVector& Box);
+
+  void UpdateTransformPositionToNextSide(const FBox& Box);
+
+  // Contains all the ChildActorComps spawned for this Actor
+  TArray<UChildActorComponent*> ChildActorComps;
 
   // The lengths of each side of the building. The length of the array is the number of sides
   // Helper to iterate throught all the sides of the building
