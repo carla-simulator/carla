@@ -567,7 +567,7 @@ namespace SceneCaptureSensor_local_ns {
 #if PLATFORM_LINUX
   // Looks like Windows and Linux have different outputs with the
   // same exposure compensation, this fixes it.
-  PostProcessSettings.ColorContrast = FVector4(1.5f, 1.5f, 1.5f, 1.0f);
+  PostProcessSettings.ColorContrast = FVector4(1.2f, 1.2f, 1.2f, 1.0f);
 #endif
 
     // Chromatic Aberration
