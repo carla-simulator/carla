@@ -1,6 +1,9 @@
 ## CARLA 0.9.10
 
-
+  * Support for OSM in Traffic Manager
+  * Fixed a map change error when Traffic Manager is in synchronous mode
+  * Fixes add entry issue for applying parameters more than once in Traffic Manager
+  * Fixes std::numeric_limits<float>::epsilon error in Traffic Manager
   * Upgraded carla Docker image to Ubuntu 18.04
   * Fixed memory leak on manual_control scripts (sensor listenning was not stoped before destroying)
   * Added PythonAPI `carla.Osm2Odr.convert()` function and `calra.Osm2OdrSettings` class to support Open Street Maps to OpenDRIVE conversions
