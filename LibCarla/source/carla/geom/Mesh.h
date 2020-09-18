@@ -193,6 +193,12 @@ namespace geom {
         Normal = Normal.GetSafeNormal(.0001f);
         if (Normal != FVector::ZeroVector)
         {
+          // fix to prevent ugly x-fighting in geometries with very large curvatures,
+          // ensures that all road geometry is facing upwards
+          if (FVector::DotProduct(Normal, FVector(0,0,1)) < 0)
+          {
+            Normal = -Normal;
+          }
           Mesh.Normals[Triangle.v0] = Normal;
           Mesh.Normals[Triangle.v1] = Normal;
           Mesh.Normals[Triangle.v2] = Normal;
