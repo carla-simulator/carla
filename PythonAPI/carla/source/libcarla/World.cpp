@@ -137,7 +137,7 @@ void export_world() {
   ;
 
   enum_<cr::CityObjectLabel>("CityObjectLabel")
-    .value("None", cr::CityObjectLabel::None)
+    .value("Any", cr::CityObjectLabel::Any)
     .value("Buildings", cr::CityObjectLabel::Buildings)
     .value("Fences", cr::CityObjectLabel::Fences)
     .value("Other", cr::CityObjectLabel::Other)
@@ -204,7 +204,7 @@ void export_world() {
     .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
-    .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
+    .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::Any))
     .def(self_ns::str(self_ns::self))
   ;
 
