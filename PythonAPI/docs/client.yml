@@ -445,7 +445,7 @@
     # --------------------------------------
     - def_name: set_osm_mode
       params:
-      - param_name: set_osm_mode
+      - param_name: mode_switch
         type: bool
         default: true
         doc: >
