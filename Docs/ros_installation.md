@@ -13,17 +13,23 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 ---
 ## Requirements
 
-*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.j  
-*  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform. 
+Make sure that both requirements work properly before continuing with the installation.  
 
-!!! Important
-    Make sure that both CARLA and ROS work properly before continuing with the installation. 
+*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.  
+*  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform.
+
+!!! Warning
+    CARLA 0.9.10 and later release packages will not be able to run the ROS bridge, as no support for Python2 is provided. Running CARLA in a build from source will be necessary. 
 
 ### Python2
 
-Those using ROS Kinetic or Melodic will need Python2 in order to run the ROS bridge. This is no problem for previous versions of CARLA. However, since 0.9.10 (included), CARLA does not provide support for Python2. 
+Those using ROS Kinetic or Melodic will need Python2 in order to run the ROS bridge. Release packages since 0.9.10 (included) do not provide support for Python2, so a build from source will be necessary.  
 
-In order to compile the necessary `.egg` file of the PythonAPI for Python2, run the following command in the root CARLA directory.
+Make the [Linux](build_linux.md) or [Windows](build_windows.md) build from source. To compile the PythonAPI for Python2, the instructions depend on the system being used.  
+
+*   __Windows__ — The PythonAPI will be built based on the installed Python version. If the system runs with Python2, the PythonAPI will be compiled properly.  
+
+*   __Linux__  — Run the following command in the root CARLA directory.
 
 ```sh
 make PythonAPI ARGS="--python-version=2"
@@ -50,7 +56,7 @@ sudo apt-get install carla-ros-bridge # Install the latest ROS bridge version, o
 
 This repository contains features from CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
-sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "1" to the Debian revision.  
+sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "1" to the Debian revision  
 ```
 
 ### B. Using source repository
@@ -58,7 +64,7 @@ sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers t
 A catkin workspace is needed to use the ROS bridge. It should be cloned and built in there. The following code creates a new workspace, and clones the repository in there.  
 
 ```sh
-#setup folder structure
+# Setup folder structure
 mkdir -p ~/carla-ros-bridge/catkin_ws/src
 cd ~/carla-ros-bridge
 git clone https://github.com/carla-simulator/ros-bridge.git
@@ -66,14 +72,14 @@ cd ros-bridge
 git submodule update --init
 cd ../catkin_ws/src
 ln -s ../../ros-bridge
-source /opt/ros/kinetic/setup.bash #Watch out, this sets ROS Kinetic. 
+source /opt/ros/kinetic/setup.bash # Watch out, this sets ROS Kinetic 
 cd ..
 
-#install required ros-dependencies
+# Install required ros-dependencies
 rosdep update
 rosdep install --from-paths src --ignore-src -r
 
-#build
+# Build
 catkin_make
 ```
 
