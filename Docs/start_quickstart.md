@@ -20,37 +20,36 @@
    </summary>
 
 ```sh
-# Install required modules Pygame and Numpy. 
+# Install required modules Pygame and Numpy
  pip install --user pygame numpy
 
-# There are two different ways to install CARLA. 
+# There are two different ways to install CARLA
 
 # Option A) Debian package installation
-# This repository contains CARLA 0.9.10 and later. To install previous CARLA versions, change to a previous version of the docs using the pannel in the bottom right part of the window.
+# This repository contains CARLA 0.9.10 and later. To install previous CARLA versions, change to a previous version of the docs using the pannel in the bottom right part of the window
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
 sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
 sudo apt-get update
-sudo apt-get install carla-simulator # Install the latest CARLA version or update the current installation. 
-sudo apt-get install carla-simulator=0.9.10-1 # install a specific CARLA version. 
+sudo apt-get install carla-simulator # Install the latest CARLA version or update the current installation
+sudo apt-get install carla-simulator=0.9.10-1 # install a specific CARLA version
 cd /opt/carla-simulator
 ./CarlaUE4.sh
 
 # Option B) Package installation
 #   Go to: https://github.com/carla-simulator/carla/blob/master/Docs/download.md
-#   Download the desired package and additional assets. 
-#   Extract the package. 
-#   Extract the additional assets in `/Import`.
+#   Download the desired package and additional assets
+#   Extract the package
+#   Extract the additional assets in `/Import`
 #   Run CARLA (Linux).
 ./CarlaUE.sh
-#   Run CARLA (Windows).
+#   Run CARLA (Windows)
 > CarlaUE4.exe
 
 # Run a script to test CARLA.
 cd PythonAPI/examples
 python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 
-# Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
-make PythonAPI ARGS="--python-version=2"
+# The PythonAPI can be compiled for Python2 when using a Linux build from source
 
 ```
 </details>
@@ -92,7 +91,7 @@ cd /opt/carla-simulator # Open the folder where CARLA is installed
 
 This repository contains CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
-sudo apt-get install carla-simulator=0.9.10-1 # In this case, "0.9.10" refers to a CARLA version, and "1" to the Debian revision.
+sudo apt-get install carla-simulator=0.9.10-1 # In this case, "0.9.10" refers to a CARLA version, and "1" to the Debian revision
 ```
 
 !!! Important
@@ -152,11 +151,9 @@ Now it is time to start running scripts. The following example will spawn some l
 > python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
 ```
 
-Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
+!!! Note
+    The PythonAPI can be compiled for Python2 when using a [Linux build from source](build_linux.md).
 
-```sh
-make PythonAPI ARGS="--python-version=2"
-```
 
 #### Command-line options
 
@@ -178,7 +175,7 @@ The script `PythonAPI/util/config.py` provides for more configuration options.
 > ./config.py --map Town05        # Change map
 > ./config.py --weather ClearNoon # Change weather
 
-> ./config.py --help # Check all the available configuration options. 
+> ./config.py --help # Check all the available configuration options
 ```
 
 ---
