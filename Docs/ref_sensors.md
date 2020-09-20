@@ -843,7 +843,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <tr>
 <td><code>fstop</code></td>
 <td>float</td>
-<td>8.0</td>
+<td>1.4</td>
 <td>Opening of the camera lens. Aperture is <code>1/fstop</code> with typical lens going down to f/1.2 (larger opening). Larger numbers will reduce the Depth of Field effect.</td>
 <tr>
 <td><code>image_size_x</code></td>
@@ -858,7 +858,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <tr>
 <td><code>iso</code></td>
 <td>float</td>
-<td>200.0</td>
+<td>100.0</td>
 <td>The camera sensor sensitivity.</td>
 <tr>
 <td><code>gamma</code></td>
@@ -959,22 +959,22 @@ Since these effects are provided by UE, please make sure to check their document
 <tr>
 <td><code>exposure_mode</code> </td>
 <td>str</td>
-<td><code>manual</code></td>
+<td><code>histogram</code></td>
 <td>Can be <code>manual</code> or <code>histogram</code>. More in <a href="https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html">UE4 docs</a>.</td>
 <tr>
 <td><code>exposure_compensation</code> </td>
 <td>float</td>
-<td>-2.2</td>
+<td><b>Linux:</b> -1.5<br><b>Windows:</b> 0.0</td>
 <td>Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.</td>
 <tr>
 <td><code>exposure_min_bright</code> </td>
 <td>float</td>
-<td>0.1</td>
+<td>7.0</td>
 <td>In <code>exposure_mode: "histogram"</code>. Minimum brightness for auto exposure. The lowest the eye can adapt within. Must be greater than 0 and less than or equal to <code>exposure_max_bright</code>.</td>
 <tr>
 <td><code>exposure_max_bright</code> </td>
 <td>float</td>
-<td>2.0</td>
+<td>9.0</td>
 <td>In `exposure_mode: "histogram"`. Maximum brightness for auto exposure. The highestthe eye can adapt within. Must be greater than 0 and greater than or equal to `exposure_min_bright`.</td>
 <tr>
 <td><code>exposure_speed_up</code> </td>
