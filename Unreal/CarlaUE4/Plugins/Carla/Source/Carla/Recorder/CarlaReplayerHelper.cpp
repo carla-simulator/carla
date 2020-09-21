@@ -54,6 +54,10 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
       if (desc->Id == ActorDesc.Id)
       {
         // we don't need to create, actor of same type already exist
+        // relocate
+        FRotator Rot = FRotator::MakeFromEuler(Rotation);
+        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
+        view.GetActor()->SetActorTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
         return std::pair<int, FActorView>(2, view);
       }
     }
@@ -460,6 +464,23 @@ void CarlaReplayerHelper::SetWalkerSpeed(uint32_t ActorId, float Speed)
         Control.Speed = Speed;
         Controller->ApplyWalkerControl(Control);
      }
+    }
+  }
+}
+
+void CarlaReplayerHelper::RemoveStaticProps()
+{
+  check(Episode != nullptr);
+  auto World = Episode->GetWorld();
+  for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+  {
+    auto Actor = *It;
+    check(Actor != nullptr);
+    auto MeshComponent = Actor->GetStaticMeshComponent();
+    check(MeshComponent != nullptr);
+    if (MeshComponent->Mobility == EComponentMobility::Movable)
+    {
+      Actor->Destroy();
     }
   }
 }

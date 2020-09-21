@@ -111,7 +111,7 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 
 *   __11. Test the vehicle__. Launch CARLA, open a terminal in `PythonAPI/examples` and run the following command.  
 ```sh
-python manual_control.py --filter <model_name> # The name used in step 10.2
+python3 manual_control.py --filter <model_name> # The name used in step 10.2
 ```
 
 ---

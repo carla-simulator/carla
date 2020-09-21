@@ -17,6 +17,7 @@ LocalizationStage::LocalizationStage(
   TrackTraffic &track_traffic,
   const LocalMapPtr &local_map,
   Parameters &parameters,
+  std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
   cc::DebugHelper &debug_helper)
   : vehicle_id_list(vehicle_id_list),
@@ -25,6 +26,7 @@ LocalizationStage::LocalizationStage(
     track_traffic(track_traffic),
     local_map(local_map),
     parameters(parameters),
+    marked_for_removal(marked_for_removal),
     output_array(output_array),
     debug_helper(debug_helper) {}
 
@@ -150,6 +152,13 @@ void LocalizationStage::Update(const unsigned long index) {
     // Pseudo-randomized path selection if found more than one choice.
     if (next_waypoints.size() > 1) {
       selection_index = static_cast<uint64_t>(pgen.next()) % next_waypoints.size();
+    } else if (next_waypoints.size() == 0) {
+      if (parameters.GetOSMMode()) {
+        marked_for_removal.push_back(actor_id);
+        break;
+      } else {
+        throw std::invalid_argument("This is an OSM, please activate the set_open_street_map parameter");
+      }
     }
     SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
     if (next_wp == nullptr) {

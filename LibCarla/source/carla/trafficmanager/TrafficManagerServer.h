@@ -163,6 +163,11 @@ public:
         tm->SetHybridPhysicsRadius(radius);
       });
 
+      /// Method to set hybrid physics radius.
+      server->bind("set_osm_mode", [=](const bool mode_switch) {
+        tm->SetHybridPhysicsRadius(mode_switch);
+      });
+
       /// Method to set synchronous mode.
       server->bind("set_synchronous_mode", [=](const bool mode) {
         tm->SetSynchronousMode(mode);

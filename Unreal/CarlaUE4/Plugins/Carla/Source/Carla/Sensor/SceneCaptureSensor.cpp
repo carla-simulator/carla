@@ -110,12 +110,12 @@ EAutoExposureMethod ASceneCaptureSensor::GetExposureMethod() const
 void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 {
   check(CaptureComponent2D != nullptr);
-  // Looks like windows and linux have different outputs with the
-  // same exposure compensation
 #if PLATFORM_LINUX
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
+  // Looks like Windows and Linux have different outputs with the
+  // same exposure compensation, this fixes it.
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation - 1.5f;
 #else
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 2.2f;
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
 #endif
 }
 
@@ -490,9 +490,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   Super::BeginPlay();
 
-  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  GameMode->AddSceneCaptureSensor(this);
-
+  SendPixelsDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureSensor::SendPixels);
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
@@ -513,88 +511,7 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
 
-  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  GameMode->RemoveSceneCaptureSensor(this);
-}
-
-void ASceneCaptureSensor::CopyTextureToAtlas()
-{
-
-  check(CaptureRenderTarget != nullptr);
-
-  ASceneCaptureSensor* This = this;
-
-  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  if(!GameMode->IsCameraAtlasTextureValid()) return;
-
-#if !UE_BUILD_SHIPPING
-  if(!GameMode->IsCameraCopyToAtlasEnabled()) return;
-#endif
-
-  ENQUEUE_RENDER_COMMAND(ASceneCaptureSensor_CopyTextureToAtlas)
-  (
-    [This, GameMode](FRHICommandListImmediate& RHICmdList) mutable
-    {
-      FTexture2DRHIRef AtlasTexture = GameMode->GetCurrentCamerasAtlasTexture();
-
-      if (AtlasTexture.IsValid() && This && This->HasActorBegunPlay() && !This->IsPendingKill())
-      {
-          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorCopyText);
-
-          const FTextureRenderTarget2DResource* RenderResource =
-            static_cast<const FTextureRenderTarget2DResource *>(This->CaptureRenderTarget->Resource);
-          FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
-          if (!Texture)
-          {
-            UE_LOG(LogCarla, Error, TEXT("ASceneCaptureSensor::Capture: UTextureRenderTarget2D missing render target texture"));
-            return;
-          }
-
-          // Prepare copy information
-          FRHICopyTextureInfo CopyInfo;
-          CopyInfo.Size = FIntVector(This->ImageWidth, This->ImageHeight, 0); // Size of the camera
-          CopyInfo.DestPosition = This->PositionInAtlas; // Where to copy the texture
-
-          RHICmdList.CopyTexture(Texture, AtlasTexture, CopyInfo);
-      }
-    }
-  );
-}
-
-bool ASceneCaptureSensor::CopyTextureFromAtlas(
-    carla::Buffer &Buffer,
-    const TArray<FColor>& AtlasImage,
-    uint32 AtlasTextureWidth)
-{
-
-  Buffer.reset(Offset + ImageWidth * ImageHeight * sizeof(FColor));
-
-  // Check that the atlas alreay contains our texture
-  // and our image has been initialized
-  uint32 ExpectedSize = (uint32)(PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight);
-  uint32 TotalSize = (uint32)AtlasImage.Num();
-  if(!AtlasImage.GetData() || TotalSize == 0 || TotalSize < ExpectedSize)
-  {
-    return false;
-  }
-
-  SCOPE_CYCLE_COUNTER(STAT_CarlaSensorBufferCopy);
-
-  const FColor* SourceFColor = AtlasImage.GetData() + PositionInAtlas.Y * AtlasTextureWidth;
-  const uint8* Source = (uint8*)SourceFColor;
-  uint32 Dest = Offset;
-
-  const uint32 DstStride = ImageWidth * sizeof(FColor);
-  const uint32 SrcStride = AtlasTextureWidth * sizeof(FColor);
-
-  for(uint32 i = 0; i < ImageHeight; i++)
-  {
-    Buffer.copy_from(Dest, Source, DstStride);
-    Source += SrcStride;
-    Dest += DstStride;
-  }
-
-  return true;
+  FCoreDelegates::OnEndFrameRT.Remove(SendPixelsDelegate);
 }
 
 // =============================================================================
@@ -609,13 +526,17 @@ namespace SceneCaptureSensor_local_ns {
 
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
-    PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
+    PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Histogram;
     PostProcessSettings.bOverride_AutoExposureBias = true;
     PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
     PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
     PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
     PostProcessSettings.bOverride_AutoExposureCalibrationConstant = true;
+    PostProcessSettings.bOverride_HistogramLogMin = true;
+    PostProcessSettings.HistogramLogMin = 1.0f;
+    PostProcessSettings.bOverride_HistogramLogMax = true;
+    PostProcessSettings.HistogramLogMax = 12.0f;
 
     // Camera
     PostProcessSettings.bOverride_CameraShutterSpeed = true;
@@ -642,6 +563,12 @@ namespace SceneCaptureSensor_local_ns {
     // Color Grading
     PostProcessSettings.bOverride_WhiteTemp = true;
     PostProcessSettings.bOverride_WhiteTint = true;
+    PostProcessSettings.bOverride_ColorContrast = true;
+#if PLATFORM_LINUX
+  // Looks like Windows and Linux have different outputs with the
+  // same exposure compensation, this fixes it.
+  PostProcessSettings.ColorContrast = FVector4(1.2f, 1.2f, 1.2f, 1.0f);
+#endif
 
     // Chromatic Aberration
     PostProcessSettings.bOverride_SceneFringeIntensity = true;

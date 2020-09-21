@@ -33,5 +33,6 @@ void export_trafficmanager() {
       .def("set_percentage_keep_right_rule", &carla::traffic_manager::TrafficManager::SetKeepRightPercentage)
       .def("set_synchronous_mode", &carla::traffic_manager::TrafficManager::SetSynchronousMode)
       .def("set_hybrid_physics_mode", &carla::traffic_manager::TrafficManager::SetHybridPhysicsMode)
-      .def("set_hybrid_physics_radius", &carla::traffic_manager::TrafficManager::SetHybridPhysicsRadius);
+      .def("set_hybrid_physics_radius", &carla::traffic_manager::TrafficManager::SetHybridPhysicsRadius)
+      .def("set_osm_mode", &carla::traffic_manager::TrafficManager::SetOSMMode);
 }

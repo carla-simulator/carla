@@ -181,6 +181,10 @@ void TrafficManagerRemote::SetHybridPhysicsRadius(const float radius) {
   client.SetHybridPhysicsRadius(radius);
 }
 
+void TrafficManagerRemote::SetOSMMode(const bool mode_switch) {
+  client.SetOSMMode(mode_switch);
+}
+
 void TrafficManagerRemote::ResetAllTrafficLights() {
   client.ResetAllTrafficLights();
 }
