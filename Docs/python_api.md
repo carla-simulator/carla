@@ -2037,9 +2037,9 @@ With hybrid physics on, changes the radius of the area of influence where physic
     - **Parameters:**
         - `r` (_float<small> – meters</small>_) – New radius where physics are enabled.  
 - <a name="carla.TrafficManager.set_osm_mode"></a>**<font color="#7fb800">set_osm_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
-Enables or disables the OSM mode. This mode fixes a bug when running a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps usually have roads with abrupt ends (borders when the map is outlined). Vehicles cannot find the next waypoint, causing the TM to crash. When OSM mode is enabled, vehicles will be destroyed when no next waypoint is found.  
+Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. Now it throws an exception, warning the user to activate <code>set_osm_mode</code> and then stops.  
     - **Parameters:**
-        - `mode_switch` (_bool_) – If __True__, the OSM is enabled.  
+        - `mode_switch` (_bool_) – If __True__, the OSM mode is enabled.  
 
 ---
 
