@@ -110,12 +110,12 @@ EAutoExposureMethod ASceneCaptureSensor::GetExposureMethod() const
 void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 {
   check(CaptureComponent2D != nullptr);
-  // Looks like windows and linux have different outputs with the
-  // same exposure compensation
 #if PLATFORM_LINUX
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
+  // Looks like Windows and Linux have different outputs with the
+  // same exposure compensation, this fixes it.
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation - 1.5f;
 #else
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 2.2f;
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
 #endif
 }
 
@@ -526,13 +526,17 @@ namespace SceneCaptureSensor_local_ns {
 
     // Exposure
     PostProcessSettings.bOverride_AutoExposureMethod = true;
-    PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
+    PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Histogram;
     PostProcessSettings.bOverride_AutoExposureBias = true;
     PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
     PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
     PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
     PostProcessSettings.bOverride_AutoExposureCalibrationConstant = true;
+    PostProcessSettings.bOverride_HistogramLogMin = true;
+    PostProcessSettings.HistogramLogMin = 1.0f;
+    PostProcessSettings.bOverride_HistogramLogMax = true;
+    PostProcessSettings.HistogramLogMax = 12.0f;
 
     // Camera
     PostProcessSettings.bOverride_CameraShutterSpeed = true;
@@ -559,6 +563,12 @@ namespace SceneCaptureSensor_local_ns {
     // Color Grading
     PostProcessSettings.bOverride_WhiteTemp = true;
     PostProcessSettings.bOverride_WhiteTint = true;
+    PostProcessSettings.bOverride_ColorContrast = true;
+#if PLATFORM_LINUX
+  // Looks like Windows and Linux have different outputs with the
+  // same exposure compensation, this fixes it.
+  PostProcessSettings.ColorContrast = FVector4(1.2f, 1.2f, 1.2f, 1.0f);
+#endif
 
     // Chromatic Aberration
     PostProcessSettings.bOverride_SceneFringeIntensity = true;
