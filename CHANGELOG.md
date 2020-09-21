@@ -62,6 +62,7 @@
   * Added automatic calculation of vehicle's BB
   * Retrieve BBs of all the elements of the level
 
+
 ## CARLA 0.9.9
 
   * Introduced hybrid mode for Traffic Manager
