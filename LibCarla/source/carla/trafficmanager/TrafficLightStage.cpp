@@ -41,15 +41,17 @@ void TrafficLightStage::Update(const unsigned long index) {
   // junction and there is a red or yellow light.
   if (is_at_traffic_light &&
       traffic_light_state != TLS::Green &&
+      traffic_light_state != TLS::Off &&
       parameters.GetPercentageRunningLight(ego_actor_id) <= pgen.next()) {
 
     traffic_light_hazard = true;
   }
   // Handle entry negotiation at non-signalised junction.
-  else if (look_ahead_point->CheckJunction()
-           && !is_at_traffic_light
-           && traffic_light_state != TLS::Green
-           && parameters.GetPercentageRunningSign(ego_actor_id) <= pgen.next()) {
+  else if (look_ahead_point->CheckJunction() &&
+          !is_at_traffic_light &&
+          traffic_light_state != TLS::Green &&
+          traffic_light_state != TLS::Off &&
+          parameters.GetPercentageRunningSign(ego_actor_id) <= pgen.next()) {
 
     traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_time);
   }

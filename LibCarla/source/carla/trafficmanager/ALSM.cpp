@@ -313,7 +313,7 @@ void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const Actor
     double &idle_duration = idle_time.at(actor_id);
     TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
     if (simulation_state.GetVelocity(actor_id).SquaredLength() > SQUARE(STOPPED_VELOCITY_THRESHOLD)
-        || (tl_state.at_traffic_light && tl_state.tl_state != TLS::Green)) {
+        || (tl_state.at_traffic_light && tl_state.tl_state != TLS::Green && tl_state.tl_state != TLS::Off)) {
       idle_duration = current_timestamp.elapsed_seconds;
     }
 
