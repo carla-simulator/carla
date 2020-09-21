@@ -326,6 +326,10 @@ namespace detail {
     _pimpl->AsyncCall("reset_traffic_light_group", traffic_light);
   }
 
+  void Client::ResetAllTrafficLights() {
+    _pimpl->AsyncCall("reset_all_traffic_lights");
+  }
+
   void Client::FreezeAllTrafficLights(bool frozen) {
     _pimpl->AsyncCall("freeze_all_traffic_lights", frozen);
   }

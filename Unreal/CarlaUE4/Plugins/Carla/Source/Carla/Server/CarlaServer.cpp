@@ -905,6 +905,16 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(reset_all_traffic_lights) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    for (TActorIterator<ATrafficLightGroup> It(Episode->GetWorld()); It; ++It)
+    {
+      It->ResetGroup();
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(freeze_all_traffic_lights) << [this]
       (bool frozen) -> R<void>
   {

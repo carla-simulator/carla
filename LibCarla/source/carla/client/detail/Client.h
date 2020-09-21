@@ -205,6 +205,8 @@ namespace detail {
     void ResetTrafficLightGroup(
         rpc::ActorId traffic_light);
 
+    void ResetAllTrafficLights();
+
     void FreezeAllTrafficLights(bool frozen);
 
     /// Returns a list of pairs where the firts element is the vehicle ID
