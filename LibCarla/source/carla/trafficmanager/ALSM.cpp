@@ -18,6 +18,7 @@ ALSM::ALSM(
   AtomicActorSet &registered_vehicles,
   BufferMap &buffer_map,
   TrackTraffic &track_traffic,
+  std::vector<ActorId>& marked_for_removal,
   const Parameters &parameters,
   const cc::World &world,
   const LocalMapPtr &local_map,
@@ -30,6 +31,7 @@ ALSM::ALSM(
   : registered_vehicles(registered_vehicles),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
+    marked_for_removal(marked_for_removal),
     parameters(parameters),
     world(world),
     local_map(local_map),
@@ -106,6 +108,15 @@ void ALSM::Update() {
     registered_vehicles.Destroy(max_idle_time.first);
     RemoveActor(max_idle_time.first, true);
     elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
+  }
+
+  // Destorying vehicles for marked for removal by stages.
+  if (parameters.GetOSMMode()) {
+    for (const ActorId& actor_id: marked_for_removal) {
+      registered_vehicles.Destroy(actor_id);
+      RemoveActor(actor_id, true);
+    }
+    marked_for_removal.clear();
   }
 
   // Update dynamic state and static attributes for unregistered actors.

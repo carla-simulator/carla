@@ -37,6 +37,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          track_traffic,
                                          local_map,
                                          parameters,
+                                         marked_for_removal,
                                          localization_frame,
                                          debug_helper,
                                          random_devices)),
@@ -76,6 +77,7 @@ TrafficManagerLocal::TrafficManagerLocal(
     alsm(ALSM(registered_vehicles,
               buffer_map,
               track_traffic,
+              marked_for_removal,
               parameters,
               world,
               local_map,
@@ -345,6 +347,10 @@ void TrafficManagerLocal::SetHybridPhysicsMode(const bool mode_switch) {
 
 void TrafficManagerLocal::SetHybridPhysicsRadius(const float radius) {
   parameters.SetHybridPhysicsRadius(radius);
+}
+
+void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
+  parameters.SetOSMMode(mode_switch);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {

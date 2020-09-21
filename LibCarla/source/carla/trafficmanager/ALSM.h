@@ -49,6 +49,8 @@ private:
   // Structure containing vehicles with attribute role_name with value hero.
   ActorMap hero_actors;
   TrackTraffic &track_traffic;
+  // Array of vehicles marked by stages for removal.
+  std::vector<ActorId>& marked_for_removal;
   const Parameters &parameters;
   const cc::World &world;
   const LocalMapPtr &local_map;
@@ -87,6 +89,7 @@ public:
   ALSM(AtomicActorSet &registered_vehicles,
        BufferMap &buffer_map,
        TrackTraffic &track_traffic,
+       std::vector<ActorId>& marked_for_removal,
        const Parameters &parameters,
        const cc::World &world,
        const LocalMapPtr &local_map,

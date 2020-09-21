@@ -85,7 +85,7 @@ chmod 777 input_folder
 __2. Run the script to cook the map.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested. If no `.json` is provided, the name must be `map_package`.
 
 ```sh
-python docker_tools.py --input ~/path_to_input_folder --output ~/path_to_output_folder --packages map_package
+python3 docker_tools.py --input ~/path_to_input_folder --output ~/path_to_output_folder --packages map_package
 ```
 !!! Warning
     If the argument `--package <package_name>` is not provided, the Docker will make a package of CARLA. 

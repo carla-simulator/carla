@@ -114,6 +114,7 @@ private:
   RandomGeneratorMap random_devices;
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
+  std::vector<ActorId> marked_for_removal;
 
   /// Method to check if all traffic lights are frozen in a group.
   bool CheckAllFrozen(TLGroup tl_to_freeze);
@@ -225,6 +226,9 @@ public:
 
   /// Method to set randomization seed.
   void SetRandomDeviceSeed(const uint64_t _seed);
+
+  /// Method to set Open Street Map mode.
+  void SetOSMMode(const bool mode_switch);
 };
 
 } // namespace traffic_manager

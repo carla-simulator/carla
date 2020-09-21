@@ -34,6 +34,8 @@ private:
   TrackTraffic &track_traffic;
   const LocalMapPtr &local_map;
   Parameters &parameters;
+  // Array of vehicles marked by stages for removal.
+  std::vector<ActorId>& marked_for_removal;
   LocalizationFrame &output_array;
   cc::DebugHelper &debug_helper;
   LaneChangeLocationMap last_lane_change_location;
@@ -60,6 +62,7 @@ public:
                     TrackTraffic &track_traffic,
                     const LocalMapPtr &local_map,
                     Parameters &parameters,
+                    std::vector<ActorId>& marked_for_removal,
                     LocalizationFrame &output_array,
                     cc::DebugHelper &debug_helper,
                     RandomGeneratorMap &random_devices);
