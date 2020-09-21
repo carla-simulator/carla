@@ -259,7 +259,7 @@ namespace detail {
         bool discard_client = false) const;
 
     /// Returns all the BBs of all the elements of the level
-    std::vector<geom::BoundingBox> GetLevelBBs() const;
+    std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
 
   private:
 

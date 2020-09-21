@@ -8,6 +8,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/ActorList.h>
 #include <carla/client/World.h>
+#include <carla/rpc/ObjectLabel.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -70,10 +71,10 @@ static auto GetVehiclesLightStates(carla::client::World &self) {
   return dict;
 }
 
-static auto GetLevelBBs(const carla::client::World &self) {
+static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
   carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
-  for (const auto &bb : self.GetLevelBBs()) {
+  for (const auto &bb : self.GetLevelBBs(queried_tag)) {
     result.append(bb);
   }
   return result;
@@ -135,6 +136,32 @@ void export_world() {
     .value("SpringArm", cr::AttachmentType::SpringArm)
   ;
 
+  enum_<cr::CityObjectLabel>("CityObjectLabel")
+    .value("Any", cr::CityObjectLabel::None)
+    .value("Buildings", cr::CityObjectLabel::Buildings)
+    .value("Fences", cr::CityObjectLabel::Fences)
+    .value("Other", cr::CityObjectLabel::Other)
+    .value("Pedestrians", cr::CityObjectLabel::Pedestrians)
+    .value("Poles", cr::CityObjectLabel::Poles)
+    .value("RoadLines", cr::CityObjectLabel::RoadLines)
+    .value("Roads", cr::CityObjectLabel::Roads)
+    .value("Sidewalks", cr::CityObjectLabel::Sidewalks)
+    .value("TrafficSigns", cr::CityObjectLabel::TrafficSigns)
+    .value("Vegetation", cr::CityObjectLabel::Vegetation)
+    .value("Vehicles", cr::CityObjectLabel::Vehicles)
+    .value("Walls", cr::CityObjectLabel::Walls)
+    .value("Sky", cr::CityObjectLabel::Sky)
+    .value("Ground", cr::CityObjectLabel::Ground)
+    .value("Bridge", cr::CityObjectLabel::Bridge)
+    .value("RailTrack", cr::CityObjectLabel::RailTrack)
+    .value("GuardRail", cr::CityObjectLabel::GuardRail)
+    .value("TrafficLight", cr::CityObjectLabel::TrafficLight)
+    .value("Static", cr::CityObjectLabel::Static)
+    .value("Dynamic", cr::CityObjectLabel::Dynamic)
+    .value("Water", cr::CityObjectLabel::Water)
+    .value("Terrain", cr::CityObjectLabel::Terrain)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -178,7 +205,7 @@ void export_world() {
     .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
-    .def("get_level_bbs", &GetLevelBBs)
+    .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
     .def(self_ns::str(self_ns::self))
   ;
 
