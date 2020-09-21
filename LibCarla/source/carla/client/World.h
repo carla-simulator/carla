@@ -138,6 +138,8 @@ namespace client {
 
     SharedPtr<Actor> GetTrafficLight(const Landmark& landmark) const;
 
+    void ResetAllTrafficLights();
+
     SharedPtr<LightManager> GetLightManager() const;
 
     DebugHelper MakeDebugHelper() const {
