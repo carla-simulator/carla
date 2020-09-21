@@ -501,13 +501,13 @@ Class that defines conversion patterns that can be applied to a [carla.Image](#c
 
 <h3>Instance Variables</h3>
 - <a name="carla.ColorConverter.CityScapesPalette"></a>**<font color="#f8805a">CityScapesPalette</font>**  
-Converts the image to a segmentated map using tags provided by the blueprint library. Used by <b>sensor.camera.semantic_segmentation</b>.  
+Converts the image to a segmentated map using tags provided by the blueprint library. Used by the [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera).  
 - <a name="carla.ColorConverter.Depth"></a>**<font color="#f8805a">Depth</font>**  
-Converts the image to a linear depth map. Used by <b>sensor.camera.depth</b>.  
+Converts the image to a linear depth map. Used by the [depth camera](ref_sensors.md#depth-camera).  
 - <a name="carla.ColorConverter.LogarithmicDepth"></a>**<font color="#f8805a">LogarithmicDepth</font>**  
 Converts the image to a depth map using a logarithmic scale, leading to better precision for small distances at the expense of losing it when further away.  
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
-No changes applied to the image.  
+No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-camera).  
 
 ---
 

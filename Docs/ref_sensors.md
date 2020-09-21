@@ -1444,99 +1444,123 @@ The following tags are currently available:
 <th>Value</th>
 <th>Tag</th>
 <th>Converted color</th>
+<th>Description</th>
 </thead>
 <tbody>
 <td><code>0</code> </td>
 <td>Unlabeled</td>
 <td><code>(0, 0, 0)</code></td>
+<td>Elements that have not been categorized are considered <code>Unlabeled</code>. This category is meant to be empty or at least contain elements with no collisions.</td>
 <tr>
 <td><code>1</code> </td>
 <td>Building</td>
 <td><code>(70, 70, 70)</code></td>
+<td>Buildings like houses, skyscrapers,... and the elements attached to them. <br> E.g. air conditioners, scaffolding, awning or ladders and much more.</td>
 <tr>
 <td><code>2</code> </td>
 <td>Fence</td>
 <td><code>(100, 40, 40)</code></td>
+<td>Barriers, railing, or other upright structures. Basically wood or wire assemblies that enclose an area of ground.</td>
 <tr>
 <td><code>3</code> </td>
 <td>Other</td>
 <td><code>(55, 90, 80)</code></td>
+<td> Everything that does not belong to any other category.</td>
 <tr>
 <td><code>4</code> </td>
 <td>Pedestrian</td>
 <td><code>(220,  20,  60)</code></td>
+<td>Humans that walk or ride/drive any kind of vehicle or mobility system. <br> E.g. bicycles or scooters, skateboards, horses, roller-blades, wheel-chairs, etc.</td>
 <tr>
 <td><code>5</code> </td>
 <td>Pole</td>
 <td><code>(153, 153, 153)</code></td>
+<td>Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.E</td>
 <tr>
 <td><code>6</code> </td>
 <td>RoadLine</td>
 <td><code>(157, 234, 50)</code></td>
+<td>The markings on the road.</td>
 <tr>
 <td><code>7</code> </td>
 <td>Road</td>
 <td><code>(128, 64, 128)</code></td>
+<td>Part of ground on which cars usually drive. <br> E.g. lanes in any directions, and streets.</td>
 <tr>
 <td><code>8</code> </td>
 <td>SideWalk</td>
 <td><code>(244, 35, 232)</code></td>
+<td>Part of ground designated for pedestrians or cyclists. Delimited from the road by some obstacle (such as curbs or poles), not only by markings. This label includes a possibly delimiting curb, traffic islands (the walkable part), and pedestrian zones.</td>
 <tr>
 <td><code>9</code> </td>
 <td>Vegetation</td>
 <td><code>(107, 142, 35)</code></td>
+<td> Trees, hedges, all kinds of vertical vegetation. Ground-level vegetation is considered <code>Terrain</code>.</td>
 <tr>
 <td><code>10</code> </td>
 <td>Vehicles</td>
 <td><code>(0, 0, 142)</code></td>
+<td>Cars, vans, trucks, motorcycles, bikes, buses, trains.</td>
 <tr>
 <td><code>11</code> </td>
 <td>Wall</td>
 <td><code>(102, 102, 156)</code></td>
+<td>Individual standing walls. Not part of a building.</td>
 <tr>
 <td><code>12</code> </td>
 <td>TrafficSign</td>
 <td><code>(220, 220, 0)</code></td>
+<td>Signs installed by the state/city authority, usually for traffic regulation. This category does not include the poles where signs are attached to. <br> E.g. traffic- signs, parking signs, direction signs...</td>
 <tr>
 <td><code>13</code> </td>
 <td>Sky</td>
 <td><code>(70, 130, 180)</code></td>
+<td>Open sky. Includes clouds and the sun.</td>
 <tr>
 <td><code>14</code> </td>
 <td>Ground</td>
 <td><code>(81, 0, 81)</code></td>
+<td>Any horizontal ground-level structures that does not match any other category. For example areas shared by vehicles and pedestrians, or flat roundabouts delimited from the road by a curb.</td>
 <tr>
 <td><code>15</code> </td>
 <td>Bridge</td>
 <td><code>(150, 100, 100)</code></td>
+<td>Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately.</td>
 <tr>
 <td><code>16</code> </td>
 <td>RailTrack</td>
 <td><code>(230, 150, 140)</code></td>
+<td>All kind of rail tracks that are non-drivable by cars. <br> E.g. subway and train rail tracks.</td>
 <tr>
 <td><code>17</code> </td>
 <td>GuardRail</td>
 <td><code>(180, 165, 180)</code></td>
+<td>All types of guard rails/crash barriers.</td>
 <tr>
 <td><code>18</code> </td>
 <td>TrafficLight</td>
 <td><code>(250, 170, 30)</code></td>
+<td>Traffic light boxes without their poles.</td>
 <tr>
 <td><code>19</code> </td>
 <td>Static</td>
 <td><code>(110, 190, 160)</code></td>
+<td>Elements in the scene and props that are immovable. E.g. fire hydrants, fixed benches, fountains, bus stops, etc.</td>
 <tr>
 <td><code>20</code> </td>
 <td>Dynamic</td>
 <td><code>(170, 120, 50)</code></td>
+<td>Elements whose position is susceptible to change over time. E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.</td>
 <tr>
 <td><code>21</code> </td>
 <td>Water</td>
 <td><code>(45, 60, 150)</code></td>
+<td>Horizontal water surfaces. <br> E.g. Lakes, sea, rivers.</td>
 <tr>
 <td><code>22</code> </td>
 <td>Terrain</td>
 <td><code>(145, 170, 100)</code></td>
+<td>Grass, ground-level vegetation, soil or sand. These areas are not meant to be driven on. This label includes a possibly delimiting curb.</td>
 </tbody>
 </table>
 <br>
