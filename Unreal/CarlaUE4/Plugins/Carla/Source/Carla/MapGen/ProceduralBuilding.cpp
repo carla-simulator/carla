@@ -12,12 +12,9 @@ AProceduralBuilding::AProceduralBuilding()
 
   SideVisibility.Init(true, 4);
   CornerVisibility.Init(true, 4);
-}
 
-// Called when the game starts or when spawned
-void AProceduralBuilding::BeginPlay()
-{
-  Super::BeginPlay();
+  USceneComponent* SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+  RootComponent = SceneComponent;
 
 }
 
@@ -41,6 +38,8 @@ void AProceduralBuilding::CreateBuilding()
 
 void AProceduralBuilding::Reset()
 {
+  CurrentTransform = FTransform::Identity;
+
   // Discard previous calculation
   SidesLength.Reset();
 
@@ -59,6 +58,8 @@ void AProceduralBuilding::Reset()
 
 void AProceduralBuilding::Init()
 {
+  Reset();
+
   CalculateSidesLength();
 }
 
@@ -67,7 +68,6 @@ void AProceduralBuilding::CreateFloor(
     bool IncludeDoors,
     bool IncludeWalls)
 {
-
   float MaxZ = 0.0f;
 
   // Stores the total length covered. This is needed to place the doors.
@@ -98,7 +98,7 @@ void AProceduralBuilding::CreateFloor(
     if(!UseFullBlocks)
     {
       const FQuat RotationToAdd = FRotator(0.0f, 90.0f, 0.0f).Quaternion();
-      CurrentTransform.SetRotation(CurrentTransform.GetRotation() + RotationToAdd);
+      CurrentTransform.ConcatenateRotation(RotationToAdd);
     }
   }
 
@@ -116,6 +116,9 @@ float AProceduralBuilding::CreateSide(
     bool MainVisibility,
     bool CornerVisbility)
 {
+
+  UE_LOG(LogCarla, Warning, TEXT("AProceduralBuilding::CreateSide of length %d"), SideLength);
+
   const TArray<UStaticMesh*>* MainMeshes = MeshCollection.MainMeshes;
   const TArray<TSubclassOf<AActor>>* MainBPs = MeshCollection.MainBPs;
   const TArray<UStaticMesh*>* CornerMeshes = MeshCollection.CornerMeshes;
@@ -142,13 +145,14 @@ float AProceduralBuilding::CreateSide(
     if(AreAuxMeshesAvailable && AuxiliarPosition)
     {
       // Choose an auxiliar mesh
-      ChooseGeometryToSpawn(*AuxiliarMeshes, *AuxiliarBPs, SelectedMesh, SelectedBP);
+      ChooseGeometryToSpawn(*AuxiliarMeshes, *AuxiliarBPs, &SelectedMesh, &SelectedBP);
     }
     else
     {
       // Choose a main mesh
-      ChooseGeometryToSpawn(*MainMeshes, *MainBPs, SelectedMesh, SelectedBP);
+      ChooseGeometryToSpawn(*MainMeshes, *MainBPs, &SelectedMesh, &SelectedBP);
     }
+
     float ChunkZ = AddChunck(SelectedMesh, SelectedBP, MainVisibility, SelectedMeshBounds);
     MaxZ = (MaxZ < ChunkZ) ? ChunkZ : MaxZ;
   }
@@ -160,7 +164,7 @@ float AProceduralBuilding::CreateSide(
   if(AreCornerMeshesAvailable)
   {
     // Choose a corner mesh
-    ChooseGeometryToSpawn(*CornerMeshes, *CornerBPs, SelectedMesh, SelectedBP);
+    ChooseGeometryToSpawn(*CornerMeshes, *CornerBPs, &SelectedMesh, &SelectedBP);
     float ChunkZ = AddChunck(SelectedMesh, SelectedBP, MainVisibility, SelectedMeshBounds);
     MaxZ = (MaxZ < ChunkZ) ? ChunkZ : MaxZ;
 
@@ -217,8 +221,8 @@ void AProceduralBuilding::CalculateSideVisibilities(int SideIndex, bool& MainVis
 void AProceduralBuilding::ChooseGeometryToSpawn(
     const TArray<UStaticMesh*>& InMeshes,
     const TArray<TSubclassOf<AActor>>& InBPs,
-    UStaticMesh* OutMesh = nullptr,
-    TSubclassOf<AActor> OutBP = nullptr)
+    UStaticMesh** OutMesh = nullptr,
+    TSubclassOf<AActor>* OutBP = nullptr)
 {
   int NumMeshes = InMeshes.Num();
   int NumBPs = InBPs.Num();
@@ -228,11 +232,11 @@ void AProceduralBuilding::ChooseGeometryToSpawn(
 
   if(Choosen < NumMeshes)
   {
-    OutMesh = InMeshes[Choosen];
+    *OutMesh = InMeshes[Choosen];
   }
   if(NumMeshes <= Choosen && Choosen < NumBPs)
   {
-    OutBP = InBPs[Choosen - NumMeshes];
+    *OutBP = InBPs[Choosen - NumMeshes];
   }
 }
 
@@ -243,6 +247,9 @@ float AProceduralBuilding::AddChunck(
     FBox& OutSelectedMeshBounds)
 {
   float Result = 0.0f;
+
+  UE_LOG(LogCarla, Warning, TEXT("AddChunck"));
+
   // Static Mesh
   if(SelectedMesh)
   {
@@ -259,6 +266,9 @@ float AProceduralBuilding::AddChunck(
   // BP
   else if(SelectedBP)
   {
+
+    UE_LOG(LogCarla, Warning, TEXT("AddChunck BP"));
+
     // Create a new ChildActorComponent
     UChildActorComponent* ChildActorComp = NewObject<UChildActorComponent>(this,
       FName(*FString::Printf(TEXT("ChildActorComp_%d"), ChildActorComps.Num())));
@@ -314,6 +324,7 @@ float AProceduralBuilding::AddChunck(
 
 void AProceduralBuilding::AddMeshToBuilding(const UStaticMesh* SM)
 {
+
   UHierarchicalInstancedStaticMeshComponent* HISMComp = GetHISMComp(SM);
   HISMComp->AddInstance(CurrentTransform);
 }
@@ -355,7 +366,7 @@ void AProceduralBuilding::UpdateTransformPositionToNextChunk(const FVector& Box)
 {
   // Update Current Transform to the right side of the added chunk
   // Nothing to change if the chunk is the size of a floor
-  if(UseFullBlocks)
+  if(!UseFullBlocks)
   {
     FQuat Rotation = CurrentTransform.GetRotation();
     FVector ForwardVector = -Rotation.GetForwardVector();
@@ -369,7 +380,7 @@ void AProceduralBuilding::UpdateTransformPositionToNextSide(const FBox& Box)
 {
   // Update Current Transform to the right side of the added chunk
   // Nothing to change if the chunk is the size of a floor
-  if(UseFullBlocks)
+  if(!UseFullBlocks)
   {
     FQuat Rotation = CurrentTransform.GetRotation();
     FVector RightVector = -Rotation.GetRightVector();
