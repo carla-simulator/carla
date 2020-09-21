@@ -39,14 +39,15 @@ public:
 
 protected:
 
-  // Called when the game starts or when spawned
-  virtual void BeginPlay() override;
-
   UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
   void CreateBuilding();
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
+  void Reset();
+
   // Map containing the pair with the name of the mesh and the component that uses it
-  UPROPERTY(BlueprintReadOnly, VisibleAnywhere, AdvancedDisplay, Category="Procedural Building|Debug")
+  //UPROPERTY(BlueprintReadOnly, VisibleAnywhere, AdvancedDisplay, Category="Procedural Building|Debug")
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Debug")
   TMap<FString, UHierarchicalInstancedStaticMeshComponent*> HISMComps;
 
 
@@ -189,8 +190,6 @@ protected:
 
 private:
 
-  void Reset();
-
   void Init();
 
   void CreateFloor(const FloorMeshCollection& MeshCollection, bool IncludeDoors, bool IncludeWalls);
@@ -216,8 +215,8 @@ private:
   void ChooseGeometryToSpawn(
     const TArray<UStaticMesh*>& InMeshes,
     const TArray<TSubclassOf<AActor>>& InMainBPs,
-    UStaticMesh* OutMesh,
-    TSubclassOf<AActor> OutBP);
+    UStaticMesh** OutMesh,
+    TSubclassOf<AActor>* OutBP);
 
   // Add one part on the side
   float AddChunck(
@@ -248,6 +247,6 @@ private:
   TArray<int> SidesLength;
 
   // Transform used to spawn the meshes of the building. It is updated (moved) with each new mesh
-  FTransform CurrentTransform;
+  FTransform CurrentTransform = FTransform::Identity;
 
 };
