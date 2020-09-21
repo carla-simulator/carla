@@ -101,7 +101,7 @@ Either way, the map should be ingested automatically in CARLA and the result sho
 <div style="text-align: right"><i>Outcome of the CARLA map generation using OpenStreetMap.</i></div>
 
 !!! Warning
-    The roads generated end abruptly in the borders of the map. This will cause the TM to crash when vehicles are not able to find the next waypoint. Use [set_osm_mode()](python_api.md#carlatrafficmanager) to enable de OSM mode. This will destroy the vehicles when no next waypoint is found.  
+    The roads generated end abruptly in the borders of the map. This will cause the TM to crash when vehicles are not able to find the next waypoint. Use [set_osm_mode()](python_api.md#carlatrafficmanager) or directly the `--osm` argument in `PythonAPI/examples/spawn_npc.py` to enable de OSM mode. This will destroy the vehicles when no next waypoint is found.  
 
 ---
 

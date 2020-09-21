@@ -2040,6 +2040,8 @@ With hybrid physics on, changes the radius of the area of influence where physic
 Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. Now it throws an exception, warning the user to activate <code>set_osm_mode</code> and then stops.  
     - **Parameters:**
         - `mode_switch` (_bool_) – If __True__, the OSM mode is enabled.  
+    - **Note:** <font color="#8E8E8E">_The argument `--osm` in `PythonAPI/examples/spawn_npc.py` makes use of this method to enable OSM mode.
+_</font>  
 
 ---
 
