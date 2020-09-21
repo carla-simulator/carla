@@ -80,6 +80,12 @@ in_meters = 1000 * normalized
 The output [carla.Image](python_api.md#carla.Image) should then be saved to disk using a [carla.colorConverter](python_api.md#carla.ColorConverter) that will turn the distance stored in RGB channels into a __[0,1]__ float containing the distance and then translate this to grayscale.
 There are two options in [carla.colorConverter](python_api.md#carla.ColorConverter) to get a depth view: __Depth__ and __Logaritmic depth__. The precision is milimetric in both, but the logarithmic approach provides better results for closer objects.
 
+```py
+...
+raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
+```
+
+
 ![ImageDepth](img/ref_sensors_depth.jpg)
 
 
@@ -1435,8 +1441,16 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
 
+![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
+
 The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.
 This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.
+
+```py
+...
+raw_image.save_to_disk("path/to/save/converted/image",carla.cityScapesPalette)
+```
+
 The following tags are currently available:
 
 <table class ="defTable">
@@ -1568,8 +1582,6 @@ The following tags are currently available:
 !!! Note
     **Adding new tags**:
     It requires some C++ coding. Add a new label to the `ECityObjectLabel` enum in "Tagger.h", and its corresponding filepath check inside `GetLabelByFolderName()` function in "Tagger.cpp".
-
-![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
 
 #### Basic camera attributes
 
