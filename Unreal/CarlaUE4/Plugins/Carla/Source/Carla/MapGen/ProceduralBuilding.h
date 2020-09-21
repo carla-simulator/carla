@@ -37,6 +37,11 @@ public:
   // Sets default values for this actor's properties
   AProceduralBuilding();
 
+#if WITH_EDITOR
+  /** Called after an actor has been moved in the editor */
+  void PostEditMove(bool bFinished) override;
+#endif // WITH_EDITOR
+
 protected:
 
   UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
@@ -50,6 +55,9 @@ protected:
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Debug")
   TMap<FString, UHierarchicalInstancedStaticMeshComponent*> HISMComps;
 
+  // Contains all the ChildActorComps spawned for this Actor
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Debug")
+  TArray<UChildActorComponent*> ChildActorComps;
 
   /**
    *  Base Parameters
@@ -238,9 +246,6 @@ private:
   void UpdateTransformPositionToNextChunk(const FVector& Box);
 
   void UpdateTransformPositionToNextSide(const FBox& Box);
-
-  // Contains all the ChildActorComps spawned for this Actor
-  TArray<UChildActorComponent*> ChildActorComps;
 
   // The lengths of each side of the building. The length of the array is the number of sides
   // Helper to iterate throught all the sides of the building
