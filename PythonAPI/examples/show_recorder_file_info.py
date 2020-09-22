@@ -47,14 +47,24 @@ def main():
         '-a', '--show_all',
         action='store_true',
         help='show detailed info about all frames content')
+    argparser.add_argument(
+        '-s', '--save_to_file',
+        metavar='S',
+        help='save result to file (specify name and extension)')
+
     args = argparser.parse_args()
 
     try:
 
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
+        if args.save_to_file:
+            doc = open(args.save_to_file, "w+")
+            doc.write(client.show_recorder_file_info(args.recorder_filename, args.show_all))
+            doc.close()
+        else:
+            print(client.show_recorder_file_info(args.recorder_filename, args.show_all))
 
-        print(client.show_recorder_file_info(args.recorder_filename, args.show_all))
 
     finally:
         pass
