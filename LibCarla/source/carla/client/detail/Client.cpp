@@ -327,7 +327,7 @@ namespace detail {
   }
 
   void Client::ResetAllTrafficLights() {
-    _pimpl->AsyncCall("reset_all_traffic_lights");
+    _pimpl->CallAndWait<void>("reset_all_traffic_lights");
   }
 
   void Client::FreezeAllTrafficLights(bool frozen) {
