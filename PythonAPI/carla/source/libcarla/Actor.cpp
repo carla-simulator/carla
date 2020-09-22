@@ -87,6 +87,8 @@ void export_actor() {
       .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
       .def("set_target_velocity", &cc::Actor::SetTargetVelocity, (arg("vector")))
       .def("set_target_angular_velocity", &cc::Actor::SetTargetAngularVelocity, (arg("vector")))
+      .def("enable_constant_velocity", &cc::Actor::EnableConstantVelocity, (arg("vector")))
+      .def("disable_constant_velocity", &cc::Actor::DisableConstantVelocity)
       .def("add_impulse", &cc::Actor::AddImpulse, (arg("vector")))
       .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("vector")))
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
