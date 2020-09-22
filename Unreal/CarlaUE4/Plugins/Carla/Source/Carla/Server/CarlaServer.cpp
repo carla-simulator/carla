@@ -579,8 +579,7 @@ void FCarlaServer::FPimpl::BindActions()
   };
 
   BIND_SYNC(disable_actor_constant_velocity) << [this](
-      cr::ActorId ActorId,
-      cr::Vector3D vector) -> R<void>
+      cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
