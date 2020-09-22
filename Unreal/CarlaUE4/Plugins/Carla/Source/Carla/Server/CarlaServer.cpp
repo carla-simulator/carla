@@ -620,6 +620,75 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(add_actor_impulse_at_location) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D impulse,
+      cr::Vector3D location) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor impulse: not supported by actor");
+    }
+
+    RootComponent->AddImpulseAtLocation(
+        impulse.ToCentimeters().ToFVector(),
+        location.ToCentimeters().ToFVector(),
+        "None");
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(add_actor_force) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor impulse: not supported by actor");
+    }
+    RootComponent->AddForce(
+        vector.ToCentimeters().ToFVector(),
+        "None",
+        false);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(add_actor_force_at_location) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D force,
+      cr::Vector3D location) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor impulse: not supported by actor");
+    }
+    RootComponent->AddForceAtLocation(
+        force.ToCentimeters().ToFVector(),
+        location.ToCentimeters().ToFVector(),
+        "None");
+    return R<void>::Success();
+  };
+
   BIND_SYNC(add_actor_angular_impulse) << [this](
       cr::ActorId ActorId,
       cr::Vector3D vector) -> R<void>
@@ -636,6 +705,28 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to add actor angular impulse: not supported by actor");
     }
     RootComponent->AddAngularImpulseInDegrees(
+        vector.ToFVector(),
+        "None",
+        false);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(add_actor_torque) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor torque: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor torque: not supported by actor");
+    }
+    RootComponent->AddTorqueInDegrees(
         vector.ToFVector(),
         "None",
         false);
