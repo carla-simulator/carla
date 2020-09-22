@@ -219,6 +219,8 @@ private:
 
   void CreateFloor(const FloorMeshCollection& MeshCollection, bool IncludeDoors, bool IncludeWalls);
 
+  void CreateRoof();
+
   // Creates the side of a floor of the building and returns the maximun height of the side
   float CreateSide(
     const FloorMeshCollection& MeshCollection,
@@ -258,7 +260,7 @@ private:
   UHierarchicalInstancedStaticMeshComponent* GetHISMComp(const UStaticMesh* SM);
 
   // Calculate the Bounds for the Static Mesh
-  FVector GetMeshBound(const UStaticMesh* SM);
+  FVector GetMeshSize(const UStaticMesh* SM);
 
   void UpdateTransformPositionToNextChunk(const FVector& Box);
 
@@ -270,5 +272,7 @@ private:
 
   // Transform used to spawn the meshes of the building. It is updated (moved) with each new mesh
   FTransform CurrentTransform = FTransform::Identity;
+
+  FBox LastSelectedMeshBounds;
 
 };

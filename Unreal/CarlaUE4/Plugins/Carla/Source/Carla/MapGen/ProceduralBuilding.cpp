@@ -15,16 +15,6 @@ AProceduralBuilding::AProceduralBuilding()
 
   UStaticMeshComponent* StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
   RootComponent = StaticMeshComponent;
-
-  const TSet <UActorComponent*> Comps = GetComponents();
-  UE_LOG(LogCarla, Warning, TEXT("CTR - ChildActorComps %d, HISMComps %d, Comps %d"),
-    ChildActorComps.Num(), HISMComps.Num(), Comps.Num());
-
-  TArray<AActor*> ChildActors;
-  GetAllChildActors(ChildActors);
-  UE_LOG(LogCarla, Warning, TEXT("CTR - Attached Childs %d"), ChildActors.Num());
-
-
 }
 
 #if WITH_EDITOR
@@ -44,7 +34,7 @@ void AProceduralBuilding::EditorApplyTranslation(
   {
     AActor* ChildActor = ChildActorComp->GetChildActor();
     FVector ChildActorLocation = ChildActor->GetActorLocation();
-    ChildActor->SetActorLocation(ChildActorLocation + DeltaTranslation);
+    //ChildActor->SetActorLocation(ChildActorLocation + DeltaTranslation);
   }
 }
 
@@ -65,11 +55,11 @@ void AProceduralBuilding::EditorApplyRotation(const FRotator& DeltaRotation, boo
 
     // Add DeltaRotation
     ChildActorRotation += DeltaRotation;
-    ChildActor->SetActorRotation(ChildActorRotation);
+    //ChildActor->SetActorRotation(ChildActorRotation);
 
     // Rotate the location
     DeltaLocation = DeltaRotation.RotateVector(DeltaLocation);
-    ChildActor->SetActorLocation(ParentLocation + DeltaLocation);
+    //ChildActor->SetActorLocation(ParentLocation + DeltaLocation);
   }
 }
 
@@ -100,10 +90,21 @@ void AProceduralBuilding::CreateBuilding()
     false);
 
   // Body floors
+  const FloorMeshCollection BodyMeshCollection =
+      { &BodyMeshes, &BodyBPs, &CornerBodyMeshes, &CornerBodyBPs, &WallMeshes, &WallBPs };
+  for(int i = 0; i < NumFloors; i++)
+  {
+    CreateFloor(BodyMeshCollection, false, true);
+  }
 
   // Top floor
+  CreateFloor(
+    { &TopMeshes, &TopBPs, &CornerTopMeshes, &CornerTopBPs },
+    false,
+    false);
 
   // Roof
+  CreateRoof();
 
 }
 
@@ -189,6 +190,44 @@ void AProceduralBuilding::CreateFloor(
 
 }
 
+void AProceduralBuilding::CreateRoof()
+{
+  UStaticMesh* SelectedMesh = nullptr;
+  TSubclassOf<AActor> SelectedBP = nullptr;
+  FBox SelectedMeshBounds;
+
+  bool AreRoofMeshesAvailable = (RoofMeshes.Num() > 0) || (RoofBPs.Num() > 0);
+
+  // Hack for top meshes. Perhaps the top part has a little part of the roof
+  FVector BoxSize = LastSelectedMeshBounds.GetSize();
+  BoxSize = FVector(0.0f, -BoxSize.Y, 0.0f);
+  CurrentTransform.SetTranslation(CurrentTransform.GetTranslation() + BoxSize);
+
+  if(AreRoofMeshesAvailable)
+  {
+
+    for(int i = 0; i < LengthY; i++)
+    {
+      FVector PivotLocation = CurrentTransform.GetTranslation();
+      for(int j = 0; j < LengthX; j++)
+      {
+        UE_LOG(LogCarla, Warning, TEXT("   CurrLocation %s"), *CurrentTransform.GetTranslation().ToString());
+
+        // Choose a roof mesh
+        ChooseGeometryToSpawn(RoofMeshes, RoofBPs, &SelectedMesh, &SelectedBP);
+
+        AddChunck(SelectedMesh, SelectedBP, RoofVisibility, SelectedMeshBounds);
+
+      }
+      // Move the Transform location to the beginning of the next row
+      CurrentTransform.SetTranslation(PivotLocation);
+      UpdateTransformPositionToNextSide(SelectedMeshBounds);
+    }
+  }
+
+
+}
+
 float AProceduralBuilding::CreateSide(
     const FloorMeshCollection& MeshCollection,
     const TSet<int>& AuxiliarPositions,
@@ -249,6 +288,8 @@ float AProceduralBuilding::CreateSide(
     // because corners can be in two sides
     UpdateTransformPositionToNextSide(SelectedMeshBounds);
   }
+
+  LastSelectedMeshBounds = SelectedMeshBounds;
 
   return MaxZ;
 }
@@ -332,7 +373,7 @@ float AProceduralBuilding::AddChunck(
     {
       AddMeshToBuilding(SelectedMesh);
     }
-    FVector MeshBound = GetMeshBound(SelectedMesh);
+    FVector MeshBound = GetMeshSize(SelectedMesh);
     Result = MeshBound.Z;
 
     UpdateTransformPositionToNextChunk(MeshBound);
@@ -357,7 +398,7 @@ float AProceduralBuilding::AddChunck(
     AActor* ChildActor = ChildActorComp->GetChildActor();
     FAttachmentTransformRules AttachmentTransformRules =
         FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-    ChildActor->AttachToComponent(RootComponent, AttachmentTransformRules);
+    //ChildActor->AttachToComponent(RootComponent, AttachmentTransformRules);
 
 #if WITH_EDITOR
     // Add the child actor to a subfolder of the actor's name
@@ -381,7 +422,7 @@ float AProceduralBuilding::AddChunck(
       const UStaticMesh* SM = PivotSMComp->GetStaticMesh();
 
       AddMeshToBuilding(SM);
-      FVector MeshBound = GetMeshBound(SM);
+      FVector MeshBound = GetMeshSize(SM);
       Result = MeshBound.Z;
 
       UpdateTransformPositionToNextChunk(MeshBound);
@@ -434,10 +475,10 @@ UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
   return HISMComp;
 }
 
-FVector AProceduralBuilding::GetMeshBound(const UStaticMesh* SM)
+FVector AProceduralBuilding::GetMeshSize(const UStaticMesh* SM)
 {
   FBox Box = SM->GetBoundingBox();
-  return (Box.Max - Box.Min);
+  return Box.GetSize();
 }
 
 void AProceduralBuilding::UpdateTransformPositionToNextChunk(const FVector& Box)
@@ -451,6 +492,8 @@ void AProceduralBuilding::UpdateTransformPositionToNextChunk(const FVector& Box)
 
     FVector NewLocation = CurrentTransform.GetTranslation() + ForwardVector * Box.X;
     CurrentTransform.SetTranslation(NewLocation);
+
+    UE_LOG(LogCarla, Warning, TEXT("   UpdateTransformPositionToNextChunk %s"), *NewLocation.ToString());
   }
 }
 
@@ -462,9 +505,9 @@ void AProceduralBuilding::UpdateTransformPositionToNextSide(const FBox& Box)
   {
     FQuat Rotation = CurrentTransform.GetRotation();
     FVector RightVector = -Rotation.GetRightVector();
-    FVector Extent = (Box.Max - Box.Min);
+    FVector Size = Box.GetSize();
 
-    FVector NewLocation = CurrentTransform.GetTranslation() + RightVector * Extent.Y;
+    FVector NewLocation = CurrentTransform.GetTranslation() + RightVector * Size.Y;
     CurrentTransform.SetTranslation(NewLocation);
   }
 }
