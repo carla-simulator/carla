@@ -22,6 +22,7 @@
   * Change API: set_velocity to set_target_velocity for linear and angular velocities
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
+  * Exposed add_force and add_torque
   * Fixed assets import pipeline
   * Fixed Update.sh from failing when the root folder contains a space on it
   * Fixed dynamic meshes not moving to initial position when replaying
