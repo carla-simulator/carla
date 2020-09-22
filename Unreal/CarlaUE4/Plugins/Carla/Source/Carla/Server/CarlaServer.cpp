@@ -306,7 +306,7 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(ActorView);
   };
 
-  BIND_SYNC(get_all_level_BBs) << [this]() -> R<std::vector<cg::BoundingBox>>
+  BIND_SYNC(get_all_level_BBs) << [this](uint8 QueriedTag) -> R<std::vector<cg::BoundingBox>>
   {
     REQUIRE_CARLA_EPISODE();
     TArray<FBoundingBox> Result;
@@ -315,7 +315,7 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to find CARLA game mode");
     }
-    Result = GameMode->GetAllBBsOfLevel();
+    Result = GameMode->GetAllBBsOfLevel(QueriedTag);
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
   };
 
