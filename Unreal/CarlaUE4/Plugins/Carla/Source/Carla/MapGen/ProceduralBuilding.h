@@ -235,6 +235,9 @@ private:
   // The set returns the position (index) of the doors relative to the side, ie: [0, Length)
   TSet<int> CalculateDoorsIndexInSide(int StartIndex, int Length);
 
+  //
+  TSet<int> GenerateWallsIndexPositions(int Length);
+
   // Check if the main and corner part of the side is visible
   void CalculateSideVisibilities(int SideIndex, bool& MainVisibility, bool& CornerVisbility);
 
