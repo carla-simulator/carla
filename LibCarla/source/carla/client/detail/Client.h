@@ -163,9 +163,27 @@ namespace detail {
 
     void AddActorImpulse(
         rpc::ActorId actor,
-        const geom::Vector3D &vector);
+        const geom::Vector3D &impulse);
+
+    void AddActorImpulse(
+        rpc::ActorId actor,
+        const geom::Vector3D &impulse,
+        const geom::Vector3D &location);
+
+    void AddActorForce(
+        rpc::ActorId actor,
+        const geom::Vector3D &force);
+
+    void AddActorForce(
+        rpc::ActorId actor,
+        const geom::Vector3D &force,
+        const geom::Vector3D &location);
 
     void AddActorAngularImpulse(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void AddActorTorque(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
