@@ -146,11 +146,11 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Transform &transform);
 
-    void SetActorVelocity(
+    void SetActorTargetVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
-    void SetActorAngularVelocity(
+    void SetActorTargetAngularVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
@@ -257,7 +257,7 @@ namespace detail {
         bool discard_client = false) const;
 
     /// Returns all the BBs of all the elements of the level
-    std::vector<geom::BoundingBox> GetLevelBBs() const;
+    std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
 
   private:
 

@@ -18,6 +18,7 @@
   * Added new semantic segmenation tags: `RailTrack`, `GuardRail`, `TrafficLight`, `Static`, `Dynamic`, `Water` and `Terrain`
   * Fixed several untagged and mistagged objects
   * Added vehicle light and street light data to recorder
+  * Change API: set_velocity to set_target_velocity for linear and angular velocities
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
   * Fixed assets import pipeline
@@ -60,6 +61,7 @@
   * Fixed minor typo in the introduction section of documentation.
   * Fixed a bug at the local planner when changing the route, causing it to maintain the first part of the previous one. This was only relevant when using very large buffer sizes.
   * Added automatic calculation of vehicle's BB
+  * Retrieve BBs of all the elements of the level
 
 
 ## CARLA 0.9.9
