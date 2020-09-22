@@ -48,6 +48,14 @@ namespace client {
     GetEpisode().Lock()->SetActorTargetAngularVelocity(*this, vector);
   }
 
+  void Actor::EnableConstantVelocity(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->EnableActorConstantVelocity(*this, vector);
+  }
+
+  void Actor::DisableConstantVelocity() {
+    GetEpisode().Lock()->DisableActorConstantVelocity(*this);
+  }
+
   void Actor::AddImpulse(const geom::Vector3D &vector) {
     GetEpisode().Lock()->AddActorImpulse(*this, vector);
   }

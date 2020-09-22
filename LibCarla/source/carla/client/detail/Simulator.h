@@ -330,6 +330,13 @@ namespace detail {
     void SetActorTargetAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
       _client.SetActorTargetAngularVelocity(actor.GetId(), vector);
     }
+    void EnableActorConstantVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.EnableActorConstantVelocity(actor.GetId(), vector);
+    }
+
+    void DisableActorConstantVelocity(const Actor &actor) {
+      _client.DisableActorConstantVelocity(actor.GetId());
+    }
 
     void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
       _client.AddActorImpulse(actor.GetId(), vector);

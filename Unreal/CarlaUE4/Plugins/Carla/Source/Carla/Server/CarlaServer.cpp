@@ -557,6 +557,48 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(enable_actor_constant_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor velocity: actor not found");
+    }
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (CarlaVehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set actor velocity: not supported by actor");
+    }
+
+    CarlaVehicle->ActivateVelocityControl(vector.ToCentimeters().ToFVector());
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(disable_actor_constant_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor velocity: actor not found");
+    }
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (CarlaVehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set actor velocity: not supported by actor");
+    }
+
+    CarlaVehicle->DeactivateVelocityControl();
+
+    return R<void>::Success();
+  };
+
   BIND_SYNC(add_actor_impulse) << [this](
       cr::ActorId ActorId,
       cr::Vector3D vector) -> R<void>
