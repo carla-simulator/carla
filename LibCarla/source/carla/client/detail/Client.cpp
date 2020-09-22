@@ -271,6 +271,7 @@ namespace detail {
   void Client::SetActorTargetAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("set_actor_target_angular_velocity", actor, vector);
   }
+
   void Client::EnableActorConstantVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("enable_actor_constant_velocity", actor, vector);
   }
