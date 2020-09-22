@@ -12,6 +12,7 @@ AProceduralBuilding::AProceduralBuilding()
 
   SideVisibility.Init(true, 4);
   CornerVisibility.Init(true, 4);
+  UseWallMesh.Init(false, 4);
 
   UStaticMeshComponent* StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
   RootComponent = StaticMeshComponent;
@@ -131,8 +132,10 @@ void AProceduralBuilding::Reset()
   // Remove all child actors
   for(UChildActorComponent* ChildActorComp : ChildActorComps)
   {
-    ChildActorComp->DestroyChildActor();
-    ChildActorComp->DestroyComponent();
+    if(ChildActorComp)
+    {
+      ChildActorComp->DestroyComponent();
+    }
   }
   ChildActorComps.Reset();
 
@@ -157,20 +160,24 @@ void AProceduralBuilding::CreateFloor(
 
   for(int i = 0; i < SidesLength.Num(); i++)
   {
-    TSet<int> DoorsPosition;
+    TSet<int> AuxiliarPositions;
     int SideLength = SidesLength[i];
     bool MainVisibility = true;
     bool CornerVisbility = true;
 
     if (IncludeDoors)
     {
-      DoorsPosition = CalculateDoorsIndexInSide(SideLengthAcumulator, SideLength);
+      AuxiliarPositions = CalculateDoorsIndexInSide(SideLengthAcumulator, SideLength);
+    }
+    if(IncludeWalls && UseWallMesh[i])
+    {
+      AuxiliarPositions = GenerateWallsIndexPositions(SideLength);
     }
 
     CalculateSideVisibilities(i, MainVisibility, CornerVisbility);
 
     // Update Max Z
-    float SideMaxZ = CreateSide(MeshCollection, DoorsPosition, SideLength, MainVisibility, CornerVisbility);
+    float SideMaxZ = CreateSide(MeshCollection, AuxiliarPositions, SideLength, MainVisibility, CornerVisbility);
     MaxZ = (MaxZ < SideMaxZ) ? SideMaxZ : MaxZ;
 
     // Update the acumulator to calculate doors index in next sides
@@ -201,6 +208,7 @@ void AProceduralBuilding::CreateRoof()
   // Hack for top meshes. Perhaps the top part has a little part of the roof
   FVector BoxSize = LastSelectedMeshBounds.GetSize();
   BoxSize = FVector(0.0f, -BoxSize.Y, 0.0f);
+
   CurrentTransform.SetTranslation(CurrentTransform.GetTranslation() + BoxSize);
 
   if(AreRoofMeshesAvailable)
@@ -211,8 +219,6 @@ void AProceduralBuilding::CreateRoof()
       FVector PivotLocation = CurrentTransform.GetTranslation();
       for(int j = 0; j < LengthX; j++)
       {
-        UE_LOG(LogCarla, Warning, TEXT("   CurrLocation %s"), *CurrentTransform.GetTranslation().ToString());
-
         // Choose a roof mesh
         ChooseGeometryToSpawn(RoofMeshes, RoofBPs, &SelectedMesh, &SelectedBP);
 
@@ -281,7 +287,7 @@ float AProceduralBuilding::CreateSide(
   {
     // Choose a corner mesh
     ChooseGeometryToSpawn(*CornerMeshes, *CornerBPs, &SelectedMesh, &SelectedBP);
-    float ChunkZ = AddChunck(SelectedMesh, SelectedBP, MainVisibility, SelectedMeshBounds);
+    float ChunkZ = AddChunck(SelectedMesh, SelectedBP, CornerVisbility, SelectedMeshBounds);
     MaxZ = (MaxZ < ChunkZ) ? ChunkZ : MaxZ;
 
     // Move the Transform location to the next side of the building
@@ -326,6 +332,16 @@ TSet<int> AProceduralBuilding::CalculateDoorsIndexInSide(int StartIndex, int Len
       int RelativePostion = i - StartIndex;
       Result.Emplace(RelativePostion);
     }
+  }
+  return Result;
+}
+
+TSet<int> AProceduralBuilding::GenerateWallsIndexPositions(int Length)
+{
+  TSet<int> Result;
+  for(int i = 0; i < Length; i++)
+  {
+    Result.Emplace(i);
   }
   return Result;
 }
@@ -411,31 +427,29 @@ float AProceduralBuilding::AddChunck(
 
     ChildActor->GetComponents<UStaticMeshComponent>(SMComps);
 
-    int NumSMs = SMComps.Num();
+    // The first mesh on the BP is the pivot to continue creating the floor
+    PivotSMComp = SMComps[0];
+    const UStaticMesh* SM = PivotSMComp->GetStaticMesh();
 
-    if(Visible && NumSMs > 0)
+    if(Visible)
     {
       ChildActorComps.Emplace(ChildActorComp);
-
-      // The first mesh on the BP is the pivot to continue creating the floor
-      PivotSMComp = SMComps[0];
-      const UStaticMesh* SM = PivotSMComp->GetStaticMesh();
-
       AddMeshToBuilding(SM);
-      FVector MeshBound = GetMeshSize(SM);
-      Result = MeshBound.Z;
-
-      UpdateTransformPositionToNextChunk(MeshBound);
-
-      // Make it invisible on the child actor to avoid duplication with the HISMComp
-      PivotSMComp->SetVisibility(false, false);
-      OutSelectedMeshBounds = SM->GetBoundingBox();
     }
     else
     {
-      //ChildActorComp->DestroyComponent();
-      ChildActor->Destroy();
+      ChildActorComp->DestroyComponent();
     }
+
+    FVector MeshBound = GetMeshSize(SM);
+    Result = MeshBound.Z;
+
+    UpdateTransformPositionToNextChunk(MeshBound);
+
+    // Make it invisible on the child actor to avoid duplication with the HISMComp
+    PivotSMComp->SetVisibility(false, false);
+    OutSelectedMeshBounds = SM->GetBoundingBox();
+
   }
 
   return Result;
@@ -492,8 +506,6 @@ void AProceduralBuilding::UpdateTransformPositionToNextChunk(const FVector& Box)
 
     FVector NewLocation = CurrentTransform.GetTranslation() + ForwardVector * Box.X;
     CurrentTransform.SetTranslation(NewLocation);
-
-    UE_LOG(LogCarla, Warning, TEXT("   UpdateTransformPositionToNextChunk %s"), *NewLocation.ToString());
   }
 }
 
