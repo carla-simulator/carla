@@ -473,6 +473,10 @@ namespace detail {
       _client.ResetTrafficLightGroup(trafficLight.GetId());
     }
 
+    void ResetAllTrafficLights() {
+      _client.ResetAllTrafficLights();
+    }
+
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
       return _client.GetGroupTrafficLights(trafficLight.GetId());
     }
