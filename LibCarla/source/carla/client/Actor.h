@@ -76,12 +76,23 @@ namespace client {
     /// Disable the constant velocity mode
     void DisableConstantVelocity();
 
-
-    /// Add impulse to the actor.
+    /// Add impulse to the actor at its center of mass.
     void AddImpulse(const geom::Vector3D &vector);
+
+    /// Add impulse to the actor at certain location.
+    void AddImpulse(const geom::Vector3D &impulse, const geom::Vector3D &location);
+
+    /// Add force to the actor at its center of mass.
+    void AddForce(const geom::Vector3D &force);
+
+    /// Add force to the actor at certain location.
+    void AddForce(const geom::Vector3D &force, const geom::Vector3D &location);
 
     /// Add angular impulse to the actor.
     void AddAngularImpulse(const geom::Vector3D &vector);
+
+    /// Add a torque to the actor.
+    void AddTorque(const geom::Vector3D &vector);
 
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);

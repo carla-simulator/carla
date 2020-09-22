@@ -338,12 +338,28 @@ namespace detail {
       _client.DisableActorConstantVelocity(actor.GetId());
     }
 
-    void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
-      _client.AddActorImpulse(actor.GetId(), vector);
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse) {
+      _client.AddActorImpulse(actor.GetId(), impulse);
+    }
+
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse, const geom::Vector3D &location) {
+      _client.AddActorImpulse(actor.GetId(), impulse, location);
+    }
+
+    void AddActorForce(const Actor &actor, const geom::Vector3D &force) {
+      _client.AddActorForce(actor.GetId(), force);
+    }
+
+    void AddActorForce(const Actor &actor, const geom::Vector3D &force, const geom::Vector3D &location) {
+      _client.AddActorForce(actor.GetId(), force, location);
     }
 
     void AddActorAngularImpulse(const Actor &actor, const geom::Vector3D &vector) {
       _client.AddActorAngularImpulse(actor.GetId(), vector);
+    }
+
+    void AddActorTorque(const Actor &actor, const geom::Vector3D &torque) {
+      _client.AddActorAngularImpulse(actor.GetId(), torque);
     }
 
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
