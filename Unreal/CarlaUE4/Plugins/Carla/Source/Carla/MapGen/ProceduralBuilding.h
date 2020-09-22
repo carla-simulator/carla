@@ -38,8 +38,25 @@ public:
   AProceduralBuilding();
 
 #if WITH_EDITOR
-  /** Called after an actor has been moved in the editor */
-  void PostEditMove(bool bFinished) override;
+  /**
+   * Called by ApplyDeltaToActor to perform an actor class-specific operation based on widget manipulation.
+   * The default implementation is simply to translate the actor's location.
+   */
+  void EditorApplyTranslation(const FVector& DeltaTranslation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
+
+  /**
+   * Called by ApplyDeltaToActor to perform an actor class-specific operation based on widget manipulation.
+   * The default implementation is simply to modify the actor's rotation.
+   */
+  void EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
+
+  /**
+   * Called by ApplyDeltaToActor to perform an actor class-specific operation based on widget manipulation.
+   * The default implementation is simply to modify the actor's draw scale.
+   */
+  void EditorApplyScale(const FVector& DeltaScale, const FVector* PivotLocation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
+
+
 #endif // WITH_EDITOR
 
 protected:
@@ -50,13 +67,13 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
   void Reset();
 
+  // TODO: AdvancedDisplay
   // Map containing the pair with the name of the mesh and the component that uses it
-  //UPROPERTY(BlueprintReadOnly, VisibleAnywhere, AdvancedDisplay, Category="Procedural Building|Debug")
-  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Debug")
+  UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Procedural Building|Debug")
   TMap<FString, UHierarchicalInstancedStaticMeshComponent*> HISMComps;
 
   // Contains all the ChildActorComps spawned for this Actor
-  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Procedural Building|Debug")
+  UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Procedural Building|Debug")
   TArray<UChildActorComponent*> ChildActorComps;
 
   /**
