@@ -43,8 +43,8 @@ void UVehicleVelocityControl::Activate(FVector Velocity, bool bReset)
 
 void UVehicleVelocityControl::Deactivate()
 {
-  Super::Deactivate();
   SetComponentTickEnabled(false);
+  Super::Deactivate();
 }
 
 void UVehicleVelocityControl::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
