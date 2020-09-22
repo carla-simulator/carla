@@ -512,7 +512,8 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(set_actor_velocity) << [this](
+
+  BIND_SYNC(set_actor_target_velocity) << [this](
       cr::ActorId ActorId,
       cr::Vector3D vector) -> R<void>
   {
@@ -520,12 +521,12 @@ void FCarlaServer::FPimpl::BindActions()
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to set actor velocity: actor not found");
+      RESPOND_ERROR("unable to set actor target velocity: actor not found");
     }
     auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
     if (RootComponent == nullptr)
     {
-      RESPOND_ERROR("unable to set actor velocity: not supported by actor");
+      RESPOND_ERROR("unable to set actor target velocity: not supported by actor");
     }
     RootComponent->SetPhysicsLinearVelocity(
         vector.ToCentimeters().ToFVector(),
@@ -534,7 +535,7 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(set_actor_angular_velocity) << [this](
+  BIND_SYNC(set_actor_target_angular_velocity) << [this](
       cr::ActorId ActorId,
       cr::Vector3D vector) -> R<void>
   {
@@ -542,12 +543,12 @@ void FCarlaServer::FPimpl::BindActions()
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to set actor angular velocity: actor not found");
+      RESPOND_ERROR("unable to set actor target angular velocity: actor not found");
     }
     auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
     if (RootComponent == nullptr)
     {
-      RESPOND_ERROR("unable to set actor angular velocity: not supported by actor");
+      RESPOND_ERROR("unable to set actor target angular velocity: not supported by actor");
     }
     RootComponent->SetPhysicsAngularVelocityInDegrees(
         vector.ToFVector(),
@@ -1112,8 +1113,8 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
-      [=](auto, const C::ApplyVelocity &c) {        MAKE_RESULT(set_actor_velocity(c.actor, c.velocity)); },
-      [=](auto, const C::ApplyAngularVelocity &c) { MAKE_RESULT(set_actor_angular_velocity(c.actor, c.angular_velocity)); },
+      [=](auto, const C::ApplyTargetVelocity &c) {        MAKE_RESULT(set_actor_target_velocity(c.actor, c.velocity)); },
+      [=](auto, const C::ApplyTargetAngularVelocity &c) { MAKE_RESULT(set_actor_target_angular_velocity(c.actor, c.angular_velocity)); },
       [=](auto, const C::ApplyImpulse &c) {         MAKE_RESULT(add_actor_impulse(c.actor, c.impulse)); },
       [=](auto, const C::ApplyAngularImpulse &c) {  MAKE_RESULT(add_actor_angular_impulse(c.actor, c.impulse)); },
       [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },

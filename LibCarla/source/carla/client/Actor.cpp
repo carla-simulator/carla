@@ -40,12 +40,12 @@ namespace client {
     GetEpisode().Lock()->SetActorTransform(*this, transform);
   }
 
-  void Actor::SetVelocity(const geom::Vector3D &vector) {
-    GetEpisode().Lock()->SetActorVelocity(*this, vector);
+  void Actor::SetTargetVelocity(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->SetActorTargetVelocity(*this, vector);
   }
 
-  void Actor::SetAngularVelocity(const geom::Vector3D &vector) {
-    GetEpisode().Lock()->SetActorAngularVelocity(*this, vector);
+  void Actor::SetTargetAngularVelocity(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->SetActorTargetAngularVelocity(*this, vector);
   }
 
   void Actor::AddImpulse(const geom::Vector3D &vector) {

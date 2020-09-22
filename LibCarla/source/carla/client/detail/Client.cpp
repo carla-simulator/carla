@@ -264,12 +264,12 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_transform", actor, transform);
   }
 
-  void Client::SetActorVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_velocity", actor, vector);
+  void Client::SetActorTargetVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_target_velocity", actor, vector);
   }
 
-  void Client::SetActorAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
+  void Client::SetActorTargetAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_target_angular_velocity", actor, vector);
   }
 
   void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {

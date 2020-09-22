@@ -146,11 +146,11 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Transform &transform);
 
-    void SetActorVelocity(
+    void SetActorTargetVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
-    void SetActorAngularVelocity(
+    void SetActorTargetAngularVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
