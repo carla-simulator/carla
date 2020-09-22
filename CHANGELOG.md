@@ -28,6 +28,7 @@
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
+  * Added Constant Velocity mode
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
   * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system
   * Fixed light intensity and camera parameters to match
