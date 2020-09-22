@@ -13,8 +13,8 @@ AProceduralBuilding::AProceduralBuilding()
   SideVisibility.Init(true, 4);
   CornerVisibility.Init(true, 4);
 
-  USceneComponent* SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-  RootComponent = SceneComponent;
+  UStaticMeshComponent* StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
+  RootComponent = StaticMeshComponent;
 
   const TSet <UActorComponent*> Comps = GetComponents();
   UE_LOG(LogCarla, Warning, TEXT("CTR - ChildActorComps %d, HISMComps %d, Comps %d"),
@@ -24,21 +24,70 @@ AProceduralBuilding::AProceduralBuilding()
   GetAllChildActors(ChildActors);
   UE_LOG(LogCarla, Warning, TEXT("CTR - Attached Childs %d"), ChildActors.Num());
 
+
 }
 
-void AProceduralBuilding::PostEditMove(bool bFinished)
+#if WITH_EDITOR
+
+void AProceduralBuilding::EditorApplyTranslation(
+  const FVector& DeltaTranslation,
+  bool bAltDown,
+  bool bShiftDown,
+  bool bCtrlDown)
 {
-  Super::PostEditMove(bFinished);
+  Super::EditorApplyTranslation(DeltaTranslation, bAltDown, bShiftDown, bCtrlDown);
 
-  UE_LOG(LogCarla, Warning, TEXT("AProceduralBuilding::PostEditMove"));
+  const FTransform& ParentTransform = GetTransform();
+  FTransform ChildTransform = ChildActorComps[0]->GetChildActor()->GetTransform();
 
-  const FTransform& Transform = GetTransform();
   for(UChildActorComponent* ChildActorComp : ChildActorComps)
   {
-    ChildActorComp->SetRelativeTransform(Transform);
+    AActor* ChildActor = ChildActorComp->GetChildActor();
+    FVector ChildActorLocation = ChildActor->GetActorLocation();
+    ChildActor->SetActorLocation(ChildActorLocation + DeltaTranslation);
   }
-
 }
+
+void AProceduralBuilding::EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
+{
+  Super::EditorApplyRotation(DeltaRotation, bAltDown, bShiftDown, bCtrlDown);
+
+  const FTransform& ParentTransform = GetTransform();
+  FTransform ChildTransform = ChildActorComps[0]->GetChildActor()->GetTransform();
+
+  FVector ParentLocation = GetActorLocation();
+  for(UChildActorComponent* ChildActorComp : ChildActorComps)
+  {
+    AActor* ChildActor = ChildActorComp->GetChildActor();
+    FVector ChildActorLocation = ChildActor->GetActorLocation();
+    FVector DeltaLocation = ChildActorLocation - ParentLocation;
+    FRotator ChildActorRotation = ChildActor->GetActorRotation();
+
+    // Add DeltaRotation
+    ChildActorRotation += DeltaRotation;
+    ChildActor->SetActorRotation(ChildActorRotation);
+
+    // Rotate the location
+    DeltaLocation = DeltaRotation.RotateVector(DeltaLocation);
+    ChildActor->SetActorLocation(ParentLocation + DeltaLocation);
+  }
+}
+
+void AProceduralBuilding::EditorApplyScale(const FVector& DeltaScale, const FVector* PivotLocation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
+{
+  Super::EditorApplyScale(DeltaScale, PivotLocation, bAltDown, bShiftDown, bCtrlDown);
+
+  for(UChildActorComponent* ChildActorComp : ChildActorComps)
+  {
+    AActor* ChildActor = ChildActorComp->GetChildActor();
+    FVector ChildActorScale = ChildActor->GetActorScale3D();
+    // TODO: apply scale with rotation in mind
+    // ChildActor->SetActorScale3D();
+
+  }
+}
+
+#endif // WITH_EDITOR
 
 void AProceduralBuilding::CreateBuilding()
 {
@@ -56,10 +105,6 @@ void AProceduralBuilding::CreateBuilding()
 
   // Roof
 
-  TArray<AActor*> ChildActors;
-  GetAllChildActors(ChildActors);
-  UE_LOG(LogCarla, Warning, TEXT("Attached Childs %d"), ChildActors.Num());
-
 }
 
 void AProceduralBuilding::Reset()
@@ -72,7 +117,6 @@ void AProceduralBuilding::Reset()
   const TSet <UActorComponent*> Comps = GetComponents();
 
   // Remove all the instances of each HISMComp
-  UE_LOG(LogCarla, Warning, TEXT("HISMComps %d, Comps %d"), HISMComps.Num(), Comps.Num());
   for(auto& It : HISMComps)
   {
     const FString& MeshName = It.Key;
@@ -84,16 +128,6 @@ void AProceduralBuilding::Reset()
   HISMComps.Reset();
 
   // Remove all child actors
-  TArray<AActor*> ChildActors;
-  GetAllChildActors(ChildActors);
-  UE_LOG(LogCarla, Warning, TEXT("Reset NumChilds = %d, ChildActorComps = %d"),
-    ChildActors.Num(), ChildActorComps.Num());
-  /*
-  for(AActor* ChildActor : ChildActors)
-  {
-    ChildActor->Destroy();
-  }
-  */
   for(UChildActorComponent* ChildActorComp : ChildActorComps)
   {
     ChildActorComp->DestroyChildActor();
@@ -162,9 +196,6 @@ float AProceduralBuilding::CreateSide(
     bool MainVisibility,
     bool CornerVisbility)
 {
-
-  UE_LOG(LogCarla, Warning, TEXT("AProceduralBuilding::CreateSide of length %d"), SideLength);
-
   const TArray<UStaticMesh*>* MainMeshes = MeshCollection.MainMeshes;
   const TArray<TSubclassOf<AActor>>* MainBPs = MeshCollection.MainBPs;
   const TArray<UStaticMesh*>* CornerMeshes = MeshCollection.CornerMeshes;
@@ -207,7 +238,7 @@ float AProceduralBuilding::CreateSide(
    * Corner part
    */
   bool AreCornerMeshesAvailable = (CornerMeshes && (CornerMeshes->Num() > 0)) || (CornerBPs && (CornerBPs->Num() > 0));
-  if(AreCornerMeshesAvailable)
+  if(Corners && AreCornerMeshesAvailable)
   {
     // Choose a corner mesh
     ChooseGeometryToSpawn(*CornerMeshes, *CornerBPs, &SelectedMesh, &SelectedBP);
@@ -234,10 +265,10 @@ void AProceduralBuilding::CalculateSidesLength()
   }
   else
   {
-    SidesLength.Emplace(LengthY);
     SidesLength.Emplace(LengthX);
     SidesLength.Emplace(LengthY);
     SidesLength.Emplace(LengthX);
+    SidesLength.Emplace(LengthY);
   }
 
 }
@@ -310,13 +341,10 @@ float AProceduralBuilding::AddChunck(
   // BP
   else if(SelectedBP)
   {
-
-    UE_LOG(LogCarla, Warning, TEXT("AddChunck BP -> %s"), *SelectedBP->GetClass()->GetName());
-
     // Create a new ChildActorComponent
     UChildActorComponent* ChildActorComp = NewObject<UChildActorComponent>(this,
-      FName(*FString::Printf(TEXT("ChildActorComp_%d"), ChildActorComps.Num())));
-    ChildActorComp->SetupAttachment(GetRootComponent());
+      FName(*FString::Printf(TEXT("ChildActorComp_%d"), ChildActorComps.Num() )));
+    ChildActorComp->SetupAttachment(RootComponent);
 
     // Set the class that it will use
     ChildActorComp->SetChildActorClass(SelectedBP);
@@ -326,16 +354,15 @@ float AProceduralBuilding::AddChunck(
     ChildActorComp->RegisterComponent();
 
     // Create and attach child actor to parent
-    //ChildActorComp->CreateChildActor();
     AActor* ChildActor = ChildActorComp->GetChildActor();
-    //AddComponent()
-    //ChildActor->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-    //ChildActor->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
-    //ChildActorComp->SetRelativeTransform(CurrentTransform);
+    FAttachmentTransformRules AttachmentTransformRules =
+        FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
+    ChildActor->AttachToComponent(RootComponent, AttachmentTransformRules);
 
-    //UE_LOG(LogCarla, Warning, TEXT("ChildActorComp->SetRelativeTransform \n%s"), *CurrentTransform.ToHumanReadableString());
-
-    UE_LOG(LogCarla, Warning, TEXT("Child Attached To %s"), *ChildActor->GetParentActor()->GetName());
+#if WITH_EDITOR
+    // Add the child actor to a subfolder of the actor's name
+    ChildActor->SetFolderPath(FName( *FString::Printf(TEXT("/Buildings/%s"), *GetName())));
+ #endif
 
     // Look for all the SMComps
     TArray<UStaticMeshComponent*> SMComps;
@@ -368,15 +395,6 @@ float AProceduralBuilding::AddChunck(
       //ChildActorComp->DestroyComponent();
       ChildActor->Destroy();
     }
-
-    /*
-    // TODO: add the other meshes to a HISMComp
-    for(int i = 1; i < NumSMs; i++)
-    {
-      UStaticMeshComponent* SMComp = Cast<UStaticMeshComponent>(SMComps[i]);
-      const UStaticMesh* SM = SMComp->GetStaticMesh();
-    }
-    */
   }
 
   return Result;
@@ -404,7 +422,7 @@ UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
   // If it doesn't exist, create the component
   HISMComp = NewObject<UHierarchicalInstancedStaticMeshComponent>(this,
     FName(*FString::Printf(TEXT("HISMComp_%d"), HISMComps.Num())));
-  HISMComp->SetupAttachment(GetRootComponent());
+  HISMComp->SetupAttachment(RootComponent);
   HISMComp->RegisterComponent();
 
   // Set the mesh that will be used
