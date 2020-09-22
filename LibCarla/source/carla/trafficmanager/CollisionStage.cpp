@@ -336,7 +336,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   bool ego_inside_junction = closest_point->CheckJunction();
   TrafficLightState reference_tl_state = simulation_state.GetTLS(reference_vehicle_id);
   bool ego_at_traffic_light = reference_tl_state.at_traffic_light;
-  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green;
+  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green && reference_tl_state.tl_state != TLS::Off;
   SimpleWaypointPtr look_ahead_point = reference_vehicle_buffer.at(reference_junction_look_ahead_index);
   bool ego_at_junction_entrance = !closest_point->CheckJunction() && look_ahead_point->CheckJunction();
 
