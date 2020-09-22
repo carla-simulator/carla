@@ -1489,7 +1489,7 @@ The following tags are currently available:
 <td><code>5</code> </td>
 <td>Pole</td>
 <td><code>(153, 153, 153)</code></td>
-<td>Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.E</td>
+<td>Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.</td>
 <tr>
 <td><code>6</code> </td>
 <td>RoadLine</td>
@@ -1559,12 +1559,12 @@ The following tags are currently available:
 <td><code>19</code> </td>
 <td>Static</td>
 <td><code>(110, 190, 160)</code></td>
-<td>Elements in the scene and props that are immovable. E.g. fire hydrants, fixed benches, fountains, bus stops, etc.</td>
+<td>Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.</td>
 <tr>
 <td><code>20</code> </td>
 <td>Dynamic</td>
 <td><code>(170, 120, 50)</code></td>
-<td>Elements whose position is susceptible to change over time. E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.</td>
+<td>Elements whose position is susceptible to change over time. <br> E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.</td>
 <tr>
 <td><code>21</code> </td>
 <td>Water</td>
