@@ -69,6 +69,11 @@ namespace client {
 
     /// Set the angular velocity of the actor before applying physics.
     void SetTargetAngularVelocity(const geom::Vector3D &vector);
+    /// Enable a constant velocity mode
+    void EnableConstantVelocity(const geom::Vector3D &vector);
+    /// Disable the constant velocity mode
+    void DisableConstantVelocity();
+
 
     /// Add impulse to the actor.
     void AddImpulse(const geom::Vector3D &vector);

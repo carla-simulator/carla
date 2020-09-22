@@ -153,6 +153,12 @@ namespace detail {
     void SetActorTargetAngularVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
+    void EnableActorConstantVelocity(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void DisableActorConstantVelocity(
+        rpc::ActorId actor);
 
     void AddActorImpulse(
         rpc::ActorId actor,
