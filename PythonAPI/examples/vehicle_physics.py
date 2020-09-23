@@ -8,7 +8,7 @@
 
 """
 Vehicle physics example for CARLA
-Small example that shows the effect of different impulse and force aplication 
+Small example that shows the effect of different impulse and force aplication
 methods to a vehicle.
 """
 
@@ -68,10 +68,10 @@ def main(arg):
         vehicle_transform = world.get_map().get_spawn_points()[0]
         vehicle_transform.location.z += 3
         vehicle = world.spawn_actor(vehicle_bp, vehicle_transform)
-        
+
         physics_vehicle = vehicle.get_physics_control()
         car_mass = physics_vehicle.mass
-        
+
         spectator_transform = carla.Transform(vehicle_transform.location, vehicle_transform.rotation)
         spectator_transform.location += vehicle_transform.get_forward_vector() * 20
         spectator_transform.rotation.yaw += 180
@@ -79,7 +79,7 @@ def main(arg):
         spectator.set_transform(spectator_transform)
 
 
-        # We want to 
+        # We want to
         wait(world)
         vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
         vehicle_transform = vehicle.get_transform()
@@ -87,10 +87,10 @@ def main(arg):
 
         # Impulse/Force at the center of mass of the object
         impulse = 10 * car_mass
-        
+
         print(car_mass)
 
-        print("# Adding an Impulse of %f N·s" % impulse)
+        print("# Adding an Impulse")
         vehicle.add_impulse(carla.Vector3D(0, 0, impulse))
 
         wait(world)
@@ -98,7 +98,9 @@ def main(arg):
         vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
         wait(world)
 
-        print("# Adding Force of %f N" % (impulse / delta))
+        print("# Adding an scaled Force")
+        # AddForce should not be use for instantaneous forces like this one.
+        # This is only to show a way of making an equivalence between impulse and force.
         vehicle.add_force(carla.Vector3D(0, 0, impulse / delta))
 
         wait(world)
