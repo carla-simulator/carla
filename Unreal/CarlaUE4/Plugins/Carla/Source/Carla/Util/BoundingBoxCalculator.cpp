@@ -223,6 +223,7 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
       IndicesDiscarded.Emplace(i);
       FBoundingBox MergedBB = CombineBBs(BBsToCombine);
       MergedBB.Rotation = BB1.Rotation;
+      UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *TrafficLight->GetName(), *TrafficLight->GetClass()->GetName() );
       OutBB.Add(MergedBB);
     }
   }
@@ -233,6 +234,7 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     // Check if the index was used to merge a previous BB
     if(IndicesDiscarded.Contains(i)) continue;
     FBoundingBox& BB = BBsOfTL[i];
+    UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *TrafficLight->GetName(), *TrafficLight->GetClass()->GetName() );
     OutBB.Add(BB);
   }
 
@@ -324,6 +326,7 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
   {
     const FTransform Transform = FTransform(InstSMIData.Transform);
     FBoundingBox BoundingBox = ApplyTransformToBB(SMBoundingBox, Transform);
+    UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *ISMComp->GetOwner()->GetName(), *ISMComp->GetOwner()->GetClass()->GetName() );
     OutBoundingBox.Add(BoundingBox);
   }
 
@@ -339,6 +342,9 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 
   for(UStaticMeshComponent* Comp : StaticMeshComps)
   {
+    // Avoid duplication with SMComp
+    if(Cast<UInstancedStaticMeshComponent>(Comp)) continue;
+
     // Filter by tag
     crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
     if(FilterByTagEnabled && Tag != TagQueried) continue;
@@ -355,6 +361,7 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
       // Component-to-world transform for this component
       const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
       BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+      UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Comp->GetOwner()->GetName(), *Comp->GetOwner()->GetClass()->GetName() );
       OutBB.Add(BoundingBox);
     }
   }
@@ -385,6 +392,7 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
       // Component-to-world transform for this component
       const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
       BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+      UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Comp->GetOwner()->GetName(), *Comp->GetOwner()->GetClass()->GetName() );
       OutBB.Add(BoundingBox);
     }
   }
@@ -398,6 +406,8 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
+  UE_LOG(LogCarla, Error, TEXT("GetBoundingBoxOfActors num %d"), Actors.Num());
+
   for(AActor* Actor : Actors)
   {
     FString ClassName = Actor->GetClass()->GetName();
@@ -406,7 +416,8 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     // When improved the BP_Procedural_Building this maybe should be removed
     // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
     //       than getting the UClass of the BP to cast the actor.
-    if(ClassName.Contains("BP_Procedural_Bulding")) continue;
+    if( ClassName.Contains("BP_Procedural_Bulding") ||
+        ClassName.Contains("BP_Procedural_Bulding") ) continue;
 
     // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
@@ -415,6 +426,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
       if(!BoundingBox.Extent.IsZero())
       {
+        UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Actor->GetName(), *ClassName );
         Result.Add(BoundingBox);
       }
       continue;
@@ -428,6 +440,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
       if(!BoundingBox.Extent.IsZero())
       {
+        UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Actor->GetName(), *ClassName );
         Result.Add(BoundingBox);
       }
       continue;
@@ -441,16 +454,6 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       continue;
     }
 
-    // Calculate FBoundingBox of SM
-    TArray<UStaticMeshComponent*> StaticMeshComps;
-    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
-
-    // Calculate FBoundingBox of SK_M
-    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
-    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
-
     // Calculate FBoundingBox of ISM
     TArray<UInstancedStaticMeshComponent *> ISMComps;
     Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
@@ -463,7 +466,19 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       GetISMBoundingBox(Comp, Result);
     }
 
+    // Calculate FBoundingBox of SM
+    TArray<UStaticMeshComponent*> StaticMeshComps;
+    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
+
+    // Calculate FBoundingBox of SK_M
+    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
+
   }
+
+  UE_LOG(LogCarla, Error, TEXT("GetBoundingBoxOfActors result num %d"), Result.Num());
 
   return Result;
 }
