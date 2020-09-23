@@ -185,61 +185,6 @@ void AProceduralBuilding::SetTopMeshes(
   RoofBPs = InRoofBPs;
 }
 
-#if WITH_EDITOR
-
-void AProceduralBuilding::EditorApplyTranslation(
-  const FVector& DeltaTranslation,
-  bool bAltDown,
-  bool bShiftDown,
-  bool bCtrlDown)
-{
-  Super::EditorApplyTranslation(DeltaTranslation, bAltDown, bShiftDown, bCtrlDown);
-
-  for(UChildActorComponent* ChildActorComp : ChildActorComps)
-  {
-    AActor* ChildActor = ChildActorComp->GetChildActor();
-    FVector ChildActorLocation = ChildActor->GetActorLocation();
-    //ChildActor->SetActorLocation(ChildActorLocation + DeltaTranslation);
-  }
-}
-
-void AProceduralBuilding::EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
-{
-  Super::EditorApplyRotation(DeltaRotation, bAltDown, bShiftDown, bCtrlDown);
-
-  FVector ParentLocation = GetActorLocation();
-  for(UChildActorComponent* ChildActorComp : ChildActorComps)
-  {
-    AActor* ChildActor = ChildActorComp->GetChildActor();
-    FVector ChildActorLocation = ChildActor->GetActorLocation();
-    FVector DeltaLocation = ChildActorLocation - ParentLocation;
-    FRotator ChildActorRotation = ChildActor->GetActorRotation();
-
-    // Add DeltaRotation
-    ChildActorRotation += DeltaRotation;
-    //ChildActor->SetActorRotation(ChildActorRotation);
-
-    // Rotate the location
-    DeltaLocation = DeltaRotation.RotateVector(DeltaLocation);
-    //ChildActor->SetActorLocation(ParentLocation + DeltaLocation);
-  }
-}
-
-void AProceduralBuilding::EditorApplyScale(const FVector& DeltaScale, const FVector* PivotLocation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
-{
-  Super::EditorApplyScale(DeltaScale, PivotLocation, bAltDown, bShiftDown, bCtrlDown);
-
-  for(UChildActorComponent* ChildActorComp : ChildActorComps)
-  {
-    AActor* ChildActor = ChildActorComp->GetChildActor();
-    FVector ChildActorScale = ChildActor->GetActorScale3D();
-    // TODO: apply scale with rotation in mind
-    // ChildActor->SetActorScale3D();
-  }
-}
-
-#endif // WITH_EDITOR
-
 void AProceduralBuilding::CreateBuilding()
 {
   Init();
@@ -652,9 +597,3 @@ void AProceduralBuilding::UpdateTransformPositionToNextSide(const FBox& Box)
     CurrentTransform.SetTranslation(NewLocation);
   }
 }
-
-
-
-
-
-

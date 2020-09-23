@@ -83,28 +83,6 @@ public:
     const TArray<UStaticMesh*>& InRoofMeshes,
     const TArray<TSubclassOf<AActor>>& InRoofBPs);
 
-#if WITH_EDITOR
-  /**
-   * Called by ApplyDeltaToActor to perform an actor class-specific operation based on widget manipulation.
-   * The default implementation is simply to translate the actor's location.
-   */
-  void EditorApplyTranslation(const FVector& DeltaTranslation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
-
-  /**
-   * Called by ApplyDeltaToActor to perform an actor class-specific operation based on widget manipulation.
-   * The default implementation is simply to modify the actor's rotation.
-   */
-  void EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
-
-  /**
-   * Called by ApplyDeltaToActor to perform an actor class-specific operation based on widget manipulation.
-   * The default implementation is simply to modify the actor's draw scale.
-   */
-  void EditorApplyScale(const FVector& DeltaScale, const FVector* PivotLocation, bool bAltDown, bool bShiftDown, bool bCtrlDown) override;
-
-
-#endif // WITH_EDITOR
-
 protected:
 
   UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
