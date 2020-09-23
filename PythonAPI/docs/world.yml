@@ -338,7 +338,9 @@
     - def_name: get_map
       return: carla.Map
       doc: >
-        Returns the object containing the navigation map used to describe this world.
+        Asks the server for the XODR containing the map file, and returns this parsed as a carla.Map.
+      warning: >
+        This method does call the simulation.  
     # --------------------------------------
     - def_name: get_traffic_light
       return: carla.TrafficLight
