@@ -62,6 +62,7 @@ nav:
 - Tutorials (developers):
   - 'Contribute with assets': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'
+  - 'Customize vehicle suspension': 'tuto_D_customize_vehicle_suspension.md'
   - 'Generate detailed colliders': 'tuto_D_generate_colliders.md'
   - 'Make a release': 'tuto_D_make_release.md'
   - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
