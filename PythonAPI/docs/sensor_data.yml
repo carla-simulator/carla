@@ -41,16 +41,16 @@
     instance_variables:
     - var_name: CityScapesPalette
       doc: >
-        Converts the image to a segmentated map using tags provided by the blueprint library. Used by <b>sensor.camera.semantic_segmentation</b>.
+        Converts the image to a segmentated map using tags provided by the blueprint library. Used by the [semantic segmentation camera](ref_sensors.md#semantic-segmentation-camera).
     - var_name: Depth
       doc: >
-        Converts the image to a linear depth map. Used by <b>sensor.camera.depth</b>.
+        Converts the image to a linear depth map. Used by the [depth camera](ref_sensors.md#depth-camera).
     - var_name: LogarithmicDepth
       doc: >
         Converts the image to a depth map using a logarithmic scale, leading to better precision for small distances at the expense of losing it when further away.
     - var_name: Raw
       doc: >
-        No changes applied to the image.
+        No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-camera).
 
   - class_name: Image
     parent: carla.SensorData
