@@ -18,6 +18,173 @@ AProceduralBuilding::AProceduralBuilding()
   RootComponent = StaticMeshComponent;
 }
 
+UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
+    const UStaticMesh* SM)
+{
+
+  FString SMName = SM->GetName();
+
+  UHierarchicalInstancedStaticMeshComponent** HISMCompPtr = HISMComps.Find(SMName);
+
+  if(HISMCompPtr) return *HISMCompPtr;
+
+  UHierarchicalInstancedStaticMeshComponent* HISMComp = *HISMCompPtr;
+
+  // If it doesn't exist, create the component
+  HISMComp = NewObject<UHierarchicalInstancedStaticMeshComponent>(this,
+    FName(*FString::Printf(TEXT("HISMComp_%d"), HISMComps.Num())));
+  HISMComp->SetupAttachment(RootComponent);
+  HISMComp->RegisterComponent();
+
+  // Set the mesh that will be used
+  HISMComp->SetStaticMesh(const_cast<UStaticMesh*>(SM));
+
+  // Add to the map
+  HISMComps.Emplace(SMName, HISMComp);
+
+  return HISMComp;
+}
+
+void AProceduralBuilding::ConvertOldBP_ToNativeCodeObject(AActor* BP_Building)
+{
+  AProceduralBuilding* ProceduralBuilding = nullptr;
+
+  // Look for all the HISMComps
+  TArray<UHierarchicalInstancedStaticMeshComponent*> OtherHISMComps;
+  BP_Building->GetComponents<UHierarchicalInstancedStaticMeshComponent>(OtherHISMComps);
+
+  for(UHierarchicalInstancedStaticMeshComponent* OtherHISMComp : OtherHISMComps)
+  {
+    const UStaticMesh* SM = OtherHISMComp->GetStaticMesh();
+
+    // Create a new HISMComp and set the SM
+    UHierarchicalInstancedStaticMeshComponent* NewHISMComp = GetHISMComp(SM);
+
+    // Create the instances
+    const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  OtherHISMComp->PerInstanceSMData;
+
+    for(const FInstancedStaticMeshInstanceData& InstSMIData : PerInstanceSMData)
+    {
+      FTransform Transform = FTransform(InstSMIData.Transform);
+
+      NewHISMComp->AddInstance(Transform);
+    }
+  }
+
+  // TODO: Look for all ChildActors -> Add new Child
+  TArray<UChildActorComponent*> OtherChildComps;
+  BP_Building->GetComponents<UChildActorComponent>(OtherChildComps);
+
+  for(const UChildActorComponent* OtherChildActor : OtherChildComps)
+  {
+    // Create a new ChildActorComponent
+    UChildActorComponent* ChildActorComp = NewObject<UChildActorComponent>(this,
+      FName(*FString::Printf(TEXT("ChildActorComp_%d"), ChildActorComps.Num() )));
+    ChildActorComp->SetupAttachment(RootComponent);
+
+    // Set the class that it will use
+    ChildActorComp->SetChildActorClass(OtherChildActor->GetChildActorClass());
+    ChildActorComp->SetRelativeTransform(OtherChildActor->GetRelativeTransform());
+
+    // Spawns the actor referenced by UChildActorComponent
+    ChildActorComp->RegisterComponent();
+
+    AActor* NewChildActor = ChildActorComp->GetChildActor();
+
+#if WITH_EDITOR
+    // Add the child actor to a subfolder of the actor's name
+    NewChildActor->SetFolderPath(FName( *FString::Printf(TEXT("/Buildings/%s"), *GetName())));
+ #endif
+
+    // Look for all the SMComps
+    TArray<UStaticMeshComponent*> NewSMComps;
+    NewChildActor->GetComponents<UStaticMeshComponent>(NewSMComps);
+
+    // Make it invisible on the child actor to avoid duplication with the HISMComp
+    UStaticMeshComponent* PivotSMComp = NewSMComps[0];
+    PivotSMComp->SetVisibility(false, false);
+
+    ChildActorComps.Emplace(ChildActorComp);
+
+  }
+}
+
+void AProceduralBuilding::SetBaseParameters(
+  const TSet<int>& InDoorsIndexPosition,
+  const TArray<bool>& InUseWallMesh,
+  int InNumFloors,
+  int InLengthX,
+  int InLengthY,
+  bool InCorners,
+  bool InUseFullBlocks)
+{
+  DoorsIndexPosition = InDoorsIndexPosition;
+  UseWallMesh = InUseWallMesh;
+  NumFloors = InNumFloors;
+  LengthX = InLengthX;
+  LengthY = InLengthY;
+  Corners = InCorners;
+  UseFullBlocks = InUseFullBlocks;
+}
+
+void AProceduralBuilding::SetVisibilityParameters(
+  const TArray<bool>& InSideVisibility,
+  const TArray<bool>& InCornerVisibility,
+  bool InRoofVisibility)
+{
+  SideVisibility = InSideVisibility;
+  CornerVisibility = InCornerVisibility;
+  RoofVisibility = InRoofVisibility;
+}
+
+void AProceduralBuilding::SetBaseMeshes(
+  const TArray<UStaticMesh*>& InBaseMeshes,
+  const TArray<TSubclassOf<AActor>>& InBaseBPs,
+  const TArray<UStaticMesh*>& InCornerBaseMeshes,
+  const TArray<TSubclassOf<AActor>>& InCornerBaseBPs,
+  const TArray<UStaticMesh*>& InDoorMeshes,
+  const TArray<TSubclassOf<AActor>>& InDoorBPs)
+{
+  BaseMeshes = InBaseMeshes;
+  BaseBPs = InBaseBPs;
+  CornerBaseMeshes = InCornerBaseMeshes;
+  CornerBaseBPs = InCornerBaseBPs;
+  DoorMeshes = InDoorMeshes;
+  DoorBPs = InDoorBPs;
+}
+
+void AProceduralBuilding::SetBodyMeshes(
+  const TArray<UStaticMesh*>& InBodyMeshes,
+  const TArray<TSubclassOf<AActor>>& InBodyBPs,
+  const TArray<UStaticMesh*>& InCornerBodyMeshes,
+  const TArray<TSubclassOf<AActor>>& InCornerBodyBPs,
+  const TArray<UStaticMesh*>& InWallMeshes,
+  const TArray<TSubclassOf<AActor>>& InWallBPs)
+{
+  BodyMeshes = InBodyMeshes;
+  BodyBPs = InBodyBPs;
+  CornerBodyMeshes = InCornerBodyMeshes;
+  CornerBodyBPs = InCornerBodyBPs;
+  WallMeshes = InWallMeshes;
+  WallBPs = InWallBPs;
+}
+
+void AProceduralBuilding::SetTopMeshes(
+  const TArray<UStaticMesh*>& InTopMeshes,
+  const TArray<TSubclassOf<AActor>>& InTopBPs,
+  const TArray<UStaticMesh*>& InCornerTopMeshes,
+  const TArray<TSubclassOf<AActor>>& InCornerTopBPs,
+  const TArray<UStaticMesh*>& InRoofMeshes,
+  const TArray<TSubclassOf<AActor>>& InRoofBPs)
+{
+  TopMeshes = InTopMeshes;
+  TopBPs = InTopBPs;
+  CornerTopMeshes = InCornerTopMeshes;
+  CornerTopBPs = InCornerTopBPs;
+  RoofMeshes = InRoofMeshes;
+  RoofBPs = InRoofBPs;
+}
+
 #if WITH_EDITOR
 
 void AProceduralBuilding::EditorApplyTranslation(
@@ -27,9 +194,6 @@ void AProceduralBuilding::EditorApplyTranslation(
   bool bCtrlDown)
 {
   Super::EditorApplyTranslation(DeltaTranslation, bAltDown, bShiftDown, bCtrlDown);
-
-  const FTransform& ParentTransform = GetTransform();
-  FTransform ChildTransform = ChildActorComps[0]->GetChildActor()->GetTransform();
 
   for(UChildActorComponent* ChildActorComp : ChildActorComps)
   {
@@ -42,9 +206,6 @@ void AProceduralBuilding::EditorApplyTranslation(
 void AProceduralBuilding::EditorApplyRotation(const FRotator& DeltaRotation, bool bAltDown, bool bShiftDown, bool bCtrlDown)
 {
   Super::EditorApplyRotation(DeltaRotation, bAltDown, bShiftDown, bCtrlDown);
-
-  const FTransform& ParentTransform = GetTransform();
-  FTransform ChildTransform = ChildActorComps[0]->GetChildActor()->GetTransform();
 
   FVector ParentLocation = GetActorLocation();
   for(UChildActorComponent* ChildActorComp : ChildActorComps)
@@ -74,7 +235,6 @@ void AProceduralBuilding::EditorApplyScale(const FVector& DeltaScale, const FVec
     FVector ChildActorScale = ChildActor->GetActorScale3D();
     // TODO: apply scale with rotation in mind
     // ChildActor->SetActorScale3D();
-
   }
 }
 
@@ -410,11 +570,7 @@ float AProceduralBuilding::AddChunck(
     // Spawns the actor referenced by UChildActorComponent
     ChildActorComp->RegisterComponent();
 
-    // Create and attach child actor to parent
     AActor* ChildActor = ChildActorComp->GetChildActor();
-    FAttachmentTransformRules AttachmentTransformRules =
-        FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true);
-    //ChildActor->AttachToComponent(RootComponent, AttachmentTransformRules);
 
 #if WITH_EDITOR
     // Add the child actor to a subfolder of the actor's name
@@ -460,33 +616,6 @@ void AProceduralBuilding::AddMeshToBuilding(const UStaticMesh* SM)
 
   UHierarchicalInstancedStaticMeshComponent* HISMComp = GetHISMComp(SM);
   HISMComp->AddInstance(CurrentTransform);
-}
-
-UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
-    const UStaticMesh* SM)
-{
-
-  FString SMName = SM->GetName();
-
-  UHierarchicalInstancedStaticMeshComponent** HISMCompPtr = HISMComps.Find(SMName);
-
-  if(HISMCompPtr) return *HISMCompPtr;
-
-  UHierarchicalInstancedStaticMeshComponent* HISMComp = *HISMCompPtr;
-
-  // If it doesn't exist, create the component
-  HISMComp = NewObject<UHierarchicalInstancedStaticMeshComponent>(this,
-    FName(*FString::Printf(TEXT("HISMComp_%d"), HISMComps.Num())));
-  HISMComp->SetupAttachment(RootComponent);
-  HISMComp->RegisterComponent();
-
-  // Set the mesh that will be used
-  HISMComp->SetStaticMesh(const_cast<UStaticMesh*>(SM));
-
-  // Add to the map
-  HISMComps.Emplace(SMName, HISMComp);
-
-  return HISMComp;
 }
 
 FVector AProceduralBuilding::GetMeshSize(const UStaticMesh* SM)
