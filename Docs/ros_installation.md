@@ -1,5 +1,7 @@
 # ROS bridge installation
 
+The ROS bridge enables two-way communication between ROS and CARLA. The information from the CARLA server is translated to ROS topics. In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA.
+
 *   [__Requirements__](#requirements)  
 	*   [Python2](#python2)  
 *   [__Bridge installation__](#bridge-installation)  
@@ -7,8 +9,9 @@
 	*   [B. Using source repository](#b-using-source-repository)  
 *   [__Run the ROS bridge__](#run-the-ros-bridge)  
 *   [__Setting CARLA__](#setting-carla)  
- 
-The ROS bridge enables two-way communication between ROS and CARLA. The information from the CARLA server is translated to ROS topics. In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA.
+
+!!! Important
+    ROS is still [experimental](http://wiki.ros.org/noetic/Installation) for Windows, so the ROS bridge has only been tested for Linux systems.  
 
 ---
 ## Requirements
@@ -19,7 +22,7 @@ Make sure that both requirements work properly before continuing with the instal
 	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 16.04 (Xenial).  
 	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 18.04 (Bionic).  
 	*   [__ROS Noetic__](http://wiki.ros.org/noetic#Installation) — For Ubuntu 20.04 (Focal).
-*  __CARLA 0.9.7 or later__ — Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for [Linux](build_linux.md) or [Windows](build_windows.md).
+*  __CARLA 0.9.7 or later__ — Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for [Linux](build_linux.md).
 
 ### Python
 
@@ -28,15 +31,9 @@ The version of Python needed to run the ROS bridge depends on the ROS version be
 *   __ROS Melodic__ and __ROS Kinetic__ — Python2.  
 *   __ROS Noetic__ — Python3.  
 
-All the CARLA releases provide support for Python3, so ROS Noetic users do not need more preparation. However, ROS Melodic/Kinetic users cannot use the latest CARLA release packages, and they will have to build CARLA form source.  
+All the CARLA releases provide support for Python3, so ROS Noetic users do not need more preparation. However, ROS Melodic/Kinetic users cannot use the latest CARLA release packages. Since 0.9.10 (included), CARLA does not provide support for Python2, so users will have to make the [build from source](build_linux.md), and compile the PythonAPI for Python2.  
 
-CARLA release packages since 0.9.10 (included) do not provide support for Python2, so users will have to make the [Linux](build_linux.md) or [Windows](build_windows.md) build from source, and compile the PythonAPI for Python2.  
-
-The instructions depend on the system being used.  
-
-*   __Windows__ — The PythonAPI will be built based on the installed Python version. If the system runs with Python2, the PythonAPI will be compiled properly.  
-
-*   __Linux__  — Run the following command in the root CARLA directory.
+*   Run the following command in the root CARLA directory of your Linux build to compile the PythonAPI for Python2.  
 
 ```sh
 make PythonAPI ARGS="--python-version=2"
