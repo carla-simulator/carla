@@ -12,11 +12,6 @@
 
 // TODO: support n-sides building
 
-// TODO: option (button) to clear all the values
-// TODO: option (button) to clear all the meshes
-
-// TODO:
-
 struct FloorMeshCollection
 {
   TArray<UStaticMesh*>* MainMeshes = nullptr;
@@ -36,6 +31,57 @@ public:
 
   // Sets default values for this actor's properties
   AProceduralBuilding();
+
+  // Looks for the HISMComp on the HISMComps Map that uses the SelectedMesh and returns it.
+  // If doesn't exist its created
+  UFUNCTION(BlueprintCallable, Category="Procedural Building")
+  UHierarchicalInstancedStaticMeshComponent* GetHISMComp(const UStaticMesh* SM);
+
+  UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
+  void ConvertOldBP_ToNativeCodeObject(AActor* BP_Building);
+
+  UFUNCTION(BlueprintCallable, Category="Procedural Building|Conversion")
+  void SetBaseParameters(
+    const TSet<int>& InDoorsIndexPosition,
+    const TArray<bool>& InUseWallMesh,
+    int InNumFloors,
+    int InLengthX,
+    int InLengthY,
+    bool InCorners,
+    bool InUseFullBlocks);
+
+  UFUNCTION(BlueprintCallable, Category="Procedural Building|Conversion")
+  void SetVisibilityParameters(
+    const TArray<bool>& InSideVisibility,
+    const TArray<bool>& InCornerVisibility,
+    bool InRoofVisibility);
+
+  UFUNCTION(BlueprintCallable, Category="Procedural Building|Conversion")
+  void SetBaseMeshes(
+    const TArray<UStaticMesh*>& InBaseMeshes,
+    const TArray<TSubclassOf<AActor>>& InBaseBPs,
+    const TArray<UStaticMesh*>& InCornerBaseMeshes,
+    const TArray<TSubclassOf<AActor>>& InCornerBaseBPs,
+    const TArray<UStaticMesh*>& InDoorMeshes,
+    const TArray<TSubclassOf<AActor>>& InDoorBPs);
+
+  UFUNCTION(BlueprintCallable, Category="Procedural Building|Conversion")
+  void SetBodyMeshes(
+    const TArray<UStaticMesh*>& InBodyMeshes,
+    const TArray<TSubclassOf<AActor>>& InBodyBPs,
+    const TArray<UStaticMesh*>& InCornerBodyMeshes,
+    const TArray<TSubclassOf<AActor>>& InCornerBodyBPs,
+    const TArray<UStaticMesh*>& InWallMeshes,
+    const TArray<TSubclassOf<AActor>>& InWallBPs);
+
+  UFUNCTION(BlueprintCallable, Category="Procedural Building|Conversion")
+  void SetTopMeshes(
+    const TArray<UStaticMesh*>& InTopMeshes,
+    const TArray<TSubclassOf<AActor>>& InTopBPs,
+    const TArray<UStaticMesh*>& InCornerTopMeshes,
+    const TArray<TSubclassOf<AActor>>& InCornerTopBPs,
+    const TArray<UStaticMesh*>& InRoofMeshes,
+    const TArray<TSubclassOf<AActor>>& InRoofBPs);
 
 #if WITH_EDITOR
   /**
@@ -257,10 +303,6 @@ private:
 
   // Add the Static Mesh on the transform location with the transform orientation
   void AddMeshToBuilding(const UStaticMesh* SM);
-
-  // Looks for the HISMComp on the HISMComps Map that uses the SelectedMesh and returns it.
-  // If doesn't exist its created
-  UHierarchicalInstancedStaticMeshComponent* GetHISMComp(const UStaticMesh* SM);
 
   // Calculate the Bounds for the Static Mesh
   FVector GetMeshSize(const UStaticMesh* SM);
