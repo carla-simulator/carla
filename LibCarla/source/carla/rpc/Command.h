@@ -209,7 +209,9 @@ namespace rpc {
         ApplyTargetVelocity,
         ApplyTargetAngularVelocity,
         ApplyImpulse,
+        ApplyForce,
         ApplyAngularImpulse,
+        ApplyTorque,
         SetSimulatePhysics,
         SetAutopilot,
         SetVehicleLightState>;
