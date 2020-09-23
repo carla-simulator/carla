@@ -319,16 +319,16 @@ namespace detail {
       return GetActorSnapshot(actor).velocity;
     }
 
-    void SetActorVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorVelocity(actor.GetId(), vector);
+    void SetActorTargetVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorTargetVelocity(actor.GetId(), vector);
     }
 
     geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
       return GetActorSnapshot(actor).angular_velocity;
     }
 
-    void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorAngularVelocity(actor.GetId(), vector);
+    void SetActorTargetAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorTargetAngularVelocity(actor.GetId(), vector);
     }
 
     void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
@@ -471,6 +471,10 @@ namespace detail {
 
     void ResetTrafficLightGroup(TrafficLight &trafficLight) {
       _client.ResetTrafficLightGroup(trafficLight.GetId());
+    }
+
+    void ResetAllTrafficLights() {
+      _client.ResetAllTrafficLights();
     }
 
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {

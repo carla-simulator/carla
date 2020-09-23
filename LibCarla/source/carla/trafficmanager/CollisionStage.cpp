@@ -22,14 +22,16 @@ CollisionStage::CollisionStage(
   const TrackTraffic &track_traffic,
   const Parameters &parameters,
   CollisionFrame &output_array,
-  cc::DebugHelper &debug_helper)
+  cc::DebugHelper &debug_helper,
+  RandomGeneratorMap &random_devices)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
     parameters(parameters),
     output_array(output_array),
-    debug_helper(debug_helper) {}
+    debug_helper(debug_helper),
+    random_devices(random_devices) {}
 
 void CollisionStage::Update(const unsigned long index) {
   ActorId obstacle_id = 0u;
@@ -81,9 +83,9 @@ void CollisionStage::Update(const unsigned long index) {
                                                                        look_ahead_index);
         if (negotiation_result.first) {
           if ((other_actor_type == ActorType::Vehicle
-               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= pgen.next())
+               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= random_devices.at(ego_actor_id).next())
               || (other_actor_type == ActorType::Pedestrian
-                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= pgen.next())) {
+                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= random_devices.at(ego_actor_id).next())) {
             collision_hazard = true;
             obstacle_id = other_actor_id;
             available_distance_margin = negotiation_result.second;
@@ -334,7 +336,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   bool ego_inside_junction = closest_point->CheckJunction();
   TrafficLightState reference_tl_state = simulation_state.GetTLS(reference_vehicle_id);
   bool ego_at_traffic_light = reference_tl_state.at_traffic_light;
-  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green;
+  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green && reference_tl_state.tl_state != TLS::Off;
   SimpleWaypointPtr look_ahead_point = reference_vehicle_buffer.at(reference_junction_look_ahead_index);
   bool ego_at_junction_entrance = !closest_point->CheckJunction() && look_ahead_point->CheckJunction();
 

@@ -1,5 +1,6 @@
 ## CARLA 0.9.10
 
+  * Deterministic mode for Traffic Manager, limited by computational power
   * Support for OSM in Traffic Manager
   * Fixed a map change error when Traffic Manager is in synchronous mode
   * Fixes add entry issue for applying parameters more than once in Traffic Manager
@@ -18,6 +19,7 @@
   * Added new semantic segmenation tags: `RailTrack`, `GuardRail`, `TrafficLight`, `Static`, `Dynamic`, `Water` and `Terrain`
   * Fixed several untagged and mistagged objects
   * Added vehicle light and street light data to recorder
+  * Change API: set_velocity to set_target_velocity for linear and angular velocities
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
   * Fixed assets import pipeline

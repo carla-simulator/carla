@@ -150,6 +150,10 @@ namespace client {
     return nullptr;
   }
 
+  void World::ResetAllTrafficLights() {
+    _episode.Lock()->ResetAllTrafficLights();
+  }
+
   SharedPtr<LightManager> World::GetLightManager() const {
     return _episode.Lock()->GetLightManager();
   }

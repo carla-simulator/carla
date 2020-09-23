@@ -64,11 +64,11 @@ namespace client {
     /// Teleport and rotate the actor to @a transform.
     void SetTransform(const geom::Transform &transform);
 
-    /// Set the actor velocity.
-    void SetVelocity(const geom::Vector3D &vector);
+    /// Set the actor velocity before applying physics.
+    void SetTargetVelocity(const geom::Vector3D &vector);
 
-    /// Set the angular velocity of the actor
-    void SetAngularVelocity(const geom::Vector3D &vector);
+    /// Set the angular velocity of the actor before applying physics.
+    void SetTargetAngularVelocity(const geom::Vector3D &vector);
 
     /// Add impulse to the actor.
     void AddImpulse(const geom::Vector3D &vector);

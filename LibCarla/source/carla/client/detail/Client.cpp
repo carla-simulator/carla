@@ -264,12 +264,12 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_transform", actor, transform);
   }
 
-  void Client::SetActorVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_velocity", actor, vector);
+  void Client::SetActorTargetVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_target_velocity", actor, vector);
   }
 
-  void Client::SetActorAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
+  void Client::SetActorTargetAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_target_angular_velocity", actor, vector);
   }
 
   void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
@@ -324,6 +324,10 @@ namespace detail {
 
   void Client::ResetTrafficLightGroup(rpc::ActorId traffic_light) {
     _pimpl->AsyncCall("reset_traffic_light_group", traffic_light);
+  }
+
+  void Client::ResetAllTrafficLights() {
+    _pimpl->CallAndWait<void>("reset_all_traffic_lights");
   }
 
   void Client::FreezeAllTrafficLights(bool frozen) {
