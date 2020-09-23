@@ -170,7 +170,7 @@ void LocalizationStage::Update(const unsigned long index) {
       selection_index = static_cast<uint64_t>(std::floor(r_sample/s_bucket));
     } else if (next_waypoints.size() == 0) {
       if (!parameters.GetOSMMode()) {
-        std::cout << "This is an OSM, please change the set_open_street_map parameter to true" << std::endl;
+        std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
       }
       marked_for_removal.push_back(actor_id);
       break;
