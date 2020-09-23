@@ -2829,23 +2829,6 @@ Angular impulse applied to the actor. Determines magnitude and global axis where
 
 ---
 
-## command.ApplyAngularVelocity<a name="command.ApplyAngularVelocity"></a>
-Command adaptation of **<font color="#7fb800">set_angular_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).  
-
-<h3>Instance Variables</h3>
-- <a name="command.ApplyAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-Actor affected by the command.  
-- <a name="command.ApplyAngularVelocity.angular_velocity"></a>**<font color="#f8805a">angular_velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
-The 3D angular velocity that will be applied to the actor.  
-
-<h3>Methods</h3>
-- <a name="command.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
-    - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_) – Angular velocity vector applied to the actor.  
-
----
-
 ## command.ApplyImpulse<a name="command.ApplyImpulse"></a>
 Command adaptation of **<font color="#7fb800">add_impulse()</font>** in [carla.Actor](#carla.Actor). Adds impulse to an actor.  
 
@@ -2860,6 +2843,40 @@ Impulse applied to the actor.
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
+
+---
+
+## command.ApplyTargetAngularVelocity<a name="command.ApplyTargetAngularVelocity"></a>
+Command adaptation of **<font color="#7fb800">set_target_angular_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).  
+
+<h3>Instance Variables</h3>
+- <a name="command.ApplyTargetAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
+- <a name="command.ApplyTargetAngularVelocity.angular_velocity"></a>**<font color="#f8805a">angular_velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
+The 3D angular velocity that will be applied to the actor.  
+
+<h3>Methods</h3>
+- <a name="command.ApplyTargetAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_) – Angular velocity vector applied to the actor.  
+
+---
+
+## command.ApplyTargetVelocity<a name="command.ApplyTargetVelocity"></a>
+Command adaptation of **<font color="#7fb800">set_target_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).  
+
+<h3>Instance Variables</h3>
+- <a name="command.ApplyTargetVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
+- <a name="command.ApplyTargetVelocity.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – m/s</small>_)  
+The 3D velocity applied to the actor.  
+
+<h3>Methods</h3>
+- <a name="command.ApplyTargetVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `velocity` (_[carla.Vector3D](#carla.Vector3D)_) – Velocity vector applied to the actor.  
 
 ---
 
@@ -2894,23 +2911,6 @@ Vehicle control to be applied.
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
-
----
-
-## command.ApplyVelocity<a name="command.ApplyVelocity"></a>
-Command adaptation of **<font color="#7fb800">set_target_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).  
-
-<h3>Instance Variables</h3>
-- <a name="command.ApplyVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
-Actor affected by the command.  
-- <a name="command.ApplyVelocity.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – m/s</small>_)  
-The 3D velocity applied to the actor.  
-
-<h3>Methods</h3>
-- <a name="command.ApplyVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
-    - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `velocity` (_[carla.Vector3D](#carla.Vector3D)_) – Velocity vector applied to the actor.  
 
 ---
 
