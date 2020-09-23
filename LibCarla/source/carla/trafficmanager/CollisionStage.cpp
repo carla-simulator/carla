@@ -22,14 +22,16 @@ CollisionStage::CollisionStage(
   const TrackTraffic &track_traffic,
   const Parameters &parameters,
   CollisionFrame &output_array,
-  cc::DebugHelper &debug_helper)
+  cc::DebugHelper &debug_helper,
+  RandomGeneratorMap &random_devices)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
     parameters(parameters),
     output_array(output_array),
-    debug_helper(debug_helper) {}
+    debug_helper(debug_helper),
+    random_devices(random_devices) {}
 
 void CollisionStage::Update(const unsigned long index) {
   ActorId obstacle_id = 0u;
@@ -81,9 +83,9 @@ void CollisionStage::Update(const unsigned long index) {
                                                                        look_ahead_index);
         if (negotiation_result.first) {
           if ((other_actor_type == ActorType::Vehicle
-               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= pgen.next())
+               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= random_devices.at(ego_actor_id).next())
               || (other_actor_type == ActorType::Pedestrian
-                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= pgen.next())) {
+                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= random_devices.at(ego_actor_id).next())) {
             collision_hazard = true;
             obstacle_id = other_actor_id;
             available_distance_margin = negotiation_result.second;
@@ -143,7 +145,7 @@ LocationVector CollisionStage::GetBoundary(const ActorId actor_id) {
   float bbox_y = dimensions.y;
 
   const cg::Vector3D x_boundary_vector = heading_vector * (bbox_x + forward_extension);
-  const auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f).MakeUnitVector();
+  const auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f).MakeSafeUnitVector(EPSILON);
   const cg::Vector3D y_boundary_vector = perpendicular_vector * (bbox_y + forward_extension);
 
   // Four corners of the vehicle in top view clockwise order (left-handed system).
@@ -199,7 +201,7 @@ LocationVector CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
           const cg::Vector3D heading_vector = current_point->GetForwardVector();
           const cg::Location location = current_point->GetLocation();
           cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
-          perpendicular_vector = perpendicular_vector.MakeUnitVector();
+          perpendicular_vector = perpendicular_vector.MakeSafeUnitVector(EPSILON);
           // Direction determined for the left-handed system.
           const cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
           left_boundary.push_back(location + cg::Location(scaled_perpendicular));
@@ -304,15 +306,14 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   // Ego and other vehicle heading.
   const cg::Vector3D reference_heading = simulation_state.GetHeading(reference_vehicle_id);
   // Vector from ego position to position of the other vehicle.
-  const float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
   cg::Vector3D reference_to_other = other_location - reference_location;
-  reference_to_other = reference_to_other.MakeSafeUnitVector(vector_magnitude_epsilon);
+  reference_to_other = reference_to_other.MakeSafeUnitVector(EPSILON);
 
   // Other vehicle heading.
   const cg::Vector3D other_heading = simulation_state.GetHeading(other_actor_id);
   // Vector from other vehicle position to ego position.
   cg::Vector3D other_to_reference = reference_location - other_location;
-  other_to_reference = other_to_reference.MakeSafeUnitVector(vector_magnitude_epsilon);
+  other_to_reference = other_to_reference.MakeSafeUnitVector(EPSILON);
 
   float reference_vehicle_length = simulation_state.GetDimensions(reference_vehicle_id).x * SQUARE_ROOT_OF_TWO;
   float other_vehicle_length = simulation_state.GetDimensions(other_actor_id).x * SQUARE_ROOT_OF_TWO;
@@ -335,7 +336,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   bool ego_inside_junction = closest_point->CheckJunction();
   TrafficLightState reference_tl_state = simulation_state.GetTLS(reference_vehicle_id);
   bool ego_at_traffic_light = reference_tl_state.at_traffic_light;
-  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green;
+  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green && reference_tl_state.tl_state != TLS::Off;
   SimpleWaypointPtr look_ahead_point = reference_vehicle_buffer.at(reference_junction_look_ahead_index);
   bool ego_at_junction_entrance = !closest_point->CheckJunction() && look_ahead_point->CheckJunction();
 

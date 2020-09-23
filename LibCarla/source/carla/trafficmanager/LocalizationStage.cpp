@@ -17,16 +17,20 @@ LocalizationStage::LocalizationStage(
   TrackTraffic &track_traffic,
   const LocalMapPtr &local_map,
   Parameters &parameters,
+  std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  cc::DebugHelper &debug_helper)
+  cc::DebugHelper &debug_helper,
+  RandomGeneratorMap &random_devices)
   : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
     track_traffic(track_traffic),
     local_map(local_map),
     parameters(parameters),
+    marked_for_removal(marked_for_removal),
     output_array(output_array),
-    debug_helper(debug_helper) {}
+    debug_helper(debug_helper),
+    random_devices(random_devices) {}
 
 void LocalizationStage::Update(const unsigned long index) {
 
@@ -103,7 +107,7 @@ void LocalizationStage::Update(const unsigned long index) {
 
   if (!force_lane_change) {
     float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
-    if (perc_keep_right >= 0.0f && perc_keep_right >= pgen.next()) {
+    if (perc_keep_right >= 0.0f && perc_keep_right >= random_devices.at(actor_id).next()) {
       force_lane_change = true;
       lane_change_direction = true;
     }
@@ -145,22 +149,35 @@ void LocalizationStage::Update(const unsigned long index) {
   // Populating the buffer.
   while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
 
-    std::vector<SimpleWaypointPtr> next_waypoints = waypoint_buffer.back()->GetNextWaypoint();
+    SimpleWaypointPtr furthest_waypoint = waypoint_buffer.back();
+    std::vector<SimpleWaypointPtr> next_waypoints = furthest_waypoint->GetNextWaypoint();
     uint64_t selection_index = 0u;
     // Pseudo-randomized path selection if found more than one choice.
     if (next_waypoints.size() > 1) {
-      selection_index = static_cast<uint64_t>(pgen.next()) % next_waypoints.size();
-    }
-    SimpleWaypointPtr next_wp = next_waypoints.at(selection_index);
-    if (next_wp == nullptr) {
-      for (auto &wp : next_waypoints) {
-        if (wp != nullptr) {
-          next_wp = wp;
-          break;
-        }
+      // Arranging selection points from right to left.
+      std::sort(next_waypoints.begin(), next_waypoints.end(),
+                [&furthest_waypoint](const SimpleWaypointPtr &a, const SimpleWaypointPtr &b) {
+                  float a_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
+                                                            furthest_waypoint->GetForwardVector(),
+                                                            a->GetLocation());
+                  float b_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
+                                                            furthest_waypoint->GetForwardVector(),
+                                                            b->GetLocation());
+                  return a_x_product < b_x_product;
+                });
+      double r_sample = random_devices.at(actor_id).next();
+      double s_bucket = 100.0 / next_waypoints.size();
+      selection_index = static_cast<uint64_t>(std::floor(r_sample/s_bucket));
+    } else if (next_waypoints.size() == 0) {
+      if (parameters.GetOSMMode()) {
+        marked_for_removal.push_back(actor_id);
+        break;
+      } else {
+        throw std::invalid_argument("This is an OSM, please activate the set_open_street_map parameter");
       }
     }
-    PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp);
+    SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
+    PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
   }
 
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);

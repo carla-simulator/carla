@@ -163,6 +163,11 @@ public:
         tm->SetHybridPhysicsRadius(radius);
       });
 
+      /// Method to set hybrid physics radius.
+      server->bind("set_osm_mode", [=](const bool mode_switch) {
+        tm->SetHybridPhysicsRadius(mode_switch);
+      });
+
       /// Method to set synchronous mode.
       server->bind("set_synchronous_mode", [=](const bool mode) {
         tm->SetSynchronousMode(mode);
@@ -171,6 +176,11 @@ public:
       /// Method to set tick timeout for synchronous execution.
       server->bind("set_synchronous_mode_timeout_in_milisecond", [=](const double time) {
         tm->SetSynchronousModeTimeOutInMiliSecond(time);
+      });
+
+      /// Method to set randomization seed.
+      server->bind("set_random_device_seed", [=](const uint64_t seed) {
+        tm->SetRandomDeviceSeed(seed);
       });
 
       /// Method to provide synchronous tick.

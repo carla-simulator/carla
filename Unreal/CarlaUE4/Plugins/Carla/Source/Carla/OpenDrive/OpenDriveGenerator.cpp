@@ -18,6 +18,13 @@
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
 #include "PhysicsEngine/BodySetupEnums.h"
 
+AProceduralMeshActor::AProceduralMeshActor()
+{
+  PrimaryActorTick.bCanEverTick = false;
+  MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("RootComponent"));
+  RootComponent = MeshComponent;
+}
+
 AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -77,11 +84,8 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     {
       continue;
     }
-    AActor *TempActor = GetWorld()->SpawnActor<AActor>();
-    UProceduralMeshComponent *TempPMC = NewObject<UProceduralMeshComponent>(TempActor);
-    TempPMC->RegisterComponent();
-    TempPMC->AttachToComponent(
-        TempActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
     TempPMC->bUseAsyncCooking = true;
     TempPMC->bUseComplexAsSimpleCollision = true;
     TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);

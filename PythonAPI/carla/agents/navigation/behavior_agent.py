@@ -118,7 +118,7 @@ class BehaviorAgent(Agent):
 
         route_trace = self._trace_route(self.start_waypoint, self.end_waypoint)
 
-        self._local_planner.set_global_plan(route_trace)
+        self._local_planner.set_global_plan(route_trace, clean)
 
     def reroute(self, spawn_points):
         """
