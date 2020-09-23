@@ -29,7 +29,7 @@
   - class_name: SpawnActor
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">spawn_actor()</font>** in carla.World. Spawns an actor into the world based on the blueprint provided and the transform. If a parent is provided, the actor is attached to it.
+      Command adaptation of __<font color="#7fb800">spawn_actor()</font>__ in carla.World. Spawns an actor into the world based on the blueprint provided and the transform. If a parent is provided, the actor is attached to it.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: transform
@@ -73,7 +73,7 @@
   - class_name: DestroyActor
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">destroy()</font>** in carla.Actor that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with **<font color="#7fb800">apply_batch_sync()</font>** in carla.Client there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.
+      Command adaptation of __<font color="#7fb800">destroy()</font>__ in carla.Actor that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with __<font color="#7fb800">apply_batch_sync()</font>__ in carla.Client there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -93,7 +93,7 @@
   - class_name: ApplyVehicleControl
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">apply_control()</font>** in carla.Vehicle. Applies a certain control to a vehicle.
+      Command adaptation of __<font color="#7fb800">apply_control()</font>__ in carla.Vehicle. Applies a certain control to a vehicle.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -119,7 +119,7 @@
   - class_name: ApplyWalkerControl
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">apply_control()</font>** in carla.Walker. Applies a control to a walker.
+      Command adaptation of __<font color="#7fb800">apply_control()</font>__ in carla.Walker. Applies a control to a walker.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -145,7 +145,7 @@
   - class_name: ApplyTransform
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_transform()</font>** in carla.Actor. Sets a new transform to an actor. 
+      Command adaptation of __<font color="#7fb800">set_transform()</font>__ in carla.Actor. Sets a new transform to an actor. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -205,7 +205,7 @@
   - class_name: ApplyTargetVelocity
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_target_velocity()</font>** in carla.Actor. Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).
+      Command adaptation of __<font color="#7fb800">set_target_velocity()</font>__ in carla.Actor.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -235,7 +235,7 @@
   - class_name: ApplyTargetAngularVelocity
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_target_angular_velocity()</font>** in carla.Actor. Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).
+      Command adaptation of __<font color="#7fb800">set_target_angular_velocity()</font>__ in carla.Actor. Sets the actor's angular velocity vector.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -265,7 +265,7 @@
   - class_name: ApplyImpulse
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">add_impulse()</font>** in carla.Actor. Adds impulse to an actor.
+      Command adaptation of __<font color="#7fb800">add_impulse()</font>__ in carla.Actor. Applies an impulse to an actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -290,21 +290,47 @@
         param_units: N*s
     # --------------------------------------
 
-  - class_name: ApplyAngularImpulse
+  - class_name: ApplyForce
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">add_angular_impulse()</font>** in carla.Actor. Adds angular impulse to an actor.  
+      Command adaptation of __<font color="#7fb800">add_force()</font>__ in carla.Actor. Applies a force to an actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
       type: int
       doc: >
         Actor affected by the command. 
+    - var_name: force
+      type: carla.Vector3D
+      doc: >
+        Force applied to the actor over time. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: force
+        type: carla.Vector3D
+    # --------------------------------------
+
+  - class_name: ApplyAngularImpulse
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">add_angular_impulse()</font>__ in carla.Actor. Applies an angular impulse to an actor.  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command.
     - var_name: impulse
       type: carla.Vector3D
       var_units: degrees
       doc: >
-        Angular impulse applied to the actor. Determines magnitude and global axis where it is applied.  
+        Angular impulse applied to the actor.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -318,10 +344,36 @@
         param_units: degrees
     # --------------------------------------
 
+  - class_name: ApplyTorque
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">add_torque()</font>__ in carla.Actor. Applies a torque to an actor.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command. 
+    - var_name: torque
+      type: carla.Vector3D
+      doc: >
+        Torque applied to the actor over time. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: torque
+        type: carla.Vector3D
+    # --------------------------------------
+
   - class_name: SetSimulatePhysics
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_simulate_physics()</font>** in carla.Actor. Determines whether an actor will be affected by physics or not.
+      Command adaptation of __<font color="#7fb800">set_simulate_physics()</font>__ in carla.Actor. Determines whether an actor will be affected by physics or not.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -347,7 +399,7 @@
   - class_name: SetAutopilot
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_autopilot()</font>** in carla.Vehicle. Turns on/off the vehicle's autopilot mode.
+      Command adaptation of __<font color="#7fb800">set_autopilot()</font>__ in carla.Vehicle. Turns on/off the vehicle's autopilot mode.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
@@ -382,7 +434,7 @@
   - class_name: SetVehicleLightState
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_light_state()</font>** in carla.Vehicle. Sets the light state of a vehicle.
+      Command adaptation of __<font color="#7fb800">set_light_state()</font>__ in carla.Vehicle. Sets the light state of a vehicle.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
