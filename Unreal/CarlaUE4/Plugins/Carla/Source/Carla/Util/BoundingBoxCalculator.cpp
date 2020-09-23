@@ -15,7 +15,61 @@
 
 #include "Rendering/SkeletalMeshRenderData.h"
 
-FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
+
+namespace crp = carla::rpc;
+
+static FBoundingBox ApplyTransformToBB(
+    const FBoundingBox& InBoundingBox,
+    const FTransform& Transform)
+{
+  const FRotator Rotation = Transform.GetRotation().Rotator();
+  const FVector Translation = Transform.GetLocation();
+  const FVector Scale = Transform.GetScale3D();
+
+  FBoundingBox BoundingBox = InBoundingBox;
+  BoundingBox.Origin *= Scale;
+  BoundingBox.Origin = Rotation.RotateVector(BoundingBox.Origin) + Translation;
+  BoundingBox.Extent *= Scale;
+  BoundingBox.Rotation = Rotation;
+
+  return BoundingBox;
+}
+
+static FBoundingBox CombineBBs(const TArray<FBoundingBox>& BBsToCombine)
+{
+  FVector MaxVertex(TNumericLimits<float>::Lowest());
+  FVector MinVertex(TNumericLimits<float>::Max());
+
+  for(const FBoundingBox& BB : BBsToCombine) {
+    FVector MaxVertexOfBB = BB.Origin + BB.Extent;
+    FVector MinVertexOfBB = BB.Origin - BB.Extent;
+
+    MaxVertex.X = (MaxVertexOfBB.X > MaxVertex.X) ? MaxVertexOfBB.X : MaxVertex.X;
+    MaxVertex.Y = (MaxVertexOfBB.Y > MaxVertex.Y) ? MaxVertexOfBB.Y : MaxVertex.Y;
+    MaxVertex.Z = (MaxVertexOfBB.Z > MaxVertex.Z) ? MaxVertexOfBB.Z : MaxVertex.Z;
+    MinVertex.X = (MinVertexOfBB.X < MinVertex.X) ? MinVertexOfBB.X : MinVertex.X;
+    MinVertex.Y = (MinVertexOfBB.Y < MinVertex.Y) ? MinVertexOfBB.Y : MinVertex.Y;
+    MinVertex.Z = (MinVertexOfBB.Z < MinVertex.Z) ? MinVertexOfBB.Z : MinVertex.Z;
+  }
+
+  // Calculate box extent
+  FVector Extent (
+    (MaxVertex.X - MinVertex.X) * 0.5f,
+    (MaxVertex.Y - MinVertex.Y) * 0.5f,
+    (MaxVertex.Z - MinVertex.Z) * 0.5f
+  );
+
+  // Calculate middle point
+  FVector Origin (
+    (MinVertex.X + Extent.X),
+    (MinVertex.Y + Extent.Y),
+    (MinVertex.Z + Extent.Z)
+  );
+
+  return {Origin, Extent};
+}
+
+FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, uint8 InTagQueried)
 {
   if (Actor != nullptr)
   {
@@ -59,9 +113,131 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor)
         return {};
       }
     }
+
+
   }
   return {};
 }
+
+FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
+    const ACarlaWheeledVehicle* Vehicle,
+    uint8 InTagQueried)
+{
+  check(Vehicle);
+
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+
+  UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+  USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
+
+  // Filter by tag
+  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+  if(FilterByTagEnabled && Tag != TagQueried) return {};
+
+  USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+  FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+  if(BoundingBox.Extent.IsZero())
+  {
+    UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Vehicle->GetName());
+    return {};
+  }
+
+  // Component-to-world transform for this component
+  const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+  BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+
+  return BoundingBox;
+}
+
+FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
+    const ACharacter* Character,
+    uint8 InTagQueried)
+{
+  check(Character);
+
+  UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+  if (Capsule)
+  {
+    const float Radius = Capsule->GetScaledCapsuleRadius();
+    const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+    FBoundingBox BoundingBox;
+    // Characters have the pivot point centered.
+    BoundingBox.Origin = {0.0f, 0.0f, 0.0f};
+    BoundingBox.Extent = {Radius, Radius, HalfHeight};
+    // Component-to-world transform for this component
+    const FTransform& CompToWorldTransform = Capsule->GetComponentTransform();
+    BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+
+    return BoundingBox;
+  }
+
+  return {};
+}
+
+void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
+    const ATrafficLightBase* TrafficLight,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried)
+{
+  check(TrafficLight);
+
+  TArray<FBoundingBox> BBsOfTL;
+  TArray<UStaticMeshComponent*> StaticMeshComps;
+  TrafficLight->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+  GetBBsOfStaticMeshComponents(StaticMeshComps, BBsOfTL, InTagQueried);
+
+  // This kind of a magic number relying that the lights of a TL are not bigger than 100.
+  // and we are gonna compare against a squared distance
+  const float DistanceThreshold = 100.0f * 100.0f;
+
+  // The BBs of the TL are calculated per light, so we need to merge the full-box
+  TSet<int> IndicesDiscarded;
+  for(int i = 0; i < BBsOfTL.Num(); i++)
+  {
+    // Check if the index was used to merge a previous BB
+    if(IndicesDiscarded.Contains(i)) continue;
+
+    TArray<FBoundingBox> BBsToCombine;
+    FBoundingBox& BB1 = BBsOfTL[i];
+
+    for(int j = i + 1; j < BBsOfTL.Num(); j++)
+    {
+      // Check if the index was used to merge a previous BB
+      if(IndicesDiscarded.Contains(j)) continue;
+
+      FBoundingBox& BB2 = BBsOfTL[j];
+
+      float Distance = FVector::DistSquared(BB1.Origin, BB2.Origin);
+
+      // If the lights are close enough, we merge it
+      if(Distance <= DistanceThreshold)
+      {
+        BBsToCombine.Emplace(BB2);
+        IndicesDiscarded.Emplace(j);
+      }
+    }
+    if(BBsToCombine.Num() > 0)
+    {
+      BBsToCombine.Emplace(BB1);
+      IndicesDiscarded.Emplace(i);
+      FBoundingBox MergedBB = CombineBBs(BBsToCombine);
+      MergedBB.Rotation = BB1.Rotation;
+      OutBB.Add(MergedBB);
+    }
+  }
+
+  // Add the BB of the meshes that didn't need to combine (ie: poles)
+  for(int i = 0; i < BBsOfTL.Num(); i++)
+  {
+    // Check if the index was used to merge a previous BB
+    if(IndicesDiscarded.Contains(i)) continue;
+    FBoundingBox& BB = BBsOfTL[i];
+    OutBB.Add(BB);
+  }
+
+}
+
 
 // TODO: update to calculate current animation pose
 FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh)
@@ -80,7 +256,7 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalM
   uint32 NumVertices = FPositionVertexBuffer.GetNumVertices();
 
   // Look for Skeletal Mesh bounds (vertex perfect)
-  FVector MaxVertex(TNumericLimits<float>::Min());
+  FVector MaxVertex(TNumericLimits<float>::Lowest());
   FVector MinVertex(TNumericLimits<float>::Max());
   for(uint32 i = 0; i < NumVertices; i++)
   {
@@ -93,18 +269,18 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalM
     MinVertex.Z = (Pos.Z < MinVertex.Z) ? Pos.Z : MinVertex.Z;
   }
 
-  // Calculate middle point
-  FVector Origin (
-    (MaxVertex.X + MinVertex.X) * 0.5f,
-    (MaxVertex.Y + MinVertex.Y) * 0.5f,
-    (MaxVertex.Z + MinVertex.Z) * 0.5f
-  );
-
   // Calculate box extent
   FVector Extent (
     (MaxVertex.X - MinVertex.X) * 0.5f,
     (MaxVertex.Y - MinVertex.Y) * 0.5f,
     (MaxVertex.Z - MinVertex.Z) * 0.5f
+  );
+
+  // Calculate middle point
+  FVector Origin (
+    (MinVertex.X + Extent.X),
+    (MinVertex.Y + Extent.Y),
+    (MinVertex.Z + Extent.Z)
   );
 
   return {Origin, Extent};
@@ -119,114 +295,174 @@ FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(const UStaticMesh*
   }
 
   FBox Box = StaticMesh->GetBoundingBox();
-
   return {Box.GetCenter(), Box.GetExtent()};
 
 }
 
-// TODO: Dynamic vehicle, avoid SM of collision
-TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(const TArray<AActor*>& Actors)
+void UBoundingBoxCalculator::GetISMBoundingBox(
+    UInstancedStaticMeshComponent* ISMComp,
+    TArray<FBoundingBox>& OutBoundingBox)
 {
-  TArray<FBoundingBox> Result;
-
-  int ActorIndex = 0;
-  for(AActor* Actor : Actors)
+  if(!ISMComp)
   {
-    //UE_LOG(LogCarla, Warning, TEXT(" %d / %d"), ActorIndex, Actors.Num());
-    ActorIndex++;
+    UE_LOG(LogCarla, Error, TEXT("GetISMBoundingBox no ISMComp"));
+    return;
+  }
 
-    AInstancedFoliageActor* InstancedFolliageActor = Cast<AInstancedFoliageActor>(Actor);
-    if(InstancedFolliageActor != nullptr)
+  const UStaticMesh *Mesh = ISMComp->GetStaticMesh();
+  const FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
+
+  if(SMBoundingBox.Extent.IsZero())
+  {
+    UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName());
+    return;
+  }
+
+  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  ISMComp->PerInstanceSMData;
+
+  for(auto& InstSMIData : PerInstanceSMData)
+  {
+    const FTransform Transform = FTransform(InstSMIData.Transform);
+    FBoundingBox BoundingBox = ApplyTransformToBB(SMBoundingBox, Transform);
+    OutBoundingBox.Add(BoundingBox);
+  }
+
+}
+
+void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
+    const TArray<UStaticMeshComponent*>& StaticMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried)
+{
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+
+  for(UStaticMeshComponent* Comp : StaticMeshComps)
+  {
+    // Filter by tag
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    UStaticMesh* StaticMesh = Comp->GetStaticMesh();
+    FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
+
+    if(BoundingBox.Extent.IsZero())
     {
-      TMap<UFoliageType*, TUniqueObj<FFoliageInfo>>& FoliageInstancesMap = InstancedFolliageActor->FoliageInfos;
-
-
-      UE_LOG(LogCarla, Warning, TEXT("FolliageActor with %d FoliageTypes"), FoliageInstancesMap.Num());
-
-      int FoliageIndex = 0;
-      for(auto& FoliagePair: FoliageInstancesMap)
-      {
-        const UFoliageType* FoliageType = FoliagePair.Key;
-        const FFoliageInfo& FoliageInfo = FoliagePair.Value.Get();
-        const UFoliageType_InstancedStaticMesh* FoliageType_ISM = Cast<UFoliageType_InstancedStaticMesh>(FoliageType);
-
-        UHierarchicalInstancedStaticMeshComponent* HISMComp = FoliageInfo.GetComponent();
-
-        UStaticMesh *Mesh = FoliageType_ISM->GetStaticMesh();
-        FBoundingBox SMBoundingBox = GetStaticMeshBoundingBox(Mesh);
-
-        int32 NumHISMInstances = HISMComp->GetNumRenderInstances();
-
-        UE_LOG(LogCarla, Warning, TEXT("   %d/%d : NumHISMInstances = %d"),
-          FoliageIndex, FoliageInstancesMap.Num(), NumHISMInstances);
-        FoliageIndex++;
-
-        const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  HISMComp->PerInstanceSMData;
-
-        for(auto& InstSMIData : PerInstanceSMData)
-        {
-          FTransform Transform = FTransform(InstSMIData.Transform);
-          FRotator Rotation = Transform.GetRotation().Rotator();
-          FVector Translation = Transform.GetLocation();
-          FVector Scale = Transform.GetScale3D();
-
-          FBoundingBox BoundingBox = SMBoundingBox;
-          BoundingBox.Origin *= Scale;
-          BoundingBox.Origin = Rotation.RotateVector(BoundingBox.Origin) + Translation;
-          BoundingBox.Extent *= Scale;
-          BoundingBox.Rotation = Rotation;
-          Result.Add(BoundingBox);
-        }
-      }
-
+      UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Comp->GetOwner()->GetName());
     }
     else
     {
-      TArray<UMeshComponent*> MeshComps;
-      Actor->GetComponents<UMeshComponent>(MeshComps);
+      // Component-to-world transform for this component
+      const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+      BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+      OutBB.Add(BoundingBox);
+    }
+  }
+}
 
-      FVector WorldLocation = Actor->GetActorLocation();
-      FVector WorldScale = Actor->GetActorScale();
-      FRotator WorldRotation = Actor->GetActorRotation();
+void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
+    const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried)
+{
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
-      // Find if there is some geometry component
-      TArray<UStaticMeshComponent*> StaticMeshComps;
-      TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-      Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-      Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+  for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
+  {
+    // Filter by tag
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if(FilterByTagEnabled && Tag != TagQueried) continue;
 
-      // Calculate FBoundingBox of SM
-      for(UStaticMeshComponent* StaticMeshComp : StaticMeshComps)
+    USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+    FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+    if(BoundingBox.Extent.IsZero())
+    {
+      UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Comp->GetOwner()->GetName());
+    }
+    else
+    {
+      // Component-to-world transform for this component
+      const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+      BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+      OutBB.Add(BoundingBox);
+    }
+  }
+}
+
+TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
+  const TArray<AActor*>& Actors,
+  uint8 InTagQueried)
+{
+  TArray<FBoundingBox> Result;
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+
+  for(AActor* Actor : Actors)
+  {
+    FString ClassName = Actor->GetClass()->GetName();
+
+    // Avoid the BP_Procedural_Building to avoid duplication with their child actors
+    // When improved the BP_Procedural_Building this maybe should be removed
+    // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
+    //       than getting the UClass of the BP to cast the actor.
+    if(ClassName.Contains("BP_Procedural_Bulding")) continue;
+
+    // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
+    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+    if (Vehicle)
+    {
+      FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
+      if(!BoundingBox.Extent.IsZero())
       {
-        UStaticMesh* StaticMesh = StaticMeshComp->GetStaticMesh();
-        FBoundingBox BoundingBox = GetStaticMeshBoundingBox(StaticMesh);
-
-        if(BoundingBox.Extent.IsZero())
-        {
-          UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Actor->GetName());
-        }
-        else
-        {
-          BoundingBox.Origin *= WorldScale;
-          BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
-          BoundingBox.Extent *= WorldScale;
-          BoundingBox.Rotation = WorldRotation;
-          Result.Add(BoundingBox);
-        }
-      }
-
-      // Calculate FBoundingBox of SK_M
-      for(USkeletalMeshComponent* SkeletalMeshComp : SkeletalMeshComps)
-      {
-        USkeletalMesh* SkeletalMesh = SkeletalMeshComp->SkeletalMesh;
-        FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
-        BoundingBox.Origin *= WorldScale;
-        BoundingBox.Origin = WorldRotation.RotateVector(BoundingBox.Origin) + WorldLocation;
-        BoundingBox.Extent *= WorldScale;
-        BoundingBox.Rotation = WorldRotation;
         Result.Add(BoundingBox);
       }
+      continue;
     }
+
+
+    // Pedestrians, we just use the capsule component at the moment.
+    ACharacter* Character = Cast<ACharacter>(Actor);
+    if (Character)
+    {
+      FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
+      if(!BoundingBox.Extent.IsZero())
+      {
+        Result.Add(BoundingBox);
+      }
+      continue;
+    }
+
+    // TrafficLight, we need to join all the BB of the lights in one
+    ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
+    if(TrafficLight)
+    {
+      GetTrafficLightBoundingBox(TrafficLight, Result, InTagQueried);
+      continue;
+    }
+
+    // Calculate FBoundingBox of SM
+    TArray<UStaticMeshComponent*> StaticMeshComps;
+    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
+
+    // Calculate FBoundingBox of SK_M
+    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
+
+    // Calculate FBoundingBox of ISM
+    TArray<UInstancedStaticMeshComponent *> ISMComps;
+    Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
+    for(UInstancedStaticMeshComponent* Comp: ISMComps)
+    {
+      // Filter by tag
+      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+      if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+      GetISMBoundingBox(Comp, Result);
+    }
+
   }
 
   return Result;

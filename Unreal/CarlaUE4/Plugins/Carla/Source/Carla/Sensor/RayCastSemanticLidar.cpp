@@ -19,6 +19,8 @@
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 
+namespace crp = carla::rpc;
+
 FActorDefinition ARayCastSemanticLidar::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeLidarDefinition(TEXT("ray_cast_semantic"));
@@ -160,7 +162,7 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 
     AActor* actor = HitInfo.Actor.Get();
     Detection.object_idx = 0;
-    Detection.object_tag = static_cast<uint32_t>(ECityObjectLabel::None);
+    Detection.object_tag = static_cast<uint32_t>(crp::CityObjectLabel::None);
     if (actor != nullptr) {
 
       FActorView view = Registry.Find(actor);

@@ -182,7 +182,7 @@ private:
 
   uint8 DepthPriority = SDPG_World;
 
-  static constexpr double BrightMultiplier = 10000.0;
+  static constexpr double BrightMultiplier = 1.0;
 };
 
 void FDebugShapeDrawer::Draw(const carla::rpc::DebugShape &Shape)
