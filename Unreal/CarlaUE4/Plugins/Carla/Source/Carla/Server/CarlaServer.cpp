@@ -637,6 +637,8 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to add actor impulse: not supported by actor");
     }
 
+    UE_LOG(LogCarla, Warning, TEXT("AddImpulseAtLocation: Experimental feature, use carefully."));
+
     RootComponent->AddImpulseAtLocation(
         impulse.ToCentimeters().ToFVector(),
         location.ToCentimeters().ToFVector(),
@@ -682,6 +684,9 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to add actor impulse: not supported by actor");
     }
+
+    UE_LOG(LogCarla, Warning, TEXT("AddImpulseAtLocation: Experimental feature, use carefully."));
+
     RootComponent->AddForceAtLocation(
         force.ToCentimeters().ToFVector(),
         location.ToCentimeters().ToFVector(),
