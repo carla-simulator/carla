@@ -14,23 +14,39 @@ Returns whether this object was destroyed using this actor handle.
 - <a name="carla.Actor.parent"></a>**<font color="#f8805a">parent</font>** (_[carla.Actor](#carla.Actor)_)  
 Actors may be attached to a parent actor that they will follow around. This is said actor.  
 - <a name="carla.Actor.semantic_tags"></a>**<font color="#f8805a">semantic_tags</font>** (_list(int)_)  
-A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with "pole" and "traffic light". These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](ref_sensors.md#semantic-segmentation-camera).  
+A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with `Pole` and `TrafficLight`. These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](ref_sensors.md#semantic-segmentation-camera).  
 - <a name="carla.Actor.type_id"></a>**<font color="#f8805a">type_id</font>** (_str_)  
-The identifier of the blueprint this actor was based on, e.g. "vehicle.ford.mustang".  
+The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 
 <h3>Methods</h3>
-- <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
-Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
-    - **Parameters:**
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
 - <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
-Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
+Applies an angular impulse at the center of mass of the actor. Angular impulses are instantaneous. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over time.  
     - **Parameters:**
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_)  
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_) – Angular impulse vector in global coordinates.  
+- <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
+Applies an impulse at the center of mass of the actor. Impulses are instantaneous. Use __<font color="#7fb800">add_force()</font>__ to apply forces over time.  
+    - **Parameters:**
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_) – Impulse vector in global coordinates.  
+- <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  
+Applies a force at the center of mass of the actor.  The effects of the force depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply an instantaneous rotation impulse.  
+    - **Parameters:**
+        - `force` (_[carla.Vector3D](#carla.Vector3D)_) – Force vector in global coordinates.  
+- <a name="carla.Actor.add_torque"></a>**<font color="#7fb800">add_torque</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque**</font>)  
+Applies a torque at the center of mass of the actor. The effects of the torque depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply an instantaneous rotation impulse.  
+    - **Parameters:**
+        - `torque` (_[carla.Vector3D](#carla.Vector3D)_) – Torque vector in global coordinates.  
 - <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
 Tells the simulator to destroy this actor and returns <b>True</b> if it was successful. It has no effect if it was already destroyed.  
     - **Return:** _bool_  
     - **Warning:** <font color="#ED2F2F">_This method blocks the script until the destruction is completed by the simulator.
+_</font>  
+- <a name="carla.Actor.disable_constant_velocity"></a>**<font color="#7fb800">disable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+Disables any constant velocity previously set for a [carla.Vehicle](#carla.Vehicle) actor.  
+- <a name="carla.Actor.enable_constant_velocity"></a>**<font color="#7fb800">enable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
+Sets the actor's velocity vector to a constant value over time. The modification is instantaneous. The resulting velocity will not be exactly the `velocity` being set. It will be affected by external forces such as friction.  
+    - **Parameters:**
+        - `velocity` (_[carla.Vector3D](#carla.Vector3D)_) – Velocity vector in local space.  
+    - **Warning:** <font color="#ED2F2F">_Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_traffic_manager/) may cause conflicts. It will not be able to override the constant velocity being set.  
 _</font>  
 
 <h5 style="margin-top: -20px">Getters</h5>
@@ -40,7 +56,6 @@ Returns the actor's 3D acceleration vector the client recieved during last tick.
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – rad/s</small>_  
-    - **Setter:** _[carla.Actor.set_angular_velocity](#carla.Actor.set_angular_velocity)_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Location](#carla.Location)<small> – meters</small>_  
@@ -52,17 +67,17 @@ Returns the actor's transform (location and rotation) the client recieved during
 - <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – m/s</small>_  
-    - **Setter:** _[carla.Actor.set_velocity](#carla.Actor.set_velocity)_  
 - <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the world this actor belongs to.  
     - **Return:** _[carla.World](#carla.World)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_angular_velocity"></a>**<font color="#7fb800">set_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
-Changes the actor's angular velocity vector.  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_target_angular_velocity"></a>**<font color="#7fb800">set_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
+Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).  
     - **Parameters:**
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
-    - **Getter:** _[carla.Actor.get_angular_velocity](#carla.Actor.get_angular_velocity)_  
+    - **Note:** <font color="#8E8E8E">_The update will not be effective until two frames after it is set.  
+_</font>  
 - <a name="carla.Actor.set_location"></a>**<font color="#7fb800">set_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
 Teleports the actor to a given location.  
     - **Parameters:**
@@ -77,11 +92,12 @@ Teleports the actor to a given transform (location and rotation).
     - **Parameters:**
         - `transform` (_[carla.Transform](#carla.Transform)_)  
     - **Getter:** _[carla.Actor.get_transform](#carla.Actor.get_transform)_  
-- <a name="carla.Actor.set_velocity"></a>**<font color="#7fb800">set_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
-Sets the actor's velocity vector.  
+- <a name="carla.Actor.set_target_velocity"></a>**<font color="#7fb800">set_target_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
+Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
-    - **Getter:** _[carla.Actor.get_velocity](#carla.Actor.get_velocity)_  
+    - **Note:** <font color="#8E8E8E">_The update will not be effective until two frames after it is set.  
+_</font>  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -349,13 +365,13 @@ Client constructor.
         - `port` (_int_) – TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001.  
         - `worker_threads` (_int_) – Number of working threads used for background updates. If 0, use all available concurrency.  
 - <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
-Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
+Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.   [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.  
 - <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**due_tick_cue**=False</font>)  
 Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.  
     - **Parameters:**
-        - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the function **<font color="#7fb800">apply_batch()</font>**.  
+        - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.  
         - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. It is __False__ by default.  
     - **Return:** _list(command.Response)_  
 - <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**parameters**=(2.0, 50.0, 1.0, 0.6, true, true)</font>)  
@@ -1877,7 +1893,7 @@ The client returns <b>True</b> if a traffic light is frozen according to last ti
     - **Return:** _bool_  
 - <a name="carla.TrafficLight.reset_group"></a>**<font color="#7fb800">reset_group</font>**(<font color="#00a6ed">**self**</font>)  
 Resets the state of the traffic lights of the group to the initial state at the start of the simulation.  
-    - **Note:** <font color="#8E8E8E">_This function calls the simulator.
+    - **Note:** <font color="#8E8E8E">_This method calls the simulator.
 _</font>  
 
 <h5 style="margin-top: -20px">Getters</h5>
@@ -1887,7 +1903,7 @@ The client returns the time in seconds since current light state started accordi
 - <a name="carla.TrafficLight.get_group_traffic_lights"></a>**<font color="#7fb800">get_group_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
 Returns all traffic lights in the group this one belongs to.  
     - **Return:** _list([carla.TrafficLight](#carla.TrafficLight))_  
-    - **Note:** <font color="#8E8E8E">_This function calls the simulator.
+    - **Note:** <font color="#8E8E8E">_This method calls the simulator.
 _</font>  
 - <a name="carla.TrafficLight.get_pole_index"></a>**<font color="#7fb800">get_pole_index</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the index of the pole that identifies it as part of the traffic light group of a junction.  
@@ -2179,7 +2195,7 @@ Returns a flag representing the vehicle light state, this represents which light
 - <a name="carla.Vehicle.get_physics_control"></a>**<font color="#7fb800">get_physics_control</font>**(<font color="#00a6ed">**self**</font>)  
 The simulator returns the last physics control applied to this vehicle.  
     - **Return:** _[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_  
-    - **Warning:** <font color="#ED2F2F">_This function does call the simulator to retrieve the value._</font>  
+    - **Warning:** <font color="#ED2F2F">_This method does call the simulator to retrieve the value._</font>  
 - <a name="carla.Vehicle.get_speed_limit"></a>**<font color="#7fb800">get_speed_limit</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.  
     - **Return:** _float<small> – m/s</small>_  
@@ -2485,7 +2501,7 @@ Returns a list of waypoints from this to the start of the lane separated by a ce
 
 <h5 style="margin-top: -20px">Getters</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
-If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.  
+If the waypoint belongs to a junction this method returns the asociated junction object. Otherwise returns null.  
     - **Return:** _[carla.Junction](#carla.Junction)_  
 - <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
 Returns a list of landmarks in the road from the current waypoint until the specified distance.  
@@ -2814,7 +2830,7 @@ Angular impulse applied to the actor. Determines magnitude and global axis where
 ---
 
 ## command.ApplyAngularVelocity<a name="command.ApplyAngularVelocity"></a>
-Command adaptation of **<font color="#7fb800">set_angular_velocity()</font>** in [carla.Actor](#carla.Actor). Sets an actor's angular velocity.  
+Command adaptation of **<font color="#7fb800">set_angular_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2826,7 +2842,7 @@ The 3D angular velocity that will be applied to the actor.
 - <a name="command.ApplyAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
+        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_) – Angular velocity vector applied to the actor.  
 
 ---
 
@@ -2882,7 +2898,7 @@ Vehicle control to be applied.
 ---
 
 ## command.ApplyVelocity<a name="command.ApplyVelocity"></a>
-Command adaptation of **<font color="#7fb800">set_velocity()</font>** in [carla.Actor](#carla.Actor). Sets an actor's velocity.  
+Command adaptation of **<font color="#7fb800">set_target_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2894,7 +2910,7 @@ The 3D velocity applied to the actor.
 - <a name="command.ApplyVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
-        - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
+        - `velocity` (_[carla.Vector3D](#carla.Vector3D)_) – Velocity vector applied to the actor.  
 
 ---
 
@@ -2950,7 +2966,7 @@ Actor affected by the command.
 ---
 
 ## command.Response<a name="command.Response"></a>
-States the result of executing a command as either the ID of the actor to whom the command was applied to (when succeeded) or an error string (when failed).  actor ID, depending on whether or not the command succeeded. The method **<font color="#7fb800">apply_batch_sync()</font>** in [carla.Client](#carla.Client) returns a list of these to summarize the execution of a batch.  
+States the result of executing a command as either the ID of the actor to whom the command was applied to (when succeeded) or an error string (when failed).  actor ID, depending on whether or not the command succeeded. The method __<font color="#7fb800">apply_batch_sync()</font>__ in [carla.Client](#carla.Client) returns a list of these to summarize the execution of a batch.  
 
 <h3>Instance Variables</h3>
 - <a name="command.Response.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
