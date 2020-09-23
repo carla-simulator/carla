@@ -197,7 +197,7 @@ popd >/dev/null
 if ${SMOKE_TESTS} ; then
   pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/util" >/dev/null
     log "Checking connection with the simulator."
-    python${PY_VERSION} test_connection.py -p 3654 --timeout=60.0
+    /usr/bin/env python${PY_VERSION} test_connection.py -p 3654 --timeout=60.0
   popd >/dev/null
 fi
 
