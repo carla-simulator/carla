@@ -406,7 +406,7 @@
     - def_name: get_junction
       return: carla.Junction
       doc: >
-        If the waypoint belongs to a junction this function returns the asociated junction object. Otherwise returns null.
+        If the waypoint belongs to a junction this method returns the asociated junction object. Otherwise returns null.
     # --------------------------------------
     - def_name: get_landmarks
       params:
