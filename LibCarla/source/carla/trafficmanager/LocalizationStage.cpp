@@ -169,12 +169,11 @@ void LocalizationStage::Update(const unsigned long index) {
       double s_bucket = 100.0 / next_waypoints.size();
       selection_index = static_cast<uint64_t>(std::floor(r_sample/s_bucket));
     } else if (next_waypoints.size() == 0) {
-      if (parameters.GetOSMMode()) {
-        marked_for_removal.push_back(actor_id);
-        break;
-      } else {
-        throw std::invalid_argument("This is an OSM, please activate the set_open_street_map parameter");
+      if (!parameters.GetOSMMode()) {
+        std::cout << "This is an OSM, please change the set_open_street_map parameter to true" << std::endl;
       }
+      marked_for_removal.push_back(actor_id);
+      break;
     }
     SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
     PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
