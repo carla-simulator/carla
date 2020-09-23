@@ -89,10 +89,6 @@ def main():
         type=int,
         help='Random device seed')
     argparser.add_argument(
-        '--osm',
-        action='store_true',
-        help='Open Street Map mode')
-    argparser.add_argument(
         '--car-lights-on',
         action='store_true',
         default=False,
@@ -119,8 +115,6 @@ def main():
         if args.seed is not None:
             traffic_manager.set_random_device_seed(args.seed)
 
-        if args.osm:
-            traffic_manager.set_osm_mode(True)
 
         if args.sync:
             settings = world.get_settings()
