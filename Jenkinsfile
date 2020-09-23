@@ -106,12 +106,6 @@ pipeline
                         }
                         stage('ubuntu deploy')
                         {
-                            when { branch "dev"; }
-                            steps
-                            {
-                                sh 'git checkout .'
-                                sh 'make deploy ARGS="--replace-latest"'
-                            }
                             when { anyOf { branch "master"; buildingTag() } }
                             steps
                             {
@@ -244,7 +238,7 @@ pipeline
                         }
                         stage('windows deploy')
                         {
-                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                            when { anyOf { branch "master"; buildingTag() } }
                             steps {
                                 bat """
                                     call ../setEnv64.bat
