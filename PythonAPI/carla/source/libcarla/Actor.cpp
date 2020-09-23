@@ -42,20 +42,20 @@ static void AddActorImpulseCOM(carla::client::Actor &self,
   self.AddImpulse(impulse);
 }
 
-static void AddActorImpulseLoc(carla::client::Actor &self,
-    const carla::geom::Vector3D &impulse, const carla::geom::Vector3D &location) {
-  self.AddImpulse(impulse, location);
-}
+//static void AddActorImpulseLoc(carla::client::Actor &self,
+//    const carla::geom::Vector3D &impulse, const carla::geom::Vector3D &location) {
+//  self.AddImpulse(impulse, location);
+//}
 
 static void AddActorForceCOM(carla::client::Actor &self,
     const carla::geom::Vector3D &force) {
   self.AddForce(force);
 }
 
-static void AddActorForceLoc(carla::client::Actor &self,
-    const carla::geom::Vector3D &force, const carla::geom::Vector3D &location) {
-  self.AddForce(force, location);
-}
+//static void AddActorForceLoc(carla::client::Actor &self,
+//    const carla::geom::Vector3D &force, const carla::geom::Vector3D &location) {
+//  self.AddForce(force, location);
+//}
 
 static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
   namespace py = boost::python;
