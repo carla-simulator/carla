@@ -53,7 +53,7 @@ public:
   ATrafficLightManager* GetTrafficLightManager();
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FBoundingBox> GetAllBBsOfLevel();
+  TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
 
 protected:
 
@@ -86,7 +86,7 @@ private:
   UCarlaEpisode *Episode = nullptr;
 
   UPROPERTY()
-  ACarlaRecorder *Recorder = nullptr;
+  ACarlaRecorder *Recorder = nullptr; 
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)

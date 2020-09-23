@@ -342,6 +342,10 @@
       doc: >
         Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen. 
     # --------------------------------------
+    - def_name: reset_all_traffic_lights
+      doc: >
+        Resets the cycle of all traffic lights in the map to the initial state.
+    # --------------------------------------
     - def_name: get_map
       return: carla.Map
       doc: >

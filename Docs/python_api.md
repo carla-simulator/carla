@@ -2659,6 +2659,8 @@ Same as **<font color="#7fb800">spawn_actor()</font>** but returns <b>None</b> o
 Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen.  
     - **Parameters:**
         - `frozen` (_bool_)  
+- <a name="carla.World.reset_all_traffic_lights"></a>**<font color="#7fb800">reset_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
+Resets the cycle of all traffic lights in the map to the initial state.  
 
 <h5 style="margin-top: -20px">Getters</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.get_actor"></a>**<font color="#7fb800">get_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  

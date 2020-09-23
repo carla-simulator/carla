@@ -150,6 +150,10 @@ namespace client {
     return nullptr;
   }
 
+  void World::ResetAllTrafficLights() {
+    _episode.Lock()->ResetAllTrafficLights();
+  }
+
   SharedPtr<LightManager> World::GetLightManager() const {
     return _episode.Lock()->GetLightManager();
   }
@@ -158,8 +162,8 @@ namespace client {
     _episode.Lock()->FreezeAllTrafficLights(frozen);
   }
 
-  std::vector<geom::BoundingBox> World::GetLevelBBs() const {
-    return _episode.Lock()->GetLevelBBs();
+  std::vector<geom::BoundingBox> World::GetLevelBBs(uint8_t queried_tag) const {
+    return _episode.Lock()->GetLevelBBs(queried_tag);
   }
 
 } // namespace client
