@@ -209,5 +209,9 @@ carla::client::detail::EpisodeProxy& TrafficManagerRemote::GetEpisodeProxy() {
   return episodeProxyTM;
 }
 
+void TrafficManagerRemote::SetRandomDeviceSeed(const uint64_t seed) {
+  client.SetRandomDeviceSeed(seed);
+}
+
 } // namespace traffic_manager
 } // namespace carla

@@ -28,8 +28,8 @@ static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
 namespace HybridMode {
-static const float HYBRID_MODE_DT = 0.05f;
-static const float INV_HYBRID_DT = 1.0f / HYBRID_MODE_DT;
+static const double HYBRID_MODE_DT = 0.05;
+static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
 

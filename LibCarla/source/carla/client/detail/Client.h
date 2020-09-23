@@ -146,11 +146,11 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Transform &transform);
 
-    void SetActorVelocity(
+    void SetActorTargetVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
-    void SetActorAngularVelocity(
+    void SetActorTargetAngularVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
@@ -205,6 +205,8 @@ namespace detail {
     void ResetTrafficLightGroup(
         rpc::ActorId traffic_light);
 
+    void ResetAllTrafficLights();
+
     void FreezeAllTrafficLights(bool frozen);
 
     /// Returns a list of pairs where the firts element is the vehicle ID
@@ -257,7 +259,7 @@ namespace detail {
         bool discard_client = false) const;
 
     /// Returns all the BBs of all the elements of the level
-    std::vector<geom::BoundingBox> GetLevelBBs() const;
+    std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
 
   private:
 
