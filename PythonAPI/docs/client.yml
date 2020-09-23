@@ -42,7 +42,7 @@
         doc: >
           A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
       doc: >
-        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one.
+        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.  
         [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.
     # --------------------------------------
     - def_name: apply_batch_sync
@@ -50,7 +50,7 @@
       - param_name: commands
         type: list
         doc: >
-          A list of commands to execute in batch. The commands available are listed right above, in the function **<font color="#7fb800">apply_batch()</font>**.
+          A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.
       - param_name: due_tick_cue
         type: bool
         default: false

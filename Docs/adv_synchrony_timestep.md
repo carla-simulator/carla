@@ -74,7 +74,7 @@ CARLA has a [recorder feature](adv_recorder.md) that allows a simulation to be r
 Physics must be computed within very low time steps to be precise. The more time goes by, the more variables and chaos come to place, and the more defective the simulation will be. 
 CARLA uses up to 6 substeps to compute physics in every step, each with a maximum delta time of 0.016667s.  
 
-To know how many of these are needed, the time-step used gets divided by the maximum delta time a substep can use `number_of_substeps = time_step/0.016667`. Being these a maximum of 6, `6*0.016667 = 0.1`. If the time-step is greater than `0.1``, there will not be enough physical substeps. Physics will not be in synchrony with the delta time. 
+To know how many of these are needed, the time-step used gets divided by the maximum delta time a substep can use `number_of_substeps = time_step/0.016667`. Being these a maximum of 6, `6*0.016667 = 0.1`. If the time-step is greater than `0.1`, there will not be enough physical substeps. Physics will not be in synchrony with the delta time. 
 
 !!! Warning
     __Do not use a time-step greater than 0.1s.__<br>
