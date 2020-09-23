@@ -43,7 +43,7 @@ public:
   virtual void Activate(FVector Velocity, bool bReset=false);
 
   // Deactivate the component
-	virtual void Deactivate() override;
+  virtual void Deactivate() override;
 
 private:
   ///

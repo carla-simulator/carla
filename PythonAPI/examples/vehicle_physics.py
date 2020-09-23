@@ -36,9 +36,11 @@ def print_step_info(world, vehicle):
             vehicle.get_velocity().x, vehicle.get_velocity().y, vehicle.get_velocity().z, \
             vehicle.get_location().x, vehicle.get_location().y, vehicle.get_location().z))
 
+
 def wait(world, frames=100):
     for i in range(0, frames):
         world.tick()
+
 
 def main(arg):
     """Main function of the script"""
