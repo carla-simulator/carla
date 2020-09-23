@@ -19,20 +19,20 @@ A list of semantic tags provided by the blueprint listing components for this ac
 The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 
 <h3>Methods</h3>
-- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
-Applies an angular impulse at the center of mass of the actor. Angular impulses are instantaneous. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over time.  
+- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_impulse**</font>)  
+Applies an angular impulse at the center of mass of the actor. Angular impulses only last an instant. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over a period of time.  
     - **Parameters:**
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_) – Angular impulse vector in global coordinates.  
-- <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
-Applies an impulse at the center of mass of the actor. Impulses are instantaneous. Use __<font color="#7fb800">add_force()</font>__ to apply forces over time.  
-    - **Parameters:**
-        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_) – Impulse vector in global coordinates.  
+        - `angular_impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_) – Angular impulse vector in global coordinates.  
 - <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  
-Applies a force at the center of mass of the actor.  The effects of the force depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply an instantaneous rotation impulse.  
+Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
     - **Parameters:**
-        - `force` (_[carla.Vector3D](#carla.Vector3D)_) – Force vector in global coordinates.  
+        - `force` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_) – Force vector in global coordinates.  
+- <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
+Applies an impulse at the center of mass of the actor. Impulses only last an instant. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.  
+    - **Parameters:**
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)_) – Impulse vector in global coordinates.  
 - <a name="carla.Actor.add_torque"></a>**<font color="#7fb800">add_torque</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque**</font>)  
-Applies a torque at the center of mass of the actor. The effects of the torque depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply an instantaneous rotation impulse.  
+Applies a torque at the center of mass of the actor. The effects of the torque depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply a rotation impulse that only lasts an instant.  
     - **Parameters:**
         - `torque` (_[carla.Vector3D](#carla.Vector3D)_) – Torque vector in global coordinates.  
 - <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
@@ -43,7 +43,7 @@ _</font>
 - <a name="carla.Actor.disable_constant_velocity"></a>**<font color="#7fb800">disable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Disables any constant velocity previously set for a [carla.Vehicle](#carla.Vehicle) actor.  
 - <a name="carla.Actor.enable_constant_velocity"></a>**<font color="#7fb800">enable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
-Sets the actor's velocity vector to a constant value over time. The modification is instantaneous. The resulting velocity will not be exactly the `velocity` being set. It will be affected by external forces such as friction.  
+Sets the actor's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_) – Velocity vector in local space.  
     - **Warning:** <font color="#ED2F2F">_Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_traffic_manager/) may cause conflicts. It will not be able to override the constant velocity being set.  
@@ -73,7 +73,7 @@ Returns the world this actor belongs to.
 
 <h5 style="margin-top: -20px">Setters</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_target_angular_velocity"></a>**<font color="#7fb800">set_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
-Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).  
+Sets the actor's angular velocity vector. The modification will be effective two frames after the setting, and the update between angular velocities will be sudden. Also, this is applied before the physics step so the resulting angular velocity will be affected by external forces at this frame such as friction.  
     - **Parameters:**
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
     - **Note:** <font color="#8E8E8E">_The update will not be effective until two frames after it is set.  
@@ -93,7 +93,7 @@ Teleports the actor to a given transform (location and rotation).
         - `transform` (_[carla.Transform](#carla.Transform)_)  
     - **Getter:** _[carla.Actor.get_transform](#carla.Actor.get_transform)_  
 - <a name="carla.Actor.set_target_velocity"></a>**<font color="#7fb800">set_target_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
-Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).  
+Sets the actor's velocity vector. The modification will be effective two frames after the setting, and the update between velocities will be sudden. Also, this is applied before the physics step so the resulting velocity will be affected by external forces at this frame such as friction.  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
     - **Note:** <font color="#8E8E8E">_The update will not be effective until two frames after it is set.  
@@ -2813,13 +2813,13 @@ Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are diffe
 ---
 
 ## command.ApplyAngularImpulse<a name="command.ApplyAngularImpulse"></a>
-Command adaptation of **<font color="#7fb800">add_angular_impulse()</font>** in [carla.Actor](#carla.Actor). Adds angular impulse to an actor.  
+Command adaptation of __<font color="#7fb800">add_angular_impulse()</font>__ in [carla.Actor](#carla.Actor). Applies an angular impulse to an actor.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyAngularImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
 Actor affected by the command.  
 - <a name="command.ApplyAngularImpulse.impulse"></a>**<font color="#f8805a">impulse</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_)  
-Angular impulse applied to the actor. Determines magnitude and global axis where it is applied.  
+Angular impulse applied to the actor.  
 
 <h3>Methods</h3>
 - <a name="command.ApplyAngularImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
@@ -2829,8 +2829,25 @@ Angular impulse applied to the actor. Determines magnitude and global axis where
 
 ---
 
+## command.ApplyForce<a name="command.ApplyForce"></a>
+Command adaptation of __<font color="#7fb800">add_force()</font>__ in [carla.Actor](#carla.Actor). Applies a force to an actor.  
+
+<h3>Instance Variables</h3>
+- <a name="command.ApplyForce.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
+- <a name="command.ApplyForce.force"></a>**<font color="#f8805a">force</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Force applied to the actor over time.  
+
+<h3>Methods</h3>
+- <a name="command.ApplyForce.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**force**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `force` (_[carla.Vector3D](#carla.Vector3D)_)  
+
+---
+
 ## command.ApplyImpulse<a name="command.ApplyImpulse"></a>
-Command adaptation of **<font color="#7fb800">add_impulse()</font>** in [carla.Actor](#carla.Actor). Adds impulse to an actor.  
+Command adaptation of __<font color="#7fb800">add_impulse()</font>__ in [carla.Actor](#carla.Actor). Applies an impulse to an actor.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyImpulse.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2847,7 +2864,7 @@ Impulse applied to the actor.
 ---
 
 ## command.ApplyTargetAngularVelocity<a name="command.ApplyTargetAngularVelocity"></a>
-Command adaptation of **<font color="#7fb800">set_target_angular_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).  
+Command adaptation of __<font color="#7fb800">set_target_angular_velocity()</font>__ in [carla.Actor](#carla.Actor). Sets the actor's angular velocity vector.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyTargetAngularVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2864,7 +2881,7 @@ The 3D angular velocity that will be applied to the actor.
 ---
 
 ## command.ApplyTargetVelocity<a name="command.ApplyTargetVelocity"></a>
-Command adaptation of **<font color="#7fb800">set_target_velocity()</font>** in [carla.Actor](#carla.Actor). Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).  
+Command adaptation of __<font color="#7fb800">set_target_velocity()</font>__ in [carla.Actor](#carla.Actor).  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyTargetVelocity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2880,8 +2897,25 @@ The 3D velocity applied to the actor.
 
 ---
 
+## command.ApplyTorque<a name="command.ApplyTorque"></a>
+Command adaptation of __<font color="#7fb800">add_torque()</font>__ in [carla.Actor](#carla.Actor). Applies a torque to an actor.  
+
+<h3>Instance Variables</h3>
+- <a name="command.ApplyTorque.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
+Actor affected by the command.  
+- <a name="command.ApplyTorque.torque"></a>**<font color="#f8805a">torque</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
+Torque applied to the actor over time.  
+
+<h3>Methods</h3>
+- <a name="command.ApplyTorque.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**torque**</font>)  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
+        - `torque` (_[carla.Vector3D](#carla.Vector3D)_)  
+
+---
+
 ## command.ApplyTransform<a name="command.ApplyTransform"></a>
-Command adaptation of **<font color="#7fb800">set_transform()</font>** in [carla.Actor](#carla.Actor). Sets a new transform to an actor.  
+Command adaptation of __<font color="#7fb800">set_transform()</font>__ in [carla.Actor](#carla.Actor). Sets a new transform to an actor.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyTransform.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2898,7 +2932,7 @@ Transformation to be applied.
 ---
 
 ## command.ApplyVehicleControl<a name="command.ApplyVehicleControl"></a>
-Command adaptation of **<font color="#7fb800">apply_control()</font>** in [carla.Vehicle](#carla.Vehicle). Applies a certain control to a vehicle.  
+Command adaptation of __<font color="#7fb800">apply_control()</font>__ in [carla.Vehicle](#carla.Vehicle). Applies a certain control to a vehicle.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyVehicleControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2915,7 +2949,7 @@ Vehicle control to be applied.
 ---
 
 ## command.ApplyWalkerControl<a name="command.ApplyWalkerControl"></a>
-Command adaptation of **<font color="#7fb800">apply_control()</font>** in [carla.Walker](#carla.Walker). Applies a control to a walker.  
+Command adaptation of __<font color="#7fb800">apply_control()</font>__ in [carla.Walker](#carla.Walker). Applies a control to a walker.  
 
 <h3>Instance Variables</h3>
 - <a name="command.ApplyWalkerControl.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2952,7 +2986,7 @@ Speed to be applied.
 ---
 
 ## command.DestroyActor<a name="command.DestroyActor"></a>
-Command adaptation of **<font color="#7fb800">destroy()</font>** in [carla.Actor](#carla.Actor) that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with **<font color="#7fb800">apply_batch_sync()</font>** in [carla.Client](#carla.Client) there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.  
+Command adaptation of __<font color="#7fb800">destroy()</font>__ in [carla.Actor](#carla.Actor) that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with __<font color="#7fb800">apply_batch_sync()</font>__ in [carla.Client](#carla.Client) there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.  
 
 <h3>Instance Variables</h3>
 - <a name="command.DestroyActor.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -2982,7 +3016,7 @@ Returns <b>True</b> if the command execution fails, and <b>False</b> if it was s
 ---
 
 ## command.SetAutopilot<a name="command.SetAutopilot"></a>
-Command adaptation of **<font color="#7fb800">set_autopilot()</font>** in [carla.Vehicle](#carla.Vehicle). Turns on/off the vehicle's autopilot mode.  
+Command adaptation of __<font color="#7fb800">set_autopilot()</font>__ in [carla.Vehicle](#carla.Vehicle). Turns on/off the vehicle's autopilot mode.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SetAutopilot.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -3002,7 +3036,7 @@ Port of the Traffic Manager where the vehicle is to be registered or unlisted.
 ---
 
 ## command.SetSimulatePhysics<a name="command.SetSimulatePhysics"></a>
-Command adaptation of **<font color="#7fb800">set_simulate_physics()</font>** in [carla.Actor](#carla.Actor). Determines whether an actor will be affected by physics or not.  
+Command adaptation of __<font color="#7fb800">set_simulate_physics()</font>__ in [carla.Actor](#carla.Actor). Determines whether an actor will be affected by physics or not.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SetSimulatePhysics.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -3019,7 +3053,7 @@ If physics should be activated or not.
 ---
 
 ## command.SetVehicleLightState<a name="command.SetVehicleLightState"></a>
-Command adaptation of **<font color="#7fb800">set_light_state()</font>** in [carla.Vehicle](#carla.Vehicle). Sets the light state of a vehicle.  
+Command adaptation of __<font color="#7fb800">set_light_state()</font>__ in [carla.Vehicle](#carla.Vehicle). Sets the light state of a vehicle.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SetVehicleLightState.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_int_)  
@@ -3036,7 +3070,7 @@ Defines the light state of a vehicle.
 ---
 
 ## command.SpawnActor<a name="command.SpawnActor"></a>
-Command adaptation of **<font color="#7fb800">spawn_actor()</font>** in [carla.World](#carla.World). Spawns an actor into the world based on the blueprint provided and the transform. If a parent is provided, the actor is attached to it.  
+Command adaptation of __<font color="#7fb800">spawn_actor()</font>__ in [carla.World](#carla.World). Spawns an actor into the world based on the blueprint provided and the transform. If a parent is provided, the actor is attached to it.  
 
 <h3>Instance Variables</h3>
 - <a name="command.SpawnActor.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  

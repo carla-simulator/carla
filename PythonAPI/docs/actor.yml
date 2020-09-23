@@ -37,32 +37,32 @@
     methods:
     - def_name: add_angular_impulse
       params:
-      - param_name: impulse
+      - param_name: angular_impulse
         type: carla.Vector3D
         param_units: N*s
         doc: >
           Angular impulse vector in global coordinates. 
       doc: >
-        Applies an angular impulse at the center of mass of the actor. Angular impulses are instantaneous. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over time.  
-    # --------------------------------------
-    - def_name: add_impulse
-      params:
-      - param_name: impulse
-        type: carla.Vector3D
-        param_units: degrees
-        doc: >
-          Impulse vector in global coordinates. 
-      doc: >
-        Applies an impulse at the center of mass of the actor. Impulses are instantaneous. Use __<font color="#7fb800">add_force()</font>__ to apply forces over time.  
+        Applies an angular impulse at the center of mass of the actor. Angular impulses only last an instant. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over a period of time.  
     # --------------------------------------
     - def_name: add_force
       params:
       - param_name: force
         type: carla.Vector3D
+        param_units: degrees
         doc: >
           Force vector in global coordinates. 
       doc: >
-        Applies a force at the center of mass of the actor.  The effects of the force depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply an instantaneous rotation impulse.  
+        Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
+    # --------------------------------------
+    - def_name: add_impulse
+      params:
+      - param_name: impulse
+        type: carla.Vector3D
+        doc: >
+          Impulse vector in global coordinates. 
+      doc: >
+        Applies an impulse at the center of mass of the actor. Impulses only last an instant. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.  
     # --------------------------------------
     - def_name: add_torque
       params:
@@ -71,7 +71,7 @@
         doc: >
           Torque vector in global coordinates. 
       doc: >
-        Applies a torque at the center of mass of the actor. The effects of the torque depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply an instantaneous rotation impulse.  
+        Applies a torque at the center of mass of the actor. The effects of the torque depend on the delta time (time between simulation steps) during which it is applied. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply a rotation impulse that only lasts an instant.  
     # --------------------------------------
     - def_name: destroy
       return: bool
@@ -91,7 +91,7 @@
         doc: >
           Velocity vector in local space.  
       doc: >
-        Sets the actor's velocity vector to a constant value over time. The modification is instantaneous. The resulting velocity will not be exactly the `velocity` being set. It will be affected by external forces such as friction. 
+        Sets the actor's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
       Note: >
         Only carla.Vehicle actors can use this method.  
       warning: >
@@ -136,7 +136,7 @@
       - param_name: angular_velocity
         type: carla.Vector3D
       doc: >
-        Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).  
+        Sets the actor's angular velocity vector. The modification will be effective two frames after the setting, and the update between angular velocities will be sudden. Also, this is applied before the physics step so the resulting angular velocity will be affected by external forces at this frame such as friction.
       note: >
         The update will not be effective until two frames after it is set.  
     # --------------------------------------
@@ -168,7 +168,7 @@
       - param_name: velocity
         type: carla.Vector3D
       doc: >
-        Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).  
+        Sets the actor's velocity vector. The modification will be effective two frames after the setting, and the update between velocities will be sudden. Also, this is applied before the physics step so the resulting velocity will be affected by external forces at this frame such as friction.  
       note: >
         The update will not be effective until two frames after it is set.  
     # --------------------------------------
