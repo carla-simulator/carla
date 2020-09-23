@@ -300,7 +300,9 @@
   - class_name: Waypoint
     # - DESCRIPTION ------------------------
     doc: >
-      Waypoints in CARLA are described as 3D directed points. They store a certain carla.Transform which locates the waypoint in a road and orientates it according to the lane. They also store the road information belonging to said point regarding its lane and lane markings. All of this information is retrieved as provided by the OpenDRIVE file.
+      Waypoints in CARLA are described as 3D directed points. They store a certain carla.Transform which locates the waypoint in a road and orientates it according to the lane. They also store the road information belonging to said point regarding its lane and lane markings.  
+      <br><br>
+      All the information regarding waypoints and the [waypoint API](https://carla.readthedocs.io/en/latest/core_map/#navigation-in-carla) is retrieved as provided by the OpenDRIVE file. Once the client asks for the map object to the server, no longer communication will be needed.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
