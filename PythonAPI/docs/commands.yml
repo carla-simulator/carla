@@ -202,7 +202,7 @@
         param_units: m/s
     # --------------------------------------
 
-  - class_name: ApplyVelocity
+  - class_name: ApplyTargetVelocity
     # - DESCRIPTION ------------------------
     doc: >
       Command adaptation of **<font color="#7fb800">set_target_velocity()</font>** in carla.Actor. Sets the actor's velocity vector. The modification is instantaneous, and done before physics. The resulting velocity will be affected by external forces over time (such as friction).
@@ -232,10 +232,10 @@
           Velocity vector applied to the actor. 
     # --------------------------------------
 
-  - class_name: ApplyAngularVelocity
+  - class_name: ApplyTargetAngularVelocity
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of **<font color="#7fb800">set_angular_velocity()</font>** in carla.Actor. Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).
+      Command adaptation of **<font color="#7fb800">set_target_angular_velocity()</font>** in carla.Actor. Sets the actor's angular velocity vector. The modification is instantaneous, and done before physics. The resulting angular velocity will be affected by external forces over time (such as friction).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id
