@@ -16,12 +16,6 @@ import glob
 import os
 import sys
 import argparse
-import time
-from datetime import datetime
-import random
-import numpy as np
-from matplotlib import cm
-import open3d as o3d
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -79,18 +73,17 @@ def main(arg):
         spectator.set_transform(spectator_transform)
 
 
-        # We want to
+        # We let the vehicle stabilize and save the transform to reset it after each test.
         wait(world)
         vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
         vehicle_transform = vehicle.get_transform()
         wait(world)
 
+
         # Impulse/Force at the center of mass of the object
         impulse = 10 * car_mass
 
-        print(car_mass)
-
-        print("# Adding an Impulse")
+        print("# Adding an Impulse of %f N·s", % impulse)
         vehicle.add_impulse(carla.Vector3D(0, 0, impulse))
 
         wait(world)
@@ -98,9 +91,13 @@ def main(arg):
         vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
         wait(world)
 
-        print("# Adding an scaled Force")
-        # AddForce should not be use for instantaneous forces like this one.
-        # This is only to show a way of making an equivalence between impulse and force.
+        print("# Adding a Force of %f N", % impulse / delta)
+        # The add_force method should not be use for instantaneous forces like this one,
+        # it is more useful for constant or variable forces acting in a finite amount of time.
+        # In this script it is done with the proper scaling to show the equivalence
+        # between the add_impulse and add_force methods.
+        # As in this case the force is going to be applied during the whole step dt=delta
+        # a force more or less equivalent is impulse / delta.
         vehicle.add_force(carla.Vector3D(0, 0, impulse / delta))
 
         wait(world)
@@ -108,11 +105,7 @@ def main(arg):
         vehicle.set_target_velocity(carla.Vector3D(0, 0, 0))
         wait(world)
 
-        wait(world)
-        wait(world)
-        wait(world)
-        wait(world)
-        wait(world)
+        wait(world, 500)
 
 
     finally:
