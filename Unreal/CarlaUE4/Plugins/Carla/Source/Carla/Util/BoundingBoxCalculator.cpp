@@ -156,8 +156,14 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
 {
   check(Character);
 
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTag = TagQueried == crp::CityObjectLabel::None ||
+                     TagQueried == crp::CityObjectLabel::Pedestrians;
+
   UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
-  if (Capsule)
+
+
+  if (Capsule && FilterByTag)
   {
     const float Radius = Capsule->GetScaledCapsuleRadius();
     const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
@@ -379,7 +385,8 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
   {
     // Filter by tag
     crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    if(!Comp->IsVisible() || (FilterByTagEnabled && Tag != TagQueried)) continue;
 
     USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
     FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
