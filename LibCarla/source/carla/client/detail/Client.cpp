@@ -272,12 +272,36 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_target_angular_velocity", actor, vector);
   }
 
-  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("add_actor_impulse", actor, vector);
+  void Client::EnableActorConstantVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("enable_actor_constant_velocity", actor, vector);
+  }
+
+  void Client::DisableActorConstantVelocity(rpc::ActorId actor) {
+    _pimpl->AsyncCall("disable_actor_constant_velocity", actor);
+  }
+
+  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &impulse) {
+    _pimpl->AsyncCall("add_actor_impulse", actor, impulse);
+  }
+
+  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &impulse, const geom::Vector3D &location) {
+    _pimpl->AsyncCall("add_actor_impulse_at_location", actor, impulse, location);
+  }
+
+  void Client::AddActorForce(rpc::ActorId actor, const geom::Vector3D &force) {
+    _pimpl->AsyncCall("add_actor_force", actor, force);
+  }
+
+  void Client::AddActorForce(rpc::ActorId actor, const geom::Vector3D &force, const geom::Vector3D &location) {
+    _pimpl->AsyncCall("add_actor_force_at_location", actor, force, location);
   }
 
   void Client::AddActorAngularImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("add_actor_angular_impulse", actor, vector);
+  }
+
+  void Client::AddActorTorque(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("add_actor_torque", actor, vector);
   }
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {

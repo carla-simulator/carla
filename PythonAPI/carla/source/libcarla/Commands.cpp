@@ -144,11 +144,25 @@ void export_commands() {
     .def_readwrite("impulse", &cr::Command::ApplyImpulse::impulse)
   ;
 
+  class_<cr::Command::ApplyForce>("ApplyForce")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("force")))
+    .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("force"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyForce::actor)
+    .def_readwrite("force", &cr::Command::ApplyForce::force)
+  ;
+
   class_<cr::Command::ApplyAngularImpulse>("ApplyAngularImpulse")
     .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("impulse")))
     .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("impulse"))))
     .def_readwrite("actor_id", &cr::Command::ApplyAngularImpulse::actor)
     .def_readwrite("impulse", &cr::Command::ApplyAngularImpulse::impulse)
+  ;
+
+  class_<cr::Command::ApplyTorque>("ApplyTorque")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("torque")))
+    .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("torque"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyTorque::actor)
+    .def_readwrite("torque", &cr::Command::ApplyTorque::torque)
   ;
 
   class_<cr::Command::SetSimulatePhysics>("SetSimulatePhysics")
@@ -182,7 +196,9 @@ void export_commands() {
   implicitly_convertible<cr::Command::ApplyTargetVelocity, cr::Command>();
   implicitly_convertible<cr::Command::ApplyTargetAngularVelocity, cr::Command>();
   implicitly_convertible<cr::Command::ApplyImpulse, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyForce, cr::Command>();
   implicitly_convertible<cr::Command::ApplyAngularImpulse, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyTorque, cr::Command>();
   implicitly_convertible<cr::Command::SetSimulatePhysics, cr::Command>();
   implicitly_convertible<cr::Command::SetAutopilot, cr::Command>();
   implicitly_convertible<cr::Command::SetVehicleLightState, cr::Command>();

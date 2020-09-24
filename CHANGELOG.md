@@ -22,12 +22,14 @@
   * Change API: set_velocity to set_target_velocity for linear and angular velocities
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
+  * Exposed add_force and add_torque
   * Fixed assets import pipeline
   * Fixed Update.sh from failing when the root folder contains a space on it
   * Fixed dynamic meshes not moving to initial position when replaying
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
+  * Added Constant Velocity mode
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
   * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system
   * Fixed light intensity and camera parameters to match
