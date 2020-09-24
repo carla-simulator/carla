@@ -223,7 +223,6 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
       IndicesDiscarded.Emplace(i);
       FBoundingBox MergedBB = CombineBBs(BBsToCombine);
       MergedBB.Rotation = BB1.Rotation;
-      UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *TrafficLight->GetName(), *TrafficLight->GetClass()->GetName() );
       OutBB.Add(MergedBB);
     }
   }
@@ -234,7 +233,6 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     // Check if the index was used to merge a previous BB
     if(IndicesDiscarded.Contains(i)) continue;
     FBoundingBox& BB = BBsOfTL[i];
-    UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *TrafficLight->GetName(), *TrafficLight->GetClass()->GetName() );
     OutBB.Add(BB);
   }
 
@@ -322,11 +320,13 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
 
   const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  ISMComp->PerInstanceSMData;
 
+  const FTransform ParentTransform = ISMComp->GetComponentTransform();
+
   for(auto& InstSMIData : PerInstanceSMData)
   {
-    const FTransform Transform = FTransform(InstSMIData.Transform);
+    const FTransform Transform = FTransform(InstSMIData.Transform) * ParentTransform;
     FBoundingBox BoundingBox = ApplyTransformToBB(SMBoundingBox, Transform);
-    UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *ISMComp->GetOwner()->GetName(), *ISMComp->GetOwner()->GetClass()->GetName() );
+
     OutBoundingBox.Add(BoundingBox);
   }
 
@@ -361,7 +361,6 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
       // Component-to-world transform for this component
       const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
       BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
-      UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Comp->GetOwner()->GetName(), *Comp->GetOwner()->GetClass()->GetName() );
       OutBB.Add(BoundingBox);
     }
   }
@@ -392,7 +391,6 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
       // Component-to-world transform for this component
       const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
       BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
-      UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Comp->GetOwner()->GetName(), *Comp->GetOwner()->GetClass()->GetName() );
       OutBB.Add(BoundingBox);
     }
   }
