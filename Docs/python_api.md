@@ -2036,6 +2036,10 @@ Enables or disables the hybrid physics mode. In this mode, vehicle's farther tha
 With hybrid physics on, changes the radius of the area of influence where physics are enabled.  
     - **Parameters:**
         - `r` (_float<small> – meters</small>_) – New radius where physics are enabled.  
+- <a name="carla.TrafficManager.set_osm_mode"></a>**<font color="#7fb800">set_osm_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
+Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
+    - **Parameters:**
+        - `mode_switch` (_bool_) – If __True__, the OSM mode is enabled.  
 
 ---
 
@@ -2447,7 +2451,7 @@ Compares every variable with `other` and returns <b>True</b> if any of these dif
 ---
 
 ## carla.Waypoint<a name="carla.Waypoint"></a>
-Waypoints in CARLA are described as 3D directed points. They store a certain [carla.Transform](#carla.Transform) which locates the waypoint in a road and orientates it according to the lane. They also store the road information belonging to said point regarding its lane and lane markings. All of this information is retrieved as provided by the OpenDRIVE file.  
+Waypoints in CARLA are described as 3D directed points. They have a [carla.Transform](#carla.Transform) which locates the waypoint in a road and orientates it according to the lane. They also store the road information belonging to said point regarding its lane and lane markings.   <br><br> All the information regarding waypoints and the [waypoint API](../../core_map/#navigation-in-carla) is retrieved as provided by the OpenDRIVE file. Once the client asks for the map object to the server, no longer communication will be needed.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Waypoint.id"></a>**<font color="#f8805a">id</font>** (_int_)  
@@ -2699,8 +2703,10 @@ Returns a dict where the keys are [carla.Actor](#carla.Actor) IDs and the values
 Returns an instance of [carla.LightManager](#carla.LightManager) that can be used to handle the lights in the scene.  
     - **Return:** _[carla.LightManager](#carla.LightManager)_  
 - <a name="carla.World.get_map"></a>**<font color="#7fb800">get_map</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the object containing the navigation map used to describe this world.  
+Asks the server for the XODR containing the map file, and returns this parsed as a [carla.Map](#carla.Map).  
     - **Return:** _[carla.Map](#carla.Map)_  
+    - **Warning:** <font color="#ED2F2F">_This method does call the simulation. It is expensive, and should only be called once.  
+_</font>  
 - <a name="carla.World.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
 Provided a landmark, returns the traffic light object it describes.  
     - **Parameters:**
