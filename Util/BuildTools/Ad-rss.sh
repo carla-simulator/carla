@@ -1,5 +1,16 @@
 #! /bin/bash
 
+
+PY_VERSION=3
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --python-version )
+      PY_VERSION="$2";
+      shift 2 ;;
+  esac
+done
+
 # ==============================================================================
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
@@ -9,7 +20,7 @@ source $(dirname "$0")/Environment.sh
 # -- Get and compile ad-rss -------------------------------------------
 # ==============================================================================
 
-ADRSS_BASENAME=ad-rss-4.0.0
+ADRSS_BASENAME=ad-rss-4.1.0
 ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
 
 
@@ -25,14 +36,63 @@ else
 
     mkdir -p "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src"
 
+    cat >"${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src/0001-Workaround-for-boost-python-binding.patch" <<EOL
+---
+ cmake/python-binding.cmake | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/cmake/python-binding.cmake b/cmake/python-binding.cmake
+index d39dbf5..0f2fbe8 100644
+--- a/cmake/python-binding.cmake
++++ b/cmake/python-binding.cmake
+@@ -40,6 +40,7 @@ function(find_python_binding_packages)
+   endif()
+
+   #python2
++  if("\${PY_VERSION}" STREQUAL "" OR "\${PY_VERSION}" STREQUAL "2")
+   unset(PYTHON_INCLUDE_DIR)
+   unset(PYTHON_INCLUDE_DIR CACHE)
+   unset(PYTHON_LIBRARY)
+@@ -67,8 +68,10 @@ function(find_python_binding_packages)
+       \${LOCAL_PYTHON_BINDING_PACKAGE_LIBRARIES_PYTHON2}
+       PARENT_SCOPE)
+   endif()
++  endif()
+
+   #python3
++  if("\${PY_VERSION}" STREQUAL "" OR "\${PY_VERSION}" STREQUAL "3")
+   unset(PYTHON_INCLUDE_DIR)
+   unset(PYTHON_INCLUDE_DIR CACHE)
+   unset(PYTHON_LIBRARY)
+@@ -95,6 +98,7 @@ function(find_python_binding_packages)
+       \${LOCAL_PYTHON_BINDING_PACKAGE_LIBRARIES_PYTHON3}
+       PARENT_SCOPE)
+   endif()
++  endif()
+
+   set(PYTHON_BINDINGS \${LOCAL_PYTHON_BINDINGS} PARENT_SCOPE)
+
+--
+2.17.1
+EOL
+
     log "Retrieving ${ADRSS_BASENAME}."
 
     pushd "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" >/dev/null
     git clone --depth=1 -b v1.7.0 https://github.com/gabime/spdlog.git
     git clone --depth=1 -b 4.9.3 https://github.com/OSGeo/PROJ.git
     git clone --depth=1 -b v2.1.0 https://github.com/carla-simulator/map.git
-    git clone --depth=1 -b v4.1.0 https://github.com/intel/ad-rss-lib.git
+    #patch
+    pushd map </dev/null
+    git apply ${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src/0001-Workaround-for-boost-python-binding.patch
     popd
+    git clone --depth=1 -b v4.1.0 https://github.com/intel/ad-rss-lib.git
+    #patch
+    pushd ad-rss-lib </dev/null
+    git apply ${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src/0001-Workaround-for-boost-python-binding.patch
+    popd
+    popd
+
 
     cat >"${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/colcon.meta" <<EOL
 {
@@ -41,20 +101,20 @@ else
             "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_LIBPROJ_SHARED=OFF"]
         },
         "ad_physics": {
-            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DPY_VERSION=${PY_VERSION}", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
         },
         "ad_map_access": {
-            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DPY_VERSION=${PY_VERSION}", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
         },
         "ad_map_opendrive_reader": {
             "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"],
             "dependencies": ["PROJ4"]
         },
         "ad_rss": {
-            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DPY_VERSION=${PY_VERSION}", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
         },
         "ad_rss_map_integration": {
-            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
+            "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DPY_VERSION=${PY_VERSION}", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
         },
         "spdlog": {
             "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF"]
