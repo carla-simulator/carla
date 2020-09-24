@@ -65,7 +65,7 @@ namespace geom {
   std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {
     out << "BoundingBox(" << box.location << ", ";
     WriteVector3D(out, "Extent", box.extent);
-    out << box.location;
+    out << ", " << box.rotation;
     out << ')';
     return out;
   }
