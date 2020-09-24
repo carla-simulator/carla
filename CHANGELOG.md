@@ -4,7 +4,7 @@
   * Added deterministic mode for Traffic Manager
   * Added support in Traffic Manager for dead-end roads
   * Upgraded CARLA Docker image to Ubuntu 18.04
-  * Upgraded to AD RSS v4.1.0 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
+  * Upgraded to AD RSS v4.2.0 supporting unstructured scenes and pedestrians, and fixed spdlog to v1.7.0
   * Changed frozen behavior for traffic lights. It now affects to all traffic lights at the same time
   * Added new pedestrian models
   * API changes:

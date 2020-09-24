@@ -109,10 +109,10 @@ BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 SHOULD_BUILD_BOOST=true
 
 PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V)
-LIB_NAME=${PYTHON_VERSION:7:3}
-LIB_NAME=${LIB_NAME//.}
+PYTHON_VERSION_MAJOR_MINOR=${PYTHON_VERSION:7:3}
+PYTHON_VERSION_MAJOR_MINOR=${PYTHON_VERSION_MAJOR_MINOR//.}
 if [[ -d "${BOOST_BASENAME}-install" ]] ; then
-  if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
+  if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${PYTHON_VERSION_MAJOR_MINOR}.a" ] ; then
     SHOULD_BUILD_BOOST=false
     log "${BOOST_BASENAME} already installed."
   fi
@@ -556,6 +556,8 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(LIBPNG_INCLUDE_PATH "${LIBPNG_INCLUDE}")
   set(LIBPNG_LIB_PATH "${LIBPNG_LIBPATH}")
 endif ()
+
+set(PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_MAJOR_MINOR}")
 
 EOL
 
