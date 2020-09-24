@@ -16,7 +16,7 @@ try:
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64')
-    sys.path.append(glob.glob('../carla/dist/%s' % carla_lib_name)[0])
+    sys.path.append(glob.glob(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/carla/dist/%s' % carla_lib_name)[0])
 except IndexError:
     print('\n  [ERROR] Could not find "%s"' % carla_lib_name)
     print('          Blueprint library docs will not be generated')
