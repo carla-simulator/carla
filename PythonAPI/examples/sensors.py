@@ -65,6 +65,7 @@ class CollisionSensor(object):
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x**2 + impulse.y**2 + impulse.z**2)
         self.history.append((event.frame, intensity))
+        print(len(self.history))
         if len(self.history) > 4000:
             self.history.pop(0)
 

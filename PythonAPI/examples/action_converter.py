@@ -10,10 +10,14 @@ class ActionConverter:
 
     def get_control(self, control, action):
         if self.action_type == 0:
-            if action == 0: # forward TODO: let actions determine throttle value?
-                self.control.throttle = min(control.throttle + 0.1, 1)
-            else:
+            # if action == 0: # forward TODO: let actions determine throttle value?
+            #     self.control.throttle = min(control.throttle + 0.1, 1)
+            # else:
+            #     self.control.throttle = 0.0
+            if action == 1: # stop
                 self.control.throttle = 0.0
+            else: # forward, steer left, steer right
+                self.control.throttle = 1.0
             if action == 1: # stop
                 self.control.brake = min(control.brake + 0.2, 1)
             else:

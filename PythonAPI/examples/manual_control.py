@@ -435,8 +435,13 @@ class KeyboardControl(object):
             world.player.apply_control(self._control)
 
     def _parse_vehicle_keys(self, keys, milliseconds):
-        if keys[K_UP] or keys[K_w]:
-            self._control.throttle = min(self._control.throttle + 0.01, 1)
+        # if keys[K_UP] or keys[K_w]:
+        #     self._control.throttle = min(self._control.throttle + 0.01, 1)
+        # else:
+        #     self._control.throttle = 0.0
+
+        if keys[K_UP] or keys[K_w] or keys[K_LEFT] or keys[K_a] or keys[K_RIGHT] or keys[K_d]:
+            self._control.throttle = 1.0
         else:
             self._control.throttle = 0.0
 
@@ -1032,7 +1037,7 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         clock = pygame.time.Clock()
-        world = World(world=client.get_world(), clock=clock, display=display, hud=hud, args=args)
+        world = World(carla_world=client.get_world(), clock=clock, display=display, hud=hud, args=args)
         controller = KeyboardControl(world, args.autopilot)
 
         

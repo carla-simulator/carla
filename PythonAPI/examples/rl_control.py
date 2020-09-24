@@ -24,6 +24,7 @@ from __future__ import print_function
 import glob
 import os
 import sys
+import traceback
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -174,7 +175,7 @@ class World(object):
         env_state = {'timeout': timeout, 'collision': collision, 'success': success}
 
         # Additional information
-        info = {'carla-reward': reward}
+        info = {'timeout': timeout, 'collision': collision, 'success': success, 'done': self.done, 'carla-reward': reward}
 
         self.steps += 1
         return obs, reward, self.done, info
@@ -207,10 +208,16 @@ class World(object):
             print("No recommended values for 'speed' attribute")
         # Spawn the player.
         if self.player is not None:
-            spawn_point = self.player.get_transform()
-            spawn_point.location.z += 2.0
-            spawn_point.rotation.roll = 0.0
-            spawn_point.rotation.pitch = 0.0
+            # spawn_point = self.player.get_transform()
+            # spawn_point.location.z += 2.0
+            # spawn_point.rotation.roll = 0.0
+            # spawn_point.rotation.pitch = 0.0            
+            if not self.map.get_spawn_points():
+                print('There are no spawn points available in your map/town.')
+                print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                sys.exit(1)
+            spawn_points = self.map.get_spawn_points()
+            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
         while self.player is None:
@@ -224,11 +231,11 @@ class World(object):
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
-        self.gnss_sensor = GnssSensor(self.player)
+        # self.gnss_sensor = GnssSensor(self.player)
         self.imu_sensor = IMUSensor(self.player)
         self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
         self.camera_manager.transform_index = cam_pos_index
-        sensor_list = [0, 1, 2, 3, 4, 5, 8]
+        sensor_list = [0, 4, 5]
         self.camera_manager.spawn_sensors(sensor_list)
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
@@ -247,6 +254,7 @@ class World(object):
         acceleration = self.player.get_acceleration()
         colhist = self.collision_sensor.get_collision_history()
         sensor_data = self.camera_manager.sensor_data
+        # return sensor_data
         return Observation(transform=transform, velocity=velocity, colhist=colhist, sensor_data=sensor_data, acceleration=acceleration)
         
     def next_weather(self, reverse=False):
@@ -282,11 +290,12 @@ class World(object):
     def destroy(self):
         if self.radar_sensor is not None:
             self.toggle_radar()
+        self.destroy_sensors()
         actors = [
             self.camera_manager.sensor,
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
-            self.gnss_sensor.sensor,
+            # self.gnss_sensor.sensor,
             self.imu_sensor.sensor,
             self.player]
         for actor in actors:
@@ -353,7 +362,7 @@ class HUD(object):
             'Accelero: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.accelerometer),
             'Gyroscop: (%5.1f,%5.1f,%5.1f)' % (world.imu_sensor.gyroscope),
             'Location:% 20s' % ('(% 5.1f, % 5.1f)' % (t.location.x, t.location.y)),
-            'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
+            # 'GNSS:% 24s' % ('(% 2.6f, % 3.6f)' % (world.gnss_sensor.lat, world.gnss_sensor.lon)),
             'Height:  % 18.0f m' % t.location.z,
             '']
         if isinstance(c, carla.VehicleControl):
@@ -513,7 +522,7 @@ def game_loop(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(10.0)
 
         display = pygame.display.set_mode(
             (args.width, args.height),
@@ -543,6 +552,7 @@ def game_loop(args):
         return
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return
     finally:
 
@@ -628,6 +638,6 @@ def main():
         print('\nCancelled by user. Bye!')
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
 
-#     main()
+    main()

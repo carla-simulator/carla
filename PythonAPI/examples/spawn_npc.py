@@ -102,7 +102,7 @@ def main():
 
     try:
         world = client.get_world()
-
+        print(len(world.get_map().get_spawn_points()))
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.0)
         if args.hybrid:
