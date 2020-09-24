@@ -351,7 +351,7 @@
       doc: >
         Asks the server for the XODR containing the map file, and returns this parsed as a carla.Map.
       warning: >
-        This method does call the simulation.  
+        This method does call the simulation. It is expensive, and should only be called once.  
     # --------------------------------------
     - def_name: get_traffic_light
       return: carla.TrafficLight
