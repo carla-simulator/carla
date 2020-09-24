@@ -42,7 +42,7 @@
         doc: >
           A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
       doc: >
-        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the **<font color="#7fb800">apply_batch_sync()</font>** function right below this one.
+        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.  
         [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.
     # --------------------------------------
     - def_name: apply_batch_sync
@@ -50,7 +50,7 @@
       - param_name: commands
         type: list
         doc: >
-          A list of commands to execute in batch. The commands available are listed right above, in the function **<font color="#7fb800">apply_batch()</font>**.
+          A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.
       - param_name: due_tick_cue
         type: bool
         default: false
@@ -102,12 +102,14 @@
           Name of the file containing the information of the simulation.
       - param_name: start
         type: float
+        param_units: seconds
         doc: >
-          Time in seconds where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.
+          Time where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.
       - param_name: duration
         type: float
+        param_units: seconds
         doc: >
-          Time in seconds that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.
+          Time that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.
       - param_name: follow_id
         type: int
         doc: >
@@ -133,12 +135,14 @@
           Name of the recorded file to load
       - param_name: min_time
         type: float
+        param_units: seconds
         doc: >
-          Minimum time in seconds the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.
+          Minimum time the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.
       - param_name: min_distance
         type: float
+        param_units: centimeters
         doc: >
-          Minimum distance in centimeters the actor has to move to not be considered blocked. Default is 100 centimeters.
+          Minimum distance the actor has to move to not be considered blocked. Default is 100 centimeters.
       return: string
       doc: >
         The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.
@@ -259,10 +263,11 @@
       params:
       - param_name: seconds
         type: float
+        param_units: seconds
         doc: >
-          New timeout value in seconds. Default is 5 seconds.
+          New timeout value. Default is 5 seconds.
       doc: >
-        Sets in seconds the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
+        Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
 
   - class_name: TrafficManager
@@ -313,6 +318,7 @@
           Vehicle whose minimum distance is being changed.
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
           Meters between both vehicles.
       doc: >
@@ -335,6 +341,7 @@
       params:
       - param_name: distance
         type: float
+        param_units: meters
         doc: >
           Meters between vehicles.
       doc: >
@@ -430,6 +437,7 @@
       - param_name: r
         type: float
         default: 70.0
+        param_units: meters
         doc: >
           New radius where physics are enabled.
       doc: >
@@ -444,18 +452,22 @@
     instance_variables:
     - var_name: vertex_distance
       type: float
+      param_units: meters
       doc: >
         Distance between vertices of the mesh generated. __Default is `2.0`__.
     - var_name: max_road_length
       type: float
+      param_units: meters
       doc: >
         Max road length for a single mesh portion. The mesh of the map is divided into portions, in order to avoid propagating issues. __Default is `50.0`__.
     - var_name: wall_height
       type: float
+      param_units: meters
       doc: >
         Height of walls created on the boundaries of the road. These prevent vehicles from falling off the road. __Default is `1.0`__.
     - var_name: additional_width
       type: float
+      param_units: meters
       doc: >
         Additional with applied junction lanes. Complex situations tend to occur at junctions, and a little increase can prevent vehicles from falling off the road.  __Default is `0.6`__.
     - var_name: smooth_junctions

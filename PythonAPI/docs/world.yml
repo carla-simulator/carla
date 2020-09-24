@@ -15,14 +15,17 @@
         The number of frames elapsed since the simulator was launched.
     - var_name: elapsed_seconds
       type: float
+      var_units: seconds
       doc: >
         Simulated seconds elapsed since the beginning of the current episode.
     - var_name: delta_seconds
       type: float
+      var_units: seconds
       doc: >
         Simulated seconds elapsed since the previous frame.
     - var_name: platform_timestamp
       type: float
+      var_units: seconds
       doc: >
         Time register of the frame at which this measurement was taken given by the OS in seconds. 
     # - METHODS ----------------------------
@@ -33,20 +36,25 @@
         type: int
       - param_name: elapsed_seconds
         type: float
+        param_units: seconds
       - param_name: delta_seconds
         type: float
+        param_units: seconds
       - param_name: platform_timestamp
         type: float
+        param_units: seconds
     # --------------------------------------
     - def_name: __eq__
       params:
       - param_name: other
         type: carla.Timestamp
+        param_units: seconds
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
         type: carla.Timestamp
+        param_units: seconds
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -131,8 +139,9 @@
       - param_name: fixed_delta_seconds
         type: float
         default: 0.0
+        param_units: seconds
         doc: >
-          Set this time in seconds to get a fixed time-step in between frames. 0.0 means variable time-step and it is the default mode. 
+          Set a fixed time-step in between frames. <code>0.0</code> means variable time-step and it is the default mode. 
       doc: >
         Creates an object containing desired settings that could later be applied through carla.World and its method **<font color="#7fb800">apply_settings()</font>**.
     # --------------------------------------
@@ -226,8 +235,9 @@
       - param_name: seconds
         type: float
         default: 10.0
+        param_units: seconds
         doc: > 
-          Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.   
+          Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
       doc: >
         This method only has effect on synchronous mode, when both client and server move together. The client tells the server when to step to the next frame and returns the id of the newly started frame. 
     # --------------------------------------
@@ -237,8 +247,9 @@
       - param_name: seconds
         type: float
         default: 10.0
+        param_units: seconds
         doc: > 
-          Maximum time in seconds the server should wait for a tick. It is set to 10.0 by default.   
+          Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
       doc: >
         The client tells the server to pause the simulation until a **<font color="#7fb800">World.tick()</font>** is received.
     # --------------------------------------
@@ -338,7 +349,9 @@
     - def_name: get_map
       return: carla.Map
       doc: >
-        Returns the object containing the navigation map used to describe this world.
+        Asks the server for the XODR containing the map file, and returns this parsed as a carla.Map.
+      warning: >
+        This method does call the simulation. It is expensive, and should only be called once.  
     # --------------------------------------
     - def_name: get_traffic_light
       return: carla.TrafficLight
@@ -411,20 +424,24 @@
       params:
       - param_name: begin
         type: carla.Location
+        param_units: meters
         doc: >
           Point in the coordinate system where the arrow starts. 
       - param_name: end
         type: carla.Location
+        param_units: meters
         doc: >
           Point in the coordinate system where the arrow ends and points towards to. 
       - param_name: thickness
         type: float
-        default: 0.1f
+        default: 0.1
+        param_units: meters
         doc: >
           Density of the line.  
       - param_name: arrow_size
         type: float
-        default: 0.1f
+        default: 0.1
+        param_units: meters
         doc: >
           Size of the tip of the arrow. 
       - param_name: color
@@ -434,9 +451,10 @@
           RGB code to color the object. Red by default. 
       - param_name: life_time
         type: float
-        default: -1.0f
+        default: -1.0
+        param_units: seconds
         doc: >
-          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
         Draws an arrow from `begin` to `end` pointing in that direction.
 
@@ -449,11 +467,13 @@
           Object containing a location and the length of a box for every axis. 
       - param_name: rotation
         type: carla.Rotation
+        param_units: degrees (pitch,yaw,roll)
         doc: >
           Orientation of the box according to Unreal Engine's axis system. 
       - param_name: thickness
         type: float
-        default: 0.1f
+        default: 0.1
+        param_units: meters
         doc: >
           Density of the lines that define the box. 
       - param_name: color
@@ -463,9 +483,10 @@
           RGB code to color the object. Red by default. 
       - param_name: life_time
         type: float
-        default: -1.0f
+        default: -1.0
+        param_units: seconds
         doc: >
-          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
         Draws a box, ussually to act for object colliders. 
         
@@ -474,15 +495,18 @@
       params:
       - param_name: begin
         type: carla.Location
+        param_units: meters
         doc: >
           Point in the coordinate system where the line starts. 
       - param_name: end
         type: carla.Location
+        param_units: meters
         doc: >
           Spot in the coordinate system where the line ends. 
       - param_name: thickness
         type: float
-        default: 0.1f
+        default: 0.1
+        param_units: meters
         doc: >
           Density of the line.  
       - param_name: color
@@ -492,9 +516,10 @@
           RGB code to color the object. Red by default.
       - param_name: life_time
         type: float
-        default: -1.0f
+        default: -1.0
+        param_units: seconds
         doc: >
-          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
         Draws a line in between `begin` and `end`.
     # --------------------------------------
@@ -502,11 +527,13 @@
       params: 
       - param_name: location
         type: carla.Location
+        param_units: meters
         doc: >
           Spot in the coordinate system to center the object. 
       - param_name: size
         type: float
-        default: 0.1f
+        default: 0.1
+        param_units: meters
         doc: >
           Density of the point.  
       - param_name: color
@@ -516,9 +543,10 @@
           RGB code to color the object. Red by default. 
       - param_name: life_time
         type: float
-        default: -1.0f
+        default: -1.0
+        param_units: seconds
         doc: >
-          Lifespan in seconds for the shape. By default it only lasts one frame. Set this to 0 for permanent shapes. 
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
         Draws a point `location`.
     # --------------------------------------
@@ -526,6 +554,7 @@
       params: 
       - param_name: location
         type: carla.Location
+        param_units: meters
         doc: >
           Spot in the simulation where the text will be centered. 
       - param_name: text
@@ -544,7 +573,10 @@
           RGB code to color the string. Red by default. 
       - param_name: life_time
         type: float
-        default: -1.0f
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
         Draws a string in a given location of the simulation which can only be seen server-side.
     # --------------------------------------

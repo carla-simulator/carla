@@ -65,7 +65,7 @@ private:
   /// Hybrid physics radius.
   std::atomic<float> hybrid_physics_radius {70.0};
   /// Parameter specifying Open Street Map mode.
-  std::atomic<bool> osm_mode {false};
+  std::atomic<bool> osm_mode {true};
 
 public:
   Parameters();

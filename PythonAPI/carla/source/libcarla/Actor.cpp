@@ -37,6 +37,16 @@ static auto GetSemanticTags(const carla::client::Actor &self) {
   return boost::python::list(iter);
 }
 
+static void AddActorImpulse(carla::client::Actor &self,
+    const carla::geom::Vector3D &impulse) {
+  self.AddImpulse(impulse);
+}
+
+static void AddActorForce(carla::client::Actor &self,
+    const carla::geom::Vector3D &force) {
+  self.AddForce(force);
+}
+
 static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
   namespace py = boost::python;
   auto values = self.GetGroupTrafficLights();
@@ -85,10 +95,14 @@ void export_actor() {
       .def("get_acceleration", &cc::Actor::GetAcceleration)
       .def("set_location", &cc::Actor::SetLocation, (arg("location")))
       .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
-      .def("set_target_velocity", &cc::Actor::SetTargetVelocity, (arg("vector")))
-      .def("set_target_angular_velocity", &cc::Actor::SetTargetAngularVelocity, (arg("vector")))
-      .def("add_impulse", &cc::Actor::AddImpulse, (arg("vector")))
-      .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("vector")))
+      .def("set_target_velocity", &cc::Actor::SetTargetVelocity, (arg("velocity")))
+      .def("set_target_angular_velocity", &cc::Actor::SetTargetAngularVelocity, (arg("angular_velocity")))
+      .def("enable_constant_velocity", &cc::Actor::EnableConstantVelocity, (arg("velocity")))
+      .def("disable_constant_velocity", &cc::Actor::DisableConstantVelocity)
+      .def("add_impulse", &AddActorImpulse, (arg("impulse")))
+      .def("add_force", &AddActorForce, (arg("force")))
+      .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("angular_impulse")))
+      .def("add_torque", &cc::Actor::AddTorque, (arg("torque")))
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
       .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
       .def(self_ns::str(self_ns::self))

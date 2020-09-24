@@ -1,26 +1,49 @@
 # ROS bridge installation
 
-*  [__Requirements__](#requirements)  
-*  [__Bridge installation__](#bridge-installation)  
-	* [A. Using Debian repository](#a-using-debian-repository)  
-	* [B. Using source repository](#b-using-source-repository)  
-*  [__Run the ROS bridge__](#run-the-ros-bridge)  
-*  [__Setting CARLA__](#setting-carla)  
- 
 The ROS bridge enables two-way communication between ROS and CARLA. The information from the CARLA server is translated to ROS topics. In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA.
+
+*   [__Requirements__](#requirements)  
+	*   [Python2](#python2)  
+*   [__Bridge installation__](#bridge-installation)  
+	*   [A. Using Debian repository](#a-using-debian-repository)  
+	*   [B. Using source repository](#b-using-source-repository)  
+*   [__Run the ROS bridge__](#run-the-ros-bridge)  
+*   [__Setting CARLA__](#setting-carla)  
+
+!!! Important
+    ROS is still [experimental](http://wiki.ros.org/noetic/Installation) for Windows, so the ROS bridge has only been tested for Linux systems.  
 
 ---
 ## Requirements
-### ROS Kinetic/Melodic
 
-*  __ROS Kinetic/Melodic.__ Install ROS [Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu), for Ubuntu 18.04, or [Kinetic](http://wiki.ros.org/kinetic/Installation), for Ubuntu 16.04. ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) to visualize ROS data.j  
-*  __CARLA 0.9.7 or later.__ Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for the corresponding platform. 
+Make sure that both requirements work properly before continuing with the installation.  
 
-!!! Important
-    Make sure that both CARLA and ROS work properly before continuing with the installation. 
+*  __ROS Kinetic/Melodic__ — Install the ROS version corresponding to your system. Additional ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) is highly recommended to visualize ROS data.  
+	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 16.04 (Xenial).  
+	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 18.04 (Bionic).  
+	*   [__ROS Noetic__](http://wiki.ros.org/noetic#Installation) — For Ubuntu 20.04 (Focal).
+*  __CARLA 0.9.7 or later__ — Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for [Linux](build_linux.md).
+
+### Python
+
+The version of Python needed to run the ROS bridge depends on the ROS version being used.  
+
+*   __ROS Melodic__ and __ROS Kinetic__ — Python2.  
+*   __ROS Noetic__ — Python3.  
+
+All the CARLA releases provide support for Python3, so ROS Noetic users do not need more preparation. However, ROS Melodic/Kinetic users cannot use the latest CARLA release packages. Since 0.9.10 (included), CARLA does not provide support for Python2, so users will have to make the [build from source](build_linux.md), and compile the PythonAPI for Python2.  
+
+*   Run the following command in the root CARLA directory of your Linux build to compile the PythonAPI for Python2.  
+
+```sh
+make PythonAPI ARGS="--python-version=2"
+```
 
 ---
 ## Bridge installation 
+
+!!! Important
+    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
 
 ### A. Using Debian repository
 
@@ -37,18 +60,15 @@ sudo apt-get install carla-ros-bridge # Install the latest ROS bridge version, o
 
 This repository contains features from CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
-sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "1" to the Debian revision.  
+sudo apt-get install carla-ros-bridge=0.9.10-1 # In this case, "0.9.10" refers to the ROS bridge version, and "1" to the Debian revision  
 ```
-
-!!! Important
-    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
 
 ### B. Using source repository
 
 A catkin workspace is needed to use the ROS bridge. It should be cloned and built in there. The following code creates a new workspace, and clones the repository in there.  
 
 ```sh
-#setup folder structure
+# Setup folder structure
 mkdir -p ~/carla-ros-bridge/catkin_ws/src
 cd ~/carla-ros-bridge
 git clone https://github.com/carla-simulator/ros-bridge.git
@@ -56,14 +76,14 @@ cd ros-bridge
 git submodule update --init
 cd ../catkin_ws/src
 ln -s ../../ros-bridge
-source /opt/ros/kinetic/setup.bash #Watch out, this sets ROS Kinetic. 
+source /opt/ros/kinetic/setup.bash # Watch out, this sets ROS Kinetic 
 cd ..
 
-#install required ros-dependencies
+# Install required ros-dependencies
 rosdep update
 rosdep install --from-paths src --ignore-src -r
 
-#build
+# Build
 catkin_make
 ```
 

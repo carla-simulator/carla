@@ -23,11 +23,8 @@ The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** 
 <br>
 To execute the <code>make</code> commands below, you <b>must</b> use the Visual Studio 2017 native console x64 <b>with</b> administrator rights, otherwise you may be getting permission errors.
 
-!!! Important
-    To execute the ```make``` commands below, you **must** use the Visual Studio 2017 native console x64 **with** administrator rights, otherwise you may be getting permission errors.
-	
 ```sh
-# Make sure to meet the minimum requirements.
+# Make sure to meet the minimum requirements
 
 # Necessary software: 
 #   CMake
@@ -35,7 +32,7 @@ To execute the <code>make</code> commands below, you <b>must</b> use the Visual 
 #   Make
 #   Python3 x64
 #   Unreal Engine 4.24
-#   Visual Studio 2017 with Windows 8.1 SDK and x64 Visual C++ Toolset.
+#   Visual Studio 2017 with Windows 8.1 SDK and x64 Visual C++ Toolset
 
 # Set environment variables for the software
 
@@ -46,13 +43,17 @@ git clone https://github.com/carla-simulator/carla
 make PythonAPI
 make launch
 
-# Press play in the Editor to initialize the server, and run example scripts to test CARLA.
+# Press play in the Editor to initialize the server
+# Run example scripts to test CARLA
 # Terminal A 
 cd PythonAPI/examples
 python3 spawn_npc.py 
 # Terminal B
 cd PythonAPI/examples
-python3 dynamic_weather.py # Support for Python2 was provided until 0.9.10 (not included)
+python3 dynamic_weather.py 
+# The PythonAPI will be built based on the installed Python version
+# The docs will use Python3, as support for  Python2 was provided until 0.9.10 (not included)
+
 ```
 </details>
 
@@ -161,18 +162,20 @@ The project may ask to build other instances such as `UE4Editor-Carla.dll` the f
 Finally, let's test the simulator. Inside `PythonAPI/examples` and `PythonAPI/util` there are some example scripts that may be especially useful for starters. The following commands will spawn some life into the town, and create a weather cycle. Each script should be run in one terminal 
 
 ```sh
-# Support for Python2 was provided until 0.9.10 (not included)
 # Terminal A 
 cd PythonAPI/examples
 python3 spawn_npc.py  
 # Terminal B
 cd PythonAPI/examples
 python3 dynamic_weather.py 
+# The PythonAPI will be built based on the installed Python version
+# The docs will use Python3, as support for  Python2 was provided until 0.9.10 (not included)
 ```
+
 !!! Important
     If the simulation is running at very low FPS rates, go to `Edit/Editor preferences/Performance` in the UE editor and disable __Use less CPU when in background__.
 
-Now CARLA is ready to go. Here is a brief summary of the most useful `make` commands available.
+Now CARLA is ready to go. Here is a brief summary of the most useful `make` commands available.  
 
 <table class ="defTable">
 <thead>

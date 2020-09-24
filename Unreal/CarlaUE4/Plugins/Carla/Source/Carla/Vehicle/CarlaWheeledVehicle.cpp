@@ -30,6 +30,9 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VehicleBounds->SetHiddenInGame(true);
   VehicleBounds->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
+  VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
+  VelocityControl->Deactivate();
+
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }
 
@@ -430,6 +433,16 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   {
     Recorder->AddPhysicsControl(*this);
   }
+}
+
+void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)
+{
+  VelocityControl->Activate(Velocity);
+}
+
+void ACarlaWheeledVehicle::DeactivateVelocityControl()
+{
+  VelocityControl->Deactivate();
 }
 
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightState)
