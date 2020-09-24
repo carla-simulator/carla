@@ -405,8 +405,6 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
-  UE_LOG(LogCarla, Error, TEXT("GetBoundingBoxOfActors num %d"), Actors.Num());
-
   for(AActor* Actor : Actors)
   {
     FString ClassName = Actor->GetClass()->GetName();
@@ -424,7 +422,6 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
       if(!BoundingBox.Extent.IsZero())
       {
-        UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Actor->GetName(), *ClassName );
         Result.Add(BoundingBox);
       }
       continue;
@@ -438,7 +435,6 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
       if(!BoundingBox.Extent.IsZero())
       {
-        UE_LOG(LogCarla, Error, TEXT("  GetBoundingBoxOfActors %s - %s"), *Actor->GetName(), *ClassName );
         Result.Add(BoundingBox);
       }
       continue;
@@ -475,8 +471,6 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
 
   }
-
-  UE_LOG(LogCarla, Error, TEXT("GetBoundingBoxOfActors result num %d"), Result.Num());
 
   return Result;
 }
