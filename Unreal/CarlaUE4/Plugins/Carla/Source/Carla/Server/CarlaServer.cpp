@@ -306,7 +306,7 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(ActorView);
   };
 
-  BIND_SYNC(get_all_level_BBs) << [this]() -> R<std::vector<cg::BoundingBox>>
+  BIND_SYNC(get_all_level_BBs) << [this](uint8 QueriedTag) -> R<std::vector<cg::BoundingBox>>
   {
     REQUIRE_CARLA_EPISODE();
     TArray<FBoundingBox> Result;
@@ -315,7 +315,7 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to find CARLA game mode");
     }
-    Result = GameMode->GetAllBBsOfLevel();
+    Result = GameMode->GetAllBBsOfLevel(QueriedTag);
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
   };
 
@@ -512,7 +512,52 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(set_actor_velocity) << [this](
+
+  BIND_SYNC(set_actor_target_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor target velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to set actor target velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsLinearVelocity(
+        vector.ToCentimeters().ToFVector(),
+        false,
+        "None");
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_target_angular_velocity) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor target angular velocity: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to set actor target angular velocity: not supported by actor");
+    }
+    RootComponent->SetPhysicsAngularVelocityInDegrees(
+        vector.ToFVector(),
+        false,
+        "None");
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(enable_actor_constant_velocity) << [this](
       cr::ActorId ActorId,
       cr::Vector3D vector) -> R<void>
   {
@@ -522,37 +567,34 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set actor velocity: actor not found");
     }
-    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
-    if (RootComponent == nullptr)
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (CarlaVehicle == nullptr)
     {
       RESPOND_ERROR("unable to set actor velocity: not supported by actor");
     }
-    RootComponent->SetPhysicsLinearVelocity(
-        vector.ToCentimeters().ToFVector(),
-        false,
-        "None");
+
+    CarlaVehicle->ActivateVelocityControl(vector.ToCentimeters().ToFVector());
+
     return R<void>::Success();
   };
 
-  BIND_SYNC(set_actor_angular_velocity) << [this](
-      cr::ActorId ActorId,
-      cr::Vector3D vector) -> R<void>
+  BIND_SYNC(disable_actor_constant_velocity) << [this](
+      cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
     {
-      RESPOND_ERROR("unable to set actor angular velocity: actor not found");
+      RESPOND_ERROR("unable to set actor velocity: actor not found");
     }
-    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
-    if (RootComponent == nullptr)
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (CarlaVehicle == nullptr)
     {
-      RESPOND_ERROR("unable to set actor angular velocity: not supported by actor");
+      RESPOND_ERROR("unable to set actor velocity: not supported by actor");
     }
-    RootComponent->SetPhysicsAngularVelocityInDegrees(
-        vector.ToFVector(),
-        false,
-        "None");
+
+    CarlaVehicle->DeactivateVelocityControl();
+
     return R<void>::Success();
   };
 
@@ -578,6 +620,80 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(add_actor_impulse_at_location) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D impulse,
+      cr::Vector3D location) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor impulse: not supported by actor");
+    }
+
+    UE_LOG(LogCarla, Warning, TEXT("AddImpulseAtLocation: Experimental feature, use carefully."));
+
+    RootComponent->AddImpulseAtLocation(
+        impulse.ToCentimeters().ToFVector(),
+        location.ToCentimeters().ToFVector(),
+        "None");
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(add_actor_force) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor impulse: not supported by actor");
+    }
+    RootComponent->AddForce(
+        vector.ToCentimeters().ToFVector(),
+        "None",
+        false);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(add_actor_force_at_location) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D force,
+      cr::Vector3D location) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor impulse: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor impulse: not supported by actor");
+    }
+
+    UE_LOG(LogCarla, Warning, TEXT("AddImpulseAtLocation: Experimental feature, use carefully."));
+
+    RootComponent->AddForceAtLocation(
+        force.ToCentimeters().ToFVector(),
+        location.ToCentimeters().ToFVector(),
+        "None");
+    return R<void>::Success();
+  };
+
   BIND_SYNC(add_actor_angular_impulse) << [this](
       cr::ActorId ActorId,
       cr::Vector3D vector) -> R<void>
@@ -594,6 +710,28 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to add actor angular impulse: not supported by actor");
     }
     RootComponent->AddAngularImpulseInDegrees(
+        vector.ToFVector(),
+        "None",
+        false);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(add_actor_torque) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to add actor torque: actor not found");
+    }
+    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      RESPOND_ERROR("unable to add actor torque: not supported by actor");
+    }
+    RootComponent->AddTorqueInDegrees(
         vector.ToFVector(),
         "None",
         false);
@@ -905,6 +1043,16 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(reset_all_traffic_lights) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    for (TActorIterator<ATrafficLightGroup> It(Episode->GetWorld()); It; ++It)
+    {
+      It->ResetGroup();
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(freeze_all_traffic_lights) << [this]
       (bool frozen) -> R<void>
   {
@@ -1102,10 +1250,12 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
-      [=](auto, const C::ApplyVelocity &c) {        MAKE_RESULT(set_actor_velocity(c.actor, c.velocity)); },
-      [=](auto, const C::ApplyAngularVelocity &c) { MAKE_RESULT(set_actor_angular_velocity(c.actor, c.angular_velocity)); },
+      [=](auto, const C::ApplyTargetVelocity &c) {  MAKE_RESULT(set_actor_target_velocity(c.actor, c.velocity)); },
+      [=](auto, const C::ApplyTargetAngularVelocity &c) { MAKE_RESULT(set_actor_target_angular_velocity(c.actor, c.angular_velocity)); },
       [=](auto, const C::ApplyImpulse &c) {         MAKE_RESULT(add_actor_impulse(c.actor, c.impulse)); },
+      [=](auto, const C::ApplyForce &c) {           MAKE_RESULT(add_actor_force(c.actor, c.force)); },
       [=](auto, const C::ApplyAngularImpulse &c) {  MAKE_RESULT(add_actor_angular_impulse(c.actor, c.impulse)); },
+      [=](auto, const C::ApplyTorque &c) {          MAKE_RESULT(add_actor_torque(c.actor, c.torque)); },
       [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
       // TODO: SetAutopilot should be removed. This is the old way to control the vehicles
       [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },

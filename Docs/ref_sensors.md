@@ -80,6 +80,12 @@ in_meters = 1000 * normalized
 The output [carla.Image](python_api.md#carla.Image) should then be saved to disk using a [carla.colorConverter](python_api.md#carla.ColorConverter) that will turn the distance stored in RGB channels into a __[0,1]__ float containing the distance and then translate this to grayscale.
 There are two options in [carla.colorConverter](python_api.md#carla.ColorConverter) to get a depth view: __Depth__ and __Logaritmic depth__. The precision is milimetric in both, but the logarithmic approach provides better results for closer objects.
 
+```py
+...
+raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
+```
+
+
 ![ImageDepth](img/ref_sensors_depth.jpg)
 
 
@@ -843,7 +849,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <tr>
 <td><code>fstop</code></td>
 <td>float</td>
-<td>8.0</td>
+<td>1.4</td>
 <td>Opening of the camera lens. Aperture is <code>1/fstop</code> with typical lens going down to f/1.2 (larger opening). Larger numbers will reduce the Depth of Field effect.</td>
 <tr>
 <td><code>image_size_x</code></td>
@@ -858,7 +864,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 <tr>
 <td><code>iso</code></td>
 <td>float</td>
-<td>200.0</td>
+<td>100.0</td>
 <td>The camera sensor sensitivity.</td>
 <tr>
 <td><code>gamma</code></td>
@@ -959,22 +965,22 @@ Since these effects are provided by UE, please make sure to check their document
 <tr>
 <td><code>exposure_mode</code> </td>
 <td>str</td>
-<td><code>manual</code></td>
+<td><code>histogram</code></td>
 <td>Can be <code>manual</code> or <code>histogram</code>. More in <a href="https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html">UE4 docs</a>.</td>
 <tr>
 <td><code>exposure_compensation</code> </td>
 <td>float</td>
-<td>-2.2</td>
+<td><b>Linux:</b> -1.5<br><b>Windows:</b> 0.0</td>
 <td>Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.</td>
 <tr>
 <td><code>exposure_min_bright</code> </td>
 <td>float</td>
-<td>0.1</td>
+<td>7.0</td>
 <td>In <code>exposure_mode: "histogram"</code>. Minimum brightness for auto exposure. The lowest the eye can adapt within. Must be greater than 0 and less than or equal to <code>exposure_max_bright</code>.</td>
 <tr>
 <td><code>exposure_max_bright</code> </td>
 <td>float</td>
-<td>2.0</td>
+<td>9.0</td>
 <td>In `exposure_mode: "histogram"`. Maximum brightness for auto exposure. The highestthe eye can adapt within. Must be greater than 0 and greater than or equal to `exposure_min_bright`.</td>
 <tr>
 <td><code>exposure_speed_up</code> </td>
@@ -1435,8 +1441,16 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
 
+![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
+
 The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.
 This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.
+
+```py
+...
+raw_image.save_to_disk("path/to/save/converted/image",carla.cityScapesPalette)
+```
+
 The following tags are currently available:
 
 <table class ="defTable">
@@ -1444,99 +1458,123 @@ The following tags are currently available:
 <th>Value</th>
 <th>Tag</th>
 <th>Converted color</th>
+<th>Description</th>
 </thead>
 <tbody>
 <td><code>0</code> </td>
 <td>Unlabeled</td>
 <td><code>(0, 0, 0)</code></td>
+<td>Elements that have not been categorized are considered <code>Unlabeled</code>. This category is meant to be empty or at least contain elements with no collisions.</td>
 <tr>
 <td><code>1</code> </td>
 <td>Building</td>
 <td><code>(70, 70, 70)</code></td>
+<td>Buildings like houses, skyscrapers,... and the elements attached to them. <br> E.g. air conditioners, scaffolding, awning or ladders and much more.</td>
 <tr>
 <td><code>2</code> </td>
 <td>Fence</td>
 <td><code>(100, 40, 40)</code></td>
+<td>Barriers, railing, or other upright structures. Basically wood or wire assemblies that enclose an area of ground.</td>
 <tr>
 <td><code>3</code> </td>
 <td>Other</td>
 <td><code>(55, 90, 80)</code></td>
+<td> Everything that does not belong to any other category.</td>
 <tr>
 <td><code>4</code> </td>
 <td>Pedestrian</td>
 <td><code>(220,  20,  60)</code></td>
+<td>Humans that walk or ride/drive any kind of vehicle or mobility system. <br> E.g. bicycles or scooters, skateboards, horses, roller-blades, wheel-chairs, etc.</td>
 <tr>
 <td><code>5</code> </td>
 <td>Pole</td>
 <td><code>(153, 153, 153)</code></td>
+<td>Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.</td>
 <tr>
 <td><code>6</code> </td>
 <td>RoadLine</td>
 <td><code>(157, 234, 50)</code></td>
+<td>The markings on the road.</td>
 <tr>
 <td><code>7</code> </td>
 <td>Road</td>
 <td><code>(128, 64, 128)</code></td>
+<td>Part of ground on which cars usually drive. <br> E.g. lanes in any directions, and streets.</td>
 <tr>
 <td><code>8</code> </td>
 <td>SideWalk</td>
 <td><code>(244, 35, 232)</code></td>
+<td>Part of ground designated for pedestrians or cyclists. Delimited from the road by some obstacle (such as curbs or poles), not only by markings. This label includes a possibly delimiting curb, traffic islands (the walkable part), and pedestrian zones.</td>
 <tr>
 <td><code>9</code> </td>
 <td>Vegetation</td>
 <td><code>(107, 142, 35)</code></td>
+<td> Trees, hedges, all kinds of vertical vegetation. Ground-level vegetation is considered <code>Terrain</code>.</td>
 <tr>
 <td><code>10</code> </td>
 <td>Vehicles</td>
 <td><code>(0, 0, 142)</code></td>
+<td>Cars, vans, trucks, motorcycles, bikes, buses, trains.</td>
 <tr>
 <td><code>11</code> </td>
 <td>Wall</td>
 <td><code>(102, 102, 156)</code></td>
+<td>Individual standing walls. Not part of a building.</td>
 <tr>
 <td><code>12</code> </td>
 <td>TrafficSign</td>
 <td><code>(220, 220, 0)</code></td>
+<td>Signs installed by the state/city authority, usually for traffic regulation. This category does not include the poles where signs are attached to. <br> E.g. traffic- signs, parking signs, direction signs...</td>
 <tr>
 <td><code>13</code> </td>
 <td>Sky</td>
 <td><code>(70, 130, 180)</code></td>
+<td>Open sky. Includes clouds and the sun.</td>
 <tr>
 <td><code>14</code> </td>
 <td>Ground</td>
 <td><code>(81, 0, 81)</code></td>
+<td>Any horizontal ground-level structures that does not match any other category. For example areas shared by vehicles and pedestrians, or flat roundabouts delimited from the road by a curb.</td>
 <tr>
 <td><code>15</code> </td>
 <td>Bridge</td>
 <td><code>(150, 100, 100)</code></td>
+<td>Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately.</td>
 <tr>
 <td><code>16</code> </td>
 <td>RailTrack</td>
 <td><code>(230, 150, 140)</code></td>
+<td>All kind of rail tracks that are non-drivable by cars. <br> E.g. subway and train rail tracks.</td>
 <tr>
 <td><code>17</code> </td>
 <td>GuardRail</td>
 <td><code>(180, 165, 180)</code></td>
+<td>All types of guard rails/crash barriers.</td>
 <tr>
 <td><code>18</code> </td>
 <td>TrafficLight</td>
 <td><code>(250, 170, 30)</code></td>
+<td>Traffic light boxes without their poles.</td>
 <tr>
 <td><code>19</code> </td>
 <td>Static</td>
 <td><code>(110, 190, 160)</code></td>
+<td>Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.</td>
 <tr>
 <td><code>20</code> </td>
 <td>Dynamic</td>
 <td><code>(170, 120, 50)</code></td>
+<td>Elements whose position is susceptible to change over time. <br> E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.</td>
 <tr>
 <td><code>21</code> </td>
 <td>Water</td>
 <td><code>(45, 60, 150)</code></td>
+<td>Horizontal water surfaces. <br> E.g. Lakes, sea, rivers.</td>
 <tr>
 <td><code>22</code> </td>
 <td>Terrain</td>
 <td><code>(145, 170, 100)</code></td>
+<td>Grass, ground-level vegetation, soil or sand. These areas are not meant to be driven on. This label includes a possibly delimiting curb.</td>
 </tbody>
 </table>
 <br>
@@ -1544,8 +1582,6 @@ The following tags are currently available:
 !!! Note
     **Adding new tags**:
     It requires some C++ coding. Add a new label to the `ECityObjectLabel` enum in "Tagger.h", and its corresponding filepath check inside `GetLabelByFolderName()` function in "Tagger.cpp".
-
-![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
 
 #### Basic camera attributes
 

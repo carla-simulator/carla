@@ -230,6 +230,14 @@ public:
     }
   }
 
+  /// Method to set randomization seed.
+  void SetRandomDeviceSeed(const uint64_t seed) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetRandomDeviceSeed(seed);
+    }
+  }
+
 private:
 
   void CreateTrafficManagerServer(

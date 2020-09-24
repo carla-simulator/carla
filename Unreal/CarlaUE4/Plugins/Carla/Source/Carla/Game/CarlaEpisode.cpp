@@ -329,7 +329,6 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       Description.Variations.Add("mass",
           FActorAttribute{"mass", EActorAttributeType::Float,
           FString::SanitizeFloat(MeshComponent->GetMass())});
-      carla::log_warning(carla::rpc::FromFString(MeshComponent->GetStaticMesh()->GetPathName()));
       ActorDispatcher->RegisterActor(*Actor, Description);
     }
   }

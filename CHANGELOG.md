@@ -1,5 +1,6 @@
 ## CARLA 0.9.10
 
+  * Deterministic mode for Traffic Manager, limited by computational power
   * Support for OSM in Traffic Manager
   * Fixed a map change error when Traffic Manager is in synchronous mode
   * Fixes add entry issue for applying parameters more than once in Traffic Manager
@@ -18,14 +19,17 @@
   * Added new semantic segmenation tags: `RailTrack`, `GuardRail`, `TrafficLight`, `Static`, `Dynamic`, `Water` and `Terrain`
   * Fixed several untagged and mistagged objects
   * Added vehicle light and street light data to recorder
+  * Change API: set_velocity to set_target_velocity for linear and angular velocities
   * Added API function `add_angular_impulse()` to add angular impulse to any actor
   * Fixed rain drop spawn issues when spawning camera sensors
+  * Exposed add_force and add_torque
   * Fixed assets import pipeline
   * Fixed Update.sh from failing when the root folder contains a space on it
   * Fixed dynamic meshes not moving to initial position when replaying
   * Fixed colors of lane markings when importing a map, they were reversed (white and yellow)
   * Fixed missing include directive in file **WheelPhysicsControl.h**
   * Fixed gravity measurement bug from IMU sensor
+  * Added Constant Velocity mode
   * All sensors are now multi-stream, that means that the same sensor can be listened from different clients
   * Fixed point cloud of LiDAR. Now the points are given correctly in the sensor's coordinate system
   * Fixed light intensity and camera parameters to match
@@ -60,6 +64,7 @@
   * Fixed minor typo in the introduction section of documentation.
   * Fixed a bug at the local planner when changing the route, causing it to maintain the first part of the previous one. This was only relevant when using very large buffer sizes.
   * Added automatic calculation of vehicle's BB
+  * Retrieve BBs of all the elements of the level
 
 
 ## CARLA 0.9.9

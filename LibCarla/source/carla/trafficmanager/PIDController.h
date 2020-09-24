@@ -28,7 +28,7 @@ StateEntry StateUpdate(StateEntry previous_state,
                        float current_velocity,
                        float target_velocity,
                        float angular_deviation,
-                       TimeInstance current_time) {
+                       cc::Timestamp current_time) {
   StateEntry current_state = {
       current_time,
       angular_deviation,
