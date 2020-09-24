@@ -355,7 +355,7 @@ Parses the location and extent of the bounding box to string.
 ---
 
 ## carla.CityObjectLabel<a name="carla.CityObjectLabel"></a>
-Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.  
+Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](../../ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.CityObjectLabel.None"></a>**<font color="#f8805a">None</font>**  
@@ -2732,7 +2732,7 @@ Returns a list of actor blueprints available to ease the spawn of these into the
 Returns a dict where the keys are [carla.Actor](#carla.Actor) IDs and the values are [carla.VehicleLightState](#carla.VehicleLightState) of that vehicle.  
     - **Return:** _dict_  
 - <a name="carla.World.get_level_bbs"></a>**<font color="#7fb800">get_level_bbs</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_type**=None</font>)  
-Returns an array of bounding boxes with location and rotation in world space. The function returns all the bounding boxes in the level by default, but the result can be filtered using semantic tags with the argument `actor_type`.  
+Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`.  
     - **Parameters:**
         - `actor_type` (_[carla.CityObjectLabel](#carla.CityObjectLabel)_) – Semantic tag of the elements contained in the bounding boxes that are returned.  
     - **Return:** _array([carla.BoundingBox](#carla.BoundingBox))_  
