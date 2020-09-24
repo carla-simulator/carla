@@ -115,7 +115,7 @@
       - param_name: control
         type: carla.VehicleControl
     # --------------------------------------
-  
+
   - class_name: ApplyWalkerControl
     # - DESCRIPTION ------------------------
     doc: >
@@ -227,7 +227,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: velocity
         type: carla.Vector3D
-        param_untis: m/s
+        param_units: m/s
         doc: > 
           Velocity vector applied to the actor. 
     # --------------------------------------
@@ -304,6 +304,7 @@
       type: carla.Vector3D
       doc: >
         Force applied to the actor over time. 
+      var_units: N
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -314,6 +315,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: force
         type: carla.Vector3D
+        param_units: N 
     # --------------------------------------
 
   - class_name: ApplyAngularImpulse
@@ -328,7 +330,7 @@
         Actor affected by the command.
     - var_name: impulse
       type: carla.Vector3D
-      var_units: degrees
+      var_units: degrees*s
       doc: >
         Angular impulse applied to the actor.
     # - METHODS ----------------------------
@@ -341,7 +343,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: impulse
         type: carla.Vector3D
-        param_units: degrees
+        param_units: degrees*s
     # --------------------------------------
 
   - class_name: ApplyTorque
@@ -358,6 +360,7 @@
       type: carla.Vector3D
       doc: >
         Torque applied to the actor over time. 
+      var_units: degrees
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -368,6 +371,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: torque
         type: carla.Vector3D
+        param_units: degrees
     # --------------------------------------
 
   - class_name: SetSimulatePhysics
