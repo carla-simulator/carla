@@ -105,9 +105,9 @@ right_lm_color = waypoint.right_lane_marking.color
 ---
 ## Navigation in CARLA
 
-Navigation in CARLA is managed via the waypoint API. This consists of a summary of methods in [carla.Waypoint](python_api.md#carla.Waypoint) and [carla.Map](python_api.md#carla.Map) that provide connections between waypoints, and use these to generate a map navigation.  
+Navigation in CARLA is managed via the waypoint API. This consists of a summary of methods in [carla.Waypoint](python_api.md#carla.Waypoint) and [carla.Map](python_api.md#carla.Map).  
 
-All the queries happen on the client-side. The client only communicates with the server when retrieving the map object that will be used for the queries. Communication with the server is not needed after that, so the computational cost of the waypoint API is heavily reduced.  
+All the queries happen on the client-side. The client only communicates with the server when retrieving the map object that will be used for the queries. There is no need to retrieve the map (`world.get_map()`) more than once.  
 
 
 ### Navigating through waypoints
