@@ -318,7 +318,7 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
     return;
   }
 
-  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  ISMComp->PerInstanceSMData;
+  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData = ISMComp->PerInstanceSMData;
 
   const FTransform ParentTransform = ISMComp->GetComponentTransform();
 
@@ -342,8 +342,9 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 
   for(UStaticMeshComponent* Comp : StaticMeshComps)
   {
-    // Avoid duplication with SMComp
-    if(Cast<UInstancedStaticMeshComponent>(Comp)) continue;
+
+    // Avoid duplication with SMComp and not visible meshes
+    if(!Comp->IsVisible() || Cast<UInstancedStaticMeshComponent>(Comp)) continue;
 
     // Filter by tag
     crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
@@ -414,8 +415,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     // When improved the BP_Procedural_Building this maybe should be removed
     // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
     //       than getting the UClass of the BP to cast the actor.
-    if( ClassName.Contains("BP_Procedural_Bulding") ||
-        ClassName.Contains("BP_Procedural_Bulding") ) continue;
+    if( ClassName.Contains("Procedural_Bulding") ) continue;
 
     // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
