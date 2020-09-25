@@ -226,6 +226,11 @@ namespace detail {
       return _client.GetVehicleLightState(vehicle.GetId());
     }
 
+    /// Returns all the BBs of all the elements of the level
+    std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const {
+      return _client.GetLevelBBs(queried_tag);
+    }
+
     /// @}
     // =========================================================================
     /// @name AI
@@ -314,24 +319,47 @@ namespace detail {
       return GetActorSnapshot(actor).velocity;
     }
 
-    void SetActorVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorVelocity(actor.GetId(), vector);
+    void SetActorTargetVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorTargetVelocity(actor.GetId(), vector);
     }
 
     geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
       return GetActorSnapshot(actor).angular_velocity;
     }
 
-    void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorAngularVelocity(actor.GetId(), vector);
+    void SetActorTargetAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorTargetAngularVelocity(actor.GetId(), vector);
+    }
+    void EnableActorConstantVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.EnableActorConstantVelocity(actor.GetId(), vector);
     }
 
-    void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
-      _client.AddActorImpulse(actor.GetId(), vector);
+    void DisableActorConstantVelocity(const Actor &actor) {
+      _client.DisableActorConstantVelocity(actor.GetId());
+    }
+
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse) {
+      _client.AddActorImpulse(actor.GetId(), impulse);
+    }
+
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse, const geom::Vector3D &location) {
+      _client.AddActorImpulse(actor.GetId(), impulse, location);
+    }
+
+    void AddActorForce(const Actor &actor, const geom::Vector3D &force) {
+      _client.AddActorForce(actor.GetId(), force);
+    }
+
+    void AddActorForce(const Actor &actor, const geom::Vector3D &force, const geom::Vector3D &location) {
+      _client.AddActorForce(actor.GetId(), force, location);
     }
 
     void AddActorAngularImpulse(const Actor &actor, const geom::Vector3D &vector) {
       _client.AddActorAngularImpulse(actor.GetId(), vector);
+    }
+
+    void AddActorTorque(const Actor &actor, const geom::Vector3D &torque) {
+      _client.AddActorAngularImpulse(actor.GetId(), torque);
     }
 
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
@@ -466,6 +494,10 @@ namespace detail {
 
     void ResetTrafficLightGroup(TrafficLight &trafficLight) {
       _client.ResetTrafficLightGroup(trafficLight.GetId());
+    }
+
+    void ResetAllTrafficLights() {
+      _client.ResetAllTrafficLights();
     }
 
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {

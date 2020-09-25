@@ -86,7 +86,7 @@ waypoints_junc = my_junction.get_waypoints()
 
 ### Waypoints
 
-A [__carla.Waypoint__](python_api.md#carla.Waypoint) is a 3D-directed point. These are prepared to mediate between the world and the openDRIVE definition of the road.  
+A [__carla.Waypoint__](python_api.md#carla.Waypoint) is a 3D-directed point. These are prepared to mediate between the world and the openDRIVE definition of the road. Everything related with waypoints happens on the client-side, so there no communication with the server is needed.  
 
 Each waypoint contains a [carla.Transform](python_api.md#carla.Transform). This states its location on the map and the orientation of the lane containing it. The variables `road_id`,`section_id`,`lane_id` and `s` translate this transform to the OpenDRIVE road. These combined, create the `id` of the waypoint.  
 
@@ -104,6 +104,11 @@ right_lm_color = waypoint.right_lane_marking.color
 
 ---
 ## Navigation in CARLA
+
+Navigation in CARLA is managed via the waypoint API. This consists of a summary of methods in [carla.Waypoint](python_api.md#carla.Waypoint) and [carla.Map](python_api.md#carla.Map).  
+
+All the queries happen on the client-side. The client only communicates with the server when retrieving the map object that will be used for the queries. There is no need to retrieve the map (`world.get_map()`) more than once.  
+
 
 ### Navigating through waypoints
 
@@ -125,7 +130,9 @@ while True:
 
 ### Generating a map navigation
 
-The instance of the map is provided by the world. It will be useful to create routes and make vehicles roam around the city and reach goal destinations.
+The instance of the map is provided by the world. It will be useful to create routes and make vehicles roam around the city and reach goal destinations.  
+
+The following method asks the server for the XODR map file, and parses it to a [carla.Map](python_api.md#carla.Map) object. It only needs to be calle once. Maps can be quite heavy, and successive calls are unnecessary and expensive.  
 
 ```py
 map = world.get_map()

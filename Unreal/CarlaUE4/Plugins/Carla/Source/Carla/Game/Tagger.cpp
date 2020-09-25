@@ -14,39 +14,48 @@
 #include "EngineUtils.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 
+namespace crp = carla::rpc;
+
 template <typename T>
 static auto CastEnum(T label)
 {
   return static_cast<typename std::underlying_type<T>::type>(label);
 }
 
-ECityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
-  if      (String == "Buildings")       return ECityObjectLabel::Buildings;
-  else if (String == "Fences")          return ECityObjectLabel::Fences;
-  else if (String == "Pedestrians")     return ECityObjectLabel::Pedestrians;
-  else if (String == "Pole")            return ECityObjectLabel::Poles;
-  else if (String == "Props")           return ECityObjectLabel::Other;
-  else if (String == "Road")            return ECityObjectLabel::Roads;
-  else if (String == "RoadLines")       return ECityObjectLabel::RoadLines;
-  else if (String == "SideWalk")        return ECityObjectLabel::Sidewalks;
-  else if (String == "TrafficSigns")    return ECityObjectLabel::TrafficSigns;
-  else if (String == "Vegetation")      return ECityObjectLabel::Vegetation;
-  else if (String == "Vehicles")        return ECityObjectLabel::Vehicles;
-  else if (String == "Walls")           return ECityObjectLabel::Walls;
-  else if (String == "Sky")             return ECityObjectLabel::Sky;
-  else if (String == "Ground")          return ECityObjectLabel::Ground;
-  else if (String == "Bridge")          return ECityObjectLabel::Bridge;
-  else                                  return ECityObjectLabel::None;
+crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
+  if      (String == "Building")     return crp::CityObjectLabel::Buildings;
+  else if (String == "Fence")        return crp::CityObjectLabel::Fences;
+  else if (String == "Pedestrian")   return crp::CityObjectLabel::Pedestrians;
+  else if (String == "Pole")         return crp::CityObjectLabel::Poles;
+  else if (String == "Other")        return crp::CityObjectLabel::Other;
+  else if (String == "Road")         return crp::CityObjectLabel::Roads;
+  else if (String == "RoadLine")     return crp::CityObjectLabel::RoadLines;
+  else if (String == "SideWalk")     return crp::CityObjectLabel::Sidewalks;
+  else if (String == "TrafficSign")  return crp::CityObjectLabel::TrafficSigns;
+  else if (String == "Vegetation")   return crp::CityObjectLabel::Vegetation;
+  else if (String == "Vehicles")     return crp::CityObjectLabel::Vehicles;
+  else if (String == "Wall")         return crp::CityObjectLabel::Walls;
+  else if (String == "Sky")          return crp::CityObjectLabel::Sky;
+  else if (String == "Ground")       return crp::CityObjectLabel::Ground;
+  else if (String == "Bridge")       return crp::CityObjectLabel::Bridge;
+  else if (String == "RailTrack")    return crp::CityObjectLabel::RailTrack;
+  else if (String == "GuardRail")    return crp::CityObjectLabel::GuardRail;
+  else if (String == "TrafficLight") return crp::CityObjectLabel::TrafficLight;
+  else if (String == "Static")       return crp::CityObjectLabel::Static;
+  else if (String == "Dynamic")      return crp::CityObjectLabel::Dynamic;
+  else if (String == "Water")        return crp::CityObjectLabel::Water;
+  else if (String == "Terrain")      return crp::CityObjectLabel::Terrain;
+  else                               return crp::CityObjectLabel::None;
 }
 
 void ATagger::SetStencilValue(
     UPrimitiveComponent &Component,
-    const ECityObjectLabel &Label,
+    const crp::CityObjectLabel &Label,
     const bool bSetRenderCustomDepth) {
   Component.SetCustomDepthStencilValue(CastEnum(Label));
   Component.SetRenderCustomDepth(
       bSetRenderCustomDepth &&
-      (Label != ECityObjectLabel::None));
+      (Label != crp::CityObjectLabel::None));
 }
 
 // =============================================================================
@@ -91,24 +100,24 @@ void ATagger::TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation)
   }
 }
 
-void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TSet<ECityObjectLabel> &Tags)
+void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TSet<crp::CityObjectLabel> &Tags)
 {
   TArray<UPrimitiveComponent *> Components;
   Actor.GetComponents<UPrimitiveComponent>(Components);
   for (auto *Component : Components) {
     if (Component != nullptr) {
       const auto Tag = GetTagOfTaggedComponent(*Component);
-      if (Tag != ECityObjectLabel::None) {
+      if (Tag != crp::CityObjectLabel::None) {
         Tags.Add(Tag);
       }
     }
   }
 }
 
-FString ATagger::GetTagAsString(const ECityObjectLabel Label)
+FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
 {
   switch (Label) {
-#define CARLA_GET_LABEL_STR(lbl) case ECityObjectLabel:: lbl : return TEXT(#lbl);
+#define CARLA_GET_LABEL_STR(lbl) case crp::CityObjectLabel:: lbl : return TEXT(#lbl);
     default:
     CARLA_GET_LABEL_STR(None)
     CARLA_GET_LABEL_STR(Buildings)
@@ -126,6 +135,13 @@ FString ATagger::GetTagAsString(const ECityObjectLabel Label)
     CARLA_GET_LABEL_STR(Sky)
     CARLA_GET_LABEL_STR(Ground)
     CARLA_GET_LABEL_STR(Bridge)
+    CARLA_GET_LABEL_STR(RailTrack)
+    CARLA_GET_LABEL_STR(GuardRail)
+    CARLA_GET_LABEL_STR(TrafficLight)
+    CARLA_GET_LABEL_STR(Static)
+    CARLA_GET_LABEL_STR(Dynamic)
+    CARLA_GET_LABEL_STR(Water)
+    CARLA_GET_LABEL_STR(Terrain)
 #undef CARLA_GET_LABEL_STR
   }
 }

@@ -264,20 +264,44 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_transform", actor, transform);
   }
 
-  void Client::SetActorVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_velocity", actor, vector);
+  void Client::SetActorTargetVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_target_velocity", actor, vector);
   }
 
-  void Client::SetActorAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("set_actor_angular_velocity", actor, vector);
+  void Client::SetActorTargetAngularVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("set_actor_target_angular_velocity", actor, vector);
   }
 
-  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
-    _pimpl->AsyncCall("add_actor_impulse", actor, vector);
+  void Client::EnableActorConstantVelocity(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("enable_actor_constant_velocity", actor, vector);
+  }
+
+  void Client::DisableActorConstantVelocity(rpc::ActorId actor) {
+    _pimpl->AsyncCall("disable_actor_constant_velocity", actor);
+  }
+
+  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &impulse) {
+    _pimpl->AsyncCall("add_actor_impulse", actor, impulse);
+  }
+
+  void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &impulse, const geom::Vector3D &location) {
+    _pimpl->AsyncCall("add_actor_impulse_at_location", actor, impulse, location);
+  }
+
+  void Client::AddActorForce(rpc::ActorId actor, const geom::Vector3D &force) {
+    _pimpl->AsyncCall("add_actor_force", actor, force);
+  }
+
+  void Client::AddActorForce(rpc::ActorId actor, const geom::Vector3D &force, const geom::Vector3D &location) {
+    _pimpl->AsyncCall("add_actor_force_at_location", actor, force, location);
   }
 
   void Client::AddActorAngularImpulse(rpc::ActorId actor, const geom::Vector3D &vector) {
     _pimpl->AsyncCall("add_actor_angular_impulse", actor, vector);
+  }
+
+  void Client::AddActorTorque(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("add_actor_torque", actor, vector);
   }
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
@@ -324,6 +348,10 @@ namespace detail {
 
   void Client::ResetTrafficLightGroup(rpc::ActorId traffic_light) {
     _pimpl->AsyncCall("reset_traffic_light_group", traffic_light);
+  }
+
+  void Client::ResetAllTrafficLights() {
+    _pimpl->CallAndWait<void>("reset_all_traffic_lights");
   }
 
   void Client::FreezeAllTrafficLights(bool frozen) {
@@ -411,6 +439,11 @@ namespace detail {
 
   void Client::UpdateServerLightsState(std::vector<rpc::LightState>& lights, bool discard_client) const {
     _pimpl->AsyncCall("update_lights_state", _pimpl->endpoint, std::move(lights), discard_client);
+  }
+
+  std::vector<geom::BoundingBox> Client::GetLevelBBs(uint8_t queried_tag) const {
+    using return_t = std::vector<geom::BoundingBox>;
+    return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);
   }
 
 } // namespace detail

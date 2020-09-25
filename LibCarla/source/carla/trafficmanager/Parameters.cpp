@@ -133,6 +133,10 @@ void Parameters::SetHybridPhysicsRadius(const float radius) {
   hybrid_physics_radius.store(new_radius);
 }
 
+void Parameters::SetOSMMode(const bool mode_switch) {
+  osm_mode.store(mode_switch);
+}
+
 //////////////////////////////////// GETTERS //////////////////////////////////
 
 float Parameters::GetHybridPhysicsRadius() const {
@@ -267,6 +271,11 @@ float Parameters::GetPercentageIgnoreVehicles(const ActorId &actor_id) const {
 bool Parameters::GetHybridPhysicsMode() const {
 
   return hybrid_physics_mode.load();
+}
+
+bool Parameters::GetOSMMode() const {
+
+  return osm_mode.load();
 }
 
 } // namespace traffic_manager

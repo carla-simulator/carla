@@ -18,6 +18,7 @@ ALSM::ALSM(
   AtomicActorSet &registered_vehicles,
   BufferMap &buffer_map,
   TrackTraffic &track_traffic,
+  std::vector<ActorId>& marked_for_removal,
   const Parameters &parameters,
   const cc::World &world,
   const LocalMapPtr &local_map,
@@ -25,10 +26,12 @@ ALSM::ALSM(
   LocalizationStage &localization_stage,
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
-  MotionPlanStage &motion_plan_stage)
+  MotionPlanStage &motion_plan_stage,
+  RandomGeneratorMap &random_devices)
   : registered_vehicles(registered_vehicles),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
+    marked_for_removal(marked_for_removal),
     parameters(parameters),
     world(world),
     local_map(local_map),
@@ -36,7 +39,8 @@ ALSM::ALSM(
     localization_stage(localization_stage),
     collision_stage(collision_stage),
     traffic_light_stage(traffic_light_stage),
-    motion_plan_stage(motion_plan_stage) {}
+    motion_plan_stage(motion_plan_stage),
+    random_devices(random_devices) {}
 
 void ALSM::Update() {
 
@@ -104,6 +108,15 @@ void ALSM::Update() {
     registered_vehicles.Destroy(max_idle_time.first);
     RemoveActor(max_idle_time.first, true);
     elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
+  }
+
+  // Destorying vehicles for marked for removal by stages.
+  if (parameters.GetOSMMode()) {
+    for (const ActorId& actor_id: marked_for_removal) {
+      registered_vehicles.Destroy(actor_id);
+      RemoveActor(actor_id, true);
+    }
+    marked_for_removal.clear();
   }
 
   // Update dynamic state and static attributes for unregistered actors.
@@ -302,7 +315,7 @@ void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const Actor
     double &idle_duration = idle_time.at(actor_id);
     TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
     if (simulation_state.GetVelocity(actor_id).SquaredLength() > SQUARE(STOPPED_VELOCITY_THRESHOLD)
-        || (tl_state.at_traffic_light && tl_state.tl_state != TLS::Green)) {
+        || (tl_state.at_traffic_light && tl_state.tl_state != TLS::Green && tl_state.tl_state != TLS::Off)) {
       idle_duration = current_timestamp.elapsed_seconds;
     }
 
@@ -328,6 +341,7 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
     registered_vehicles.Remove({actor_id});
     buffer_map.erase(actor_id);
     idle_time.erase(actor_id);
+    random_devices.erase(actor_id);
     localization_stage.RemoveActor(actor_id);
     collision_stage.RemoveActor(actor_id);
     traffic_light_stage.RemoveActor(actor_id);

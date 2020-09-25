@@ -129,6 +129,9 @@ def brackets(buf):
 def parentheses(buf):
     return join(['(', buf, ')'])
 
+def small_html(buf):
+    return join(['<small>'+buf+'</small>'])
+
 
 def small(buf):
     return join(['<sub><sup>', buf, '</sup></sub>'])
@@ -328,11 +331,14 @@ def add_doc_method_param(md, param):
     param_name = param['param_name']
     param_type = ''
     param_doc = ''
+    param_units = ''
     if valid_dic_val(param, 'type'):
         param_type = create_hyperlinks(param['type'])
     if valid_dic_val(param, 'doc'):
         param_doc = create_hyperlinks(md.prettify_doc(param['doc']))
-    param_type = '' if not param_type else parentheses(italic(param_type))
+    if valid_dic_val(param, 'param_units'):
+        param_units = small_html(' – '+param['param_units'])
+    param_type = '' if not param_type else parentheses(italic(param_type+param_units))
     md.list_push(code(param_name))
     if param_type:
         md.text(' ' + param_type)
@@ -372,7 +378,10 @@ def add_doc_method(md, method, class_key):
     # Return doc
     if valid_dic_val(method, 'return'):
         md.list_push(bold('Return:') + ' ')
-        md.textn(italic(create_hyperlinks(method['return'])))
+        return_units = ''
+        if valid_dic_val(method, 'return_units'):
+            return_units = small_html(' – '+method['return_units'])
+        md.textn(italic(create_hyperlinks(method['return'])+return_units))
         md.list_pop()
 
     # Note doc
@@ -423,7 +432,10 @@ def add_doc_getter_setter(md, method,class_key,is_getter,other_list):
     # Return doc
     if valid_dic_val(method, 'return'):
         md.list_push(bold('Return:') + ' ')
-        md.textn(italic(create_hyperlinks(method['return'])))
+        return_units = ''
+        if valid_dic_val(method, 'return_units'):
+            return_units = small_html(' – '+method['return_units'])
+        md.textn(italic(create_hyperlinks(method['return'])+return_units))
         md.list_pop()
 
     # If setter/getter
@@ -493,11 +505,13 @@ def add_doc_inst_var(md, inst_var, class_key):
     var_name = inst_var['var_name']
     var_key = join([class_key, var_name], '.')
     var_type = ''
+    var_units = ''
 
     # Instance variable type
     if valid_dic_val(inst_var, 'type'):
-        var_type = ' ' + parentheses(italic(create_hyperlinks(inst_var['type'])))
-
+        if valid_dic_val(inst_var, 'var_units'):
+            var_units = small_html(' – '+inst_var['var_units'])
+        var_type = ' ' + parentheses(italic(create_hyperlinks(inst_var['type']+var_units)))
     md.list_pushn(
         html_key(var_key) +
         bold(color(COLOR_INSTANCE_VAR, var_name)) +

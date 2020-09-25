@@ -27,8 +27,7 @@ from carla import VehicleLightState as vls
 
 import argparse
 import logging
-import random
-
+from numpy import random
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -85,6 +84,11 @@ def main():
         action='store_true',
         help='Enanble')
     argparser.add_argument(
+        '-s', '--seed',
+        metavar='S',
+        type=int,
+        help='Random device seed')
+    argparser.add_argument(
         '--car-lights-on',
         action='store_true',
         default=False,
@@ -99,14 +103,18 @@ def main():
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     synchronous_master = False
+    random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
         world = client.get_world()
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
-        traffic_manager.set_global_distance_to_leading_vehicle(2.0)
+        traffic_manager.set_global_distance_to_leading_vehicle(1.0)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
+        if args.seed is not None:
+            traffic_manager.set_random_device_seed(args.seed)
+
 
         if args.sync:
             settings = world.get_settings()
@@ -128,6 +136,8 @@ def main():
             blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
             blueprints = [x for x in blueprints if not x.id.endswith('cybertruck')]
             blueprints = [x for x in blueprints if not x.id.endswith('t2')]
+
+        blueprints = sorted(blueprints, key=lambda bp: bp.id)
 
         spawn_points = world.get_map().get_spawn_points()
         number_of_spawn_points = len(spawn_points)

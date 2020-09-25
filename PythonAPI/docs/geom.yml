@@ -151,16 +151,19 @@
     instance_variables:
     - var_name: x
       type: float
+      var_units: meters
       doc: >
-        Distance in meters from origin to spot on X axis.
+        Distance from origin to spot on X axis.
     - var_name: 'y'
       type: float
+      var_units: meters
       doc: >
-        Distance in meters from origin to spot on Y axis.
+        Distance from origin to spot on Y axis.
     - var_name: z
       type: float
+      var_units: meters
       doc: >
-        Distance in meters from origin to spot on Z axis.
+        Distance from origin to spot on Z axis.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -182,8 +185,9 @@
         doc: >
           The other point to compute the distance with.
       return: float
+      return_units: meters
       doc: >
-        Returns Euclidean distance in meters from this location to another one.
+        Returns Euclidean distance from this location to another one.
     # --------------------------------------
     - def_name: __eq__
       return: bool
@@ -210,25 +214,28 @@
   - class_name: Rotation
     # - DESCRIPTION ------------------------
     doc: >
-      Class that represents a 3D rotation and therefore, an orientation in space.
-
-
-      ![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
-      _Unreal Engine's standard (from [UE4 docs](https://wiki.unrealengine.com/Blueprint_Rotating_Movement_Component))_
+      Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
+      
+      <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br>
+      <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
+      *Unreal Engine's coordinates system*
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: pitch
       type: float
+      var_units: degrees
       doc: >
-        Degrees around the Y-axis.
+        Y-axis rotation angle.
     - var_name: yaw
       type: float
+      var_units: degrees
       doc: >
-        Degrees around the Z-axis.
+        Z-axis rotation angle.
     - var_name: roll
       type: float
+      var_units: degrees
       doc: >
-        Degrees around the X-axis.
+        X-axis rotation angle.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -236,36 +243,40 @@
       - param_name: pitch
         type: float
         default: 0.0
+        param_units: degrees
         doc: >
-          Y rotation in degrees.
+          Y-axis rotation angle.
       - param_name: yaw
         type: float
         default: 0.0
+        param_units: degrees
         doc: >
-          Z rotation in degrees.
+          Z-axis rotation angle.
       - param_name: roll
         type: float
         default: 0.0
+        param_units: degrees
         doc: >
-          X rotation in degrees.
+          X-axis rotation angle.
+      warning: The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations.  
     # --------------------------------------
     - def_name: get_forward_vector
       params:
       return: carla.Vector3D
       doc: >
-        Computes the vector pointing forward according to the orientation of each axis.
+        Computes the vector pointing forward according to the rotation of the object.
     # --------------------------------------
     - def_name: get_right_vector
       params:
       return: carla.Vector3D
       doc: >
-        Computes the vector pointing to the right according to the orientation of each axis.
+        Computes the vector pointing to the right according to the rotation of the object.
     # --------------------------------------
     - def_name: get_up_vector
       params:
       return: carla.Vector3D
       doc: >
-        Computes the vector pointing upwards according to the orientation of each axis.
+        Computes the vector pointing upwards according to the rotation of the object.
     # --------------------------------------
     - def_name: __eq__
       return: bool
@@ -273,7 +284,7 @@
       - param_name: other
         type: carla.Rotation
       doc: >
-        Returns __True__ if both rotations represent the same orientation of each axis.
+        Returns __True__ if both rotations represent the same orientation for every axis.
     # --------------------------------------
     - def_name: __ne__
       params:
@@ -300,6 +311,7 @@
         Describes a point in the coordinate system.
     - var_name: rotation
       type: carla.Rotation
+      var_units: degrees (pitch, yaw, roll)
       doc: >
         Describes a rotation for an object according to Unreal Engine's axis system.
     # - METHODS ----------------------------
@@ -310,6 +322,7 @@
         type: carla.Location
       - param_name: rotation
         type: carla.Rotation
+        param_units: degrees (pitch, yaw, roll)
     # --------------------------------------
     - def_name: transform
       params:
@@ -323,17 +336,17 @@
     - def_name: get_forward_vector
       return: carla.Vector3D
       doc: >
-        Computes a forward vector using its rotation.
+        Computes a forward vector using the rotation of the object.
     # --------------------------------------
     - def_name: get_right_vector
       return: carla.Vector3D
       doc: >
-        Computes a right vector using its rotation.
+        Computes a right vector using the rotatio of the object.
     # --------------------------------------
     - def_name: get_up_vector
       return: carla.Vector3D
       doc: >
-        Computes an up vector using its rotation.
+        Computes an up vector using the rotation of the object.
     # --------------------------------------
     - def_name: get_matrix
       return: list(list(float))
@@ -370,29 +383,37 @@
   - class_name: BoundingBox
     # - DESCRIPTION ------------------------
     doc: >
-      Helper class defining a box location and its dimensions that will later be used by carla.DebugHelper or a carla.Client to draw shapes and detect collisions. Bounding boxes normally act for object colliders. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.
+      Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by carla.DebugHelper or a carla.Client to draw their shapes for debugging. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: extent
       type: carla.Vector3D
+      var_units: meters
       doc: >
         Vector from the center of the box to one vertex. The value in each axis equals half the size of the box for that axis.
 
         `extent.x * 2` would return the size of the box in the X-axis.
     - var_name: location
       type: carla.Location
+      var_units: meters
       doc: >
-        The center of the bounding box relative to its parent actor.
+        The center of the bounding box.
+    - var_name: rotation
+      type: carla.Rotation
+      doc: >
+        The orientation of the bounding box.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
       params:
       - param_name: location
         type: carla.Location
+        var_units: meters
         doc: >
-          Point to center the box.
+          Center of the box, relative to its parent. 
       - param_name: extent
         type: carla.Vector3D
+        param_units: meters
         doc: >
           Vector containing half the size of the box for every axis.
     # --------------------------------------
@@ -401,6 +422,7 @@
       params:
       - param_name: world_point
         type: carla.Location
+        param_units: meters
         doc: >
           The point in world space to be checked.
       - param_name: transform
@@ -455,14 +477,17 @@
     instance_variables:
     - var_name: latitude
       type: float
+      var_units: degrees
       doc: >
         North/South value of a point on the map.
     - var_name: longitude
       type: float
+      var_units: degrees
       doc: >
         West/East value of a point on the map.
     - var_name: altitude
       type: float
+      var_units: meters
       doc: >
         Height regarding ground level.
     # - METHODS ----------------------------
@@ -472,12 +497,15 @@
       - param_name: latitude
         type: float
         default: 0.0
+        param_units: degrees
       - param_name: longitude
         type: float
         default: 0.0
+        param_units: degrees
       - param_name: altitude
         type: float
         default: 0.0
+        param_units: meters
     # --------------------------------------
     - def_name: __eq__
       params:

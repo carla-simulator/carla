@@ -8,21 +8,21 @@
     doc: >
       Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at carla.World to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from carla.SensorData (depending on the sensor).
 
-        Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in carla.BlueprintLibrary. All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.
-        <b>Receive data on every tick.</b>
-        - [Depth camera](ref_sensors.md#depth-camera).
-        - [Gnss sensor](ref_sensors.md#gnss-sensor).
-        - [IMU sensor](ref_sensors.md#imu-sensor).
-        - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
-        - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
-        - [Radar](ref_sensors.md#radar-sensor).
-        - [RGB camera](ref_sensors.md#rgb-camera).
-        - [RSS sensor](ref_sensors.md#rss-sensor).
-        - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
-        <b>Only receive data when triggered.</b>
-        - [Collision detector](ref_sensors.md#collision-detector).
-        - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
-        - [Obstacle detector](ref_sensors.md#obstacle-detector).
+        Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in carla.BlueprintLibrary. All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.  
+        <br><b>Receive data on every tick.</b>  
+        - [Depth camera](ref_sensors.md#depth-camera).  
+        - [Gnss sensor](ref_sensors.md#gnss-sensor).  
+        - [IMU sensor](ref_sensors.md#imu-sensor).  
+        - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).  
+        - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).  
+        - [Radar](ref_sensors.md#radar-sensor).  
+        - [RGB camera](ref_sensors.md#rgb-camera).  
+        - [RSS sensor](ref_sensors.md#rss-sensor).  
+        - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).  
+        <br><b>Only receive data when triggered.</b>  
+        - [Collision detector](ref_sensors.md#collision-detector).  
+        - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).  
+        - [Obstacle detector](ref_sensors.md#obstacle-detector).  
 
     # - PROPERTIES -------------------------
     instance_variables:

@@ -28,8 +28,9 @@ static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
 namespace HybridMode {
-static const float HYBRID_MODE_DT = 0.05f;
-static const float INV_HYBRID_DT = 1.0f / HYBRID_MODE_DT;
+static const float HYBRID_MODE_DT_FL = 0.05f;
+static const double HYBRID_MODE_DT = 0.05;
+static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
 
@@ -78,6 +79,7 @@ static const float MAX_LOCKING_EXTENSION = 10.0f;
 static const float WALKER_TIME_EXTENSION = 1.5f;
 static const float SQUARE_ROOT_OF_TWO = 1.414f;
 static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
+static const float EPSILON = 2.0f * std::numeric_limits<float>::epsilon();
 } // namespace Collision
 
 namespace FrameMemory {
@@ -125,7 +127,6 @@ namespace TrackTraffic {
 static const uint64_t BUFFER_STEP_THROUGH = 10;
 static const float INV_BUFFER_STEP_THROUGH = 0.1f;
 } // namespace TrackTraffic
-
 
 } // namespace constants
 } // namespace traffic_manager

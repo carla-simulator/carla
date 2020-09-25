@@ -40,17 +40,21 @@
         Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is __False__.
     - var_name: offset_x
       type: float
+      var_units: meters
       doc: >
         Offset in the X axis.  Default value is __0.0__.
     - var_name: offset_y
       type: float
+      var_units: meters
       doc: >
         Offset in the Y axis.  Default value is __0.0__.
     - var_name: default_lane_width
       type: float
+      var_units: meters
       doc: >
         Width of the lanes described in the resulting XODR map. Default value is __4.0__.
     - var_name: elevation_layer_height
       type: float
+      var_units: meters
       doc: >
         Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.
