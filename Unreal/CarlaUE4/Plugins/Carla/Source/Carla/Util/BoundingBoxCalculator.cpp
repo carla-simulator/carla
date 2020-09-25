@@ -156,8 +156,14 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
 {
   check(Character);
 
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTag = TagQueried == crp::CityObjectLabel::None ||
+                     TagQueried == crp::CityObjectLabel::Pedestrians;
+
   UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
-  if (Capsule)
+
+
+  if (Capsule && FilterByTag)
   {
     const float Radius = Capsule->GetScaledCapsuleRadius();
     const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
@@ -318,12 +324,15 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
     return;
   }
 
-  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  ISMComp->PerInstanceSMData;
+  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData = ISMComp->PerInstanceSMData;
+
+  const FTransform ParentTransform = ISMComp->GetComponentTransform();
 
   for(auto& InstSMIData : PerInstanceSMData)
   {
-    const FTransform Transform = FTransform(InstSMIData.Transform);
+    const FTransform Transform = FTransform(InstSMIData.Transform) * ParentTransform;
     FBoundingBox BoundingBox = ApplyTransformToBB(SMBoundingBox, Transform);
+
     OutBoundingBox.Add(BoundingBox);
   }
 
@@ -339,6 +348,10 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 
   for(UStaticMeshComponent* Comp : StaticMeshComps)
   {
+
+    // Avoid duplication with SMComp and not visible meshes
+    if(!Comp->IsVisible() || Cast<UInstancedStaticMeshComponent>(Comp)) continue;
+
     // Filter by tag
     crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
     if(FilterByTagEnabled && Tag != TagQueried) continue;
@@ -372,7 +385,8 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
   {
     // Filter by tag
     crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    if(!Comp->IsVisible() || (FilterByTagEnabled && Tag != TagQueried)) continue;
 
     USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
     FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
@@ -406,7 +420,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
     // When improved the BP_Procedural_Building this maybe should be removed
     // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
     //       than getting the UClass of the BP to cast the actor.
-    if(ClassName.Contains("BP_Procedural_Bulding")) continue;
+    if( ClassName.Contains("Procedural_Bulding") ) continue;
 
     // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
@@ -441,16 +455,6 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
       continue;
     }
 
-    // Calculate FBoundingBox of SM
-    TArray<UStaticMeshComponent*> StaticMeshComps;
-    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
-
-    // Calculate FBoundingBox of SK_M
-    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
-    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
-
     // Calculate FBoundingBox of ISM
     TArray<UInstancedStaticMeshComponent *> ISMComps;
     Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
@@ -462,6 +466,16 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
 
       GetISMBoundingBox(Comp, Result);
     }
+
+    // Calculate FBoundingBox of SM
+    TArray<UStaticMeshComponent*> StaticMeshComps;
+    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
+
+    // Calculate FBoundingBox of SK_M
+    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
 
   }
 

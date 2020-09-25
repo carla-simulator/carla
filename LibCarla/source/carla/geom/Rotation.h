@@ -88,30 +88,8 @@ namespace geom {
     }
 
     Vector3D RotateVector(const Vector3D& in_point) const {
-      // Rotates Rz(yaw) * Ry(pitch) * Rx(roll) = first x, then y, then z.
-      const float cy = std::cos(Math::ToRadians(yaw));
-      const float sy = std::sin(Math::ToRadians(yaw));
-      const float cr = std::cos(Math::ToRadians(roll));
-      const float sr = std::sin(Math::ToRadians(roll));
-      const float cp = std::cos(Math::ToRadians(pitch));
-      const float sp = std::sin(Math::ToRadians(pitch));
-
-      Vector3D out_point;
-      out_point.x =
-        in_point.x * (cp * cy) +
-        in_point.y * (cy * sp * sr - sy * cr) +
-        in_point.z * (-cy * sp * cr - sy * sr);
-
-      out_point.y =
-        in_point.x * (cp * sy) +
-        in_point.y * (sy * sp * sr + cy * cr) +
-        in_point.z * (-sy * sp * cr + cy * sr);
-
-      out_point.z =
-        in_point.x * (sp) +
-        in_point.y * (-cp * sr) +
-        in_point.z * (cp * cr);
-
+      Vector3D out_point = in_point;
+      RotateVector(out_point);
       return out_point;
     }
 

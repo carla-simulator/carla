@@ -143,10 +143,12 @@ CARLA forum</a>
         — Add new content to CARLA.  
     [__Create a sensor__](tuto_D_create_sensor.md)
         — Develop a new sensor to be used in CARLA.  
+    [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md)
+        — Modify the suspension system of a vehicle.  
     [__Make a release__](tuto_D_make_release.md)
         — For developers who want to publish a release.  
     [__Generate detailed colliders__](tuto_D_generate_colliders.md)
-        — Created detailed colliders for vehicles.  
+        — Create detailed colliders for vehicles.  
     [__Generate pedestrian navigation__](tuto_D_generate_pedestrian_navigation.md)
         — Obtain the information needed for walkers to move around.  
     </p>

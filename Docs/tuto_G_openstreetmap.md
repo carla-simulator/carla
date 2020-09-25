@@ -93,12 +93,15 @@ __b) Using `config.py`__ — The script can load an OpenStreetMap file directly 
 ```
 python3 config.py --osm-file=/path/to/OSM/file
 ```
-!!! Warning
+!!! Important
     [client.generate_opendrive_world()](python_api.md#carla.Client.generate_opendrive_world) requires the __content of the OpenDRIVE file parsed as string__, and allows parameterization. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__ and always uses default parameters.
 
 Either way, the map should be ingested automatically in CARLA and the result should be similar to this.
 ![opendrive_meshissue](img/tuto_g_osm_carla.jpg)
 <div style="text-align: right"><i>Outcome of the CARLA map generation using OpenStreetMap.</i></div>
+
+!!! Warning
+    The roads generated end abruptly in the borders of the map. This will cause the TM to crash when vehicles are not able to find the next waypoint. To avoid this, the OSM mode is set to __True__ by default ([set_osm_mode()](python_api.md#carlatrafficmanager)). This will show a warning, and destroy vehicles when necessary.  
 
 ---
 

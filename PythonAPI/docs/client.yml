@@ -443,6 +443,16 @@
       doc: >
         With hybrid physics on, changes the radius of the area of influence where physics are enabled.
     # --------------------------------------
+    - def_name: set_osm_mode
+      params:
+      - param_name: mode_switch
+        type: bool
+        default: true
+        doc: >
+          If __True__, the OSM mode is enabled. 
+      doc: >
+        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
+    # --------------------------------------
 
   - class_name: OpendriveGenerationParameters
     # - DESCRIPTION ------------------------

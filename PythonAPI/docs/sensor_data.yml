@@ -52,6 +52,37 @@
       doc: >
         No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-camera).
 
+  - class_name: CityObjectLabel
+    # - DESCRIPTION ------------------------
+    doc: >
+      Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the [semantic tag](../../ref_sensors/#semantic-segmentation-camera) that the elements in the scene have. 
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: None
+    - var_name: Buildings
+    - var_name: Fences
+    - var_name: Other
+    - var_name: Pedestrians
+    - var_name: Poles
+    - var_name: RoadLines
+    - var_name: Roads
+    - var_name: Sidewalks
+    - var_name: TrafficSigns
+    - var_name: Vegetation
+    - var_name: Vehicles
+    - var_name: Walls
+    - var_name: Sky
+    - var_name: Ground
+    - var_name: Bridge
+    - var_name: RailTrack
+    - var_name: GuardRail
+    - var_name: TrafficLight
+    - var_name: Static
+    - var_name: Dynamic
+    - var_name: Water
+    - var_name: Terrain
+
   - class_name: Image
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
