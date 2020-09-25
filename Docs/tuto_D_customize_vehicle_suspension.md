@@ -4,16 +4,20 @@ This tutorial covers the basics of the suspension system for CARLA vehicles, and
 
 *   [__Basics of the suspension system__](#basics-of-the-suspension-system)  
 *   [__Suspension groups__](#suspension-groups)  
-
+	*   [Coupe](#coupe)  
+	*   [Off-road](#off-road)  
+	*   [Truck](#truck)  
+	*   [Urban](#urban)  
+	*   [Van](#van)  
 
 ---
 ## Basics of the suspension system
 
 The suspension system of a vehicle is defined by the wheels of said vehicle. Each wheel has an independent blueprint with some parameterization, which includes the suspension system. 
 
-These blueprints can be found in `Content/Carla/Blueprints/Vehicles/<vehicle_name>`. They are named such as: `BP_<vehicle_name>_<F/B><R/L>W`.  
+These blueprints can be found in `Content/Carla/Blueprints/Vehicles/<vehicle_name>`. They are named such as: `BP_<vehicle_name>_<F/R><R/L>W`.  
 
-*   `F` or `B` is used for front or back wheels correspondingly.  
+*   `F` or `R` is used for front or back wheels correspondingly.  
 *   `R` or `L` is used for right or left wheels correspondingly.  
 
 ![tuto_suspension_blueprints](img/tuto_suspension_blueprints.jpg)
@@ -41,12 +45,12 @@ Inside the blueprint, there is a section with some parameterization regarding th
 
 According to their system suspension, vehicles in CARLA can be classified in five groups. All the vehicles in a group have the same parameterization, as they are expected to have a similar behaviour on the road. The suspension of a vehicle can be modified at will, and is no subject to these five groups. However understanding these, and observing their behaviour in the simulation can be of great use to define a custom suspension.  
 
-The five groups are: *Coupé*, *Off-road*, *Truck*, *Urban*, and *Van*. In closer observation, the parameterization of these groups follows a specific pattern.  
+The five groups are: *coupe*, *Off-road*, *Truck*, *Urban*, and *Van*. In closer observation, the parameterization of these groups follows a specific pattern.  
 
 <table class ="defTable">
 <tbody>
 <td><b>Stiff suspension</b></td>
-<td>Coupé</td>
+<td>coupe</td>
 <td>Urban</td>
 <td>Van</td>
 <td>Off-road</td>
@@ -56,19 +60,15 @@ The five groups are: *Coupé*, *Off-road*, *Truck*, *Urban*, and *Van*. In close
 </table>
 <br>
 
-The closer a vehicle is to a stiff suspension, its parameterization changes.  
+When moving from a soft to a stiff suspension, there are some clear tendencies in their parameterization.  
 
 *   __Decrease__ of `Suspension Max Raise` and `Suspension Max Drop` — Stiff vehicles are meant to drive over plane roads with no bumps. For the sake of aerodynamics, the chassis is not supposed to move greatly, but remain constantly close to the ground.  
-*   __Decrease__ of `Suspension Natural Frequency` — Stiff vehicles tend to be lighter, so the amount of bounces for the same joggle is expected to be lower.  
 *   __Increase__ of `Suspension Damping Ratio` — The absortion of the bouncing by the dampers is greater for stiff vehicles.  
 
-> TO BE DISCUSSED: Suspension natural frequency increases for stiff vehicles instead?? !!
+### Coupe
 
-!!! Note
-    `Suspension Force Offset` and `Sweep Type` remain constant for every group. No offset is intended to be applied on forces, and the sweep tests for detecting collisions should be the same for all vehicles.  
+Vehicles with the stiffest suspension.  
 
-
-*   __Coupé__ — Vehicles with the stiffest suspension.  
 <table class ="defTable">
 <thead>
 <th>Parameterization</th>
@@ -95,8 +95,10 @@ The closer a vehicle is to a stiff suspension, its parameterization changes.
 </table>
 <br>
 
+### Off-road
 
-*   __Off-road__ — Vehicles with a soft suspension.  
+Vehicles with a soft suspension.  
+
 <table class ="defTable">
 <thead>
 <th>Parameterization</th>
@@ -121,7 +123,11 @@ The closer a vehicle is to a stiff suspension, its parameterization changes.
 </table>
 <br>
 
-*   __Truck__ — Vehicles with the softest suspension.  
+
+### Truck
+
+Vehicles with the softest suspension.  
+
 <table class ="defTable">
 <thead>
 <th>Parameterization</th>
@@ -143,7 +149,11 @@ The closer a vehicle is to a stiff suspension, its parameterization changes.
 </table>
 <br>
 
-*   __Urban__ —  Vehicles with a soft suspension.  
+
+### Urban
+
+Vehicles with a soft suspension.  
+
 <table class ="defTable">
 <thead>
 <th>Parameterization</th>
@@ -172,7 +182,10 @@ The closer a vehicle is to a stiff suspension, its parameterization changes.
 </table>
 <br>
 
-*   __Van__ —  Vehicles with a middle-ground suspension.  
+### Van
+
+Vehicles with a middle-ground suspension.  
+
 <table class ="defTable">
 <thead>
 <th>Parameterization</th>
