@@ -17,7 +17,7 @@ The suspension system of a vehicle is defined by the wheels of said vehicle. Eac
 
 These blueprints can be found in `Content/Carla/Blueprints/Vehicles/<vehicle_name>`. They are named such as: `BP_<vehicle_name>_<F/R><R/L>W`.  
 
-*   `F` or `R` is used for front or back wheels correspondingly.  
+*   `F` or `R` is used for front or rear wheels correspondingly.  
 *   `R` or `L` is used for right or left wheels correspondingly.  
 
 ![tuto_suspension_blueprints](img/tuto_suspension_blueprints.jpg)
@@ -30,8 +30,8 @@ Inside the blueprint, there is a section with some parameterization regarding th
 *   `Suspension Force Offset` — Vertical offset from where suspension forces are applied (along Z axis). 
 *   `Suspension Max Raise` — How far the wheel can go above the resting position. 
 *   `Suspension Max Drop` — How far the wheel can drop below the resting position. 
-*   `Suspension Natural Frequency` — Oscillation frequency of the suspension. Standard cars have values between 5 and 10. 
-*   `Suspension Damping Ratio` — The rate at which energy is dissipated from the spring. Standard cars have values between 0.8 and 1.2. Values < 1 are more sluggish, values > 1 are more twitchy.  
+*   `Suspension Natural Frequency` — Oscillation frequency of the suspension. Standard cars have values between `5` and `10`. 
+*   `Suspension Damping Ratio` — The rate at which energy is dissipated from the spring. Standard cars have values between `0.8` and `1.2`. Values `<1` are more sluggish, values `>1` are more twitchy.  
 *   `Sweep Type` — Wether wheel suspension considers simple, complex or both.  
 
 ![tuto_suspension_parameterization](img/tuto_suspension_parameterization.jpg)
@@ -45,12 +45,12 @@ Inside the blueprint, there is a section with some parameterization regarding th
 
 According to their system suspension, vehicles in CARLA can be classified in five groups. All the vehicles in a group have the same parameterization, as they are expected to have a similar behaviour on the road. The suspension of a vehicle can be modified at will, and is no subject to these five groups. However understanding these, and observing their behaviour in the simulation can be of great use to define a custom suspension.  
 
-The five groups are: *coupe*, *Off-road*, *Truck*, *Urban*, and *Van*. In closer observation, the parameterization of these groups follows a specific pattern.  
+The five groups are: *Coupe*, *Off-road*, *Truck*, *Urban*, and *Van*. In closer observation, the parameterization of these groups follows a specific pattern.  
 
 <table class ="defTable">
 <tbody>
 <td><b>Stiff suspension</b></td>
-<td>coupe</td>
+<td>Coupe</td>
 <td>Urban</td>
 <td>Van</td>
 <td>Off-road</td>
@@ -60,7 +60,7 @@ The five groups are: *coupe*, *Off-road*, *Truck*, *Urban*, and *Van*. In closer
 </table>
 <br>
 
-When moving from a soft to a stiff suspension, there are some clear tendencies in their parameterization.  
+When moving from a soft to a stiff suspension, there are some clear tendencies in the parameterization.  
 
 *   __Decrease__ of `Suspension Max Raise` and `Suspension Max Drop` — Stiff vehicles are meant to drive over plane roads with no bumps. For the sake of aerodynamics, the chassis is not supposed to move greatly, but remain constantly close to the ground.  
 *   __Increase__ of `Suspension Damping Ratio` — The absortion of the bouncing by the dampers is greater for stiff vehicles.  
@@ -79,17 +79,16 @@ Vehicles with the stiffest suspension.
 <code>Suspension Force Offset</code> — <code>0.0</code><br>
 <code>Suspension Max Raise</code> — <code>7.5</code><br>
 <code>Suspension Max Drop</code> — <code>7.5</code><br>
-<code>Suspension Natural Frequency</code> — <code>10.0</code><br>
+<code>Suspension Natural Frequency</code> — <code>9.5</code><br>
 <code>Suspension Damping Ratio</code> — <code>1.0</code><br>
 <code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
 </td>
 <td>
-<code>vehicle.seat.leon</code><br>
-<code>vehicle.audi.a2</code><br>
 <code>vehicle.audi.tt</code><br>
-<code>vehicle.tesla.model3</code><br>
 <code>vehicle.lincoln.mkz2017</code><br>
 <code>vehicle.mercedes-benz.coupe</code><br>
+<code>vehicle.seat.leon</code><br>
+<code>vehicle.tesla.model3</code><br>
 </td>
 </tbody>
 </table>
@@ -115,9 +114,9 @@ Vehicles with a soft suspension.
 </td>
 <td>
 <code>vehicle.audi.etron</code><br>
+<code>vehicle.jeep.wrangler_rubicon</code><br>
 <code>vehicle.nissan.patrol</code><br>
 <code>vehicle.tesla.cybertruck</code><br>
-<code>vehicle.jeep.wrangler_rubicon</code><br>
 </td>
 </tbody>
 </table>
@@ -169,14 +168,15 @@ Vehicles with a soft suspension.
 <code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
 </td>
 <td>
-<code>vehicle.nissan.micra</code><br>
-<code>vehicle.mustang.mustang</code><br>
-<code>vehicle.mini.cooperst</code><br>
-<code>vehicle.citroen.c3</code><br>
-<code>vehicle.chevrolet.impala</code><br>
-<code>vehicle.toyota.prius</code><br>
-<code>vehicle.dodge_charger.police</code><br>
+<code>vehicle.audi.a2</code><br>
 <code>vehicle.bmw.grandtourer</code><br>
+<code>vehicle.chevrolet.impala</code><br>
+<code>vehicle.citroen.c3</code><br>
+<code>vehicle.dodge_charger.police</code><br>
+<code>vehicle.mini.cooperst</code><br>
+<code>vehicle.mustang.mustang</code><br>
+<code>vehicle.nissan.micra</code><br>
+<code>vehicle.toyota.prius</code><br>
 </td>
 </tbody>
 </table>
@@ -196,8 +196,8 @@ Vehicles with a middle-ground suspension.
 <code>Suspension Force Offset</code> — <code>0.0</code><br>
 <code>Suspension Max Raise</code> — <code>9.0</code><br>
 <code>Suspension Max Drop</code> — <code>9.0</code><br>
-<code>Suspension Natural Frequency</code> — <code>9.0</code><br>
-<code>Suspension Damping Ratio</code> — <code>0.9</code><br>
+<code>Suspension Natural Frequency</code> — <code>8.0</code><br>
+<code>Suspension Damping Ratio</code> — <code>0.8</code><br>
 <code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
 </td>
 <td>
