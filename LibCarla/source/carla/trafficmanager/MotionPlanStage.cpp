@@ -12,6 +12,7 @@ using namespace constants::WaypointSelection;
 using namespace constants::SpeedThreshold;
 
 using constants::HybridMode::HYBRID_MODE_DT;
+using constants::HybridMode::HYBRID_MODE_DT_FL;
 
 MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -26,6 +27,7 @@ MotionPlanStage::MotionPlanStage(
   const LocalizationFrame &localization_frame,
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
+  const cc::World &world,
   ControlFrame &output_array)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
@@ -39,6 +41,7 @@ MotionPlanStage::MotionPlanStage(
     localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
+    world(world),
     output_array(output_array) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
@@ -64,10 +67,11 @@ void MotionPlanStage::Update(const unsigned long index) {
     dot_product *= -1.0f;
   }
   const float current_deviation = dot_product;
+  current_timestamp = world.GetSnapshot().GetTimestamp();
 
   // If previous state for vehicle not found, initialize state entry.
   if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-    const auto initial_state = StateEntry{chr::system_clock::now(), 0.0f, 0.0f, 0.0f, 0.0f};
+    const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f, 0.0f};
     pid_state_map.insert({actor_id, initial_state});
   }
 
@@ -96,7 +100,6 @@ void MotionPlanStage::Update(const unsigned long index) {
   bool collision_emergency_stop = collision_response.first;
   float dynamic_target_velocity = collision_response.second;
 
-
   // Don't enter junction if there isn't enough free space after the junction.
   bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
 
@@ -107,13 +110,12 @@ void MotionPlanStage::Update(const unsigned long index) {
   cg::Transform teleportation_transform;
 
   // If physics is enabled for the vehicle, use PID controller.
-  const auto current_time = chr::system_clock::now();
   StateEntry current_state;
   if (ego_physics_enabled) {
 
     // State update for vehicle.
     current_state = PID::StateUpdate(previous_state, ego_speed, dynamic_target_velocity,
-                                     current_deviation, current_time);
+                                     current_deviation, current_timestamp);
 
     // Controller actuation.
     actuation_signal = PID::RunStep(current_state, previous_state,
@@ -130,23 +132,23 @@ void MotionPlanStage::Update(const unsigned long index) {
   // For physics-less vehicles, determine position and orientation for teleportation.
   else {
     // Flushing controller state for vehicle.
-    current_state = {chr::system_clock::now(),
+    current_state = {current_timestamp,
                      0.0f, 0.0f,
                      0.0f, 0.0f};
 
     // Add entry to teleportation duration clock table if not present.
     if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
-      teleportation_instance.insert({actor_id, chr::system_clock::now()});
+      teleportation_instance.insert({actor_id, current_timestamp});
     }
 
     // Measuring time elapsed since last teleportation for the vehicle.
-    chr::duration<float> elapsed_time = current_time - teleportation_instance.at(actor_id);
+    double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
 
     // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-    if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time.count() > HYBRID_MODE_DT)) {
+    if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
 
       // Target displacement magnitude to achieve target velocity.
-      const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT;
+      const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
       const SimpleWaypointPtr teleport_target_waypoint = GetTargetWaypoint(waypoint_buffer, target_displacement).first;
 
       // Construct target transform to accurately achieve desired velocity.

@@ -116,8 +116,8 @@ def main(args):
     sumo_net = sumolib.net.readNet(net_file)
     sumo_simulation = SumoSimulation(cfg_file,
                                      args.step_length,
-                                     host=None,
-                                     port=None,
+                                     host=args.sumo_host,
+                                     port=args.sumo_port,
                                      sumo_gui=args.sumo_gui,
                                      client_order=args.client_order)
 
@@ -218,6 +218,13 @@ if __name__ == '__main__':
                            default=2000,
                            type=int,
                            help='TCP port to listen to (default: 2000)')
+    argparser.add_argument('--sumo-host',
+                           default=None,
+                           help='IP of the sumo host server (default: None)')
+    argparser.add_argument('--sumo-port',
+                           default=None,
+                           type=int,
+                           help='TCP port to listen to (default: None)')
     argparser.add_argument('-n',
                            '--number-of-vehicles',
                            metavar='N',

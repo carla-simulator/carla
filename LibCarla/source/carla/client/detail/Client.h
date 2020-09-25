@@ -146,19 +146,44 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Transform &transform);
 
-    void SetActorVelocity(
+    void SetActorTargetVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
-    void SetActorAngularVelocity(
+    void SetActorTargetAngularVelocity(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
+
+    void EnableActorConstantVelocity(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void DisableActorConstantVelocity(
+        rpc::ActorId actor);
 
     void AddActorImpulse(
         rpc::ActorId actor,
-        const geom::Vector3D &vector);
+        const geom::Vector3D &impulse);
+
+    void AddActorImpulse(
+        rpc::ActorId actor,
+        const geom::Vector3D &impulse,
+        const geom::Vector3D &location);
+
+    void AddActorForce(
+        rpc::ActorId actor,
+        const geom::Vector3D &force);
+
+    void AddActorForce(
+        rpc::ActorId actor,
+        const geom::Vector3D &force,
+        const geom::Vector3D &location);
 
     void AddActorAngularImpulse(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void AddActorTorque(
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
@@ -204,6 +229,8 @@ namespace detail {
 
     void ResetTrafficLightGroup(
         rpc::ActorId traffic_light);
+
+    void ResetAllTrafficLights();
 
     void FreezeAllTrafficLights(bool frozen);
 
@@ -255,6 +282,9 @@ namespace detail {
     void UpdateServerLightsState(
         std::vector<rpc::LightState>& lights,
         bool discard_client = false) const;
+
+    /// Returns all the BBs of all the elements of the level
+    std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
 
   private:
 

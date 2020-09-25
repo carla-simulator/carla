@@ -4,39 +4,39 @@ Learning an efficient way to retrieve simulation data is essential in CARLA. Thi
 
 First, the simulation is initialized with custom settings and traffic. An ego vehicle is set to roam around the city, optionally with some basic sensors. The simulation is recorded, so that later it can be queried to find the highlights. After that, the original simulation is played back, and exploited to the limit. New sensors can be added to retrieve consistent data. The weather conditions can be changed. The recorder can even be used to test specific scenarios with different outputs.  
 
-* [__Overview__](#overview)  
-* [__Set the simulation__](#set-the-simulation)  
-	* [Map setting](#map-setting)  
-	* [Weather setting](#weather-setting)  
-* [__Set traffic__](#set-traffic)  
-	* [CARLA traffic and pedestrians](#carla-traffic-and-pedestrians)  
-	* [SUMO co-simulation traffic](#sumo-co-simulation-traffic)  
-* [__Set the ego vehicle__](#set-the-ego-vehicle)  
-	* [Spawn the ego vehicle](#spawn-the-ego-vehicle)  
-	* [Place the spectator](#place-the-spectator)  
-* [__Set basic sensors__](#set-basic-sensors)  
-	* [RGB camera](#rgb-camera)  
-	* [Detectors](#detectors)  
-	* [Other sensors](#other-sensors)  
-* [__Set advanced sensors__](#set-advanced-sensors)  
-	* [Depth camera](#depth-camera)  
-	* [Semantic segmentation camera](#semantic-segmentation-camera)  
-	* [LIDAR raycast sensor](#lidar-raycast-sensor)  
-	* [Radar sensor](#radar-sensor)  
-* [__No-rendering-mode__](#no-rendering-mode)  
-	* [Simulate at a fast pace](#simulate-at-a-fast-pace)  
-	* [Manual control without rendering](#manual-control-without-rendering)  
-* [__Record and retrieve data__](#record-and-retrieve-data)  
-	* [Start recording](#start-recording)  
-	* [Capture and record](#capture-and-record)  
-	* [Stop recording](#stop-recording)  
-* [__Exploit the recording__](#exploit-the-recording)  
-	* [Query the events](#query-the-events)  
-	* [Choose a fragment](#choose-a-fragment)  
-	* [Retrieve more data](#retrieve-more-data)  
-	* [Change the weather](#change-the-weather)  
-	* [Try new outcomes](#try-new-outcomes)  
-* [__Tutorial scripts__](#tutorial-scripts)  
+*   [__Overview__](#overview)  
+*   [__Set the simulation__](#set-the-simulation)  
+	*   [Map setting](#map-setting)  
+	*   [Weather setting](#weather-setting)  
+*   [__Set traffic__](#set-traffic)  
+	*   [CARLA traffic and pedestrians](#carla-traffic-and-pedestrians)  
+	*   [SUMO co-simulation traffic](#sumo-co-simulation-traffic)  
+*   [__Set the ego vehicle__](#set-the-ego-vehicle)  
+	*   [Spawn the ego vehicle](#spawn-the-ego-vehicle)  
+	*   [Place the spectator](#place-the-spectator)  
+*   [__Set basic sensors__](#set-basic-sensors)  
+	*   [RGB camera](#rgb-camera)  
+	*   [Detectors](#detectors)  
+	*   [Other sensors](#other-sensors)  
+*   [__Set advanced sensors__](#set-advanced-sensors)  
+	*   [Depth camera](#depth-camera)  
+	*   [Semantic segmentation camera](#semantic-segmentation-camera)  
+	*   [LIDAR raycast sensor](#lidar-raycast-sensor)  
+	*   [Radar sensor](#radar-sensor)  
+*   [__No-rendering-mode__](#no-rendering-mode)  
+	*   [Simulate at a fast pace](#simulate-at-a-fast-pace)  
+	*   [Manual control without rendering](#manual-control-without-rendering)  
+*   [__Record and retrieve data__](#record-and-retrieve-data)  
+	*   [Start recording](#start-recording)  
+	*   [Capture and record](#capture-and-record)  
+	*   [Stop recording](#stop-recording)  
+*   [__Exploit the recording__](#exploit-the-recording)  
+	*   [Query the events](#query-the-events)  
+	*   [Choose a fragment](#choose-a-fragment)  
+	*   [Retrieve more data](#retrieve-more-data)  
+	*   [Change the weather](#change-the-weather)  
+	*   [Try new outcomes](#try-new-outcomes)  
+*   [__Tutorial scripts__](#tutorial-scripts)  
 
 ---
 ## Overview
@@ -87,7 +87,7 @@ Open a new terminal. Change the map using the __config.py__ script.
 
 ```
 cd /opt/carla/PythonAPI/utils
-./config.py --map Town01
+python3 config.py --map Town01
 ```
 This script can enable different settings. Some of them will be mentioned during the tutorial, others will not. Hereunder there is a brief summary.  
 
@@ -133,14 +133,14 @@ Each town is loaded with a specific weather that fits it, however this can be se
 ```sh
 cd /opt/carla/PythonAPI/examples
 
-python dynamic_weather.py --speed 1.0
+python3 dynamic_weather.py --speed 1.0
 ```
 
 * __To set custom conditions__. Use the script __environment.py__. There are quite a lot of possible settings. Take a look at the optional arguments, and the documentation for [carla.WeatherParameters](python_api.md#carla.WeatherParameters).
 
 ```sh
 cd /opt/carla/PythonAPI/util
-python environment.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
+python3 environment.py --clouds 100 --rain 80 --wetness 100 --puddles 60 --wind 80 --fog 50
 
 ```
 <details>
@@ -182,7 +182,7 @@ Open a new terminal, and run __spawn_npc.py__ to spawn vehicles and walkers. Let
 
 ```sh
 cd /opt/carla/PythonAPI/examples
-python spawn_npc.py -n 50 -w 50 --safe
+python3 spawn_npc.py -n 50 -w 50 --safe
 ```
 <details>
 <summary> Optional arguments in <b>spawn_npc.py</b> </summary>
@@ -228,7 +228,7 @@ echo "export SUMO_HOME=/usr/share/sumo" >> ~/.bashrc && source ~/.bashrc
 * With the CARLA server on, run the [SUMO-CARLA synchrony script](https://github.com/carla-simulator/carla/blob/master/Co-Simulation/Sumo/run_synchronization.py). 
 ```sh
 cd ~/carla/Co-Simulation/Sumo
-python run_synchronization.py examples/Town01.sumocfg --sumo-gui
+python3 run_synchronization.py examples/Town01.sumocfg --sumo-gui
 ```
 * A SUMO window should have opened. __Press Play__ in order to start traffic in both simulations. 
 ```
@@ -632,7 +632,7 @@ The same `config.py` used to [set the map](#map-setting) can disable rendering, 
 
 ```
 cd /opt/carla/PythonAPI/utils
-./config.py --no-rendering --delta-seconds 0.05 # Never greater than 0.1s
+python3 config.py --no-rendering --delta-seconds 0.05 # Never greater than 0.1s
 ```
 
 !!! Warning
@@ -644,12 +644,12 @@ The script `PythonAPI/examples/no_rendering_mode.py` provides an overview of the
 
 ```
 cd /opt/carla/PythonAPI/examples
-python manual_control.py
+python3 manual_control.py
 ```
 
 ```
 cd /opt/carla/PythonAPI/examples
-python no_rendering_mode.py --no-rendering
+python3 no_rendering_mode.py --no-rendering
 ```
 
 <details>
@@ -712,7 +712,7 @@ while True:
 
 ```
 cd /opt/carla/PythonAPI/examples
-python manual_control.py
+python3 manual_control.py
 ```
 
 !!! Note
@@ -742,7 +742,7 @@ It is time to run a new simulation.
 To reenact the simulation, [choose a fragment](#choose-a-fragment) and run the script containing the code for the playback.  
 
 ```sh
-python tuto_replay.py
+python3 tuto_replay.py
 ```
 
 ### Query the events

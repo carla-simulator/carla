@@ -102,6 +102,9 @@ public:
   /// Method to set hybrid physics radius.
   void SetHybridPhysicsRadius(const float radius);
 
+  /// Method to set Open Street Map mode.
+  void SetOSMMode(const bool mode_switch);
+
   /// Method to provide synchronous tick
   bool SynchronousTick();
 
@@ -113,6 +116,9 @@ public:
 
   /// Method to check server is alive or not.
   void HealthCheckRemoteTM();
+
+  /// Method to set randomization seed.
+  void SetRandomDeviceSeed(const uint64_t seed);
 
 private:
 

@@ -16,7 +16,7 @@ DO_CLEAN_INTERMEDIATE=false
 PROPS_MAP_NAME=PropsMap
 PACKAGE_CONFIG=Shipping
 
-OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,packages:,python3-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,packages:,python-version: -n 'parse-options' -- "$@"`
 
 if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
 

@@ -28,5 +28,52 @@ public:
   ///
   /// @warning Traffic signs return its trigger box instead.
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
-  static FBoundingBox GetActorBoundingBox(const AActor *Actor);
+  static FBoundingBox GetActorBoundingBox(
+    const AActor *Actor,
+    uint8 InTagQueried = 0);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static FBoundingBox GetVehicleBoundingBox(
+    const ACarlaWheeledVehicle* Vehicle,
+    uint8 InTagQueried = 0);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static FBoundingBox GetCharacterBoundingBox(
+    const ACharacter* Character,
+    uint8 InTagQueried = 0);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void GetTrafficLightBoundingBox(
+    const ATrafficLightBase* TrafficLight,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried = 0);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static FBoundingBox GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static FBoundingBox GetStaticMeshBoundingBox(const UStaticMesh* StaticMesh);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static void GetISMBoundingBox(
+    UInstancedStaticMeshComponent* HISMComp,
+    TArray<FBoundingBox>& OutBoundingBox);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static void GetBBsOfStaticMeshComponents(
+    const TArray<UStaticMeshComponent*>& StaticMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried = 0);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static void GetBBsOfSkeletalMeshComponents(
+    const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    uint8 InTagQueried = 0);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static TArray<FBoundingBox> GetBoundingBoxOfActors(
+    const TArray<AActor*>& Actors,
+    uint8 InTagQueried = 0);
+
 };

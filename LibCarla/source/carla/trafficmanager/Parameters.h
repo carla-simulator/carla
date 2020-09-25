@@ -64,6 +64,8 @@ private:
   std::atomic<bool> hybrid_physics_mode{false};
   /// Hybrid physics radius.
   std::atomic<float> hybrid_physics_radius {70.0};
+  /// Parameter specifying Open Street Map mode.
+  std::atomic<bool> osm_mode {true};
 
 public:
   Parameters();
@@ -126,6 +128,9 @@ public:
   /// Method to set hybrid physics radius.
   void SetHybridPhysicsRadius(const float radius);
 
+  /// Method to set Open Street Map mode.
+  void SetOSMMode(const bool mode_switch);
+
   ///////////////////////////////// GETTERS /////////////////////////////////////
 
   /// Method to retrieve hybrid physics radius.
@@ -169,6 +174,9 @@ public:
 
   /// Method to retrieve hybrid physics mode.
   bool GetHybridPhysicsMode() const;
+
+  /// Method to get Open Street Map mode.
+  bool GetOSMMode() const;
 
   /// Synchronous mode time out variable.
   std::chrono::duration<double, std::milli> synchronous_time_out;

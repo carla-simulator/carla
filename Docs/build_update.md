@@ -1,13 +1,13 @@
 # Update CARLA
 
-* [__Update commands summary__](#update-commands-summary)  
-* [__Get the lastest binary release__](#get-latest-binary-release)  
-* [__Update Linux and Windows build__](#update-linux-and-windows-build)  
-	* Clean the build  
-	* Pull from origin  
-	* Download the assets  
-	* Launch the server  
-* [__Get development assets__](#get-development-assets)  
+*   [__Update commands summary__](#update-commands-summary)  
+*   [__Get the lastest binary release__](#get-latest-binary-release)  
+*   [__Update Linux and Windows build__](#update-linux-and-windows-build)  
+	*   [Clean the build](#clean-the-build)  
+	*   [Pull from origin](#pull-from-origin)  
+	*   [Download the assets](#download-the-assets)  
+	*   [Launch the server](#launch-the-server)  
+*   [__Get development assets__](#get-development-assets)  
 
 To post unexpected issues, doubts or suggestions, feel free to login in the CARLA forum.
 

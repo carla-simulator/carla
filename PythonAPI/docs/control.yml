@@ -51,12 +51,15 @@
       - param_name: throttle
         type: float
         default: 0.0
+        doc: Scalar value between [0.0,1.0]
       - param_name: steer
         type: float
         default: 0.0
+        doc: Scalar value between [0.0,1.0]
       - param_name: brake
         type: float
         default: 0.0
+        doc: Scalar value between [0.0,1.0]
       - param_name: hand_brake
         type: bool
         default: False
@@ -98,6 +101,7 @@
     # --------------------------------------
     - var_name: speed
       type: float
+      var_units: m/s
       doc: >
         A scalar value to control the walker's speed.
     # --------------------------------------
@@ -115,6 +119,7 @@
         type: carla.Vector3D
       - param_name: speed
         default: 0.0
+        param_units: m/s
         type: float
       - param_name: jump
         default: False
@@ -154,7 +159,7 @@
       - param_name: 'list(name,transform)'
         type: tuple
       doc: >
-        Intializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it. 
+        Initializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it. 
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -224,6 +229,7 @@
     # --------------------------------------
     - var_name: moi
       type: float
+      var_units: kg*m<sup>2</sup>
       doc: >
         The moment of inertia of the vehicle's engine.
     # --------------------------------------
@@ -249,18 +255,20 @@
     # --------------------------------------
     - var_name: gear_switch_time
       type: float
+      var_units: seconds
       doc: >
         Switching time between gears.
     # --------------------------------------
     - var_name: clutch_strength
       type: float
+      var_units: kg*m<sup>2</sup>/s
       doc: >
-        The clutch strength of the vehicle in Kgm^2/s.
+        Clutch strength of the vehicle.
     # --------------------------------------
     - var_name: final_ratio
       type: float
       doc: >
-        The fixed ratio from transmission to wheels.
+        Fixed ratio from transmission to wheels.
     # --------------------------------------
     - var_name: forward_gears
       type: list(carla.GearPhysicsControl)
@@ -269,8 +277,9 @@
     # --------------------------------------
     - var_name: mass
       type: float
+      var_units: kilograms
       doc: >
-        The mass of the vehicle in Kg.
+        Mass of the vehicle.
     # --------------------------------------
     - var_name: drag_coefficient
       type: float
@@ -279,8 +288,9 @@
     # --------------------------------------
     - var_name: center_of_mass
       type: carla.Vector3D
+      var_units: meters
       doc: >
-        The center of mass of the vehicle.
+        Center of mass of the vehicle.
     # --------------------------------------
     - var_name: steering_curve
       type: list(carla.Vector2D)
@@ -305,6 +315,7 @@
       - param_name: moi
         default: 1.0
         type: float
+        param_units: kg*m<sup>2</sup>
       - param_name: damping_rate_full_throttle
         default: 0.15
         type: float
@@ -320,9 +331,11 @@
       - param_name: gear_switch_time
         default: 0.5
         type: float
+        param_units: seconds
       - param_name: clutch_strength
         default: 10.0
         type: float
+        param_units: kg*m<sup>2</sup>/s
       - param_name: final_ratio
         default: 4.0
         type: float
@@ -331,6 +344,7 @@
         type: list(carla.GearPhysicsControl)
       - param_name: mass
         default: 1000.0
+        param_units: kilograms
       - param_name: drag_coefficient
         default: 0.3
         type: float
@@ -376,23 +390,27 @@
     # --------------------------------------
     - var_name: max_steer_angle
       type: float
+      var_units: degrees
       doc: >
-        Maximum angle in degrees that the wheel can steer.
+        Maximum angle that the wheel can steer.
     # --------------------------------------
     - var_name: radius
       type: float
+      var_units: centimeters
       doc: >
-        Radius of the wheel in centimeters.
+        Radius of the wheel.
     # --------------------------------------
     - var_name: max_brake_torque
       type: float
+      var_units: N*m
       doc: >
-        Maximum brake torque in Nm.
+        Maximum brake torque.
     # --------------------------------------
     - var_name: max_handbrake_torque
       type: float
+      var_units: N*m
       doc: >
-        Maximum handbrake torque in Nm.
+        Maximum handbrake torque.
     # --------------------------------------
     - var_name: position
       type: carla.Vector3D
@@ -411,18 +429,23 @@
       - param_name: max_steer_angle
         default: 70.0
         type: float
+        param_units: degrees
       - param_name: radius
         default: 30.0
         type: float
+        param_units: centimerers
       - param_name: max_brake_torque
         default: 1500.0
         type: float
+        param_units: N*m
       - param_name: max_handbrake_torque
         default: 3000.0
         type: float
+        param_units: N*m
       - param_name: position
         default: (0.0,0.0,0.0)
         type: carla.Vector3D
+        param_units: meters
     # --------------------------------------
     - def_name: __eq__
       params:

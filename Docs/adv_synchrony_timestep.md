@@ -2,15 +2,15 @@
 
 This section deals with two fundamental concepts in CARLA. Their configuration defines how does time go by in the simulation, and how does the server make the simulation move forward.  
 
-* [__Simulation time-step__](#simulation-time-step)  
-	* Variable time-step  
-	* Fixed time-step  
-	* Tips when recording the simulation  
-	* Time-step limitations  
-* [__Client-server synchrony__](#client-server-synchrony)  
-	* Setting synchronous mode  
-	* Using synchronous mode  
-* [__Possible configurations__](#possible-configurations)  
+*   [__Simulation time-step__](#simulation-time-step)  
+	*   [Variable time-step](#variable-time-step)  
+	*   [Fixed time-step](#fixed-time-step)  
+	*   [Tips when recording the simulation](#tips-when-recording-the-simulation)  
+	*   [Time-step limitations](#time-step-limitations)  
+*   [__Client-server synchrony__](#client-server-synchrony)  
+	*   [Setting synchronous mode](#setting-synchronous-mode)  
+	*   [Using synchronous mode](#using-synchronous-mode)  
+*   [__Possible configurations__](#possible-configurations)  
 
 ---
 ## Simulation time-step
@@ -35,7 +35,7 @@ world.apply_settings(settings)
 ```
 `PythonAPI/util/config.py` sets the time-step using an argument. Zero equals variable time-step. 
 ```sh
-cd PythonAPI/util && ./config.py --delta-seconds 0
+cd PythonAPI/util && python3 config.py --delta-seconds 0
 ``` 
 
 ### Fixed time-step
@@ -52,7 +52,7 @@ world.apply_settings(settings)
 This can also be set using the provided script `PythonAPI/util/config.py`.
 
 ```sh
-cd PythonAPI/util && ./config.py --delta-seconds 0.05
+cd PythonAPI/util && python3 config.py --delta-seconds 0.05
 ``` 
 
 ### Tips when recording the simulation
@@ -74,7 +74,7 @@ CARLA has a [recorder feature](adv_recorder.md) that allows a simulation to be r
 Physics must be computed within very low time steps to be precise. The more time goes by, the more variables and chaos come to place, and the more defective the simulation will be. 
 CARLA uses up to 6 substeps to compute physics in every step, each with a maximum delta time of 0.016667s.  
 
-To know how many of these are needed, the time-step used gets divided by the maximum delta time a substep can use `number_of_substeps = time_step/0.016667`. Being these a maximum of 6, `6*0.016667 = 0.1`. If the time-step is greater than `0.1``, there will not be enough physical substeps. Physics will not be in synchrony with the delta time. 
+To know how many of these are needed, the time-step used gets divided by the maximum delta time a substep can use `number_of_substeps = time_step/0.016667`. Being these a maximum of 6, `6*0.016667 = 0.1`. If the time-step is greater than `0.1`, there will not be enough physical substeps. Physics will not be in synchrony with the delta time. 
 
 !!! Warning
     __Do not use a time-step greater than 0.1s.__<br>
@@ -101,7 +101,7 @@ world.apply_settings(settings)
 
 To disable synchronous mode just set the variable to false or use the script `PythonAPI/util/config.py`. 
 ```sh
-cd PythonAPI/util && ./config.py --no-sync # Disables synchronous mode
+cd PythonAPI/util && python3 config.py --no-sync # Disables synchronous mode
 ``` 
 Synchronous mode cannot be enabled using the script, only disabled. Enabling the synchronous mode makes the server wait for a client tick. Using this script, the user cannot send ticks when desired. 
 
