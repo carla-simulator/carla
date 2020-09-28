@@ -19,8 +19,8 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 Make sure that both requirements work properly before continuing with the installation.  
 
 *  __ROS Kinetic/Melodic__ — Install the ROS version corresponding to your system. Additional ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) is highly recommended to visualize ROS data.  
-	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 16.04 (Xenial).  
-	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 18.04 (Bionic).  
+	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 16.04 (Xenial).  
+	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 18.04 (Bionic).  
 	*   [__ROS Noetic__](http://wiki.ros.org/noetic#Installation) — For Ubuntu 20.04 (Focal).
 *  __CARLA 0.9.7 or later__ — Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for [Linux](build_linux.md).
 
@@ -28,10 +28,10 @@ Make sure that both requirements work properly before continuing with the instal
 
 The version of Python needed to run the ROS bridge depends on the ROS version being used.  
 
-*   __ROS Melodic__ and __ROS Kinetic__ — Python2.  
+*   __ROS Kinetic__ and __ROS Melodic__ — Python2.  
 *   __ROS Noetic__ — Python3.  
 
-All the CARLA releases provide support for Python3, so ROS Noetic users do not need more preparation. However, ROS Melodic/Kinetic users cannot use the latest CARLA release packages. Since 0.9.10 (included), CARLA does not provide support for Python2, so users will have to make the [build from source](build_linux.md), and compile the PythonAPI for Python2.  
+All the CARLA releases provide support for Python3, so ROS Noetic users do not need more preparation. However, ROS Kinetic/Melodic users cannot use the latest CARLA release packages. Since 0.9.10 (included), CARLA does not provide support for Python2, so users will have to make the [build from source](build_linux.md), and compile the PythonAPI for Python2.  
 
 *   Run the following command in the root CARLA directory of your Linux build to compile the PythonAPI for Python2.  
 
@@ -100,7 +100,7 @@ __2) Add the source path.__ The source path for the workspace has to be added, s
 
 *  __Source for apt ROS bridge.__
 ```sh
-source /opt/carla-ros-bridge/<melodic or kinetic>/setup.bash
+source /opt/carla-ros-bridge/<kinetic or melodic>/setup.bash
 ```
 
 *  __Source for ROS bridge repository download.__
