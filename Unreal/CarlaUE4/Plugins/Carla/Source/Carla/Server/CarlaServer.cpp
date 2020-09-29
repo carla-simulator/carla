@@ -12,6 +12,7 @@
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -826,12 +827,33 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set actor simulate physics: actor not found");
     }
-    auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
-    if (RootComponent == nullptr)
+
+    auto Character = Cast<ACharacter>(ActorView.GetActor());
+    // The physics in the walkers works in a different way so to disable them,
+    // we need to do it in the UCharacterMovementComponent.
+    if (Character != nullptr)
     {
-      RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
+      auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
+
+      if(bEnabled) {
+        CharacterMovement->SetDefaultMovementMode();
+      }
+      else {
+        CharacterMovement->DisableMovement();
+      }
     }
-    RootComponent->SetSimulatePhysics(bEnabled);
+    // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
+    // that for disable it.
+    else
+    {
+      auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+      if (RootComponent == nullptr)
+      {
+        RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
+      }
+      RootComponent->SetSimulatePhysics(bEnabled);
+    }
+
     return R<void>::Success();
   };
 
