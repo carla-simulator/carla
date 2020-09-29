@@ -490,7 +490,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   Super::BeginPlay();
 
-  SendPixelsDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureSensor::SendPixels);
+  SendPixelsDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ASceneCaptureSensor::SendPixels);
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
@@ -511,7 +511,7 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
 
-  FCoreDelegates::OnEndFrameRT.Remove(SendPixelsDelegate);
+  FCoreDelegates::OnEndFrame.Remove(SendPixelsDelegate);
 }
 
 // =============================================================================
