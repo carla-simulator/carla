@@ -413,6 +413,51 @@ else
   rm -Rf ${LIBPNG_BASENAME}-source
 fi
 
+# ==============================================================================
+# -- Get and compile libxerces 3.2.3 ------------------------------
+# ==============================================================================
+
+XERCESC_VERSION=3.2.3
+XERCESC_BASENAME=xerces-c-${XERCESC_VERSION}
+
+XERCESC_TEMP_FOLDER=${XERCESC_BASENAME}
+XERCESC_REPO=https://ftp.cixug.es/apache//xerces/c/3/sources/xerces-c-${XERCESC_VERSION}.tar.gz
+
+XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
+XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
+
+if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
+  log "Xerces-c already installed."
+else
+  log "Retrieving xerces-c."
+  wget ${XERCESC_REPO}
+
+  log "Extracting xerces-c."
+  tar -xzf ${XERCESC_BASENAME}.tar.gz
+  mv ${XERCESC_BASENAME} ${XERCESC_SRC_DIR}
+  mkdir -p ${XERCESC_INSTALL_DIR}
+  mkdir -p ${XERCESC_SRC_DIR}/build
+
+  pushd ${XERCESC_SRC_DIR}/build >/dev/null
+
+  # define clang compiler
+  # export CC=/usr/bin/clang-8
+  # export CXX=/usr/bin/clang++-8
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w" \
+      -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_DIR}" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_SHARED_LIBS=OFF \
+      -Dnetwork=OFF \
+      ..
+  ninja
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${XERCESC_BASENAME}.tar.gz
+  rm -Rf ${XERCESC_SRC_DIR}
+fi
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
