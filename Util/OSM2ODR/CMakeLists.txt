@@ -77,14 +77,12 @@ execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import setuptools" RESULT_VARIA
     #set(ENABLED_FEATURES "${ENABLED_FEATURES} Proj")
 #endif (PROJ_FOUND)
 
-if (WIN32)
-    set(XERCES_PATH "../../Build/xerces-c-3.2.3-install")
-    set(XercesC_INCLUDE_DIR "${XERCES_PATH}/include")
-    set(XercesC_LIBRARY "${XERCES_PATH}/lib")
-    # Install xercesc
-    file(GLOB XERCES_LIBS "${XercesC_LIBRARY}/*.*")
-    install(FILES ${XERCES_LIBS} DESTINATION lib)
-endif ()
+set(XERCES_PATH "../../Build/xerces-c-3.2.3-install")
+set(XercesC_INCLUDE_DIR "${XERCES_PATH}/include")
+set(XercesC_LIBRARY "${XERCES_PATH}/lib")
+# Install xercesc
+file(GLOB XERCES_LIBS "${XercesC_LIBRARY}/*.*")
+install(FILES ${XERCES_LIBS} DESTINATION lib)
 find_package(XercesC REQUIRED)
 if (XercesC_FOUND)
     include_directories(SYSTEM ${XercesC_INCLUDE_DIRS})
