@@ -191,6 +191,10 @@ namespace detail {
         rpc::ActorId actor,
         bool enabled);
 
+    void SetActorEnableGravity(
+        rpc::ActorId actor,
+        bool enabled);
+
     void SetActorAutopilot(
         rpc::ActorId vehicle,
         bool enabled);
