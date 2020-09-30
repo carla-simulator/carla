@@ -15,7 +15,7 @@ validation of autonomous driving systems. In addition to open-source code and pr
 vehicles) that were created for this purpose and can be used freely. The simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
-[![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=TOojcifcRBA)
+[![CARLA Video](Docs/img/video_thumbnail_0910.jpg)](https://www.youtube.com/watch?v=7jej46ALVRE)
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
