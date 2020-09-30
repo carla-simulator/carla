@@ -18,8 +18,6 @@ PACKAGE_CONFIG=Shipping
 
 OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,packages:,python-version: -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
 while [[ $# -gt 0 ]]; do
