@@ -56,14 +56,6 @@ pipeline
                                 sh 'make CarlaUE4Editor'
                                 sh 'make examples'
                             }
-                            post
-                            {
-                                always
-                                {
-                                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
-                                }
-                            }
                         }
                         stage('ubuntu unit tests')
                         {
@@ -91,7 +83,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make PythonAPI ARGS="--python-version=2" && make package ARGS="--python-version=3.7"'
+                                sh 'make package ARGS="--python-version=3.7"'
                                 sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
@@ -99,6 +91,8 @@ pipeline
                             {
                                 always
                                 {
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
                                     archiveArtifacts 'Dist/*.tar.gz'
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
