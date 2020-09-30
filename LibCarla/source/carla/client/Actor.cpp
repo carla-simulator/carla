@@ -85,7 +85,6 @@ namespace client {
   }
 
   void Actor::SetEnableGravity(const bool enabled) {
-    std::cout << "Actor::SetEnableGravity" << std::endl;
     GetEpisode().Lock()->SetActorEnableGravity(*this, enabled);
   }
 
