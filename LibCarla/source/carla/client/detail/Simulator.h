@@ -378,6 +378,10 @@ namespace detail {
       _client.SetActorSimulatePhysics(actor.GetId(), enabled);
     }
 
+    void SetActorEnableGravity(Actor &actor, bool enabled) {
+      _client.SetActorEnableGravity(actor.GetId(), enabled);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with vehicles

@@ -51,8 +51,8 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libRecast.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
-                os.path.join(pwd, 'dependencies/lib/libosm2odr.a')]
-            extra_link_args += ['-lxerces-c']
+                os.path.join(pwd, 'dependencies/lib/libosm2odr.a'),
+                os.path.join(pwd, 'dependencies/lib/libxerces-c.a')]
             extra_link_args += ['-lz']
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
