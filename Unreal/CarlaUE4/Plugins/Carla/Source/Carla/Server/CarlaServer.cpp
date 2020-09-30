@@ -828,14 +828,12 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor simulate physics: actor not found");
     }
 
-    UE_LOG(LogCarla, Warning, TEXT("CarlaServer: set_actor_simulate_physics %d!!!!"), bEnabled);
     auto Character = Cast<ACharacter>(ActorView.GetActor());
     // The physics in the walkers works in a different way so to disable them,
     // we need to do it in the UCharacterMovementComponent.
     if (Character != nullptr)
     {
       auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
-      UE_LOG(LogCarla, Error, TEXT("Character::SetEnableGravity %d!!!!"), bEnabled);
 
       if(bEnabled) {
         CharacterMovement->SetDefaultMovementMode();
@@ -849,7 +847,6 @@ void FCarlaServer::FPimpl::BindActions()
     else
     {
       auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
-      UE_LOG(LogCarla, Error, TEXT("Root::SetEnableGravity %d!!!!"), bEnabled);
       if (RootComponent == nullptr)
       {
         RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
@@ -876,20 +873,19 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor enable gravity: actor not found");
     }
 
-    UE_LOG(LogCarla, Error, TEXT("CarlaServer: set_actor_enable_gravity %d!!!!"), bEnabled);
     auto Character = Cast<ACharacter>(ActorView.GetActor());
     // The physics in the walkers works in a different way so to disable them,
     // we need to do it in the UCharacterMovementComponent.
     if (Character != nullptr)
     {
       auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
-      UE_LOG(LogCarla, Error, TEXT("Character::SetEnableGravity %d!!!!"), bEnabled);
 
       if(bEnabled) {
-        CharacterMovement->GravityScale = 1.0f;
+        CharacterMovement->SetDefaultMovementMode();
       }
       else {
-        CharacterMovement->GravityScale = 0.0f;
+        if (CharacterMovement->IsFlying() || CharacterMovement->IsFalling())
+          CharacterMovement->DisableMovement();
       }
     }
     // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
@@ -901,7 +897,6 @@ void FCarlaServer::FPimpl::BindActions()
       {
         RESPOND_ERROR("unable to set actor enable gravity: not supported by actor");
       }
-      UE_LOG(LogCarla, Error, TEXT("SetEnableGravity %d!!!!"), bEnabled);
       RootComponent->SetEnableGravity(bEnabled);
     }
 

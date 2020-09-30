@@ -309,7 +309,6 @@ namespace detail {
   }
 
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
-    std::cout << "SetActorEnableGravity" << std::endl;
     _pimpl->AsyncCall("set_actor_enable_gravity", actor, enabled);
   }
 
