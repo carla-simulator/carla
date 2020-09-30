@@ -19,8 +19,8 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 Make sure that both requirements work properly before continuing with the installation.  
 
 *  __ROS Kinetic/Melodic__ — Install the ROS version corresponding to your system. Additional ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) is highly recommended to visualize ROS data.  
-	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 16.04 (Xenial).  
-	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 18.04 (Bionic).  
+	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 16.04 (Xenial).  
+	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 18.04 (Bionic).  
 	*   [__ROS Noetic__](http://wiki.ros.org/noetic#Installation) — For Ubuntu 20.04 (Focal).
 *  __CARLA 0.9.7 or later__ — Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for [Linux](build_linux.md).
 
