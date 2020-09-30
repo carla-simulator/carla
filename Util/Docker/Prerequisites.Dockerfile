@@ -34,8 +34,7 @@ RUN apt-get update ; \
     libtool \
     rsync \
     libxml2-dev \
-    aria2 \
-    libxerces-c-dev && \
+    aria2 && \
   pip3 install -Iv setuptools==47.3.1 && \
   pip3 install distro && \
   update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 && \

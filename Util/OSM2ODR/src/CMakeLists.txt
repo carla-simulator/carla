@@ -59,8 +59,8 @@ set(osm2odr_sources "${osm2odr_sources};${utils_traction_wire_sources}")
 
 add_library(osm2odr STATIC ${osm2odr_sources})
 target_link_libraries(osm2odr ${XercesC_LIBRARIES} ${ZLIB_LIBRARIES} ${PROJ_LIBRARY})
-if (WIN32)
-    target_compile_definitions(osm2odr PUBLIC "XERCES_STATIC_LIBRARY")
-endif ()
+
+target_compile_definitions(osm2odr PUBLIC "XERCES_STATIC_LIBRARY")
+
 install(TARGETS osm2odr ARCHIVE DESTINATION lib)
 install(FILES OSM2ODR.h DESTINATION include)

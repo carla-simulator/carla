@@ -52,6 +52,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7"'
+                                sh 'make PythonAPI ARGS="--python-version=2"'
                                 sh 'make CarlaUE4Editor'
                                 sh 'make examples'
                             }
