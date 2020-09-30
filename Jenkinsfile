@@ -91,6 +91,7 @@ pipeline
                         {
                             steps
                             {
+                                sh 'make PythonAPI ARGS="--python-version=2"'
                                 sh 'make package ARGS="--python-version=3.7"'
                                 sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7"'
                                 sh 'make examples ARGS="localhost 3654"'
@@ -111,7 +112,7 @@ pipeline
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
                                             jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                            
+
                                             jenkinsLib.CreateUbuntuTestNode(JOB_ID)
                                         }
                                     }
@@ -144,11 +145,11 @@ pipeline
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
                                             jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                            
+
                                             jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
                                         }
                                     }
-                                }                               
+                                }
                             }
                         }
                         stage('ubuntu deploy dev')
