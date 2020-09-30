@@ -43,8 +43,6 @@ BUILD_RSS_VARIANT=false
 
 OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
 while true; do
@@ -81,7 +79,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 

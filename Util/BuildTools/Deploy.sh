@@ -23,8 +23,6 @@ USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-ru
 
 OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
 while true; do
@@ -46,7 +44,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
