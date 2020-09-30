@@ -97,6 +97,9 @@ namespace client {
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);
 
+    /// Enable or disable gravity on this actor.
+    void SetEnableGravity(bool enabled = true);
+
     /// @warning This method only checks whether this instance of Actor has
     /// called the Destroy() method, it does not check whether the actor is
     /// actually alive in the simulator.

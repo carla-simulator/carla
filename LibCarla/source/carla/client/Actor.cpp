@@ -84,6 +84,11 @@ namespace client {
     GetEpisode().Lock()->SetActorSimulatePhysics(*this, enabled);
   }
 
+  void Actor::SetEnableGravity(const bool enabled) {
+    std::cout << "Actor::SetEnableGravity" << std::endl;
+    GetEpisode().Lock()->SetActorEnableGravity(*this, enabled);
+  }
+
   bool Actor::Destroy() {
     if (IsAlive()) {
       // Let the exceptions leave the function, IsAlive() will still be true.
