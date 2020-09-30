@@ -440,14 +440,12 @@ else
 
   pushd ${XERCESC_SRC_DIR}/build >/dev/null
 
-  # define clang compiler
-  # export CC=/usr/bin/clang-8
-  # export CXX=/usr/bin/clang++-8
   cmake -G "Ninja" \
       -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w" \
       -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_DIR}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
+      -Dtranscoder=gnuiconv \
       -Dnetwork=OFF \
       ..
   ninja
