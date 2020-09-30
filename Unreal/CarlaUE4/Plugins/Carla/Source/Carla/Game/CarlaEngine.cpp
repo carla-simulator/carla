@@ -127,10 +127,10 @@ void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float DeltaSeconds)
 {
   if (GetCurrentEpisode())
   {
-    auto* Recorder = GetCurrentEpisode()->GetRecorder();
-    if (Recorder)
+    auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
+    if (EpisodeRecorder)
     {
-      Recorder->Ticking(DeltaSeconds);
+      EpisodeRecorder->Ticking(DeltaSeconds);
     }
   }
   do
