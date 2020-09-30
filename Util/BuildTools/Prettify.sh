@@ -19,8 +19,6 @@ PRETTIFY_FILE=false
 
 OPTS=`getopt -o hf: --long help,all,file: -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
 while true; do
@@ -37,7 +35,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 

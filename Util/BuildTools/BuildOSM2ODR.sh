@@ -24,8 +24,6 @@ BUILD_OSM2ODR=false
 
 OPTS=`getopt -o h --long help,rebuild,build,clean -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
 while true; do
@@ -46,7 +44,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 

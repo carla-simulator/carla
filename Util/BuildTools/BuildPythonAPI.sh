@@ -19,8 +19,6 @@ BUILD_PYTHONAPI=true
 
 OPTS=`getopt -o h --long help,rebuild,clean,rss,python-version:,packages:,clean-intermediate,all,xml, -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
 PY_VERSION=3
