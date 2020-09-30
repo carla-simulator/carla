@@ -91,8 +91,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make PythonAPI ARGS="--python-version=2"'
-                                sh 'make package ARGS="--python-version=3.7"'
+                                sh 'make PythonAPI ARGS="--python-version=2" && make package ARGS="--python-version=3.7"'
                                 sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
