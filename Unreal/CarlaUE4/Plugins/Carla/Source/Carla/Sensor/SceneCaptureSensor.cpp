@@ -9,16 +9,17 @@
 
 #include "Carla/Game/CarlaStatics.h"
 
+#include "Async/Async.h"
 #include "Components/DrawFrustumComponent.h"
-#include "Engine/Classes/Engine/Scene.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "HighResScreenshot.h"
 #include "ContentStreaming.h"
-#include "Async/Async.h"
-#include "RHICommandList.h"
+#include "Engine/Classes/Engine/Scene.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "HAL/UnrealMemory.h"
+#include "HighResScreenshot.h"
+#include "Misc/CoreDelegates.h"
+#include "RHICommandList.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -490,7 +491,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   Super::BeginPlay();
 
-  SendPixelsDelegate = FCoreDelegates::OnEndFrame.AddUObject(this, &ASceneCaptureSensor::SendPixels);
+  SendPixelsDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
@@ -511,7 +512,7 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
 
-  FCoreDelegates::OnEndFrame.Remove(SendPixelsDelegate);
+  FWorldDelegates::OnWorldPostActorTick.Remove(SendPixelsDelegate);
 }
 
 // =============================================================================
