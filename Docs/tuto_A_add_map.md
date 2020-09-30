@@ -31,7 +31,7 @@ There are other ways to import a map into CARLA, which are now deprecated. They 
 ---
 ## Create a map with RoadRunner
 
-RoadRunner is an accessible and powerful software from Vector Zero to create 3D scenes. There is a trial version available at their [site](https://www.vectorzero.io/), and an [installation guide][rr_docs].
+RoadRunner is an accessible and powerful software from Vector Zero to create 3D scenes. Since the release of R2020b (16th September 2020), it has been added to the MATLAB Campus Wide Licenses, so many universities can provide unlimited academic access. [Check](https://www.mathworks.com/academia/tah-support-program/eligibility.html) if your university has access. Reach out to *automated-driving@mathworks.com* for any question or trouble regarding accessibility. Additionally, there is a [trial version](https://es.mathworks.com/products/roadrunner.html) available, and an [installation guide][rr_docs].   
 
 [rr_docs]: https://tracetransit.atlassian.net/wiki/spaces/VS/pages/740622413/Getting+Started
 
