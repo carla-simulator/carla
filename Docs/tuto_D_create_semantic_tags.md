@@ -1,9 +1,14 @@
 # Create semantic tags
 
-Learn how to define customized tags for semantic segmentation. These can additionally be used to filter the bounding boxes that [carla.World](python_api.md#carla.World) retrieves.  
+Learn how to define customized tags for semantic segmentation. These can additionally be added to [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) to filter the bounding boxes that [carla.World](python_api.md#carla.World) retrieves.  
 
-*   [__Create a new semantic tag__](#add-a-4-wheeled-vehicle)  
-*   [__Add a tag to carla.CityObjectLabel__](#add-a-2-wheeled-vehicle)  
+*   [__Create a new semantic tag__](#create-a-new-semantic-tag)  
+	*   [1. Create the tag ID](#1-create-the-tag-id)  
+	*   [2. Create the UE folder for assets](#2-create-the-ue-folder-for-assets)  
+	*   [3. Create two-way correspondence between UE and the code tag](#3-create-two-way-correspondence-between-ue-and-the-code-tag)  
+	*   [4. Define a color code](#4-define-a-color-code)  
+	*   [5. Add the tagged elements](#5-add-the-tagged-elements)  
+*   [__Add a tag to carla.CityObjectLabel__](#add-a-tag-to-carlacityobjectlabel)  
 
 ---
 
@@ -37,7 +42,7 @@ __3.2. Go to `GetTagAsString`__ in the same `Tagger.cpp`. Add the new tag by the
 
 ![tagger_cpp_02](img/tuto_D_create_semantic_tags/04_tagger_cpp_02.jpg)
 
-### 4. Add the color code
+### 4. Define a color code
 
 __Open `CityScapesPalette.h`__ in `LibCarla/source/carla/image`. Add the color code of your new tag by the end of the array. 
 
@@ -52,6 +57,31 @@ The new semantic tag is ready to be used. Only the elements stored inside the UE
 
 ---
 
-## Add a tag to carla.CityObjectLabel
+## Add a tag to [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel)
 
-This step is not directly related with semantic segmentation. However, these tags can be used to filter the bounding box query in [carla.World](python_api.md#carla.World). In order to do this, the tag must be added to the [carla.CityObjectLabel]() enum in the PythonAPI. 
+This step is not directly related with semantic segmentation. However, these tags can be used to filter the bounding box query in [carla.World](python_api.md#carla.World). In order to do this, the tag must be added to the [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) enum in the PythonAPI.  
+
+__Open `World.cpp`__ in `carla/PythonAPI/carla/sourc/libcarla` and add the new tag by the end of the enum.  
+
+![city_object_label](img/tuto_D_create_semantic_tags/06_city_object_label.jpg)
+
+
+---
+
+Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://forum.carla.org/c/installation-issues/linux) for any issues, doubts or suggestions.  
+
+<p style="font-size: 20px">What's next?</p>
+
+<div class="build-buttons">
+
+<p>
+<a href="../ref_sensors" target="_blank" class="btn btn-neutral" title="Learn all about sensors in CARLA">
+Sensors reference</a>
+</p>
+
+<p>
+<a href="../tuto_A_add_props" target="_blank" class="btn btn-neutral" title="Learn how to import your custom into CARLA">
+Add new props</a>
+</p>
+
+</div>
