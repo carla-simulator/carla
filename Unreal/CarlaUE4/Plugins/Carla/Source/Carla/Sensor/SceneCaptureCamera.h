@@ -26,6 +26,6 @@ public:
 
 protected:
 
-  void SendPixels() override;
+  void SendPixels(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
 };

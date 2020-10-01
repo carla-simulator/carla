@@ -61,6 +61,10 @@ if [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   log "Detected tag ${REPOSITORY_TAG}."
   DEPLOY_NAME=CARLA_${REPOSITORY_TAG}.tar.gz
   DOCKER_TAG=${REPOSITORY_TAG}
+elif [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  log "Detected tag ${REPOSITORY_TAG}."
+  DEPLOY_NAME=CARLA_${REPOSITORY_TAG}.tar.gz
+  DOCKER_TAG=${REPOSITORY_TAG}
 else
   S3_PREFIX=${S3_PREFIX}/Dev
   DEPLOY_NAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
