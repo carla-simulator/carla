@@ -43,7 +43,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make setup ARGS="--python-version=3.7"'
+                                sh 'make setup ARGS="--python-version=3.7,2"'
                             }
                         }
                         stage('ubuntu build')
@@ -51,8 +51,7 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI ARGS="--python-version=3.7"'
-                                sh 'make PythonAPI ARGS="--python-version=2"'
+                                sh 'make PythonAPI ARGS="--python-version=3.7,2"'
                                 sh 'make CarlaUE4Editor'
                                 sh 'make examples'
                             }
@@ -69,7 +68,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make check ARGS="--all --xml --python-version=3.7"'
+                                sh 'make check ARGS="--all --xml --python-version=3.7,2"'
                             }
                             post
                             {
@@ -91,8 +90,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7"'
-                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7"'
+                                sh 'make package ARGS="--python-version=3.7,2"'
+                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -111,7 +110,7 @@ pipeline
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
                                             jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                            
+
                                             jenkinsLib.CreateUbuntuTestNode(JOB_ID)
                                         }
                                     }
@@ -144,11 +143,11 @@ pipeline
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
                                             jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                            
+
                                             jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
                                         }
                                     }
-                                }                               
+                                }
                             }
                         }
                         stage('ubuntu deploy dev')
