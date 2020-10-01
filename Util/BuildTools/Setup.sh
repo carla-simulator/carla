@@ -110,7 +110,7 @@ BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
   SHOULD_BUILD_BOOST=true
-  PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V)
+  PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V 2>&1)
   LIB_NAME=${PYTHON_VERSION:7:3}
   LIB_NAME=${LIB_NAME//.}
   if [[ -d "${BOOST_BASENAME}-install" ]] ; then
