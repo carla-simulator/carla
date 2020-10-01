@@ -12,12 +12,12 @@ OPTS=`getopt -o h --long help,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
-PY_VERSION=3
+PY_VERSION_LIST=3
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --python-version )
-      PY_VERSION="$2";
+      PY_VERSION_LIST="$2";
       shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -43,6 +43,9 @@ export CC=/usr/bin/clang-8
 export CXX=/usr/bin/clang++-8
 
 source $(dirname "$0")/Environment.sh
+
+# Convert comma-separated string to array of unique elements.
+IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
@@ -104,80 +107,83 @@ BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib
 
-SHOULD_BUILD_BOOST=true
+for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
-PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V)
-LIB_NAME=${PYTHON_VERSION:7:3}
-LIB_NAME=${LIB_NAME//.}
-if [[ -d "${BOOST_BASENAME}-install" ]] ; then
-  if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
-    SHOULD_BUILD_BOOST=false
-    log "${BOOST_BASENAME} already installed."
-  fi
-fi
-
-if { ${SHOULD_BUILD_BOOST} ; } ; then
-  rm -Rf ${BOOST_BASENAME}-source
-
-  BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
-
-  log "Retrieving boost."
-  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
-  # try to use the backup boost we have in Jenkins
-  if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
-    log "Using boost backup"
-    wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+  SHOULD_BUILD_BOOST=true
+  PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V)
+  LIB_NAME=${PYTHON_VERSION:7:3}
+  LIB_NAME=${LIB_NAME//.}
+  if [[ -d "${BOOST_BASENAME}-install" ]] ; then
+    if [ -f "${BOOST_BASENAME}-install/lib/libboost_python${LIB_NAME}.a" ] ; then
+      SHOULD_BUILD_BOOST=false
+      log "${BOOST_BASENAME} already installed."
+    fi
   fi
 
-  log "Extracting boost for Python ${PY_VERSION}."
-  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
-  mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-  # Boost patch for exception handling
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
-  # ---
+  if { ${SHOULD_BUILD_BOOST} ; } ; then
+    rm -Rf ${BOOST_BASENAME}-source
 
-  pushd ${BOOST_BASENAME}-source >/dev/null
+    BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
-  BOOST_TOOLSET="clang-8.0"
-  BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
+    log "Retrieving boost."
+    wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    # try to use the backup boost we have in Jenkins
+    if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
+      log "Using boost backup"
+      wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    fi
 
-  py3="/usr/bin/env python${PY_VERSION}"
-  py3_root=`${py3} -c "import sys; print(sys.prefix)"`
-  pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
-  ./bootstrap.sh \
-      --with-toolset=clang \
-      --prefix=../boost-install \
-      --with-libraries=python,filesystem,system,program_options \
-      --with-python=${py3} --with-python-root=${py3_root}
+    log "Extracting boost for Python ${PY_VERSION}."
+    tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
+    mkdir -p ${BOOST_BASENAME}-install/include
+    mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
+    # Boost patch for exception handling
+    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
+    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
+    # ---
 
-  if ${TRAVIS} ; then
-    echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > ${HOME}/user-config.jam
-  else
-    echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > project-config.jam
+    pushd ${BOOST_BASENAME}-source >/dev/null
+
+    BOOST_TOOLSET="clang-8.0"
+    BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
+
+    py3="/usr/bin/env python${PY_VERSION}"
+    py3_root=`${py3} -c "import sys; print(sys.prefix)"`
+    pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
+    ./bootstrap.sh \
+        --with-toolset=clang \
+        --prefix=../boost-install \
+        --with-libraries=python,filesystem,system,program_options \
+        --with-python=${py3} --with-python-root=${py3_root}
+
+    if ${TRAVIS} ; then
+      echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > ${HOME}/user-config.jam
+    else
+      echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} ;" > project-config.jam
+    fi
+
+    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+
+    popd >/dev/null
+
+    rm -Rf ${BOOST_BASENAME}-source
+    rm ${BOOST_PACKAGE_BASENAME}.tar.gz
+
+    # Boost patch for exception handling
+    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
+    cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
+    # ---
+
+    # Install boost dependencies
+    mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system"
+    mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib"
+    cp -rf ${BOOST_BASENAME}-install/include/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system
+    cp -rf ${BOOST_BASENAME}-install/lib/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib
+
   fi
 
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-
-  popd >/dev/null
-
-  rm -Rf ${BOOST_BASENAME}-source
-  rm ${BOOST_PACKAGE_BASENAME}.tar.gz
-
-  # Boost patch for exception handling
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-install/include/boost/rational.hpp"
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-install/include/boost/geometry/io/wkt/read.hpp"
-  # ---
-
-  # Install boost dependencies
-  mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system"
-  mkdir -p "${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib"
-  cp -rf ${BOOST_BASENAME}-install/include/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/include/system
-  cp -rf ${BOOST_BASENAME}-install/lib/* ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib
-
-fi
+done
 
 unset BOOST_BASENAME
 
