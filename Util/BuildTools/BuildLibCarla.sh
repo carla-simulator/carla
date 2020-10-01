@@ -45,7 +45,7 @@ OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss -n '
 
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;

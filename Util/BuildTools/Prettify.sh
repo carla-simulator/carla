@@ -21,7 +21,7 @@ OPTS=`getopt -o hf: --long help,all,file: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --all )
       PRETTIFY_ALL=true;
