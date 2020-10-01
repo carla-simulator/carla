@@ -185,7 +185,7 @@ def callable_env(args):
 
 def make_env(args):
     # env = CarlaEnv(args=args) # TODO
-    # env = Monitor(env, "./log/")
+    # # env = Monitor(env, "./log/")
 
     # check_env(env)
     # print("Finish check env")
@@ -224,7 +224,7 @@ def game_loop(args):
         # eval_callback = EvalCallback(eval_env, eval_freq=500,
             # deterministic=True, render=False)
         model = PPO('CnnPolicy', env, verbose=1, batch_size=8, n_steps=8, device="auto")
-        model.learn(total_timesteps=10000)
+        # model.learn(total_timesteps=10000)
 
         obs = env.reset()
         print(obs.shape)
@@ -234,7 +234,7 @@ def game_loop(args):
             done = False
             while not done:
                 action, _states = model.predict(obs, deterministic=True)
-                # action = [0]
+                action = [0]
                 print(action)
                 obs, reward, done, info = env.step(action)
                 print(info)

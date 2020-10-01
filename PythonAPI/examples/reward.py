@@ -28,9 +28,10 @@ class Reward:
                                     target.y,
                                     target.z])
         d = np.linalg.norm(player_location - goal_location) # / 1000
+        print("d: %f" % d)
 
         success = False
-        if d < 1.0:
+        if d < 0.7:
             success = True
 
         # Speed

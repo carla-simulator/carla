@@ -141,6 +141,9 @@ class World(object):
         try:
             while True:
                 # send control
+                if self.target is None:
+                    self.target =  self.map.get_waypoint(self.player.get_location()).next(15)[0].transform.location
+                self.world.debug.draw_line(self.player.get_transform().location, self.target)
                 control = self.action_converter.get_control(self.player.get_control(), action)
                 self.player.apply_control(control)                
 
@@ -160,7 +163,10 @@ class World(object):
         else:
             collision = False
 
-        timeout = False # TODO: timeout
+        if self.steps >= 1000:
+            timeout = True  
+        else:
+            timeout =  False
 
         if timeout:
             print('Timeout')
@@ -183,7 +189,8 @@ class World(object):
 
     def reset(self):
         # TODO: Load target from config
-        self.target = carla.Location(x=-13.473097, y=134.311234, z=-0.010433)
+        # self.target = carla.Location(x=-13.473097, y=134.311234, z=-0.010433)
+        self.target = None
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
@@ -212,14 +219,16 @@ class World(object):
             # spawn_point.location.z += 2.0
             # spawn_point.rotation.roll = 0.0
             # spawn_point.rotation.pitch = 0.0            
-            if not self.map.get_spawn_points():
-                print('There are no spawn points available in your map/town.')
-                print('Please add some Vehicle Spawn Point to your UE4 scene.')
-                sys.exit(1)
-            spawn_points = self.map.get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            # if not self.map.get_spawn_points():
+            #     print('There are no spawn points available in your map/town.')
+            #     print('Please add some Vehicle Spawn Point to your UE4 scene.')
+            #     sys.exit(1)
+            # spawn_points = self.map.get_spawn_points()
+            # spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.destroy()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.player = None
+            # self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+        # else:
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
@@ -533,6 +542,7 @@ def game_loop(args):
         world = World(carla_world=client.get_world(), hud=hud, clock=clock, display=display, args=args)
 
         for episode in range(args.num_episodes):
+            world.steps = 0
             print("Starting episode %d" % episode)
             while not world.done:
                 clock.tick_busy_loop(60)
