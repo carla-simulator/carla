@@ -25,7 +25,7 @@ OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run -n 'parse-optio
 
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --replace-latest )
       REPLACE_LATEST=true;

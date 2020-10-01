@@ -32,7 +32,7 @@ OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -
 
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --gdb )
       GDB="gdb --args";

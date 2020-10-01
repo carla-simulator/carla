@@ -8,7 +8,7 @@ USAGE_STRING="Usage: $0 [-h|--help] [--release]"
 
 RELEASE=false
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --release )
       RELEASE=true
@@ -19,7 +19,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
