@@ -852,6 +852,52 @@ void FCarlaServer::FPimpl::BindActions()
         RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
       }
       RootComponent->SetSimulatePhysics(bEnabled);
+      RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+      auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+      if(Vehicle)
+        Vehicle->SetActorEnableCollision(true);
+    }
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_actor_enable_gravity) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor enable gravity: actor not found");
+    }
+
+    auto Character = Cast<ACharacter>(ActorView.GetActor());
+    // The physics in the walkers works in a different way so to disable them,
+    // we need to do it in the UCharacterMovementComponent.
+    if (Character != nullptr)
+    {
+      auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
+
+      if(bEnabled) {
+        CharacterMovement->SetDefaultMovementMode();
+      }
+      else {
+        if (CharacterMovement->IsFlying() || CharacterMovement->IsFalling())
+          CharacterMovement->DisableMovement();
+      }
+    }
+    // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
+    // that for disable it.
+    else
+    {
+      auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+      if (RootComponent == nullptr)
+      {
+        RESPOND_ERROR("unable to set actor enable gravity: not supported by actor");
+      }
+      RootComponent->SetEnableGravity(bEnabled);
     }
 
     return R<void>::Success();
@@ -1279,6 +1325,7 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyAngularImpulse &c) {  MAKE_RESULT(add_actor_angular_impulse(c.actor, c.impulse)); },
       [=](auto, const C::ApplyTorque &c) {          MAKE_RESULT(add_actor_torque(c.actor, c.torque)); },
       [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
+      [=](auto, const C::SetEnableGravity &c) {   MAKE_RESULT(set_actor_enable_gravity(c.actor, c.enabled)); },
       // TODO: SetAutopilot should be removed. This is the old way to control the vehicles
       [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },
       [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },

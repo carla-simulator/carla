@@ -172,6 +172,16 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 
+    struct SetEnableGravity : CommandBase<SetEnableGravity> {
+      SetEnableGravity() = default;
+      SetEnableGravity(ActorId id, bool value)
+        : actor(id),
+          enabled(value) {}
+      ActorId actor;
+      bool enabled;
+      MSGPACK_DEFINE_ARRAY(actor, enabled);
+    };
+
     struct SetAutopilot : CommandBase<SetAutopilot> {
       SetAutopilot() = default;
       SetAutopilot(
@@ -213,6 +223,7 @@ namespace rpc {
         ApplyAngularImpulse,
         ApplyTorque,
         SetSimulatePhysics,
+        SetEnableGravity,
         SetAutopilot,
         SetVehicleLightState>;
 
