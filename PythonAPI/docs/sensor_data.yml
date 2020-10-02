@@ -134,6 +134,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.Image that form the image. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -189,6 +191,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.LidarDetection retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -265,6 +269,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.SemanticLidarDetection retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -452,6 +458,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.RadarDetection retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -785,6 +793,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.DVSEvent retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
