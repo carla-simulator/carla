@@ -198,6 +198,6 @@ void export_ad_rss() {
                                                                                                       no_init)
       .def(init<>())
       .def("restrict_vehicle_control", &carla::rss::RssRestrictor::RestrictVehicleControl,
-           (arg("vehicle_control"), arg("restriction"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
+           (arg("vehicle_control"), arg("proper_response"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
       .def(self_ns::str(self_ns::self));
 }

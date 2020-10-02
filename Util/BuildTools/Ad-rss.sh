@@ -46,8 +46,8 @@ else
     pushd "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" >/dev/null
     git clone --depth=1 -b v1.7.0 https://github.com/gabime/spdlog.git
     git clone --depth=1 -b 4.9.3 https://github.com/OSGeo/PROJ.git
-    git clone --depth=1 -b 2.3.0 https://github.com/carla-simulator/map.git
-    git clone --depth=1 -b 4.2.0 https://github.com/intel/ad-rss-lib.git
+    git clone --depth=1 -b v2.3.0 https://github.com/carla-simulator/map.git
+    git clone --depth=1 -b v4.2.0 https://github.com/intel/ad-rss-lib.git
     popd
 
 
