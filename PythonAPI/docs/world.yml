@@ -91,7 +91,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Allows the iteration for the actors in this object. 
+        Iterate over the carla.Actor contained in the list.  
     # --------------------------------------
     - def_name: __len__
       return: int
