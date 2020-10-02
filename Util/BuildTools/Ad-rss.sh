@@ -1,13 +1,17 @@
 #! /bin/bash
 
 
-PY_VERSION=3
+OPTS=`getopt -o h --long python-version: -n 'parse-options' -- "$@"`
+
+eval set -- "$OPTS"
+
+PY_VERSION_LIST=3
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --python-version=*)
-      PY_VERSION="${1/--python-version=/}";
-      shift ;;
+    --python-version )
+      PY_VERSION_LIST="$2";
+      shift 2 ;;
     * )
       shift ;;
   esac
@@ -18,40 +22,31 @@ done
 # ==============================================================================
 source $(dirname "$0")/Environment.sh
 
+# Convert comma-separated string to array of unique elements.
+IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
+
 # ==============================================================================
-# -- Get and compile ad-rss -------------------------------------------
+# -- Get ad-rss -------------------------------------------
 # ==============================================================================
 
 ADRSS_BASENAME=ad-rss-4.2.0
-ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
-ADRSS_BUILD_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build-python${PY_VERSION}"
+ADRSS_COLCON_WORKSPACE="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}"
+ADRSS_SRC_DIR="${ADRSS_COLCON_WORKSPACE}/src"
 
-if [[ -d "${ADRSS_INSTALL_DIR}" && -d "${ADRSS_BUILD_DIR}" ]]; then
-  log "${ADRSS_BASENAME} for python${PY_VERSION} already installed."
-else
-  log "Building ${ADRSS_BASENAME} for python${PY_VERSION}."
-  if [[ ! -d "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" ]]; then
-    # ad-rss is built inside a colcon workspace, therefore we have to setup the workspace first
-    if [[ -d "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build-python2" ]]; then
-      rm -rf "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build-python2"
-    fi
-    if [[ -d "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build-python3" ]]; then
-      rm -rf "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build-python3"
-    fi
+if [[ ! -d "${ADRSS_SRC_DIR}" ]]; then
+  # ad-rss is built inside a colcon workspace, therefore we have to setup the workspace first
+  log "Retrieving ${ADRSS_BASENAME}."
 
-    mkdir -p "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src"
+  mkdir -p "${ADRSS_SRC_DIR}"
 
-    log "Retrieving ${ADRSS_BASENAME}."
+  pushd "${ADRSS_SRC_DIR}" >/dev/null
+  git clone --depth=1 -b v1.7.0 https://github.com/gabime/spdlog.git
+  git clone --depth=1 -b 4.9.3 https://github.com/OSGeo/PROJ.git
+  git clone --depth=1 -b v2.3.0 https://github.com/carla-simulator/map.git
+  git clone --depth=1 -b v4.2.0 https://github.com/intel/ad-rss-lib.git
+  popd
 
-    pushd "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/src" >/dev/null
-    git clone --depth=1 -b v1.7.0 https://github.com/gabime/spdlog.git
-    git clone --depth=1 -b 4.9.3 https://github.com/OSGeo/PROJ.git
-    git clone --depth=1 -b v2.3.0 https://github.com/carla-simulator/map.git
-    git clone --depth=1 -b v4.2.0 https://github.com/intel/ad-rss-lib.git
-    popd
-
-
-    cat >"${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/colcon.meta" <<EOL
+  cat >"${ADRSS_COLCON_WORKSPACE}/colcon.meta" <<EOL
 {
     "names": {
         "PROJ4": {
@@ -80,37 +75,47 @@ else
 }
 
 EOL
-  fi
-
-  log "Compiling ${ADRSS_BASENAME}."
-
-  pushd "${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}" >/dev/null
-  if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
-    export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
-  else
-    export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
-  fi
-
-  # get the python version of the binding to be built
-  PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V)
-  PYTHON_BINDING_VERSIONS=${PYTHON_VERSION:7:3}
-  echo "PYTHON_BINDING_VERSIONS=${PYTHON_BINDING_VERSIONS}"
-
-  # enforce sequential executor to reduce the required memory for compilation
-  colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
-
-  COLCON_RESULT=$?
-  if (( COLCON_RESULT )); then
-    rm -rf "${ADRSS_INSTALL_DIR}"
-    log "Failed !"
-  else
-    log "Success!"
-  fi
-
-  # ==============================================================================
-  # -- ...and we are done --------------------------------------------------------
-  # ==============================================================================
-
-  popd >/dev/null
-
 fi
+
+# ==============================================================================
+# -- Build ad-rss -------------------------------------------
+# ==============================================================================
+ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
+
+#
+# Since it it not possible with boost-python to build more than one python version at once (find_package has some bugs)
+# we have to build it for every version in a separate colcon build
+#
+for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
+  ADRSS_BUILD_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/build-python${PY_VERSION}"
+
+  if [[ -d "${ADRSS_INSTALL_DIR}" && -d "${ADRSS_BUILD_DIR}" ]]; then
+    log "${ADRSS_BASENAME} for python${PY_VERSION} already installed."
+  else
+    log "Building ${ADRSS_BASENAME} for python${PY_VERSION}"
+
+    pushd "${ADRSS_COLCON_WORKSPACE}" >/dev/null
+    if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
+      export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
+    else
+      export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
+    fi
+
+    # get the python version of the binding to be built
+    PYTHON_VERSION=$(/usr/bin/env python${PY_VERSION} -V 2>&1)
+    PYTHON_BINDING_VERSIONS=${PYTHON_VERSION:7:3}
+    echo "PYTHON_BINDING_VERSIONS=${PYTHON_BINDING_VERSIONS}"
+
+    # enforce sequential executor to reduce the required memory for compilation
+    colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
+
+    COLCON_RESULT=$?
+    if (( COLCON_RESULT )); then
+      rm -rf "${ADRSS_INSTALL_DIR}"
+      log "Failed !"
+    else
+      log "Success!"
+    fi
+    popd >/dev/null
+  fi
+done
