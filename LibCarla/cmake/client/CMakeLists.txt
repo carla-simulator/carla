@@ -30,7 +30,7 @@ if (BUILD_RSS_VARIANT)
 
     # Install corresponding python libs if available
     file(GLOB ${ad_lib}_python_libs "${ADRSS_INSTALL_DIR}/${ad_lib}/lib/lib${ad_lib}_python*.a")
-    foreach(ad_python_lib ${ad_lib}_python_libs)
+    foreach(ad_python_lib ${${ad_lib}_python_libs})
       if (EXISTS ${ad_python_lib})
         install(FILES ${ad_python_lib} DESTINATION lib)
       endif()
