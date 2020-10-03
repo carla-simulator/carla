@@ -79,9 +79,8 @@ namespace tcp {
       if (!_socket.is_open()) {
         return;
       }
-      if (_is_writing) {
-        log_debug("session", _session_id, ": connection too slow: message discarded");
-        return;
+      while (_is_writing) {
+        std::this_thread::yield();
       }
       _is_writing = true;
 
@@ -102,7 +101,7 @@ namespace tcp {
       boost::asio::async_write(
           _socket,
           message->GetBufferSequence(),
-          boost::asio::bind_executor(_strand, handle_sent));
+          handle_sent);
     });
   }
 
@@ -126,7 +125,6 @@ namespace tcp {
   }
 
   void ServerSession::CloseNow() {
-    DEBUG_ASSERT(_strand.running_in_this_thread());
     _deadline.cancel();
     if (_socket.is_open()) {
       _socket.close();
