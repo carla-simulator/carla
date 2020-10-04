@@ -287,6 +287,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
+    StreamingServer.SetSynchronousMode(settings.synchronous_mode);
     return GFrameCounter;
   };
 
