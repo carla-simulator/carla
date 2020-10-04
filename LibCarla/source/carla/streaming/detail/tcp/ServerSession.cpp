@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/streaming/detail/tcp/ServerSession.h"
+#include "carla/streaming/detail/tcp/Server.h"
 
 #include "carla/Debug.h"
 #include "carla/Logging.h"
@@ -15,6 +16,7 @@
 #include <boost/asio/post.hpp>
 
 #include <atomic>
+#include <thread>
 
 namespace carla {
 namespace streaming {
@@ -25,9 +27,11 @@ namespace tcp {
 
   ServerSession::ServerSession(
       boost::asio::io_context &io_context,
-      const time_duration timeout)
+      const time_duration timeout,
+      Server &server)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
           std::string("tcp server session ") + std::to_string(SESSION_COUNTER)),
+      _server(server),
       _session_id(SESSION_COUNTER++),
       _socket(io_context),
       _timeout(timeout),
@@ -79,8 +83,17 @@ namespace tcp {
       if (!_socket.is_open()) {
         return;
       }
-      while (_is_writing) {
-        std::this_thread::yield();
+      if (_is_writing) {
+        if (_server.IsSynchronousMode()) {
+          // wait until previous message has been sent
+          while (_is_writing) {
+            std::this_thread::yield();
+          }
+        } else {
+          // ignore this message
+          log_debug("session", _session_id, ": connection too slow: message discarded");
+          return;
+        }      
       }
       _is_writing = true;
 
