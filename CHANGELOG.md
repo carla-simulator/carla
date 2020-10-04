@@ -1,3 +1,7 @@
+## Latest
+
+  * Fixed random dead-lock on synchronous mode at high frame rate
+  
 ## CARLA 0.9.10
 
   * Added retrieval of bounding boxes for all the elements of the level
