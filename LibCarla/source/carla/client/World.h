@@ -18,6 +18,7 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/EpisodeSettings.h"
+#include "carla/rpc/Object.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
@@ -154,6 +155,8 @@ namespace client {
 
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
+
+    std::vector<rpc::CarlaObject> GetObjects() const;
 
   private:
 
