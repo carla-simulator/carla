@@ -450,6 +450,11 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);
   }
 
+  std::vector<rpc::CarlaObject> Client::GetObjects() const {
+    using return_t = std::vector<rpc::CarlaObject>;
+    return _pimpl->CallAndWait<return_t>("get_objects");
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla

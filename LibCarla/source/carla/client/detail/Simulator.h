@@ -231,6 +231,10 @@ namespace detail {
       return _client.GetLevelBBs(queried_tag);
     }
 
+    std::vector<rpc::CarlaObject> GetObjects() const {
+      return _client.GetObjects();
+    }
+
     /// @}
     // =========================================================================
     /// @name AI
