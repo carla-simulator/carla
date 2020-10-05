@@ -27,6 +27,7 @@
 #include <carla/rpc/EpisodeSettings.h>
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
+#include <carla/rpc/Object.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/String.h>
@@ -319,6 +320,18 @@ void FCarlaServer::FPimpl::BindActions()
     }
     Result = GameMode->GetAllBBsOfLevel(QueriedTag);
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
+  };
+
+  BIND_SYNC(get_objects) << [this]() -> R<std::vector<cr::CarlaObject>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<FCarlaObject> Result = GameMode->GetObjects();
+    return MakeVectorFromTArray<cr::CarlaObject>(Result);
   };
 
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

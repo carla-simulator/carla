@@ -10,9 +10,10 @@
 #include "Engine/DecalActor.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/WeatherParameters.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
+#include <carla/rpc/Object.h>
+#include <carla/rpc/WeatherParameters.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "Async/ParallelFor.h"
@@ -153,6 +154,7 @@ void ACarlaGameModeBase::BeginPlay()
   {
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
+
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -344,4 +346,37 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   BoundingBoxes = UBoundingBoxCalculator::GetBoundingBoxOfActors(FoundActors, TagQueried);
 
   return BoundingBoxes;
+}
+
+TArray<FCarlaObject> ACarlaGameModeBase::GetObjects()
+{
+  UWorld* World = GetWorld();
+  // Get all actors of the level
+  TArray<AActor*> FoundActors;
+  TArray<FCarlaObject> Result;
+
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
+
+  // UE_LOG(LogCarla, Error, TEXT("___Hashing actors to generate IDs___"));
+
+  for(AActor* Actor : FoundActors)
+  {
+
+    FString ActorName = Actor->GetName();
+    const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
+
+    //UE_LOG(LogCarla, Error, TEXT("   %s (%d) -> %d"),
+    //  *ActorName, Actor->GetUniqueID(), CityHash64(ActorNameChar, ActorName.Len()));
+
+    //FString Output = FString::Printf(TEXT("%s %llu"),
+    //  *ActorName, CityHash64(ActorNameChar, ActorName.Len()) );
+
+    FCarlaObject Object;
+    Object.Transform = Actor->GetActorTransform();
+    Object.Id = CityHash64(ActorNameChar, ActorName.Len());
+    Object.Name = ActorName; // std::string(TCHAR_TO_UTF8(*ActorName));
+    Result.Add(Object);
+  }
+
+  return Result;
 }
