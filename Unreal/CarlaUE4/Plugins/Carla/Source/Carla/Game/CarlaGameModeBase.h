@@ -16,6 +16,8 @@
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Traffic/TrafficLightManager.h"
+#include "Carla/Util/CarlaObject.h"
+
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
@@ -55,6 +57,9 @@ public:
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
 
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  TArray<FCarlaObject> GetObjects();
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -86,7 +91,7 @@ private:
   UCarlaEpisode *Episode = nullptr;
 
   UPROPERTY()
-  ACarlaRecorder *Recorder = nullptr; 
+  ACarlaRecorder *Recorder = nullptr;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
