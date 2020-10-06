@@ -19,30 +19,30 @@ A list of semantic tags provided by the blueprint listing components for this ac
 The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 
 <h3>Methods</h3>
-- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_impulse**</font>)  
+- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_impulse**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.add_angular_impulse-snipet").innerHTML'>snipet &rarr;</button>  
 Applies an angular impulse at the center of mass of the actor. This method should be used for instantaneous torques, usually applied once. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over a period of time.  
     - **Parameters:**
         - `angular_impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees*s</small>_) – Angular impulse vector in global coordinates.  
-- <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  
+- <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.add_force-snipet").innerHTML'>snipet &rarr;</button>  
 Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
     - **Parameters:**
         - `force` (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_) – Force vector in global coordinates.  
-- <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
+- <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.add_impulse-snipet").innerHTML'>snipet &rarr;</button>  
 Applies an impulse at the center of mass of the actor. This method should be used for instantaneous forces, usually applied once. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.  
     - **Parameters:**
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_) – Impulse vector in global coordinates.  
-- <a name="carla.Actor.add_torque"></a>**<font color="#7fb800">add_torque</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque**</font>)  
+- <a name="carla.Actor.add_torque"></a>**<font color="#7fb800">add_torque</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.add_torque-snipet").innerHTML'>snipet &rarr;</button>  
 Applies a torque at the center of mass of the actor. This method should be used for torques that are applied over a certain period of time. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply a torque that only lasts an instant.  
     - **Parameters:**
         - `torque` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_) – Torque vector in global coordinates.  
-- <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.destroy-snipet").innerHTML'>snipet &rarr;</button>  
 Tells the simulator to destroy this actor and returns <b>True</b> if it was successful. It has no effect if it was already destroyed.  
     - **Return:** _bool_  
     - **Warning:** <font color="#ED2F2F">_This method blocks the script until the destruction is completed by the simulator.
 _</font>  
-- <a name="carla.Actor.disable_constant_velocity"></a>**<font color="#7fb800">disable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.disable_constant_velocity"></a>**<font color="#7fb800">disable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.disable_constant_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Disables any constant velocity previously set for a [carla.Vehicle](#carla.Vehicle) actor.  
-- <a name="carla.Actor.enable_constant_velocity"></a>**<font color="#7fb800">enable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
+- <a name="carla.Actor.enable_constant_velocity"></a>**<font color="#7fb800">enable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.enable_constant_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – m/s</small>_) – Velocity vector in local space.  
@@ -50,49 +50,49 @@ Sets a vehicle's velocity vector to a constant value over time. The resulting ve
 _</font>  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.get_acceleration-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – m/s<sup>2</sup></small>_  
-- <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.get_angular_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_  
-- <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.get_location-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Location](#carla.Location)<small> – meters</small>_  
     - **Setter:** _[carla.Actor.set_location](#carla.Actor.set_location)_  
-- <a name="carla.Actor.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.get_transform-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the actor's transform (location and rotation) the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
     - **Setter:** _[carla.Actor.set_transform](#carla.Actor.set_transform)_  
-- <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.get_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – m/s</small>_  
-- <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.get_world-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the world this actor belongs to.  
     - **Return:** _[carla.World](#carla.World)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_target_angular_velocity"></a>**<font color="#7fb800">set_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_target_angular_velocity"></a>**<font color="#7fb800">set_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.set_target_angular_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the actor's angular velocity vector. The modification will be effective two frames after the setting. Also, this is applied before the physics step so the resulting angular velocity will be affected by external forces at this frame such as friction.  
     - **Parameters:**
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
     - **Note:** <font color="#8E8E8E">_The update will not be effective until two frames after it is set.  
 _</font>  
-- <a name="carla.Actor.set_location"></a>**<font color="#7fb800">set_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+- <a name="carla.Actor.set_location"></a>**<font color="#7fb800">set_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.set_location-snipet").innerHTML'>snipet &rarr;</button>  
 Teleports the actor to a given location.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)<small> – meters</small>_)  
     - **Getter:** _[carla.Actor.get_location](#carla.Actor.get_location)_  
-- <a name="carla.Actor.set_simulate_physics"></a>**<font color="#7fb800">set_simulate_physics</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
+- <a name="carla.Actor.set_simulate_physics"></a>**<font color="#7fb800">set_simulate_physics</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.set_simulate_physics-snipet").innerHTML'>snipet &rarr;</button>  
 Enables or disables the simulation of physics on this actor.  
     - **Parameters:**
         - `enabled` (_bool_)  
-- <a name="carla.Actor.set_transform"></a>**<font color="#7fb800">set_transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
+- <a name="carla.Actor.set_transform"></a>**<font color="#7fb800">set_transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.set_transform-snipet").innerHTML'>snipet &rarr;</button>  
 Teleports the actor to a given transform (location and rotation).  
     - **Parameters:**
         - `transform` (_[carla.Transform](#carla.Transform)_)  
     - **Getter:** _[carla.Actor.get_transform](#carla.Actor.get_transform)_  
-- <a name="carla.Actor.set_target_velocity"></a>**<font color="#7fb800">set_target_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
+- <a name="carla.Actor.set_target_velocity"></a>**<font color="#7fb800">set_target_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Actor.set_target_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the actor's velocity vector. The modification will be effective two frames after the setting. Also, this is applied before the physics step so the resulting velocity will be affected by external forces at this frame such as friction.  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
@@ -118,15 +118,15 @@ A list of values suggested by those who designed the blueprint.
 The attribute's parameter type.  
 
 <h3>Methods</h3>
-- <a name="carla.ActorAttribute.as_bool"></a>**<font color="#7fb800">as_bool</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorAttribute.as_bool"></a>**<font color="#7fb800">as_bool</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorAttribute.as_bool-snipet").innerHTML'>snipet &rarr;</button>  
 Reads the attribute as boolean value.  
-- <a name="carla.ActorAttribute.as_color"></a>**<font color="#7fb800">as_color</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorAttribute.as_color"></a>**<font color="#7fb800">as_color</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorAttribute.as_color-snipet").innerHTML'>snipet &rarr;</button>  
 Reads the attribute as [carla.Color](#carla.Color).  
-- <a name="carla.ActorAttribute.as_float"></a>**<font color="#7fb800">as_float</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorAttribute.as_float"></a>**<font color="#7fb800">as_float</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorAttribute.as_float-snipet").innerHTML'>snipet &rarr;</button>  
 Reads the attribute as float.  
-- <a name="carla.ActorAttribute.as_int"></a>**<font color="#7fb800">as_int</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorAttribute.as_int"></a>**<font color="#7fb800">as_int</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorAttribute.as_int-snipet").innerHTML'>snipet &rarr;</button>  
 Reads the attribute as int.  
-- <a name="carla.ActorAttribute.as_str"></a>**<font color="#7fb800">as_str</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorAttribute.as_str"></a>**<font color="#7fb800">as_str</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorAttribute.as_str-snipet").innerHTML'>snipet &rarr;</button>  
 Reads the attribute as string.  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
@@ -168,24 +168,24 @@ The identifier of said blueprint inside the library. E.g. `walker.pedestrian.000
 A list of tags each blueprint has that helps describing them. E.g. `['0001', 'pedestrian', 'walker']`.  
 
 <h3>Methods</h3>
-- <a name="carla.ActorBlueprint.has_attribute"></a>**<font color="#7fb800">has_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
+- <a name="carla.ActorBlueprint.has_attribute"></a>**<font color="#7fb800">has_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorBlueprint.has_attribute-snipet").innerHTML'>snipet &rarr;</button>  
 Returns <b>True</b> if the blueprint contains the attribute `id`.  
     - **Parameters:**
         - `id` (_str_) – e.g. `gender` would return **True** for pedestrians' blueprints.  
     - **Return:** _bool_  
-- <a name="carla.ActorBlueprint.has_tag"></a>**<font color="#7fb800">has_tag</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tag**</font>)  
+- <a name="carla.ActorBlueprint.has_tag"></a>**<font color="#7fb800">has_tag</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tag**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorBlueprint.has_tag-snipet").innerHTML'>snipet &rarr;</button>  
 Returns <b>True</b> if the blueprint has the specified `tag` listed.  
     - **Parameters:**
         - `tag` (_str_) – e.g. 'walker'.  
     - **Return:** _bool_  
-- <a name="carla.ActorBlueprint.match_tags"></a>**<font color="#7fb800">match_tags</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
+- <a name="carla.ActorBlueprint.match_tags"></a>**<font color="#7fb800">match_tags</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorBlueprint.match_tags-snipet").innerHTML'>snipet &rarr;</button>  
 Returns <b>True</b> if any of the tags listed for this blueprint matches `wildcard_pattern`. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _bool_  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.get_attribute"></a>**<font color="#7fb800">get_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.get_attribute"></a>**<font color="#7fb800">get_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorBlueprint.get_attribute-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the actor's attribute with `id` as identifier if existing.  
     - **Parameters:**
         - `id` (_str_)  
@@ -193,7 +193,7 @@ Returns the actor's attribute with `id` as identifier if existing.
     - **Setter:** _[carla.ActorBlueprint.set_attribute](#carla.ActorBlueprint.set_attribute)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorBlueprint.set_attribute-snipet").innerHTML'>snipet &rarr;</button>  
 If the `id` attribute is modifiable, changes its value to `value`.  
     - **Parameters:**
         - `id` (_str_) – The identifier for the attribute that is intended to be changed.  
@@ -213,12 +213,12 @@ Returns the amount of attributes for this blueprint.
 A class that contains every actor present on the scene and provides access to them. The list is automatically created and updated by the server and it can be returned using [carla.World](#carla.World).  
 
 <h3>Methods</h3>
-- <a name="carla.ActorList.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
+- <a name="carla.ActorList.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorList.filter-snipet").innerHTML'>snipet &rarr;</button>  
 Filters a list of Actors matching `wildcard_pattern` against their variable __<font color="#f8805a">type_id</font>__ (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _list_  
-- <a name="carla.ActorList.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
+- <a name="carla.ActorList.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorList.find-snipet").innerHTML'>snipet &rarr;</button>  
 Finds an actor using its identifier and returns it or <b>None</b> if it is not present.  
     - **Parameters:**
         - `actor_id` (_int_)  
@@ -249,16 +249,16 @@ An identifier for the snapshot itself.
 <h3>Methods</h3>
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorSnapshot.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorSnapshot.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorSnapshot.get_acceleration-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the acceleration vector registered for an actor in that tick.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – m/s<sup>2</sup></small>_  
-- <a name="carla.ActorSnapshot.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorSnapshot.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorSnapshot.get_angular_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the angular velocity vector registered for an actor in that tick.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – rad/s</small>_  
-- <a name="carla.ActorSnapshot.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorSnapshot.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorSnapshot.get_transform-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the actor's transform (location and rotation) for an actor in that tick.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
-- <a name="carla.ActorSnapshot.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.ActorSnapshot.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.ActorSnapshot.get_velocity-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the velocity vector registered for an actor in that tick.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – m/s</small>_  
 
@@ -281,12 +281,12 @@ A class that contains the blueprints provided for actor spawning. Its main appli
   [Here](bp_library.md) is a reference containing every available blueprint and its specifics.  
 
 <h3>Methods</h3>
-- <a name="carla.BlueprintLibrary.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
+- <a name="carla.BlueprintLibrary.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.BlueprintLibrary.filter-snipet").innerHTML'>snipet &rarr;</button>  
 Filters a list of blueprints matching the `wildcard_pattern` against the id and tags of every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _[carla.BlueprintLibrary](#carla.BlueprintLibrary)_  
-- <a name="carla.BlueprintLibrary.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  
+- <a name="carla.BlueprintLibrary.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.BlueprintLibrary.find-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the blueprint corresponding to that identifier.  
     - **Parameters:**
         - `id` (_str_)  
@@ -320,11 +320,11 @@ The center of the bounding box.
 The orientation of the bounding box.  
 
 <h3>Methods</h3>
-- <a name="carla.BoundingBox.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**extent**</font>)  
+- <a name="carla.BoundingBox.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**extent**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.BoundingBox.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) – Center of the box, relative to its parent.  
         - `extent` (_[carla.Vector3D](#carla.Vector3D)<small> – meters</small>_) – Vector containing half the size of the box for every axis.  
-- <a name="carla.BoundingBox.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_point**</font>, <font color="#00a6ed">**transform**</font>)  
+- <a name="carla.BoundingBox.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_point**</font>, <font color="#00a6ed">**transform**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.BoundingBox.contains-snipet").innerHTML'>snipet &rarr;</button>  
 Returns **True** if a point passed in world space is inside this bounding box.  
     - **Parameters:**
         - `world_point` (_[carla.Location](#carla.Location)<small> – meters</small>_) – The point in world space to be checked.  
@@ -332,10 +332,10 @@ Returns **True** if a point passed in world space is inside this bounding box.
     - **Return:** _bool_  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.BoundingBox.get_local_vertices"></a>**<font color="#7fb800">get_local_vertices</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.BoundingBox.get_local_vertices-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list containing the locations of this object's vertices in local space.  
     - **Return:** _list([carla.Location](#carla.Location))_  
-- <a name="carla.BoundingBox.get_world_vertices"></a>**<font color="#7fb800">get_world_vertices</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
+- <a name="carla.BoundingBox.get_world_vertices"></a>**<font color="#7fb800">get_world_vertices</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.BoundingBox.get_world_vertices-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list containing the locations of this object's vertices in world space.  
     - **Parameters:**
         - `transform` (_[carla.Transform](#carla.Transform)_) – Contains location and rotation needed to convert this object's local space to world space.  
@@ -390,53 +390,53 @@ The Client connects CARLA to the server which runs the simulation. Both server a
   The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](adv_recorder.md) is some information about how to use this recorder.  
 
 <h3>Methods</h3>
-- <a name="carla.Client.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**host**=127.0.0.1</font>, <font color="#00a6ed">**port**=2000</font>, <font color="#00a6ed">**worker_threads**=0</font>)  
+- <a name="carla.Client.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**host**=127.0.0.1</font>, <font color="#00a6ed">**port**=2000</font>, <font color="#00a6ed">**worker_threads**=0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 Client constructor.  
     - **Parameters:**
         - `host` (_str_) – IP address where a CARLA Simulator instance is running. Default is localhost (127.0.0.1).  
         - `port` (_int_) – TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001.  
         - `worker_threads` (_int_) – Number of working threads used for background updates. If 0, use all available concurrency.  
-- <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  
+- <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.apply_batch-snipet").innerHTML'>snipet &rarr;</button>  
 Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.   [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.  
-- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**due_tick_cue**=False</font>)  
+- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**due_tick_cue**=False</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.apply_batch_sync-snipet").innerHTML'>snipet &rarr;</button>  
 Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.  
         - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. It is __False__ by default.  
     - **Return:** _list(command.Response)_  
-- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**parameters**=(2.0, 50.0, 1.0, 0.6, true, true)</font>)  
+- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**parameters**=(2.0, 50.0, 1.0, 0.6, true, true)</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.generate_opendrive_world-snipet").innerHTML'>snipet &rarr;</button>  
 Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
     - **Parameters:**
         - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.  
         - `parameters` (_[carla.OpendriveGenerationParameters](#carla.OpendriveGenerationParameters)_) – Additional settings for the mesh generation. If none are provided, default values will be used.  
-- <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
+- <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.load_world-snipet").innerHTML'>snipet &rarr;</button>  
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  
     - **Parameters:**
         - `map_name` (_str_) – Name of the map to be used in this world. Accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.  
-- <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.reload_world-snipet").innerHTML'>snipet &rarr;</button>  
 Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Raises:** RuntimeError when corresponding.  
-- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>)  
+- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.replay_file-snipet").innerHTML'>snipet &rarr;</button>  
 Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
         - `name` (_str_) – Name of the file containing the information of the simulation.  
         - `start` (_float<small> – seconds</small>_) – Time where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.  
         - `duration` (_float<small> – seconds</small>_) – Time that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
         - `follow_id` (_int_) – ID of the actor to follow. If this is 0 then camera is disabled.  
-- <a name="carla.Client.stop_replayer"></a>**<font color="#7fb800">stop_replayer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**keep_actors**</font>)  
+- <a name="carla.Client.stop_replayer"></a>**<font color="#7fb800">stop_replayer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**keep_actors**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.stop_replayer-snipet").innerHTML'>snipet &rarr;</button>  
 Stop current replayer.  
     - **Parameters:**
         - `keep_actors` (_bool_) – True if you want autoremove all actors from the replayer, or False to keep them.  
-- <a name="carla.Client.show_recorder_actors_blocked"></a>**<font color="#7fb800">show_recorder_actors_blocked</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**min_time**</font>, <font color="#00a6ed">**min_distance**</font>)  
+- <a name="carla.Client.show_recorder_actors_blocked"></a>**<font color="#7fb800">show_recorder_actors_blocked</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**min_time**</font>, <font color="#00a6ed">**min_distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.show_recorder_actors_blocked-snipet").innerHTML'>snipet &rarr;</button>  
 The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.  
     - **Parameters:**
         - `filename` (_str_) – Name of the recorded file to load.  
         - `min_time` (_float<small> – seconds</small>_) – Minimum time the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.  
         - `min_distance` (_float<small> – centimeters</small>_) – Minimum distance the actor has to move to not be considered blocked. Default is 100 centimeters.  
     - **Return:** _string_  
-- <a name="carla.Client.show_recorder_collisions"></a>**<font color="#7fb800">show_recorder_collisions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**category1**</font>, <font color="#00a6ed">**category2**</font>)  
+- <a name="carla.Client.show_recorder_collisions"></a>**<font color="#7fb800">show_recorder_collisions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**category1**</font>, <font color="#00a6ed">**category2**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.show_recorder_collisions-snipet").innerHTML'>snipet &rarr;</button>  
 The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved. The categories will be specified in `category1` and `category2` as follows:
   'h' = Hero, the one vehicle that can be controlled manually or managed by the user.
   'v' = Vehicle
@@ -450,22 +450,22 @@ If you want to see only collisions between a vehicles and a walkers, use for `ca
         - `category1` (_single char_) – Character variable specifying a first type of actor involved in the collision.  
         - `category2` (_single char_) – Character variable specifying the second type of actor involved in the collision.  
     - **Return:** _string_  
-- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)  
+- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.show_recorder_file_info-snipet").innerHTML'>snipet &rarr;</button>  
 The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.  
     - **Parameters:**
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
         - `show_all` (_bool_) – If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.  
     - **Return:** _string_  
-- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**additional_data**=False</font>)  
+- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**additional_data**=False</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.start_recorder-snipet").innerHTML'>snipet &rarr;</button>  
 Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
     - **Parameters:**
         - `filename` (_str_) – Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.  
         - `additional_data` (_bool_) – Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc).  
-- <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.stop_recorder-snipet").innerHTML'>snipet &rarr;</button>  
 Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.get_available_maps-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
   ['/Game/Carla/Maps/Town01',
   '/Game/Carla/Maps/Town02',
@@ -475,27 +475,27 @@ Returns a list of strings containing the paths of the maps available on server. 
   '/Game/Carla/Maps/Town06',
   '/Game/Carla/Maps/Town07'].  
     - **Return:** _list(str)_  
-- <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.get_client_version-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.  
     - **Return:** _str_  
-- <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.get_server_version-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
     - **Return:** _str_  
-- <a name="carla.Client.get_trafficmanager"></a>**<font color="#7fb800">get_trafficmanager</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**client_connection**=8000</font>)  
+- <a name="carla.Client.get_trafficmanager"></a>**<font color="#7fb800">get_trafficmanager</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**client_connection**=8000</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.get_trafficmanager-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.  
     - **Parameters:**
         - `client_connection` (_int_) – Port that will be used by the traffic manager. Default is `8000`.  
     - **Return:** _[carla.TrafficManager](#carla.TrafficManager)_  
-- <a name="carla.Client.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Client.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.get_world-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the world object currently active in the simulation. This world will be later used for example to load maps.  
     - **Return:** _[carla.World](#carla.World)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Client.set_replayer_time_factor"></a>**<font color="#7fb800">set_replayer_time_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**time_factor**=1.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.set_replayer_time_factor-snipet").innerHTML'>snipet &rarr;</button>  
 When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.  
     - **Parameters:**
         - `time_factor` (_float_) – 1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).  
-- <a name="carla.Client.set_timeout"></a>**<font color="#7fb800">set_timeout</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**</font>)  
+- <a name="carla.Client.set_timeout"></a>**<font color="#7fb800">set_timeout</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Client.set_timeout-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.  
     - **Parameters:**
         - `seconds` (_float<small> – seconds</small>_) – New timeout value. Default is 5 seconds.  
@@ -529,7 +529,7 @@ Blue color (0-255).
 Alpha channel (0-255).  
 
 <h3>Methods</h3>
-- <a name="carla.Color.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=0</font>, <font color="#00a6ed">**g**=0</font>, <font color="#00a6ed">**b**=0</font>, <font color="#00a6ed">**a**=255</font>)  
+- <a name="carla.Color.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=0</font>, <font color="#00a6ed">**g**=0</font>, <font color="#00a6ed">**b**=0</font>, <font color="#00a6ed">**a**=255</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Color.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 Initializes a color, black by default.  
     - **Parameters:**
         - `r` (_int_)  
@@ -592,17 +592,17 @@ Image width in pixels.
 - <a name="carla.DVSEventArray.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
 
 <h3>Methods</h3>
-- <a name="carla.DVSEventArray.to_image"></a>**<font color="#7fb800">to_image</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.to_image"></a>**<font color="#7fb800">to_image</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DVSEventArray.to_image-snipet").innerHTML'>snipet &rarr;</button>  
 Converts the image following this pattern: blue indicates positive events, red indicates negative events.  
-- <a name="carla.DVSEventArray.to_array"></a>**<font color="#7fb800">to_array</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.to_array"></a>**<font color="#7fb800">to_array</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DVSEventArray.to_array-snipet").innerHTML'>snipet &rarr;</button>  
 Converts the stream of events to an array of int values in the following order <code>[x, y, t, pol]</code>.  
-- <a name="carla.DVSEventArray.to_array_x"></a>**<font color="#7fb800">to_array_x</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.to_array_x"></a>**<font color="#7fb800">to_array_x</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DVSEventArray.to_array_x-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an array with X pixel coordinate of all the events in the stream.  
-- <a name="carla.DVSEventArray.to_array_y"></a>**<font color="#7fb800">to_array_y</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.to_array_y"></a>**<font color="#7fb800">to_array_y</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DVSEventArray.to_array_y-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an array with Y pixel coordinate of all the events in the stream.  
-- <a name="carla.DVSEventArray.to_array_t"></a>**<font color="#7fb800">to_array_t</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.to_array_t"></a>**<font color="#7fb800">to_array_t</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DVSEventArray.to_array_t-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an array with the timestamp of all the events in the stream.  
-- <a name="carla.DVSEventArray.to_array_pol"></a>**<font color="#7fb800">to_array_pol</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DVSEventArray.to_array_pol"></a>**<font color="#7fb800">to_array_pol</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DVSEventArray.to_array_pol-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an array with the polarity of all the events in the stream.  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
@@ -619,7 +619,7 @@ Iterate over the [carla.DVSEvent](#carla.DVSEvent) retrieved as data.
 Helper class part of [carla.World](#carla.World) that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
 
 <h3>Methods</h3>
-- <a name="carla.DebugHelper.draw_arrow"></a>**<font color="#7fb800">draw_arrow</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**arrow_size**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_arrow"></a>**<font color="#7fb800">draw_arrow</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**arrow_size**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DebugHelper.draw_arrow-snipet").innerHTML'>snipet &rarr;</button>  
 Draws an arrow from `begin` to `end` pointing in that direction.  
     - **Parameters:**
         - `begin` (_[carla.Location](#carla.Location)<small> – meters</small>_) – Point in the coordinate system where the arrow starts.  
@@ -628,7 +628,7 @@ Draws an arrow from `begin` to `end` pointing in that direction.
         - `arrow_size` (_float<small> – meters</small>_) – Size of the tip of the arrow.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DebugHelper.draw_box-snipet").innerHTML'>snipet &rarr;</button>  
 Draws a box, ussually to act for object colliders.  
     - **Parameters:**
         - `box` (_[carla.BoundingBox](#carla.BoundingBox)_) – Object containing a location and the length of a box for every axis.  
@@ -636,7 +636,7 @@ Draws a box, ussually to act for object colliders.
         - `thickness` (_float<small> – meters</small>_) – Density of the lines that define the box.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_line"></a>**<font color="#7fb800">draw_line</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_line"></a>**<font color="#7fb800">draw_line</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DebugHelper.draw_line-snipet").innerHTML'>snipet &rarr;</button>  
 Draws a line in between `begin` and `end`.  
     - **Parameters:**
         - `begin` (_[carla.Location](#carla.Location)<small> – meters</small>_) – Point in the coordinate system where the line starts.  
@@ -644,14 +644,14 @@ Draws a line in between `begin` and `end`.
         - `thickness` (_float<small> – meters</small>_) – Density of the line.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_point"></a>**<font color="#7fb800">draw_point</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**size**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_point"></a>**<font color="#7fb800">draw_point</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**size**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DebugHelper.draw_point-snipet").innerHTML'>snipet &rarr;</button>  
 Draws a point `location`.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)<small> – meters</small>_) – Spot in the coordinate system to center the object.  
         - `size` (_float<small> – meters</small>_) – Density of the point.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_string"></a>**<font color="#7fb800">draw_string</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**text**</font>, <font color="#00a6ed">**draw_shadow**=False</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_string"></a>**<font color="#7fb800">draw_string</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**text**</font>, <font color="#00a6ed">**draw_shadow**=False</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.DebugHelper.draw_string-snipet").innerHTML'>snipet &rarr;</button>  
 Draws a string in a given location of the simulation which can only be seen server-side.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)<small> – meters</small>_) – Spot in the simulation where the text will be centered.  
@@ -674,7 +674,7 @@ Quotient between current RPM and MaxRPM where the autonomous gear box should shi
 Quotient between current RPM and MaxRPM where the autonomous gear box should shift up.  
 
 <h3>Methods</h3>
-- <a name="carla.GearPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**ratio**=1.0</font>, <font color="#00a6ed">**down_ratio**=0.5</font>, <font color="#00a6ed">**up_ratio**=0.65</font>)  
+- <a name="carla.GearPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**ratio**=1.0</font>, <font color="#00a6ed">**down_ratio**=0.5</font>, <font color="#00a6ed">**up_ratio**=0.65</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.GearPhysicsControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `ratio` (_float_)  
         - `down_ratio` (_float_)  
@@ -699,7 +699,7 @@ West/East value of a point on the map.
 Height regarding ground level.  
 
 <h3>Methods</h3>
-- <a name="carla.GeoLocation.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**latitude**=0.0</font>, <font color="#00a6ed">**longitude**=0.0</font>, <font color="#00a6ed">**altitude**=0.0</font>)  
+- <a name="carla.GeoLocation.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**latitude**=0.0</font>, <font color="#00a6ed">**longitude**=0.0</font>, <font color="#00a6ed">**altitude**=0.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.GeoLocation.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `latitude` (_float<small> – degrees</small>_)  
         - `longitude` (_float<small> – degrees</small>_)  
@@ -761,11 +761,11 @@ Image width in pixels.
 - <a name="carla.Image.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
 
 <h3>Methods</h3>
-- <a name="carla.Image.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color_converter**</font>)  
+- <a name="carla.Image.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color_converter**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Image.convert-snipet").innerHTML'>snipet &rarr;</button>  
 Converts the image following the `color_converter` pattern.  
     - **Parameters:**
         - `color_converter` (_[carla.ColorConverter](#carla.ColorConverter)_)  
-- <a name="carla.Image.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>, <font color="#00a6ed">**color_converter**=Raw</font>)  
+- <a name="carla.Image.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>, <font color="#00a6ed">**color_converter**=Raw</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Image.save_to_disk-snipet").innerHTML'>snipet &rarr;</button>  
 Saves the image to disk using a converter pattern stated as `color_converter`. The default conversion pattern is <b>Raw</b> that will make no changes to the image.  
     - **Parameters:**
         - `path` (_str_) – Path that will contain the image.  
@@ -793,7 +793,7 @@ Bounding box encapsulating the junction lanes.
 <h3>Methods</h3>
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Junction.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Junction.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Junction.get_waypoints-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of pairs of waypoints. Every tuple on the list contains first an initial and then a final waypoint within the intersection boundaries that describe the beginning and the end of said lane along the junction. Lanes follow their OpenDRIVE definitions so there may be many different tuples with the same starting waypoint due to possible deviations, as this are considered different lanes.  
     - **Parameters:**
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Type of lanes to get the waypoints.  
@@ -855,7 +855,7 @@ The location and orientation of the landmark in the simulation.
 <h3>Methods</h3>
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Landmark.get_lane_validities"></a>**<font color="#7fb800">get_lane_validities</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Landmark.get_lane_validities-snipet").innerHTML'>snipet &rarr;</button>  
 Returns which lanes the landmark is affecting to. As there may be specific lanes where the landmark is not effective, the return is a list of pairs containing ranges of the __lane_id__ affected:
 <small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>.  
     - **Return:** _list(tuple(int))_  
@@ -1089,13 +1089,13 @@ Horizontal angle the LIDAR is rotated at the time of the measurement.
 Received list of 4D points. Each point consists of [x,y,z] coordiantes plus the intensity computed for that point.  
 
 <h3>Methods</h3>
-- <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+- <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LidarMeasurement.save_to_disk-snipet").innerHTML'>snipet &rarr;</button>  
 Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.  
     - **Parameters:**
         - `path` (_str_)  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LidarMeasurement.get_point_count-snipet").innerHTML'>snipet &rarr;</button>  
 Retrieves the number of points sorted by channel that are generated by this measure. Sorting by channel allows to identify the original channel for every point.  
     - **Parameters:**
         - `channel` (_int_)  
@@ -1131,25 +1131,25 @@ Group the light belongs to.
 State of the light. Summarizes its attributes, group, and if it is on/off.  
 
 <h3>Methods</h3>
-- <a name="carla.Light.turn_off"></a>**<font color="#7fb800">turn_off</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Light.turn_off"></a>**<font color="#7fb800">turn_off</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Light.turn_off-snipet").innerHTML'>snipet &rarr;</button>  
 Switches off the light.  
-- <a name="carla.Light.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Light.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Light.turn_on-snipet").innerHTML'>snipet &rarr;</button>  
 Switches on the light.  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Light.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Light.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Light.set_color-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the color of the light to `color`.  
     - **Parameters:**
         - `color` (_[carla.Color](#carla.Color)_)  
-- <a name="carla.Light.set_intensity"></a>**<font color="#7fb800">set_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**intensity**</font>)  
+- <a name="carla.Light.set_intensity"></a>**<font color="#7fb800">set_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**intensity**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Light.set_intensity-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the intensity of the light to `intensity`.  
     - **Parameters:**
         - `intensity` (_float<small> – lumens</small>_)  
-- <a name="carla.Light.set_light_group"></a>**<font color="#7fb800">set_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
+- <a name="carla.Light.set_light_group"></a>**<font color="#7fb800">set_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Light.set_light_group-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the light to the group `light_group`.  
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_)  
-- <a name="carla.Light.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
+- <a name="carla.Light.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Light.set_light_state-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the state of the light to `light_state`. This may change attributes, group and turn the light on/off all at once.  
     - **Parameters:**
         - `light_state` (_[carla.LightState](#carla.LightState)_)  
@@ -1177,107 +1177,107 @@ This class handles the lights in the scene. Its main use is to get and set the s
 __Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as [carla.Light](#carla.Light) objects. These have to be managed using [carla.Vehicle](#carla.Vehicle) and [carla.VehicleLightState](#carla.VehicleLightState).  
 
 <h3>Methods</h3>
-- <a name="carla.LightManager.is_active"></a>**<font color="#7fb800">is_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+- <a name="carla.LightManager.is_active"></a>**<font color="#7fb800">is_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.is_active-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list with booleans stating if the elements in `lights` are switched on/off.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list(bool)_  
-- <a name="carla.LightManager.turn_off"></a>**<font color="#7fb800">turn_off</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+- <a name="carla.LightManager.turn_off"></a>**<font color="#7fb800">turn_off</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.turn_off-snipet").innerHTML'>snipet &rarr;</button>  
 Switches off all the lights in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be switched off.  
-- <a name="carla.LightManager.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+- <a name="carla.LightManager.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.turn_on-snipet").innerHTML'>snipet &rarr;</button>  
 Switches on all the lights in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be switched on.  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.get_all_lights"></a>**<font color="#7fb800">get_all_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.get_all_lights"></a>**<font color="#7fb800">get_all_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.get_all_lights-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list containing the lights in a certain group. By default, the group is `None`.  
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – Group to filter the lights returned. Default is `None`.  
     - **Return:** _list([carla.Light](#carla.Light))_  
-- <a name="carla.LightManager.get_color"></a>**<font color="#7fb800">get_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+- <a name="carla.LightManager.get_color"></a>**<font color="#7fb800">get_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.get_color-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list with the colors of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.Color](#carla.Color))_  
     - **Setter:** _[carla.LightManager.set_color](#carla.LightManager.set_color)_  
-- <a name="carla.LightManager.get_intensity"></a>**<font color="#7fb800">get_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+- <a name="carla.LightManager.get_intensity"></a>**<font color="#7fb800">get_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.get_intensity-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list with the intensity of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list(float)<small> – lumens</small>_  
     - **Setter:** _[carla.LightManager.set_intensity](#carla.LightManager.set_intensity)_  
-- <a name="carla.LightManager.get_light_group"></a>**<font color="#7fb800">get_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+- <a name="carla.LightManager.get_light_group"></a>**<font color="#7fb800">get_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.get_light_group-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list with the group of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.LightGroup](#carla.LightGroup))_  
     - **Setter:** _[carla.LightManager.set_light_group](#carla.LightManager.set_light_group)_  
-- <a name="carla.LightManager.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+- <a name="carla.LightManager.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.get_light_state-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list with the state of all the attributes of every element in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be queried.  
     - **Return:** _list([carla.LightState](#carla.LightState))_  
     - **Setter:** _[carla.LightManager.set_light_state](#carla.LightManager.set_light_state)_  
-- <a name="carla.LightManager.get_turned_off_lights"></a>**<font color="#7fb800">get_turned_off_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
+- <a name="carla.LightManager.get_turned_off_lights"></a>**<font color="#7fb800">get_turned_off_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.get_turned_off_lights-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list containing lights switched off in the scene, filtered by group.  
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – List of lights to be queried.  
     - **Return:** _list([carla.Light](#carla.Light))_  
-- <a name="carla.LightManager.get_turned_on_lights"></a>**<font color="#7fb800">get_turned_on_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
+- <a name="carla.LightManager.get_turned_on_lights"></a>**<font color="#7fb800">get_turned_on_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.get_turned_on_lights-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list containing lights switched on in the scene, filtered by group.  
     - **Parameters:**
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – List of lights to be queried.  
     - **Return:** _list([carla.Light](#carla.Light))_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.set_active"></a>**<font color="#7fb800">set_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**active**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LightManager.set_active"></a>**<font color="#7fb800">set_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**active**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_active-snipet").innerHTML'>snipet &rarr;</button>  
 Switches on/off the elements in `lights`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be switched on/off.  
         - `active` (_list(bool)_) – List of booleans to be applied.  
-- <a name="carla.LightManager.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**color**</font>)  
+- <a name="carla.LightManager.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**color**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_color-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the color of the elements in `lights` to `color`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `color` (_[carla.Color](#carla.Color)_) – Color to be applied.  
     - **Getter:** _[carla.LightManager.get_color](#carla.LightManager.get_color)_  
-- <a name="carla.LightManager.set_colors"></a>**<font color="#7fb800">set_colors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**colors**</font>)  
+- <a name="carla.LightManager.set_colors"></a>**<font color="#7fb800">set_colors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**colors**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_colors-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the color of each element in `lights` to the corresponding in `colors`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `colors` (_list([carla.Color](#carla.Color))_) – List of colors to be applied.  
-- <a name="carla.LightManager.set_intensity"></a>**<font color="#7fb800">set_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensity**</font>)  
+- <a name="carla.LightManager.set_intensity"></a>**<font color="#7fb800">set_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensity**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_intensity-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the intensity of every element in `lights` to `intensity`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `intensity` (_float<small> – lumens</small>_) – Intensity to be applied.  
     - **Getter:** _[carla.LightManager.get_intensity](#carla.LightManager.get_intensity)_  
-- <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  
+- <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_intensities-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the intensity of each element in `lights` to the corresponding in `intensities`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `intensities` (_list(float)<small> – lumens</small>_) – List of intensities to be applied.  
-- <a name="carla.LightManager.set_light_group"></a>**<font color="#7fb800">set_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_group**</font>)  
+- <a name="carla.LightManager.set_light_group"></a>**<font color="#7fb800">set_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_group**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_light_group-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the group of every element in `lights` to `light_group`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) – Group to be applied.  
     - **Getter:** _[carla.LightManager.get_light_group](#carla.LightManager.get_light_group)_  
-- <a name="carla.LightManager.set_light_groups"></a>**<font color="#7fb800">set_light_groups</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_groups**</font>)  
+- <a name="carla.LightManager.set_light_groups"></a>**<font color="#7fb800">set_light_groups</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_groups**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_light_groups-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the group of each element in `lights` to the corresponding in `light_groups`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `light_groups` (_list([carla.LightGroup](#carla.LightGroup))_) – List of groups to be applied.  
-- <a name="carla.LightManager.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_state**</font>)  
+- <a name="carla.LightManager.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_state**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_light_state-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the state of the attributes of every element in `lights` to `light_state`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
         - `light_state` (_[carla.LightState](#carla.LightState)_) – State of the attributes to be applied.  
     - **Getter:** _[carla.LightManager.get_light_state](#carla.LightManager.get_light_state)_  
-- <a name="carla.LightManager.set_light_states"></a>**<font color="#7fb800">set_light_states</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_states**</font>)  
+- <a name="carla.LightManager.set_light_states"></a>**<font color="#7fb800">set_light_states</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_states**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightManager.set_light_states-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the state of the attributes of each element in `lights` to the corresponding in `light_states`.  
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) – List of lights to be changed.  
@@ -1299,7 +1299,7 @@ Group a light belongs to.
 Switch of a light. It is __True__ when the light is on.  
 
 <h3>Methods</h3>
-- <a name="carla.LightState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**intensity**=0.0</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)()</font>, <font color="#00a6ed">**group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>, <font color="#00a6ed">**active**=False</font>)  
+- <a name="carla.LightState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**intensity**=0.0</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)()</font>, <font color="#00a6ed">**group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>, <font color="#00a6ed">**active**=False</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.LightState.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `intensity` (_float<small> – lumens</small>_) – Intensity of the light. Default is `0.0`.  
         - `color` (_[carla.Color](#carla.Color)_) – Color of the light. Default is black.  
@@ -1320,12 +1320,12 @@ Distance from origin to spot on Y axis.
 Distance from origin to spot on Z axis.  
 
 <h3>Methods</h3>
-- <a name="carla.Location.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>, <font color="#00a6ed">**z**=0.0</font>)  
+- <a name="carla.Location.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>, <font color="#00a6ed">**z**=0.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Location.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `x` (_float_)  
         - `y` (_float_)  
         - `z` (_float_)  
-- <a name="carla.Location.distance"></a>**<font color="#7fb800">distance</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+- <a name="carla.Location.distance"></a>**<font color="#7fb800">distance</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Location.distance-snipet").innerHTML'>snipet &rarr;</button>  
 Returns Euclidean distance from this location to another one.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) – The other point to compute the distance with.  
@@ -1352,56 +1352,56 @@ Class containing the road information and waypoint managing. Data is retrieved f
 The name of the map. It corresponds to the .umap from Unreal Engine that is loaded from a CARLA server, which then references to the .xodr road description.  
 
 <h3>Methods</h3>
-- <a name="carla.Map.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**xodr_content**</font>)  
+- <a name="carla.Map.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**xodr_content**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 Constructor for this class. Though a map is automatically generated when initializing the world, using this method in no-rendering mode facilitates working with an .xodr without any CARLA server running.  
     - **Parameters:**
         - `name` (_str_) – Name of the current map.  
         - `xodr_content` (_str_) – .xodr content in string format.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
-- <a name="carla.Map.generate_waypoints"></a>**<font color="#7fb800">generate_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+- <a name="carla.Map.generate_waypoints"></a>**<font color="#7fb800">generate_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.generate_waypoints-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of waypoints with a certain distance between them for every lane and centered inside of it. Waypoints are not listed in any particular order. Remember that waypoints closer than 2cm within the same road, section and lane will have the same identificator.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – Approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
-- <a name="carla.Map.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+- <a name="carla.Map.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.save_to_disk-snipet").innerHTML'>snipet &rarr;</button>  
 Saves the .xodr OpenDRIVE file of the current map to disk.  
     - **Parameters:**
         - `path` – Path where the file will be saved.  
-- <a name="carla.Map.to_opendrive"></a>**<font color="#7fb800">to_opendrive</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Map.to_opendrive"></a>**<font color="#7fb800">to_opendrive</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.to_opendrive-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the .xodr OpenDRIVe file of the current map as string.  
     - **Return:** _str_  
-- <a name="carla.Map.transform_to_geolocation"></a>**<font color="#7fb800">transform_to_geolocation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+- <a name="carla.Map.transform_to_geolocation"></a>**<font color="#7fb800">transform_to_geolocation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.transform_to_geolocation-snipet").innerHTML'>snipet &rarr;</button>  
 Converts a given `location`, a point in the simulation, to a [carla.GeoLocation](#carla.GeoLocation), which represents world coordinates. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
     - **Return:** _[carla.GeoLocation](#carla.GeoLocation)_  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Map.get_all_landmarks"></a>**<font color="#7fb800">get_all_landmarks</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Map.get_all_landmarks"></a>**<font color="#7fb800">get_all_landmarks</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_all_landmarks-snipet").innerHTML'>snipet &rarr;</button>  
 Returns all the landmarks in the map. Landmarks retrieved using this method have a __null__ waypoint.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
-- <a name="carla.Map.get_all_landmarks_from_id"></a>**<font color="#7fb800">get_all_landmarks_from_id</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive_id**</font>)  
+- <a name="carla.Map.get_all_landmarks_from_id"></a>**<font color="#7fb800">get_all_landmarks_from_id</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive_id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_all_landmarks_from_id-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the landmarks with a certain OpenDRIVE ID. Landmarks retrieved using this method have a __null__ waypoint.  
     - **Parameters:**
         - `opendrive_id` (_string_) – The OpenDRIVE ID of the landmarks.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
-- <a name="carla.Map.get_all_landmarks_of_type"></a>**<font color="#7fb800">get_all_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**type**</font>)  
+- <a name="carla.Map.get_all_landmarks_of_type"></a>**<font color="#7fb800">get_all_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**type**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_all_landmarks_of_type-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the landmarks of a specific type. Landmarks retrieved using this method have a __null__ waypoint.  
     - **Parameters:**
         - `type` (_string_) – The type of the landmarks.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
-- <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+- <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_landmark_group-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.  
     - **Parameters:**
         - `landmark` (_[carla.Landmark](#carla.Landmark)_) – A landmark that belongs to the group.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
-- <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_spawn_points-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes [carla.Transform](#carla.Transform) objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
-- <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_topology-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of tuples describing a minimal graph of the topology of the OpenDRIVE file. The tuples contain pairs of waypoints located either at the point a road begins or ends. The first one is the origin and the second one represents another road end that can be reached. This graph can be loaded into [NetworkX](https://networkx.github.io/) to work with. Output could look like this: <b>[(w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4)]</b>.  
     - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint), [carla.Waypoint](#carla.Waypoint)))_  
-- <a name="carla.Map.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**project_to_road**=True</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+- <a name="carla.Map.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**project_to_road**=True</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_waypoint-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
  The method will return <b>None</b> if the waypoint is not found, which may happen only when trying to retrieve a waypoint for an exact location. That eases checking if a point is inside a certain road, as otherwise, it will return the corresponding waypoint.  
     - **Parameters:**
@@ -1409,7 +1409,7 @@ Returns a waypoint that can be located in an exact location or translated to the
         - `project_to_road` (_bool_) – If **True**, the waypoint will be at the center of the closest lane. This is the default setting. If **False**, the waypoint will be exactly in `location`. <b>None</b> means said location does not belong to a road.  
         - `lane_type` (_[carla.LaneType](#carla.LaneType)_) – Limits the search for nearest lane to one or various lane types that can be flagged.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
-- <a name="carla.Map.get_waypoint_xodr"></a>**<font color="#7fb800">get_waypoint_xodr</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**lane_id**</font>, <font color="#00a6ed">**s**</font>)  
+- <a name="carla.Map.get_waypoint_xodr"></a>**<font color="#7fb800">get_waypoint_xodr</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**lane_id**</font>, <font color="#00a6ed">**s**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Map.get_waypoint_xodr-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a waypoint if all the parameters passed are correct. Otherwise, returns __None__.  
     - **Parameters:**
         - `road_id` (_int_) – ID of the road to get the waypoint.  
@@ -1465,7 +1465,7 @@ If __True__, Pedestrian navigation will be enabled using Recast tool. For very l
 Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
 
 <h3>Methods</h3>
-- <a name="carla.Osm2Odr.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**osm_file**</font>, <font color="#00a6ed">**settings**</font>)  
+- <a name="carla.Osm2Odr.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**osm_file**</font>, <font color="#00a6ed">**settings**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Osm2Odr.convert-snipet").innerHTML'>snipet &rarr;</button>  
 Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.  
     - **Parameters:**
         - `osm_file` (_str_) – The content of the input OpenStreetMap file parsed as string.  
@@ -1521,7 +1521,7 @@ The complete information of the [carla.RadarDetection](#carla.RadarDetection) th
 <h3>Methods</h3>
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RadarMeasurement.get_detection_count"></a>**<font color="#7fb800">get_detection_count</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RadarMeasurement.get_detection_count"></a>**<font color="#7fb800">get_detection_count</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RadarMeasurement.get_detection_count-snipet").innerHTML'>snipet &rarr;</button>  
 Retrieves the number of entries generated, same as **<font color="#7fb800">\__str__()</font>**.  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
@@ -1547,7 +1547,7 @@ Z-axis rotation angle.
 X-axis rotation angle.  
 
 <h3>Methods</h3>
-- <a name="carla.Rotation.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pitch**=0.0</font>, <font color="#00a6ed">**yaw**=0.0</font>, <font color="#00a6ed">**roll**=0.0</font>)  
+- <a name="carla.Rotation.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pitch**=0.0</font>, <font color="#00a6ed">**yaw**=0.0</font>, <font color="#00a6ed">**roll**=0.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Rotation.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `pitch` (_float<small> – degrees</small>_) – Y-axis rotation angle.  
         - `yaw` (_float<small> – degrees</small>_) – Z-axis rotation angle.  
@@ -1555,13 +1555,13 @@ X-axis rotation angle.
     - **Warning:** <font color="#ED2F2F">_The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations._</font>  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Rotation.get_forward_vector-snipet").innerHTML'>snipet &rarr;</button>  
 Computes the vector pointing forward according to the rotation of the object.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
-- <a name="carla.Rotation.get_right_vector"></a>**<font color="#7fb800">get_right_vector</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Rotation.get_right_vector"></a>**<font color="#7fb800">get_right_vector</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Rotation.get_right_vector-snipet").innerHTML'>snipet &rarr;</button>  
 Computes the vector pointing to the right according to the rotation of the object.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
-- <a name="carla.Rotation.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Rotation.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Rotation.get_up_vector-snipet").innerHTML'>snipet &rarr;</button>  
 Computes the vector pointing upwards according to the rotation of the object.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
 
@@ -1707,7 +1707,7 @@ Detailed RSS situations extracted from the world model.
 These objects apply restrictions to a [carla.VehicleControl](#carla.VehicleControl). It is part of the CARLA implementation of the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib). This class works hand in hand with a [rss sensor](ref_sensors.md#rss-sensor), which provides the data of the restrictions to be applied.  
 
 <h3>Methods</h3>
-- <a name="carla.RssRestrictor.restrict_vehicle_control"></a>**<font color="#7fb800">restrict_vehicle_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vehicle_control**</font>, <font color="#00a6ed">**proper_response**</font>, <font color="#00a6ed">**ego_dynamics_on_route**</font>, <font color="#00a6ed">**vehicle_physics**</font>)  
+- <a name="carla.RssRestrictor.restrict_vehicle_control"></a>**<font color="#7fb800">restrict_vehicle_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vehicle_control**</font>, <font color="#00a6ed">**proper_response**</font>, <font color="#00a6ed">**ego_dynamics_on_route**</font>, <font color="#00a6ed">**vehicle_physics**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RssRestrictor.restrict_vehicle_control-snipet").innerHTML'>snipet &rarr;</button>  
 Applies the safety restrictions given by a [carla.RssSensor](#carla.RssSensor) to a [carla.VehicleControl](#carla.VehicleControl).  
     - **Parameters:**
         - `vehicle_control` (_[carla.VehicleControl](#carla.VehicleControl)_) – The input vehicle control to be restricted.  
@@ -1747,25 +1747,25 @@ Switches the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integr
 The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random.  
 
 <h3>Methods</h3>
-- <a name="carla.RssSensor.append_routing_target"></a>**<font color="#7fb800">append_routing_target</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**routing_target**</font>)  
+- <a name="carla.RssSensor.append_routing_target"></a>**<font color="#7fb800">append_routing_target</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**routing_target**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RssSensor.append_routing_target-snipet").innerHTML'>snipet &rarr;</button>  
 Appends a new target position to the current route of the vehicle.  
     - **Parameters:**
         - `routing_target` (_[carla.Transform](#carla.Transform)_) – New target point for the route. Choose these after the intersections to force the route to take the desired turn.  
-- <a name="carla.RssSensor.reset_routing_targets"></a>**<font color="#7fb800">reset_routing_targets</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.RssSensor.reset_routing_targets"></a>**<font color="#7fb800">reset_routing_targets</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RssSensor.reset_routing_targets-snipet").innerHTML'>snipet &rarr;</button>  
 Erases the targets that have been appended to the route.  
-- <a name="carla.RssSensor.drop_route"></a>**<font color="#7fb800">drop_route</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.RssSensor.drop_route"></a>**<font color="#7fb800">drop_route</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RssSensor.drop_route-snipet").innerHTML'>snipet &rarr;</button>  
 Discards the current route. If there are targets remaining in **<font color="#f8805a">routing_targets</font>**, creates a new route using those. Otherwise, a new route is created at random.  
-- <a name="carla.RssSensor.register_actor_constellation_callback"></a>**<font color="#7fb800">register_actor_constellation_callback</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
+- <a name="carla.RssSensor.register_actor_constellation_callback"></a>**<font color="#7fb800">register_actor_constellation_callback</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RssSensor.register_actor_constellation_callback-snipet").innerHTML'>snipet &rarr;</button>  
 Register a callback to customize a [carla.RssActorConstellationResult](#carla.RssActorConstellationResult). By this callback the settings of RSS parameters are done per actor constellation and the settings (ego_vehicle_dynamics, other_vehicle_dynamics and pedestrian_dynamics) have no effect.  
     - **Parameters:**
         - `callback` – The function to be called whenever a RSS situation is about to be calculated.  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.set_log_level"></a>**<font color="#7fb800">set_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.set_log_level"></a>**<font color="#7fb800">set_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RssSensor.set_log_level-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the log level.  
     - **Parameters:**
         - `log_level` (_[carla.RssLogLevel](#carla.RssLogLevel)_) – New log level.  
-- <a name="carla.RssSensor.set_map_log_level"></a>**<font color="#7fb800">set_map_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  
+- <a name="carla.RssSensor.set_map_log_level"></a>**<font color="#7fb800">set_map_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.RssSensor.set_map_log_level-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the map log level.  
     - **Parameters:**
         - `log_level` (_[carla.RssLogLevel](#carla.RssLogLevel)_) – New map log level.  
@@ -1807,13 +1807,13 @@ Horizontal angle the LIDAR is rotated at the time of the measurement.
 Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag.  
 
 <h3>Methods</h3>
-- <a name="carla.SemanticLidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+- <a name="carla.SemanticLidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.SemanticLidarMeasurement.save_to_disk-snipet").innerHTML'>snipet &rarr;</button>  
 Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open-source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.  
     - **Parameters:**
         - `path` (_str_)  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.SemanticLidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.SemanticLidarMeasurement.get_point_count"></a>**<font color="#7fb800">get_point_count</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**channel**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.SemanticLidarMeasurement.get_point_count-snipet").innerHTML'>snipet &rarr;</button>  
 Retrieves the number of points sorted by channel that are generated by this measure. Sorting by channel allows to identify the original channel for every point.  
     - **Parameters:**
         - `channel` (_int_)  
@@ -1852,11 +1852,11 @@ Iterate over the [carla.SemanticLidarDetection](#carla.SemanticLidarDetection) r
 When <b>True</b> the sensor will be waiting for data.  
 
 <h3>Methods</h3>
-- <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
+- <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Sensor.listen-snipet").innerHTML'>snipet &rarr;</button>  
 The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type [carla.SensorData](#carla.SensorData) to work with.  
     - **Parameters:**
         - `callback` (_function_) – The called function with one argument containing the sensor data.  
-- <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Sensor.stop-snipet").innerHTML'>snipet &rarr;</button>  
 Commands the sensor to stop listening for data.  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
@@ -1901,7 +1901,7 @@ Simulated seconds elapsed since the previous frame.
 Time register of the frame at which this measurement was taken given by the OS in seconds.  
 
 <h3>Methods</h3>
-- <a name="carla.Timestamp.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**frame**</font>, <font color="#00a6ed">**elapsed_seconds**</font>, <font color="#00a6ed">**delta_seconds**</font>, <font color="#00a6ed">**platform_timestamp**</font>)  
+- <a name="carla.Timestamp.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**frame**</font>, <font color="#00a6ed">**elapsed_seconds**</font>, <font color="#00a6ed">**delta_seconds**</font>, <font color="#00a6ed">**platform_timestamp**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Timestamp.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `frame` (_int_)  
         - `elapsed_seconds` (_float<small> – seconds</small>_)  
@@ -1925,63 +1925,63 @@ Time register of the frame at which this measurement was taken given by the OS i
 Current state of the traffic light.  
 
 <h3>Methods</h3>
-- <a name="carla.TrafficLight.freeze"></a>**<font color="#7fb800">freeze</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**freeze**</font>)  
+- <a name="carla.TrafficLight.freeze"></a>**<font color="#7fb800">freeze</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**freeze**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.freeze-snipet").innerHTML'>snipet &rarr;</button>  
 Stops all the traffic lights in the scene at their current state.  
     - **Parameters:**
         - `freeze` (_bool_)  
-- <a name="carla.TrafficLight.is_frozen"></a>**<font color="#7fb800">is_frozen</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.is_frozen"></a>**<font color="#7fb800">is_frozen</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.is_frozen-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns <b>True</b> if a traffic light is frozen according to last tick. The method does not call the simulator.  
     - **Return:** _bool_  
-- <a name="carla.TrafficLight.reset_group"></a>**<font color="#7fb800">reset_group</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.reset_group"></a>**<font color="#7fb800">reset_group</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.reset_group-snipet").innerHTML'>snipet &rarr;</button>  
 Resets the state of the traffic lights of the group to the initial state at the start of the simulation.  
     - **Note:** <font color="#8E8E8E">_This method calls the simulator.
 _</font>  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.get_elapsed_time"></a>**<font color="#7fb800">get_elapsed_time</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.get_elapsed_time"></a>**<font color="#7fb800">get_elapsed_time</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.get_elapsed_time-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.  
     - **Return:** _float<small> – seconds</small>_  
-- <a name="carla.TrafficLight.get_group_traffic_lights"></a>**<font color="#7fb800">get_group_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.get_group_traffic_lights"></a>**<font color="#7fb800">get_group_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.get_group_traffic_lights-snipet").innerHTML'>snipet &rarr;</button>  
 Returns all traffic lights in the group this one belongs to.  
     - **Return:** _list([carla.TrafficLight](#carla.TrafficLight))_  
     - **Note:** <font color="#8E8E8E">_This method calls the simulator.
 _</font>  
-- <a name="carla.TrafficLight.get_pole_index"></a>**<font color="#7fb800">get_pole_index</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.get_pole_index"></a>**<font color="#7fb800">get_pole_index</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.get_pole_index-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the index of the pole that identifies it as part of the traffic light group of a junction.  
     - **Return:** _int_  
-- <a name="carla.TrafficLight.get_state"></a>**<font color="#7fb800">get_state</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.get_state"></a>**<font color="#7fb800">get_state</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.get_state-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the state of the traffic light according to last tick. The method does not call the simulator.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
     - **Setter:** _[carla.TrafficLight.set_state](#carla.TrafficLight.set_state)_  
-- <a name="carla.TrafficLight.get_green_time"></a>**<font color="#7fb800">get_green_time</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.get_green_time"></a>**<font color="#7fb800">get_green_time</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.get_green_time-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the time set for the traffic light to be green, according to last tick. The method does not call the simulator.  
     - **Return:** _float<small> – seconds</small>_  
     - **Setter:** _[carla.TrafficLight.set_green_time](#carla.TrafficLight.set_green_time)_  
-- <a name="carla.TrafficLight.get_red_time"></a>**<font color="#7fb800">get_red_time</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.get_red_time"></a>**<font color="#7fb800">get_red_time</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.get_red_time-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the time set for the traffic light to be red, according to last tick. The method does not call the simulator.  
     - **Return:** _float<small> – seconds</small>_  
     - **Setter:** _[carla.TrafficLight.set_red_time](#carla.TrafficLight.set_red_time)_  
-- <a name="carla.TrafficLight.get_yellow_time"></a>**<font color="#7fb800">get_yellow_time</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficLight.get_yellow_time"></a>**<font color="#7fb800">get_yellow_time</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.get_yellow_time-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the time set for the traffic light to be yellow, according to last tick. The method does not call the simulator.  
     - **Return:** _float<small> – seconds</small>_  
     - **Setter:** _[carla.TrafficLight.set_yellow_time](#carla.TrafficLight.set_yellow_time)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.set_state-snipet").innerHTML'>snipet &rarr;</button>  
 Sets a given state to a traffic light actor.  
     - **Parameters:**
         - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
     - **Getter:** _[carla.TrafficLight.get_state](#carla.TrafficLight.get_state)_  
-- <a name="carla.TrafficLight.set_green_time"></a>**<font color="#7fb800">set_green_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**green_time**</font>)  
+- <a name="carla.TrafficLight.set_green_time"></a>**<font color="#7fb800">set_green_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**green_time**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.set_green_time-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `green_time` (_float<small> – seconds</small>_) – Sets a given time for the green light to be active.  
     - **Getter:** _[carla.TrafficLight.get_green_time](#carla.TrafficLight.get_green_time)_  
-- <a name="carla.TrafficLight.set_red_time"></a>**<font color="#7fb800">set_red_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**red_time**</font>)  
+- <a name="carla.TrafficLight.set_red_time"></a>**<font color="#7fb800">set_red_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**red_time**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.set_red_time-snipet").innerHTML'>snipet &rarr;</button>  
 Sets a given time for the red state to be active.  
     - **Parameters:**
         - `red_time` (_float<small> – seconds</small>_)  
     - **Getter:** _[carla.TrafficLight.get_red_time](#carla.TrafficLight.get_red_time)_  
-- <a name="carla.TrafficLight.set_yellow_time"></a>**<font color="#7fb800">set_yellow_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**yellow_time**</font>)  
+- <a name="carla.TrafficLight.set_yellow_time"></a>**<font color="#7fb800">set_yellow_time</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**yellow_time**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficLight.set_yellow_time-snipet").innerHTML'>snipet &rarr;</button>  
 Sets a given time for the yellow light to be active.  
     - **Parameters:**
         - `yellow_time` (_float<small> – seconds</small>_)  
@@ -2009,54 +2009,54 @@ The traffic manager is a module built on top of the CARLA API in C++. It handles
 In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.  
 
 <h3>Methods</h3>
-- <a name="carla.TrafficManager.auto_lane_change"></a>**<font color="#7fb800">auto_lane_change</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enable**</font>)  
+- <a name="carla.TrafficManager.auto_lane_change"></a>**<font color="#7fb800">auto_lane_change</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enable**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.auto_lane_change-snipet").innerHTML'>snipet &rarr;</button>  
 Turns on or off lane changing behaviour for a vehicle.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – The vehicle whose settings are changed.  
         - `enable` (_bool_) – __True__ is default and enables lane changes. __False__ will disable them.  
-- <a name="carla.TrafficManager.collision_detection"></a>**<font color="#7fb800">collision_detection</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**reference_actor**</font>, <font color="#00a6ed">**other_actor**</font>, <font color="#00a6ed">**detect_collision**</font>)  
+- <a name="carla.TrafficManager.collision_detection"></a>**<font color="#7fb800">collision_detection</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**reference_actor**</font>, <font color="#00a6ed">**other_actor**</font>, <font color="#00a6ed">**detect_collision**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.collision_detection-snipet").innerHTML'>snipet &rarr;</button>  
 Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.  
     - **Parameters:**
         - `reference_actor` (_[carla.Actor](#carla.Actor)_) – Vehicle that is going to ignore collisions.  
         - `other_actor` (_[carla.Actor](#carla.Actor)_) – The actor that `reference_actor` is going to ignore collisions with.  
         - `detect_collision` (_bool_) – __True__ is default and enables collisions. __False__ will disable them.  
-- <a name="carla.TrafficManager.distance_to_leading_vehicle"></a>**<font color="#7fb800">distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**distance**</font>)  
+- <a name="carla.TrafficManager.distance_to_leading_vehicle"></a>**<font color="#7fb800">distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.distance_to_leading_vehicle-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose minimum distance is being changed.  
         - `distance` (_float<small> – meters</small>_) – Meters between both vehicles.  
-- <a name="carla.TrafficManager.force_lane_change"></a>**<font color="#7fb800">force_lane_change</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**direction**</font>)  
+- <a name="carla.TrafficManager.force_lane_change"></a>**<font color="#7fb800">force_lane_change</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**direction**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.force_lane_change-snipet").innerHTML'>snipet &rarr;</button>  
 Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle being forced to change lanes.  
         - `direction` (_bool_) – Destination lane. __True__ is the one on the right and __False__ is the left one.  
-- <a name="carla.TrafficManager.global_distance_to_leading_vehicle"></a>**<font color="#7fb800">global_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+- <a name="carla.TrafficManager.global_distance_to_leading_vehicle"></a>**<font color="#7fb800">global_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.global_distance_to_leading_vehicle-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – Meters between vehicles.  
-- <a name="carla.TrafficManager.global_percentage_speed_difference"></a>**<font color="#7fb800">global_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  
+- <a name="carla.TrafficManager.global_percentage_speed_difference"></a>**<font color="#7fb800">global_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.global_percentage_speed_difference-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
-- <a name="carla.TrafficManager.ignore_lights_percentage"></a>**<font color="#7fb800">ignore_lights_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+- <a name="carla.TrafficManager.ignore_lights_percentage"></a>**<font color="#7fb800">ignore_lights_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.ignore_lights_percentage-snipet").innerHTML'>snipet &rarr;</button>  
 During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – The actor that is going to ignore traffic lights.  
         - `perc` (_float_) – Between 0 and 100. Amount of times traffic lights will be ignored.  
-- <a name="carla.TrafficManager.ignore_vehicles_percentage"></a>**<font color="#7fb800">ignore_vehicles_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+- <a name="carla.TrafficManager.ignore_vehicles_percentage"></a>**<font color="#7fb800">ignore_vehicles_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.ignore_vehicles_percentage-snipet").innerHTML'>snipet &rarr;</button>  
 During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with another vehicle will be ignored for a vehicle.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – The vehicle that is going to ignore other vehicles.  
         - `perc` (_float_) – Between 0 and 100. Amount of times collisions will be ignored.  
-- <a name="carla.TrafficManager.ignore_walkers_percentage"></a>**<font color="#7fb800">ignore_walkers_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+- <a name="carla.TrafficManager.ignore_walkers_percentage"></a>**<font color="#7fb800">ignore_walkers_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.ignore_walkers_percentage-snipet").innerHTML'>snipet &rarr;</button>  
 During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with walkers will be ignored for a vehicle.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – The vehicle that is going to ignore walkers on scene.  
         - `perc` (_float_) – Between 0 and 100. Amount of times collisions will be ignored.  
-- <a name="carla.TrafficManager.reset_traffic_lights"></a>**<font color="#7fb800">reset_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.TrafficManager.reset_traffic_lights"></a>**<font color="#7fb800">reset_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.reset_traffic_lights-snipet").innerHTML'>snipet &rarr;</button>  
 Resets every traffic light in the map to its initial state.  
-- <a name="carla.TrafficManager.vehicle_percentage_speed_difference"></a>**<font color="#7fb800">vehicle_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**percentage**</font>)  
+- <a name="carla.TrafficManager.vehicle_percentage_speed_difference"></a>**<font color="#7fb800">vehicle_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**percentage**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.vehicle_percentage_speed_difference-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
@@ -2064,20 +2064,20 @@ Default is 30. Exceeding a speed limit can be done using negative percentages.
         - `percentage` (_float_) – Percentage difference between intended speed and the current limit.  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.get_port"></a>**<font color="#7fb800">get_port</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.get_port"></a>**<font color="#7fb800">get_port</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.get_port-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.  
     - **Return:** _uint16_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.set_hybrid_physics_mode"></a>**<font color="#7fb800">set_hybrid_physics_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=False</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.set_hybrid_physics_mode"></a>**<font color="#7fb800">set_hybrid_physics_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=False</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.set_hybrid_physics_mode-snipet").innerHTML'>snipet &rarr;</button>  
 Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.  
     - **Parameters:**
         - `enabled` (_bool_) – If __True__, enables the hybrid physics.  
-- <a name="carla.TrafficManager.set_hybrid_mode_radius"></a>**<font color="#7fb800">set_hybrid_mode_radius</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=70.0</font>)  
+- <a name="carla.TrafficManager.set_hybrid_mode_radius"></a>**<font color="#7fb800">set_hybrid_mode_radius</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=70.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.set_hybrid_mode_radius-snipet").innerHTML'>snipet &rarr;</button>  
 With hybrid physics on, changes the radius of the area of influence where physics are enabled.  
     - **Parameters:**
         - `r` (_float<small> – meters</small>_) – New radius where physics are enabled.  
-- <a name="carla.TrafficManager.set_osm_mode"></a>**<font color="#7fb800">set_osm_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
+- <a name="carla.TrafficManager.set_osm_mode"></a>**<font color="#7fb800">set_osm_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.TrafficManager.set_osm_mode-snipet").innerHTML'>snipet &rarr;</button>  
 Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
     - **Parameters:**
         - `mode_switch` (_bool_) – If __True__, the OSM mode is enabled.  
@@ -2103,29 +2103,29 @@ Describes a point in the coordinate system.
 Describes a rotation for an object according to Unreal Engine's axis system.  
 
 <h3>Methods</h3>
-- <a name="carla.Transform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**rotation**</font>)  
+- <a name="carla.Transform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**rotation**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Transform.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)<small> – degrees (pitch, yaw, roll)</small>_)  
-- <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
+- <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Transform.transform-snipet").innerHTML'>snipet &rarr;</button>  
 Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**
         - `in_point` (_[carla.Location](#carla.Location)_) – Location in the space to which the transformation will be applied.  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Transform.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Transform.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Transform.get_forward_vector-snipet").innerHTML'>snipet &rarr;</button>  
 Computes a forward vector using the rotation of the object.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
-- <a name="carla.Transform.get_right_vector"></a>**<font color="#7fb800">get_right_vector</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Transform.get_right_vector"></a>**<font color="#7fb800">get_right_vector</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Transform.get_right_vector-snipet").innerHTML'>snipet &rarr;</button>  
 Computes a right vector using the rotatio of the object.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
-- <a name="carla.Transform.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Transform.get_up_vector"></a>**<font color="#7fb800">get_up_vector</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Transform.get_up_vector-snipet").innerHTML'>snipet &rarr;</button>  
 Computes an up vector using the rotation of the object.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
-- <a name="carla.Transform.get_matrix"></a>**<font color="#7fb800">get_matrix</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Transform.get_matrix"></a>**<font color="#7fb800">get_matrix</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Transform.get_matrix-snipet").innerHTML'>snipet &rarr;</button>  
 Computes the 4-matrix representation of the transformation.  
     - **Return:** _list(list(float))_  
-- <a name="carla.Transform.get_inverse_matrix"></a>**<font color="#7fb800">get_inverse_matrix</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Transform.get_inverse_matrix"></a>**<font color="#7fb800">get_inverse_matrix</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Transform.get_inverse_matrix-snipet").innerHTML'>snipet &rarr;</button>  
 Computes the 4-matrix representation of the inverse transformation.  
     - **Return:** _list(list(float))_  
 
@@ -2152,7 +2152,7 @@ X-axis value.
 Y-axis value.  
 
 <h3>Methods</h3>
-- <a name="carla.Vector2D.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>)  
+- <a name="carla.Vector2D.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vector2D.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `x` (_float_)  
         - `y` (_float_)  
@@ -2186,7 +2186,7 @@ Y-axis value.
 Z-axis value.  
 
 <h3>Methods</h3>
-- <a name="carla.Vector3D.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>, <font color="#00a6ed">**z**=0.0</font>)  
+- <a name="carla.Vector3D.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>, <font color="#00a6ed">**z**=0.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vector3D.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `x` (_float_)  
         - `y` (_float_)  
@@ -2217,47 +2217,47 @@ Returns the axis values for the vector parsed as string.
 Bounding box containing the geometry of the vehicle. Its location and rotation are relative to the vehicle it is attached to.  
 
 <h3>Methods</h3>
-- <a name="carla.Vehicle.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
+- <a name="carla.Vehicle.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.apply_control-snipet").innerHTML'>snipet &rarr;</button>  
 Applies a control object on the next tick, containing driving parameters such as throttle, steering or gear shifting.  
     - **Parameters:**
         - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
-- <a name="carla.Vehicle.apply_physics_control"></a>**<font color="#7fb800">apply_physics_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**physics_control**</font>)  
+- <a name="carla.Vehicle.apply_physics_control"></a>**<font color="#7fb800">apply_physics_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**physics_control**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.apply_physics_control-snipet").innerHTML'>snipet &rarr;</button>  
 Applies a physics control object in the next tick containing the parameters that define the vehicle as a corporeal body. E.g.: moment of inertia, mass, drag coefficient and many more.  
     - **Parameters:**
         - `physics_control` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_)  
-- <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.is_at_traffic_light-snipet").innerHTML'>snipet &rarr;</button>  
 Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).  
     - **Return:** _bool_  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.get_control-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the control applied in the last tick. The method does not call the simulator.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
-- <a name="carla.Vehicle.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Vehicle.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.get_light_state-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a flag representing the vehicle light state, this represents which lights are active or not.  
     - **Return:** _[carla.VehicleLightState](#carla.VehicleLightState)_  
     - **Setter:** _[carla.Vehicle.set_light_state](#carla.Vehicle.set_light_state)_  
-- <a name="carla.Vehicle.get_physics_control"></a>**<font color="#7fb800">get_physics_control</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Vehicle.get_physics_control"></a>**<font color="#7fb800">get_physics_control</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.get_physics_control-snipet").innerHTML'>snipet &rarr;</button>  
 The simulator returns the last physics control applied to this vehicle.  
     - **Return:** _[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_  
     - **Warning:** <font color="#ED2F2F">_This method does call the simulator to retrieve the value._</font>  
-- <a name="carla.Vehicle.get_speed_limit"></a>**<font color="#7fb800">get_speed_limit</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Vehicle.get_speed_limit"></a>**<font color="#7fb800">get_speed_limit</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.get_speed_limit-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.  
     - **Return:** _float<small> – m/s</small>_  
-- <a name="carla.Vehicle.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Vehicle.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.get_traffic_light-snipet").innerHTML'>snipet &rarr;</button>  
 Retrieves the traffic light actor affecting this vehicle (if any) according to last tick. The method does not call the simulator.  
     - **Return:** _[carla.TrafficLight](#carla.TrafficLight)_  
-- <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.get_traffic_light_state-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator. If no traffic light is currently affecting the vehicle, returns <b>green</b>.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**port**=8000</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**port**=8000</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.set_autopilot-snipet").innerHTML'>snipet &rarr;</button>  
 Registers or deletes the vehicle from a Traffic Manager's list. When __True__, the Traffic Manager passed as parameter will move the vehicle around. The autopilot takes place client-side.  
     - **Parameters:**
         - `enabled` (_bool_)  
         - `port` (_uint16_) – The port of the TM-Server where the vehicle is to be registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`.  
-- <a name="carla.Vehicle.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
+- <a name="carla.Vehicle.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Vehicle.set_light_state-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the light state of a vehicle using a flag that represents the lights that are on and off.  
     - **Parameters:**
         - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
@@ -2288,7 +2288,7 @@ Determines whether the vehicle will be controlled by changing gears manually. De
 States which gear is the vehicle running on.  
 
 <h3>Methods</h3>
-- <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=False</font>, <font color="#00a6ed">**reverse**=False</font>, <font color="#00a6ed">**manual_gear_shift**=False</font>, <font color="#00a6ed">**gear**=0</font>)  
+- <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=False</font>, <font color="#00a6ed">**reverse**=False</font>, <font color="#00a6ed">**manual_gear_shift**=False</font>, <font color="#00a6ed">**gear**=0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.VehicleControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `throttle` (_float_) – Scalar value between [0.0,1.0].  
         - `steer` (_float_) – Scalar value between [0.0,1.0].  
@@ -2367,7 +2367,7 @@ Curve that indicates the maximum steering for a specific forward speed.
 List of wheel physics objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.  
 
 <h3>Methods</h3>
-- <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque_curve**=[[0.0, 500.0], [5000.0, 500.0]]</font>, <font color="#00a6ed">**max_rpm**=5000.0</font>, <font color="#00a6ed">**moi**=1.0</font>, <font color="#00a6ed">**damping_rate_full_throttle**=0.15</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_engaged**=2.0</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_disengaged**=0.35</font>, <font color="#00a6ed">**use_gear_autobox**=True</font>, <font color="#00a6ed">**gear_switch_time**=0.5</font>, <font color="#00a6ed">**clutch_strength**=10.0</font>, <font color="#00a6ed">**final_ratio**=4.0</font>, <font color="#00a6ed">**forward_gears**=list()</font>, <font color="#00a6ed">**mass**=1000.0</font>, <font color="#00a6ed">**drag_coefficient**=0.3</font>, <font color="#00a6ed">**center_of_mass**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**steering_curve**=[[0.0, 1.0], [10.0, 0.5]]</font>, <font color="#00a6ed">**wheels**=list()</font>)  
+- <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque_curve**=[[0.0, 500.0], [5000.0, 500.0]]</font>, <font color="#00a6ed">**max_rpm**=5000.0</font>, <font color="#00a6ed">**moi**=1.0</font>, <font color="#00a6ed">**damping_rate_full_throttle**=0.15</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_engaged**=2.0</font>, <font color="#00a6ed">**damping_rate_zero_throttle_clutch_disengaged**=0.35</font>, <font color="#00a6ed">**use_gear_autobox**=True</font>, <font color="#00a6ed">**gear_switch_time**=0.5</font>, <font color="#00a6ed">**clutch_strength**=10.0</font>, <font color="#00a6ed">**final_ratio**=4.0</font>, <font color="#00a6ed">**forward_gears**=list()</font>, <font color="#00a6ed">**mass**=1000.0</font>, <font color="#00a6ed">**drag_coefficient**=0.3</font>, <font color="#00a6ed">**center_of_mass**=[0.0, 0.0, 0.0]</font>, <font color="#00a6ed">**steering_curve**=[[0.0, 1.0], [10.0, 0.5]]</font>, <font color="#00a6ed">**wheels**=list()</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.VehiclePhysicsControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 VehiclePhysicsControl constructor.  
     - **Parameters:**
         - `torque_curve` (_list([carla.Vector2D](#carla.Vector2D))_)  
@@ -2401,17 +2401,17 @@ VehiclePhysicsControl constructor.
 Bounding box containing the geometry of the walker. Its location and rotation are relative to the walker it is attached to.  
 
 <h3>Methods</h3>
-- <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
+- <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Walker.apply_control-snipet").innerHTML'>snipet &rarr;</button>  
 On the next tick, the control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.  
     - **Parameters:**
         - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
-- <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  
+- <a name="carla.Walker.apply_control"></a>**<font color="#7fb800">apply_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**control**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Walker.apply_control-snipet").innerHTML'>snipet &rarr;</button>  
 On the next tick, the control defines a list of bone transformations that will be applied to the walker's skeleton.  
     - **Parameters:**
         - `control` (_[carla.WalkerBoneControl](#carla.WalkerBoneControl)_)  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Walker.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Walker.get_control-snipet").innerHTML'>snipet &rarr;</button>  
 The client returns the control applied to this walker during last tick. The method does not call the simulator.  
     - **Return:** _[carla.WalkerControl](#carla.WalkerControl)_  
 
@@ -2424,17 +2424,17 @@ The client returns the control applied to this walker during last tick. The meth
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way.  
 
 <h3>Methods</h3>
-- <a name="carla.WalkerAIController.go_to_location"></a>**<font color="#7fb800">go_to_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**destination**</font>)  
+- <a name="carla.WalkerAIController.go_to_location"></a>**<font color="#7fb800">go_to_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**destination**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WalkerAIController.go_to_location-snipet").innerHTML'>snipet &rarr;</button>  
 Sets the destination that the pedestrian will reach.  
     - **Parameters:**
         - `destination` (_[carla.Location](#carla.Location)<small> – meters</small>_)  
-- <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WalkerAIController.start-snipet").innerHTML'>snipet &rarr;</button>  
 Enables AI control for its parent walker.  
-- <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WalkerAIController.stop-snipet").innerHTML'>snipet &rarr;</button>  
 Disables AI control for its parent walker.  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WalkerAIController.set_max_speed-snipet").innerHTML'>snipet &rarr;</button>  
 Sets a speed for the walker in meters per second.  
     - **Parameters:**
         - `speed` (_float<small> – m/s</small>_) – An easy walking speed is set by default.  
@@ -2452,7 +2452,7 @@ This class grants bone specific manipulation for walker. The skeletons of walker
 List of tuples where the first value is the bone's name and the second value stores the transformation (changes in location and rotation) that will be applied to it.  
 
 <h3>Methods</h3>
-- <a name="carla.WalkerBoneControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**list(name,transform)**</font>)  
+- <a name="carla.WalkerBoneControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**list(name,transform)**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WalkerBoneControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 Initializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it.  
     - **Parameters:**
         - `list(name,transform)` (_tuple_)  
@@ -2476,7 +2476,7 @@ A scalar value to control the walker's speed.
 If <b>True</b>, the walker will perform a jump.  
 
 <h3>Methods</h3>
-- <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**direction**=[1.0, 0.0, 0.0]</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**jump**=False</font>)  
+- <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**direction**=[1.0, 0.0, 0.0]</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**jump**=False</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WalkerControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `direction` (_[carla.Vector3D](#carla.Vector3D)_)  
         - `speed` (_float<small> – m/s</small>_)  
@@ -2521,51 +2521,51 @@ The right lane marking information based on the direction of the Waypoint.
 The left lane marking information based on the direction of the Waypoint.  
 
 <h3>Methods</h3>
-- <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+- <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.next-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of waypoints at a certain approximate `distance` from the current one. It takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.
 The list may be empty if the lane is not connected to any other at the specified distance.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – The approximate distance where to get the next waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
-- <a name="carla.Waypoint.next_until_lane_end"></a>**<font color="#7fb800">next_until_lane_end</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+- <a name="carla.Waypoint.next_until_lane_end"></a>**<font color="#7fb800">next_until_lane_end</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.next_until_lane_end-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of waypoints from this to the end of the lane separated by a certain `distance`.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
-- <a name="carla.Waypoint.previous"></a>**<font color="#7fb800">previous</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+- <a name="carla.Waypoint.previous"></a>**<font color="#7fb800">previous</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.previous-snipet").innerHTML'>snipet &rarr;</button>  
 This method does not return the waypoint previously visited by an actor, but a list of waypoints at an approximate `distance` but in the opposite direction of the lane. Similarly to **<font color="#7fb800">next()</font>**, it takes into account the road and its possible deviations without performing any lane change and returns one waypoint per option.
 The list may be empty if the lane is not connected to any other at the specified distance.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – The approximate distance where to get the previous waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
-- <a name="carla.Waypoint.previous_until_lane_start"></a>**<font color="#7fb800">previous_until_lane_start</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+- <a name="carla.Waypoint.previous_until_lane_start"></a>**<font color="#7fb800">previous_until_lane_start</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.previous_until_lane_start-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of waypoints from this to the start of the lane separated by a certain `distance`.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – The approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Waypoint.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.get_junction-snipet").innerHTML'>snipet &rarr;</button>  
 If the waypoint belongs to a junction this method returns the asociated junction object. Otherwise returns null.  
     - **Return:** _[carla.Junction](#carla.Junction)_  
-- <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
+- <a name="carla.Waypoint.get_landmarks"></a>**<font color="#7fb800">get_landmarks</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.get_landmarks-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of landmarks in the road from the current waypoint until the specified distance.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – The maximum distance to search for landmarks from the current waypoint.  
         - `stop_at_junction` (_bool_) – Enables or disables the landmark search through junctions.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
-- <a name="carla.Waypoint.get_landmarks_of_type"></a>**<font color="#7fb800">get_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**type**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  
+- <a name="carla.Waypoint.get_landmarks_of_type"></a>**<font color="#7fb800">get_landmarks_of_type</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**type**</font>, <font color="#00a6ed">**stop_at_junction**=False</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.get_landmarks_of_type-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of landmarks in the road of a specified type from the current waypoint until the specified distance.  
     - **Parameters:**
         - `distance` (_float<small> – meters</small>_) – The maximum distance to search for landmarks from the current waypoint.  
         - `type` (_str_) – The type of landmarks to search.  
         - `stop_at_junction` (_bool_) – Enables or disables the landmark search through junctions.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
-- <a name="carla.Waypoint.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Waypoint.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.get_left_lane-snipet").innerHTML'>snipet &rarr;</button>  
 Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, taking into account if the lane change is allowed in this location.
 Will return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
-- <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.Waypoint.get_right_lane-snipet").innerHTML'>snipet &rarr;</button>  
 Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.
 Will return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
@@ -2602,7 +2602,7 @@ Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to
 Density of the fog (as in specific mass) from 0 to infinity. The bigger the value, the more dense and heavy it will be, and the fog will reach smaller heights. Corresponds to <a href="https://docs.unrealengine.com/en-US/Engine/Actors/FogEffects/HeightFog/index.html#:~:text=Using%20Exponential%20Height%20Fog%20Features,-The%20sections%20below&text=Add%20a%20second%20fog%20layer,height%20falloff%2C%20and%20height%20offset">Fog Height Falloff</a> in the UE docs. <br> If the value is 0, the fog will be lighter than air, and will cover the whole scene. <br> A value of 1 is approximately as dense as the air, and reaches normal-sized buildings. <br> For values greater than 5, the air will be so dense that it will be compressed on ground level.  
 
 <h3>Methods</h3>
-- <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudiness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>, <font color="#00a6ed">**fog_density**=0.0</font>, <font color="#00a6ed">**fog_distance**=0.0</font>, <font color="#00a6ed">**wetness**=0.0</font>, <font color="#00a6ed">**fog_falloff**=0.2</font>)  
+- <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudiness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>, <font color="#00a6ed">**fog_density**=0.0</font>, <font color="#00a6ed">**fog_distance**=0.0</font>, <font color="#00a6ed">**wetness**=0.0</font>, <font color="#00a6ed">**fog_falloff**=0.2</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WeatherParameters.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below.  
     - **Parameters:**
         - `cloudiness` (_float_) – 0 is a clear sky, 100 complete overcast.  
@@ -2649,7 +2649,7 @@ Maximum handbrake torque.
 World position of the wheel. This is a read-only parameter.  
 
 <h3>Methods</h3>
-- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tire_friction**=2.0</font>, <font color="#00a6ed">**damping_rate**=0.25</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**radius**=30.0</font>, <font color="#00a6ed">**max_brake_torque**=1500.0</font>, <font color="#00a6ed">**max_handbrake_torque**=3000.0</font>, <font color="#00a6ed">**position**=(0.0,0.0,0.0)</font>)  
+- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tire_friction**=2.0</font>, <font color="#00a6ed">**damping_rate**=0.25</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**radius**=30.0</font>, <font color="#00a6ed">**max_brake_torque**=1500.0</font>, <font color="#00a6ed">**max_handbrake_torque**=3000.0</font>, <font color="#00a6ed">**position**=(0.0,0.0,0.0)</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WheelPhysicsControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `tire_friction` (_float_)  
         - `damping_rate` (_float_)  
@@ -2676,33 +2676,33 @@ The ID of the episode associated with this world. Episodes are different session
 Responsible for creating different shapes for debugging. Take a look at its class to learn more about it.  
 
 <h3>Methods</h3>
-- <a name="carla.World.apply_settings"></a>**<font color="#7fb800">apply_settings</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_settings**</font>)  
+- <a name="carla.World.apply_settings"></a>**<font color="#7fb800">apply_settings</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_settings**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.apply_settings-snipet").innerHTML'>snipet &rarr;</button>  
 This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented.  
     - **Parameters:**
         - `world_settings` (_[carla.WorldSettings](#carla.WorldSettings)_)  
     - **Return:** _int_  
-- <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
+- <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.on_tick-snipet").innerHTML'>snipet &rarr;</button>  
 This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
     - **Parameters:**
         - `callback` (_[carla.WorldSnapshot](#carla.WorldSnapshot)_) – Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
     - **Return:** _int_  
-- <a name="carla.World.remove_on_tick"></a>**<font color="#7fb800">remove_on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback_id**</font>)  
+- <a name="carla.World.remove_on_tick"></a>**<font color="#7fb800">remove_on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback_id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.remove_on_tick-snipet").innerHTML'>snipet &rarr;</button>  
 Stops the callback for `callback_id` started with __<font color="#7fb800">on_tick()</font>__.  
     - **Parameters:**
         - `callback_id` (_callback_) – The callback to be removed. The ID is returned when creating the callback.  
-- <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
+- <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.tick-snipet").innerHTML'>snipet &rarr;</button>  
 This method is used in [__synchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server.  
     - **Parameters:**
         - `seconds` (_float<small> – seconds</small>_) – Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _int_  
     - **Note:** <font color="#8E8E8E">_If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/) to learn more.  
 _</font>  
-- <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
+- <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.wait_for_tick-snipet").innerHTML'>snipet &rarr;</button>  
 This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
     - **Parameters:**
         - `seconds` (_float<small> – seconds</small>_) – Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
-- <a name="carla.World.spawn_actor"></a>**<font color="#7fb800">spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
+- <a name="carla.World.spawn_actor"></a>**<font color="#7fb800">spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.spawn_actor-snipet").innerHTML'>snipet &rarr;</button>  
 The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type.  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_) – The reference from which the actor will be created.  
@@ -2710,7 +2710,7 @@ The method will create, return and spawn an actor into the world. The actor will
         - `attach_to` (_[carla.Actor](#carla.Actor)_) – The parent object that the spawned actor will follow around.  
         - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_) – Determines how fixed and rigorous should be the changes in position according to its parent object.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
-- <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
+- <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.try_spawn_actor-snipet").innerHTML'>snipet &rarr;</button>  
 Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> on failure instead of throwing an exception.  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_) – The reference from which the actor will be created.  
@@ -2718,72 +2718,72 @@ Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> o
         - `attach_to` (_[carla.Actor](#carla.Actor)_) – The parent object that the spawned actor will follow around.  
         - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_) – Determines how fixed and rigorous should be the changes in position according to its parent object.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
-- <a name="carla.World.freeze_all_traffic_lights"></a>**<font color="#7fb800">freeze_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**frozen**</font>)  
+- <a name="carla.World.freeze_all_traffic_lights"></a>**<font color="#7fb800">freeze_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**frozen**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.freeze_all_traffic_lights-snipet").innerHTML'>snipet &rarr;</button>  
 Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen.  
     - **Parameters:**
         - `frozen` (_bool_)  
-- <a name="carla.World.reset_all_traffic_lights"></a>**<font color="#7fb800">reset_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.reset_all_traffic_lights"></a>**<font color="#7fb800">reset_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.reset_all_traffic_lights-snipet").innerHTML'>snipet &rarr;</button>  
 Resets the cycle of all traffic lights in the map to the initial state.  
 
 <h5 style="margin-top: -20px">Getters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.get_actor"></a>**<font color="#7fb800">get_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.get_actor"></a>**<font color="#7fb800">get_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_actor-snipet").innerHTML'>snipet &rarr;</button>  
 Looks up for an actor by ID and returns <b>None</b> if not found.  
     - **Parameters:**
         - `actor_id` (_int_)  
     - **Return:** _[carla.Actor](#carla.Actor)_  
-- <a name="carla.World.get_actors"></a>**<font color="#7fb800">get_actors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>)  
+- <a name="carla.World.get_actors"></a>**<font color="#7fb800">get_actors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_actors-snipet").innerHTML'>snipet &rarr;</button>  
 Retrieves a list of [carla.Actor](#carla.Actor) elements, either using a list of IDs provided or just listing everyone on stage. If an ID does not correspond with any actor, it will be excluded from the list returned, meaning that both the list of IDs and the list of actors may have different lengths.  
     - **Parameters:**
         - `actor_ids` (_list_) – The IDs of the actors being searched. By default it is set to <b>None</b> and returns every actor on scene.  
     - **Return:** _[carla.ActorList](#carla.ActorList)_  
-- <a name="carla.World.get_blueprint_library"></a>**<font color="#7fb800">get_blueprint_library</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_blueprint_library"></a>**<font color="#7fb800">get_blueprint_library</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_blueprint_library-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a list of actor blueprints available to ease the spawn of these into the world.  
     - **Return:** _[carla.BlueprintLibrary](#carla.BlueprintLibrary)_  
-- <a name="carla.World.get_vehicles_light_states"></a>**<font color="#7fb800">get_vehicles_light_states</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_vehicles_light_states"></a>**<font color="#7fb800">get_vehicles_light_states</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_vehicles_light_states-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a dict where the keys are [carla.Actor](#carla.Actor) IDs and the values are [carla.VehicleLightState](#carla.VehicleLightState) of that vehicle.  
     - **Return:** _dict_  
-- <a name="carla.World.get_level_bbs"></a>**<font color="#7fb800">get_level_bbs</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_type**=None</font>)  
+- <a name="carla.World.get_level_bbs"></a>**<font color="#7fb800">get_level_bbs</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_type**=None</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_level_bbs-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`.  
     - **Parameters:**
         - `actor_type` (_[carla.CityObjectLabel](#carla.CityObjectLabel)_) – Semantic tag of the elements contained in the bounding boxes that are returned.  
     - **Return:** _array([carla.BoundingBox](#carla.BoundingBox))_  
-- <a name="carla.World.get_lightmanager"></a>**<font color="#7fb800">get_lightmanager</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_lightmanager"></a>**<font color="#7fb800">get_lightmanager</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_lightmanager-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an instance of [carla.LightManager](#carla.LightManager) that can be used to handle the lights in the scene.  
     - **Return:** _[carla.LightManager](#carla.LightManager)_  
-- <a name="carla.World.get_map"></a>**<font color="#7fb800">get_map</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_map"></a>**<font color="#7fb800">get_map</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_map-snipet").innerHTML'>snipet &rarr;</button>  
 Asks the server for the XODR containing the map file, and returns this parsed as a [carla.Map](#carla.Map).  
     - **Return:** _[carla.Map](#carla.Map)_  
     - **Warning:** <font color="#ED2F2F">_This method does call the simulation. It is expensive, and should only be called once.  
 _</font>  
-- <a name="carla.World.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+- <a name="carla.World.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_traffic_light-snipet").innerHTML'>snipet &rarr;</button>  
 Provided a landmark, returns the traffic light object it describes.  
     - **Parameters:**
         - `landmark` (_[carla.Landmark](#carla.Landmark)_) – The landmark object describing a traffic light.  
     - **Return:** _[carla.TrafficLight](#carla.TrafficLight)_  
-- <a name="carla.World.get_traffic_sign"></a>**<font color="#7fb800">get_traffic_sign</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
+- <a name="carla.World.get_traffic_sign"></a>**<font color="#7fb800">get_traffic_sign</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_traffic_sign-snipet").innerHTML'>snipet &rarr;</button>  
 Provided a landmark, returns the traffic sign object it describes.  
     - **Parameters:**
         - `landmark` (_[carla.Landmark](#carla.Landmark)_) – The landmark object describing a traffic sign.  
     - **Return:** _[carla.TrafficSign](#carla.TrafficSign)_  
-- <a name="carla.World.get_random_location_from_navigation"></a>**<font color="#7fb800">get_random_location_from_navigation</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_random_location_from_navigation"></a>**<font color="#7fb800">get_random_location_from_navigation</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_random_location_from_navigation-snipet").innerHTML'>snipet &rarr;</button>  
 This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.  
     - **Return:** _[carla.Location](#carla.Location)_  
-- <a name="carla.World.get_settings"></a>**<font color="#7fb800">get_settings</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_settings"></a>**<font color="#7fb800">get_settings</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_settings-snipet").innerHTML'>snipet &rarr;</button>  
 Returns an object containing some data about the simulation such as synchrony between client and server or rendering mode.  
     - **Return:** _[carla.WorldSettings](#carla.WorldSettings)_  
-- <a name="carla.World.get_snapshot"></a>**<font color="#7fb800">get_snapshot</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_snapshot"></a>**<font color="#7fb800">get_snapshot</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_snapshot-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a snapshot of the world at a certain moment comprising all the information about the actors.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
-- <a name="carla.World.get_spectator"></a>**<font color="#7fb800">get_spectator</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_spectator"></a>**<font color="#7fb800">get_spectator</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_spectator-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
-- <a name="carla.World.get_weather"></a>**<font color="#7fb800">get_weather</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.World.get_weather"></a>**<font color="#7fb800">get_weather</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.get_weather-snipet").innerHTML'>snipet &rarr;</button>  
 Retrieves an object containing weather parameters currently active in the simulation, mainly cloudiness, precipitation, wind and sun position.  
     - **Return:** _[carla.WeatherParameters](#carla.WeatherParameters)_  
     - **Setter:** _[carla.World.set_weather](#carla.World.set_weather)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.World.set_weather-snipet").innerHTML'>snipet &rarr;</button>  
 Changes the weather parameteres ruling the simulation to another ones defined in an object.  
     - **Parameters:**
         - `weather` (_[carla.WeatherParameters](#carla.WeatherParameters)_) – New conditions to be applied.  
@@ -2808,7 +2808,7 @@ When enabled, the simulation will run no rendering at all. This is mainly used t
 Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
 
 <h3>Methods</h3>
-- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)  
+- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WorldSettings.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 Creates an object containing desired settings that could later be applied through [carla.World](#carla.World) and its method __<font color="#7fb800">apply_settings()</font>__.  
     - **Parameters:**
         - `synchronous_mode` (_bool_) – Set this to true to enable client-server synchrony.  
@@ -2840,12 +2840,12 @@ Simulation frame in which the snapshot was taken.
 Precise moment in time when snapshot was taken. This class works in seconds as given by the operative system.  
 
 <h3>Methods</h3>
-- <a name="carla.WorldSnapshot.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
+- <a name="carla.WorldSnapshot.find"></a>**<font color="#7fb800">find</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WorldSnapshot.find-snipet").innerHTML'>snipet &rarr;</button>  
 Given a certain actor ID, returns its corresponding snapshot or <b>None</b> if it is not found.  
     - **Parameters:**
         - `actor_id` (_int_)  
     - **Return:** _[carla.ActorSnapshot](#carla.ActorSnapshot)_  
-- <a name="carla.WorldSnapshot.has_actor"></a>**<font color="#7fb800">has_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  
+- <a name="carla.WorldSnapshot.has_actor"></a>**<font color="#7fb800">has_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("carla.WorldSnapshot.has_actor-snipet").innerHTML'>snipet &rarr;</button>  
 Given a certain actor ID, checks if there is a snapshot corresponding it and so, if the actor was present at that moment.  
     - **Parameters:**
         - `actor_id` (_int_)  
@@ -2876,7 +2876,7 @@ Actor affected by the command.
 Angular impulse applied to the actor.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyAngularImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
+- <a name="command.ApplyAngularImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyAngularImpulse.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees*s</small>_)  
@@ -2893,7 +2893,7 @@ Actor affected by the command.
 Force applied to the actor over time.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyForce.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**force**</font>)  
+- <a name="command.ApplyForce.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**force**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyForce.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `force` (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_)  
@@ -2910,7 +2910,7 @@ Actor affected by the command.
 Impulse applied to the actor.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  
+- <a name="command.ApplyImpulse.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**impulse**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyImpulse.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – N*s</small>_)  
@@ -2927,7 +2927,7 @@ Actor affected by the command.
 The 3D angular velocity that will be applied to the actor.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyTargetAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
+- <a name="command.ApplyTargetAngularVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**angular_velocity**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyTargetAngularVelocity.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_) – Angular velocity vector applied to the actor.  
@@ -2944,7 +2944,7 @@ Actor affected by the command.
 The 3D velocity applied to the actor.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyTargetVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  
+- <a name="command.ApplyTargetVelocity.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**velocity**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyTargetVelocity.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – m/s</small>_) – Velocity vector applied to the actor.  
@@ -2961,7 +2961,7 @@ Actor affected by the command.
 Torque applied to the actor over time.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyTorque.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**torque**</font>)  
+- <a name="command.ApplyTorque.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**torque**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyTorque.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `torque` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_)  
@@ -2978,7 +2978,7 @@ Actor affected by the command.
 Transformation to be applied.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>)  
+- <a name="command.ApplyTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyTransform.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
@@ -2995,7 +2995,7 @@ Vehicle actor affected by the command.
 Vehicle control to be applied.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyVehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
+- <a name="command.ApplyVehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyVehicleControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
@@ -3012,7 +3012,7 @@ Walker actor affected by the command.
 Walker control to be applied.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyWalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  
+- <a name="command.ApplyWalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**control**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyWalkerControl.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
@@ -3031,7 +3031,7 @@ Transform to be applied.
 Speed to be applied.  
 
 <h3>Methods</h3>
-- <a name="command.ApplyWalkerState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**speed**</font>)  
+- <a name="command.ApplyWalkerState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**speed**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.ApplyWalkerState.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
@@ -3047,7 +3047,7 @@ Command adaptation of __<font color="#7fb800">destroy()</font>__ in [carla.Actor
 Actor affected by the command.  
 
 <h3>Methods</h3>
-- <a name="command.DestroyActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>)  
+- <a name="command.DestroyActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.DestroyActor.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
 
@@ -3063,7 +3063,7 @@ Actor to whom the command was applied to. States that the command was successful
 A string stating the command has failed.  
 
 <h3>Methods</h3>
-- <a name="command.Response.has_error"></a>**<font color="#7fb800">has_error</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="command.Response.has_error"></a>**<font color="#7fb800">has_error</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.Response.has_error-snipet").innerHTML'>snipet &rarr;</button>  
 Returns <b>True</b> if the command execution fails, and <b>False</b> if it was successful.  
     - **Return:** _bool_  
 
@@ -3081,7 +3081,7 @@ If autopilot should be activated or not.
 Port of the Traffic Manager where the vehicle is to be registered or unlisted.  
 
 <h3>Methods</h3>
-- <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>, <font color="#00a6ed">**port**=8000</font>)  
+- <a name="command.SetAutopilot.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>, <font color="#00a6ed">**port**=8000</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.SetAutopilot.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `enabled` (_bool_)  
@@ -3099,7 +3099,7 @@ Actor affected by the command.
 If physics should be activated or not.  
 
 <h3>Methods</h3>
-- <a name="command.SetSimulatePhysics.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  
+- <a name="command.SetSimulatePhysics.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**enabled**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.SetSimulatePhysics.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `enabled` (_bool_)  
@@ -3116,7 +3116,7 @@ Actor that is affected by the command.
 Defines the light state of a vehicle.  
 
 <h3>Methods</h3>
-- <a name="command.SetVehicleLightState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**light_state**</font>)  
+- <a name="command.SetVehicleLightState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**light_state**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.SetVehicleLightState.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor) or int_) – Actor or its ID to whom the command will be applied to.  
         - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_) – Recaps the state of the lights of a vehicle, these can be used as a flags.  
@@ -3133,19 +3133,81 @@ Transform to be applied.
 Identificator of the parent actor.  
 
 <h3>Methods</h3>
-- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
-- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>)  
+- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.SpawnActor.__init__-snipet").innerHTML'>snipet &rarr;</button>  
+- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.SpawnActor.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
-- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**parent**</font>)  
+- <a name="command.SpawnActor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**parent**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.SpawnActor.__init__-snipet").innerHTML'>snipet &rarr;</button>  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_)  
         - `transform` (_[carla.Transform](#carla.Transform)_)  
         - `parent` (_[carla.Actor](#carla.Actor) or int_)  
-- <a name="command.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
+- <a name="command.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("demo").innerHTML = document.getElementById("command.SpawnActor.then-snipet").innerHTML'>snipet &rarr;</button>  
 Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
     - **Parameters:**
         - `command` (_any carla Command_) – a Carla command.  
 
 ---
+
+[comment]: <> (=========================)
+[comment]: <> (PYTHON API SCRIPT SNIPETS)
+[comment]: <> (=========================)
+
+<div id="demo" onmouseover='this.style["overflowX"]="scroll";'  onmouseout='this.style["overflowX"]="visible";' style="position: fixed; margin-left: 0px; overflow-y: auto; padding-left: 5px; border-left: 1px solid #767677; height: 95%; top: 70px; left: 1100px;"></div>
+
+<script>
+function CopyToClipboard(containerid) {
+  if (document.selection) {
+    var range = document.body.createTextRange();
+    range.moveToElementText(document.getElementById(containerid));
+    range.select().createTextRange();
+    document.execCommand("copy");
+  } else if (window.getSelection) {
+    var range = document.createRange();
+    range.selectNode(document.getElementById(containerid));
+    window.getSelection().addRange(range);
+    document.execCommand("copy");
+  }
+}
+</script>
+
+<div id ="carla.Actor.add_angular_impulse-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Actor.add_angular_impulse
+</p>
+<div id="carla.Actor.add_angular_impulse_code" style="width: 500px; margin-left: 10px">
+
+```py
+# Check angular velocity
+actor.get_angular_velocity()
+
+# Apply angular impulse
+actor.add_angular_impulse(10) # degrees * s
+
+# Wait for world update
+world.wait_for_tick()
+
+# Check new angular velocity
+actor.get_angular_velocity()
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Actor.add_angular_impulse_code')">Copy snipet</button>
+</div>
+
+<div id ="carla.Actor.add_force-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Actor.add_force
+</p>
+<div id="carla.Actor.add_force-code" style=" width: 500px; margin-left: 10px">
+
+```py
+client = carla.Client(127.0.0.1, 2000)
+client.set_timeout(10.0)
+
+# Spawn an actor
+MY FOOOOOOOOOOOOOORCE 
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Actor.add_force-code')">Copy snipet</button>
+</div>
+
+</div>

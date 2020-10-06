@@ -117,6 +117,10 @@ def italic(buf):
 def bold(buf):
     return join(['**', buf, '**'])
 
+def snipet(name,class_key):
+
+    return join(["  <button style=\"background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;\""
+    +" onclick='document.getElementById(\"demo\").innerHTML = document.getElementById(\"", class_key, ".", name, "-snipet\").innerHTML'>", "snipet &rarr;", '</button>'])
 
 def code(buf):
     return join(['`', buf, '`'])
@@ -222,6 +226,13 @@ class YamlFile:
         return [module for module in self.data]
 
 
+def append_code_snipets(md):
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+    snipets_path = os.path.join(current_folder, '../../Docs/python_api_snipets.md')
+    snipets = open(snipets_path, 'r')
+    md.text(snipets.read())
+
+
 def gen_stub_method_def(method):
     """Return python def as it should be written in stub files"""
     param = ''
@@ -235,20 +246,25 @@ def gen_stub_method_def(method):
     return join([method_name, parentheses(param), return_type])
 
 
-def gen_doc_method_def(method, is_indx=False, with_self=True):
+def gen_doc_method_def(method, class_key, is_indx=False, with_self=True):
     """Return python def as it should be written in docs"""
     param = ''
+    snipet_link = ''
     method_name = method['def_name']
+    full_method_name = method_name
     if valid_dic_val(method, 'static'):
         with_self = False
 
-    # to correclty render methods like __init__ in md
+    # to correctly render methods like __init__ in md
     if method_name[0] == '_':
         method_name = '\\' + method_name
     if is_indx:
         method_name = bold(method_name)
     else:
         method_name = bold(color(COLOR_METHOD, method_name))
+
+    # Add snipet
+        #method_name = snipet(method_name, full_method_name, class_key)
 
     if with_self:
         if not 'params' in method or method['params'] is None:
@@ -269,7 +285,11 @@ def gen_doc_method_def(method, is_indx=False, with_self=True):
             del method['params']
 
     param = param[:-2]  # delete the last ', '
-    return join([method_name, parentheses(param)])
+
+    # Add snipet
+    snipet_link = snipet(full_method_name, class_key)
+
+    return join([method_name, parentheses(param),snipet_link])
 
 def gen_doc_dunder_def(dunder, is_indx=False, with_self=True):
     """Return python def as it should be written in docs"""
@@ -320,7 +340,7 @@ def gen_inst_var_indx(inst_var, class_key):
 def gen_method_indx(method, class_key):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
-    method_def = gen_doc_method_def(method, True)
+    method_def = gen_doc_method_def(method, class_key, True)
     return join([
         brackets(method_def),
         parentheses(method_key), ' ',
@@ -352,7 +372,7 @@ def add_doc_method_param(md, param):
 def add_doc_method(md, method, class_key):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
-    method_def = gen_doc_method_def(method, False)
+    method_def = gen_doc_method_def(method, class_key, False)
     md.list_pushn(join([html_key(method_key), method_def]))
 
     # Method doc
@@ -403,10 +423,10 @@ def add_doc_method(md, method, class_key):
 
     md.list_pop()
 
-def add_doc_getter_setter(md, method,class_key,is_getter,other_list):
+def add_doc_getter_setter(md, method,class_key, is_getter,other_list):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
-    method_def = gen_doc_method_def(method, False)
+    method_def = gen_doc_method_def(method, class_key, False)
     md.list_pushn(join([html_key(method_key), method_def]))
 
     # Method doc
@@ -535,7 +555,6 @@ def add_doc_inst_var(md, inst_var, class_key):
 
     md.list_pop()
 
-
 class Documentation:
     """Main documentation class"""
 
@@ -644,16 +663,17 @@ class Documentation:
                         if len(get_list)>0:
                             md.title_html(5, 'Getters')
                         for method in get_list:
-                            add_doc_getter_setter(md, method,class_key,True,set_list)
+                            add_doc_getter_setter(md, method,class_key, True,set_list)
                         if len(set_list)>0:
                             md.title_html(5, 'Setters')
                         for method in set_list:
-                            add_doc_getter_setter(md, method,class_key,False,get_list)
+                            add_doc_getter_setter(md, method,class_key, False,get_list)
                         if len(dunder_list)>0:
                             md.title_html(5, 'Dunder methods')
                         for method in dunder_list:
                             add_doc_dunder(md, method, class_key)
                     md.separator()
+        append_code_snipets(md)
         return md.data().strip()
 
     def gen_markdown(self):
