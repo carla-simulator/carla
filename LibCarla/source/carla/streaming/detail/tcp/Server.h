@@ -58,7 +58,7 @@ namespace tcp {
       _synchronous = is_synchro;
     }
 
-    bool IsSynchronousMode(void) {
+    bool IsSynchronousMode() const {
       return _synchronous;
     }
 
