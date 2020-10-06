@@ -26,5 +26,9 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
 
 void ASemanticSegmentationCamera::SendPixels(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  FPixelReader::SendPixelsInRenderThread(*this);
+  if(ReadyToCapture)
+  {
+    FPixelReader::SendPixelsInRenderThread(*this);
+    ReadyToCapture = false;
+  }
 }
