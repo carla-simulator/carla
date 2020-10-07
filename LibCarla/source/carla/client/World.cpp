@@ -166,8 +166,8 @@ namespace client {
     return _episode.Lock()->GetLevelBBs(queried_tag);
   }
 
-  std::vector<rpc::CarlaObject> World::GetObjects() const {
-    return _episode.Lock()->GetObjects();
+  std::vector<rpc::Mesh> World::GetMeshes() const {
+    return _episode.Lock()->GetMeshes();
   }
 
 } // namespace client

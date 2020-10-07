@@ -231,8 +231,8 @@ namespace detail {
       return _client.GetLevelBBs(queried_tag);
     }
 
-    std::vector<rpc::CarlaObject> GetObjects() const {
-      return _client.GetObjects();
+    std::vector<rpc::Mesh> GetMeshes() const {
+      return _client.GetMeshes();
     }
 
     /// @}
