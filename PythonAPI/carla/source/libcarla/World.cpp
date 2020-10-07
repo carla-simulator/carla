@@ -8,7 +8,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/ActorList.h>
 #include <carla/client/World.h>
-#include <carla/rpc/Object.h>
+#include <carla/rpc/Mesh.h>
 #include <carla/rpc/ObjectLabel.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -38,11 +38,11 @@ namespace rpc {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const CarlaObject &object) {
-    out << "CarlaObject(id=" << object.id << ", ";
-    out << "name=" << object.name << ", ";
-    out << "transform=" << object.transform << ", ";
-    out << "bounding_box=" << object.bounding_box << ")";
+  std::ostream &operator<<(std::ostream &out, const Mesh &mesh) {
+    out << "Mesh(id=" << mesh.id << ", ";
+    out << "name=" << mesh.name << ", ";
+    out << "transform=" << mesh.transform << ", ";
+    out << "bounding_box=" << mesh.bounding_box << ")";
     return out;
   }
 
@@ -89,11 +89,11 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
   return result;
 }
 
-static auto GetObjects(const carla::client::World &self) {
+static auto GetMeshes(const carla::client::World &self) {
   carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
-  for (const auto &object : self.GetObjects()) {
-    result.append(object);
+  for (const auto &geometry : self.GetMeshes()) {
+    result.append(geometry);
   }
   return result;
 }
@@ -149,11 +149,11 @@ void export_world() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::CarlaObject>("CarlaObject", no_init)
-    .def_readwrite("transform", &cr::CarlaObject::transform)
-    .def_readwrite("bounding_box", &cr::CarlaObject::bounding_box)
-    .def_readwrite("id", &cr::CarlaObject::id)
-    .def_readwrite("name", &cr::CarlaObject::name)
+  class_<cr::Mesh>("Mesh", no_init)
+    .def_readwrite("transform", &cr::Mesh::transform)
+    .def_readwrite("bounding_box", &cr::Mesh::bounding_box)
+    .def_readwrite("id", &cr::Mesh::id)
+    .def_readwrite("name", &cr::Mesh::name)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -232,7 +232,7 @@ void export_world() {
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
-    .def("get_objects", &GetObjects)
+    .def("get_meshes", &GetMeshes)
     .def(self_ns::str(self_ns::self))
   ;
 
