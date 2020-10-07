@@ -64,6 +64,10 @@ namespace low_level {
       return _dispatcher.MakeStream();
     }
 
+    void SetSynchronousMode(bool is_synchro) {
+      _server.SetSynchronousMode(is_synchro);
+    }
+
   private:
 
     void StartServer() {

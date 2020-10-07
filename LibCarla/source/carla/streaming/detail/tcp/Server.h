@@ -54,6 +54,14 @@ namespace tcp {
       });
     }
 
+    void SetSynchronousMode(bool is_synchro) {
+      _synchronous = is_synchro;
+    }
+
+    bool IsSynchronousMode() const {
+      return _synchronous;
+    }
+
   private:
 
     void OpenSession(
@@ -66,6 +74,8 @@ namespace tcp {
     boost::asio::ip::tcp::acceptor _acceptor;
 
     std::atomic<time_duration> _timeout;
+
+    bool _synchronous;
   };
 
 } // namespace tcp
