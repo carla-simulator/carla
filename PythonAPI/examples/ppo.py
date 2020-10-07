@@ -44,9 +44,6 @@ class CarlaEnv(gym.Env):
         self.resize = args.resize
         self.action_space = spaces.Discrete(4)
         # Example for using image as input:
-        if self.resize:
-            self.observation_space = spaces.Box(low=0, high=255,
-                                            shape=(90, 160, 3), dtype=np.uint8)
         self.observation_space = spaces.Box(low=0, high=255,
                                             shape=(args.height, args.width, 3), dtype=np.uint8)
         # TODO: action and obs space
@@ -73,13 +70,13 @@ class CarlaEnv(gym.Env):
     def step(self, action):
         self.clock.tick_busy_loop(60)
         raw_obs, reward, done, info = self.world.step(action)
-        observation = raw_obs.sensor_data.rgb_img
+        observation = raw_obs.sensor_data.seg_csp_img
        
         return observation, reward, done, info
 
     def reset(self):
         raw_obs = self.world.reset() 
-        observation = raw_obs.sensor_data.rgb_img
+        observation = raw_obs.sensor_data.seg_csp_img
         
         return observation  # reward, done, info can't be included
 
@@ -178,7 +175,7 @@ def callable_env(args):
     def _init():
         env = CarlaEnv(args=args) # TODO
         env = Monitor(env, "./log/")
-        # env = CarlaWrapper(env)
+        env = CarlaWrapper(env)
         return env
     return _init
 
@@ -192,8 +189,6 @@ def make_env(args):
     # import pdb
     # pdb.set_trace()
     env = DummyVecEnv([callable_env(args)])
-    # env = make_vec_env(lambda: env, n_envs=1)
-    # env = VecResizeImage(env)
     env = VecFrameStack(env, 4)
     env = VecTransposeImage(env)
     return env
@@ -228,13 +223,13 @@ def game_loop(args):
 
         obs = env.reset()
         print(obs.shape)
-        test_visualize(env)
+        # test_visualize(env)
         for episode in range(args.num_episodes):
             print("Starting episode %d" % episode)
             done = False
             while not done:
                 action, _states = model.predict(obs, deterministic=True)
-                action = [0]
+                # action = [1]
                 print(action)
                 obs, reward, done, info = env.step(action)
                 print(info)

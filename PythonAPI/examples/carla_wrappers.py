@@ -9,13 +9,16 @@ class WarpFrame(gym.ObservationWrapper):
         gym.ObservationWrapper.__init__(self, env)
         self.width = width
         self.height = height
-        self.obserbation_space = spaces.Box(
+        self.observation_space = spaces.Box(
             low=0, high=255, shape=(self.height, self.width, 3), dtype=env.observation_space.dtype
         )
 
     def observation(self, frame: np.ndarray) -> np.ndarray:
-        frame = cv2.resize(frame, (self.height, self.width), interpolation=cv2.INTER_AREA)
-        return frame[:, :, 3]
+        if frame is not None:
+            frame = cv2.resize(frame, (self.width, self.height), interpolation=cv2.INTER_AREA)
+        else:
+            frame = np.zeros((self.height, self.width, 3))
+        return frame
 
 class CarlaWrapper(gym.Wrapper):
     def __init__(

@@ -123,6 +123,7 @@ class World(object):
         # self._control = carla.VehicleControl()
         self.num_episodes = 0
         self.steps = 0
+        self.counter = 0
         self.done = False
         self.clock = clock
         self.display = display
@@ -163,7 +164,7 @@ class World(object):
         else:
             collision = False
 
-        if self.steps >= 1000:
+        if self.counter >= 1000:
             timeout = True  
         else:
             timeout =  False
@@ -181,14 +182,16 @@ class World(object):
         env_state = {'timeout': timeout, 'collision': collision, 'success': success}
 
         # Additional information
-        info = {'timeout': timeout, 'collision': collision, 'success': success, 'done': self.done, 'carla-reward': reward}
+        info = {'counter': self.counter, 'timeout': timeout, 'collision': collision, 'success': success, 'done': self.done, 'carla-reward': reward}
 
         self.steps += 1
+        self.counter += 1
         return obs, reward, self.done, info
 
 
     def reset(self):
         # TODO: Load target from config
+        self.counter = 0
         # self.target = carla.Location(x=-13.473097, y=134.311234, z=-0.010433)
         self.target = None
         self.player_max_speed = 1.589
@@ -258,13 +261,26 @@ class World(object):
         return obs
 
     def get_observation(self):        
+        # transform = self.player.get_transform()
+        # velocity = self.player.get_velocity()
+        # acceleration = self.player.get_acceleration()
+        # colhist = self.collision_sensor.get_collision_history()
+        # sensor_data = self.camera_manager.sensor_data
+        # # return sensor_data
+        # return Observation(transform=transform, velocity=velocity, colhist=colhist, sensor_data=sensor_data, acceleration=acceleration)
+        target = self.target
         transform = self.player.get_transform()
         velocity = self.player.get_velocity()
         acceleration = self.player.get_acceleration()
         colhist = self.collision_sensor.get_collision_history()
         sensor_data = self.camera_manager.sensor_data
+        throttle = self.action_converter.control.throttle
+        steer = self.action_converter.control.steer
+        # throttle = 0
+        # steer = 0
         # return sensor_data
-        return Observation(transform=transform, velocity=velocity, colhist=colhist, sensor_data=sensor_data, acceleration=acceleration)
+        return Observation(target=target, transform=transform, velocity=velocity, colhist=colhist, sensor_data=sensor_data, acceleration=acceleration, throttle=throttle, steer=steer)
+      
         
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
@@ -509,15 +525,33 @@ class HelpText(object):
         if self._render:
             display.blit(self.surface, self.pos)
 
+# class Observation:
+#     def __init__(self, transform, velocity, acceleration, colhist, sensor_data):
+#         self.transform = transform
+#         self.velocity = velocity
+#         self.acceleration = acceleration        
+#         # self.speed = np.linalg.norm([velocity.x, velocity.y, velocity.z])
+#         self.speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
+#         self.colhist = colhist
+#         self.sensor_data = sensor_data  
 class Observation:
-    def __init__(self, transform, velocity, acceleration, colhist, sensor_data):
-        self.transform = transform
+    def __init__(self, target, transform, velocity, acceleration, colhist, sensor_data, throttle, steer):
+        player_location = np.array([transform.location.x, transform.location.y, transform.location.z])
+        if target is None:
+            goal_location = np.array([0, 0, 0])
+        else:
+            goal_location = np.array([target.x,
+                                        target.y,
+                                        target.z])
+        self.displace_vec = goal_location - player_location
         self.velocity = velocity
-        self.acceleration = acceleration        
+        self.acceleration = acceleration
         # self.speed = np.linalg.norm([velocity.x, velocity.y, velocity.z])
         self.speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
         self.colhist = colhist
-        self.sensor_data = sensor_data  
+        self.sensor_data = sensor_data
+        self.throttle = throttle
+        self.steer = steer
         
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
@@ -548,7 +582,7 @@ def game_loop(args):
                 clock.tick_busy_loop(60)
                 # action = agent.act() # TODO: fill in agent
                 action = 0
-                obs, reward, done, info = world.step(action)
+                # obs, reward, done, info = world.step(action)
                 if world.steps % 900 == 0:
                     cv2.imwrite(("data/source_domain/images/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.rgb_img)
                     cv2.imwrite(("data/source_domain/depth/carla_%d_%d.jpg" % (episode, world.steps)), obs.sensor_data.depth_log_img)
