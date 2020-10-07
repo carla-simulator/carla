@@ -12,6 +12,7 @@
 
 #include "carla/geom/BoundingBox.h"
 #include "carla/rpc/Transform.h"
+#include "carla/rpc/ObjectLabel.h"
 
 namespace carla {
 namespace rpc {
@@ -22,7 +23,7 @@ namespace rpc {
     geom::BoundingBox bounding_box;
     uint64_t id = 0;
     std::string name;
-    //CityObjectLabel type;
+    CityObjectLabel type = CityObjectLabel::None;
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
