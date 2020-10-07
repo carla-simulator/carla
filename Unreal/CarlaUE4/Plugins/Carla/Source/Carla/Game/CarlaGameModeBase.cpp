@@ -12,7 +12,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
-#include <carla/rpc/Object.h>
+#include <carla/rpc/Mesh.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -155,7 +155,7 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  RegisterLevelObjects();
+  RegisterMeshes();
 
 }
 
@@ -350,12 +350,12 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   return BoundingBoxes;
 }
 
-TArray<FCarlaObject> ACarlaGameModeBase::GetObjects() const
+TArray<FCarlaMesh> ACarlaGameModeBase::GetMeshes() const
 {
-  return LevelObjects;
+  return Meshes;
 }
 
-void ACarlaGameModeBase::RegisterLevelObjects()
+void ACarlaGameModeBase::RegisterMeshes()
 {
   UWorld* World = GetWorld();
 
@@ -364,18 +364,18 @@ void ACarlaGameModeBase::RegisterLevelObjects()
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
   // Empties the array but doesn't change memory allocations
-  LevelObjects.Reset();
+  Meshes.Reset();
 
   for(AActor* Actor : FoundActors)
   {
     FString ActorName = Actor->GetName();
     const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
 
-    FCarlaObject Object;
-    Object.Transform = Actor->GetActorTransform();
-    Object.Id = CityHash64(ActorNameChar, ActorName.Len());
-    Object.Name = ActorName;
+    FCarlaMesh CarlaMesh;
+    CarlaMesh.Transform = Actor->GetActorTransform();
+    CarlaMesh.Id = CityHash64(ActorNameChar, ActorName.Len());
+    CarlaMesh.Name = ActorName;
 
-    LevelObjects.Add(Object);
+    Meshes.Add(CarlaMesh);
   }
 }

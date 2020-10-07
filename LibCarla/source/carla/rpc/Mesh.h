@@ -17,7 +17,7 @@ namespace carla {
 namespace rpc {
 
   // Name is under discussion
-  struct CarlaObject {
+  struct Mesh {
     Transform transform;
     geom::BoundingBox bounding_box;
     uint64_t id = 0;
@@ -26,11 +26,11 @@ namespace rpc {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    CarlaObject(const FCarlaObject &CarlaObject)
-      : transform(CarlaObject.Transform),
-        bounding_box(CarlaObject.BoundingBox),
-        id(CarlaObject.Id),
-        name(TCHAR_TO_UTF8(*CarlaObject.Name)) {}
+    Mesh(const FCarlaMesh &CarlaMesh)
+      : transform(CarlaMesh.Transform),
+        bounding_box(CarlaMesh.BoundingBox),
+        id(CarlaMesh.Id),
+        name(TCHAR_TO_UTF8(*CarlaMesh.Name)) {}
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
