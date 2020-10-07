@@ -307,4 +307,6 @@ protected:
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
 
+  bool ReadyToCapture = false;
+
 };
