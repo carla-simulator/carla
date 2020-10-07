@@ -505,6 +505,7 @@ void ASceneCaptureSensor::Tick(float DeltaTime)
       ImageWidth,
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
+  ReadyToCapture = true;
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
