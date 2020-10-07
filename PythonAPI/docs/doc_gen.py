@@ -120,7 +120,7 @@ def bold(buf):
 def snipet(name,class_key):
 
     return join(["  <button style=\"background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;\""
-    +" onclick='document.getElementById(\"demo\").innerHTML = document.getElementById(\"", class_key, ".", name, "-snipet\").innerHTML'>", "snipet &rarr;", '</button>'])
+    +" onclick='document.getElementById(\"snipets-container\").innerHTML = document.getElementById(\"", class_key, ".", name, "-snipet\").innerHTML'>", "snipet &rarr;", '</button>'])
 
 def code(buf):
     return join(['`', buf, '`'])
@@ -263,9 +263,6 @@ def gen_doc_method_def(method, class_key, is_indx=False, with_self=True):
     else:
         method_name = bold(color(COLOR_METHOD, method_name))
 
-    # Add snipet
-        #method_name = snipet(method_name, full_method_name, class_key)
-
     if with_self:
         if not 'params' in method or method['params'] is None:
             method['params'] = []
@@ -287,7 +284,8 @@ def gen_doc_method_def(method, class_key, is_indx=False, with_self=True):
     param = param[:-2]  # delete the last ', '
 
     # Add snipet
-    snipet_link = snipet(full_method_name, class_key)
+    if valid_dic_val(method, 'snipet'):
+        snipet_link = snipet(full_method_name, class_key)
 
     return join([method_name, parentheses(param),snipet_link])
 
@@ -298,7 +296,7 @@ def gen_doc_dunder_def(dunder, is_indx=False, with_self=True):
     if valid_dic_val(dunder, 'static'):
         with_self = False
 
-    # to correclty render methods like __init__ in md
+    # to correctly render methods like __init__ in md
     if dunder_name[0] == '_':
         dunder_name = '\\' + dunder_name
     if is_indx:
@@ -685,6 +683,8 @@ def main():
     """Main function"""
     print("Generating PythonAPI documentation...")
     script_path = os.path.dirname(os.path.abspath(__file__))
+    snipet_path = os.path.join(script_path, 'doc_gen_snipets.py')
+    os.system('python '+snipet_path)
     docs = Documentation(script_path)
     with open(os.path.join(script_path, '../../Docs/python_api.md'), 'w') as md_file:
         md_file.write(docs.gen_markdown())
