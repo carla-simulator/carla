@@ -58,7 +58,7 @@ public:
   TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FCarlaObject> GetObjects();
+  TArray<FCarlaObject> GetObjects() const;
 
 protected:
 
@@ -78,6 +78,8 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
+  void RegisterLevelObjects();
+
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
 
@@ -92,6 +94,8 @@ private:
 
   UPROPERTY()
   ACarlaRecorder *Recorder = nullptr;
+
+  TArray<FCarlaObject> LevelObjects;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
