@@ -155,6 +155,8 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
+  RegisterLevelObjects();
+
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -348,35 +350,32 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   return BoundingBoxes;
 }
 
-TArray<FCarlaObject> ACarlaGameModeBase::GetObjects()
+TArray<FCarlaObject> ACarlaGameModeBase::GetObjects() const
+{
+  return LevelObjects;
+}
+
+void ACarlaGameModeBase::RegisterLevelObjects()
 {
   UWorld* World = GetWorld();
+
   // Get all actors of the level
   TArray<AActor*> FoundActors;
-  TArray<FCarlaObject> Result;
-
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
-  // UE_LOG(LogCarla, Error, TEXT("___Hashing actors to generate IDs___"));
+  // Empties the array but doesn't change memory allocations
+  LevelObjects.Reset();
 
   for(AActor* Actor : FoundActors)
   {
-
     FString ActorName = Actor->GetName();
     const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
-
-    //UE_LOG(LogCarla, Error, TEXT("   %s (%d) -> %d"),
-    //  *ActorName, Actor->GetUniqueID(), CityHash64(ActorNameChar, ActorName.Len()));
-
-    //FString Output = FString::Printf(TEXT("%s %llu"),
-    //  *ActorName, CityHash64(ActorNameChar, ActorName.Len()) );
 
     FCarlaObject Object;
     Object.Transform = Actor->GetActorTransform();
     Object.Id = CityHash64(ActorNameChar, ActorName.Len());
-    Object.Name = ActorName; // std::string(TCHAR_TO_UTF8(*ActorName));
-    Result.Add(Object);
-  }
+    Object.Name = ActorName;
 
-  return Result;
+    LevelObjects.Add(Object);
+  }
 }
