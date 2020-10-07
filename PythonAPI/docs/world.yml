@@ -71,7 +71,7 @@
       - param_name: wildcard_pattern
         type: str
       doc: >
-        Filters a list of Actors matching `wildcard_pattern` against their variable **<font color="#f8805a">type_id</font>** (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
+        Filters a list of Actors matching `wildcard_pattern` against their variable __<font color="#f8805a">type_id</font>__ (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
     # --------------------------------------
     - def_name: find
       return: carla.Actor
@@ -143,7 +143,7 @@
         doc: >
           Set a fixed time-step in between frames. <code>0.0</code> means variable time-step and it is the default mode. 
       doc: >
-        Creates an object containing desired settings that could later be applied through carla.World and its method **<font color="#7fb800">apply_settings()</font>**.
+        Creates an object containing desired settings that could later be applied through carla.World and its method __<font color="#7fb800">apply_settings()</font>__.
     # --------------------------------------
     - def_name: __eq__
       return: bool
@@ -216,18 +216,18 @@
       - param_name: callback
         type: carla.WorldSnapshot
         doc: > 
-          A defined function with a snapshot as compulsory parameter that will be called every tick.  
+          Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
       doc: >
-        The method will start callbacks for a defined function `callback`. It will return the ID for this callback so it can be removed with **<font color="#7fb800">remove_on_tick()</font>**.
+        This method is used in [__asynchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a carla.WorldSnapshot as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.
     # --------------------------------------
     - def_name: remove_on_tick
       params:
       - param_name: callback_id
         type: callback
         doc: > 
-          The callback to be removed.  
+          The callback to be removed. The ID is returned when creating the callback.  
       doc: >
-        Stops the callback for `callback_id` started with **<font color="#7fb800">on_tick()</font>**.
+        Stops the callback for `callback_id` started with __<font color="#7fb800">on_tick()</font>__.
     # --------------------------------------
     - def_name: tick
       return: int
@@ -239,7 +239,9 @@
         doc: > 
           Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
       doc: >
-        This method only has effect on synchronous mode, when both client and server move together. The client tells the server when to step to the next frame and returns the id of the newly started frame. 
+        This method is used in [__synchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server. 
+      note: > 
+        If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/) to learn more.  
     # --------------------------------------
     - def_name: wait_for_tick
       return: carla.WorldSnapshot
@@ -251,7 +253,7 @@
         doc: > 
           Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
       doc: >
-        The client tells the server to pause the simulation until a **<font color="#7fb800">World.tick()</font>** is received.
+        This method is used in [__asynchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world. 
     # --------------------------------------
     - def_name: spawn_actor
       return: carla.Actor
@@ -299,7 +301,7 @@
         doc: > 
           Determines how fixed and rigorous should be the changes in position according to its parent object. 
       doc: >
-        Same as **<font color="#7fb800">spawn_actor()</font>** but returns <b>None</b> on failure instead of throwing an exception.
+        Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> on failure instead of throwing an exception.
     # --------------------------------------
     - def_name: get_actor
       return: carla.Actor
@@ -387,7 +389,7 @@
     - def_name: get_random_location_from_navigation
       return: carla.Location
       doc: >
-        This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
+        This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
     # --------------------------------------
     - def_name: get_settings
       return: carla.WorldSettings

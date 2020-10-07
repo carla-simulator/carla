@@ -14,6 +14,9 @@
 *   [__Semantic segmentation camera__](#semantic-segmentation-camera)
 *   [__DVS camera__](#dvs-camera)
 
+!!! Important
+    All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
+
 ---
 ## Collision detector
 
@@ -1581,8 +1584,7 @@ The following tags are currently available:
 <br>
 
 !!! Note
-    **Adding new tags**:
-    It requires some C++ coding. Add a new label to the `ECityObjectLabel` enum in "Tagger.h", and its corresponding filepath check inside `GetLabelByFolderName()` function in "Tagger.cpp".
+    Read [this](tuto_D_create_semantic_tags.md) tutorial to create new semantic tags. 
 
 #### Basic camera attributes
 
