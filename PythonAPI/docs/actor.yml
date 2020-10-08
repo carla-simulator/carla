@@ -36,7 +36,6 @@
     # - METHODS ----------------------------
     methods:
     - def_name: add_angular_impulse
-      snipet: yes
       params:
       - param_name: angular_impulse
         type: carla.Vector3D
@@ -47,7 +46,6 @@
         Applies an angular impulse at the center of mass of the actor. This method should be used for instantaneous torques, usually applied once. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over a period of time.
     # --------------------------------------
     - def_name: add_force
-      snipet: yes
       params:
       - param_name: force
         type: carla.Vector3D

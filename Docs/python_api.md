@@ -19,11 +19,11 @@ A list of semantic tags provided by the blueprint listing components for this ac
 The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 
 <h3>Methods</h3>
-- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_impulse**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Actor.add_angular_impulse-snipet").innerHTML'>snipet &rarr;</button>  
+- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_impulse**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Actor.add_angular_impulse-snipet").innerHTML'>snipet &rarr;</button>  
 Applies an angular impulse at the center of mass of the actor. This method should be used for instantaneous torques, usually applied once. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over a period of time.  
     - **Parameters:**
         - `angular_impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees*s</small>_) – Angular impulse vector in global coordinates.  
-- <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Actor.add_force-snipet").innerHTML'>snipet &rarr;</button>  
+- <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Actor.add_force-snipet").innerHTML'>snipet &rarr;</button>  
 Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
     - **Parameters:**
         - `force` (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_) – Force vector in global coordinates.  
@@ -2774,7 +2774,7 @@ Returns an object containing some data about the simulation such as synchrony be
 - <a name="carla.World.get_snapshot"></a>**<font color="#7fb800">get_snapshot</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a snapshot of the world at a certain moment comprising all the information about the actors.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
-- <a name="carla.World.get_spectator"></a>**<font color="#7fb800">get_spectator</font>**(<font color="#00a6ed">**self**</font>)  <button style="background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.World.get_spectator-snipet").innerHTML'>snipet &rarr;</button>  
+- <a name="carla.World.get_spectator"></a>**<font color="#7fb800">get_spectator</font>**(<font color="#00a6ed">**self**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.World.get_spectator-snipet").innerHTML'>snipet &rarr;</button>  
 Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.World.get_weather"></a>**<font color="#7fb800">get_weather</font>**(<font color="#00a6ed">**self**</font>)  
@@ -3244,4 +3244,20 @@ actor.get_angular_velocity()
 </div>
   
 
-</div>
+</div><script>
+function buttonvisibility(){
+buttons = document.getElementsByClassName('SnipetButton')
+if(window.innerWidth > 1200){
+for (var i = 0; i < buttons.length; i++) {
+buttons[i].style.visibility = "visible";
+}
+}
+else{
+for (var i = 0; i < buttons.length; i++) {
+buttons[i].style.visibility = "hidden";
+}
+}
+}
+window.onresize = buttonvisibility
+buttonvisibility();
+</script>

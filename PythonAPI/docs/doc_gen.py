@@ -119,7 +119,7 @@ def bold(buf):
 
 def snipet(name,class_key):
 
-    return join(["  <button style=\"background-color: #476e9e; border-radius:42px; border:0px; display:inline-block; cursor:pointer; color:#ffffff; font-family:Arial; font-size:12px; padding:2px 3px; text-decoration:none; text-shadow:0px 1px 0px #2f6627;\""
+    return join(["  <button class=\"SnipetButton\""
     +" onclick='document.getElementById(\"snipets-container\").innerHTML = document.getElementById(\"", class_key, ".", name, "-snipet\").innerHTML'>", "snipet &rarr;", '</button>'])
 
 def code(buf):
@@ -225,12 +225,31 @@ class YamlFile:
     def get_modules(self):
         return [module for module in self.data]
 
+def append_snipet_button_script(md):
+    md.textn("<script>\n"+
+                "function buttonvisibility(){\n"+
+                    "buttons = document.getElementsByClassName('SnipetButton')\n"+
+                    "if(window.innerWidth > 1200){\n"+
+                        "for (var i = 0; i < buttons.length; i++) {\n"+
+                            "buttons[i].style.visibility = \"visible\";\n"+
+                        "}\n"+
+                    "}\n"+
+                    "else{\n"+
+                        "for (var i = 0; i < buttons.length; i++) {\n"+
+                            "buttons[i].style.visibility = \"hidden\";\n"+
+                        "}\n"+
+                    "}\n"+
+                "}\n"+
+                "window.onresize = buttonvisibility\n"+
+                "buttonvisibility();\n"+
+            "</script>\n")
 
 def append_code_snipets(md):
     current_folder = os.path.dirname(os.path.abspath(__file__))
     snipets_path = os.path.join(current_folder, '../../Docs/python_api_snipets.md')
     snipets = open(snipets_path, 'r')
     md.text(snipets.read())
+    os.remove(snipets_path)
 
 
 def gen_stub_method_def(method):
@@ -284,7 +303,10 @@ def gen_doc_method_def(method, class_key, is_indx=False, with_self=True):
     param = param[:-2]  # delete the last ', '
 
     # Add snipet
-    if valid_dic_val(method, 'snipet'):
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+    snipets_path = os.path.join(current_folder, '../../Docs/python_api_snipets.md')
+    snipets = open(snipets_path, 'r')
+    if class_key+'.'+full_method_name+'-snipet' in snipets.read():
         snipet_link = snipet(full_method_name, class_key)
 
     return join([method_name, parentheses(param),snipet_link])
@@ -672,6 +694,7 @@ class Documentation:
                             add_doc_dunder(md, method, class_key)
                     md.separator()
         append_code_snipets(md)
+        append_snipet_button_script(md)
         return md.data().strip()
 
     def gen_markdown(self):

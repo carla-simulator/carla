@@ -402,7 +402,6 @@
         Returns a snapshot of the world at a certain moment comprising all the information about the actors.
     # --------------------------------------
     - def_name: get_spectator
-      snipet: yes
       return: carla.Actor
       doc: >
         Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.
