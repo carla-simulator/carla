@@ -84,7 +84,7 @@ fi
 if ${BUILD_PYTHONAPI} ; then
 
   for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
-    log "Building Python API for Python 3."
+    log "Building Python API for Python ${PY_VERSION}."
 
     /usr/bin/env python${PY_VERSION} setup.py bdist_egg
   done

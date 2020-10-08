@@ -7,26 +7,12 @@
 #include <carla/rss/RssSensor.h>
 #include <carla/sensor/data/RssResponse.h>
 
+#include <ad/physics/python/AdPhysicsPython.hpp>
+#include <ad/map/python/AdMapAccessPython.hpp>
+#include <ad/rss/python/AdRssPython.hpp>
+#include <ad/rss/python/AdRssMapIntegrationPython.hpp>
 #include <ad/rss/world/RssDynamics.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
-#ifdef LIBCARLA_PYTHON_MAJOR_2
-extern "C" {
-void initlibad_physics_python2();
-void initlibad_rss_python2();
-void initlibad_map_access_python2();
-void initlibad_rss_map_integration_python2();
-}
-#endif
-
-#ifdef LIBCARLA_PYTHON_MAJOR_3
-extern "C" {
-void PyInit_libad_physics_python3();
-void PyInit_libad_rss_python3();
-void PyInit_libad_map_access_python3();
-void PyInit_libad_rss_map_integration_python3();
-}
-#endif
 
 namespace carla {
 namespace rss {
@@ -107,20 +93,25 @@ static void RegisterActorConstellationCallback(carla::client::RssSensor &self, b
   self.RegisterActorConstellationCallback(callback_function);
 }
 
-void export_ad_rss() {
-#ifdef LIBCARLA_PYTHON_MAJOR_2
-  initlibad_physics_python2();
-  initlibad_rss_python2();
-  initlibad_map_access_python2();
-  initlibad_rss_map_integration_python2();
-#endif
+void export_ad() {
+  using namespace boost::python;
 
-#ifdef LIBCARLA_PYTHON_MAJOR_3
-  PyInit_libad_physics_python3();
-  PyInit_libad_rss_python3();
-  PyInit_libad_map_access_python3();
-  PyInit_libad_rss_map_integration_python3();
-#endif
+  // create/import the ad module scope
+  object ad_module(handle<>(borrowed(PyImport_AddModule("ad"))));
+  scope().attr("ad") = ad_module;
+  scope submodule_scope = ad_module;
+  scope().attr("__doc__") = "Python binding of ad namespace C++ code";
+  scope().attr("__copyright__") = "Copyright (C) 2019-2020 Intel Corporation";
+
+  export_ad_physics_python();
+  export_ad_map_access_python();
+  export_ad_rss_python();
+  export_ad_rss_map_integration_python();
+}
+
+void export_ad_rss() {
+
+  export_ad();
 
   using namespace boost::python;
   namespace cc = carla::client;
@@ -207,6 +198,6 @@ void export_ad_rss() {
                                                                                                       no_init)
       .def(init<>())
       .def("restrict_vehicle_control", &carla::rss::RssRestrictor::RestrictVehicleControl,
-           (arg("vehicle_control"), arg("restriction"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
+           (arg("vehicle_control"), arg("proper_response"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
       .def(self_ns::str(self_ns::self));
 }

@@ -28,17 +28,24 @@ The following image sketches the integration of __RSS__ into the CARLA architect
 ![Interate RSS into CARLA](img/rss_carla_integration_architecture.png)
 
 __1. The server.__
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a camera image to the client. <small>(Only if the client needs visualization).</small>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the RssSensor with world data.
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends a physics model of the vehicle to the RssRestrictor. <small>(Only if the default values are overwritten).</small>
+
+- Sends a camera image to the client. <small>(Only if the client needs visualization).</small>
+- Provides the RssSensor with world data.
+- Sends a physics model of the vehicle to the RssRestrictor. <small>(Only if the default values are overwritten).</small>
+
 __2. The client.__
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Provides the *RssSensor* with some [parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) to be considered.
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends to the *RssResrictor* an initial [carla.VehicleControl](python_api.md#carla.VehicleControl).
+
+- Provides the *RssSensor* with some [parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) to be considered.
+-Sends to the *RssResrictor* an initial [carla.VehicleControl](python_api.md#carla.VehicleControl).
+
 __3. The RssSensor.__
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Uses the *ad-rss-lib* to extract situations, do safety checks, and generate a response.
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ Sends the *RssRestrictor* a response containing the proper response and aceleration restrictions to be applied.
+
+- Uses the *ad-rss-lib* to extract situations, do safety checks, and generate a response.
+- Sends the *RssRestrictor* a response containing the proper response and aceleration restrictions to be applied.
+
 __4. The RssRestrictor__
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__-__ If the client asks for it, applies the response to the [carla.VehicleControl](python_api.md#carla.VehicleControl), and returns the resulting one.
+
+- If the client asks for it, applies the response to the [carla.VehicleControl](python_api.md#carla.VehicleControl), and returns the resulting one.
 
 [![RSS sensor in CARLA](img/rss_carla_integration.png)](https://www.youtube.com/watch?v=UxKPXPT2T8Q)
 <div style="text-align: right"><i>Visualization of the RssSensor results.</i></div>
@@ -96,7 +103,7 @@ make package.rss
 
 ### RssSensor
 
-[__carla.RssSensor__](python_api.md#carla.RssSensor) supports [ad-rss-lib v4.0.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections, [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support and unstructured scenes (e.g. with pedestrians).
+[__carla.RssSensor__](python_api.md#carla.RssSensor) supports [ad-rss-lib v4.2.0 feature set](https://intel.github.io/ad-rss-lib/RELEASE_NOTES_AND_DISCLAIMERS) completely, including intersections, [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) support and [unstructured constellations (e.g. with pedestrians)](https://intel.github.io/ad-rss-lib/ad_rss/UnstructuredConstellations/).
 
 So far, the server provides the sensor with ground truth data of the surroundings that includes the state of other traffic participants and traffic lights.
 
