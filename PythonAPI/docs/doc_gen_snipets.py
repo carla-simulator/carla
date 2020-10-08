@@ -52,7 +52,7 @@ class MarkdownFile:
 class Documentation:
     """Main documentation class"""
 
-    def __init__(self, path):
+    def __init__(self, path, images_path):
         self._snipets_path = os.path.join(os.path.dirname(path), 'snipets')
         self._files = [f for f in os.listdir(self._snipets_path) if f.endswith('.py')]
         self._snipets = list()
@@ -60,6 +60,15 @@ class Documentation:
             current_snipet_path = os.path.join(self._snipets_path,snipet_file)
             #print("This is the new snipet path: "+current_snipet_path)
             self._snipets.append(current_snipet_path)
+        # Gather snipet images
+        self._snipets_images_path = images_path
+        self._files_images = [f for f in os.listdir(self._snipets_images_path)]
+        self._snipets_images = list()
+        for snipet_image in self._files_images:
+            current_image_path = os.path.join(self._snipets_images_path,snipet_image)
+            #print("This is the new snipet path: "+current_snipet_path)
+            self._snipets_images.append(current_image_path)
+
 
     def gen_body(self):
         """Generates the documentation body"""
@@ -69,7 +78,7 @@ class Documentation:
         "[comment]: <> (=========================)\n"+
         "[comment]: <> (PYTHON API SCRIPT SNIPETS)\n"+
         "[comment]: <> (=========================)\n"+
-        "<div id=\"snipets-container\" onmouseover='this.style[\"overflowX\"]=\"scroll\";'  onmouseout='this.style[\"overflowX\"]=\"visible\";' style=\"position: fixed; margin-left: 0px; overflow-y: auto; padding-left: 5px; border-left: 1px solid #767677; height: 95%; top: 70px; left: 1100px;\"></div>\n"+
+        "<div id=\"snipets-container\" onmouseover='this.style[\"overflowX\"]=\"scroll\";' onmouseout='this.style[\"overflowX\"]=\"visible\";' style=\"position: fixed; margin-left: 0px; overflow-y: auto; padding-left: 5px; border-left: 1px solid #767677; height: 95%; top: 70px; left: 1100px;\"></div>\n"+
         "<script>\n"+
         "function CopyToClipboard(containerid) {\n"+
         "if (document.selection) {\n"+
@@ -95,11 +104,18 @@ class Documentation:
             "<p class=\"SnipetFont\">\n"+
             "Snipet for "+snipet_name+"\n"+
             "</p>\n"+
-            "<div id=\""+snipet_name+"-code\" style=\"width: 400px; margin-left: 10px\">\n\n```py\n")
+            "<div id=\""+snipet_name+"-code\" class=\"SnipetContent\">\n\n```py\n")
             # The snipet code
             md.textn(current_snipet.read())
             # Closing for a snipet
-            md.textn("\n```\n<button id=\"button1\" class=\"CopyScript\" onclick=\"CopyToClipboard('"+snipet_name+"-code')\">Copy snipet</button>\n</div>\n")
+            md.textn("\n```\n<button id=\"button1\" class=\"CopyScript\" onclick=\"CopyToClipboard('"+snipet_name+"-code')\">Copy snipet</button><br><br>\n")
+            # Check if snipet image exists, and add it
+            for snipet_path_to_image in self._snipets_images:
+                snipet_image_name = os.path.splitext(os.path.basename(snipet_path_to_image))[0]
+                if snipet_name == snipet_image_name:
+                    print(os.path.basename(snipet_path_to_image))
+                    md.textn("\n<img src=\"/img/snipets_images/"+os.path.basename(snipet_path_to_image)+"\">\n")
+            md.textn("</div>\n")
         # Closing div
         md.textn("\n</div>\n")
         #print(md.data())
@@ -115,7 +131,8 @@ def main():
     """Main function"""
     print("Generating PythonAPI snipets...")
     script_path = os.path.dirname(os.path.abspath(__file__)+'/snipets')
-    docs = Documentation(script_path)
+    snipets_images_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))+'/Docs/img/snipets_images'
+    docs = Documentation(script_path, snipets_images_path)
     snipets_md_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(script_path))),'Docs/python_api_snipets.md')
     #print("The md path: "+snipets_md_path)
     with open(snipets_md_path, 'w') as md_file:

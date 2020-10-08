@@ -19,11 +19,11 @@ A list of semantic tags provided by the blueprint listing components for this ac
 The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 
 <h3>Methods</h3>
-- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_impulse**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Actor.add_angular_impulse-snipet").innerHTML'>snipet &rarr;</button>  
+- <a name="carla.Actor.add_angular_impulse"></a>**<font color="#7fb800">add_angular_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_impulse**</font>)  
 Applies an angular impulse at the center of mass of the actor. This method should be used for instantaneous torques, usually applied once. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over a period of time.  
     - **Parameters:**
         - `angular_impulse` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees*s</small>_) – Angular impulse vector in global coordinates.  
-- <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Actor.add_force-snipet").innerHTML'>snipet &rarr;</button>  
+- <a name="carla.Actor.add_force"></a>**<font color="#7fb800">add_force</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>)  
 Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
     - **Parameters:**
         - `force` (_[carla.Vector3D](#carla.Vector3D)<small> – N</small>_) – Force vector in global coordinates.  
@@ -193,7 +193,7 @@ Returns the actor's attribute with `id` as identifier if existing.
     - **Setter:** _[carla.ActorBlueprint.set_attribute](#carla.ActorBlueprint.set_attribute)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.set_attribute"></a>**<font color="#7fb800">set_attribute</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**id**</font>, <font color="#00a6ed">**value**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.ActorBlueprint.set_attribute-snipet").innerHTML'>snipet &rarr;</button>  
 If the `id` attribute is modifiable, changes its value to `value`.  
     - **Parameters:**
         - `id` (_str_) – The identifier for the attribute that is intended to be changed.  
@@ -390,7 +390,7 @@ The Client connects CARLA to the server which runs the simulation. Both server a
   The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](adv_recorder.md) is some information about how to use this recorder.  
 
 <h3>Methods</h3>
-- <a name="carla.Client.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**host**=127.0.0.1</font>, <font color="#00a6ed">**port**=2000</font>, <font color="#00a6ed">**worker_threads**=0</font>)  
+- <a name="carla.Client.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**host**=127.0.0.1</font>, <font color="#00a6ed">**port**=2000</font>, <font color="#00a6ed">**worker_threads**=0</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Client.__init__-snipet").innerHTML'>snipet &rarr;</button>  
 Client constructor.  
     - **Parameters:**
         - `host` (_str_) – IP address where a CARLA Simulator instance is running. Default is localhost (127.0.0.1).  
@@ -400,7 +400,7 @@ Client constructor.
 Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.   [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.  
-- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**due_tick_cue**=False</font>)  
+- <a name="carla.Client.apply_batch_sync"></a>**<font color="#7fb800">apply_batch_sync</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**due_tick_cue**=False</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Client.apply_batch_sync-snipet").innerHTML'>snipet &rarr;</button>  
 Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.  
     - **Parameters:**
         - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.  
@@ -628,7 +628,7 @@ Draws an arrow from `begin` to `end` pointing in that direction.
         - `arrow_size` (_float<small> – meters</small>_) – Size of the tip of the arrow.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_box"></a>**<font color="#7fb800">draw_box</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**box**</font>, <font color="#00a6ed">**rotation**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.DebugHelper.draw_box-snipet").innerHTML'>snipet &rarr;</button>  
 Draws a box, ussually to act for object colliders.  
     - **Parameters:**
         - `box` (_[carla.BoundingBox](#carla.BoundingBox)_) – Object containing a location and the length of a box for every axis.  
@@ -636,7 +636,7 @@ Draws a box, ussually to act for object colliders.
         - `thickness` (_float<small> – meters</small>_) – Density of the lines that define the box.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_line"></a>**<font color="#7fb800">draw_line</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_line"></a>**<font color="#7fb800">draw_line</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.DebugHelper.draw_line-snipet").innerHTML'>snipet &rarr;</button>  
 Draws a line in between `begin` and `end`.  
     - **Parameters:**
         - `begin` (_[carla.Location](#carla.Location)<small> – meters</small>_) – Point in the coordinate system where the line starts.  
@@ -1401,7 +1401,7 @@ Returns a list of recommendations made by the creators of the map to be used as 
 - <a name="carla.Map.get_topology"></a>**<font color="#7fb800">get_topology</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of tuples describing a minimal graph of the topology of the OpenDRIVE file. The tuples contain pairs of waypoints located either at the point a road begins or ends. The first one is the origin and the second one represents another road end that can be reached. This graph can be loaded into [NetworkX](https://networkx.github.io/) to work with. Output could look like this: <b>[(w0, w1), (w0, w2), (w1, w3), (w2, w3), (w0, w4)]</b>.  
     - **Return:** _list(tuple([carla.Waypoint](#carla.Waypoint), [carla.Waypoint](#carla.Waypoint)))_  
-- <a name="carla.Map.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**project_to_road**=True</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+- <a name="carla.Map.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**project_to_road**=True</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Map.get_waypoint-snipet").innerHTML'>snipet &rarr;</button>  
 Returns a waypoint that can be located in an exact location or translated to the center of the nearest lane. Said lane type can be defined using flags such as `LaneType.Driving & LaneType.Shoulder`.
  The method will return <b>None</b> if the waypoint is not found, which may happen only when trying to retrieve a waypoint for an exact location. That eases checking if a point is inside a certain road, as otherwise, it will return the corresponding waypoint.  
     - **Parameters:**
@@ -1967,7 +1967,7 @@ The client returns the time set for the traffic light to be yellow, according to
     - **Setter:** _[carla.TrafficLight.set_yellow_time](#carla.TrafficLight.set_yellow_time)_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.TrafficLight.set_state-snipet").innerHTML'>snipet &rarr;</button>  
 Sets a given state to a traffic light actor.  
     - **Parameters:**
         - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
@@ -2430,7 +2430,7 @@ Sets the destination that the pedestrian will reach.
         - `destination` (_[carla.Location](#carla.Location)<small> – meters</small>_)  
 - <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
 Enables AI control for its parent walker.  
-- <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.WalkerAIController.stop-snipet").innerHTML'>snipet &rarr;</button>  
 Disables AI control for its parent walker.  
 
 <h5 style="margin-top: -20px">Setters</h5>
@@ -2702,7 +2702,7 @@ This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#c
     - **Parameters:**
         - `seconds` (_float<small> – seconds</small>_) – Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
-- <a name="carla.World.spawn_actor"></a>**<font color="#7fb800">spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
+- <a name="carla.World.spawn_actor"></a>**<font color="#7fb800">spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.World.spawn_actor-snipet").innerHTML'>snipet &rarr;</button>  
 The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type.  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_) – The reference from which the actor will be created.  
@@ -3152,7 +3152,7 @@ Links another command to be executed right after. It allows to ease very common 
 [comment]: <> (=========================)
 [comment]: <> (PYTHON API SCRIPT SNIPETS)
 [comment]: <> (=========================)
-<div id="snipets-container" onmouseover='this.style["overflowX"]="scroll";'  onmouseout='this.style["overflowX"]="visible";' style="position: fixed; margin-left: 0px; overflow-y: auto; padding-left: 5px; border-left: 1px solid #767677; height: 95%; top: 70px; left: 1100px;"></div>
+<div id="snipets-container" onmouseover='this.style["overflowX"]="scroll";' onmouseout='this.style["overflowX"]="visible";' style="position: fixed; margin-left: 0px; overflow-y: auto; padding-left: 5px; border-left: 1px solid #767677; height: 95%; top: 70px; left: 1100px;"></div>
 <script>
 function CopyToClipboard(containerid) {
 if (document.selection) {
@@ -3170,14 +3170,134 @@ document.execCommand("copy");
 }
 </script>
   
+<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Map.get_waypoint
+</p>
+<div id="carla.Map.get_waypoint-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows the current traffic rules affecting the vehicle. 
+# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
+
+# ...
+waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
+print("Current lane type: " + str(waypoint.lane_type))
+# Check current lane change allowed
+print("Current Lane change:  " + str(waypoint.lane_change))
+# Left and Right lane markings
+print("L lane marking type: " + str(waypoint.left_lane_marking.type))
+print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
+print("R lane marking type: " + str(waypoint.right_lane_marking.type))
+print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
+  
+</div>
+  
+<div id ="carla.Sensor.listen-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Sensor.listen
+</p>
+<div id="carla.Sensor.listen-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe applies a color conversion to the image taken by a camera sensor,
+# so it is converted to a semantic segmentation image.
+
+# ...
+camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
+# ...
+cc = carla.ColorConverter.CityScapesPalette
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.spawn_actor-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.World.spawn_actor
+</p>
+<div id="carla.World.spawn_actor-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe attaches different camera / sensors to a vehicle with different attachments.
+
+# ...
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
+# Default attachment:  Attachment.Rigid
+gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
+collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
+lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.ActorBlueprint.set_attribute
+</p>
+<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe changes attributes of different type of blueprint actors.
+
+# ...
+walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
+walker_bp.set_attribute('is_invincible', True)
+
+# ...
+# Changes attribute randomly by the recommended value
+vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
+color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
+vehicle_bp.set_attribute('color', color)
+
+# ...
+
+camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
+camera_bp.set_attribute('image_size_x', 600)
+camera_bp.set_attribute('image_size_y', 600)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snipet</button><br><br>
+  
+</div>
+  
 <div id ="carla.World.get_spectator-snipet" style="display: none;">
 <p class="SnipetFont">
 Snipet for carla.World.get_spectator
 </p>
-<div id="carla.World.get_spectator-code" style="width: 400px; margin-left: 10px">
+<div id="carla.World.get_spectator-code" class="SnipetContent">
 
 ```py
   
+
+# This recipe spawns an actor and the spectator camera at the actor's location.
+
 # ...
 world = client.get_world()
 spectator = world.get_spectator()
@@ -3198,49 +3318,269 @@ spectator.set_transform(actor_snapshot.get_transform())
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button><br><br>
+  
 </div>
   
-<div id ="carla.Actor.add_force-snipet" style="display: none;">
+<div id ="carla.DebugHelper.draw_line-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Actor.add_force
+Snipet for carla.DebugHelper.draw_line
 </p>
-<div id="carla.Actor.add_force-code" style="width: 400px; margin-left: 10px">
+<div id="carla.DebugHelper.draw_line-code" class="SnipetContent">
 
 ```py
   
-client = carla.Client(127.0.0.1, 2000)
-client.set_timeout(10.0)
 
-# Spawn an actor
-MY FOOOOOOOOOOOOOORCE   
+# This recipe is a modification of lane_explorer.py example.
+# It draws the path of an actor through the world, printing information at each waypoint.
+
+# ...
+current_w = map.get_waypoint(vehicle.get_location())
+while True:
+
+    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
+    # Check if the vehicle is moving
+    if next_w.id != current_w.id:
+        vector = vehicle.get_velocity()
+        # Check if the vehicle is on a sidewalk
+        if current_w.lane_type == carla.LaneType.Sidewalk:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+        else:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+        draw_transform(debug, current_w.transform, white, 60)
+
+    # Update the current waypoint and sleep for some time
+    current_w = next_w
+    time.sleep(args.tick_time)
+# ...
+  
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Actor.add_force-code')">Copy snipet</button>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_line-code')">Copy snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_line.jpg">
+  
 </div>
   
-<div id ="carla.Actor.add_angular_impulse-snipet" style="display: none;">
+<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Actor.add_angular_impulse
+Snipet for carla.DebugHelper.draw_box
 </p>
-<div id="carla.Actor.add_angular_impulse-code" style="width: 400px; margin-left: 10px">
+<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
 
 ```py
   
-# Check angular velocity
-actor.get_angular_velocity()
 
-# Apply angular impulse
-actor.add_angular_impulse(10) # degrees * s
+# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
 
-# Wait for world update
+# ....
+debug = world.debug
+world_snapshot = world.get_snapshot()
+
+for actor_snapshot in world_snapshot:
+    actual_actor = world.get_actor(actor_snapshot.id)
+    if actual_actor.type_id == 'traffic.traffic_light':
+        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+  
+</div>
+  
+<div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.TrafficLight.set_state
+</p>
+<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe changes from red to green the traffic light that affects the vehicle. 
+# This is done by detecting if the vehicle actor is at a traffic light.
+
+# ...
+world = client.get_world()
+spectator = world.get_spectator()
+
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
+transform = random.choice(world.get_map().get_spawn_points())
+vehicle = world.try_spawn_actor(vehicle_bp, transform)
+
+# Wait for world to get the vehicle actor
+world.tick()
+
+world_snapshot = world.wait_for_tick()
+actor_snapshot = world_snapshot.find(vehicle.id)
+
+# Set spectator at given transform (vehicle transform)
+spectator.set_transform(actor_snapshot.get_transform())
+# ...# ...
+if vehicle_actor.is_at_traffic_light():
+    traffic_light = vehicle_actor.get_traffic_light()
+    if traffic_light.get_state() == carla.TrafficLightState.Red:
+       # world.hud.notification("Traffic light changed! Good to go!")
+        traffic_light.set_state(carla.TrafficLightState.Green)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
+  
+</div>
+  
+<div id ="carla.Client.apply_batch_sync-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.apply_batch_sync
+</p>
+<div id="carla.Client.apply_batch_sync-code" class="SnipetContent">
+
+```py
+  
+# 0. Choose a blueprint fo the walkers
+world = client.get_world()
+blueprintsWalkers = world.get_blueprint_library().filter("walker.pedestrian.*")
+walker_bp = random.choice(blueprintsWalkers)
+
+# 1. Take all the random locations to spawn
+spawn_points = []
+for i in range(50):
+    spawn_point = carla.Transform()
+    spawn_point.location = world.get_random_location_from_navigation()
+    if (spawn_point.location != None):
+        spawn_points.append(spawn_point)
+
+# 2. Build the batch of commands to spawn the pedestrians
+batch = []
+for spawn_point in spawn_points:
+    walker_bp = random.choice(blueprintsWalkers)
+    batch.append(carla.command.SpawnActor(walker_bp, spawn_point))
+
+# 2.1 apply the batch
+results = client.apply_batch_sync(batch, True)
+for i in range(len(results)):
+    if results[i].error:
+        logging.error(results[i].error)
+    else:
+        walkers_list.append({"id": results[i].actor_id})
+
+# 3. Spawn walker AI controllers for each walker
+batch = []
+walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+for i in range(len(walkers_list)):
+    batch.append(carla.command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+
+# 3.1 apply the batch
+results = client.apply_batch_sync(batch, True)
+for i in range(len(results)):
+    if results[i].error:
+        logging.error(results[i].error)
+    else:
+        walkers_list[i]["con"] = results[i].actor_id
+
+# 4. Put altogether the walker and controller ids
+for i in range(len(walkers_list)):
+    all_id.append(walkers_list[i]["con"])
+    all_id.append(walkers_list[i]["id"])
+all_actors = world.get_actors(all_id)
+
+# wait for a tick to ensure client receives the last transform of the walkers we have just created
 world.wait_for_tick()
 
-# Check new angular velocity
-actor.get_angular_velocity()  
+# 5. initialize each controller and set target to walk to (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_actors), 2):
+    # start walker
+    all_actors[i].start()
+    # set walk to random point
+    all_actors[i].go_to_location(world.get_random_location_from_navigation())
+    # random max speed
+    all_actors[i].set_max_speed(1 + random.random())    # max speed between 1 and 2 (default is 1.4 m/s)
+  
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Actor.add_angular_impulse-code')">Copy snipet</button>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.apply_batch_sync-code')">Copy snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.WalkerAIController.stop
+</p>
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
+
+```py
+  
+
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
+
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
+
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Client.__init__-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.__init__
+</p>
+<div id="carla.Client.__init__-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows in every script provided in PythonAPI/Examples 
+# and it is used to parse the client creation arguments when running the script. 
+
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-s', '--speed',
+        metavar='FACTOR',
+        default=1.0,
+        type=float,
+        help='rate at which the weather changes (default: 1.0)')
+    args = argparser.parse_args()
+
+    speed_factor = args.speed
+    update_freq = 0.1 / speed_factor
+
+    client = carla.Client(args.host, args.port)
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snipet</button><br><br>
+  
 </div>
   
 

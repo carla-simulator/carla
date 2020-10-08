@@ -1,3 +1,6 @@
+
+# This recipe spawns an actor and the spectator camera at the actor's location.
+
 # ...
 world = client.get_world()
 spectator = world.get_spectator()

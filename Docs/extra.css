@@ -189,4 +189,11 @@ table.defTable tbody td{
 	text-shadow:0px 1px 0px #2f6627;
 }
 
+/************************* SNIPET CONTENT **************************/
+
+.SnipetContent {
+	width: 500px; 
+	margin-left: 10px;
+}
+
 
