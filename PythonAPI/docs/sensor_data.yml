@@ -135,7 +135,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Iterate over the carla.Image that form the image. 
+        Iterate over the carla.Color that form the image. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
