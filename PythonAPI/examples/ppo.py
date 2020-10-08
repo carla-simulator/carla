@@ -44,8 +44,8 @@ class CarlaEnv(gym.Env):
         self.resize = args.resize
         self.action_space = spaces.Discrete(4)
         # Example for using image as input:
-        self.observation_space = spaces.Box(low=0, high=255,
-                                            shape=(args.height, args.width, 3), dtype=np.uint8)
+        # self.observation_space = spaces.Box(low=0, high=255, shape=(args.height, args.width, 3), dtype=np.uint8)
+        self.observation_space = spaces.Dict({"image": spaces.Box(low=0, high=255, shape=(args.height, args.width, 3), dtype=np.uint8)})
         # TODO: action and obs space
         
         pygame.init()
@@ -70,13 +70,16 @@ class CarlaEnv(gym.Env):
     def step(self, action):
         self.clock.tick_busy_loop(60)
         raw_obs, reward, done, info = self.world.step(action)
-        observation = raw_obs.sensor_data.seg_csp_img
+        # observation = raw_obs.sensor_data.seg_csp_img
+        observation = {'image': raw_obs.sensor_data.seg_csp_img}
        
         return observation, reward, done, info
 
     def reset(self):
         raw_obs = self.world.reset() 
-        observation = raw_obs.sensor_data.seg_csp_img
+        # observation = raw_obs.sensor_data.seg_csp_img
+
+        observation = {'image': raw_obs.sensor_data.seg_csp_img}
         
         return observation  # reward, done, info can't be included
 
@@ -175,20 +178,20 @@ def callable_env(args):
     def _init():
         env = CarlaEnv(args=args) # TODO
         env = Monitor(env, "./log/")
-        env = CarlaWrapper(env)
+        # env = CarlaWrapper(env)
         return env
     return _init
 
 
 def make_env(args):
-    # env = CarlaEnv(args=args) # TODO
-    # # env = Monitor(env, "./log/")
+    env = CarlaEnv(args=args) # TODO
+    env = Monitor(env, "./log/")
 
-    # check_env(env)
-    # print("Finish check env")
-    # import pdb
-    # pdb.set_trace()
-    env = DummyVecEnv([callable_env(args)])
+    check_env(env)
+    print("Finish check env")
+    import pdb
+    pdb.set_trace()
+    # env = DummyVecEnv([callable_env(args)])
     env = VecFrameStack(env, 4)
     env = VecTransposeImage(env)
     return env
