@@ -14,8 +14,8 @@ The CARLA forum is available to post any doubts or suggestions that may arise du
 CARLA forum</a>
 </div>
 
-!!! Important
-    This documentation refers to CARLA 0.9.0 or later. To read about previous versions, check the [stable branch](https://carla.readthedocs.io/en/stable/).
+!!! Warning
+    Change the docs version to fit the CARLA version you are using. Use the pannel in the bottom-right side of this window to change to previous versions. ![docs_version_panel](img/docs_version_panel.jpg)
 
 ---
 
