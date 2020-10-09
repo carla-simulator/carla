@@ -1,6 +1,6 @@
 ## Latest
   * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions.
-  * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation.
+  * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.4.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation.
   * Fixed random dead-lock on synchronous mode at high frame rate
   * API extensions:
     - Added `actor.set_enable_gravity()` function to enable/disable the gravity affecting the actor
