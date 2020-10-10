@@ -206,7 +206,7 @@ def main():
         world = client.reload_world()
     elif args.xodr_path is not None:
         if os.path.exists(args.xodr_path):
-            with open(args.xodr_path) as od_file:
+            with open(args.xodr_path, encoding='utf-8') as od_file:
                 try:
                     data = od_file.read()
                 except OSError:
