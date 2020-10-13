@@ -108,7 +108,7 @@
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
-      return_units: rad/s
+      return_units: deg/s
       doc: >
         Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
@@ -138,6 +138,7 @@
       params:
       - param_name: angular_velocity
         type: carla.Vector3D
+        param_units: deg/s
       doc: >
         Sets the actor's angular velocity vector. The modification will be effective two frames after the setting. Also, this is applied before the physics step so the resulting angular velocity will be affected by external forces at this frame such as friction.
       note: >
