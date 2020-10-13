@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <algorithm>
+
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
@@ -155,6 +157,9 @@ void TrafficManagerLocal::Run() {
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
 
       vehicle_id_list = registered_vehicles.GetIDList();
+
+      std::sort(vehicle_id_list.begin(), vehicle_id_list.end());
+
       number_of_vehicles = vehicle_id_list.size();
 
       // Reserve more space if needed.
@@ -194,19 +199,13 @@ void TrafficManagerLocal::Run() {
       motion_plan_stage.Update(index);
     }
 
-    // Building the command array for current cycle.
-    std::vector<carla::rpc::Command> batch_command(number_of_vehicles);
-    for (unsigned long i = 0u; i < number_of_vehicles; ++i) {
-      batch_command.at(i) = control_frame.at(i);
-    }
-
     // Sending the current cycle's batch command to the simulator.
     if (synchronous_mode) {
-      episode_proxy.Lock()->ApplyBatchSync(std::move(batch_command), false);
+      episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
       step_end.store(true);
       step_end_trigger.notify_one();
     } else {
-      episode_proxy.Lock()->ApplyBatch(std::move(batch_command), false);
+      episode_proxy.Lock()->ApplyBatch(control_frame, false);
     }
   }
 }
