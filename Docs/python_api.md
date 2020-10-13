@@ -55,7 +55,7 @@ Returns the actor's 3D acceleration vector the client recieved during last tick.
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – m/s<sup>2</sup></small>_  
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
-    - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – rad/s</small>_  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Location](#carla.Location)<small> – meters</small>_  
@@ -75,7 +75,7 @@ Returns the world this actor belongs to.
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_target_angular_velocity"></a>**<font color="#7fb800">set_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
 Sets the actor's angular velocity vector. The modification will be effective two frames after the setting. Also, this is applied before the physics step so the resulting angular velocity will be affected by external forces at this frame such as friction.  
     - **Parameters:**
-        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
+        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
     - **Note:** <font color="#8E8E8E">_The update will not be effective until two frames after it is set.  
 _</font>  
 - <a name="carla.Actor.set_location"></a>**<font color="#7fb800">set_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
@@ -1172,7 +1172,7 @@ All lights.
 ---
 
 ## carla.LightManager<a name="carla.LightManager"></a>
-This class handles the lights in the scene. Its main use is to get and set the state of groups or lists of lights in one call. An instance of this class can be retrieved by the [carla.World.get_light_manager](#carla.World.get_light_manager)().  
+This class handles the lights in the scene. Its main use is to get and set the state of groups or lists of lights in one call. An instance of this class can be retrieved by the [carla.World.get_lightmanager](#carla.World.get_lightmanager)().  
 
 __Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as [carla.Light](#carla.Light) objects. These have to be managed using [carla.Vehicle](#carla.Vehicle) and [carla.VehicleLightState](#carla.VehicleLightState).  
 

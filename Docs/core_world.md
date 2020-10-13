@@ -181,7 +181,7 @@ Street lights are categorized using their attribute __light_group__, of type [__
 
 ```py
 # Get the light manager and lights
-lmanager = world.get_light_manager()
+lmanager = world.get_lightmanager()
 mylights = lmanager.get_all_lights()
 
 # Custom a specific light
