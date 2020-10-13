@@ -23,7 +23,7 @@ table.defTable {
 }
 
 table.defTable thead {
-  background: #ffffff; 
+  background: #ffffff;
   border-bottom: 1px solid #444444;
 }
 
@@ -53,7 +53,7 @@ table.defTable tbody td{
 /* Hide the images by default */
 .townslide {
   display: none;
-  text-align: center; 
+  text-align: center;
 
 }
 
@@ -164,6 +164,8 @@ table.defTable tbody td{
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 16px;
 	letter-spacing: 0.4px;
+	margin-left: 10px;
+	margin-bottom: 0px;
 	word-spacing: -2.2px;
 	color: #4675B1;
 	font-weight: 700;
@@ -192,7 +194,7 @@ table.defTable tbody td{
 /************************* SNIPET CONTENT **************************/
 
 .SnipetContent {
-	width: 500px; 
+	width: 500px;
 	margin-left: 10px;
 }
 
