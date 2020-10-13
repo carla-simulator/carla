@@ -265,13 +265,13 @@ Returns the velocity vector registered for an actor in that tick.
 ---
 
 ## carla.AttachmentType<a name="carla.AttachmentType"></a>
-Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. [Here](ref_code_recipes.md#attach-sensors-recipe) is a brief recipe in which we can see how sensors can be attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
+Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. The snipet in [carla.World.spawn_actor](#carla.World.spawn_actor) shows some sensors being attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.AttachmentType.Rigid"></a>**<font color="#f8805a">Rigid</font>**  
 With this fixed attatchment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
 - <a name="carla.AttachmentType.SpringArm"></a>**<font color="#f8805a">SpringArm</font>**  
-An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check this out](ref_code_recipes.md#attach-sensors-recipe) to learn some more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
+An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check the UE docs](https://docs.unrealengine.com/en-US/Gameplay/HowTo/UsingCameras/SpringArmComponents/index.html) to learn more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
 
 ---
 
@@ -308,7 +308,7 @@ Parses the identifiers for every blueprint to string.
 ---
 
 ## carla.BoundingBox<a name="carla.BoundingBox"></a>
-Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by [carla.DebugHelper](#carla.DebugHelper) or a [carla.Client](#carla.Client) to draw their shapes for debugging. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
+Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by [carla.DebugHelper](#carla.DebugHelper) or a [carla.Client](#carla.Client) to draw their shapes for debugging. Check out the snipet in [carla.DebugHelper.draw_box](#carla.DebugHelper.draw_box) where a snapshot of the world is used to draw bounding boxes for traffic lights.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.BoundingBox.extent"></a>**<font color="#f8805a">extent</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – meters</small>_)  
@@ -503,7 +503,7 @@ Sets the maxixum time a network call is allowed before blocking it and raising a
 ---
 
 ## carla.CollisionEvent<a name="carla.CollisionEvent"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of this for every collision detected which may be many for one simulation step. Learn more about this [here](ref_sensors.md#collision-detector).  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of this for every collision detected which may be many for one simulation step. Learn more about this [here](ref_sensors.md#collision-detector).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.CollisionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -545,7 +545,7 @@ Initializes a color, black by default.
 ---
 
 ## carla.ColorConverter<a name="carla.ColorConverter"></a>
-Class that defines conversion patterns that can be applied to a [carla.Image](#carla.Image) in order to show information provided by [carla.Sensor](#carla.Sensor). Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look a this [recipe](ref_code_recipes.md#converted-image-recipe) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.  
+Class that defines conversion patterns that can be applied to a [carla.Image](#carla.Image) in order to show information provided by [carla.Sensor](#carla.Sensor). Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look at the snipet in [carla.Sensor.listen](#carla.Sensor.listen) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ColorConverter.CityScapesPalette"></a>**<font color="#f8805a">CityScapesPalette</font>**  
@@ -616,7 +616,7 @@ Iterate over the [carla.DVSEvent](#carla.DVSEvent) retrieved as data.
 ---
 
 ## carla.DebugHelper<a name="carla.DebugHelper"></a>
-Helper class part of [carla.World](#carla.World) that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.  
+Helper class part of [carla.World](#carla.World) that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Take a look at the snipets available for this class to learn how to debug easily in CARLA.  
 
 <h3>Methods</h3>
 - <a name="carla.DebugHelper.draw_arrow"></a>**<font color="#7fb800">draw_arrow</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**arrow_size**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
@@ -713,7 +713,7 @@ Height regarding ground level.
 ---
 
 ## carla.GnssMeasurement<a name="carla.GnssMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the Gnss data registered by a <b>sensor.other.gnss</b>. It essentially reports its position with the position of the sensor and an OpenDRIVE geo-reference.  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the Gnss data registered by a <b>sensor.other.gnss</b>. It essentially reports its position with the position of the sensor and an OpenDRIVE geo-reference.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.GnssMeasurement.altitude"></a>**<font color="#f8805a">altitude</font>** (_float<small> – meters</small>_)  
@@ -731,7 +731,7 @@ West/East value of a point on the map.
 ---
 
 ## carla.IMUMeasurement<a name="carla.IMUMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the data registered by a <b>sensor.other.imu</b>, regarding the sensor's transformation according to the current [carla.World](#carla.World). It essentially acts as accelerometer, gyroscope and compass.  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the data registered by a <b>sensor.other.imu</b>, regarding the sensor's transformation according to the current [carla.World](#carla.World). It essentially acts as accelerometer, gyroscope and compass.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.IMUMeasurement.accelerometer"></a>**<font color="#f8805a">accelerometer</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – m/s<sup>2</sup></small>_)  
@@ -749,7 +749,7 @@ Angular velocity.
 ---
 
 ## carla.Image<a name="carla.Image"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines an image of 32-bit BGRA colors that will be used as initial data retrieved by camera sensors. There are different camera sensors (currently three, RGB, depth and semantic segmentation) and each of these makes different use for the images. Learn more about them [here](ref_sensors.md).  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines an image of 32-bit BGRA colors that will be used as initial data retrieved by camera sensors. There are different camera sensors (currently three, RGB, depth and semantic segmentation) and each of these makes different use for the images. Learn more about them [here](ref_sensors.md).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Image.fov"></a>**<font color="#f8805a">fov</font>** (_float<small> – degrees</small>_)  
@@ -952,7 +952,7 @@ Type 381.
 ---
 
 ## carla.LaneChange<a name="carla.LaneChange"></a>
-Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every [carla.Waypoint](#carla.Waypoint) according to the OpenDRIVE file. In this [recipe](ref_code_recipes.md#lanes-recipe) the user creates a waypoint for a current vehicle position and learns which turns are permitted.  
+Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every [carla.Waypoint](#carla.Waypoint) according to the OpenDRIVE file. The snipet in [carla.Map.get_waypoint](#carla.Map.get_waypoint) shows how a waypoint can be used to learn which turns are permitted.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneChange.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -967,7 +967,7 @@ Traffic rules allow turning either right or left.
 ---
 
 ## carla.LaneInvasionEvent<a name="carla.LaneInvasionEvent"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines lanes invasion for <b>sensor.other.lane_invasion</b>. It works only client-side and is dependant on OpenDRIVE to provide reliable information. The sensor creates one of this every time there is a lane invasion, which may be more than once per simulation step. Learn more about this [here](ref_sensors.md#lane-invasion-detector).  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines lanes invasion for <b>sensor.other.lane_invasion</b>. It works only client-side and is dependant on OpenDRIVE to provide reliable information. The sensor creates one of this every time there is a lane invasion, which may be more than once per simulation step. Learn more about this [here](ref_sensors.md#lane-invasion-detector).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneInvasionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -1013,8 +1013,7 @@ White by default.
 ---
 
 ## carla.LaneMarkingType<a name="carla.LaneMarkingType"></a>
-Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](ref_code_recipes.md#lanes-recipe) where the user creates a [carla.Waypoint](#carla.Waypoint) for a vehicle location and retrieves from it the information about adjacent lane markings.
-__Note on double types:__ Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.  
+Class that defines the lane marking types accepted by OpenDRIVE 1.4. The snipet in [carla.Map.get_waypoint](#carla.Map.get_waypoint) shows how a waypoint can be used to retrieve the information about adjacent lane markings.   <br><br> __Note on double types:__ Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneMarkingType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -1032,7 +1031,7 @@ __Note on double types:__ Lane markings are defined under the OpenDRIVE standard
 ---
 
 ## carla.LaneType<a name="carla.LaneType"></a>
-Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. For instance in this [recipe](ref_code_recipes.md#lanes-recipe) the user creates a [carla.Waypoint](#carla.Waypoint) for the current location of a vehicle and uses it to get the current and adjacent lane types.  
+Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. The snipet in [carla.Map.get_waypoint](#carla.Map.get_waypoint) makes use of a waypoint to get the current and adjacent lane types.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneType.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -1078,7 +1077,7 @@ Computed intensity for this point as a scalar value between [0.0 , 1.0].
 ---
 
 ## carla.LidarMeasurement<a name="carla.LidarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
@@ -1309,7 +1308,7 @@ Switch of a light. It is __True__ when the light is on.
 ---
 
 ## carla.Location<a name="carla.Location"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Vector3D](#carla.Vector3D)_</b></small></div></p><p>Represents a spot in the world.  
+<div class="Inherited"><small><b>Inherited from _[carla.Vector3D](#carla.Vector3D)_</b></small></div></p><p>Represents a spot in the world.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Location.x"></a>**<font color="#f8805a">x</font>** (_float<small> – meters</small>_)  
@@ -1423,7 +1422,7 @@ Returns a waypoint if all the parameters passed are correct. Otherwise, returns 
 ---
 
 ## carla.ObstacleDetectionEvent<a name="carla.ObstacleDetectionEvent"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the obstacle data for <b>sensor.other.obstacle</b>. Learn more about this [here](ref_sensors.md#obstacle-detector).  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the obstacle data for <b>sensor.other.obstacle</b>. Learn more about this [here](ref_sensors.md#obstacle-detector).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ObstacleDetectionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -1512,7 +1511,7 @@ The velocity of the detected object towards the sensor.
 ---
 
 ## carla.RadarMeasurement<a name="carla.RadarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines and gathers the measures registered by a <b>sensor.other.radar</b>, representing a wall of points in front of the sensor with a distance, angle and velocity in relation to it. The data consists of a [carla.RadarDetection](#carla.RadarDetection) array. Learn more about this [here](ref_sensors.md#radar-sensor).  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines and gathers the measures registered by a <b>sensor.other.radar</b>, representing a wall of points in front of the sensor with a distance, angle and velocity in relation to it. The data consists of a [carla.RadarDetection](#carla.RadarDetection) array. Learn more about this [here](ref_sensors.md#radar-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.RadarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
@@ -1678,7 +1677,7 @@ Enum declaration used in [carla.RssSensor](#carla.RssSensor) to set the log leve
 ---
 
 ## carla.RssResponse<a name="carla.RssResponse"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.
 
 A [carla.RssRestrictor](#carla.RssRestrictor) will use the data to modify the [carla.VehicleControl](#carla.VehicleControl) of the vehicle.  
 
@@ -1730,7 +1729,7 @@ Disables the _stay on road_ feature.
 ---
 
 ## carla.RssSensor<a name="carla.RssSensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.
+<div class="Inherited"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.
 
 The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle. The output retrieved by the sensor is a [carla.RssResponse](#carla.RssResponse). This will be used by a [carla.RssRestrictor](#carla.RssRestrictor) to modify a [carla.VehicleControl](#carla.VehicleControl) before applying it to a vehicle.  
 
@@ -1796,7 +1795,7 @@ ID of the actor hit by the ray.
 ---
 
 ## carla.SemanticLidarMeasurement<a name="carla.SemanticLidarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).  
+<div class="Inherited"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SemanticLidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
@@ -1829,7 +1828,7 @@ Iterate over the [carla.SemanticLidarDetection](#carla.SemanticLidarDetection) r
 ---
 
 ## carla.Sensor<a name="carla.Sensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
+<div class="Inherited"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
 
   Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.
   <br><b>Receive data on every tick.</b>
@@ -1852,7 +1851,7 @@ Iterate over the [carla.SemanticLidarDetection](#carla.SemanticLidarDetection) r
 When <b>True</b> the sensor will be waiting for data.  
 
 <h3>Methods</h3>
-- <a name="carla.Sensor.listenz"></a>**<font color="#7fb800">listenz</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
+- <a name="carla.Sensor.listen"></a>**<font color="#7fb800">listen</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  <button class="SnipetButton" onclick='document.getElementById("snipets-container").innerHTML = document.getElementById("carla.Sensor.listen-snipet").innerHTML'>snipet &rarr;</button>  
 The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type [carla.SensorData](#carla.SensorData) to work with.  
     - **Parameters:**
         - `callback` (_function_) – The called function with one argument containing the sensor data.  
@@ -1916,9 +1915,9 @@ Time register of the frame at which this measurement was taken given by the OS i
 ---
 
 ## carla.TrafficLight<a name="carla.TrafficLight"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.TrafficSign](#carla.TrafficSign)_</b></small></div></p><p>A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
+<div class="Inherited"><small><b>Inherited from _[carla.TrafficSign](#carla.TrafficSign)_</b></small></div></p><p>A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
      
-  Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to learn how to do so.  
+  Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLight.state"></a>**<font color="#f8805a">state</font>** (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
@@ -1993,7 +1992,7 @@ Sets a given time for the yellow light to be active.
 ---
 
 ## carla.TrafficLightState<a name="carla.TrafficLightState"></a>
-All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to see an example.  
+All possible states for traffic lights. These can either change at a specific time step or be changed manually. The snipet in [carla.TrafficLight.set_state](#carla.TrafficLight.set_state) changes the state of a traffic light on the fly.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficLightState.Red"></a>**<font color="#f8805a">Red</font>**  
@@ -2085,7 +2084,7 @@ Enables or disables the OSM mode. This mode allows the user to run TM in a map c
 ---
 
 ## carla.TrafficSign<a name="carla.TrafficSign"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Traffic signs appearing in the simulation except for traffic lights. These have their own class inherited from this in [carla.TrafficLight](#carla.TrafficLight). Right now, speed signs, stops and yields are mainly the ones implemented, but many others are borne in mind.  
+<div class="Inherited"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Traffic signs appearing in the simulation except for traffic lights. These have their own class inherited from this in [carla.TrafficLight](#carla.TrafficLight). Right now, speed signs, stops and yields are mainly the ones implemented, but many others are borne in mind.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficSign.trigger_volume"></a>**<font color="#f8805a">trigger_volume</font>**  
@@ -2210,7 +2209,7 @@ Returns the axis values for the vector parsed as string.
 ---
 
 ## carla.Vehicle<a name="carla.Vehicle"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
+<div class="Inherited"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Vehicle.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -2394,7 +2393,7 @@ VehiclePhysicsControl constructor.
 ---
 
 ## carla.Walker<a name="carla.Walker"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>This class inherits from the [carla.Actor](#carla.Actor) and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled either by an AI ([carla.WalkerAIController](#carla.WalkerAIController)) or manually via script, using a series of [carla.WalkerControl](#carla.WalkerControl) to move these and their skeletons.  
+<div class="Inherited"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>This class inherits from the [carla.Actor](#carla.Actor) and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled either by an AI ([carla.WalkerAIController](#carla.WalkerAIController)) or manually via script, using a series of [carla.WalkerControl](#carla.WalkerControl) to move these and their skeletons.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Walker.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -2421,7 +2420,7 @@ The client returns the control applied to this walker during last tick. The meth
 ---
 
 ## carla.WalkerAIController<a name="carla.WalkerAIController"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way.  
+<div class="Inherited"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way.  
 
 <h3>Methods</h3>
 - <a name="carla.WalkerAIController.go_to_location"></a>**<font color="#7fb800">go_to_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**destination**</font>)  
@@ -3152,7 +3151,7 @@ Links another command to be executed right after. It allows to ease very common 
 [comment]: <> (=========================)
 [comment]: <> (PYTHON API SCRIPT SNIPETS)
 [comment]: <> (=========================)
-<div id="snipets-container" onmouseover='this.style["overflowX"]="scroll";' onmouseout='this.style["overflowX"]="visible";' style="position: fixed; margin-left: 0px; overflow-y: auto; padding-left: 10px; height: 95%; top: 70px; left: 1100px;"></div>
+<div id="snipets-container" class="Container" onmouseover='this.style["overflowX"]="scroll";' onmouseout='this.style["overflowX"]="visible";'></div>
 <script>
 function CopyToClipboard(containerid) {
 if (document.selection) {
@@ -3169,6 +3168,69 @@ document.execCommand("copy");
 }
 }
 </script>
+<script>
+function CloseSnipet() {
+document.getElementById("snipets-container").innerHTML = null;
+}
+</script>
+  
+<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Map.get_waypoint
+</p>
+<div id="carla.Map.get_waypoint-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows the current traffic rules affecting the vehicle. 
+# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
+
+# ...
+waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
+print("Current lane type: " + str(waypoint.lane_type))
+# Check current lane change allowed
+print("Current Lane change:  " + str(waypoint.lane_change))
+# Left and Right lane markings
+print("L lane marking type: " + str(waypoint.left_lane_marking.type))
+print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
+print("R lane marking type: " + str(waypoint.right_lane_marking.type))
+print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
+  
+</div>
+  
+<div id ="carla.Sensor.listen-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Sensor.listen
+</p>
+<div id="carla.Sensor.listen-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe applies a color conversion to the image taken by a camera sensor,
+# so it is converted to a semantic segmentation image.
+
+# ...
+camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
+# ...
+cc = carla.ColorConverter.CityScapesPalette
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
   
 <div id ="carla.World.spawn_actor-snipet" style="display: none;">
 <p class="SnipetFont">
@@ -3191,31 +3253,118 @@ lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, att
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snipet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
-<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
+<div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.WalkerAIController.stop
+Snipet for carla.ActorBlueprint.set_attribute
 </p>
-<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
+<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
 
 ```py
   
 
-#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
+# This recipe changes attributes of different type of blueprint actors.
 
-# stop pedestrians (list is [controller, actor, controller, actor ...])
-for i in range(0, len(all_id), 2):
-    all_actors[i].stop()
+# ...
+walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
+walker_bp.set_attribute('is_invincible', True)
 
-# destroy pedestrian (actor and controller)
-client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+# ...
+# Changes attribute randomly by the recommended value
+vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
+color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
+vehicle_bp.set_attribute('color', color)
+
+# ...
+
+camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
+camera_bp.set_attribute('image_size_x', 600)
+camera_bp.set_attribute('image_size_y', 600)
+# ...
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snipet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.get_spectator-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.World.get_spectator
+</p>
+<div id="carla.World.get_spectator-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe spawns an actor and the spectator camera at the actor's location.
+
+# ...
+world = client.get_world()
+spectator = world.get_spectator()
+
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
+transform = random.choice(world.get_map().get_spawn_points())
+vehicle = world.try_spawn_actor(vehicle_bp, transform)
+
+# Wait for world to get the vehicle actor
+world.tick()
+
+world_snapshot = world.wait_for_tick()
+actor_snapshot = world_snapshot.find(vehicle.id)
+
+# Set spectator at given transform (vehicle transform)
+spectator.set_transform(actor_snapshot.get_transform())
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_line-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.DebugHelper.draw_line
+</p>
+<div id="carla.DebugHelper.draw_line-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe is a modification of lane_explorer.py example.
+# It draws the path of an actor through the world, printing information at each waypoint.
+
+# ...
+current_w = map.get_waypoint(vehicle.get_location())
+while True:
+
+    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
+    # Check if the vehicle is moving
+    if next_w.id != current_w.id:
+        vector = vehicle.get_velocity()
+        # Check if the vehicle is on a sidewalk
+        if current_w.lane_type == carla.LaneType.Sidewalk:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+        else:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+        draw_transform(debug, current_w.transform, white, 60)
+
+    # Update the current waypoint and sleep for some time
+    current_w = next_w
+    time.sleep(args.tick_time)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_line-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_line.jpg">
   
 </div>
   
@@ -3243,10 +3392,56 @@ for actor_snapshot in world_snapshot:
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snipet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 
 <img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+  
+</div>
+  
+<div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.TrafficLight.set_state
+</p>
+<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe changes from red to green the traffic light that affects the vehicle. 
+# This is done by detecting if the vehicle actor is at a traffic light.
+
+# ...
+world = client.get_world()
+spectator = world.get_spectator()
+
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
+transform = random.choice(world.get_map().get_spawn_points())
+vehicle = world.try_spawn_actor(vehicle_bp, transform)
+
+# Wait for world to get the vehicle actor
+world.tick()
+
+world_snapshot = world.wait_for_tick()
+actor_snapshot = world_snapshot.find(vehicle.id)
+
+# Set spectator at given transform (vehicle transform)
+spectator.set_transform(actor_snapshot.get_transform())
+# ...# ...
+if vehicle_actor.is_at_traffic_light():
+    traffic_light = vehicle_actor.get_traffic_light()
+    if traffic_light.get_state() == carla.TrafficLightState.Red:
+       # world.hud.notification("Traffic light changed! Good to go!")
+        traffic_light.set_state(carla.TrafficLightState.Green)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
   
 </div>
   
@@ -3319,7 +3514,31 @@ for i in range(0, len(all_actors), 2):
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.apply_batch_sync-code')">Copy snipet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.apply_batch_sync-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.WalkerAIController.stop
+</p>
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
+
+```py
+  
+
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
+
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
+
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3364,222 +3583,7 @@ Snipet for carla.Client.__init__
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snipet</button><br><br>
-  
-</div>
-  
-<div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.TrafficLight.set_state
-</p>
-<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe changes from red to green the traffic light that affects the vehicle. 
-# This is done by detecting if the vehicle actor is at a traffic light.
-
-# ...
-world = client.get_world()
-spectator = world.get_spectator()
-
-vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
-transform = random.choice(world.get_map().get_spawn_points())
-vehicle = world.try_spawn_actor(vehicle_bp, transform)
-
-# Wait for world to get the vehicle actor
-world.tick()
-
-world_snapshot = world.wait_for_tick()
-actor_snapshot = world_snapshot.find(vehicle.id)
-
-# Set spectator at given transform (vehicle transform)
-spectator.set_transform(actor_snapshot.get_transform())
-# ...# ...
-if vehicle_actor.is_at_traffic_light():
-    traffic_light = vehicle_actor.get_traffic_light()
-    if traffic_light.get_state() == carla.TrafficLightState.Red:
-       # world.hud.notification("Traffic light changed! Good to go!")
-        traffic_light.set_state(carla.TrafficLightState.Green)
-# ...
-
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
-  
-</div>
-  
-<div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.ActorBlueprint.set_attribute
-</p>
-<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe changes attributes of different type of blueprint actors.
-
-# ...
-walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
-walker_bp.set_attribute('is_invincible', True)
-
-# ...
-# Changes attribute randomly by the recommended value
-vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
-color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
-vehicle_bp.set_attribute('color', color)
-
-# ...
-
-camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
-camera_bp.set_attribute('image_size_x', 600)
-camera_bp.set_attribute('image_size_y', 600)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snipet</button><br><br>
-  
-</div>
-  
-<div id ="carla.DebugHelper.draw_line-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.DebugHelper.draw_line
-</p>
-<div id="carla.DebugHelper.draw_line-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe is a modification of lane_explorer.py example.
-# It draws the path of an actor through the world, printing information at each waypoint.
-
-# ...
-current_w = map.get_waypoint(vehicle.get_location())
-while True:
-
-    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
-    # Check if the vehicle is moving
-    if next_w.id != current_w.id:
-        vector = vehicle.get_velocity()
-        # Check if the vehicle is on a sidewalk
-        if current_w.lane_type == carla.LaneType.Sidewalk:
-            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
-        else:
-            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
-        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
-        draw_transform(debug, current_w.transform, white, 60)
-
-    # Update the current waypoint and sleep for some time
-    current_w = next_w
-    time.sleep(args.tick_time)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_line-code')">Copy snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_line.jpg">
-  
-</div>
-  
-<div id ="carla.Sensor.listen-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.Sensor.listen
-</p>
-<div id="carla.Sensor.listen-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe applies a color conversion to the image taken by a camera sensor,
-# so it is converted to a semantic segmentation image.
-
-# ...
-camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
-# ...
-cc = carla.ColorConverter.CityScapesPalette
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snipet</button><br><br>
-  
-</div>
-  
-<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.Map.get_waypoint
-</p>
-<div id="carla.Map.get_waypoint-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows the current traffic rules affecting the vehicle. 
-# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
-
-# ...
-waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
-print("Current lane type: " + str(waypoint.lane_type))
-# Check current lane change allowed
-print("Current Lane change:  " + str(waypoint.lane_change))
-# Left and Right lane markings
-print("L lane marking type: " + str(waypoint.left_lane_marking.type))
-print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
-print("R lane marking type: " + str(waypoint.right_lane_marking.type))
-print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
-  
-</div>
-  
-<div id ="carla.World.get_spectator-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.World.get_spectator
-</p>
-<div id="carla.World.get_spectator-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe spawns an actor and the spectator camera at the actor's location.
-
-# ...
-world = client.get_world()
-spectator = world.get_spectator()
-
-vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
-transform = random.choice(world.get_map().get_spawn_points())
-vehicle = world.try_spawn_actor(vehicle_bp, transform)
-
-# Wait for world to get the vehicle actor
-world.tick()
-
-world_snapshot = world.wait_for_tick()
-actor_snapshot = world_snapshot.find(vehicle.id)
-
-# Set spectator at given transform (vehicle transform)
-spectator.set_transform(actor_snapshot.get_transform())
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3595,6 +3599,7 @@ buttons[i].style.visibility = "visible";
 else{
 for (var i = 0; i < buttons.length; i++) {
 buttons[i].style.visibility = "hidden";
+document.getElementById("snipets-container").innerHTML = null;
 }
 }
 }

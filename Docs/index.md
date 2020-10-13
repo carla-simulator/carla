@@ -81,8 +81,6 @@ CARLA forum</a>
   <p style="padding-left:30px;line-height:1.8">
     [__Python API reference__](python_api.md)
         — Classes and methods in the Python API.  
-    [__Code recipes__](ref_code_recipes.md)
-        — Some code fragments commonly used.  
     [__Blueprint library__](bp_library.md)
         — Blueprints provided to spawn actors.  
     [__C++ reference__](ref_cpp.md)
@@ -96,7 +94,8 @@ CARLA forum</a>
   <p style="padding-left:30px;line-height:1.8">
     [__carlaviz — web visualizer__](plugins_carlaviz.md)
         — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.  
-
+  </p>
+  
 ## ROS bridge
   <p style="padding-left:30px;line-height:1.8">
     [__ROS bridge installation__](ros_installation.md)

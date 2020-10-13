@@ -34,7 +34,6 @@ nav:
   - 'Traffic Manager': 'adv_traffic_manager.md'
 - References:
   - 'Python API reference': 'python_api.md'
-  - 'Code recipes': 'ref_code_recipes.md'
   - 'Blueprint Library': 'bp_library.md'
   - 'C++ reference' : 'ref_cpp.md'
   - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'

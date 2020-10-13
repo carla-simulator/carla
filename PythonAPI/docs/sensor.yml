@@ -32,7 +32,7 @@
         When <b>True</b> the sensor will be waiting for data.
     # - METHODS ----------------------------
     methods:
-    - def_name: listenz
+    - def_name: listen
       params:
       - param_name: callback
         type: function

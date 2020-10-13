@@ -10,6 +10,7 @@
 import os
 import yaml
 import re
+import doc_gen_snipets
 
 COLOR_METHOD = '#7fb800'
 COLOR_PARAM = '#00a6ed'
@@ -93,7 +94,7 @@ class MarkdownFile:
 
     def inherit_join(self, inh):
         self._data = join([
-            self._data,'<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from ',inh,'</b></small></div></p><p>'])
+            self._data,'<div class="Inherited"><small><b>Inherited from ',inh,'</b></small></div></p><p>'])
 
     def note(self, buf):
         self._data = join([self._data, buf])
@@ -235,6 +236,7 @@ def append_snipet_button_script(md):
                     "else{\n"+
                         "for (var i = 0; i < buttons.length; i++) {\n"+
                             "buttons[i].style.visibility = \"hidden\";\n"+
+                            "document.getElementById(\"snipets-container\").innerHTML = null;\n"+
                         "}\n"+
                     "}\n"+
                 "}\n"+
@@ -704,9 +706,7 @@ def main():
     """Main function"""
     print("Generating PythonAPI documentation...")
     script_path = os.path.dirname(os.path.abspath(__file__))
-    snipet_path = os.path.join(script_path, 'doc_gen_snipets.py')
-    # TODO: change the calling method of snipets script from OS to python itself
-    os.system('python '+snipet_path)
+    doc_gen_snipets.main()
     docs = Documentation(script_path)
     with open(os.path.join(script_path, '../../Docs/python_api.md'), 'w') as md_file:
         md_file.write(docs.gen_markdown())
