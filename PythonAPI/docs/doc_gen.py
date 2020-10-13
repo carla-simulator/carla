@@ -35,7 +35,7 @@ class MarkdownFile:
         self._data = ""
         self._list_depth = 0
         self.endl = '  \n'
-    
+
     def data(self):
         return self._data
 
@@ -77,9 +77,7 @@ class MarkdownFile:
             self._data, '#Python API reference\n'])
 
     def button_apis(self):
-        self._data = join([
-            self._data, 
-            ''])
+        self._data = join([self._data, ''])
 
     def title(self, strongness, buf):
         self._data = join([
@@ -443,7 +441,7 @@ def add_doc_method(md, method, class_key):
 
     md.list_pop()
 
-def add_doc_getter_setter(md, method,class_key, is_getter,other_list):
+def add_doc_getter_setter(md, method, class_key, is_getter, other_list):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
     method_def = gen_doc_method_def(method, class_key, False)
@@ -683,11 +681,11 @@ class Documentation:
                         if len(get_list)>0:
                             md.title_html(5, 'Getters')
                         for method in get_list:
-                            add_doc_getter_setter(md, method,class_key, True,set_list)
+                            add_doc_getter_setter(md, method, class_key, True, set_list)
                         if len(set_list)>0:
                             md.title_html(5, 'Setters')
                         for method in set_list:
-                            add_doc_getter_setter(md, method,class_key, False,get_list)
+                            add_doc_getter_setter(md, method, class_key, False, get_list)
                         if len(dunder_list)>0:
                             md.title_html(5, 'Dunder methods')
                         for method in dunder_list:
@@ -707,6 +705,7 @@ def main():
     print("Generating PythonAPI documentation...")
     script_path = os.path.dirname(os.path.abspath(__file__))
     snipet_path = os.path.join(script_path, 'doc_gen_snipets.py')
+    # TODO: change the calling method of snipets script from OS to python itself
     os.system('python '+snipet_path)
     docs = Documentation(script_path)
     with open(os.path.join(script_path, '../../Docs/python_api.md'), 'w') as md_file:
