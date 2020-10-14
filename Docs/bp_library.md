@@ -249,6 +249,10 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `size` (_String_)
+- **<font color="#498efc">static.prop.bikeparking</font>**  
+    - **Attributes:**
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `size` (_String_)
 - **<font color="#498efc">static.prop.bin</font>**  
     - **Attributes:**
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
@@ -405,9 +409,6 @@ Check out the [introduction to blueprints](core_actors.md).
     - **Attributes:**
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `size` (_String_)
-- **<font color="#498efc">static.prop.mesh</font>**  
-    - **Attributes:**
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">static.prop.mobile</font>**  
     - **Attributes:**
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
@@ -469,6 +470,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `size` (_String_)
 - **<font color="#498efc">static.prop.purse</font>**  
+    - **Attributes:**
+        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.shop01</font>**  
     - **Attributes:**
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `size` (_String_)
@@ -876,83 +881,6 @@ Check out the [introduction to blueprints](core_actors.md).
         - `role_name` (_String_)<sub>_ – Modifiable_</sub>
         - `speed` (_Float_)<sub>_ – Modifiable_</sub>
 - **<font color="#498efc">walker.pedestrian.0015</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0016</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0017</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0018</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0019</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0020</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0021</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0022</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0023</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0024</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0025</font>**  
-    - **Attributes:**
-        - `age` (_String_)
-        - `gender` (_String_)
-        - `is_invincible` (_Bool_)<sub>_ – Modifiable_</sub>
-        - `role_name` (_String_)<sub>_ – Modifiable_</sub>
-        - `speed` (_Float_)<sub>_ – Modifiable_</sub>
-- **<font color="#498efc">walker.pedestrian.0026</font>**  
     - **Attributes:**
         - `age` (_String_)
         - `gender` (_String_)
