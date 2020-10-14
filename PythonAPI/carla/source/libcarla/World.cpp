@@ -8,7 +8,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/ActorList.h>
 #include <carla/client/World.h>
-#include <carla/rpc/Mesh.h>
+#include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/ObjectLabel.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -38,11 +38,11 @@ namespace rpc {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const Mesh &mesh) {
-    out << "Mesh(id=" << mesh.id << ", ";
-    out << "name=" << mesh.name << ", ";
-    out << "transform=" << mesh.transform << ", ";
-    out << "bounding_box=" << mesh.bounding_box << ")";
+  std::ostream &operator<<(std::ostream &out, const EnvironmentObject &environment_object) {
+    out << "Mesh(id=" << environment_object.id << ", ";
+    out << "name=" << environment_object.name << ", ";
+    out << "transform=" << environment_object.transform << ", ";
+    out << "bounding_box=" << environment_object.bounding_box << ")";
     return out;
   }
 
@@ -89,13 +89,26 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
   return result;
 }
 
-static auto GetMeshes(const carla::client::World &self) {
+static auto GetEnvironmentObjects(const carla::client::World &self) {
   carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
-  for (const auto &geometry : self.GetMeshes()) {
+  for (const auto &geometry : self.GetEnvironmentObjects()) {
     result.append(geometry);
   }
   return result;
+}
+
+static void EnableEnvironmentObjects(
+  carla::client::World &self,
+  const boost::python::object& py_env_objects_ids,
+  const bool enable ) {
+
+  std::vector<uint64_t> env_objects_ids {
+    boost::python::stl_input_iterator<uint64_t>(py_env_objects_ids),
+    boost::python::stl_input_iterator<uint64_t>()
+  };
+
+  self.EnableEnvironmentObjects(env_objects_ids, enable);
 }
 
 void export_world() {
@@ -149,11 +162,11 @@ void export_world() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::Mesh>("Mesh", no_init)
-    .def_readwrite("transform", &cr::Mesh::transform)
-    .def_readwrite("bounding_box", &cr::Mesh::bounding_box)
-    .def_readwrite("id", &cr::Mesh::id)
-    .def_readwrite("name", &cr::Mesh::name)
+  class_<cr::EnvironmentObject>("EnvironmentObject", no_init)
+    .def_readwrite("transform", &cr::EnvironmentObject::transform)
+    .def_readwrite("bounding_box", &cr::EnvironmentObject::bounding_box)
+    .def_readwrite("id", &cr::EnvironmentObject::id)
+    .def_readwrite("name", &cr::EnvironmentObject::name)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -232,7 +245,8 @@ void export_world() {
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
-    .def("get_meshes", &GetMeshes)
+    .def("get_environment_objects", &GetEnvironmentObjects)
+    .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))
     .def(self_ns::str(self_ns::self))
   ;
 

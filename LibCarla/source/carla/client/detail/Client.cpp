@@ -450,9 +450,15 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);
   }
 
-  std::vector<rpc::Mesh> Client::GetMeshes() const {
-    using return_t = std::vector<rpc::Mesh>;
-    return _pimpl->CallAndWait<return_t>("get_meshes");
+  std::vector<rpc::EnvironmentObject> Client::GetEnvironmentObjects() const {
+    using return_t = std::vector<rpc::EnvironmentObject>;
+    return _pimpl->CallAndWait<return_t>("get_environment_objects");
+  }
+
+  void Client::EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+    _pimpl->AsyncCall("enable_environment_objects", std::move(env_objects_ids), enable);
   }
 
 } // namespace detail
