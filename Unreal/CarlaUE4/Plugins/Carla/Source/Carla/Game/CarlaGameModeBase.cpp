@@ -376,6 +376,7 @@ void ACarlaGameModeBase::RegisterEnvironmentObject()
     EnvironmentObject.Id = CityHash64(ActorNameChar, ActorName.Len());
     EnvironmentObject.Name = ActorName;
     EnvironmentObject.Actor = Actor;
+    EnvironmentObject.CanTick = Actor->IsActorTickEnabled();
 
     EnvironmentObjects.Emplace(EnvironmentObject);
   }
@@ -394,7 +395,10 @@ void ACarlaGameModeBase::EnableEnvironmentObjects(
 
       Actor->SetActorHiddenInGame(!Enable);
       Actor->SetActorEnableCollision(Enable);
-      Actor->SetActorTickEnabled(Enable);
+      if(EnvironmentObject.CanTick)
+      {
+        Actor->SetActorTickEnabled(Enable);
+      }
     }
   }
 
