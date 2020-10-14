@@ -14,8 +14,8 @@ The CARLA forum is available to post any doubts or suggestions that may arise du
 CARLA forum</a>
 </div>
 
-!!! Important
-    This documentation refers to CARLA 0.9.0 or later. To read about previous versions, check the [stable branch](https://carla.readthedocs.io/en/stable/).
+!!! Warning
+    Change the docs version to fit the CARLA version you are using. Use the pannel in the bottom-right side of this window to change to previous versions. ![docs_version_panel](img/docs_version_panel.jpg)
 
 ---
 
@@ -143,6 +143,8 @@ CARLA forum</a>
         — Add new content to CARLA.  
     [__Create a sensor__](tuto_D_create_sensor.md)
         — Develop a new sensor to be used in CARLA.  
+    [__Create semantic tags_](tuto_D_create_semantic_tags.md)
+        — Define new semantic tags for semantic segmentation.  
     [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md)
         — Modify the suspension system of a vehicle.  
     [__Make a release__](tuto_D_make_release.md)

@@ -143,7 +143,7 @@ setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh $(ARGS)
 
 ad-rss:
-	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh
+	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh $(ARGS)
 
 deploy:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Deploy.sh $(ARGS)

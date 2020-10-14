@@ -30,11 +30,9 @@ RHI="-vulkan"
 
 OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --gdb )
       GDB="gdb --args";
@@ -65,7 +63,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 

@@ -55,7 +55,7 @@ Returns the actor's 3D acceleration vector the client recieved during last tick.
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – m/s<sup>2</sup></small>_  
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
-    - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – rad/s</small>_  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
     - **Return:** _[carla.Location](#carla.Location)<small> – meters</small>_  
@@ -75,7 +75,7 @@ Returns the world this actor belongs to.
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Actor.set_target_angular_velocity"></a>**<font color="#7fb800">set_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
 Sets the actor's angular velocity vector. The modification will be effective two frames after the setting. Also, this is applied before the physics step so the resulting angular velocity will be affected by external forces at this frame such as friction.  
     - **Parameters:**
-        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
+        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> – deg/s</small>_)  
     - **Note:** <font color="#8E8E8E">_The update will not be effective until two frames after it is set.  
 _</font>  
 - <a name="carla.Actor.set_location"></a>**<font color="#7fb800">set_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
@@ -202,7 +202,7 @@ If the `id` attribute is modifiable, changes its value to `value`.
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.ActorBlueprint.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Allows iteration within this class' attributes.  
+Iterate over the [carla.ActorAttribute](#carla.ActorAttribute) that this blueprint has.  
 - <a name="carla.ActorBlueprint.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of attributes for this blueprint.  
 - <a name="carla.ActorBlueprint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -214,7 +214,7 @@ A class that contains every actor present on the scene and provides access to th
 
 <h3>Methods</h3>
 - <a name="carla.ActorList.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
-Filters a list of Actors matching `wildcard_pattern` against their variable **<font color="#f8805a">type_id</font>** (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
+Filters a list of Actors matching `wildcard_pattern` against their variable __<font color="#f8805a">type_id</font>__ (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
     - **Return:** _list_  
@@ -229,7 +229,7 @@ Finds an actor using its identifier and returns it or <b>None</b> if it is not p
 Returns the actor corresponding to `pos` position in the list.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.ActorList.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Allows the iteration for the actors in this object.  
+Iterate over the [carla.Actor](#carla.Actor) contained in the list.  
 - <a name="carla.ActorList.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of actors listed.  
     - **Return:** _int_  
@@ -297,7 +297,7 @@ Returns the blueprint corresponding to that identifier.
 Returns the blueprint stored in `pos` position inside the data structure containing them.  
     - **Return:** _[carla.ActorBlueprint](#carla.ActorBlueprint)_  
 - <a name="carla.BlueprintLibrary.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Method that allows iteration within the blueprints provided.  
+Iterate over the [carla.ActorBlueprint](#carla.ActorBlueprint) stored in the library.  
 - <a name="carla.BlueprintLibrary.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of blueprints comprising the library.  
     - **Return:** _int_  
@@ -608,6 +608,7 @@ Returns an array with the polarity of all the events in the stream.
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.DVSEventArray.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.DVSEventArray.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the [carla.DVSEvent](#carla.DVSEvent) retrieved as data.  
 - <a name="carla.DVSEventArray.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.DVSEventArray.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
 - <a name="carla.DVSEventArray.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -773,6 +774,7 @@ Saves the image to disk using a converter pattern stated as `color_converter`. T
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.Image.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.Image.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the [carla.Color](#carla.Color) that form the image.  
 - <a name="carla.Image.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.Image.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
 - <a name="carla.Image.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1101,6 +1103,7 @@ Retrieves the number of points sorted by channel that are generated by this meas
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.LidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.LidarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the [carla.LidarDetection](#carla.LidarDetection) retrieved as data.  
 - <a name="carla.LidarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.LidarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**detection**=[carla.LidarDetection](#carla.LidarDetection)</font>)  
 - <a name="carla.LidarMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1169,7 +1172,7 @@ All lights.
 ---
 
 ## carla.LightManager<a name="carla.LightManager"></a>
-This class handles the lights in the scene. Its main use is to get and set the state of groups or lists of lights in one call. An instance of this class can be retrieved by the [carla.World.get_light_manager](#carla.World.get_light_manager)().  
+This class handles the lights in the scene. Its main use is to get and set the state of groups or lists of lights in one call. An instance of this class can be retrieved by the [carla.World.get_lightmanager](#carla.World.get_lightmanager)().  
 
 __Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as [carla.Light](#carla.Light) objects. These have to be managed using [carla.Vehicle](#carla.Vehicle) and [carla.VehicleLightState](#carla.VehicleLightState).  
 
@@ -1524,6 +1527,7 @@ Retrieves the number of entries generated, same as **<font color="#7fb800">\__st
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RadarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.RadarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the [carla.RadarDetection](#carla.RadarDetection) retrieved as data.  
 - <a name="carla.RadarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.RadarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**detection**=[carla.RadarDetection](#carla.RadarDetection)</font>)  
 - <a name="carla.RadarMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1577,16 +1581,16 @@ Parses the axis' orientations to string.
 Data structure that is provided within the callback registered by RssSensor.register_actor_constellation_callback().  
 
 <h3>Instance Variables</h3>
-- <a name="carla.RssActorConstellationData.ego_match_object"></a>**<font color="#f8805a">ego_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>_)  
+- <a name="carla.RssActorConstellationData.ego_match_object"></a>**<font color="#f8805a">ego_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">ad.map.match.Object</a>_)  
 The ego map matched information.  
-- <a name="carla.RssActorConstellationData.ego_route"></a>**<font color="#f8805a">ego_route</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1route_1_1FullRoute.html">libad_map_access_python.FullRoute</a>_)  
+- <a name="carla.RssActorConstellationData.ego_route"></a>**<font color="#f8805a">ego_route</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1route_1_1FullRoute.html">ad.map.route.FullRoute</a>_)  
 The ego route.  
 - <a name="carla.RssActorConstellationData.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
 Current ego vehicle dynamics regarding the route.  
-- <a name="carla.RssActorConstellationData.other_match_object"></a>**<font color="#f8805a">other_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>_)  
+- <a name="carla.RssActorConstellationData.other_match_object"></a>**<font color="#f8805a">other_match_object</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">ad.map.match.Object</a>_)  
 The other object's map matched information. This is only valid if 'other_actor' is not 'None'.  
 - <a name="carla.RssActorConstellationData.other_actor"></a>**<font color="#f8805a">other_actor</font>** (_[carla.Actor](#carla.Actor)_)  
-The other actor. This is 'None' in case of query of default parameters or articial objects of kind <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">libad_rss_python.ObjectType.ArtificialObject</a> with no dedicated '[carla.Actor](#carla.Actor)' (as e.g. for the [road boundaries](ref_sensors.md#rss-sensor) at the moment).  
+The other actor. This is 'None' in case of query of default parameters or articial objects of kind <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">ad.rss.world.ObjectType.ArtificialObject</a> with no dedicated '[carla.Actor](#carla.Actor)' (as e.g. for the [road boundaries](ref_sensors.md#rss-sensor) at the moment).  
 
 <h3>Methods</h3>
 
@@ -1599,15 +1603,15 @@ The other actor. This is 'None' in case of query of default parameters or artici
 Data structure that should be returned by the callback registered by RssSensor.register_actor_constellation_callback().  
 
 <h3>Instance Variables</h3>
-- <a name="carla.RssActorConstellationResult.rss_calculation_mode"></a>**<font color="#f8805a">rss_calculation_mode</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/namespacead_1_1rss_1_1map.html#adcb01232986ed83a0c540cd5d03ef495">libad_rss_map_integration_python.RssMode</a>_)  
+- <a name="carla.RssActorConstellationResult.rss_calculation_mode"></a>**<font color="#f8805a">rss_calculation_mode</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/namespacead_1_1rss_1_1map.html#adcb01232986ed83a0c540cd5d03ef495">ad.rss.map.RssMode</a>_)  
 The calculation mode to be applied with the actor.  
-- <a name="carla.RssActorConstellationResult.restrict_speed_limit_mode"></a>**<font color="#f8805a">restrict_speed_limit_mode</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/classad_1_1rss_1_1map_1_1RssSceneCreation.html#a403aae6dce3c77a8aec01dd9808dd964">libad_rss_map_integration_python.RestrictSpeedLimitMode</a>_)  
+- <a name="carla.RssActorConstellationResult.restrict_speed_limit_mode"></a>**<font color="#f8805a">restrict_speed_limit_mode</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/classad_1_1rss_1_1map_1_1RssSceneCreation.html#a403aae6dce3c77a8aec01dd9808dd964">ad.rss.map.RestrictSpeedLimitMode</a>_)  
 The mode for restricting speed limit.  
-- <a name="carla.RssActorConstellationResult.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>_)  
+- <a name="carla.RssActorConstellationResult.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>_)  
 The RSS dynamics to be applied for the ego vehicle.  
-- <a name="carla.RssActorConstellationResult.actor_object_type"></a>**<font color="#f8805a">actor_object_type</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">libad_rss_python.ObjectType</a>_)  
+- <a name="carla.RssActorConstellationResult.actor_object_type"></a>**<font color="#f8805a">actor_object_type</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">ad.rss.world.ObjectType</a>_)  
 The RSS object type to be used for the actor.  
-- <a name="carla.RssActorConstellationResult.actor_dynamics"></a>**<font color="#f8805a">actor_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>_)  
+- <a name="carla.RssActorConstellationResult.actor_dynamics"></a>**<font color="#f8805a">actor_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>_)  
 The RSS dynamics to be applied for the actor.  
 
 <h3>Methods</h3>
@@ -1621,35 +1625,35 @@ The RSS dynamics to be applied for the actor.
 Part of the data contained inside a [carla.RssResponse](#carla.RssResponse) describing the state of the vehicle. The parameters include its current dynamics, and how it is heading regarding the target route.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.RssEgoDynamicsOnRoute.ego_speed"></a>**<font color="#f8805a">ego_speed</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_speed"></a>**<font color="#f8805a">ego_speed</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">ad.physics.Speed</a>_)  
 The ego vehicle's speed.  
-- <a name="carla.RssEgoDynamicsOnRoute.min_stopping_distance"></a>**<font color="#f8805a">min_stopping_distance</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Distance.html">libad_physics_python.Distance</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.min_stopping_distance"></a>**<font color="#f8805a">min_stopping_distance</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Distance.html">ad.physics.Distance</a>_)  
 The current minimum stopping distance.  
-- <a name="carla.RssEgoDynamicsOnRoute.ego_center"></a>**<font color="#f8805a">ego_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_center"></a>**<font color="#f8805a">ego_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">ad.map.point.ENUPoint</a>_)  
 The considered enu position of the ego vehicle.  
-- <a name="carla.RssEgoDynamicsOnRoute.ego_heading"></a>**<font color="#f8805a">ego_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.ego_heading"></a>**<font color="#f8805a">ego_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">ad.map.point.ENUHeading</a>_)  
 The considered heading of the ego vehicle.  
 - <a name="carla.RssEgoDynamicsOnRoute.ego_center_within_route"></a>**<font color="#f8805a">ego_center_within_route</font>** (_bool_)  
 States if the ego vehicle's center is within the route.  
 - <a name="carla.RssEgoDynamicsOnRoute.crossing_border"></a>**<font color="#f8805a">crossing_border</font>** (_bool_)  
 States if the vehicle is already crossing one of the lane borders.  
-- <a name="carla.RssEgoDynamicsOnRoute.route_heading"></a>**<font color="#f8805a">route_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.route_heading"></a>**<font color="#f8805a">route_heading</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">ad.map.point.ENUHeading</a>_)  
 The considered heading of the route.  
-- <a name="carla.RssEgoDynamicsOnRoute.route_nominal_center"></a>**<font color="#f8805a">route_nominal_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.route_nominal_center"></a>**<font color="#f8805a">route_nominal_center</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">ad.map.point.ENUPoint</a>_)  
 The considered nominal center of the current route.  
-- <a name="carla.RssEgoDynamicsOnRoute.heading_diff"></a>**<font color="#f8805a">heading_diff</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.heading_diff"></a>**<font color="#f8805a">heading_diff</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">ad.map.point.ENUHeading</a>_)  
 The considered heading diff towards the route.  
-- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lat"></a>**<font color="#f8805a">route_speed_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lat"></a>**<font color="#f8805a">route_speed_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">ad.physics.Speed</a>_)  
 The ego vehicle's speed component _lat_ regarding the route.  
-- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lon"></a>**<font color="#f8805a">route_speed_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.route_speed_lon"></a>**<font color="#f8805a">route_speed_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">ad.physics.Speed</a>_)  
 The ego vehicle's speed component _lon_ regarding the route.  
-- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lat"></a>**<font color="#f8805a">route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lat"></a>**<font color="#f8805a">route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>_)  
 The ego vehicle's acceleration component _lat_ regarding the route.  
-- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lon"></a>**<font color="#f8805a">route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.route_accel_lon"></a>**<font color="#f8805a">route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>_)  
 The ego vehicle's acceleration component _lon_ regarding the route.  
-- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lat"></a>**<font color="#f8805a">avg_route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lat"></a>**<font color="#f8805a">avg_route_accel_lat</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>_)  
 The ego vehicle's acceleration component _lat_ regarding the route smoothened by an average filter.  
-- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lon"></a>**<font color="#f8805a">avg_route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>_)  
+- <a name="carla.RssEgoDynamicsOnRoute.avg_route_accel_lon"></a>**<font color="#f8805a">avg_route_accel_lon</font>** (_<a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>_)  
 The ego acceleration component _lon_ regarding the route smoothened by an average filter.  
 
 <h3>Methods</h3>
@@ -1681,15 +1685,15 @@ A [carla.RssRestrictor](#carla.RssRestrictor) will use the data to modify the [c
 <h3>Instance Variables</h3>
 - <a name="carla.RssResponse.response_valid"></a>**<font color="#f8805a">response_valid</font>** (_bool_)  
 States if the response is valid. It is __False__ if calculations failed or an exception occured.  
-- <a name="carla.RssResponse.proper_response"></a>**<font color="#f8805a">proper_response</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a>_)  
+- <a name="carla.RssResponse.proper_response"></a>**<font color="#f8805a">proper_response</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">ad.rss.state.ProperResponse</a>_)  
 The proper response that the RSS calculated for the vehicle.  
-- <a name="carla.RssResponse.rss_state_snapshot"></a>**<font color="#f8805a">rss_state_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a>_)  
+- <a name="carla.RssResponse.rss_state_snapshot"></a>**<font color="#f8805a">rss_state_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">ad.rss.state.RssStateSnapshot</a>_)  
 Detailed RSS states at the current moment in time.  
 - <a name="carla.RssResponse.ego_dynamics_on_route"></a>**<font color="#f8805a">ego_dynamics_on_route</font>** (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_)  
 Current ego vehicle dynamics regarding the route.  
-- <a name="carla.RssResponse.world_model"></a>**<font color="#f8805a">world_model</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">libad_rss_python.WorldModel</a>_)  
+- <a name="carla.RssResponse.world_model"></a>**<font color="#f8805a">world_model</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">ad.rss.world.WorldModel</a>_)  
 World model used for calculations.  
-- <a name="carla.RssResponse.situation_snapshot"></a>**<font color="#f8805a">situation_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">libad_rss_python.SituationSnapshot</a>_)  
+- <a name="carla.RssResponse.situation_snapshot"></a>**<font color="#f8805a">situation_snapshot</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">ad.rss.situation.SituationSnapshot</a>_)  
 Detailed RSS situations extracted from the world model.  
 
 <h3>Methods</h3>
@@ -1703,13 +1707,13 @@ Detailed RSS situations extracted from the world model.
 These objects apply restrictions to a [carla.VehicleControl](#carla.VehicleControl). It is part of the CARLA implementation of the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib). This class works hand in hand with a [rss sensor](ref_sensors.md#rss-sensor), which provides the data of the restrictions to be applied.  
 
 <h3>Methods</h3>
-- <a name="carla.RssRestrictor.restrict_vehicle_control"></a>**<font color="#7fb800">restrict_vehicle_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vehicle_control**</font>, <font color="#00a6ed">**restriction**</font>, <font color="#00a6ed">**ego_dynamics_on_route**</font>, <font color="#00a6ed">**vehicle_physics**</font>)  
+- <a name="carla.RssRestrictor.restrict_vehicle_control"></a>**<font color="#7fb800">restrict_vehicle_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vehicle_control**</font>, <font color="#00a6ed">**proper_response**</font>, <font color="#00a6ed">**ego_dynamics_on_route**</font>, <font color="#00a6ed">**vehicle_physics**</font>)  
 Applies the safety restrictions given by a [carla.RssSensor](#carla.RssSensor) to a [carla.VehicleControl](#carla.VehicleControl).  
     - **Parameters:**
         - `vehicle_control` (_[carla.VehicleControl](#carla.VehicleControl)_) – The input vehicle control to be restricted.  
-        - `restriction` (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a>_) – Part of the response generated by the sensor. Contains restrictions to be applied to the acceleration of the vehicle.  
+        - `proper_response` (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">ad.rss.state.ProperResponse</a>_) – Part of the response generated by the sensor. Contains restrictions to be applied to the acceleration of the vehicle.  
         - `ego_dynamics_on_route` (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_) – Part of the response generated by the sensor. Contains dynamics and heading of the vehicle regarding its route.  
-        - `vehicle_physics` (_[carla.RssEgoDynamicsOnRoute](#carla.RssEgoDynamicsOnRoute)_) – The current physics of the vehicle. Used to apply the restrictions properly.  
+        - `vehicle_physics` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_) – The current physics of the vehicle. Used to apply the restrictions properly.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
 
 ---
@@ -1731,14 +1735,14 @@ Disables the _stay on road_ feature.
 The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle. The output retrieved by the sensor is a [carla.RssResponse](#carla.RssResponse). This will be used by a [carla.RssRestrictor](#carla.RssRestrictor) to modify a [carla.VehicleControl](#carla.VehicleControl) before applying it to a vehicle.  
 
 <h3>Instance Variables</h3>
-- <a name="carla.RssSensor.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
+- <a name="carla.RssSensor.ego_vehicle_dynamics"></a>**<font color="#f8805a">ego_vehicle_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>_)  
 States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the ego vehicle if no actor constellation callback is registered.  
-- <a name="carla.RssSensor.other_vehicle_dynamics"></a>**<font color="#f8805a">other_vehicle_dynamics</font>** (_libad_rss_python.RssDynamics_)  
+- <a name="carla.RssSensor.other_vehicle_dynamics"></a>**<font color="#f8805a">other_vehicle_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>_)  
 States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the rest of vehicles if no actor constellation callback is registered.  
-- <a name="carla.RssSensor.pedestrian_dynamics"></a>**<font color="#f8805a">pedestrian_dynamics</font>** (_libad_rss_python.RssDynamics_)  
+- <a name="carla.RssSensor.pedestrian_dynamics"></a>**<font color="#f8805a">pedestrian_dynamics</font>** (_<a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>_)  
 States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for pedestrians if no actor constellation callback is registered.  
 - <a name="carla.RssSensor.road_boundaries_mode"></a>**<font color="#f8805a">road_boundaries_mode</font>** (_[carla.RssRoadBoundariesMode](#carla.RssRoadBoundariesMode)_)  
-Switches the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. By default is __On__.  
+Switches the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. By default is __Off__.  
 - <a name="carla.RssSensor.routing_targets"></a>**<font color="#f8805a">routing_targets</font>** (_vector<[carla.Transform](#carla.Transform)>_)  
 The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random.  
 
@@ -1761,6 +1765,10 @@ Register a callback to customize a [carla.RssActorConstellationResult](#carla.Rs
 Sets the log level.  
     - **Parameters:**
         - `log_level` (_[carla.RssLogLevel](#carla.RssLogLevel)_) – New log level.  
+- <a name="carla.RssSensor.set_map_log_level"></a>**<font color="#7fb800">set_map_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  
+Sets the map log level.  
+    - **Parameters:**
+        - `log_level` (_[carla.RssLogLevel](#carla.RssLogLevel)_) – New map log level.  
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.RssSensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1813,6 +1821,7 @@ Retrieves the number of points sorted by channel that are generated by this meas
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.SemanticLidarMeasurement.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
 - <a name="carla.SemanticLidarMeasurement.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the [carla.SemanticLidarDetection](#carla.SemanticLidarDetection) retrieved as data.  
 - <a name="carla.SemanticLidarMeasurement.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.SemanticLidarMeasurement.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**detection**=[carla.SemanticLidarDetection](#carla.SemanticLidarDetection)</font>)  
 - <a name="carla.SemanticLidarMeasurement.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1822,20 +1831,20 @@ Retrieves the number of points sorted by channel that are generated by this meas
 ## carla.Sensor<a name="carla.Sensor"></a>
 <div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
 
-  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.  
-  <br><b>Receive data on every tick.</b>  
-  - [Depth camera](ref_sensors.md#depth-camera).  
-  - [Gnss sensor](ref_sensors.md#gnss-sensor).  
-  - [IMU sensor](ref_sensors.md#imu-sensor).  
-  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).  
-  - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).  
-  - [Radar](ref_sensors.md#radar-sensor).  
-  - [RGB camera](ref_sensors.md#rgb-camera).  
-  - [RSS sensor](ref_sensors.md#rss-sensor).  
-  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).  
-  <br><b>Only receive data when triggered.</b>  
-  - [Collision detector](ref_sensors.md#collision-detector).  
-  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).  
+  Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.
+  <br><b>Receive data on every tick.</b>
+  - [Depth camera](ref_sensors.md#depth-camera).
+  - [Gnss sensor](ref_sensors.md#gnss-sensor).
+  - [IMU sensor](ref_sensors.md#imu-sensor).
+  - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
+  - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
+  - [Radar](ref_sensors.md#radar-sensor).
+  - [RGB camera](ref_sensors.md#rgb-camera).
+  - [RSS sensor](ref_sensors.md#rss-sensor).
+  - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
+  <br><b>Only receive data when triggered.</b>
+  - [Collision detector](ref_sensors.md#collision-detector).
+  - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
   - [Obstacle detector](ref_sensors.md#obstacle-detector).  
 
 <h3>Instance Variables</h3>
@@ -2673,21 +2682,23 @@ This method applies settings contained in an object to the simulation running an
         - `world_settings` (_[carla.WorldSettings](#carla.WorldSettings)_)  
     - **Return:** _int_  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
-The method will start callbacks for a defined function `callback`. It will return the ID for this callback so it can be removed with **<font color="#7fb800">remove_on_tick()</font>**.  
+This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
     - **Parameters:**
-        - `callback` (_[carla.WorldSnapshot](#carla.WorldSnapshot)_) – A defined function with a snapshot as compulsory parameter that will be called every tick.  
+        - `callback` (_[carla.WorldSnapshot](#carla.WorldSnapshot)_) – Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
     - **Return:** _int_  
 - <a name="carla.World.remove_on_tick"></a>**<font color="#7fb800">remove_on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback_id**</font>)  
-Stops the callback for `callback_id` started with **<font color="#7fb800">on_tick()</font>**.  
+Stops the callback for `callback_id` started with __<font color="#7fb800">on_tick()</font>__.  
     - **Parameters:**
-        - `callback_id` (_callback_) – The callback to be removed.  
+        - `callback_id` (_callback_) – The callback to be removed. The ID is returned when creating the callback.  
 - <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-This method only has effect on synchronous mode, when both client and server move together. The client tells the server when to step to the next frame and returns the id of the newly started frame.  
+This method is used in [__synchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server.  
     - **Parameters:**
         - `seconds` (_float<small> – seconds</small>_) – Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _int_  
+    - **Note:** <font color="#8E8E8E">_If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/) to learn more.  
+_</font>  
 - <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-The client tells the server to pause the simulation until a **<font color="#7fb800">World.tick()</font>** is received.  
+This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
     - **Parameters:**
         - `seconds` (_float<small> – seconds</small>_) – Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
@@ -2700,7 +2711,7 @@ The method will create, return and spawn an actor into the world. The actor will
         - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_) – Determines how fixed and rigorous should be the changes in position according to its parent object.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
-Same as **<font color="#7fb800">spawn_actor()</font>** but returns <b>None</b> on failure instead of throwing an exception.  
+Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> on failure instead of throwing an exception.  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_) – The reference from which the actor will be created.  
         - `transform` (_[carla.Transform](#carla.Transform)_) – Contains the location and orientation the actor will be spawned with.  
@@ -2755,7 +2766,7 @@ Provided a landmark, returns the traffic sign object it describes.
         - `landmark` (_[carla.Landmark](#carla.Landmark)_) – The landmark object describing a traffic sign.  
     - **Return:** _[carla.TrafficSign](#carla.TrafficSign)_  
 - <a name="carla.World.get_random_location_from_navigation"></a>**<font color="#7fb800">get_random_location_from_navigation</font>**(<font color="#00a6ed">**self**</font>)  
-This can only be used with walkers. It retrieves a random location to be used as a destination using the **<font color="#7fb800">go_to_location()</font>** method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.  
+This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.  
     - **Return:** _[carla.Location](#carla.Location)_  
 - <a name="carla.World.get_settings"></a>**<font color="#7fb800">get_settings</font>**(<font color="#00a6ed">**self**</font>)  
 Returns an object containing some data about the simulation such as synchrony between client and server or rendering mode.  
@@ -2798,7 +2809,7 @@ Ensures that the time elapsed between two steps of the simulation is fixed. Set 
 
 <h3>Methods</h3>
 - <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)  
-Creates an object containing desired settings that could later be applied through [carla.World](#carla.World) and its method **<font color="#7fb800">apply_settings()</font>**.  
+Creates an object containing desired settings that could later be applied through [carla.World](#carla.World) and its method __<font color="#7fb800">apply_settings()</font>__.  
     - **Parameters:**
         - `synchronous_mode` (_bool_) – Set this to true to enable client-server synchrony.  
         - `no_rendering_mode` (_bool_) – Set this to true to completely disable rendering in the simulation.  
@@ -2842,7 +2853,7 @@ Given a certain actor ID, checks if there is a snapshot corresponding it and so,
 
 <h5 style="margin-top: -20px">Dunder methods</h5>
 <div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.WorldSnapshot.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Method that enables iteration for this class using **<font color="#f8805a">timestamp</font>** as reference value.  
+Iterate over the [carla.ActorSnapshot](#carla.ActorSnapshot) stored in the snapshot.  
 - <a name="carla.WorldSnapshot.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of [carla.ActorSnapshot](#carla.ActorSnapshot) present in this snapshot.  
     - **Return:** _int_  
