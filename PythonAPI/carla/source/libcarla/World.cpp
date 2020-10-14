@@ -164,7 +164,7 @@ void export_world() {
 
   class_<cr::EnvironmentObject>("EnvironmentObject", no_init)
     .def_readwrite("transform", &cr::EnvironmentObject::transform)
-    .def_readwrite("bounding_box", &cr::EnvironmentObject::bounding_box)
+    //.def_readwrite("bounding_box", &cr::EnvironmentObject::bounding_box)
     .def_readwrite("id", &cr::EnvironmentObject::id)
     .def_readwrite("name", &cr::EnvironmentObject::name)
     .def(self_ns::str(self_ns::self))
