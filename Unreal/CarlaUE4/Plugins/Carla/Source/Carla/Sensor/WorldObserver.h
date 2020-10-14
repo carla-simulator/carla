@@ -39,7 +39,8 @@ public:
     bool PendingLightUpdate);
 
   /// Dummy. Required for compatibility with other sensors only.
-  FTransform GetActorTransform() const
+  /// TODO: raname to 'GetActorTransform' once the new tick pipeline is done
+  FTransform GetSyncActorTransform() const
   {
     return {};
   }
