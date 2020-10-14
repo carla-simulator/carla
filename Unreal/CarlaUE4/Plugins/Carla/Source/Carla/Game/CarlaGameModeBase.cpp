@@ -12,7 +12,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
-#include <carla/rpc/Mesh.h>
+#include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -155,7 +155,7 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  RegisterMeshes();
+  RegisterEnvironmentObject();
 
 }
 
@@ -350,12 +350,12 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   return BoundingBoxes;
 }
 
-TArray<FCarlaMesh> ACarlaGameModeBase::GetMeshes() const
+TArray<FEnvironmentObject> ACarlaGameModeBase::GetEnvironmentObjects() const
 {
-  return Meshes;
+  return EnvironmentObjects;
 }
 
-void ACarlaGameModeBase::RegisterMeshes()
+void ACarlaGameModeBase::RegisterEnvironmentObject()
 {
   UWorld* World = GetWorld();
 
@@ -364,18 +364,38 @@ void ACarlaGameModeBase::RegisterMeshes()
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
 
   // Empties the array but doesn't change memory allocations
-  Meshes.Reset();
+  EnvironmentObjects.Reset();
 
   for(AActor* Actor : FoundActors)
   {
     FString ActorName = Actor->GetName();
     const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
 
-    FCarlaMesh CarlaMesh;
-    CarlaMesh.Transform = Actor->GetActorTransform();
-    CarlaMesh.Id = CityHash64(ActorNameChar, ActorName.Len());
-    CarlaMesh.Name = ActorName;
+    FEnvironmentObject EnvironmentObject;
+    EnvironmentObject.Transform = Actor->GetActorTransform();
+    EnvironmentObject.Id = CityHash64(ActorNameChar, ActorName.Len());
+    EnvironmentObject.Name = ActorName;
+    EnvironmentObject.Actor = Actor;
 
-    Meshes.Add(CarlaMesh);
+    EnvironmentObjects.Emplace(EnvironmentObject);
   }
+}
+
+void ACarlaGameModeBase::EnableEnvironmentObjects(
+  const TSet<uint64>& EnvObjectIds,
+  bool Enable)
+{
+
+  for(FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
+  {
+    if(EnvObjectIds.Contains(EnvironmentObject.Id))
+    {
+      AActor* Actor = EnvironmentObject.Actor;
+
+      Actor->SetActorHiddenInGame(!Enable);
+      Actor->SetActorEnableCollision(Enable);
+      Actor->SetActorTickEnabled(Enable);
+    }
+  }
+
 }
