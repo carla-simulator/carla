@@ -16,7 +16,7 @@
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Traffic/TrafficLightManager.h"
-#include "Carla/Util/CarlaMesh.h"
+#include "Carla/Util/EnvironmentObject.h"
 
 
 #include "CoreMinimal.h"
@@ -58,7 +58,9 @@ public:
   TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FCarlaMesh> GetMeshes() const;
+  TArray<FEnvironmentObject> GetEnvironmentObjects() const;
+
+  void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
 protected:
 
@@ -78,7 +80,7 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
-  void RegisterMeshes();
+  void RegisterEnvironmentObject();
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
@@ -95,7 +97,7 @@ private:
   UPROPERTY()
   ACarlaRecorder *Recorder = nullptr;
 
-  TArray<FCarlaMesh> Meshes;
+  TArray<FEnvironmentObject> EnvironmentObjects;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)

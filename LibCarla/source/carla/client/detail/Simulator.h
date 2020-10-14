@@ -231,8 +231,14 @@ namespace detail {
       return _client.GetLevelBBs(queried_tag);
     }
 
-    std::vector<rpc::Mesh> GetMeshes() const {
-      return _client.GetMeshes();
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects() const {
+      return _client.GetEnvironmentObjects();
+    }
+
+    void EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+      _client.EnableEnvironmentObjects(env_objects_ids, enable);
     }
 
     /// @}

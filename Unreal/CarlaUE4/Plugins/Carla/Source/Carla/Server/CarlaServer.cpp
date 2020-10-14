@@ -27,7 +27,7 @@
 #include <carla/rpc/EpisodeSettings.h>
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
-#include <carla/rpc/Mesh.h>
+#include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/String.h>
@@ -322,7 +322,7 @@ void FCarlaServer::FPimpl::BindActions()
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
   };
 
-  BIND_SYNC(get_meshes) << [this]() -> R<std::vector<cr::Mesh>>
+  BIND_SYNC(get_environment_objects) << [this]() -> R<std::vector<cr::EnvironmentObject>>
   {
     REQUIRE_CARLA_EPISODE();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
@@ -330,8 +330,27 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to find CARLA game mode");
     }
-    TArray<FCarlaMesh> Result = GameMode->GetMeshes();
-    return MakeVectorFromTArray<cr::Mesh>(Result);
+    TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects();
+    return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
+  };
+
+  BIND_SYNC(enable_environment_objects) << [this](std::vector<uint64_t> EnvObjectIds, bool Enable) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+
+    TSet<uint64> EnvObjectIdsSet;
+    for(uint64 Id : EnvObjectIds)
+    {
+      EnvObjectIdsSet.Emplace(Id);
+    }
+
+    GameMode->EnableEnvironmentObjects(EnvObjectIdsSet, Enable);
+    return R<void>::Success();
   };
 
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
