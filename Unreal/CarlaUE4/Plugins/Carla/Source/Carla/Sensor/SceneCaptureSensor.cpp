@@ -511,6 +511,7 @@ void ASceneCaptureSensor::Tick(float DeltaTime)
 
   ReadyToCapture = true;
 
+  // TODO: delete once the new tick pipeline is done
   OldTransform = GetActorTransform();
 }
 
