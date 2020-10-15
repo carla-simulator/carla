@@ -61,6 +61,7 @@ class TestSynchronousMode(SyncSmokeTest):
 
     def test_sensor_transform_on_synchronous_mode(self):
         print("TestSynchronousMode.test_sensor_transform_on_synchronous_mode")
+        print("--- ", self.world.get_map())
         bp_lib = self.world.get_blueprint_library()
 
         spawn_points = self.world.get_map().get_spawn_points()
@@ -82,7 +83,8 @@ class TestSynchronousMode(SyncSmokeTest):
         trans = carla.Transform(carla.Location(x=1.6, z=1.7))
         sensors = [self.world.spawn_actor(sensor, trans, car) for sensor in sensor_bps]
         queues = [Queue()] * len(sensor_bps)
-        car.set_autopilot(True)
+        car.apply_control(carla.VehicleControl(0.75))
+        # car.set_autopilot(True)
 
         def sensor_callback(data, name, queue):
             queue.put((data, name))
