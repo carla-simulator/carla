@@ -98,6 +98,8 @@ settings = world.get_settings()
 settings.synchronous_mode = True # Enables synchronous mode
 world.apply_settings(settings)
 ```
+!!! Warning
+    If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
 
 To disable synchronous mode just set the variable to false or use the script `PythonAPI/util/config.py`. 
 ```sh

@@ -2700,6 +2700,8 @@ This method applies settings contained in an object to the simulation running an
     - **Parameters:**
         - `world_settings` (_[carla.WorldSettings](#carla.WorldSettings)_)  
     - **Return:** _int_  
+    - **Warning:** <font color="#ED2F2F">_If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
+_</font>  
 - <a name="carla.World.freeze_all_traffic_lights"></a>**<font color="#7fb800">freeze_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**frozen**</font>)  
 Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen.  
     - **Parameters:**
