@@ -22,7 +22,6 @@
 	*   [MultiTM](#multitm)  
 	*   [Multisimulation](#multisimulation)  
 *   [__Other considerations__](#other-considerations)  
-	*   [FPS limitations](#fps-limitations)  
 	*   [Synchronous mode](#synchronous-mode)  
 *   [__Summary__](#summary)  
 
@@ -144,7 +143,7 @@ First stage in the [control loop](#control-loop). Defines a near-future path for
 
 *   Obtains the position and velocity of all the vehicles from [simulation state](#simulation-state).  
 *   Using the [In-Memory Map](#in-memory-map), relates every vehicle with a list of waypoints that describes its current location and near-future path, according to its trajectory. The faster the vehicle goes, the larger said list will be.  
-*   The path is updated according to planning decisions such as lan changes, speed limit, distance to leading vehicle parameterization, etc.  
+*   The path is updated according to planning decisions such as lane changes, speed limit, distance to leading vehicle parameterization, etc.  
 *   The [PBVT](#pbvt) module stores the path for all the vehicles.  
 *   These paths are compared with each other, in order to estimate possible collision situations. Results are passed to the following stage: [Colllision stage](#stage-2-collision-stage).  
 
@@ -401,20 +400,39 @@ The only possible issue arising from this is a client trying to connect to an al
 
 The TM is a module constantly evolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time of writing.  
 
-### FPS limitations
-
-The TM stops working properly in asynchronous mode when the simulation is under 20fps. Below that rate, the server is going much faster than the client containing the TM and behaviours cannot be simulated properly. For said reason, under these circumstances it is recommended to work in __synchronous mode__.  
-
-!!! Important
-    The FPS limitations are specially relevant when working in the night mode. 
-
 ### Synchronous mode
 
-TM-Clients cannot tick the CARLA server in synchronous mode, __only a TM-Server can call for a tick__.  
-If more than one TM-Server ticks, the synchrony will fail, as the server will move forward on every tick. This is specially relevant when working with the __ScenarioRunner__, which runs a TM. In this case, the TM will be subordinated to the ScenarioRunner and wait for it. 
+If the CARLA server is set to synchronous mode, the Traffic Manager must be set to synchronous mode too. To do so, your script should be similar to the following: 
+```py
+...
+
+# Set the simulation to sync mode
+init_settings = world.get_settings()
+settings = world.get_settings()
+settings.synchronous_mode = True
+# Right after that, set the Traffic Manager to sync mode
+my_tm.set_synchronous_mode(True)
+
+...
+
+# Tick the world in the same client
+world.apply_settings(init_settings)
+world.tick()
+...
+
+# Disable the sync mode always, before the script ends
+settings.synchronous_mode = False
+my_tm.set_synchronous_mode(False)
+```
+
+If more than one Traffic Manager is set to synchronous mode, the synchrony will fail. Follow these general guidelines to avoid issues. 
+
+*   In a __[multiclient](#multiclient)__ situation, only the __TM-Server__ must be set to synchronous mode.  
+*   In a __[multiTM](#multitm)__ situation, only __one of the TM-Server__ must be set to synchronous mode.  
+*   The __[ScenarioRunner module](https://carla-scenariorunner.readthedocs.io/en/latest/)__, already runs a TM. In this case, the TM inside ScenarioRunner will be the one set to sync mode.  
 
 !!! Warning
-    Disable the synchronous mode in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
+    Disable the synchronous mode (both, world and TM sync mode) in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
 
 ---
 ## Summary

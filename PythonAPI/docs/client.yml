@@ -337,16 +337,6 @@
       doc: >
         Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions.
     # --------------------------------------
-    - def_name: global_distance_to_leading_vehicle
-      params:
-      - param_name: distance
-        type: float
-        param_units: meters
-        doc: >
-          Meters between vehicles.
-      doc: >
-        Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
-    # --------------------------------------
     - def_name: global_percentage_speed_difference
       params:
       - param_name: percentage
@@ -370,6 +360,19 @@
           Between 0 and 100. Amount of times traffic lights will be ignored.
       doc: >
         During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle.
+    # --------------------------------------
+    - def_name: ignore_signs_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that is going to ignore stop signs.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times stop signs will be ignored.
+      doc: >
+        During the traffic light stage, which runs every frame, this method sets the percent chance that stop signs will be ignored for a vehicle.  
     # --------------------------------------
     - def_name: ignore_vehicles_percentage
       params:
@@ -422,6 +425,16 @@
       doc: >
         Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.
     # --------------------------------------
+    - def_name: set_global_distance_to_leading_vehicle
+      params:
+      - param_name: distance
+        type: float
+        param_units: meters
+        doc: >
+          Meters between vehicles.
+      doc: >
+        Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
+    # --------------------------------------
     - def_name: set_hybrid_physics_mode
       params:
       - param_name: enabled
@@ -452,6 +465,40 @@
           If __True__, the OSM mode is enabled. 
       doc: >
         Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
+    # --------------------------------------
+    - def_name: set_percentage_keep_right_rule
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose behaviour is being changed.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times the vehicle will follow the keep right rule.
+      doc: >
+        During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.
+    # --------------------------------------
+    - def_name: set_random_device_seed
+      params:
+      - param_name: value
+        type: int
+        doc: >
+          Seed value for the random number generation of the Traffic Manager. 
+      doc: >
+        Sets a specific random seed for the Traffic Manager, thereby setting it to be a deterministic system.
+    # --------------------------------------
+    - def_name: set_synchronous_mode
+      params:
+      - param_name: mode_switch
+        type: bool
+        default: true
+        doc: >
+          If __True__, the TM synchronous mode is enabled. 
+      doc: >
+        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.  
+      warning: >
+        If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick. 
     # --------------------------------------
 
   - class_name: OpendriveGenerationParameters
