@@ -81,8 +81,6 @@ CARLA forum</a>
   <p style="padding-left:30px;line-height:1.8">
     [__Python API reference__](python_api.md)
         — Classes and methods in the Python API.  
-    [__Code recipes__](ref_code_recipes.md)
-        — Some code fragments commonly used.  
     [__Blueprint library__](bp_library.md)
         — Blueprints provided to spawn actors.  
     [__C++ reference__](ref_cpp.md)
@@ -91,12 +89,14 @@ CARLA forum</a>
         — Detailed explanation of the recorder file format.  
     [__Sensors reference__](ref_sensors.md)
         — Everything about sensors and the data they retrieve.  
+    </p>
 
 ## Plugins
   <p style="padding-left:30px;line-height:1.8">
     [__carlaviz — web visualizer__](plugins_carlaviz.md)
         — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.  
-
+  </p>
+  
 ## ROS bridge
   <p style="padding-left:30px;line-height:1.8">
     [__ROS bridge installation__](ros_installation.md)
@@ -139,11 +139,11 @@ CARLA forum</a>
 
 ## Tutorials — Developers
   <p style="padding-left:30px;line-height:1.8">
-    [__Contribute with new assets__](tuto_D_contribute_assets.md)
+    [__Contribute new assets__](tuto_D_contribute_assets.md)
         — Add new content to CARLA.  
     [__Create a sensor__](tuto_D_create_sensor.md)
         — Develop a new sensor to be used in CARLA.  
-    [__Create semantic tags_](tuto_D_create_semantic_tags.md)
+    [__Create semantic tags__](tuto_D_create_semantic_tags.md)
         — Define new semantic tags for semantic segmentation.  
     [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md)
         — Modify the suspension system of a vehicle.  
