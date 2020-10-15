@@ -139,11 +139,11 @@ CARLA forum</a>
 
 ## Tutorials — Developers
   <p style="padding-left:30px;line-height:1.8">
-    [__Contribute with new assets__](tuto_D_contribute_assets.md)
+    [__Contribute new assets__](tuto_D_contribute_assets.md)
         — Add new content to CARLA.  
     [__Create a sensor__](tuto_D_create_sensor.md)
         — Develop a new sensor to be used in CARLA.  
-    [__Create semantic tags_](tuto_D_create_semantic_tags.md)
+    [__Create semantic tags__](tuto_D_create_semantic_tags.md)
         — Define new semantic tags for semantic segmentation.  
     [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md)
         — Modify the suspension system of a vehicle.  

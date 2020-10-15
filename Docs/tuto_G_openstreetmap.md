@@ -45,9 +45,9 @@ CARLA can read a the content in the `.osm` file generated with OpenStreetMap, an
 	*   `elevation_layer_height` *(default 0.0)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).
 
 The input and output of the conversion are not the `.osm` and `.xodr` files itself, but their content. For said reason, the code should be similar to the following.
-```
+```py
 # Read the .osm data
-f = open("path/to/osm/file", 'r')
+f = open("path/to/osm/file", 'r') # Windows will need to encode the file in UTF-8. Read the note below. 
 osm_data = f.read()
 f.close()
 
@@ -61,6 +61,11 @@ f = open("path/to/output/file", 'w')
 f.write(xodr_data)
 f.close()
 ```
+
+!!! Note
+    To read the OSM file in Windows, import `io` at the beginning of the script and change the open line to `f = io.open("test", mode="r", encoding="utf-8")`.
+
+
 The resulting file contains the road information in OpenDRIVE format.
 
 ---

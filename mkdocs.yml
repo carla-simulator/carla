@@ -60,7 +60,7 @@ nav:
   - "Material customization": 'tuto_A_material_customization.md'
   - 'Vehicle modelling': 'tuto_A_vehicle_modelling.md'
 - Tutorials (developers):
-  - 'Contribute with assets': 'tuto_D_contribute_assets.md'
+  - 'Contribute assets': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'
   - 'Create semantic tags': 'tuto_D_create_semantic_tags.md'
   - 'Customize vehicle suspension': 'tuto_D_customize_vehicle_suspension.md'
