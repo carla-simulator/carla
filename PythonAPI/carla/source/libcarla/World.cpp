@@ -141,12 +141,18 @@ void export_world() {
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
-    .def(init<bool, bool, double>(
+    .def(init<bool, bool, double, bool, double, int>(
         (arg("synchronous_mode")=false,
          arg("no_rendering_mode")=false,
-         arg("fixed_delta_seconds")=0.0)))
+         arg("fixed_delta_seconds")=0.0,
+         arg("substepping")=true,
+         arg("max_substep_delta_time")=0.016667,
+         arg("max_substeps")=6)))
     .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
     .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
+    .def_readwrite("substepping", &cr::EpisodeSettings::substepping)
+    .def_readwrite("max_substep_delta_time", &cr::EpisodeSettings::max_substep_delta_time)
+    .def_readwrite("max_substeps", &cr::EpisodeSettings::max_substeps)
     .add_property("fixed_delta_seconds",
         +[](const cr::EpisodeSettings &self) {
           return OptionalToPythonObject(self.fixed_delta_seconds);
@@ -155,8 +161,8 @@ void export_world() {
           double fds = (value == object{} ? 0.0 : extract<double>(value));
           self.fixed_delta_seconds = fds > 0.0 ? fds : boost::optional<double>{};
         })
-    .def("__eq__", &cc::Timestamp::operator==)
-    .def("__ne__", &cc::Timestamp::operator!=)
+    .def("__eq__", &cr::EpisodeSettings::operator==)
+    .def("__ne__", &cr::EpisodeSettings::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
