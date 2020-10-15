@@ -15,6 +15,7 @@
 	*   [Creating a Traffic Manager](#creating-a-traffic-manager)  
 	*   [Setting a Traffic Manager](#setting-a-traffic-manager)  
 	*   [Stopping a Traffic Manager](#stopping-a-traffic-manager)  
+*   [__Deterministic mode__](#deterministic-mode)  
 *   [__Hybrid physics mode__](#hybrid-physics-mode)  
 *   [__Running multiple Traffic Managers__](#running-multiple-traffic-managers)  
 	*   [Definitions](#definitions)  
@@ -304,6 +305,32 @@ However, it is important that when shutting down a TM, the vehicles registered t
     Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__ read about [*Running multiple Traffic Managers*](#running-multiple-traffic-managers). 
 
 ---
+## Deterministic mode
+
+In deterministic mode, the Traffic Manager will always produce the same results and behaviours for the same conditions. Do not mistake determinism with the recorder. The recorder stores all the information of a simulation so it can be played back. Determinism does not involve any log nor recording, and produces different outputs for different conditions. However, as long as conditions are maintained, a deterministic Traffic Manager ensures that the TM will always behave in the same way.  
+
+Deterministic mode is meant to be used __in synchronous mode only__. In asynchronous mode, there is much less control over the simulation, and a deterministic behaviour cannot be guaranteed. Read the considerations to run [TM in synchronous mode](#synchronous-mode) before using it.  
+
+
+To enable deterministic mode, simply call the following method in your script.  
+
+```py
+my_tm.set_random_device_seed(seed_value)
+``` 
+
+`seed_value` is an `int` number from which all the random numbers will be generated. The value is not relevant itself, but the same value will always result in the same output. Two simulations, with the same conditions, that use the same seed value, will be deterministic.  
+
+The deterministic mode can be tested when using the `spawn_npc.py` example script, using a simple argument. The following example sets the seed to `9` for no specific reason.  
+
+```sh
+cd PythonAPI/examples
+python3 spawn_npc.py -n 50 --sync --sed 9
+```
+
+!!! Warning
+    Make sure to set both the world and the TM to synchronous mode before enabling deterministic mode. 
+
+---
 ## Hybrid physics mode
 
 In hybrid mode, either all vehicle physics can be disabled, or enabled only in a radius around an ego vehicle with the tag `hero`. This feature removes the vehicle physics bottleneck from the simulator. Since vehicle physics are not active, all cars move by teleportation. This feature relies on [Actor.set_simulate_physics()](https://carla.readthedocs.io/en/latest/python_api/#carla.Actor.set_simulate_physics). However, not all the physics are disregarded. Basic calculations for a linear acceleration are maintained. By doing so, the position update, and vehicle speed still look realistic. That guarantees that when a vehicle enables or disables its physics, the transition is fluid.  
@@ -423,6 +450,13 @@ world.tick()
 # Disable the sync mode always, before the script ends
 settings.synchronous_mode = False
 my_tm.set_synchronous_mode(False)
+```
+
+When using the `spawn_npc.py` example script, the TM can be set to synchronous mode just by passing an argument.  
+
+```sh
+cd PythonAPI/examples
+python3 spawn_npc.py -n 50 --sync
 ```
 
 If more than one Traffic Manager is set to synchronous mode, the synchrony will fail. Follow these general guidelines to avoid issues. 
