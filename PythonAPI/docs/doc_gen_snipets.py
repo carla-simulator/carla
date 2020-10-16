@@ -76,27 +76,7 @@ class Documentation:
         "[comment]: <> (=========================)\n"+
         "[comment]: <> (PYTHON API SCRIPT SNIPETS)\n"+
         "[comment]: <> (=========================)\n"+
-        "<div id=\"snipets-container\" class=\"Container\" onmouseover='this.style[\"overflowX\"]=\"scroll\";' onmouseout='this.style[\"overflowX\"]=\"visible\";'></div>\n"+
-        "<script>\n"+
-        "function CopyToClipboard(containerid) {\n"+
-        "if (document.selection) {\n"+
-        "var range = document.body.createTextRange();\n"+
-        "range.moveToElementText(document.getElementById(containerid));\n"+
-        "range.select().createTextRange();\n"+
-        "document.execCommand(\"copy\");\n"+
-        "} \n"+
-        "else if (window.getSelection) {\n"+
-        "var range = document.createRange();\n"+
-        "range.selectNode(document.getElementById(containerid));\n"+
-        "window.getSelection().addRange(range);\n"+
-        "document.execCommand(\"copy\");\n"+
-        "}\n"+
-        "}\n</script>\n"+
-        "<script>\n"+
-        "function CloseSnipet() {\n"+
-        "document.getElementById(\"snipets-container\").innerHTML = null;\n"+
-        "}\n"+
-        "</script>\n")
+        "<div id=\"snipets-container\" class=\"Container\" onmouseover='this.style[\"overflowX\"]=\"scroll\";' onmouseout='this.style[\"overflowX\"]=\"visible\";'></div>\n")
         # Create content for every snipet
         for snipet_path in self._snipets:
             current_snipet = open(snipet_path, 'r')
@@ -107,11 +87,11 @@ class Documentation:
             "<p class=\"SnipetFont\">\n"+
             "Snipet for "+snipet_name+"\n"+
             "</p>\n"+
-            "<div id=\""+snipet_name+"-code\" class=\"SnipetContent\">\n\n```py\n")
+            "<div id=\""+snipet_name+"-code\" class=\"SnipetContent\">\n<div id=\""+snipet_name+"-python\">\n\n```py\n")
             # The snipet code
             md.textn(current_snipet.read())
             # Closing for a snipet
-            md.textn("\n```\n<button id=\"button1\" class=\"CopyScript\" onclick=\"CopyToClipboard('"+snipet_name+"-code')\">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id=\"button1\" class=\"CloseSnipet\" onclick=\"CloseSnipet()\">Close snipet</button><br><br>\n")
+            md.textn("\n```\n</div>\n<button id=\"button1\" class=\"CopyScript\" onclick=\"CopyToClipboard('"+snipet_name+"-python')\">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id=\"button1\" class=\"CloseSnipet\" onclick=\"CloseSnipet()\">Close snipet</button><br><br>\n")
             # Check if snipet image exists, and add it
             for snipet_path_to_image in self._snipets_images:
                 snipet_image_name = os.path.splitext(os.path.basename(snipet_path_to_image))[0]

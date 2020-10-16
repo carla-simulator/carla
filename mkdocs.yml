@@ -4,6 +4,7 @@ docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
 theme: readthedocs
 extra_css: [extra.css]
+extra_javascript: [extra_scripts/map_slider.js,extra_scripts/snipets_container.js,extra_scripts/snipets_button_actions.js]
 
 nav:
 - Home: 'index.md'

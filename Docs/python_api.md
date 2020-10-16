@@ -3152,33 +3152,13 @@ Links another command to be executed right after. It allows to ease very common 
 [comment]: <> (PYTHON API SCRIPT SNIPETS)
 [comment]: <> (=========================)
 <div id="snipets-container" class="Container" onmouseover='this.style["overflowX"]="scroll";' onmouseout='this.style["overflowX"]="visible";'></div>
-<script>
-function CopyToClipboard(containerid) {
-if (document.selection) {
-var range = document.body.createTextRange();
-range.moveToElementText(document.getElementById(containerid));
-range.select().createTextRange();
-document.execCommand("copy");
-} 
-else if (window.getSelection) {
-var range = document.createRange();
-range.selectNode(document.getElementById(containerid));
-window.getSelection().addRange(range);
-document.execCommand("copy");
-}
-}
-</script>
-<script>
-function CloseSnipet() {
-document.getElementById("snipets-container").innerHTML = null;
-}
-</script>
   
 <div id ="carla.Map.get_waypoint-snipet" style="display: none;">
 <p class="SnipetFont">
 Snipet for carla.Map.get_waypoint
 </p>
 <div id="carla.Map.get_waypoint-code" class="SnipetContent">
+<div id="carla.Map.get_waypoint-python">
 
 ```py
   
@@ -3200,7 +3180,8 @@ print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 
 <img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
@@ -3212,6 +3193,7 @@ print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
 Snipet for carla.Sensor.listen
 </p>
 <div id="carla.Sensor.listen-code" class="SnipetContent">
+<div id="carla.Sensor.listen-python">
 
 ```py
   
@@ -3228,7 +3210,8 @@ camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, 
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3237,6 +3220,7 @@ camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, 
 Snipet for carla.World.spawn_actor
 </p>
 <div id="carla.World.spawn_actor-code" class="SnipetContent">
+<div id="carla.World.spawn_actor-python">
 
 ```py
   
@@ -3253,7 +3237,8 @@ lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, att
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3262,6 +3247,7 @@ lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, att
 Snipet for carla.ActorBlueprint.set_attribute
 </p>
 <div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
+<div id="carla.ActorBlueprint.set_attribute-python">
 
 ```py
   
@@ -3287,7 +3273,8 @@ camera_bp.set_attribute('image_size_y', 600)
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3296,6 +3283,7 @@ camera_bp.set_attribute('image_size_y', 600)
 Snipet for carla.World.get_spectator
 </p>
 <div id="carla.World.get_spectator-code" class="SnipetContent">
+<div id="carla.World.get_spectator-python">
 
 ```py
   
@@ -3322,7 +3310,8 @@ spectator.set_transform(actor_snapshot.get_transform())
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3331,6 +3320,7 @@ spectator.set_transform(actor_snapshot.get_transform())
 Snipet for carla.DebugHelper.draw_line
 </p>
 <div id="carla.DebugHelper.draw_line-code" class="SnipetContent">
+<div id="carla.DebugHelper.draw_line-python">
 
 ```py
   
@@ -3361,7 +3351,8 @@ while True:
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_line-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_line-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 
 <img src="/img/snipets_images/carla.DebugHelper.draw_line.jpg">
@@ -3373,6 +3364,7 @@ while True:
 Snipet for carla.DebugHelper.draw_box
 </p>
 <div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
+<div id="carla.DebugHelper.draw_box-python">
 
 ```py
   
@@ -3392,7 +3384,8 @@ for actor_snapshot in world_snapshot:
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 
 <img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
@@ -3404,6 +3397,7 @@ for actor_snapshot in world_snapshot:
 Snipet for carla.TrafficLight.set_state
 </p>
 <div id="carla.TrafficLight.set_state-code" class="SnipetContent">
+<div id="carla.TrafficLight.set_state-python">
 
 ```py
   
@@ -3438,7 +3432,8 @@ if vehicle_actor.is_at_traffic_light():
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 
 <img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
@@ -3450,6 +3445,7 @@ if vehicle_actor.is_at_traffic_light():
 Snipet for carla.Client.apply_batch_sync
 </p>
 <div id="carla.Client.apply_batch_sync-code" class="SnipetContent">
+<div id="carla.Client.apply_batch_sync-python">
 
 ```py
   
@@ -3514,7 +3510,8 @@ for i in range(0, len(all_actors), 2):
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.apply_batch_sync-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.apply_batch_sync-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3523,6 +3520,7 @@ for i in range(0, len(all_actors), 2):
 Snipet for carla.WalkerAIController.stop
 </p>
 <div id="carla.WalkerAIController.stop-code" class="SnipetContent">
+<div id="carla.WalkerAIController.stop-python">
 
 ```py
   
@@ -3538,7 +3536,8 @@ client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3547,6 +3546,7 @@ client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
 Snipet for carla.Client.__init__
 </p>
 <div id="carla.Client.__init__-code" class="SnipetContent">
+<div id="carla.Client.__init__-python">
 
 ```py
   
@@ -3583,44 +3583,12 @@ Snipet for carla.Client.__init__
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
 
 </div>
 
-<script>
-function ButtonAction(container_name){
-if(window_big){
-snipet_name = container_name.replace('-snipet_button','-snipet');
-document.getElementById("snipets-container").innerHTML = document.getElementById(snipet_name).innerHTML;
-}
-else{
-document.getElementById("snipets-container").innerHTML = null;code_name = container_name.replace('-snipet_button','-code');
-var range = document.createRange();
-range.selectNode(document.getElementById(code_name));
-alert(range);
-}
-}
-function WindowResize(){
-if(window.innerWidth > 1200){
-window_big = true;
-}
-else{
-window_big = false;
-}
-}
-var window_big;
-if(window.innerWidth > 1200){
-window_big = true;
-}
-else{
-window_big = false;
-}
-buttons = document.getElementsByClassName('SnipetButton')
-for (let i = 0; i < buttons.length; i++) {
-buttons[i].addEventListener("click",function(){ButtonAction(buttons[i].id);},true);
-}
-window.onresize = WindowResize;
-</script>
+<script type="text/javascript" src="extra_scripts/snipets_button_actions.js"></script>
