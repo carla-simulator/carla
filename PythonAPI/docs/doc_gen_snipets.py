@@ -85,7 +85,7 @@ class Documentation:
             # Header for a snipet
             md.textn("<div id =\""+snipet_name+"-snipet\" style=\"display: none;\">\n"+
             "<p class=\"SnipetFont\">\n"+
-            "Snipet for "+snipet_name+"\n"+
+            "Code snipet\n"+
             "</p>\n"+
             "<div id=\""+snipet_name+"-code\" class=\"SnipetContent\">\n<div id=\""+snipet_name+"-python\">\n\n```py\n")
             # The snipet code

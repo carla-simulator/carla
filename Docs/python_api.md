@@ -3155,7 +3155,7 @@ Links another command to be executed right after. It allows to ease very common 
   
 <div id ="carla.Map.get_waypoint-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Map.get_waypoint
+Code snipet
 </p>
 <div id="carla.Map.get_waypoint-code" class="SnipetContent">
 <div id="carla.Map.get_waypoint-python">
@@ -3190,7 +3190,7 @@ print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
   
 <div id ="carla.Sensor.listen-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Sensor.listen
+Code snipet
 </p>
 <div id="carla.Sensor.listen-code" class="SnipetContent">
 <div id="carla.Sensor.listen-python">
@@ -3217,7 +3217,7 @@ camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, 
   
 <div id ="carla.World.spawn_actor-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.World.spawn_actor
+Code snipet
 </p>
 <div id="carla.World.spawn_actor-code" class="SnipetContent">
 <div id="carla.World.spawn_actor-python">
@@ -3244,7 +3244,7 @@ lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, att
   
 <div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.ActorBlueprint.set_attribute
+Code snipet
 </p>
 <div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
 <div id="carla.ActorBlueprint.set_attribute-python">
@@ -3296,7 +3296,7 @@ camera_bp.set_attribute('image_size_y', 600)
   
 <div id ="carla.Client.show_recorder_file_info-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Client.show_recorder_file_info
+Code snipet
 </p>
 <div id="carla.Client.show_recorder_file_info-code" class="SnipetContent">
 <div id="carla.Client.show_recorder_file_info-python">
@@ -3345,7 +3345,7 @@ else:
   
 <div id ="carla.World.get_spectator-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.World.get_spectator
+Code snipet
 </p>
 <div id="carla.World.get_spectator-code" class="SnipetContent">
 <div id="carla.World.get_spectator-python">
@@ -3382,7 +3382,7 @@ spectator.set_transform(actor_snapshot.get_transform())
   
 <div id ="carla.Client.replay_file-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Client.replay_file
+Code snipet
 </p>
 <div id="carla.Client.replay_file-code" class="SnipetContent">
 <div id="carla.Client.replay_file-python">
@@ -3444,7 +3444,7 @@ else:
   
 <div id ="carla.DebugHelper.draw_line-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.DebugHelper.draw_line
+Code snipet
 </p>
 <div id="carla.DebugHelper.draw_line-code" class="SnipetContent">
 <div id="carla.DebugHelper.draw_line-python">
@@ -3488,7 +3488,7 @@ while True:
   
 <div id ="carla.WalkerAIController.start-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.WalkerAIController.start
+Code snipet
 </p>
 <div id="carla.WalkerAIController.start-code" class="SnipetContent">
 <div id="carla.WalkerAIController.start-python">
@@ -3569,7 +3569,7 @@ for i in range(0, len(all_actors), 2):
   
 <div id ="carla.World.apply_settings-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.World.apply_settings
+Code snipet
 </p>
 <div id="carla.World.apply_settings-code" class="SnipetContent">
 <div id="carla.World.apply_settings-python">
@@ -3620,7 +3620,7 @@ if new_settings != current_settings:
   
 <div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.DebugHelper.draw_box
+Code snipet
 </p>
 <div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
 <div id="carla.DebugHelper.draw_box-python">
@@ -3653,7 +3653,7 @@ for actor_snapshot in world_snapshot:
   
 <div id ="carla.Client.generate_opendrive_world-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Client.generate_opendrive_world
+Code snipet
 </p>
 <div id="carla.Client.generate_opendrive_world-code" class="SnipetContent">
 <div id="carla.Client.generate_opendrive_world-python">
@@ -3716,7 +3716,7 @@ if args.xodr_path is not None:
   
 <div id ="carla.Client.start_recorder-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Client.start_recorder
+Code snipet
 </p>
 <div id="carla.Client.start_recorder-code" class="SnipetContent">
 <div id="carla.Client.start_recorder-python">
@@ -3764,7 +3764,7 @@ client.stop_recorder()
   
 <div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.TrafficLight.set_state
+Code snipet
 </p>
 <div id="carla.TrafficLight.set_state-code" class="SnipetContent">
 <div id="carla.TrafficLight.set_state-python">
@@ -3812,7 +3812,7 @@ if vehicle_actor.is_at_traffic_light():
   
 <div id ="carla.Client.load_world-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Client.load_world
+Code snipet
 </p>
 <div id="carla.Client.load_world-code" class="SnipetContent">
 <div id="carla.Client.load_world-python">
@@ -3873,7 +3873,7 @@ if args.map is not None:
   
 <div id ="carla.Client.apply_batch_sync-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Client.apply_batch_sync
+Code snipet
 </p>
 <div id="carla.Client.apply_batch_sync-code" class="SnipetContent">
 <div id="carla.Client.apply_batch_sync-python">
@@ -3945,7 +3945,7 @@ for response in client.apply_batch_sync(batch, synchronous_master):
   
 <div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.WalkerAIController.stop
+Code snipet
 </p>
 <div id="carla.WalkerAIController.stop-code" class="SnipetContent">
 <div id="carla.WalkerAIController.stop-python">
@@ -3971,7 +3971,7 @@ client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
   
 <div id ="carla.Client.__init__-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.Client.__init__
+Code snipet
 </p>
 <div id="carla.Client.__init__-code" class="SnipetContent">
 <div id="carla.Client.__init__-python">
