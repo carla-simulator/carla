@@ -406,19 +406,19 @@ Executes a list of commands on a single simulation step, blocks until the comman
         - `commands` (_list_) – A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.  
         - `due_tick_cue` (_bool_) – A boolean parameter to specify whether or not to perform a [carla.World.tick](#carla.World.tick) after applying the batch in _synchronous mode_. It is __False__ by default.  
     - **Return:** _list(command.Response)_  
-- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**parameters**=(2.0, 50.0, 1.0, 0.6, true, true)</font>)  
+- <a name="carla.Client.generate_opendrive_world"></a>**<font color="#7fb800">generate_opendrive_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**opendrive**</font>, <font color="#00a6ed">**parameters**=(2.0, 50.0, 1.0, 0.6, true, true)</font>)<button class="SnipetButton" id="carla.Client.generate_opendrive_world-snipet_button">snipet &rarr;</button>  
 Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter. It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side. Cars can drive around the map, but there are no graphics besides the road and sidewalks.  
     - **Parameters:**
         - `opendrive` (_str_) – Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.  
         - `parameters` (_[carla.OpendriveGenerationParameters](#carla.OpendriveGenerationParameters)_) – Additional settings for the mesh generation. If none are provided, default values will be used.  
-- <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)  
+- <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>)<button class="SnipetButton" id="carla.Client.load_world-snipet_button">snipet &rarr;</button>  
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  
     - **Parameters:**
         - `map_name` (_str_) – Name of the map to be used in this world. Accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>)  
 Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Raises:** RuntimeError when corresponding.  
-- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>)  
+- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>)<button class="SnipetButton" id="carla.Client.replay_file-snipet_button">snipet &rarr;</button>  
 Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
         - `name` (_str_) – Name of the file containing the information of the simulation.  
@@ -450,13 +450,13 @@ If you want to see only collisions between a vehicles and a walkers, use for `ca
         - `category1` (_single char_) – Character variable specifying a first type of actor involved in the collision.  
         - `category2` (_single char_) – Character variable specifying the second type of actor involved in the collision.  
     - **Return:** _string_  
-- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)  
+- <a name="carla.Client.show_recorder_file_info"></a>**<font color="#7fb800">show_recorder_file_info</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**show_all**</font>)<button class="SnipetButton" id="carla.Client.show_recorder_file_info-snipet_button">snipet &rarr;</button>  
 The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.  
     - **Parameters:**
         - `filename` (_str_) – Name or absolute path of the file recorded, depending on your previous choice.  
         - `show_all` (_bool_) – If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.  
     - **Return:** _string_  
-- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**additional_data**=False</font>)  
+- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**additional_data**=False</font>)<button class="SnipetButton" id="carla.Client.start_recorder-snipet_button">snipet &rarr;</button>  
 Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
     - **Parameters:**
         - `filename` (_str_) – Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.  
@@ -2427,7 +2427,7 @@ The client returns the control applied to this walker during last tick. The meth
 Sets the destination that the pedestrian will reach.  
     - **Parameters:**
         - `destination` (_[carla.Location](#carla.Location)<small> – meters</small>_)  
-- <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.WalkerAIController.start-snipet_button">snipet &rarr;</button>  
 Enables AI control for its parent walker.  
 - <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.WalkerAIController.stop-snipet_button">snipet &rarr;</button>  
 Disables AI control for its parent walker.  
@@ -2675,7 +2675,7 @@ The ID of the episode associated with this world. Episodes are different session
 Responsible for creating different shapes for debugging. Take a look at its class to learn more about it.  
 
 <h3>Methods</h3>
-- <a name="carla.World.apply_settings"></a>**<font color="#7fb800">apply_settings</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_settings**</font>)  
+- <a name="carla.World.apply_settings"></a>**<font color="#7fb800">apply_settings</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_settings**</font>)<button class="SnipetButton" id="carla.World.apply_settings-snipet_button">snipet &rarr;</button>  
 This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented.  
     - **Parameters:**
         - `world_settings` (_[carla.WorldSettings](#carla.WorldSettings)_)  
@@ -2807,7 +2807,7 @@ When enabled, the simulation will run no rendering at all. This is mainly used t
 Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
 
 <h3>Methods</h3>
-- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)  
+- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)<button class="SnipetButton" id="carla.WorldSettings.__init__-snipet_button">snipet &rarr;</button>  
 Creates an object containing desired settings that could later be applied through [carla.World](#carla.World) and its method __<font color="#7fb800">apply_settings()</font>__.  
     - **Parameters:**
         - `synchronous_mode` (_bool_) – Set this to true to enable client-server synchrony.  
@@ -3153,6 +3153,60 @@ Links another command to be executed right after. It allows to ease very common 
 [comment]: <> (=========================)
 <div id="snipets-container" class="Container" onmouseover='this.style["overflowX"]="scroll";' onmouseout='this.style["overflowX"]="visible";'></div>
   
+<div id ="carla.WorldSettings.__init__-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.WorldSettings.__init__
+</p>
+<div id="carla.WorldSettings.__init__-code" class="SnipetContent">
+<div id="carla.WorldSettings.__init__-python">
+
+```py
+  
+# ===================================================
+# Define and apply world settings
+# ===================================================
+
+# This snipet defines and changes the world settings according to the ones passed as arguments. 
+#   World settings affect the simulation in complex and broad ways. It is highly recommended to read the docs to understand what is going on. 
+#   Read about the synchronous/asynchronous mode: https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/
+#   Read about the different rendering options: https://carla.readthedocs.io/en/latest/adv_rendering_options/ 
+
+# Gather
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '-s', '--sync',
+    action='store_true',
+    help='Use this flag to enable synchronous mode.')
+argparser.add_argument(
+    '-r', '--no-render',
+    action='store_true',
+    help='Use this flag to enable no-rendering mode')
+argparser.add_argument(
+    '-d', '--delta',
+    default=0.0,
+    type=float,
+    help='Define the delta for a fixed time-step. Default is 0.0, which is variable time-step.')
+args = argparser.parse_args()
+
+# Define the current and the new world settings.
+current_settings = world.get_settings()
+new_settings = carla.WorldSettings(sync,no_render,delta)
+
+# If the settings want to be changed, apply these. 
+if new_settings != current_settings:
+    world.apply_settings(new_settings)
+
+
+
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WorldSettings.__init__-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
 <div id ="carla.Map.get_waypoint-snipet" style="display: none;">
 <p class="SnipetFont">
 Snipet for carla.Map.get_waypoint
@@ -3251,30 +3305,95 @@ Snipet for carla.ActorBlueprint.set_attribute
 
 ```py
   
+# ===================================================
+# Set the attributes of a blueprint to desired values
+# ===================================================
 
-# This recipe changes attributes of different type of blueprint actors.
+# In this snipet, different blueprints corresponding to different types of actor are chosen,
+# and their attributes set to specific values. 
 
-# ...
-walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
+
+# First get the blueprint library from the world object, and find the desired blueprint. 
+#   You can retrieve all the blueprints of a specific type.
+walkers_bps = world.get_blueprint_library().filter("walker.pedestrian.*")
+#   But in this case, we chose a pedestrian.
+bp_library = world.get_blueprint_library()
+walker_bp = bp_library.filter('walker.pedestrian.0002')
+
+
+# Set a specific value for an attribute
 walker_bp.set_attribute('is_invincible', True)
 
-# ...
-# Changes attribute randomly by the recommended value
-vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
+
+# The attributes provide with a list of recommended values that can be used for referenced, or to choose at random. 
+#   This may be especially relevant to create some diversity on vehicle colors. 
+vehicle_bp = world.get_blueprint_library().filter('vehicle.bmw.*')
 color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
 vehicle_bp.set_attribute('color', color)
 
-# ...
 
+# All the actor attributes are set in the same manner. 
+#   Here is another example, where the output image of a camera is set.
 camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
 camera_bp.set_attribute('image_size_x', 600)
 camera_bp.set_attribute('image_size_y', 600)
-# ...
-  
+
+
+# All the blueprints available in the library, their attributes and types are listed in the blueprint library reference: 
+# https://carla.readthedocs.io/en/latest/bp_library/  
 
 ```
 </div>
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Client.show_recorder_file_info-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.show_recorder_file_info
+</p>
+<div id="carla.Client.show_recorder_file_info-code" class="SnipetContent">
+<div id="carla.Client.show_recorder_file_info-python">
+
+```py
+  
+# ===================================================
+# Show the information in a CARLA recording
+# ===================================================
+
+# This snipet makes use of a previously CARLA recording to display a summary of the data it contains per frame. 
+#   To learn more about the CARLA recorder, read the docs available in: https://carla.readthedocs.io/en/latest/adv_recorder/
+
+
+# To display the information we only need two things: the path to the log file, and a data display format. 
+#   There are two displays: a summary of the most relevant events, or all the information available per frame. 
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '-l', '--log-path',
+    help='Path to the .log file created by the CARLA recorder that is going to be replayed.')
+argparser.add_argument(
+    '-a', '--all',
+    action='store_true',
+    help='Use this flag to display all the information available per frame, instead of a summary.')
+args = argparser.parse_args()
+
+# If the path to a log was provided, start replaying. 
+if args.log_path is not None:
+    if os.path.exists(args.log_path):
+        print("Starting the replay...")
+        client.show_recorder_file_info(log_path,args.all)
+    else: 
+        print('No log found at %r.', % os.path.basename(log_path))
+else: 
+    print("You must provide with a recording using the --log-path argument.")
+
+
+# Notice that this snipet does not stop the replay, so eventually the recording will end, and the simulation will continue where the recording ended.   
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.show_recorder_file_info-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3312,6 +3431,68 @@ spectator.set_transform(actor_snapshot.get_transform())
 ```
 </div>
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Client.replay_file-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.replay_file
+</p>
+<div id="carla.Client.replay_file-code" class="SnipetContent">
+<div id="carla.Client.replay_file-python">
+
+```py
+  
+# ===================================================
+# Replay a CARLA recording
+# ===================================================
+
+# This snipet shows how to replay a recording of a CARLA simulation. 
+#   To learn more about the CARLA recorder, read the docs available in: https://carla.readthedocs.io/en/latest/adv_recorder/
+
+
+# Define some arguments for the replay. Only the path to the log file is compulsory. 
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '-l', '--log-path',
+    help='Path to the .log file created by the CARLA recorder that is going to be replayed.')
+argparser.add_argument(
+    '-s', '--start',
+    metavar='S',
+    default=0,
+    type=float,
+    help='Time in seconds where the replay starts. Negative values will be considered starting from the end of the recording. Default is 0, the beginning of the recording.')
+argparser.add_argument(
+    '-d', '--duration',
+    metavar='D',
+    default=60,
+    type=float,
+    help='Duration of the replay. The simulation continues when the duration is finished or the recording ends. Default is 60 seconds.')
+argparser.add_argument(
+    '-a', '--actor',
+    metavar='A',
+    default=0,
+    type=float,
+    help='ID of the actor that the spectator camera will follow during the replay. Default is 0, which is none.')
+args = argparser.parse_args()
+
+# If the path to a log was provided, start replaying. 
+if args.log_path is not None:
+    if os.path.exists(args.log_path):
+        print("Starting the replay...")
+        client.replay_file(log_path,args.start,args.duration,args.actor)
+    else: 
+        print('No log found at %r.', % os.path.basename(log_path))
+else: 
+    print("You must provide with a recording using the --log-path argument.")
+
+
+# Notice that this snipet does not stop the replay, so eventually the recording will end, and the simulation will continue where the recording ended.   
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.replay_file-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3359,100 +3540,25 @@ while True:
   
 </div>
   
-<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
+<div id ="carla.WalkerAIController.start-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.DebugHelper.draw_box
+Snipet for carla.WalkerAIController.start
 </p>
-<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
-<div id="carla.DebugHelper.draw_box-python">
+<div id="carla.WalkerAIController.start-code" class="SnipetContent">
+<div id="carla.WalkerAIController.start-python">
 
 ```py
   
 
-# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
+# ===================================================
+# Apply a batch of commands and check if they were successful
+# ===================================================
 
-# ....
-debug = world.debug
-world_snapshot = world.get_snapshot()
 
-for actor_snapshot in world_snapshot:
-    actual_actor = world.get_actor(actor_snapshot.id)
-    if actual_actor.type_id == 'traffic.traffic_light':
-        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
-# ...
-
-  
-
-```
-</div>
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
-  
-</div>
-  
-<div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.TrafficLight.set_state
-</p>
-<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
-<div id="carla.TrafficLight.set_state-python">
-
-```py
-  
-
-# This recipe changes from red to green the traffic light that affects the vehicle. 
-# This is done by detecting if the vehicle actor is at a traffic light.
-
-# ...
-world = client.get_world()
-spectator = world.get_spectator()
-
-vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
-transform = random.choice(world.get_map().get_spawn_points())
-vehicle = world.try_spawn_actor(vehicle_bp, transform)
-
-# Wait for world to get the vehicle actor
-world.tick()
-
-world_snapshot = world.wait_for_tick()
-actor_snapshot = world_snapshot.find(vehicle.id)
-
-# Set spectator at given transform (vehicle transform)
-spectator.set_transform(actor_snapshot.get_transform())
-# ...# ...
-if vehicle_actor.is_at_traffic_light():
-    traffic_light = vehicle_actor.get_traffic_light()
-    if traffic_light.get_state() == carla.TrafficLightState.Red:
-       # world.hud.notification("Traffic light changed! Good to go!")
-        traffic_light.set_state(carla.TrafficLightState.Green)
-# ...
-
-  
-
-```
-</div>
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
-  
-</div>
-  
-<div id ="carla.Client.apply_batch_sync-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.Client.apply_batch_sync
-</p>
-<div id="carla.Client.apply_batch_sync-code" class="SnipetContent">
-<div id="carla.Client.apply_batch_sync-python">
-
-```py
-  
 # 0. Choose a blueprint fo the walkers
 world = client.get_world()
-blueprintsWalkers = world.get_blueprint_library().filter("walker.pedestrian.*")
-walker_bp = random.choice(blueprintsWalkers)
+walkers_bps = world.get_blueprint_library().filter("walker.pedestrian.*")
+walker_bp = random.choice(walkers_bps)
 
 # 1. Take all the random locations to spawn
 spawn_points = []
@@ -3511,6 +3617,385 @@ for i in range(0, len(all_actors), 2):
 
 ```
 </div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.start-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.apply_settings-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.World.apply_settings
+</p>
+<div id="carla.World.apply_settings-code" class="SnipetContent">
+<div id="carla.World.apply_settings-python">
+
+```py
+  
+# ===================================================
+# Define and apply world settings
+# ===================================================
+
+# This snipet defines and changes the world settings according to the ones passed as arguments. 
+#   World settings affect the simulation in complex and broad ways. It is highly recommended to read the docs to understand what is going on. 
+#   Read about the synchronous/asynchronous mode: https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/
+#   Read about the different rendering options: https://carla.readthedocs.io/en/latest/adv_rendering_options/ 
+
+# Gather
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '-s', '--sync',
+    action='store_true',
+    help='Use this flag to enable synchronous mode.')
+argparser.add_argument(
+    '-r', '--no-render',
+    action='store_true',
+    help='Use this flag to enable no-rendering mode')
+argparser.add_argument(
+    '-d', '--delta',
+    default=0.0,
+    type=float,
+    help='Define the delta for a fixed time-step. Default is 0.0, which is variable time-step.')
+args = argparser.parse_args()
+
+# Define the current and the new world settings.
+current_settings = world.get_settings()
+new_settings = carla.WorldSettings(sync,no_render,delta)
+
+# If the settings want to be changed, apply these. 
+if new_settings != current_settings:
+    world.apply_settings(new_settings)
+
+
+
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.apply_settings-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.DebugHelper.draw_box
+</p>
+<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
+<div id="carla.DebugHelper.draw_box-python">
+
+```py
+  
+
+# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
+
+# ....
+debug = world.debug
+world_snapshot = world.get_snapshot()
+
+for actor_snapshot in world_snapshot:
+    actual_actor = world.get_actor(actor_snapshot.id)
+    if actual_actor.type_id == 'traffic.traffic_light':
+        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
+# ...
+
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+  
+</div>
+  
+<div id ="carla.Client.generate_opendrive_world-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.generate_opendrive_world
+</p>
+<div id="carla.Client.generate_opendrive_world-code" class="SnipetContent">
+<div id="carla.Client.generate_opendrive_world-python">
+
+```py
+  
+# ===================================================
+# Load an XODR map into CARLA 
+# ===================================================
+
+# In this snipet, a XODR file containing a map is loaded in CARLA. 
+#   This snipet is based in the OpenDRIVE Standalone Mode feature: https://carla.readthedocs.io/en/latest/adv_opendrive/
+
+
+# Define an argument for the script to provide with the path to a XODR file.
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '-x', '--xodr-path',
+    metavar='XODR_FILE_PATH',
+    help='The path to a XODR file that will be used as a CARLA map.')
+args = argparser.parse_args()
+
+# The path cannot be loaded directly into CARLA. First you have to load the file, and parse the XODR content as string. 
+if args.xodr_path is not None:
+    if os.path.exists(args.xodr_path):
+        # Try to open the file, and send a message error in case it is not possible. 
+        with open(args.xodr_path) as od_file:
+            try:
+                data = od_file.read()
+            except OSError:
+                print('The file could not be read.')
+                sys.exit()
+        print('Loading the OpenDRIVE map file at %r.' % os.path.basename(args.xodr_path))
+
+        # The map generation allows for some parameterization. Read the docs on the OpenDRIVE Standalone Mode to find out more. 
+        #   Remember that you could add these parameters as optional arguments and leave the following as default values. 
+        vertex_distance = 2.0   # in meters
+        max_road_length = 500.0 # in meters
+        wall_height = 1.0       # in meters
+        extra_width = 0.6       # in meters
+        world = client.generate_opendrive_world(
+            data, carla.OpendriveGenerationParameters(
+                vertex_distance=vertex_distance,
+                max_road_length=max_road_length,
+                wall_height=wall_height,
+                additional_width=extra_width,
+                smooth_junctions=True,
+                enable_mesh_visibility=True))
+    else:
+        print('No file found at %r.', % os.path.basename(xodr_path))
+
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.generate_opendrive_world-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Client.start_recorder-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.start_recorder
+</p>
+<div id="carla.Client.start_recorder-code" class="SnipetContent">
+<div id="carla.Client.start_recorder-python">
+
+```py
+  
+# ===================================================
+# Replay a CARLA recording
+# ===================================================
+
+# This snipet shows how to start recording a simulation. 
+#   To learn more about the CARLA recorder, read the docs available in: https://carla.readthedocs.io/en/latest/adv_recorder/
+#   To learn more about the log file and how is data stored, read the reference in: https://carla.readthedocs.io/en/latest/ref_recorder_binary_file_format/
+
+
+# Define some arguments for the replay. Only the path to the log file is compulsory. 
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '-l', '--log-name',
+    help='Name of the log file that will create the recorder. This can include a path, and if it does not, this will be considered to be the default CarlaUE4/Saved/recording.log.')
+argparser.add_argument(
+    '-d', '--extra-data',
+    action='store_true',
+    help='Use this flag to save additional data. Read the docs to find out more about this.')
+args = argparser.parse_args()
+
+# Start recording
+if args.log_path is not None:
+    client.start_recorder(args.log_name,extra_data)
+else:
+    print("You must provide with a name for the recording using the --log-name argument.")
+
+
+# To stop recording, simply call for the corresponding method in this, or any other script. 
+#   For the scope of this snipet, let's suppose we wanted a recording that lasted specifically 30 seconds. 
+time.sleep(30)
+client.stop_recorder()  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.start_recorder-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.TrafficLight.set_state
+</p>
+<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
+<div id="carla.TrafficLight.set_state-python">
+
+```py
+  
+
+# This recipe changes from red to green the traffic light that affects the vehicle. 
+# This is done by detecting if the vehicle actor is at a traffic light.
+
+# ...
+world = client.get_world()
+spectator = world.get_spectator()
+
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
+transform = random.choice(world.get_map().get_spawn_points())
+vehicle = world.try_spawn_actor(vehicle_bp, transform)
+
+# Wait for world to get the vehicle actor
+world.tick()
+
+world_snapshot = world.wait_for_tick()
+actor_snapshot = world_snapshot.find(vehicle.id)
+
+# Set spectator at given transform (vehicle transform)
+spectator.set_transform(actor_snapshot.get_transform())
+# ...# ...
+if vehicle_actor.is_at_traffic_light():
+    traffic_light = vehicle_actor.get_traffic_light()
+    if traffic_light.get_state() == carla.TrafficLightState.Red:
+       # world.hud.notification("Traffic light changed! Good to go!")
+        traffic_light.set_state(carla.TrafficLightState.Green)
+# ...
+
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
+  
+</div>
+  
+<div id ="carla.Client.load_world-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.load_world
+</p>
+<div id="carla.Client.load_world-code" class="SnipetContent">
+<div id="carla.Client.load_world-python">
+
+```py
+  
+# ===================================================
+# Load a new CARLA map
+# ===================================================
+
+# This snipet changes the current map used for the simulation. All the actors in spawned will be destroyed. 
+#   The CARLA maps available by default can be founde here: https://carla.readthedocs.io/en/latest/core_map/#carla-maps
+
+
+# This function will return the names of the maps available. It will be called when the --list argument is used. 
+def list_options(client):
+    # Remove the paths, and leave only the names of the maps.
+    maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
+    # Create a small function to format the output list. 
+    indent = 4 * ' '
+    def wrap(text):
+        return '\n'.join(textwrap.wrap(text, initial_indent=indent, subsequent_indent=indent))
+    # Print the list of map names. 
+    print('available maps:\n')
+    print(wrap(', '.join(sorted(maps))) + '.\n')
+
+
+# Define the name of the map as an argument for the script. Optionally, we added an argument to display the names of the maps available in CARLA. 
+#   The map can be loaded by name, or providing the path. By default, the CARLA maps are stored in Game/Carla/Maps/. 
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '-m', '--map',
+    help='Load the map named as stated in this argument.')
+argparser.add_argument(
+    '-l', '--list',
+    action='store_true',
+    help='List the name of the maps available.')
+args = argparser.parse_args()
+
+# If the client requested a list of the maps available, provide with it.
+if args.list:
+    list_options(client)
+
+# If a map name/path was provided, load the new map. 
+if args.map is not None:
+    print('load map %r.' % args.map)
+    world = client.load_world(args.map)
+
+
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.load_world-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Client.apply_batch_sync-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Client.apply_batch_sync
+</p>
+<div id="carla.Client.apply_batch_sync-code" class="SnipetContent">
+<div id="carla.Client.apply_batch_sync-python">
+
+```py
+  
+# ===================================================
+# Apply a batch of commands and check if they were successful
+# ===================================================
+
+# In this snipet we will spawn n vehicles at random in a batch, and use chained commands to set them to autopilot. 
+#   By using a batch, all of them will be spawned and set in the same frame. 
+
+# Get all the vehicle blueprints. We will choose at random. 
+world = client.get_world()
+vehicles_bps = world.get_blueprint_library().filter("walker.vehicle.*")
+vehicle_bp = random.choice(vehicle_bp)
+vehicles_list = []
+
+# Set the amount of vehicles to be spawned. 
+n = 50 
+
+# Get n recommended spawning points, one per vehicle that will be spawned. 
+spawn_points = []
+for i in range(n):
+    spawn_point = carla.Transform()
+    spawn_point.location = random.choice(world.get_spawn_points())
+    if (spawn_point.location != None):
+        spawn_points.append(spawn_point)
+
+# Prepare the commands that will be used. 
+#   All the commands available are listed at last in the Python API reference. 
+SpawnActor = carla.command.SpawnActor
+SetAutopilot = carla.command.SetAutopilot
+FutureActor = carla.command.FutureActor # Special command that references a to-be-spawned actor. Used when chaining commands. 
+
+batch = []
+for i in range(n):
+    vehicle_bp = random.choice(vehicles_bps)
+    # For the sake of realism, try to change some blueprint attributes at random
+    if vehicle_bp.has_attribute('color'):
+        color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
+        vehicle_bp.set_attribute('color', color)
+    # You can change the role_name of these vehicles so they can be easily identified
+    vehicle_bp.set_attribute('role_name','batch_spawn')
+
+    # Append the commands to the batch.
+    #   You can create chained commands by using the .then() method.
+    #   These commands will be executed one after the other. 
+    batch.append(SpawnActor(vehicle_bp, spawn_points[i])
+        .then(SetAutopilot(FutureActor, True)))
+
+
+# Execute the batch and, at the same time, store the responses 
+for response in client.apply_batch_sync(batch, synchronous_master):
+    #Show the error in failed spawnings, and store the id of those that were successful
+    if response.error:
+        logging.error(response.error)
+    else:
+        vehicles_list.append(response.actor_id)
+
+  
+
+```
+</div>
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.apply_batch_sync-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
@@ -3550,35 +4035,41 @@ Snipet for carla.Client.__init__
 
 ```py
   
+# ===================================================
+# Parse arguments when creating a client
+# ===================================================
 
-# This recipe shows in every script provided in PythonAPI/Examples 
-# and it is used to parse the client creation arguments when running the script. 
+# This snipet shows how to parse some arguments when calling for a script, and how these can be used to create the client. 
+#   The snipet can be found in any of the example scripts provided in PythonAPI/examples, just modified with a different set of arguments. 
 
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '-s', '--speed',
-        metavar='FACTOR',
-        default=1.0,
-        type=float,
-        help='rate at which the weather changes (default: 1.0)')
-    args = argparser.parse_args()
+# Create an argument parser and define the desired arguments
+argparser = argparse.ArgumentParser(
+    description=__doc__)
+argparser.add_argument(
+    '--host',
+    metavar='H',
+    default='127.0.0.1',
+    help='IP of the host server (default: 127.0.0.1)')
+argparser.add_argument(
+    '-p', '--port',
+    metavar='P',
+    default=2000,
+    type=int,
+    help='TCP port to listen to (default: 2000)')
+argparser.add_argument(
+    '-s', '--speed',
+    metavar='FACTOR',
+    default=1.0,
+    type=float,
+    help='rate at which the weather changes (default: 1.0)')
+args = argparser.parse_args()
 
-    speed_factor = args.speed
-    update_freq = 0.1 / speed_factor
 
-    client = carla.Client(args.host, args.port)
+# Use this arguments at will in your script
+speed_factor = args.speed
+update_freq = 0.1 / speed_factor
+
+client = carla.Client(args.host, args.port)
 
   
 
