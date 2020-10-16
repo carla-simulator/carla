@@ -31,6 +31,7 @@ ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer) {
 
   RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+  SetSeed(Description.RandomSeed);
 }
 
 void ARayCastLidar::Set(const FActorDescription &ActorDescription)
