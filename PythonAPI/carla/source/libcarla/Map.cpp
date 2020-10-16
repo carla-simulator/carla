@@ -78,6 +78,9 @@ static carla::geom::GeoLocation ToGeolocation(
   return self.GetGeoReference().Transform(location);
 }
 
+// interface with carla::client::Map::GetWaypoint
+// windows compiler requires the explicit conversion from int32_t to uint32_t
+// which is not possible in python side
 static carla::SharedPtr<carla::client::Waypoint> GetWaypoint(
     const carla::client::Map &self,
     const carla::geom::Location &location,
