@@ -643,7 +643,7 @@ class Documentation:
                             md.list_popn()
                     # Generate class methods overview (if any)
                     if 'methods' in cl and cl['methods']:
-                        for method in sorted(cl['methods']):
+                        for method in sorted(cl['methods'], key = lambda i: i['def_name']):
                             md.list_push(gen_method_indx(method, class_key))
                             md.list_popn()
                     md.list_pop()
