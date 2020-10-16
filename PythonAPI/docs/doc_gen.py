@@ -120,6 +120,11 @@ def snipet(name,class_key):
 
     return join(["<button class=\"SnipetButton\" id=\"",class_key,".",name,"-snipet_button\">", "snipet &rarr;", '</button>'])
 
+
+def snipet_full_name(name):
+
+    return join(["<button class=\"SnipetButton\" id=\"",name,"-snipet_button\">", "snipet &rarr;", '</button>'])
+
 def code(buf):
     return join(['`', buf, '`'])
 
@@ -290,6 +295,8 @@ def gen_doc_method_def(method, class_key, is_indx=False, with_self=True):
     snipets = open(snipets_path, 'r')
     if class_key+'.'+full_method_name+'-snipet' in snipets.read():
         snipet_link = snipet(full_method_name, class_key)
+    elif valid_dic_val(method, 'ref_snipet'):
+        snipet_link = snipet_full_name(method['ref_snipet'])
 
     return join([method_name, parentheses(param),snipet_link])
 

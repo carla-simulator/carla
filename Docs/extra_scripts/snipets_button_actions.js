@@ -8,7 +8,6 @@ function ButtonAction(container_name){
   else{
     document.getElementById("snipets-container").innerHTML = null;
     code_name = container_name.replace('-snipet_button','-python');
-    alert(code_name);
     var range = document.createRange();
     range.selectNode(document.getElementById(code_name));
     alert(range);

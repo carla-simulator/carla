@@ -32,8 +32,3 @@ new_settings = carla.WorldSettings(sync,no_render,delta)
 # If the settings want to be changed, apply these. 
 if new_settings != current_settings:
     world.apply_settings(new_settings)
-
-
-
-# ---
-# This snipet is also available in carla.WorldSettings.__init__()

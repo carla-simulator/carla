@@ -2807,7 +2807,7 @@ When enabled, the simulation will run no rendering at all. This is mainly used t
 Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
 
 <h3>Methods</h3>
-- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)<button class="SnipetButton" id="carla.WorldSettings.__init__-snipet_button">snipet &rarr;</button>  
+- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)<button class="SnipetButton" id="carla.World.apply_settings-snipet_button">snipet &rarr;</button>  
 Creates an object containing desired settings that could later be applied through [carla.World](#carla.World) and its method __<font color="#7fb800">apply_settings()</font>__.  
     - **Parameters:**
         - `synchronous_mode` (_bool_) – Set this to true to enable client-server synchrony.  
@@ -3152,60 +3152,6 @@ Links another command to be executed right after. It allows to ease very common 
 [comment]: <> (PYTHON API SCRIPT SNIPETS)
 [comment]: <> (=========================)
 <div id="snipets-container" class="Container" onmouseover='this.style["overflowX"]="scroll";' onmouseout='this.style["overflowX"]="visible";'></div>
-  
-<div id ="carla.WorldSettings.__init__-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.WorldSettings.__init__
-</p>
-<div id="carla.WorldSettings.__init__-code" class="SnipetContent">
-<div id="carla.WorldSettings.__init__-python">
-
-```py
-  
-# ===================================================
-# Define and apply world settings
-# ===================================================
-
-# This snipet defines and changes the world settings according to the ones passed as arguments. 
-#   World settings affect the simulation in complex and broad ways. It is highly recommended to read the docs to understand what is going on. 
-#   Read about the synchronous/asynchronous mode: https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/
-#   Read about the different rendering options: https://carla.readthedocs.io/en/latest/adv_rendering_options/ 
-
-# Gather
-argparser = argparse.ArgumentParser(
-    description=__doc__)
-argparser.add_argument(
-    '-s', '--sync',
-    action='store_true',
-    help='Use this flag to enable synchronous mode.')
-argparser.add_argument(
-    '-r', '--no-render',
-    action='store_true',
-    help='Use this flag to enable no-rendering mode')
-argparser.add_argument(
-    '-d', '--delta',
-    default=0.0,
-    type=float,
-    help='Define the delta for a fixed time-step. Default is 0.0, which is variable time-step.')
-args = argparser.parse_args()
-
-# Define the current and the new world settings.
-current_settings = world.get_settings()
-new_settings = carla.WorldSettings(sync,no_render,delta)
-
-# If the settings want to be changed, apply these. 
-if new_settings != current_settings:
-    world.apply_settings(new_settings)
-
-
-
-  
-
-```
-</div>
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WorldSettings.__init__-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-</div>
   
 <div id ="carla.Map.get_waypoint-snipet" style="display: none;">
 <p class="SnipetFont">
@@ -3664,9 +3610,6 @@ new_settings = carla.WorldSettings(sync,no_render,delta)
 # If the settings want to be changed, apply these. 
 if new_settings != current_settings:
     world.apply_settings(new_settings)
-
-
-
   
 
 ```

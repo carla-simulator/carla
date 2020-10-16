@@ -144,6 +144,7 @@
           Set a fixed time-step in between frames. <code>0.0</code> means variable time-step and it is the default mode. 
       doc: >
         Creates an object containing desired settings that could later be applied through carla.World and its method __<font color="#7fb800">apply_settings()</font>__.
+      ref_snipet: carla.World.apply_settings
     # --------------------------------------
     - def_name: __eq__
       return: bool
