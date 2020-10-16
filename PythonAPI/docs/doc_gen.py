@@ -643,7 +643,7 @@ class Documentation:
                             md.list_popn()
                     # Generate class methods overview (if any)
                     if 'methods' in cl and cl['methods']:
-                        for method in cl['methods']:
+                        for method in sorted(cl['methods']):
                             md.list_push(gen_method_indx(method, class_key))
                             md.list_popn()
                     md.list_pop()
@@ -685,7 +685,7 @@ class Documentation:
                         dunder_list = list()
                         get_list = list()
                         set_list = list()
-                        for method in cl['methods']:
+                        for method in sorted(cl['methods'], key = lambda i: i['def_name']):
                             method_name = method['def_name']
                             if method_name[0] == '_' and method_name != '__init__':
                                 dunder_list.append(method)
