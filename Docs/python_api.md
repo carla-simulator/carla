@@ -2091,7 +2091,7 @@ During the localization stage, this method sets a percent chance that vehicle wi
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose behaviour is being changed.  
         - `perc` (_float_) – Between 0 and 100. Amount of times the vehicle will follow the keep right rule.  
 - <a name="carla.TrafficManager.set_random_device_seed"></a>**<font color="#7fb800">set_random_device_seed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**value**</font>)  
-Sets a specific random seed for the Traffic Manager, thereby setting it to be a deterministic system.  
+Sets a specific random seed for the Traffic Manager, thereby setting it to be deterministic.  
     - **Parameters:**
         - `value` (_int_) – Seed value for the random number generation of the Traffic Manager.  
 - <a name="carla.TrafficManager.set_synchronous_mode"></a>**<font color="#7fb800">set_synchronous_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  

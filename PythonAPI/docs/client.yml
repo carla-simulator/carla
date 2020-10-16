@@ -486,7 +486,7 @@
         doc: >
           Seed value for the random number generation of the Traffic Manager. 
       doc: >
-        Sets a specific random seed for the Traffic Manager, thereby setting it to be a deterministic system.
+        Sets a specific random seed for the Traffic Manager, thereby setting it to be deterministic.
     # --------------------------------------
     - def_name: set_synchronous_mode
       params:

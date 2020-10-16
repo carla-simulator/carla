@@ -307,9 +307,9 @@ However, it is important that when shutting down a TM, the vehicles registered t
 ---
 ## Deterministic mode
 
-In deterministic mode, the Traffic Manager will always produce the same results and behaviours for the same conditions. Do not mistake determinism with the recorder. The recorder stores all the information of a simulation so it can be played back. Determinism does not involve any log nor recording, and produces different outputs for different conditions. However, as long as conditions are maintained, a deterministic Traffic Manager ensures that the TM will always behave in the same way.  
+In deterministic mode, the Traffic Manager will always produce the same results and behaviours under the same conditions. Do not mistake determinism with the recorder. While the recorder allows you to store the log of a simulation to play it back, determinism ensures that Traffic Manager will always have the same output over different executions of a script, if the same conditions are maintained.  
 
-Deterministic mode is meant to be used __in synchronous mode only__. In asynchronous mode, there is much less control over the simulation, and a deterministic behaviour cannot be guaranteed. Read the considerations to run [TM in synchronous mode](#synchronous-mode) before using it.  
+Deterministic mode is meant to be used __in synchronous mode only__. In asynchronous mode, there is much less control over the simulation, and determinism cannot be achieved. Read the considerations to run [TM in synchronous mode](#synchronous-mode) before using it.  
 
 
 To enable deterministic mode, simply call the following method in your script.  
@@ -324,7 +324,7 @@ The deterministic mode can be tested when using the `spawn_npc.py` example scrip
 
 ```sh
 cd PythonAPI/examples
-python3 spawn_npc.py -n 50 --sync --sed 9
+python3 spawn_npc.py -n 50 --sync --seed 9
 ```
 
 !!! Warning
