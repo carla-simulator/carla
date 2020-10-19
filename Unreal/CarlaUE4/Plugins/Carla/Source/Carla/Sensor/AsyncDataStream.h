@@ -15,6 +15,7 @@
 
 template <typename T>
 class FDataStreamTmpl;
+class FCarlaEngine;
 
 // =============================================================================
 // -- FAsyncDataStreamTmpl -----------------------------------------------------
@@ -106,7 +107,7 @@ inline FAsyncDataStreamTmpl<T>::FAsyncDataStreamTmpl(
       using Serializer = carla::sensor::s11n::SensorHeaderSerializer;
       return Serializer::Serialize(
           carla::sensor::SensorRegistry::template get<SensorT*>::index,
-          GFrameCounter,
+          FCarlaEngine::GetFrameCounter(),
           Timestamp,
           /// TODO: raname to 'GetActorTransform' once the new tick pipeline is done
           Sensor.GetSyncActorTransform());

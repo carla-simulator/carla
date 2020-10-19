@@ -20,6 +20,8 @@ class FCarlaEngine : private NonCopyable
 {
 public:
 
+  static uint64_t FrameCounter;
+
   ~FCarlaEngine();
 
   void NotifyInitGame(const UCarlaSettings &Settings);
@@ -41,6 +43,22 @@ public:
   void SetRecorder(ACarlaRecorder *InRecorder)
   {
     Recorder = InRecorder;
+  }
+
+  static uint64_t GetFrameCounter()
+  { 
+    return FCarlaEngine::FrameCounter;
+  }
+
+  static uint64_t UpdateFrameCounter() 
+  { 
+    FCarlaEngine::FrameCounter += 1;
+    return FCarlaEngine::FrameCounter;
+  }
+
+  static void ResetFrameCounter(uint64_t Value = 0)
+  { 
+    FCarlaEngine::FrameCounter = Value;
   }
 
 private:
