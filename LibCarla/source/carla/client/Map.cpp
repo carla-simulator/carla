@@ -41,7 +41,7 @@ namespace client {
   SharedPtr<Waypoint> Map::GetWaypoint(
   const geom::Location &location,
   bool project_to_road,
-  uint32_t lane_type) const {
+  int32_t lane_type) const {
     boost::optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
       waypoint = _map.GetClosestWaypointOnRoad(location, lane_type);
