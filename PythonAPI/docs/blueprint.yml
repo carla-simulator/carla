@@ -229,6 +229,7 @@
     # - METHODS ----------------------------
     methods:
     - def_name: filter
+      ref_snipet: carla.ActorList.filter
       params:
       - param_name: wildcard_pattern
         type: str

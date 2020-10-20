@@ -35,7 +35,7 @@ Applies an impulse at the center of mass of the actor. This method should be use
 Applies a torque at the center of mass of the actor. This method should be used for torques that are applied over a certain period of time. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply a torque that only lasts an instant.  
     - **Parameters:**
         - `torque` (_[carla.Vector3D](#carla.Vector3D)<small> – degrees</small>_) – Torque vector in global coordinates.  
-- <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.Actor.destroy"></a>**<font color="#7fb800">destroy</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.Actor.destroy-snipet_button">snipet &rarr;</button>  
 Tells the simulator to destroy this actor and returns <b>True</b> if it was successful. It has no effect if it was already destroyed.  
     - **Return:** _bool_  
     - **Warning:** <font color="#ED2F2F">_This method blocks the script until the destruction is completed by the simulator.
@@ -213,7 +213,7 @@ Returns the amount of attributes for this blueprint.
 A class that contains every actor present on the scene and provides access to them. The list is automatically created and updated by the server and it can be returned using [carla.World](#carla.World).  
 
 <h3>Methods</h3>
-- <a name="carla.ActorList.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
+- <a name="carla.ActorList.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)<button class="SnipetButton" id="carla.ActorList.filter-snipet_button">snipet &rarr;</button>  
 Filters a list of Actors matching `wildcard_pattern` against their variable __<font color="#f8805a">type_id</font>__ (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
@@ -281,7 +281,7 @@ A class that contains the blueprints provided for actor spawning. Its main appli
   [Here](bp_library.md) is a reference containing every available blueprint and its specifics.  
 
 <h3>Methods</h3>
-- <a name="carla.BlueprintLibrary.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)  
+- <a name="carla.BlueprintLibrary.filter"></a>**<font color="#7fb800">filter</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wildcard_pattern**</font>)<button class="SnipetButton" id="carla.ActorList.filter-snipet_button">snipet &rarr;</button>  
 Filters a list of blueprints matching the `wildcard_pattern` against the id and tags of every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
     - **Parameters:**
         - `wildcard_pattern` (_str_)  
@@ -3380,6 +3380,62 @@ spectator.set_transform(actor_snapshot.get_transform())
   
 </div>
   
+<div id ="carla.Actor.destroy-snipet" style="display: none;">
+<p class="SnipetFont">
+Code snipet
+</p>
+<div id="carla.Actor.destroy-code" class="SnipetContent">
+<div id="carla.Actor.destroy-python">
+
+```py
+  
+# ===================================================
+# Destroy actors that have been spawned
+# ===================================================
+
+# This snipet shows how to destroy actors in the scene, and some considerations that should be taken into account
+#   when destroying sensors and walkers. 
+
+
+# Destroying actors simply requires a call to the destroy() method.
+#   Let's destroy all the vehicles that are currently in the scene.
+all_actors = my_world.get_actors() # Returns a carla.ActorsList
+all_vehicles = all_actors.filter('vehicle.*.*')
+
+# The destroy() method will block the script, so it is a good idea to apply these in a batch of commands. 
+print('Destroying all vehicles...')
+client.apply_batch([carla.command.DestroyActor(x) for x in all_vehicles])
+
+
+# There are two special cases that need some preparation:
+
+# 1. Sensors: Stop their listen() function before destroying them, so that no process remains 
+all_sensors = all_actors.filter('sensor.*.*')
+
+for i in range(0, len(all_sensors):
+    all_sensors[i].stop()
+client.apply_batch([carla.command.DestroyActor(x) for x in all_sensors])
+
+
+# 2. Walkers: Remember that walkers usually have a carla.WalkerAIController attached that is in charge of navigation. 
+#    In this case, stop the carla.WalkerAIController, and then destroy the actor and the controller. 
+all_walker_controllers = all_actors.filter('controller.*.*')
+all_walker = all_actors.filter('walker.*.*')
+
+for i in range(0, len(all_walker_controllers):
+    all_walker_controllers[i].stop()
+
+client.apply_batch([carla.command.DestroyActor(x) for x in all_walker_controllers])
+client.apply_batch([carla.command.DestroyActor(x) for x in all_walkers])
+
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Actor.destroy-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
 <div id ="carla.Client.replay_file-snipet" style="display: none;">
 <p class="SnipetFont">
 Code snipet
@@ -4019,6 +4075,64 @@ client = carla.Client(args.host, args.port)
 ```
 </div>
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.ActorList.filter-snipet" style="display: none;">
+<p class="SnipetFont">
+Code snipet
+</p>
+<div id="carla.ActorList.filter-code" class="SnipetContent">
+<div id="carla.ActorList.filter-python">
+
+```py
+  
+# ===================================================
+# Filter actors in ActorList or Blueprints in the BlueprintLibrary
+# ===================================================
+
+# This snipet shows how to use the filter() method to retrieve specific sets of actors or blueprints
+#   If you are looking for a specific instance of an actor that has been spawned, it is likely you 
+#   are looking for the .find() method in carla.World and carla.ActorList, which requires the actor ID. 
+
+# Do not mix .find() and .filter(), as the later will return any actor/blueprint that matches the wildcard pattern used. 
+
+
+# The filter uses four main special characters to create the wildcard pattern.
+#   * = anything goes until something else is specified.
+#   ? = a single character.
+#   [seq] = a specific set of characters.
+#   [!seq] = a specific set of characters does NOT appear.
+
+# First let's return all the actors in the scene.
+all_actors = my_world.get_actors()
+
+# Now, let's filter these: 
+
+#   Retrieve all the vehicles of any type.
+all_vehicles = all_actors.filter('vehicle.*')
+all_tesla = all_actors.filter('vehicle.tesla.*')
+
+#   Retrieve all vehicles but the CarlaCola van.
+all_not_carlacacola = all_actors.filter('vehicle.[!carlamotors.carlacola]*')
+
+
+# Similarly, let's use the blueprint library to filter some blueprints.
+blueprint_library = my_world.get_blueprint_library()
+
+# Let's suppose we want to retrieve all the walkers blueprints numbered from 0 to 99.
+specific_blueprints = blueprint_library.filter('walker.pedestrian.00??')
+
+
+
+
+# The filter is based on the fnmatch pattern matching standard. Find out more about it to learn about its possibilities: 
+#   https://docs.python.org/2/library/fnmatch.html
+  
+
+```
+</div>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorList.filter-python')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
