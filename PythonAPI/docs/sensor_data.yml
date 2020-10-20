@@ -55,7 +55,7 @@
   - class_name: CityObjectLabel
     # - DESCRIPTION ------------------------
     doc: >
-      Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the [semantic tag](../../ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.
+      Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the [semantic tag](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.
 
     # - PROPERTIES -------------------------
     instance_variables:

@@ -355,7 +355,7 @@ Parses the location and extent of the bounding box to string.
 ---
 
 ## carla.CityObjectLabel<a name="carla.CityObjectLabel"></a>
-Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](../../ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.  
+Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.CityObjectLabel.None"></a>**<font color="#f8805a">None</font>**  
