@@ -23,6 +23,7 @@
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/LabelledPoint.h"
 
 #include <boost/optional.hpp>
 
@@ -239,6 +240,16 @@ namespace detail {
       std::vector<uint64_t> env_objects_ids,
       bool enable) const {
       _client.EnableEnvironmentObjects(env_objects_ids, enable);
+    }
+
+    std::pair<bool,rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance) const {
+      return _client.ProjectPoint(location, direction, search_distance);
+    }
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const {
+      return _client.CastRay(start_location, end_location);
     }
 
     /// @}

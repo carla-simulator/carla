@@ -19,6 +19,7 @@
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/EnvironmentObject.h"
+#include "carla/rpc/LabelledPoint.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
@@ -161,6 +162,15 @@ namespace client {
     void EnableEnvironmentObjects(
       std::vector<uint64_t> env_objects_ids,
       bool enable) const;
+
+    boost::optional<rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance = 10000.f) const;
+
+    boost::optional<rpc::LabelledPoint> GroundProjection(
+        geom::Location location, float search_distance = 10000.0) const;
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const;
 
   private:
 
