@@ -36,7 +36,7 @@
   - class_name: ColorConverter
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines conversion patterns that can be applied to a carla.Image in order to show information provided by carla.Sensor. Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look a this [recipe](ref_code_recipes.md#converted-image-recipe) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.
+      Class that defines conversion patterns that can be applied to a carla.Image in order to show information provided by carla.Sensor. Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look at the snipet in carla.Sensor.listen to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: CityScapesPalette

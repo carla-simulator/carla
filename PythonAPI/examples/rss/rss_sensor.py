@@ -299,7 +299,7 @@ class RssSensor(object):
     @staticmethod
     def get_default_parameters():
         ego_dynamics = ad.rss.world.RssDynamics()
-        ego_dynamics.alphaLon.accelMax = 3.5
+        ego_dynamics.alphaLon.accelMax = 5
         ego_dynamics.alphaLon.brakeMax = -8
         ego_dynamics.alphaLon.brakeMin = -4
         ego_dynamics.alphaLon.brakeMinCorrect = -3
@@ -310,14 +310,19 @@ class RssSensor(object):
         ego_dynamics.maxSpeedOnAcceleration = 100
         ego_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
         ego_dynamics.unstructuredSettings.driveAwayMaxAngle = 2.4
-        ego_dynamics.unstructuredSettings.vehicleYawRateChange = 0.3
+        ego_dynamics.unstructuredSettings.vehicleYawRateChange = 1.3
         ego_dynamics.unstructuredSettings.vehicleMinRadius = 3.5
         ego_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
-        ego_dynamics.unstructuredSettings.vehicleFrontIntermediateRatioSteps = 4
-        ego_dynamics.unstructuredSettings.vehicleBackIntermediateRatioSteps = 0
-        ego_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 0
-        ego_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 0
-        ego_dynamics.unstructuredSettings.vehicleResponseTimeIntermediateAccelerationSteps = 4
+        ego_dynamics.unstructuredSettings.vehicleFrontIntermediateYawRateChangeRatioSteps = 4
+        ego_dynamics.unstructuredSettings.vehicleBackIntermediateYawRateChangeRatioSteps = 0
+        ego_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 3
+        ego_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 3
+        ego_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
+        ego_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateHeadingChangeRatioSteps = 3
+        ego_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateAccelerationSteps = 0
+        ego_dynamics.unstructuredSettings.pedestrianBrakeIntermediateAccelerationSteps = 3
+        ego_dynamics.unstructuredSettings.pedestrianFrontIntermediateHeadingChangeRatioSteps = 4
+        ego_dynamics.unstructuredSettings.pedestrianBackIntermediateHeadingChangeRatioSteps = 0
         return ego_dynamics
 
     def set_default_parameters(self):
@@ -328,27 +333,30 @@ class RssSensor(object):
     def get_pedestrian_parameters():
         pedestrian_dynamics = ad.rss.world.RssDynamics()
         pedestrian_dynamics.alphaLon.accelMax = 2.0
-        pedestrian_dynamics.alphaLon.brakeMax = -4.0
+        pedestrian_dynamics.alphaLon.brakeMax = -2.0
         pedestrian_dynamics.alphaLon.brakeMin = -2.0
         pedestrian_dynamics.alphaLon.brakeMinCorrect = -2.0
         pedestrian_dynamics.alphaLat.accelMax = 0.001
         pedestrian_dynamics.alphaLat.brakeMin = -0.001
         pedestrian_dynamics.lateralFluctuationMargin = 0.1
-        pedestrian_dynamics.responseTime = 0.5
+        pedestrian_dynamics.responseTime = 0.8
         pedestrian_dynamics.maxSpeedOnAcceleration = 10
         pedestrian_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
         pedestrian_dynamics.unstructuredSettings.driveAwayMaxAngle = 2.4
+        pedestrian_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateHeadingChangeRatioSteps = 3
+        pedestrian_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateAccelerationSteps = 0
+        pedestrian_dynamics.unstructuredSettings.pedestrianBrakeIntermediateAccelerationSteps = 3
+        pedestrian_dynamics.unstructuredSettings.pedestrianFrontIntermediateHeadingChangeRatioSteps = 4
+        pedestrian_dynamics.unstructuredSettings.pedestrianBackIntermediateHeadingChangeRatioSteps = 0
 
         #not used:
-        pedestrian_dynamics.unstructuredSettings.vehicleYawRateChange = 0.3
+        pedestrian_dynamics.unstructuredSettings.vehicleYawRateChange = 1.3
         pedestrian_dynamics.unstructuredSettings.vehicleMinRadius = 3.5
         pedestrian_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
-        pedestrian_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
-        pedestrian_dynamics.unstructuredSettings.vehicleFrontIntermediateRatioSteps = 4
-        pedestrian_dynamics.unstructuredSettings.vehicleBackIntermediateRatioSteps = 0
-        pedestrian_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 0
-        pedestrian_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 0
-        pedestrian_dynamics.unstructuredSettings.vehicleResponseTimeIntermediateAccelerationSteps = 4
+        pedestrian_dynamics.unstructuredSettings.vehicleFrontIntermediateYawRateChangeRatioSteps = 4
+        pedestrian_dynamics.unstructuredSettings.vehicleBackIntermediateYawRateChangeRatioSteps = 0
+        pedestrian_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 3
+        pedestrian_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 3
         return pedestrian_dynamics
 
     def get_steering_ranges(self):
