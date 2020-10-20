@@ -223,6 +223,11 @@ void FCarlaServer::FPimpl::BindActions()
     result.reserve(MapNames.Num());
     for (const auto &MapName : MapNames)
     {
+      if (MapName.Contains("/Sublevels/"))
+        continue;
+      if (MapName.Contains("/BaseMap/"))
+        continue;
+
       result.emplace_back(cr::FromFString(MapName));
     }
     return result;
