@@ -47,9 +47,7 @@ cd /opt/carla-simulator
 
 # Run a script to test CARLA.
 cd PythonAPI/examples
-python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
-
-# The PythonAPI can be compiled for Python2 when using a Linux build from source
+python3 spawn_npc.py # Support for Python2 is provided in the CARLA release packages
 
 ```
 </details>
@@ -148,11 +146,8 @@ Now it is time to start running scripts. The following example will spawn some l
 # Go to the folder containing example scripts
 > cd PythonAPI/examples
 
-> python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
+> python3 spawn_npc.py # Support for Python2 is provided in the CARLA release packages
 ```
-
-!!! Note
-    The PythonAPI can be compiled for Python2 when using a [Linux build from source](build_linux.md).
 
 
 #### Command-line options
