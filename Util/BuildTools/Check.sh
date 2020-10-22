@@ -43,6 +43,7 @@ OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
+PY_VERSION=3
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -202,7 +203,9 @@ popd >/dev/null
 if ${SMOKE_TESTS} ; then
   pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/util" >/dev/null
     log "Checking connection with the simulator."
-    /usr/bin/env python${PY_VERSION} test_connection.py -p 3654 --timeout=60.0
+    for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
+      /usr/bin/env python${PY_VERSION} test_connection.py -p 3654 --timeout=60.0
+    done
   popd >/dev/null
 fi
 
@@ -216,9 +219,12 @@ fi
 
 if ${SMOKE_TESTS} ; then
 
-  log "Running smoke tests for Python 3."
+  for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
-  /usr/bin/env python${PY_VERSION} -m nose2 ${EXTRA_ARGS}
+    log "Running smoke tests for Python ${PY_VERSION}."
+    /usr/bin/env python${PY_VERSION} -m nose2 ${EXTRA_ARGS}
+
+  done
 
   if ${XML_OUTPUT} ; then
     mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/smoke-tests-3.xml

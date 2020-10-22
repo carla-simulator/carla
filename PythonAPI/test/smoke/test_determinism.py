@@ -4,15 +4,14 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-
-from . import SmokeTest
 from numpy import random
+from . import SmokeTest
 
-tm_port = 8000
-num_ticks = 2000
+TM_PORT = 8000
+NUM_TICKS = 2000
 
 class FrameRecord():
-    def __init__ (self, frame, vehicle_position_list):
+    def __init__(self, frame, vehicle_position_list):
         self.frame = frame
         self.vehicle_position_list = vehicle_position_list
 
@@ -23,6 +22,7 @@ class TestDeterminism(SmokeTest):
         record2_size = len(record2_list)
         self.assertEqual(record1_size, record2_size, msg="Record size missmatch")
         for i in range(0, record1_size):
+            frame_errors = 0
             record1 = record1_list[i]
             record2 = record2_list[i]
             self.assertEqual(record1.frame, record2.frame, msg="Frame missmatch")
@@ -35,7 +35,7 @@ class TestDeterminism(SmokeTest):
                 self.assertEqual(loc1, loc2, msg="Actor location missmatch at frame " + str(record1.frame))
 
     def spawn_vehicles(self, world, blueprint_transform_list):
-        traffic_manager = self.client.get_trafficmanager(tm_port)
+        traffic_manager = self.client.get_trafficmanager(TM_PORT)
         vehicle_actor_list = []
         for blueprint_transform in blueprint_transform_list:
             blueprint = blueprint_transform[0]
@@ -49,7 +49,7 @@ class TestDeterminism(SmokeTest):
         simulation_record = []
         ticks = 1
         while True:
-            if ticks == num_ticks:
+            if ticks == NUM_TICKS:
                 break
             else:
                 position_list = []
@@ -64,10 +64,10 @@ class TestDeterminism(SmokeTest):
     def test_determ(self):
         print("TestDeterminism.test_determ")
         number_of_vehicles = 100
-        tm_seed = random.randint(1)
+        tm_seed = 1
 
         # set setting for round 1
-        traffic_manager = self.client.get_trafficmanager(tm_port)
+        traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
         world = self.client.get_world()
         old_settings = world.get_settings()
@@ -78,7 +78,6 @@ class TestDeterminism(SmokeTest):
 
         traffic_manager.set_random_device_seed(tm_seed)
         blueprints = world.get_blueprint_library().filter('vehicle.*')
-        blueprintsWalkers = world.get_blueprint_library().filter('walker.pedestrian.*')
 
         # filter bad vehicles
         blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
@@ -90,7 +89,7 @@ class TestDeterminism(SmokeTest):
         blueprints = sorted(blueprints, key=lambda bp: bp.id)
 
         spawn_points = world.get_map().get_spawn_points()
-        random.shuffle(spawn_points)
+        # random.shuffle(spawn_points)
 
         # --------------
         # Spawn vehicles
@@ -109,6 +108,7 @@ class TestDeterminism(SmokeTest):
             blueprint.set_attribute('role_name', 'autopilot')
             blueprint_transform_list.append((blueprint, transform))
 
+
         # run simulation 1
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run1 = self.run_simulation(world, vehicle_actor_list)
@@ -117,7 +117,7 @@ class TestDeterminism(SmokeTest):
         self.client.reload_world()
         world = self.client.get_world()
         world.apply_settings(new_settings)
-        traffic_manager = self.client.get_trafficmanager(tm_port)
+        traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
         traffic_manager.set_random_device_seed(tm_seed)
 
@@ -125,8 +125,9 @@ class TestDeterminism(SmokeTest):
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run2 = self.run_simulation(world, vehicle_actor_list)
 
-        self.compare_records(record_run1, record_run2)
 
         self.client.reload_world()
         world.apply_settings(old_settings)
+
+        self.compare_records(record_run1, record_run2)
 
