@@ -40,9 +40,6 @@ carla::rpc::VehicleControl RssRestrictor::RestrictVehicleControl(
   // reached zero),
   // as a fallback longitudinal braking is applied instead (escalation
   // strategy).
-
-  ::ad::physics::Acceleration zero_accel(0.0);
-
   float mass = vehicle_physics.mass;
   float max_steer_angle_deg = 0.f;
   float sum_max_brake_torque = 0.f;
@@ -97,13 +94,30 @@ carla::rpc::VehicleControl RssRestrictor::RestrictVehicleControl(
       }
     }
 
-    // restrict acceleration
-    if (proper_response.accelerationRestrictions.longitudinalRange.maximum > zero_accel) {
+    // restrict longitudinal acceleration
+    auto accel_lon = proper_response.accelerationRestrictions.longitudinalRange.maximum;
+    if (proper_response.unstructuredSceneResponse == ad::rss::state::UnstructuredSceneResponse::DriveAway) {
+      // drive away is only allowed in certain direction
+      auto heading_allowed = false;
+      if (!proper_response.headingRanges.empty()) {
+        auto max_steer_angle = max_steer_angle_deg * (ad::physics::cPI / ad::physics::Angle(180.0));
+        auto current_steering_angle = static_cast<double>(ego_dynamics_on_route.ego_heading) - vehicle_control.steer * max_steer_angle;
+        for (auto it = proper_response.headingRanges.cbegin(); (it != proper_response.headingRanges.cend() && !heading_allowed); ++it) {
+          heading_allowed = ad::rss::unstructured::isInsideHeadingRange(current_steering_angle, *it);
+        }
+      }
+
+      if (!heading_allowed) {
+        accel_lon = proper_response.accelerationRestrictions.longitudinalRange.minimum;
+      }
+    }
+
+    if (accel_lon > ::ad::physics::Acceleration(0.0)) {
       // TODO: determine acceleration and limit throttle
     }
 
     // decelerate
-    if (proper_response.accelerationRestrictions.longitudinalRange.maximum < zero_accel) {
+    if (accel_lon < ::ad::physics::Acceleration(0.0)) {
       restricted_vehicle_control.throttle = 0.0f;
 
       double brake_acceleration =

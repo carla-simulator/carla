@@ -15,6 +15,7 @@
 	*   [Creating a Traffic Manager](#creating-a-traffic-manager)  
 	*   [Setting a Traffic Manager](#setting-a-traffic-manager)  
 	*   [Stopping a Traffic Manager](#stopping-a-traffic-manager)  
+*   [__Deterministic mode__](#deterministic-mode)  
 *   [__Hybrid physics mode__](#hybrid-physics-mode)  
 *   [__Running multiple Traffic Managers__](#running-multiple-traffic-managers)  
 	*   [Definitions](#definitions)  
@@ -22,7 +23,6 @@
 	*   [MultiTM](#multitm)  
 	*   [Multisimulation](#multisimulation)  
 *   [__Other considerations__](#other-considerations)  
-	*   [FPS limitations](#fps-limitations)  
 	*   [Synchronous mode](#synchronous-mode)  
 *   [__Summary__](#summary)  
 
@@ -144,7 +144,7 @@ First stage in the [control loop](#control-loop). Defines a near-future path for
 
 *   Obtains the position and velocity of all the vehicles from [simulation state](#simulation-state).  
 *   Using the [In-Memory Map](#in-memory-map), relates every vehicle with a list of waypoints that describes its current location and near-future path, according to its trajectory. The faster the vehicle goes, the larger said list will be.  
-*   The path is updated according to planning decisions such as lan changes, speed limit, distance to leading vehicle parameterization, etc.  
+*   The path is updated according to planning decisions such as lane changes, speed limit, distance to leading vehicle parameterization, etc.  
 *   The [PBVT](#pbvt) module stores the path for all the vehicles.  
 *   These paths are compared with each other, in order to estimate possible collision situations. Results are passed to the following stage: [Colllision stage](#stage-2-collision-stage).  
 
@@ -305,6 +305,32 @@ However, it is important that when shutting down a TM, the vehicles registered t
     Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__ read about [*Running multiple Traffic Managers*](#running-multiple-traffic-managers). 
 
 ---
+## Deterministic mode
+
+In deterministic mode, the Traffic Manager will always produce the same results and behaviours under the same conditions. Do not mistake determinism with the recorder. While the recorder allows you to store the log of a simulation to play it back, determinism ensures that Traffic Manager will always have the same output over different executions of a script, if the same conditions are maintained.  
+
+Deterministic mode is meant to be used __in synchronous mode only__. In asynchronous mode, there is much less control over the simulation, and determinism cannot be achieved. Read the considerations to run [TM in synchronous mode](#synchronous-mode) before using it.  
+
+
+To enable deterministic mode, simply call the following method in your script.  
+
+```py
+my_tm.set_random_device_seed(seed_value)
+``` 
+
+`seed_value` is an `int` number from which all the random numbers will be generated. The value is not relevant itself, but the same value will always result in the same output. Two simulations, with the same conditions, that use the same seed value, will be deterministic.  
+
+The deterministic mode can be tested when using the `spawn_npc.py` example script, using a simple argument. The following example sets the seed to `9` for no specific reason.  
+
+```sh
+cd PythonAPI/examples
+python3 spawn_npc.py -n 50 --sync --seed 9
+```
+
+!!! Warning
+    Make sure to set both the world and the TM to synchronous mode before enabling deterministic mode. 
+
+---
 ## Hybrid physics mode
 
 In hybrid mode, either all vehicle physics can be disabled, or enabled only in a radius around an ego vehicle with the tag `hero`. This feature removes the vehicle physics bottleneck from the simulator. Since vehicle physics are not active, all cars move by teleportation. This feature relies on [Actor.set_simulate_physics()](https://carla.readthedocs.io/en/latest/python_api/#carla.Actor.set_simulate_physics). However, not all the physics are disregarded. Basic calculations for a linear acceleration are maintained. By doing so, the position update, and vehicle speed still look realistic. That guarantees that when a vehicle enables or disables its physics, the transition is fluid.  
@@ -401,20 +427,46 @@ The only possible issue arising from this is a client trying to connect to an al
 
 The TM is a module constantly evolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time of writing.  
 
-### FPS limitations
-
-The TM stops working properly in asynchronous mode when the simulation is under 20fps. Below that rate, the server is going much faster than the client containing the TM and behaviours cannot be simulated properly. For said reason, under these circumstances it is recommended to work in __synchronous mode__.  
-
-!!! Important
-    The FPS limitations are specially relevant when working in the night mode. 
-
 ### Synchronous mode
 
-TM-Clients cannot tick the CARLA server in synchronous mode, __only a TM-Server can call for a tick__.  
-If more than one TM-Server ticks, the synchrony will fail, as the server will move forward on every tick. This is specially relevant when working with the __ScenarioRunner__, which runs a TM. In this case, the TM will be subordinated to the ScenarioRunner and wait for it. 
+If the CARLA server is set to synchronous mode, the Traffic Manager must be set to synchronous mode too. To do so, your script should be similar to the following: 
+```py
+...
+
+# Set the simulation to sync mode
+init_settings = world.get_settings()
+settings = world.get_settings()
+settings.synchronous_mode = True
+# Right after that, set the Traffic Manager to sync mode
+my_tm.set_synchronous_mode(True)
+
+...
+
+# Tick the world in the same client
+world.apply_settings(init_settings)
+world.tick()
+...
+
+# Disable the sync mode always, before the script ends
+settings.synchronous_mode = False
+my_tm.set_synchronous_mode(False)
+```
+
+When using the `spawn_npc.py` example script, the TM can be set to synchronous mode just by passing an argument.  
+
+```sh
+cd PythonAPI/examples
+python3 spawn_npc.py -n 50 --sync
+```
+
+If more than one Traffic Manager is set to synchronous mode, the synchrony will fail. Follow these general guidelines to avoid issues. 
+
+*   In a __[multiclient](#multiclient)__ situation, only the __TM-Server__ must be set to synchronous mode.  
+*   In a __[multiTM](#multitm)__ situation, only __one of the TM-Server__ must be set to synchronous mode.  
+*   The __[ScenarioRunner module](https://carla-scenariorunner.readthedocs.io/en/latest/)__, already runs a TM. In this case, the TM inside ScenarioRunner will be the one set to sync mode.  
 
 !!! Warning
-    Disable the synchronous mode in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
+    Disable the synchronous mode (both, world and TM sync mode) in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
 
 ---
 ## Summary
