@@ -51,11 +51,11 @@ namespace road {
 
     boost::optional<element::Waypoint> GetClosestWaypointOnRoad(
         const geom::Location &location,
-        uint32_t lane_type = static_cast<uint32_t>(Lane::LaneType::Driving)) const;
+        int32_t lane_type = static_cast<int32_t>(Lane::LaneType::Driving)) const;
 
     boost::optional<element::Waypoint> GetWaypoint(
         const geom::Location &location,
-        uint32_t lane_type = static_cast<uint32_t>(Lane::LaneType::Driving)) const;
+        int32_t lane_type = static_cast<int32_t>(Lane::LaneType::Driving)) const;
 
     boost::optional<element::Waypoint> GetWaypoint(
         RoadId road_id,
