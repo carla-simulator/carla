@@ -66,6 +66,7 @@ class TestDeterminism(SmokeTest):
         number_of_vehicles = 100
         tm_seed = 1
 
+        self.client.reload_world()
         # set setting for round 1
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
