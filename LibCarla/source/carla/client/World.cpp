@@ -166,5 +166,15 @@ namespace client {
     return _episode.Lock()->GetLevelBBs(queried_tag);
   }
 
+  std::vector<rpc::EnvironmentObject> World::GetEnvironmentObjects() const {
+    return _episode.Lock()->GetEnvironmentObjects();
+  }
+
+  void World::EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+    _episode.Lock()->EnableEnvironmentObjects(env_objects_ids, enable);
+  }
+
 } // namespace client
 } // namespace carla
