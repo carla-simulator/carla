@@ -405,7 +405,7 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
 
 void LocalizationStage::DrawBuffer(Buffer &buffer) {
   uint64_t buffer_size = buffer.size();
-  uint64_t step_size = std::max(buffer_size/20u, 1ul);
+  uint64_t step_size = std::max(buffer_size/20u, static_cast<uint64_t>(1));
   cc::DebugHelper::Color color {0u, 0u, 0u};
   cg::Location two_meters_up = cg::Location(0.0f, 0.0f, 2.0f);
   for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {
