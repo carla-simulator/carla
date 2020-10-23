@@ -367,7 +367,7 @@ def main(arg):
         test02.test_determ_one_config(20, 120, repetitions)
 
         print("--------------------------------------------------------------")
-        testBike01 = TestScenario(CarBikeCollision01(client, world))
+        testBike01 = TestScenario(CarBikeCollis1(client, world))
         testBike01.test_determ_one_config(20,  20, repetitions)
         testBike01.test_determ_one_config(20,  40, repetitions)
         testBike01.test_determ_one_config(20,  60, repetitions)
