@@ -112,8 +112,32 @@ class SpawnCars01(Scenario):
         super().init_scene()
 
 
-
 class CarCollision01(Scenario):
+    def init_scene(self):
+        world = self.world
+
+        blueprint_library = world.get_blueprint_library()
+
+        vehicle_transform = carla.Transform(carla.Location(100, -256, 0.015), carla.Rotation(yaw=178))
+        vehicle = world.spawn_actor(blueprint_library.filter("tt")[0], vehicle_transform)
+
+        opponent_transform = carla.Transform(carla.Location(40, -255, 0.04), carla.Rotation(yaw=0))
+        opponent = world.spawn_actor(blueprint_library.filter("lincoln")[0], opponent_transform)
+        wait(world, 1)
+
+        vehicle.set_target_velocity( carla.Vector3D(-12, 0, 0))
+        opponent.set_target_velocity(carla.Vector3D(+12, 0, 0))
+
+        self.vehicle_list = []
+        self.vehicle_list.append(vehicle)
+        self.vehicle_list.append(opponent)
+
+        wait(world, 1)
+
+        super().init_scene()
+
+
+class CarCollision02(Scenario):
     def init_scene(self):
         world = self.world
 
@@ -128,30 +152,6 @@ class CarCollision01(Scenario):
 
         vehicle.set_target_velocity( carla.Vector3D(-50, 0, 0))
         opponent.set_target_velocity(carla.Vector3D(+50, 0, 0))
-
-        self.vehicle_list = []
-        self.vehicle_list.append(vehicle)
-        self.vehicle_list.append(opponent)
-
-        wait(world, 1)
-
-        super().init_scene()
-
-class CarCollision02(Scenario):
-    def init_scene(self):
-        world = self.world
-
-        blueprint_library = world.get_blueprint_library()
-
-        vehicle_transform = carla.Transform(carla.Location(100, -256, 0.015), carla.Rotation(yaw=180))
-        vehicle = world.spawn_actor(blueprint_library.filter("tt")[0], vehicle_transform)
-
-        opponent_transform = carla.Transform(carla.Location(40, -255, 0.04), carla.Rotation(yaw=0))
-        opponent = world.spawn_actor(blueprint_library.filter("lincoln")[0], opponent_transform)
-        wait(world, 1)
-
-        vehicle.set_target_velocity( carla.Vector3D(-50, 0, 0))
-        opponent.set_target_velocity(carla.Vector3D(+10, 0, 0))
 
         self.vehicle_list = []
         self.vehicle_list.append(vehicle)
@@ -193,7 +193,7 @@ class CarCollision03(Scenario):
         super().init_scene()
 
 
-class CarBikeCollision01(Scenario):
+class CarBikeCollis1(Scenario):
     def init_scene(self):
         world = self.world
 
@@ -226,6 +226,20 @@ class TestScenario():
         self.client = self.scene.client
         self.scenario_name = self.scene.__class__.__name__
 
+    def compare_files(self, file_i, file_j):
+        check_ij = filecmp.cmp(file_i, file_j)
+
+        if check_ij:
+            return True
+
+        data_i = np.loadtxt(file_i)
+        data_j = np.loadtxt(file_j)
+
+        max_error = np.amax(np.abs(data_i-data_j))
+        #print(max_error)
+
+        return max_error < 0.2
+
     def check_simulations(self, rep_prefixes, gen_prefix):
         repetitions = len(rep_prefixes)
         mat_check = np.zeros((repetitions, repetitions), int)
@@ -237,8 +251,8 @@ class TestScenario():
                 for veh_idx in range(0, len(self.scene.vehicle_list)):
                     file_i = self.scene.get_filename(rep_prefixes[i], veh_idx)
                     file_j = self.scene.get_filename(rep_prefixes[j], veh_idx)
-                    
-                    check_ij = filecmp.cmp(file_i, file_j)
+
+                    check_ij = self.compare_files(file_i, file_j)
                     sim_check = sim_check and check_ij
                 mat_check[i][j] = int(sim_check)
                 mat_check[j][i] = int(sim_check)
@@ -257,7 +271,6 @@ class TestScenario():
         return max_rep_equal
 
     def save_simulations(self, rep_prefixes, prefix, max_idx, min_idx):
-        
         for i in range(0, len(self.scene.vehicle_list)):
             file_repetition  = self.scene.get_filename(rep_prefixes[max_idx], i)
             file_reference   = self.scene.get_filename(prefix + "reference", i)
@@ -327,14 +340,16 @@ def main(arg):
     spectator.set_transform(spectator_transform)
 
     try: 
-        repetitions = 100
+        repetitions = 20
+
         test00 = TestScenario(SpawnCars01(client, world))
-        test00.test_determ_one_config(20, 20, repetitions)
+        #test00.test_determ_one_config(20, 20, repetitions)
         #test00.test_determ_one_config(20, 40, 20)
-        test00.test_determ_one_config(20, 60, repetitions)
+        #test00.test_determ_one_config(20, 60, repetitions)
         #test00.test_determ_one_config(20, 80, 20)
-        test00.test_determ_one_config(20, 100, repetitions)
+        #test00.test_determ_one_config(20, 100, repetitions)
         
+        print("--------------------------------------------------------------")
         test01 = TestScenario(CarCollision01(client, world))
         test01.test_determ_one_config(20,  20, repetitions)
         test01.test_determ_one_config(20,  40, repetitions)
@@ -342,13 +357,16 @@ def main(arg):
         test01.test_determ_one_config(20,  80, repetitions)
         test01.test_determ_one_config(20, 100, repetitions)
 
+        print("--------------------------------------------------------------")
         test02 = TestScenario(CarCollision02(client, world))
         test02.test_determ_one_config(20,  20, repetitions)
         test02.test_determ_one_config(20,  40, repetitions)
         test02.test_determ_one_config(20,  60, repetitions)
         test02.test_determ_one_config(20,  80, repetitions)
         test02.test_determ_one_config(20, 100, repetitions)
+        test02.test_determ_one_config(20, 120, repetitions)
 
+        print("--------------------------------------------------------------")
         testBike01 = TestScenario(CarBikeCollision01(client, world))
         testBike01.test_determ_one_config(20,  20, repetitions)
         testBike01.test_determ_one_config(20,  40, repetitions)
@@ -356,16 +374,22 @@ def main(arg):
         testBike01.test_determ_one_config(20,  80, repetitions)
         testBike01.test_determ_one_config(20, 100, repetitions)
 
+        print("--------------------------------------------------------------")
         test03 = TestScenario(CarCollision03(client, world))
         test03.test_determ_one_config(20, 20,  repetitions)
         test03.test_determ_one_config(20, 40,  repetitions)
         test03.test_determ_one_config(20, 60,  repetitions)
         test03.test_determ_one_config(20, 80,  repetitions)
         test03.test_determ_one_config(20, 100, repetitions)
+        test03.test_determ_one_config(20, 120, repetitions)
+        test03.test_determ_one_config(20, 140, repetitions)
+        test03.test_determ_one_config(20, 160, repetitions)
+        test03.test_determ_one_config(20, 180, repetitions)
+        test03.test_determ_one_config(20, 200, repetitions)
+        print("--------------------------------------------------------------")
 
 
     finally:
-
         settings = world.get_settings()
         settings.synchronous_mode = False
         settings.fixed_delta_seconds = 0.0
