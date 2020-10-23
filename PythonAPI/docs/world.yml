@@ -223,6 +223,8 @@
         type: carla.WorldSettings
       doc: >
         This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented. 
+      warning: >
+        If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
     # --------------------------------------
     - def_name: on_tick
       return: int

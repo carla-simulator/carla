@@ -355,7 +355,7 @@ Parses the location and extent of the bounding box to string.
 ---
 
 ## carla.CityObjectLabel<a name="carla.CityObjectLabel"></a>
-Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](../../ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.  
+Enum declaration that contains the different tags available to filter the bounding boxes returned by [carla.World.get_level_bbs](#carla.World.get_level_bbs)(). These values correspond to the [semantic tag](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.CityObjectLabel.None"></a>**<font color="#f8805a">None</font>**  
@@ -2040,10 +2040,6 @@ Forces a vehicle to change either to the lane on its left or right, if existing,
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle being forced to change lanes.  
         - `direction` (_bool_) – Destination lane. __True__ is the one on the right and __False__ is the left one.  
-- <a name="carla.TrafficManager.global_distance_to_leading_vehicle"></a>**<font color="#7fb800">global_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
-Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
-    - **Parameters:**
-        - `distance` (_float<small> – meters</small>_) – Meters between vehicles.  
 - <a name="carla.TrafficManager.global_percentage_speed_difference"></a>**<font color="#7fb800">global_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  
 Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
@@ -2054,6 +2050,11 @@ During the traffic light stage, which runs every frame, this method sets the per
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) – The actor that is going to ignore traffic lights.  
         - `perc` (_float_) – Between 0 and 100. Amount of times traffic lights will be ignored.  
+- <a name="carla.TrafficManager.ignore_signs_percentage"></a>**<font color="#7fb800">ignore_signs_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+During the traffic light stage, which runs every frame, this method sets the percent chance that stop signs will be ignored for a vehicle.  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor)_) – The actor that is going to ignore stop signs.  
+        - `perc` (_float_) – Between 0 and 100. Amount of times stop signs will be ignored.  
 - <a name="carla.TrafficManager.ignore_vehicles_percentage"></a>**<font color="#7fb800">ignore_vehicles_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
 During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with another vehicle will be ignored for a vehicle.  
     - **Parameters:**
@@ -2079,7 +2080,11 @@ Returns the port where the Traffic Manager is connected. If the object is a TM-C
     - **Return:** _uint16_  
 
 <h5 style="margin-top: -20px">Setters</h5>
-<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.set_hybrid_mode_radius"></a>**<font color="#7fb800">set_hybrid_mode_radius</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=70.0</font>)  
+<div style="padding-left:30px;margin-top:-25px"></div>- <a name="carla.TrafficManager.set_global_distance_to_leading_vehicle"></a>**<font color="#7fb800">set_global_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
+    - **Parameters:**
+        - `distance` (_float<small> – meters</small>_) – Meters between vehicles.  
+- <a name="carla.TrafficManager.set_hybrid_mode_radius"></a>**<font color="#7fb800">set_hybrid_mode_radius</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=70.0</font>)  
 With hybrid physics on, changes the radius of the area of influence where physics are enabled.  
     - **Parameters:**
         - `r` (_float<small> – meters</small>_) – New radius where physics are enabled.  
@@ -2091,6 +2096,21 @@ Enables or disables the hybrid physics mode. In this mode, vehicle's farther tha
 Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
     - **Parameters:**
         - `mode_switch` (_bool_) – If __True__, the OSM mode is enabled.  
+- <a name="carla.TrafficManager.set_percentage_keep_right_rule"></a>**<font color="#7fb800">set_percentage_keep_right_rule</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor)_) – Vehicle whose behaviour is being changed.  
+        - `perc` (_float_) – Between 0 and 100. Amount of times the vehicle will follow the keep right rule.  
+- <a name="carla.TrafficManager.set_random_device_seed"></a>**<font color="#7fb800">set_random_device_seed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**value**</font>)  
+Sets a specific random seed for the Traffic Manager, thereby setting it to be deterministic.  
+    - **Parameters:**
+        - `value` (_int_) – Seed value for the random number generation of the Traffic Manager.  
+- <a name="carla.TrafficManager.set_synchronous_mode"></a>**<font color="#7fb800">set_synchronous_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
+Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.  
+    - **Parameters:**
+        - `mode_switch` (_bool_) – If __True__, the TM synchronous mode is enabled.  
+    - **Warning:** <font color="#ED2F2F">_If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick. 
+_</font>  
 
 ---
 
@@ -2691,6 +2711,8 @@ This method applies settings contained in an object to the simulation running an
     - **Parameters:**
         - `world_settings` (_[carla.WorldSettings](#carla.WorldSettings)_)  
     - **Return:** _int_  
+    - **Warning:** <font color="#ED2F2F">_If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
+_</font>  
 - <a name="carla.World.cast_ray"></a>**<font color="#7fb800">cast_ray</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**initial_location**</font>, <font color="#00a6ed">**final_location**</font>)  
 Casts a ray from the specified initial_location to final_location. The function then detects all geometries intersecting the ray and returns a list of [carla.LabelledPoint](#carla.LabelledPoint) in order.  
     - **Parameters:**
