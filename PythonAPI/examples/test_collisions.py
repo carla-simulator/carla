@@ -329,13 +329,16 @@ class TestScenario():
         max_rep_equal_idx = np.argmax(determinism)
         min_rep_equal_idx = np.argmin(determinism)
 
+        determinism_set = list(set(determinism))
+        determinism_set.sort(reverse=True)
+
         #print(determinism)
         #print(np.argmax(determinism))
         #print(np.argmin(determinism))
 
         self.save_simulations(rep_prefixes, gen_prefix, max_rep_equal_idx, min_rep_equal_idx)
 
-        return max_rep_equal
+        return determinism_set
 
     def save_simulations(self, rep_prefixes, prefix, max_idx, min_idx):
         for i in range(0, len(self.scene.vehicle_list)):
@@ -384,7 +387,7 @@ class TestScenario():
             sim_prefixes.append(prefix_rep)
 
         determ_repet = self.check_simulations(sim_prefixes, prefix)
-        print("Deterministic Repetitions: %2d / %2d" % (determ_repet, repetitions))
+        print("Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions))
 
         return
 
