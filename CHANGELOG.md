@@ -11,7 +11,8 @@
   * Fixed the `actor.set_simulate_physics()` for pedestrians and vehicles
   * Fixed bug causing camera-based sensors to stop sending data
   * Fixed dependency of library **Xerces-c** on package
-
+  * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
+  
 ## CARLA 0.9.10
 
   * Added retrieval of bounding boxes for all the elements of the level
