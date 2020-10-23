@@ -192,6 +192,36 @@ class CarCollision03(Scenario):
 
         super().init_scene()
 
+class CarCollision04(Scenario):
+    def init_scene(self):
+        world = self.world
+
+        blueprint_library = world.get_blueprint_library()
+
+        vehicle00_tr = carla.Transform(carla.Location(110, -255, 0.05), carla.Rotation(yaw=180))
+        vehicle00 = world.spawn_actor(blueprint_library.filter("prius")[0], vehicle00_tr)
+
+        vehicle01_tr = carla.Transform(carla.Location(53, -257, 0.00), carla.Rotation(yaw=0))
+        vehicle01 = world.spawn_actor(blueprint_library.filter("a2")[0], vehicle01_tr)
+
+        vehicle02_tr = carla.Transform(carla.Location(85, -230, 0.04), carla.Rotation(yaw=-90))
+        vehicle02 = world.spawn_actor(blueprint_library.filter("lincoln")[0], vehicle02_tr)
+
+        wait(world, 1)
+
+        vehicle00.set_target_velocity(carla.Vector3D(-15, 0, 0))
+        vehicle01.set_target_velocity(carla.Vector3D(+15, 0, 0))
+        vehicle02.set_target_velocity(carla.Vector3D(0, -15, 0))
+
+        self.vehicle_list = []
+        self.vehicle_list.append(vehicle00)
+        self.vehicle_list.append(vehicle01)
+        self.vehicle_list.append(vehicle02)
+
+        wait(world, 1)
+
+        super().init_scene()
+
 
 class CarBikeCollis1(Scenario):
     def init_scene(self):
@@ -344,9 +374,9 @@ def main(arg):
 
         test00 = TestScenario(SpawnCars01(client, world))
         #test00.test_determ_one_config(20, 20, repetitions)
-        #test00.test_determ_one_config(20, 40, 20)
+        #test00.test_determ_one_config(20, 40, repetitions)
         #test00.test_determ_one_config(20, 60, repetitions)
-        #test00.test_determ_one_config(20, 80, 20)
+        #test00.test_determ_one_config(20, 80, repetitions)
         #test00.test_determ_one_config(20, 100, repetitions)
         
         print("--------------------------------------------------------------")
@@ -364,7 +394,6 @@ def main(arg):
         test02.test_determ_one_config(20,  60, repetitions)
         test02.test_determ_one_config(20,  80, repetitions)
         test02.test_determ_one_config(20, 100, repetitions)
-        test02.test_determ_one_config(20, 120, repetitions)
 
         print("--------------------------------------------------------------")
         testBike01 = TestScenario(CarBikeCollis1(client, world))
@@ -381,11 +410,15 @@ def main(arg):
         test03.test_determ_one_config(20, 60,  repetitions)
         test03.test_determ_one_config(20, 80,  repetitions)
         test03.test_determ_one_config(20, 100, repetitions)
-        test03.test_determ_one_config(20, 120, repetitions)
-        test03.test_determ_one_config(20, 140, repetitions)
-        test03.test_determ_one_config(20, 160, repetitions)
-        test03.test_determ_one_config(20, 180, repetitions)
-        test03.test_determ_one_config(20, 200, repetitions)
+
+        print("--------------------------------------------------------------")
+        test04 = TestScenario(CarCollision04(client, world))
+        test04.test_determ_one_config(20, 20,  repetitions)
+        test04.test_determ_one_config(20, 40,  repetitions)
+        test04.test_determ_one_config(20, 60,  repetitions)
+        test04.test_determ_one_config(20, 80,  repetitions)
+        test04.test_determ_one_config(20, 100, repetitions)
+
         print("--------------------------------------------------------------")
 
 
