@@ -249,6 +249,43 @@ class CarBikeCollis1(Scenario):
         super().init_scene()
 
 
+class CarWalkCollis1(Scenario):
+    def init_scene(self):
+        world = self.world
+
+        blueprint_library = world.get_blueprint_library()
+
+        car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
+        car = world.spawn_actor(blueprint_library.filter("*lincoln*")[0], car_tr)
+        wait(world, 1)
+
+        walker_tr = carla.Transform(carla.Location(85, -248, 1.00), carla.Rotation(yaw=-90))
+        walker_tr = carla.Transform(carla.Location(85, -255, 1.00), carla.Rotation(yaw=-90))
+
+        walker_bp = blueprint_library.filter("walker.pedestrian.0007")[0]
+        if walker_bp.has_attribute('is_invincible'):
+            walker_bp.set_attribute('is_invincible', 'false')
+
+        walker = world.spawn_actor(walker_bp, walker_tr)
+        wait(world, 1)
+
+        car.set_target_velocity(carla.Vector3D(+20, 0, 0))
+
+        walker_control = walker.get_control()
+        walker_control.direction = carla.Vector3D(0, -1, 0)
+        walker_control.speed = 5
+        #walker.apply_control(walker_control)
+        walker.set_simulate_physics(True)
+
+        self.vehicle_list = []
+        self.vehicle_list.append(car)
+        self.vehicle_list.append(walker)
+
+        wait(world, 1)
+
+        super().init_scene()
+
+
 class TestScenario():
     def __init__(self, scene):
         self.scene = scene
@@ -378,7 +415,14 @@ def main(arg):
         #test00.test_determ_one_config(20, 60, repetitions)
         #test00.test_determ_one_config(20, 80, repetitions)
         #test00.test_determ_one_config(20, 100, repetitions)
-        
+
+        testW1 = TestScenario(CarWalkCollis1(client, world))
+        testW1.test_determ_one_config(20,  20, repetitions)
+        testW1.test_determ_one_config(20,  40, repetitions)
+        testW1.test_determ_one_config(20,  60, repetitions)
+        testW1.test_determ_one_config(20,  80, repetitions)
+        testW1.test_determ_one_config(20, 100, repetitions)
+
         print("--------------------------------------------------------------")
         test01 = TestScenario(CarCollision01(client, world))
         test01.test_determ_one_config(20,  20, repetitions)
