@@ -76,4 +76,9 @@ public:
     const TArray<AActor*>& Actors,
     uint8 InTagQueried = 0);
 
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static TArray<FBoundingBox> GetBBsOfActor(
+    const AActor* Actor,
+    uint8 InTagQueried = 0);
+
 };
