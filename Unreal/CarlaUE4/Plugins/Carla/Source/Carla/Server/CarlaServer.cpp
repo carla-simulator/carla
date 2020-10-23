@@ -1422,7 +1422,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     auto *World = Episode->GetWorld();
-    constexpr float meter_to_centimeter = 100.0;
+    constexpr float meter_to_centimeter = 100.0f;
     return URayTracer::ProjectPoint(Location, Direction.ToFVector(),
         meter_to_centimeter * SearchDistance, World);
   };

@@ -54,5 +54,5 @@ std::pair<bool, crp::LabelledPoint> URayTracer::ProjectPoint(
         ATagger::GetTagOfTaggedComponent(*Component);
     return std::make_pair(bDidHit, crp::LabelledPoint(Hit.Location, ComponentTag));
   }
-  return std::make_pair(bDidHit, crp::LabelledPoint(FVector(0,0,0), crp::CityObjectLabel::None));
+  return std::make_pair(bDidHit, crp::LabelledPoint(FVector(0.0f,0.0f,0.0f), crp::CityObjectLabel::None));
 }
