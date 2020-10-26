@@ -367,6 +367,9 @@ namespace road {
     /// Generates a default validity field for signal references with missing validity record in OpenDRIVE
     void GenerateDefaultValiditiesForSignalReferences();
 
+    /// Generates a default validity field for signal references with missing validity record in OpenDRIVE
+    void RemoveZeroLaneValiditySignalReferences();
+
     /// Checks signals overlapping driving lanes and emits a warning
     void CheckSignalsOnRoads(Map &map);
 
