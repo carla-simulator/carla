@@ -8,6 +8,7 @@
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Engine/DecalActor.h"
+#include "UObject/UObjectGlobals.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -120,6 +121,8 @@ void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
 void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
+
+  LoadMapLayer(CurrentMapLayer);
 
   if (true) { /// @todo If semantic segmentation enabled.
     check(GetWorld() != nullptr);
@@ -350,11 +353,6 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   return BoundingBoxes;
 }
 
-TArray<FEnvironmentObject> ACarlaGameModeBase::GetEnvironmentObjects() const
-{
-  return EnvironmentObjects;
-}
-
 void ACarlaGameModeBase::RegisterEnvironmentObject()
 {
   UWorld* World = GetWorld();
@@ -398,6 +396,85 @@ void ACarlaGameModeBase::EnableEnvironmentObjects(
       if(EnvironmentObject.CanTick)
       {
         Actor->SetActorTickEnabled(Enable);
+      }
+    }
+  }
+
+}
+
+void ACarlaGameModeBase::LoadMapLayer(EMapLayer MapLayer)
+{
+  const UWorld* World = GetWorld();
+
+  TArray<FName> LevelsToLoad;
+  ConvertMapLayerToMapName(MapLayer, LevelsToLoad);
+
+  FLatentActionInfo LatentInfo;
+  LatentInfo.UUID = 1;
+  for(FName& LevelName : LevelsToLoad)
+  {
+    UGameplayStatics::LoadStreamLevel(World, LevelName, true, true, LatentInfo);
+    LatentInfo.UUID++;
+  }
+
+}
+
+void ACarlaGameModeBase::UnLoadMapLayer(EMapLayer MapLayer)
+{
+  const UWorld* World = GetWorld();
+
+  TArray<FName> LevelsToLoad;
+  ConvertMapLayerToMapName(MapLayer, LevelsToLoad);
+
+  FLatentActionInfo LatentInfo;
+  LatentInfo.UUID = 1;
+  for(FName& LevelName : LevelsToLoad)
+  {
+    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, false);
+    LatentInfo.UUID++;
+  }
+
+}
+
+void ACarlaGameModeBase::ConvertMapLayerToMapName(EMapLayer MapLayer, TArray<FName>& OutLevelNames)
+{
+  UWorld* World = GetWorld();
+  const TArray <ULevelStreaming*> Levels = World->GetStreamingLevels();
+  TArray<FString> LayersToLoad;
+
+  const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EMapLayer"), true);
+  check(EnumPtr);
+
+  // Get all the requested layers
+  uint8 LayerMask = 1;
+  while(LayerMask > 0)
+  {
+    // Convert enum to FString
+    FString LayerName = EnumPtr->GetNameByValue(static_cast<uint64>(LayerMask)).ToString();
+    bool included = static_cast<uint8>(MapLayer) & LayerMask;
+    if(included)
+    {
+      TArray<FString> StringArray;
+      LayerName.ParseIntoArray(StringArray, TEXT("::"), false);
+      LayersToLoad.Emplace(StringArray[1]);
+    }
+    LayerMask = (LayerMask << 1) & static_cast<uint8>(EMapLayer::All);
+  }
+
+  // Get all the requested level maps
+  for(ULevelStreaming* Level : Levels)
+  {
+    TArray<FString> StringArray;
+    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    // Discard full path, we just need the umap name
+    FullSubMapName.ParseIntoArray(StringArray, TEXT("/"), false);
+    FString SubMapName = StringArray[StringArray.Num() - 1];
+    for(FString LayerName : LayersToLoad)
+    {
+      if(SubMapName.Contains(LayerName))
+      {
+        OutLevelNames.Emplace(FName(*SubMapName));
+        break;
       }
     }
   }
