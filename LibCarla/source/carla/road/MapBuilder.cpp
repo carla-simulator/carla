@@ -978,6 +978,9 @@ void MapBuilder::CreateController(
           break;
         }
       }
+      if (signal_reference->_validities.size() == 0) {
+        should_remove = false;
+      }
       if (should_remove) {
         elements_to_remove.push_back(signal_reference);
       }
