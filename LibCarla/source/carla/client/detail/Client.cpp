@@ -461,6 +461,18 @@ namespace detail {
     _pimpl->AsyncCall("enable_environment_objects", std::move(env_objects_ids), enable);
   }
 
+  std::pair<bool,rpc::LabelledPoint> Client::ProjectPoint(
+      geom::Location location, geom::Vector3D direction, float search_distance) const {
+    using return_t = std::pair<bool,rpc::LabelledPoint>;
+    return _pimpl->CallAndWait<return_t>("project_point", location, direction, search_distance);
+  }
+
+  std::vector<rpc::LabelledPoint> Client::CastRay(
+      geom::Location start_location, geom::Location end_location) const {
+    using return_t = std::vector<rpc::LabelledPoint>;
+    return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
