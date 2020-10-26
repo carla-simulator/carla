@@ -13,7 +13,9 @@
 namespace carla {
 namespace rpc {
 
-enum class MapLayer : uint8_t
+using MapLayerType = uint16_t;
+
+enum class MapLayer : uint16_t
 {
   None            =  0,
   Buildings       =  0x1,
@@ -21,12 +23,12 @@ enum class MapLayer : uint8_t
   Foliage         =  0x1 << 2,
   Ground          =  0x1 << 3,
   ParkedVehicles  =  0x1 << 4,
-  Props           =  0x1 << 5,
-  StreetLights    =  0x1 << 6,
-  Walls           =  0x1 << 7,
-  All             =  0xFF
+  Particles       =  0x1 << 5,
+  Props           =  0x1 << 6,
+  StreetLights    =  0x1 << 7,
+  Walls           =  0x1 << 8,
+  All             =  0xFFFF
 };
-
 
 } // namespace rpc
 } // namespace carla

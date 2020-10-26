@@ -8,13 +8,13 @@
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Engine/DecalActor.h"
-#include "UObject/UObjectGlobals.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/WeatherParameters.h>
+#include <carla/rpc/MapLayer.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "Async/ParallelFor.h"
@@ -24,7 +24,27 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 namespace cr = carla::road;
+namespace crp = carla::rpc;
 namespace cre = carla::road::element;
+
+static FString MapLayerToString(crp::MapLayer MapLayerValue)
+{
+  switch(MapLayerValue)
+  {
+    case crp::MapLayer::None: return TEXT("None");
+    case crp::MapLayer::Buildings: return TEXT("Buildings");
+    case crp::MapLayer::Decals: return TEXT("Decals");
+    case crp::MapLayer::Foliage: return TEXT("Foliage");
+    case crp::MapLayer::Ground: return TEXT("Ground");
+    case crp::MapLayer::ParkedVehicles: return TEXT("Parked_Vehicles");
+    case crp::MapLayer::Particles: return TEXT("Particles");
+    case crp::MapLayer::Props: return TEXT("Props");
+    case crp::MapLayer::StreetLights: return TEXT("StreetLights");
+    case crp::MapLayer::Walls: return TEXT("Walls");
+    case crp::MapLayer::All: return TEXT("All");
+    default: return TEXT("Invalid");
+  }
+}
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
@@ -402,12 +422,12 @@ void ACarlaGameModeBase::EnableEnvironmentObjects(
 
 }
 
-void ACarlaGameModeBase::LoadMapLayer(EMapLayer MapLayer)
+void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
 {
   const UWorld* World = GetWorld();
 
   TArray<FName> LevelsToLoad;
-  ConvertMapLayerToMapName(MapLayer, LevelsToLoad);
+  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
 
   FLatentActionInfo LatentInfo;
   LatentInfo.UUID = 1;
@@ -423,12 +443,12 @@ void ACarlaGameModeBase::LoadMapLayer(EMapLayer MapLayer)
 
 }
 
-void ACarlaGameModeBase::UnLoadMapLayer(EMapLayer MapLayer)
+void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
 {
   const UWorld* World = GetWorld();
 
   TArray<FName> LevelsToLoad;
-  ConvertMapLayerToMapName(MapLayer, LevelsToLoad);
+  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
 
   FLatentActionInfo LatentInfo;
   LatentInfo.UUID = 1;
@@ -442,29 +462,28 @@ void ACarlaGameModeBase::UnLoadMapLayer(EMapLayer MapLayer)
   RegisterEnvironmentObject();
 }
 
-void ACarlaGameModeBase::ConvertMapLayerToMapName(EMapLayer MapLayer, TArray<FName>& OutLevelNames)
+void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames)
 {
   UWorld* World = GetWorld();
   const TArray <ULevelStreaming*> Levels = World->GetStreamingLevels();
   TArray<FString> LayersToLoad;
 
-  const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EMapLayer"), true);
-  check(EnumPtr);
-
   // Get all the requested layers
-  uint8 LayerMask = 1;
+  int32 LayerMask = 1;
+  int32 AllLayersMask = static_cast<crp::MapLayerType>(crp::MapLayer::All);
+
   while(LayerMask > 0)
   {
     // Convert enum to FString
-    FString LayerName = EnumPtr->GetNameByValue(static_cast<uint64>(LayerMask)).ToString();
-    bool included = static_cast<uint8>(MapLayer) & LayerMask;
+    FString LayerName = MapLayerToString(static_cast<crp::MapLayer>(LayerMask));
+    UE_LOG(LogCarla, Error, TEXT("LayerMask %s -> %d"), *LayerName, LayerMask);
+    bool included = static_cast<crp::MapLayerType>(MapLayer) & LayerMask;
     if(included)
     {
-      TArray<FString> StringArray;
-      LayerName.ParseIntoArray(StringArray, TEXT("::"), false);
-      LayersToLoad.Emplace(StringArray[1]);
+      UE_LOG(LogCarla, Error, TEXT("Adding %s"), *LayerName);
+      LayersToLoad.Emplace(LayerName);
     }
-    LayerMask = (LayerMask << 1) & static_cast<uint8>(EMapLayer::All);
+    LayerMask = (LayerMask << 1) & AllLayersMask;
   }
 
   // Get all the requested level maps
