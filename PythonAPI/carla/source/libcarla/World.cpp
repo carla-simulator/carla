@@ -201,6 +201,20 @@ void export_world() {
     .value("Terrain", cr::CityObjectLabel::Terrain)
   ;
 
+  enum_<cr::MapLayer>("MapLayer")
+    .value("NONE", cr::MapLayer::None)
+    .value("Buildings", cr::MapLayer::Buildings)
+    .value("Decals", cr::MapLayer::Decals)
+    .value("Foliage", cr::MapLayer::Foliage)
+    .value("Ground", cr::MapLayer::Ground)
+    .value("ParkedVehicles", cr::MapLayer::ParkedVehicles)
+    .value("Particles", cr::MapLayer::Particles)
+    .value("Props", cr::MapLayer::Props)
+    .value("StreetLights", cr::MapLayer::StreetLights)
+    .value("Walls", cr::MapLayer::Walls)
+    .value("All", cr::MapLayer::All)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -219,6 +233,8 @@ void export_world() {
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
     .add_property("debug", &cc::World::MakeDebugHelper)
+    .def("load_map_layer", CONST_CALL_WITHOUT_GIL_1(cc::World, LoadLevelLayer, cr::MapLayer), arg("MapLayers"))
+    .def("unload_map_layer", CONST_CALL_WITHOUT_GIL_1(cc::World, UnloadLevelLayer, cr::MapLayer), arg("MapLayers"))
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_vehicles_light_states", &GetVehiclesLightStates)
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))

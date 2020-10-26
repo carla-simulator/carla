@@ -23,11 +23,12 @@
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
+#include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
-#include <carla/rpc/EnvironmentObject.h>
+#include <carla/rpc/MapLayer.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/String.h>
@@ -228,13 +229,49 @@ void FCarlaServer::FPimpl::BindActions()
     return result;
   };
 
-  BIND_SYNC(load_new_episode) << [this](const std::string &map_name) -> R<void>
+  BIND_SYNC(load_new_episode) << [this](const std::string &map_name, cr::MapLayer MapLayers) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    GameMode->SetMapLayer(static_cast<int32>(MapLayers));
+
     if(!Episode->LoadNewEpisode(cr::ToFString(map_name)))
     {
       RESPOND_ERROR("map not found");
     }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(load_map_layer) << [this](cr::MapLayer MapLayers) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    GameMode->LoadMapLayer(static_cast<int32>(MapLayers));
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(unload_map_layer) << [this](cr::MapLayer MapLayers) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    GameMode->UnLoadMapLayer(static_cast<int32>(MapLayers));
+
     return R<void>::Success();
   };
 

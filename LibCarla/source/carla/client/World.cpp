@@ -22,6 +22,14 @@ namespace client {
     return _episode.Lock()->GetCurrentMap();
   }
 
+  void World::LoadLevelLayer(rpc::MapLayer map_layers) const {
+    _episode.Lock()->LoadLevelLayer(map_layers);
+  }
+
+  void World::UnloadLevelLayer(rpc::MapLayer map_layers) const {
+    _episode.Lock()->UnloadLevelLayer(map_layers);
+  }
+
   SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
     return _episode.Lock()->GetBlueprintLibrary();
   }

@@ -454,7 +454,7 @@ void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
   LatentInfo.UUID = 1;
   for(FName& LevelName : LevelsToLoad)
   {
-    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, false);
+    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, true);
     LatentInfo.UUID++;
   }
 
@@ -476,11 +476,9 @@ void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FN
   {
     // Convert enum to FString
     FString LayerName = MapLayerToString(static_cast<crp::MapLayer>(LayerMask));
-    UE_LOG(LogCarla, Error, TEXT("LayerMask %s -> %d"), *LayerName, LayerMask);
     bool included = static_cast<crp::MapLayerType>(MapLayer) & LayerMask;
     if(included)
     {
-      UE_LOG(LogCarla, Error, TEXT("Adding %s"), *LayerName);
       LayersToLoad.Emplace(LayerName);
     }
     LayerMask = (LayerMask << 1) & AllLayersMask;

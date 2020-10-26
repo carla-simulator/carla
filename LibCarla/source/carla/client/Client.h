@@ -58,8 +58,8 @@ namespace client {
       return World{_simulator->ReloadEpisode()};
     }
 
-    World LoadWorld(std::string map_name) const {
-      return World{_simulator->LoadEpisode(std::move(map_name))};
+    World LoadWorld(std::string map_name, rpc::MapLayer map_layers) const {
+      return World{_simulator->LoadEpisode(std::move(map_name), map_layers)};
     }
 
     World GenerateOpenDriveWorld(

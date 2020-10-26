@@ -67,7 +67,15 @@ namespace detail {
       return LoadEpisode("");
     }
 
-    EpisodeProxy LoadEpisode(std::string map_name);
+    EpisodeProxy LoadEpisode(std::string map_name, rpc::MapLayer map_layers = rpc::MapLayer::All);
+
+    void LoadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.LoadLevelLayer(map_layers);
+    }
+
+    void UnloadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.UnloadLevelLayer(map_layers);
+    }
 
     EpisodeProxy LoadOpenDriveEpisode(
         std::string opendrive,
