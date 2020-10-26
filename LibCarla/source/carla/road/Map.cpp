@@ -343,7 +343,12 @@ namespace road {
         } else {
           distance_to_signal = waypoint.s - signal->GetDistance();
         }
-        Waypoint signal_waypoint = GetNext(waypoint, distance_to_signal).front();
+        Waypoint signal_waypoint;
+        if (distance_to_signal == 0) {
+          signal_waypoint = waypoint;
+        } else {
+          signal_waypoint = GetNext(waypoint, distance_to_signal).front();
+        }
         SignalSearchData signal_data{signal, signal_waypoint, distance_to_signal};
         result.emplace_back(signal_data);
       }
@@ -366,9 +371,16 @@ namespace road {
       result.emplace_back(signal_data);
     }
     // If we run out of remaining_lane_length we have to go to the successors.
-    for (const auto &successor : GetSuccessors(waypoint)) {
+    for (auto &successor : GetSuccessors(waypoint)) {
       if(_data.GetRoad(successor.road_id).IsJunction() && stop_at_junction){
         continue;
+      }
+      auto& sucessor_lane = _data.GetRoad(successor.road_id).
+            GetLaneByDistance(successor.s, successor.lane_id);
+      if (successor.lane_id < 0) {
+        successor.s = sucessor_lane.GetDistance();
+      } else {
+        successor.s = sucessor_lane.GetDistance() + sucessor_lane.GetLength();
       }
       auto sucessor_signals = GetSignalsInDistance(
           successor, distance - remaining_lane_length, stop_at_junction);

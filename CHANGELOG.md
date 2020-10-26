@@ -8,6 +8,7 @@
     - Added `actor.set_enable_gravity()` function to enable/disable the gravity affecting the actor
   * Upgraded to DirectX 12 on Windows
   * Fixed bug on Windows causing sun reflection artifacts
+  * Fixed bug in `waypoint.get_landmarks()` causing some landmarks to be missed when s = 0
   * Fixed the `actor.set_simulate_physics()` for pedestrians and vehicles
   * Fixed bug causing camera-based sensors to stop sending data
   * Fixed dependency of library **Xerces-c** on package
