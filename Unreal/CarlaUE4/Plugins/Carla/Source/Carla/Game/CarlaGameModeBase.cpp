@@ -417,6 +417,10 @@ void ACarlaGameModeBase::LoadMapLayer(EMapLayer MapLayer)
     LatentInfo.UUID++;
   }
 
+  // Register new actors and tag them
+  RegisterEnvironmentObject();
+  ATagger::TagActorsInLevel(*GetWorld(), true);
+
 }
 
 void ACarlaGameModeBase::UnLoadMapLayer(EMapLayer MapLayer)
@@ -434,6 +438,8 @@ void ACarlaGameModeBase::UnLoadMapLayer(EMapLayer MapLayer)
     LatentInfo.UUID++;
   }
 
+  // Update stored registered objects (discarding the deleted objects)
+  RegisterEnvironmentObject();
 }
 
 void ACarlaGameModeBase::ConvertMapLayerToMapName(EMapLayer MapLayer, TArray<FName>& OutLevelNames)
