@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -409,75 +409,84 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   uint8 InTagQueried)
 {
   TArray<FBoundingBox> Result;
+  for(AActor* Actor : Actors)
+  {
+    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor, InTagQueried);
+    Result.Append(BBs.GetData(), BBs.Num());
+  }
+
+  return Result;
+}
+
+TArray<FBoundingBox> UBoundingBoxCalculator::GetBBsOfActor(
+  const AActor* Actor,
+  uint8 InTagQueried)
+{
+  TArray<FBoundingBox> Result;
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
-  for(AActor* Actor : Actors)
+  FString ClassName = Actor->GetClass()->GetName();
+
+  // Avoid the BP_Procedural_Building to avoid duplication with their child actors
+  // When improved the BP_Procedural_Building this maybe should be removed
+  // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
+  //       than getting the UClass of the BP to cast the actor.
+  if( ClassName.Contains("Procedural_Bulding") ) return Result;
+
+  // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
+  const ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  if (Vehicle)
   {
-    FString ClassName = Actor->GetClass()->GetName();
-
-    // Avoid the BP_Procedural_Building to avoid duplication with their child actors
-    // When improved the BP_Procedural_Building this maybe should be removed
-    // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
-    //       than getting the UClass of the BP to cast the actor.
-    if( ClassName.Contains("Procedural_Bulding") ) continue;
-
-    // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
-    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
-    if (Vehicle)
+    FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
+    if(!BoundingBox.Extent.IsZero())
     {
-      FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
-      if(!BoundingBox.Extent.IsZero())
-      {
-        Result.Add(BoundingBox);
-      }
-      continue;
+      Result.Add(BoundingBox);
     }
-
-
-    // Pedestrians, we just use the capsule component at the moment.
-    ACharacter* Character = Cast<ACharacter>(Actor);
-    if (Character)
-    {
-      FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
-      if(!BoundingBox.Extent.IsZero())
-      {
-        Result.Add(BoundingBox);
-      }
-      continue;
-    }
-
-    // TrafficLight, we need to join all the BB of the lights in one
-    ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
-    if(TrafficLight)
-    {
-      GetTrafficLightBoundingBox(TrafficLight, Result, InTagQueried);
-      continue;
-    }
-
-    // Calculate FBoundingBox of ISM
-    TArray<UInstancedStaticMeshComponent *> ISMComps;
-    Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
-    for(UInstancedStaticMeshComponent* Comp: ISMComps)
-    {
-      // Filter by tag
-      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-      if(FilterByTagEnabled && Tag != TagQueried) continue;
-
-      GetISMBoundingBox(Comp, Result);
-    }
-
-    // Calculate FBoundingBox of SM
-    TArray<UStaticMeshComponent*> StaticMeshComps;
-    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
-
-    // Calculate FBoundingBox of SK_M
-    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
-    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
-
+    return Result;;
   }
+
+  // Pedestrians, we just use the capsule component at the moment.
+  const ACharacter* Character = Cast<ACharacter>(Actor);
+  if (Character)
+  {
+    FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
+    if(!BoundingBox.Extent.IsZero())
+    {
+      Result.Add(BoundingBox);
+    }
+    return Result;
+  }
+
+  // TrafficLight, we need to join all the BB of the lights in one
+  const ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
+  if(TrafficLight)
+  {
+    GetTrafficLightBoundingBox(TrafficLight, Result, InTagQueried);
+    return Result;
+  }
+
+  // Calculate FBoundingBox of ISM
+  TArray<UInstancedStaticMeshComponent *> ISMComps;
+  Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
+  for(UInstancedStaticMeshComponent* Comp: ISMComps)
+  {
+    // Filter by tag
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    GetISMBoundingBox(Comp, Result);
+  }
+
+  // Calculate FBoundingBox of SM
+  TArray<UStaticMeshComponent*> StaticMeshComps;
+  Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+  GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
+
+  // Calculate FBoundingBox of SK_M
+  TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+  Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+  GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
 
   return Result;
 }

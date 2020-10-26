@@ -10,9 +10,11 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
+#include "Carla/Util/RayTracer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Carla/Game/Tagger.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -25,8 +27,10 @@
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
+#include "carla/rpc/LabelledPoint.h"
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
+#include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/String.h>
@@ -45,6 +49,7 @@
 
 #include <vector>
 #include <map>
+#include <tuple>
 
 template <typename T>
 using R = carla::rpc::Response<T>;
@@ -319,6 +324,37 @@ void FCarlaServer::FPimpl::BindActions()
     }
     Result = GameMode->GetAllBBsOfLevel(QueriedTag);
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
+  };
+
+  BIND_SYNC(get_environment_objects) << [this]() -> R<std::vector<cr::EnvironmentObject>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects();
+    return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
+  };
+
+  BIND_SYNC(enable_environment_objects) << [this](std::vector<uint64_t> EnvObjectIds, bool Enable) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+
+    TSet<uint64> EnvObjectIdsSet;
+    for(uint64 Id : EnvObjectIds)
+    {
+      EnvObjectIdsSet.Emplace(Id);
+    }
+
+    GameMode->EnableEnvironmentObjects(EnvObjectIdsSet, Enable);
+    return R<void>::Success();
   };
 
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1377,6 +1413,28 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+
+  // ~~ Ray Casting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(project_point) << [this]
+      (cr::Location Location, cr::Vector3D Direction, float SearchDistance)
+      -> R<std::pair<bool,cr::LabelledPoint>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    constexpr float meter_to_centimeter = 100.0f;
+    return URayTracer::ProjectPoint(Location, Direction.ToFVector(),
+        meter_to_centimeter * SearchDistance, World);
+  };
+
+  BIND_SYNC(cast_ray) << [this]
+      (cr::Location StartLocation, cr::Location EndLocation)
+      -> R<std::vector<cr::LabelledPoint>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    return URayTracer::CastRay(StartLocation, EndLocation, World);
+  };
 
 }
 

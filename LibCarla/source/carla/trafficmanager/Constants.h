@@ -24,6 +24,7 @@ static const int64_t TM_TIMEOUT = 2000; // ms
 namespace VehicleRemoval {
 static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;
 static const double BLOCKED_TIME_THRESHOLD = 90.0;
+static const double RED_TL_BLOCKED_TIME_THRESHOLD = 180.0;
 static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
