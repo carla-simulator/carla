@@ -25,7 +25,6 @@ void export_trafficmanager() {
     .def("force_lane_change", &ctm::TrafficManager::SetForceLaneChange)
     .def("auto_lane_change", &ctm::TrafficManager::SetAutoLaneChange)
     .def("distance_to_leading_vehicle", &ctm::TrafficManager::SetDistanceToLeadingVehicle)
-    .def("reset_traffic_lights", &ctm::TrafficManager::ResetAllTrafficLights)
     .def("ignore_walkers_percentage", &ctm::TrafficManager::SetPercentageIgnoreWalkers)
     .def("ignore_vehicles_percentage", &ctm::TrafficManager::SetPercentageIgnoreVehicles)
     .def("ignore_lights_percentage", &ctm::TrafficManager::SetPercentageRunningLight)
