@@ -142,7 +142,8 @@ void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
 
-  LoadMapLayer(CurrentMapLayer);
+  LoadMapLayer(GameInstance->GetCurrentMapLayer());
+
 
   if (true) { /// @todo If semantic segmentation enabled.
     check(GetWorld() != nullptr);

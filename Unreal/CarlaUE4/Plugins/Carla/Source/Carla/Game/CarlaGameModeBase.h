@@ -13,8 +13,6 @@
 #include <boost/optional.hpp>
 #include <compiler/enable-ue4-macros.h>
 
-#include "carla/rpc/MapLayer.h"
-
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameInstance.h"
@@ -65,18 +63,6 @@ public:
   }
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
-
-  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable)
-  int32 GetCurrentMapLayer() const
-  {
-    return CurrentMapLayer;
-  }
-
-  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable)
-  void SetMapLayer(int32 MapLayer)
-  {
-    CurrentMapLayer = MapLayer;
-  }
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   void LoadMapLayer(int32 MapLayers);
@@ -139,8 +125,5 @@ private:
   ATrafficLightManager* TrafficLightManager = nullptr;
 
   boost::optional<carla::road::Map> Map;
-
-  UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
-  int32 CurrentMapLayer = static_cast<int32>(carla::rpc::MapLayer::All);
 
 };

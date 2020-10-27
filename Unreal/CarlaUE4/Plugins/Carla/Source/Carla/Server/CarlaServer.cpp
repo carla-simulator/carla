@@ -233,17 +233,18 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    if (!GameMode)
+    UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
+    if (!GameInstance)
     {
-      RESPOND_ERROR("unable to find CARLA game mode");
+      RESPOND_ERROR("unable to find CARLA game instance");
     }
-    GameMode->SetMapLayer(static_cast<int32>(MapLayers));
+    GameInstance->SetMapLayer(static_cast<int32>(MapLayers));
 
     if(!Episode->LoadNewEpisode(cr::ToFString(map_name)))
     {
       RESPOND_ERROR("map not found");
     }
+
     return R<void>::Success();
   };
 
