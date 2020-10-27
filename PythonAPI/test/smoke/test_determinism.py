@@ -130,6 +130,7 @@ class TestDeterminism(SmokeTest):
 
         self.client.reload_world()
         world.apply_settings(old_settings)
+        traffic_manager.set_synchronous_mode(False)
 
         self.compare_records(record_run1, record_run2)
 
