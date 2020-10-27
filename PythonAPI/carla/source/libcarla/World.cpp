@@ -201,6 +201,11 @@ void export_world() {
     .value("Terrain", cr::CityObjectLabel::Terrain)
   ;
 
+  class_<cr::LabelledPoint>("LabelledPoint", no_init)
+    .def_readonly("location", &cr::LabelledPoint::_location)
+    .def_readonly("label", &cr::LabelledPoint::_label)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -247,6 +252,9 @@ void export_world() {
     .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
     .def("get_environment_objects", &GetEnvironmentObjects)
     .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))
+    .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
+    .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
+    .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
     .def(self_ns::str(self_ns::self))
   ;
 

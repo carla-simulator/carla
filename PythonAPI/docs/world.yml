@@ -186,6 +186,20 @@
         An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check the UE docs](https://docs.unrealengine.com/en-US/Gameplay/HowTo/UsingCameras/SpringArmComponents/index.html) to learn more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
     # --------------------------------------
 
+  - class_name: LabelledPoint
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represent a position in space with a semantic label.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      doc: >
+        Position in 3D space.
+    - var_name: label
+      doc: >
+        Semantic tag of the point.
+    # --------------------------------------
+
   - class_name: World
     # - DESCRIPTION ------------------------
     doc: >
@@ -421,13 +435,59 @@
           New conditions to be applied. 
       doc: >
         Changes the weather parameteres ruling the simulation to another ones defined in an object. 
-     # --------------------------------------
+    # --------------------------------------
+    - def_name: cast_ray
+      return: list(carla.LabelledPoint)
+      params:
+      - param_name: initial_location
+        type: carla.Location
+        doc: >
+          The initial position of the ray.
+      - param_name: final_location
+        type: carla.Location
+        doc: >
+          The final position of the ray.
+      doc: >
+        Casts a ray from the specified initial_location to final_location. The function then detects all geometries intersecting the ray and returns a list of carla.LabelledPoint in order.
+    # --------------------------------------
+    - def_name: project_point
+      return: carla.LabelledPoint
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          The point to be projected.
+      - param_name: direction
+        type: carla.Vector3D
+        doc: >
+          The direction of projection.
+      - param_name: search_distance
+        type: float
+        doc: >
+          The maximum distance to perform the projection
+      doc: >
+        Projects the specified point to the desired direction in the scene. The functions casts a ray from location in a direction and returns a carla.Labelled object with the first geometry this ray intersects. If no geometry is found in the search_distance range the function returns `None`.
+    # --------------------------------------
+    - def_name: ground_projection
+      return: carla.LabelledPoint
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          The point to be projected.
+      - param_name: search_distance
+        type: float
+        doc: >
+          The maximum distance to perform the projection
+      doc: >
+        Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.Labelled object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
+    # --------------------------------------
     - def_name: __str__
       return:
         string
       doc: >
         The content of the world is parsed and printed as a brief report of its current state. 
-     # --------------------------------------
+    # --------------------------------------
 
   - class_name: DebugHelper
     # - DESCRIPTION ------------------------

@@ -181,14 +181,6 @@ public:
     }
   }
 
-  /// Method to reset all traffic lights.
-  void ResetAllTrafficLights() {
-    TrafficManagerBase* tm_ptr = GetTM(_port);
-    if(tm_ptr != nullptr){
-      tm_ptr->ResetAllTrafficLights();
-    }
-  }
-
   /// Method to switch traffic manager into synchronous execution.
   void SetSynchronousMode(bool mode) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
