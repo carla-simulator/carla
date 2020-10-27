@@ -36,6 +36,9 @@ Use ARROWS or WASD keys for control.
     C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
 
+    V            : Select next map layer (Shift+V reverse)
+    B            : Load current selected map layer (Shift+B to unload)
+
     R            : toggle recording images to disk
 
     CTRL + R     : toggle recording of simulation (replacing any previous)
