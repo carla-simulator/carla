@@ -72,6 +72,10 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   ++SCENE_CAPTURE_COUNTER;
 }
 
+const FTransform &ASceneCaptureSensor::GetSyncActorTransform() const {
+  return OldTransform;
+}
+
 void ASceneCaptureSensor::Set(const FActorDescription &Description)
 {
   Super::Set(Description);
@@ -506,6 +510,9 @@ void ASceneCaptureSensor::Tick(float DeltaTime)
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
   ReadyToCapture = true;
+
+  // TODO: delete once the new tick pipeline is done
+  OldTransform = GetActorTransform();
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)

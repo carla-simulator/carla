@@ -26,6 +26,9 @@ public:
 
   ASensor(const FObjectInitializer &ObjectInitializer);
 
+  /// TODO: delete once the new tick pipeline is done
+  virtual const FTransform &GetSyncActorTransform() const;
+
   void SetEpisode(const UCarlaEpisode &InEpisode)
   {
     Episode = &InEpisode;
