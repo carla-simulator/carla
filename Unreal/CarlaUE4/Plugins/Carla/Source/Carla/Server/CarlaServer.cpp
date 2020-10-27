@@ -10,9 +10,11 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
+#include "Carla/Util/RayTracer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Carla/Game/Tagger.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -25,6 +27,7 @@
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
+#include "carla/rpc/LabelledPoint.h"
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/EnvironmentObject.h>
@@ -46,6 +49,7 @@
 
 #include <vector>
 #include <map>
+#include <tuple>
 
 template <typename T>
 using R = carla::rpc::Response<T>;
@@ -223,6 +227,11 @@ void FCarlaServer::FPimpl::BindActions()
     result.reserve(MapNames.Num());
     for (const auto &MapName : MapNames)
     {
+      if (MapName.Contains("/Sublevels/"))
+        continue;
+      if (MapName.Contains("/BaseMap/"))
+        continue;
+
       result.emplace_back(cr::FromFString(MapName));
     }
     return result;
@@ -1409,6 +1418,28 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+
+  // ~~ Ray Casting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(project_point) << [this]
+      (cr::Location Location, cr::Vector3D Direction, float SearchDistance)
+      -> R<std::pair<bool,cr::LabelledPoint>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    constexpr float meter_to_centimeter = 100.0f;
+    return URayTracer::ProjectPoint(Location, Direction.ToFVector(),
+        meter_to_centimeter * SearchDistance, World);
+  };
+
+  BIND_SYNC(cast_ray) << [this]
+      (cr::Location StartLocation, cr::Location EndLocation)
+      -> R<std::vector<cr::LabelledPoint>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    return URayTracer::CastRay(StartLocation, EndLocation, World);
+  };
 
 }
 
