@@ -255,7 +255,7 @@ namespace road {
       // is the exact height that match with most of the RoadRunner sidewalks
       dp_r.location.z += 0.1524f;
       dp_l.location.z += 0.1524f;
-      /// TODO: use the OpenDRIVE 5.3.7.2.1.1.9 Lane Height Record
+      /// @TODO: use the OpenDRIVE 5.3.7.2.1.1.9 Lane Height Record
     }
 
     return std::make_pair(dp_r.location, dp_l.location);
