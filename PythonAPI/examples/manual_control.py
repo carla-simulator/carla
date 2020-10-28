@@ -987,7 +987,6 @@ class CameraManager(object):
                     if attr_name == 'range':
                         self.lidar_range = float(attr_value)
 
-
             item.append(bp)
         self.index = None
 

@@ -201,11 +201,11 @@ void export_world() {
     .value("Terrain", cr::CityObjectLabel::Terrain)
   ;
 
-  
   class_<cr::LabelledPoint>("LabelledPoint", no_init)
     .def_readonly("location", &cr::LabelledPoint::_location)
     .def_readonly("label", &cr::LabelledPoint::_label)
-  
+  ;
+
   enum_<cr::MapLayer>("MapLayer")
     .value("NONE", cr::MapLayer::None)
     .value("Buildings", cr::MapLayer::Buildings)
@@ -218,7 +218,6 @@ void export_world() {
     .value("StreetLights", cr::MapLayer::StreetLights)
     .value("Walls", cr::MapLayer::Walls)
     .value("All", cr::MapLayer::All)
-
   ;
 
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
