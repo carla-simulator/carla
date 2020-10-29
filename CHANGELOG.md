@@ -1,9 +1,7 @@
 ## Latest
-
+  * Updated the bounding box calculation of two wheeled vehicles to include the character inside the bounding box
   * Added `get_environment_objects`call to get all the placed objects in the level
   * Added `enable_environment_objects`call to enable/disable objects of the level
-  * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions.
-  * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.4.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation.
   * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions.
   * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation.
   * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
