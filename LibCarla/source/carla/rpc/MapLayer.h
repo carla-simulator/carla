@@ -15,7 +15,7 @@ namespace rpc {
 
 using MapLayerType = uint16_t;
 
-enum class MapLayer : uint16_t
+enum class MapLayer : MapLayerType
 {
   None            =  0,
   Buildings       =  0x1,
