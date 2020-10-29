@@ -16,6 +16,7 @@
   * Fixed bug causing camera-based sensors to stop sending data
   * Fixed dependency of library **Xerces-c** on package
   * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
+  * Added `horizontal_fov` parameter to lidar sensor to allow for restriction of its field of view
 
 ## CARLA 0.9.10
 
