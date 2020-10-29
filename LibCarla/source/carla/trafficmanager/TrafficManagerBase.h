@@ -86,9 +86,6 @@ public:
   /// Method to provide synchronous tick
   virtual bool SynchronousTick() = 0;
 
-  /// Method to reset all traffic lights.
-  virtual void ResetAllTrafficLights() = 0;
-
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
 

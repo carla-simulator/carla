@@ -32,11 +32,16 @@ AInertialMeasurementUnit::AInertialMeasurementUnit(
   // Initialized to something hight to minimize the artifacts
   // when the initial values are unknown
   PrevDeltaTime = std::numeric_limits<float>::max();
+  OldTransform = GetActorTransform();
 }
 
 FActorDefinition AInertialMeasurementUnit::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeIMUDefinition();
+}
+
+const FTransform &AInertialMeasurementUnit::GetSyncActorTransform() const {
+  return OldTransform;
 }
 
 void AInertialMeasurementUnit::Set(const FActorDescription &ActorDescription)
@@ -187,6 +192,9 @@ void AInertialMeasurementUnit::Tick(float DeltaTime)
       ComputeAccelerometer(DeltaTime),
       ComputeGyroscope(),
       ComputeCompass());
+
+  // TODO: delete once the new tick pipeline is done
+  OldTransform = GetActorTransform();
 }
 
 void AInertialMeasurementUnit::SetAccelerationStandardDeviation(const FVector &Vec)
@@ -222,6 +230,4 @@ const FVector &AInertialMeasurementUnit::GetGyroscopeBias() const
 void AInertialMeasurementUnit::BeginPlay()
 {
   Super::BeginPlay();
-
-  constexpr float TO_METERS = 1e-2;
 }

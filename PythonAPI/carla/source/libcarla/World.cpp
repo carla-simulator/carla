@@ -8,6 +8,7 @@
 #include <carla/client/Actor.h>
 #include <carla/client/ActorList.h>
 #include <carla/client/World.h>
+#include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/ObjectLabel.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -34,6 +35,14 @@ namespace rpc {
     auto BoolToStr = [](bool b) { return b ? "True" : "False"; };
     out << "WorldSettings(synchronous_mode=" << BoolToStr(settings.synchronous_mode)
         << ",no_rendering_mode=" << BoolToStr(settings.no_rendering_mode) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const EnvironmentObject &environment_object) {
+    out << "Mesh(id=" << environment_object.id << ", ";
+    out << "name=" << environment_object.name << ", ";
+    out << "transform=" << environment_object.transform << ", ";
+    out << "bounding_box=" << environment_object.bounding_box << ")";
     return out;
   }
 
@@ -78,6 +87,28 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
     result.append(bb);
   }
   return result;
+}
+
+static auto GetEnvironmentObjects(const carla::client::World &self) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  boost::python::list result;
+  for (const auto &geometry : self.GetEnvironmentObjects()) {
+    result.append(geometry);
+  }
+  return result;
+}
+
+static void EnableEnvironmentObjects(
+  carla::client::World &self,
+  const boost::python::object& py_env_objects_ids,
+  const bool enable ) {
+
+  std::vector<uint64_t> env_objects_ids {
+    boost::python::stl_input_iterator<uint64_t>(py_env_objects_ids),
+    boost::python::stl_input_iterator<uint64_t>()
+  };
+
+  self.EnableEnvironmentObjects(env_objects_ids, enable);
 }
 
 void export_world() {
@@ -131,6 +162,14 @@ void export_world() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cr::EnvironmentObject>("EnvironmentObject", no_init)
+    .def_readwrite("transform", &cr::EnvironmentObject::transform)
+    //.def_readwrite("bounding_box", &cr::EnvironmentObject::bounding_box)
+    .def_readwrite("id", &cr::EnvironmentObject::id)
+    .def_readwrite("name", &cr::EnvironmentObject::name)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   enum_<cr::AttachmentType>("AttachmentType")
     .value("Rigid", cr::AttachmentType::Rigid)
     .value("SpringArm", cr::AttachmentType::SpringArm)
@@ -160,6 +199,11 @@ void export_world() {
     .value("Dynamic", cr::CityObjectLabel::Dynamic)
     .value("Water", cr::CityObjectLabel::Water)
     .value("Terrain", cr::CityObjectLabel::Terrain)
+  ;
+
+  class_<cr::LabelledPoint>("LabelledPoint", no_init)
+    .def_readonly("location", &cr::LabelledPoint::_location)
+    .def_readonly("label", &cr::LabelledPoint::_label)
   ;
 
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
@@ -206,6 +250,11 @@ void export_world() {
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
+    .def("get_environment_objects", &GetEnvironmentObjects)
+    .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))
+    .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
+    .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
+    .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
     .def(self_ns::str(self_ns::self))
   ;
 

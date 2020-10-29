@@ -450,6 +450,29 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);
   }
 
+  std::vector<rpc::EnvironmentObject> Client::GetEnvironmentObjects() const {
+    using return_t = std::vector<rpc::EnvironmentObject>;
+    return _pimpl->CallAndWait<return_t>("get_environment_objects");
+  }
+
+  void Client::EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+    _pimpl->AsyncCall("enable_environment_objects", std::move(env_objects_ids), enable);
+  }
+
+  std::pair<bool,rpc::LabelledPoint> Client::ProjectPoint(
+      geom::Location location, geom::Vector3D direction, float search_distance) const {
+    using return_t = std::pair<bool,rpc::LabelledPoint>;
+    return _pimpl->CallAndWait<return_t>("project_point", location, direction, search_distance);
+  }
+
+  std::vector<rpc::LabelledPoint> Client::CastRay(
+      geom::Location start_location, geom::Location end_location) const {
+    using return_t = std::vector<rpc::LabelledPoint>;
+    return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla

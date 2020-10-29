@@ -86,8 +86,8 @@ cd PythonAPI/examples
 python3 spawn_npc.py 
 # Terminal B
 cd PythonAPI/examples
-python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
-python3 dynamic_weather.py # Support for Python2 was provided until 0.9.10 (not included)
+python3 spawn_npc.py
+python3 dynamic_weather.py
 
 # Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory
 make PythonAPI ARGS="--python-version=2"

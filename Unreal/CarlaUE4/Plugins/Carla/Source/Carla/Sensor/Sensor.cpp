@@ -20,6 +20,10 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   RootComponent = Mesh;
 }
 
+const FTransform &ASensor::GetSyncActorTransform() const {
+  return GetActorTransform();
+}
+
 void ASensor::Set(const FActorDescription &Description)
 {
   // set the tick interval of the sensor
