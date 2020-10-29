@@ -38,6 +38,10 @@ struct CARLA_API FLidarDescription
   /// horizontal line.
   UPROPERTY(EditAnywhere)
   float LowerFovLimit = -30.0f;
+  
+  /// Horizontal field of view
+  UPROPERTY(EditAnywhere)
+  float HorizontalFov = 360.0f;
 
   /// Attenuation Rate in the atmosphere in m^-1.
   UPROPERTY(EditAnywhere)

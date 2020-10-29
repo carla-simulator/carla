@@ -849,6 +849,11 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   LowerFOV.Id = TEXT("lower_fov");
   LowerFOV.Type = EActorAttributeType::Float;
   LowerFOV.RecommendedValues = { TEXT("-30.0") };
+  // Horizontal FOV.
+  FActorVariation HorizontalFOV;
+  HorizontalFOV.Id = TEXT("horizontal_fov");
+  HorizontalFOV.Type = EActorAttributeType::Float;
+  HorizontalFOV.RecommendedValues = { TEXT("360.0") };
   // Atmospheric Attenuation Rate.
   FActorVariation AtmospAttenRate;
   AtmospAttenRate.Id = TEXT("atmosphere_attenuation_rate");
@@ -894,7 +899,9 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       DropOffGenRate,
       DropOffIntensityLimit,
       DropOffAtZeroIntensity,
-      StdDevLidar});
+      StdDevLidar,
+      HorizontalFOV
+    });
   }
   else if (Id == "ray_cast_semantic") {
     Definition.Variations.Append({
@@ -903,7 +910,8 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       PointsPerSecond,
       Frequency,
       UpperFOV,
-      LowerFOV});
+      LowerFOV,
+      HorizontalFOV});
   }
   else {
     DEBUG_ASSERT(false);
@@ -1516,6 +1524,8 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("upper_fov", Description.Variations, Lidar.UpperFovLimit);
   Lidar.LowerFovLimit =
       RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
+  Lidar.HorizontalFov =
+      RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, Lidar.HorizontalFov);
   Lidar.AtmospAttenRate =
       RetrieveActorAttributeToFloat("atmosphere_attenuation_rate", Description.Variations, Lidar.AtmospAttenRate);
   Lidar.RandomSeed =
