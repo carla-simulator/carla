@@ -7,8 +7,8 @@
 from numpy import random
 from . import SmokeTest
 
-TM_PORT = 8000
-NUM_TICKS = 2000
+TM_PORT = 7056
+NUM_TICKS = 1000
 
 class FrameRecord():
     def __init__(self, frame, vehicle_position_list):
@@ -114,6 +114,7 @@ class TestDeterminism(SmokeTest):
         # run simulation 1
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run1 = self.run_simulation(world, vehicle_actor_list)
+        traffic_manager.set_synchronous_mode(False)
 
         # reset the settings
         self.client.reload_world()
@@ -127,10 +128,9 @@ class TestDeterminism(SmokeTest):
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run2 = self.run_simulation(world, vehicle_actor_list)
 
-
+        traffic_manager.set_synchronous_mode(False)
         self.client.reload_world()
         world.apply_settings(old_settings)
-        traffic_manager.set_synchronous_mode(False)
 
         self.compare_records(record_run1, record_run2)
 
