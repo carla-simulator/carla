@@ -8,6 +8,7 @@
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Engine/DecalActor.h"
+#include "Engine/LevelStreaming.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
