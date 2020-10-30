@@ -15,7 +15,6 @@
 
 template <typename T>
 class FDataStreamTmpl;
-class FCarlaEngine;
 
 // =============================================================================
 // -- FAsyncDataStreamTmpl -----------------------------------------------------
@@ -94,21 +93,3 @@ inline void FAsyncDataStreamTmpl<T>::Send(SensorT &Sensor, ArgsT &&... Args)
       std::move(Header),
       carla::sensor::SensorRegistry::Serialize(Sensor, std::forward<ArgsT>(Args)...));
 }
-
-template <typename T>
-template <typename SensorT>
-inline FAsyncDataStreamTmpl<T>::FAsyncDataStreamTmpl(
-    const SensorT &Sensor,
-    double Timestamp,
-    StreamType InStream)
-  : Stream(std::move(InStream)),
-    Header([&Sensor, Timestamp]() {
-      //check(IsInGameThread());
-      using Serializer = carla::sensor::s11n::SensorHeaderSerializer;
-      return Serializer::Serialize(
-          carla::sensor::SensorRegistry::template get<SensorT*>::index,
-          FCarlaEngine::GetFrameCounter(),
-          Timestamp,
-          /// TODO: raname to 'GetActorTransform' once the new tick pipeline is done
-          Sensor.GetSyncActorTransform());
-    }()) {}
