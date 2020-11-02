@@ -71,7 +71,7 @@ public:
   void UnLoadMapLayer(int32 MapLayers);
 
   UFUNCTION(Category = "Carla Game Mode")
-  ULevel* GetLevelToSpanInto(FString LevelName);
+  ULevel* GetULevelFromName(FString LevelName);
 
 protected:
 

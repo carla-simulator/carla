@@ -82,7 +82,7 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
     if(!TrafficGroups.Contains(JunctionId))
     {
       FActorSpawnParameters SpawnParams;
-      SpawnParams.OverrideLevel = GM->GetLevelToSpanInto("TrafficLights");
+      SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
       auto * NewTrafficLightGroup =
           GetWorld()->SpawnActor<ATrafficLightGroup>(SpawnParams);
       NewTrafficLightGroup->JunctionId = JunctionId;
@@ -103,7 +103,7 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
   else
   {
     FActorSpawnParameters SpawnParams;
-    SpawnParams.OverrideLevel = GM->GetLevelToSpanInto("TrafficLights");
+    SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
     auto * NewTrafficLightGroup =
           GetWorld()->SpawnActor<ATrafficLightGroup>(SpawnParams);
     NewTrafficLightGroup->JunctionId = TrafficLightGroupMissingId;
@@ -478,7 +478,7 @@ void ATrafficLightManager::SpawnTrafficLights()
     SpawnParams.Owner = this;
     SpawnParams.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-    SpawnParams.OverrideLevel = GM->GetLevelToSpanInto("TrafficLights");
+    SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
     ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
         TrafficLightModel,
         SpawnLocation,
@@ -573,7 +573,7 @@ void ATrafficLightManager::SpawnSignals()
       SpawnParams.Owner = this;
       SpawnParams.SpawnCollisionHandlingOverride =
           ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-      SpawnParams.OverrideLevel = GM->GetLevelToSpanInto("TrafficSigns");
+      SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficSigns");
       ATrafficSignBase * TrafficSign = GetWorld()->SpawnActor<ATrafficSignBase>(
           TrafficSignsModels[SignalType],
           SpawnLocation,
