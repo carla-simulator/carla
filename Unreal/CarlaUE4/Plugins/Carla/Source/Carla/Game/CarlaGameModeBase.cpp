@@ -234,7 +234,7 @@ ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
     if(TrafficLightManagerActor == nullptr)
     {
       FActorSpawnParameters SpawnParams;
-      SpawnParams.OverrideLevel = GetLevelToSpanInto("TrafficLights");
+      SpawnParams.OverrideLevel = GetULevelFromName("TrafficLights");
       TrafficLightManager = World->SpawnActor<ATrafficLightManager>(SpawnParams);
     }
     else
@@ -490,7 +490,7 @@ void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FN
 
 }
 
-ULevel* ACarlaGameModeBase::GetLevelToSpanInto(FString LevelName)
+ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
 {
   ULevel* OutLevel = nullptr;
   UWorld* World = GetWorld();
