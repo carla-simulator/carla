@@ -179,9 +179,9 @@ class CarCollision03(Scenario):
 
         wait(world, 1)
 
-        vehicle00.set_target_velocity(carla.Vector3D(-30, 0, 0))
-        vehicle01.set_target_velocity(carla.Vector3D(+30, 0, 0))
-        vehicle02.set_target_velocity(carla.Vector3D(0, -30, 0))
+        vehicle00.set_target_velocity(carla.Vector3D(-15, 0, 0))
+        vehicle01.set_target_velocity(carla.Vector3D(+15, 0, 0))
+        vehicle02.set_target_velocity(carla.Vector3D(0, -15, 0))
 
         self.vehicle_list = []
         self.vehicle_list.append(vehicle00)
@@ -191,6 +191,7 @@ class CarCollision03(Scenario):
         wait(world, 1)
 
         super().init_scene()
+
 
 class CarCollision04(Scenario):
     def init_scene(self):
@@ -209,9 +210,9 @@ class CarCollision04(Scenario):
 
         wait(world, 1)
 
-        vehicle00.set_target_velocity(carla.Vector3D(-15, 0, 0))
-        vehicle01.set_target_velocity(carla.Vector3D(+15, 0, 0))
-        vehicle02.set_target_velocity(carla.Vector3D(0, -15, 0))
+        vehicle00.set_target_velocity(carla.Vector3D(-30, 0, 0))
+        vehicle01.set_target_velocity(carla.Vector3D(+30, 0, 0))
+        vehicle02.set_target_velocity(carla.Vector3D(0, -30, 0))
 
         self.vehicle_list = []
         self.vehicle_list.append(vehicle00)
@@ -247,7 +248,6 @@ class CarBikeCollis1(Scenario):
         wait(world, 1)
 
         super().init_scene()
-
 
 class CarWalkCollis1(Scenario):
     def init_scene(self):
@@ -412,7 +412,7 @@ def main(arg):
     try: 
         repetitions = 20
 
-        test00 = TestScenario(SpawnCars01(client, world))
+        #test00 = TestScenario(SpawnCars01(client, world))
         #test00.test_determ_one_config(20, 20, repetitions)
         #test00.test_determ_one_config(20, 40, repetitions)
         #test00.test_determ_one_config(20, 60, repetitions)
