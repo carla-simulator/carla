@@ -81,7 +81,6 @@ static auto GetVehiclesLightStates(carla::client::World &self) {
 }
 
 static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
   for (const auto &bb : self.GetLevelBBs(queried_tag)) {
     result.append(bb);
@@ -90,7 +89,6 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
 }
 
 static auto GetEnvironmentObjects(const carla::client::World &self) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
   for (const auto &geometry : self.GetEnvironmentObjects()) {
     result.append(geometry);
