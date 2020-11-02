@@ -229,10 +229,13 @@ ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
 {
   if (!TrafficLightManager)
   {
-    AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), ATrafficLightManager::StaticClass());
+    UWorld* World = GetWorld();
+    AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
     if(TrafficLightManagerActor == nullptr)
     {
-      TrafficLightManager = GetWorld()->SpawnActor<ATrafficLightManager>();
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.OverrideLevel = GetLevelToSpanInto("TrafficLights");
+      TrafficLightManager = World->SpawnActor<ATrafficLightManager>(SpawnParams);
     }
     else
     {
@@ -485,4 +488,27 @@ void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FN
     }
   }
 
+}
+
+ULevel* ACarlaGameModeBase::GetLevelToSpanInto(FString LevelName)
+{
+  ULevel* OutLevel = nullptr;
+  UWorld* World = GetWorld();
+  const TArray <ULevelStreaming*> Levels = World->GetStreamingLevels();
+
+  for(ULevelStreaming* Level : Levels)
+  {
+    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    if(FullSubMapName.Contains(LevelName))
+    {
+      OutLevel = Level->GetLoadedLevel();
+      if(!OutLevel)
+      {
+        UE_LOG(LogCarla, Warning, TEXT("%s has not been loaded"), *LevelName);
+      }
+      break;
+    }
+  }
+
+  return OutLevel;
 }

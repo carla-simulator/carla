@@ -70,6 +70,9 @@ public:
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   void UnLoadMapLayer(int32 MapLayers);
 
+  UFUNCTION(Category = "Carla Game Mode")
+  ULevel* GetLevelToSpanInto(FString LevelName);
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
