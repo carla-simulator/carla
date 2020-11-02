@@ -91,11 +91,11 @@ namespace detail {
 
     std::string GetServerVersion();
 
-    void LoadEpisode(std::string map_name, rpc::MapLayer map_layers);
+    void LoadEpisode(std::string map_name, rpc::MapLayer map_layer = rpc::MapLayer::All);
 
-    void LoadLevelLayer(rpc::MapLayer map_layers) const;
+    void LoadLevelLayer(rpc::MapLayer map_layer) const;
 
-    void UnloadLevelLayer(rpc::MapLayer map_layers) const;
+    void UnloadLevelLayer(rpc::MapLayer map_layer) const;
 
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
