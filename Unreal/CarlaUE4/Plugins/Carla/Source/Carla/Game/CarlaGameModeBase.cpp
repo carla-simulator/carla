@@ -28,25 +28,6 @@ namespace cr = carla::road;
 namespace crp = carla::rpc;
 namespace cre = carla::road::element;
 
-static FString MapLayerToString(crp::MapLayer MapLayerValue)
-{
-  switch(MapLayerValue)
-  {
-    case crp::MapLayer::None: return TEXT("None");
-    case crp::MapLayer::Buildings: return TEXT("Buildings");
-    case crp::MapLayer::Decals: return TEXT("Decals");
-    case crp::MapLayer::Foliage: return TEXT("Foliage");
-    case crp::MapLayer::Ground: return TEXT("Ground");
-    case crp::MapLayer::ParkedVehicles: return TEXT("Parked_Vehicles");
-    case crp::MapLayer::Particles: return TEXT("Particles");
-    case crp::MapLayer::Props: return TEXT("Props");
-    case crp::MapLayer::StreetLights: return TEXT("StreetLights");
-    case crp::MapLayer::Walls: return TEXT("Walls");
-    case crp::MapLayer::All: return TEXT("All");
-    default: return TEXT("Invalid");
-  }
-}
-
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -477,7 +458,7 @@ void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FN
   while(LayerMask > 0)
   {
     // Convert enum to FString
-    FString LayerName = MapLayerToString(static_cast<crp::MapLayer>(LayerMask));
+    FString LayerName = UTF8_TO_TCHAR(MapLayerToString(static_cast<crp::MapLayer>(LayerMask)).c_str());
     bool included = static_cast<crp::MapLayerType>(MapLayer) & LayerMask;
     if(included)
     {

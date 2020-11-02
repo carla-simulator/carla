@@ -13,7 +13,7 @@
 namespace carla {
 namespace rpc {
 
-using MapLayerType = uint16_t;
+using MapLayerType = int32_t;
 
 enum class MapLayer : MapLayerType
 {
@@ -27,8 +27,10 @@ enum class MapLayer : MapLayerType
   Props           =  0x1 << 6,
   StreetLights    =  0x1 << 7,
   Walls           =  0x1 << 8,
-  All             =  0xFFFF
+  All             =  0x7FFFFFFF,
 };
+
+std::string MapLayerToString(MapLayer MapLayerValue);
 
 } // namespace rpc
 } // namespace carla
