@@ -264,7 +264,7 @@ class World(object):
         self.current_map_layer += -1 if reverse else 1
         self.current_map_layer %= len(self.map_layer_names)
         selected = self.map_layer_names[self.current_map_layer]
-        self.hud.notification('LayerMap selected: %s (%d)' % (selected, selected))
+        self.hud.notification('LayerMap selected: %s' % selected)
 
     def load_map_layer(self, unload=False):
         selected = self.map_layer_names[self.current_map_layer]
