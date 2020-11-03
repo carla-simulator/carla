@@ -103,7 +103,7 @@ namespace rpc {
       Settings.bSubstepping = substepping;
       Settings.MaxSubstepDeltaTime = max_substep_delta_time;
       Settings.MaxSubsteps = max_substeps;
-      
+
       return Settings;
     }
 

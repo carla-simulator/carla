@@ -34,7 +34,7 @@ import carla
 
 
 def wait(world, frames=100):
-    for i in range(0, frames):
+    for _i in range(0, frames):
         world.tick()
 
 class Scenario():
@@ -71,7 +71,7 @@ class Scenario():
     def save_snapshots(self):
         for i in range (0, len(self.vehicle_list)):
             self.snapshots[i] = np.vstack((self.snapshots[i], self.save_snapshot(self.vehicle_list[i])))
-    
+
     def get_filename(self, prefix, i):
         return prefix + "_v" + str(i) + ".out"
 
@@ -250,6 +250,7 @@ class CarBikeCollis1(Scenario):
 
         super().init_scene()
 
+
 class CarWalkCollis1(Scenario):
     def init_scene(self):
         world = self.world
@@ -326,7 +327,7 @@ class TestScenario():
                 mat_check[j][i] = int(sim_check)
 
         determinism = np.sum(mat_check,axis=1)
-        max_rep_equal = np.amax(determinism)
+        #max_rep_equal = np.amax(determinism)
         max_rep_equal_idx = np.argmax(determinism)
         min_rep_equal_idx = np.argmin(determinism)
 
@@ -343,29 +344,27 @@ class TestScenario():
 
     def save_simulations(self, rep_prefixes, prefix, max_idx, min_idx):
         for i in range(0, len(self.scene.vehicle_list)):
-            file_repetition  = self.scene.get_filename(rep_prefixes[max_idx], i)
-            file_reference   = self.scene.get_filename(prefix + "reference", i)
+            file_repetition = self.scene.get_filename(rep_prefixes[max_idx], i)
+            file_reference  = self.scene.get_filename(prefix + "reference", i)
 
             shutil.copyfile(file_repetition, file_reference)
-            
+
         if min_idx != max_idx:
             for i in range(0, len(self.scene.vehicle_list)):
-                file_repetition  = self.scene.get_filename(rep_prefixes[min_idx], i)
-                file_failed   = self.scene.get_filename(prefix + "failed", i)
+                file_repetition = self.scene.get_filename(rep_prefixes[min_idx], i)
+                file_failed     = self.scene.get_filename(prefix + "failed", i)
 
                 shutil.copyfile(file_repetition, file_failed)
 
         for r_prefix in rep_prefixes:
             for i in range(0, len(self.scene.vehicle_list)):
                 file_repetition   = self.scene.get_filename(r_prefix, i)
-                
+
                 os.remove(file_repetition)
 
     def test_determ_one_config(self, fps, fps_phys, repetitions = 1, sim_tics = 100):
         print("Testing Determinism in %s for %3d render FPS and %3d physics FPS -> " % \
                 (self.scenario_name, fps, fps_phys),  end='')
-
-        old_settings = self.world.get_settings()
 
         settings = self.world.get_settings()
         delta = 1.0/fps
@@ -387,7 +386,7 @@ class TestScenario():
         t_start = time.perf_counter()
         sim_prefixes = []
         for i in range(0, repetitions):
-            prefix_rep = prefix + "rep" + str(i) 
+            prefix_rep = prefix + "rep" + str(i)
             self.scene.run_simulation(prefix_rep, tics=sim_tics)
             sim_prefixes.append(prefix_rep)
         t_end = time.perf_counter()
@@ -395,8 +394,6 @@ class TestScenario():
         determ_repet = self.check_simulations(sim_prefixes, prefix)
         print("Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions), end="")
         print("  -> Comp. Time per frame: %.0f" % ((t_end-t_start)/repetitions*sim_tics))
-
-        return
 
 
 
@@ -408,15 +405,12 @@ def main(arg):
     pre_settings = world.get_settings()
     world.apply_settings(pre_settings)
 
-    fps = arg.fps
-    fps_phys = arg.phys_fps
-
     spectator_transform = carla.Transform(carla.Location(120, -256, 5), carla.Rotation(yaw=180))
     spectator_transform.location.z += 5
     spectator = world.get_spectator()
     spectator.set_transform(spectator_transform)
 
-    try: 
+    try:
         repetitions = 10
 
         #test00 = TestScenario(SpawnCars01(client, world))
@@ -504,19 +498,19 @@ if __name__ == "__main__":
         metavar='PATTERN',
         default='model3',
         help='actor filter (default: "vehicle.*")')
-    argparser.add_argument(
-        '-fps', '--fps',
-        metavar='FPS',
-        default=20,
-        type=int,
-        help='Frames per simulatation second (default: 20)')
-    argparser.add_argument(
-        '-phys_fps', '--phys_fps',
-        metavar='PHYSFPS',
-        default=100,
-        type=int,
-        help='Target physical frames per simulatation second, it will \
-            divide the dt in substeps if required to get more precision.  (default: 100)')
+#    argparser.add_argument(
+#        '-fps', '--fps',
+#        metavar='FPS',
+#        default=20,
+#        type=int,
+#        help='Frames per simulatation second (default: 20)')
+#    argparser.add_argument(
+#        '-phys_fps', '--phys_fps',
+#        metavar='PHYSFPS',
+#        default=100,
+#        type=int,
+#        help='Target physical frames per simulatation second, it will \
+#            divide the dt in substeps if required to get more precision.  (default: 100)')
     args = argparser.parse_args()
 
     try:
