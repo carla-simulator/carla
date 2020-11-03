@@ -146,8 +146,8 @@ void export_world() {
          arg("no_rendering_mode")=false,
          arg("fixed_delta_seconds")=0.0,
          arg("substepping")=true,
-         arg("max_substep_delta_time")=0.016667,
-         arg("max_substeps")=6)))
+         arg("max_substep_delta_time")=0.01,
+         arg("max_substeps")=10)))
     .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
     .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
     .def_readwrite("substepping", &cr::EpisodeSettings::substepping)

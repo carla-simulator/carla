@@ -24,7 +24,7 @@ struct CARLA_API FEpisodeSettings
 
   TOptional<double> FixedDeltaSeconds;
 
-  double MaxSubstepDeltaTime = 0.016667;
+  double MaxSubstepDeltaTime = 0.01;
 
-  int MaxSubsteps = 6;
+  int MaxSubsteps = 10;
 };
