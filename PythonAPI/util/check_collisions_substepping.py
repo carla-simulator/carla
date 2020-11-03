@@ -379,16 +379,22 @@ class TestScenario():
 
         path = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(path, "_out") + os.path.sep
+        if not os.path.exists(path):
+            os.mkdir(path)
+
         prefix = path + self.scenario_name + "_" + str(fps) + "_" + str(fps_phys) + "_"
 
+        t_start = time.perf_counter()
         sim_prefixes = []
         for i in range(0, repetitions):
             prefix_rep = prefix + "rep" + str(i) 
             self.scene.run_simulation(prefix_rep, tics=sim_tics)
             sim_prefixes.append(prefix_rep)
+        t_end = time.perf_counter()
 
         determ_repet = self.check_simulations(sim_prefixes, prefix)
-        print("Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions))
+        print("Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions), end="")
+        print("  -> Comp. Time per frame: %.0f" % ((t_end-t_start)/repetitions*sim_tics))
 
         return
 
@@ -411,7 +417,7 @@ def main(arg):
     spectator.set_transform(spectator_transform)
 
     try: 
-        repetitions = 20
+        repetitions = 10
 
         #test00 = TestScenario(SpawnCars01(client, world))
         #test00.test_determ_one_config(20, 20, repetitions)
