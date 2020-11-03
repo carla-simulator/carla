@@ -9,7 +9,7 @@
 """
 Test collisions example for CARLA
 This script runs several scenarios involving collisions and check if they
-are deterministic.
+are deterministic for different simulation parameters.
 """
 
 import glob
@@ -86,6 +86,7 @@ class Scenario():
             np.savetxt(self.get_filename(prefix, i), self.snapshots[i])
 
         self.clear_scene()
+
 
 class SpawnCars01(Scenario):
     def init_scene(self):
