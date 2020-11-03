@@ -30,11 +30,18 @@ namespace client {
 } // namespace client
 } // namespace carla
 
-static auto GetSemanticTags(const carla::client::Actor &self) {
-  const auto &tags = self.GetSemanticTags();
-  boost::python::object get_iter = boost::python::iterator<std::vector<int>>();
-  boost::python::object iter = get_iter(tags);
-  return boost::python::list(iter);
+template<class T>
+boost::python::list StdVectorToPyList(const std::vector<T> &vec) {
+  boost::python::list l;
+  for (auto &e : vec) {
+    l.append(e);
+  }
+  return l;
+}
+
+static boost::python::list GetSemanticTags(const carla::client::Actor &self) {
+  const std::vector<int> &tags = self.GetSemanticTags();
+  return StdVectorToPyList(tags);
 }
 
 static void AddActorImpulse(carla::client::Actor &self,
@@ -48,13 +55,8 @@ static void AddActorForce(carla::client::Actor &self,
 }
 
 static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
-  namespace py = boost::python;
   auto values = self.GetGroupTrafficLights();
-  py::list result;
-  for (auto value : values) {
-    result.append(value);
-  }
-  return result;
+  return StdVectorToPyList(values);
 }
 
 template <typename ControlT>
@@ -81,12 +83,12 @@ void export_actor() {
       .add_property("semantic_tags", &GetSemanticTags)
       .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
       .add_property("attributes", +[] (const cc::Actor &self) {
-    boost::python::dict atttribute_dict;
-    for (auto &&attribute_value : self.GetAttributes()) {
-      atttribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
-    }
-    return atttribute_dict;
-  })
+        boost::python::dict attribute_dict;
+        for (auto &&attribute_value : self.GetAttributes()) {
+          attribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
+        }
+        return attribute_dict;
+      })
       .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
       .def("get_location", &cc::Actor::GetLocation)
       .def("get_transform", &cc::Actor::GetTransform)
