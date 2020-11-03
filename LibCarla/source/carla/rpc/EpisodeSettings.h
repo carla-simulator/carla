@@ -33,9 +33,9 @@ namespace rpc {
 
     bool substepping = true;
 
-    double max_substep_delta_time = 0.016667;
+    double max_substep_delta_time = 0.01;
 
-    int max_substeps = 6;
+    int max_substeps = 10;
 
     MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
         max_substep_delta_time, max_substeps);
@@ -51,8 +51,8 @@ namespace rpc {
         bool no_rendering_mode,
         double fixed_delta_seconds = 0.0,
         bool substepping = true,
-        double max_substep_delta_time = 0.016667,
-        int max_substeps = 6)
+        double max_substep_delta_time = 0.01,
+        int max_substeps = 10)
       : synchronous_mode(synchronous_mode),
         no_rendering_mode(no_rendering_mode),
         fixed_delta_seconds(

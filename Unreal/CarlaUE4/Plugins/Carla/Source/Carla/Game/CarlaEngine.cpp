@@ -16,7 +16,6 @@
 
 #include "Runtime/Core/Public/Misc/App.h"
 #include "PhysicsEngine/PhysicsSettings.h"
-#include "Engine/World.h"
 
 #include <thread>
 
@@ -153,26 +152,11 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 
   FCarlaEngine_SetFixedDeltaSeconds(Settings.FixedDeltaSeconds);
 
+  // Setting parameters for physics substepping
   UPhysicsSettings* PhysSett = UPhysicsSettings::Get();
-
   PhysSett->bSubstepping = Settings.bSubstepping;
   PhysSett->MaxSubstepDeltaTime = Settings.MaxSubstepDeltaTime;
   PhysSett->MaxSubsteps = Settings.MaxSubsteps;
-
-
-
-  UE_LOG(LogCarla, Error, TEXT("-------------------------------------------------------------"));
-  UE_LOG(LogCarla, Error, TEXT("Syncronous Mode %d"), Settings.bSynchronousMode);
-  UE_LOG(LogCarla, Error, TEXT("Substepping     %d"), Settings.bSubstepping);
-  UE_LOG(LogCarla, Error, TEXT("FixedDelta Secs %f"), Settings.FixedDeltaSeconds.Get(0.0));
-  UE_LOG(LogCarla, Error, TEXT("MaxSubstepDat   %f"), Settings.MaxSubstepDeltaTime);
-  UE_LOG(LogCarla, Error, TEXT("MaxSubsteps     %d"), Settings.MaxSubsteps);
-  //UE_LOG(LogCarla, Error, TEXT("PS: EditChange  %d"), PhysSett->CanEditChange(UPhysicsSettings::bSubstepping));
-  UE_LOG(LogCarla, Error, TEXT("FA: DeltaTime   %f"), CurrentEpisode->GetWorld()->GetDeltaSeconds() );
-  UE_LOG(LogCarla, Error, TEXT("PS: Substepping %d"), PhysSett->bSubstepping);
-  UE_LOG(LogCarla, Error, TEXT("PS: MaxSubsDt   %f"), PhysSett->MaxSubstepDeltaTime);
-  UE_LOG(LogCarla, Error, TEXT("PS: MaxSubsNum  %d"), PhysSett->MaxSubsteps);
-
 }
 
 void FCarlaEngine::ResetSimulationState()
