@@ -32,9 +32,17 @@ class CARLA_API ASceneCaptureSensor : public ASensor
   friend class ACarlaGameModeBase;
   friend class FPixelReader;
 
+private:
+
+  /// @TODO: delete once the new tick pipeline is done
+  FTransform OldTransform;
+
 public:
 
   ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer);
+
+  /// @TODO: delete once the new tick pipeline is done
+  const FTransform &GetSyncActorTransform() const override;
 
   void Set(const FActorDescription &ActorDescription) override;
 
@@ -306,5 +314,7 @@ protected:
   /// Whether to render the post-processing effects present in the scene.
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
+
+  bool ReadyToCapture = false;
 
 };

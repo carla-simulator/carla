@@ -1,3 +1,20 @@
+## Latest
+  * Added `load_map_layer` and `unload_map_layer` to control map layers on new maps that support subleveling
+  * Added `get_environment_objects`call to get all the placed objects in the level
+  * Added `enable_environment_objects`call to enable/disable objects of the level
+  * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions
+  * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation
+  * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
+  * Fixed random dead-lock on synchronous mode at high frame rate
+  * API extensions:
+    - Added `actor.set_enable_gravity()` function to enable/disable the gravity affecting the actor
+  * Upgraded to DirectX 12 on Windows
+  * Fixed bug on Windows causing sun reflection artifacts
+  * Fixed the `actor.set_simulate_physics()` for pedestrians and vehicles
+  * Fixed bug causing camera-based sensors to stop sending data
+  * Fixed dependency of library **Xerces-c** on package
+  * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
+
 ## CARLA 0.9.10
 
   * Added retrieval of bounding boxes for all the elements of the level

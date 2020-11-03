@@ -108,5 +108,6 @@ inline FAsyncDataStreamTmpl<T>::FAsyncDataStreamTmpl(
           carla::sensor::SensorRegistry::template get<SensorT*>::index,
           GFrameCounter,
           Timestamp,
-          Sensor.GetActorTransform());
+          /// TODO: raname to 'GetActorTransform' once the new tick pipeline is done
+          Sensor.GetSyncActorTransform());
     }()) {}

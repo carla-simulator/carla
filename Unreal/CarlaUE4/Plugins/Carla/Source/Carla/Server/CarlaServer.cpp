@@ -10,9 +10,11 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
+#include "Carla/Util/RayTracer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Carla/Game/Tagger.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -23,10 +25,13 @@
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
+#include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
+#include "carla/rpc/LabelledPoint.h"
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
+#include <carla/rpc/MapLayer.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 #include <carla/rpc/String.h>
@@ -45,6 +50,7 @@
 
 #include <vector>
 #include <map>
+#include <tuple>
 
 template <typename T>
 using R = carla::rpc::Response<T>;
@@ -222,18 +228,60 @@ void FCarlaServer::FPimpl::BindActions()
     result.reserve(MapNames.Num());
     for (const auto &MapName : MapNames)
     {
+      if (MapName.Contains("/Sublevels/"))
+        continue;
+      if (MapName.Contains("/BaseMap/"))
+        continue;
+
       result.emplace_back(cr::FromFString(MapName));
     }
     return result;
   };
 
-  BIND_SYNC(load_new_episode) << [this](const std::string &map_name) -> R<void>
+  BIND_SYNC(load_new_episode) << [this](const std::string &map_name, cr::MapLayer MapLayers) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+
+    UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
+    if (!GameInstance)
+    {
+      RESPOND_ERROR("unable to find CARLA game instance");
+    }
+    GameInstance->SetMapLayer(static_cast<int32>(MapLayers));
+
     if(!Episode->LoadNewEpisode(cr::ToFString(map_name)))
     {
       RESPOND_ERROR("map not found");
     }
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(load_map_layer) << [this](cr::MapLayer MapLayers) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    GameMode->LoadMapLayer(static_cast<int32>(MapLayers));
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(unload_map_layer) << [this](cr::MapLayer MapLayers) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    GameMode->UnLoadMapLayer(static_cast<int32>(MapLayers));
+
     return R<void>::Success();
   };
 
@@ -287,6 +335,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
+    StreamingServer.SetSynchronousMode(settings.synchronous_mode);
     return GFrameCounter;
   };
 
@@ -318,6 +367,37 @@ void FCarlaServer::FPimpl::BindActions()
     }
     Result = GameMode->GetAllBBsOfLevel(QueriedTag);
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
+  };
+
+  BIND_SYNC(get_environment_objects) << [this]() -> R<std::vector<cr::EnvironmentObject>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects();
+    return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
+  };
+
+  BIND_SYNC(enable_environment_objects) << [this](std::vector<uint64_t> EnvObjectIds, bool Enable) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+
+    TSet<uint64> EnvObjectIdsSet;
+    for(uint64 Id : EnvObjectIds)
+    {
+      EnvObjectIdsSet.Emplace(Id);
+    }
+
+    GameMode->EnableEnvironmentObjects(EnvObjectIdsSet, Enable);
+    return R<void>::Success();
   };
 
   // ~~ Weather ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -862,6 +942,47 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_actor_enable_gravity) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set actor enable gravity: actor not found");
+    }
+
+    auto Character = Cast<ACharacter>(ActorView.GetActor());
+    // The physics in the walkers works in a different way so to disable them,
+    // we need to do it in the UCharacterMovementComponent.
+    if (Character != nullptr)
+    {
+      auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
+
+      if(bEnabled) {
+        CharacterMovement->SetDefaultMovementMode();
+      }
+      else {
+        if (CharacterMovement->IsFlying() || CharacterMovement->IsFalling())
+          CharacterMovement->DisableMovement();
+      }
+    }
+    // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
+    // that for disable it.
+    else
+    {
+      auto RootComponent = Cast<UPrimitiveComponent>(ActorView.GetActor()->GetRootComponent());
+      if (RootComponent == nullptr)
+      {
+        RESPOND_ERROR("unable to set actor enable gravity: not supported by actor");
+      }
+      RootComponent->SetEnableGravity(bEnabled);
+    }
+
+    return R<void>::Success();
+  };
+
   // ~~ Apply control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(apply_control_to_vehicle) << [this](
@@ -1284,6 +1405,7 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyAngularImpulse &c) {  MAKE_RESULT(add_actor_angular_impulse(c.actor, c.impulse)); },
       [=](auto, const C::ApplyTorque &c) {          MAKE_RESULT(add_actor_torque(c.actor, c.torque)); },
       [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
+      [=](auto, const C::SetEnableGravity &c) {   MAKE_RESULT(set_actor_enable_gravity(c.actor, c.enabled)); },
       // TODO: SetAutopilot should be removed. This is the old way to control the vehicles
       [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },
       [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },
@@ -1334,6 +1456,28 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+
+  // ~~ Ray Casting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(project_point) << [this]
+      (cr::Location Location, cr::Vector3D Direction, float SearchDistance)
+      -> R<std::pair<bool,cr::LabelledPoint>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    constexpr float meter_to_centimeter = 100.0f;
+    return URayTracer::ProjectPoint(Location, Direction.ToFVector(),
+        meter_to_centimeter * SearchDistance, World);
+  };
+
+  BIND_SYNC(cast_ray) << [this]
+      (cr::Location StartLocation, cr::Location EndLocation)
+      -> R<std::vector<cr::LabelledPoint>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    return URayTracer::CastRay(StartLocation, EndLocation, World);
+  };
 
 }
 

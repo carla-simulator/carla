@@ -9,11 +9,11 @@
 """
 Sensor synchronization example for CARLA
 
-The communication model for the syncronous mode in CARLA sends the snapshot 
+The communication model for the syncronous mode in CARLA sends the snapshot
 of the world and the sensors streams in parallel.
 We provide this script as an example of how to syncrononize the sensor
-data gathering in the client. 
-To to this, we create a queue that is being filled by every sensor when the 
+data gathering in the client.
+To to this, we create a queue that is being filled by every sensor when the
 client receives its data and the main loop is blocked until all the sensors
 have received its data.
 This suppose that all the sensors gather information at every tick. It this is
@@ -39,14 +39,14 @@ import carla
 
 
 # Sensor callback.
-# This is where you receive the sensor data and 
+# This is where you receive the sensor data and
 # process it as you liked and the important part is that,
 # at the end, it should include an element into the sensor queue.
 def sensor_callback(sensor_data, sensor_queue, sensor_name):
     # Do stuff with the sensor_data data like save it to disk
     # Then you just need to add to the queue
     sensor_queue.put((sensor_data.frame, sensor_name))
-    
+
 
 def main():
     # We start creating the client
@@ -75,8 +75,7 @@ def main():
         cam_bp = blueprint_library.find('sensor.camera.rgb')
         lidar_bp = blueprint_library.find('sensor.lidar.ray_cast')
         radar_bp = blueprint_library.find('sensor.other.radar')
-        
-        
+
         # We create all the sensors and keep them in a list for convenience.
         sensor_list = []
 
@@ -84,12 +83,12 @@ def main():
         cam01.listen(lambda data: sensor_callback(data, sensor_queue, "camera01"))
         sensor_list.append(cam01)
 
-        lidar_bp.set_attribute('points_per_second', '100000')        
+        lidar_bp.set_attribute('points_per_second', '100000')
         lidar01 = world.spawn_actor(lidar_bp, carla.Transform())
         lidar01.listen(lambda data: sensor_callback(data, sensor_queue, "lidar01"))
         sensor_list.append(lidar01)
 
-        lidar_bp.set_attribute('points_per_second', '1000000')        
+        lidar_bp.set_attribute('points_per_second', '1000000')
         lidar02 = world.spawn_actor(lidar_bp, carla.Transform())
         lidar02.listen(lambda data: sensor_callback(data, sensor_queue, "lidar02"))
         sensor_list.append(lidar02)
@@ -115,13 +114,12 @@ def main():
             # We include a timeout of 1.0 s (in the get method) and if some information is
             # not received in this time we continue.
             try:
-                for i in range (0, len(sensor_list)):
+                for _ in range(len(sensor_list)):
                     s_frame = sensor_queue.get(True, 1.0)
                     print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
-                
+
             except Empty:
                 print("    Some of the sensor information is missed")
-
 
     finally:
         world.apply_settings(original_settings)
@@ -134,4 +132,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print(' - Exited by user.')
-

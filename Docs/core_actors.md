@@ -281,7 +281,7 @@ ai_controller.stop()
 ```
 When a walker reaches the target location, they will automatically walk to another random point. If the target point is not reachable, walkers will go to the closest point from their current location.
 
-[This recipe](ref_code_recipes.md#walker-batch-recipe) uses batches to spawn a lot of walkers and make them wander around.
+A snipet in [carla.Client](python_api.md#carla.Client.apply_batch_sync) uses batches to spawn a lot of walkers and make them wander around.
 
 !!! Important
     __To destroy AI pedestrians__, stop the AI controller and destroy both, the actor, and the controller. 

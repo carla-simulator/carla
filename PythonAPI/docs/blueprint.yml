@@ -211,7 +211,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Allows iteration within this class' attributes. 
+        Iterate over the carla.ActorAttribute that this blueprint has.  
     # --------------------------------------
     - def_name: __len__
       doc: >
@@ -254,7 +254,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Method that allows iteration within the blueprints provided. 
+        Iterate over the carla.ActorBlueprint stored in the library.  
     # --------------------------------------
     - def_name: __len__
       return: int 

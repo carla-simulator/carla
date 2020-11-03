@@ -42,7 +42,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Method that enables iteration for this class using **<font color="#f8805a">timestamp</font>** as reference value. 
+        Iterate over the carla.ActorSnapshot stored in the snapshot.  
     # --------------------------------------
     - def_name: __len__
       return: int

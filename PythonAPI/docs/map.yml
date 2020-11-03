@@ -5,7 +5,7 @@
   - class_name: LaneType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. For instance in this [recipe](ref_code_recipes.md#lanes-recipe) the user creates a carla.Waypoint for the current location of a vehicle and uses it to get the current and adjacent lane types.
+      Class that defines the possible lane types accepted by OpenDRIVE 1.4. This standards define the road information. The snipet in carla.Map.get_waypoint makes use of a waypoint to get the current and adjacent lane types.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -57,7 +57,7 @@
   - class_name: LaneChange
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every carla.Waypoint according to the OpenDRIVE file. In this [recipe](ref_code_recipes.md#lanes-recipe) the user creates a waypoint for a current vehicle position and learns which turns are permitted.
+      Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every carla.Waypoint according to the OpenDRIVE file. The snipet in carla.Map.get_waypoint shows how a waypoint can be used to learn which turns are permitted.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -98,8 +98,8 @@
   - class_name: LaneMarkingType
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the lane marking types accepted by OpenDRIVE 1.4. Take a look at this [recipe](ref_code_recipes.md#lanes-recipe) where the user creates a carla.Waypoint for a vehicle location and retrieves from it the information about adjacent lane markings.
-
+      Class that defines the lane marking types accepted by OpenDRIVE 1.4. The snipet in carla.Map.get_waypoint shows how a waypoint can be used to retrieve the information about adjacent lane markings.  
+      <br><br>
       __Note on double types:__ Lane markings are defined under the OpenDRIVE standard that determines whereas a line will be considered "BrokenSolid" or "SolidBroken". For each road there is a center lane marking, defined from left to right regarding the lane's directions. The rest of the lane markings are defined in order from the center lane to the closest outside of the road.
     # - PROPERTIES -------------------------
     instance_variables:

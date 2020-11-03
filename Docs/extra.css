@@ -23,7 +23,7 @@ table.defTable {
 }
 
 table.defTable thead {
-  background: #ffffff; 
+  background: #ffffff;
   border-bottom: 1px solid #444444;
 }
 
@@ -37,6 +37,13 @@ table.defTable thead th {
 
 table.defTable tbody td{
   padding: 7px 13px;
+}
+
+/************************* INHERITED PYTHON API LINE **************************/
+
+.Inherited {
+	padding-left:30px;
+	margin-top:-20px
 }
 
 /************************* TOWN SLIDER **************************/
@@ -53,7 +60,7 @@ table.defTable tbody td{
 /* Hide the images by default */
 .townslide {
   display: none;
-  text-align: center; 
+  text-align: center;
 
 }
 
@@ -130,3 +137,110 @@ table.defTable tbody td{
   background-color: #717171;
 }
 
+/************************* COPY SCRIPT BUTTON **************************/
+
+.CopyScript {
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background:linear-gradient(to bottom, #ffffff 5%, #f6f6f6 100%);
+	background-color:#ffffff;
+	border-radius:6px;
+	border:1px solid #dcdcdc;
+	display:inline-block;
+	cursor:pointer;
+	color:#666666;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	padding:6px 6px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #ffffff;
+	margin-left: 2px;
+}
+.CopyScript:hover {
+	background:linear-gradient(to bottom, #f6f6f6 5%, #ffffff 100%);
+	background-color:#f6f6f6;
+}
+.CopyScript:active {
+	position:relative;
+	top:1px;
+}
+
+/************************* CLOSE SNIPET BUTTON **************************/
+
+.CloseSnipet {
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background:linear-gradient(to bottom, #ffffff 5%, #f6f6f6 100%);
+	background-color:#ffffff;
+	border-radius:6px;
+	border:1px solid #dcdcdc;
+	display:inline-block;
+	cursor:pointer;
+	color:#666666;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	padding:6px 6px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #ffffff;
+	margin-left: 2px;
+}
+.CloseSnipet:hover {
+	background:linear-gradient(to bottom, #ffe6e6 5%, #ffffff 100%);
+	background-color:#ffffff;
+}
+.CloseSnipet:active {
+	position:relative;
+	top:1px;
+}
+
+/************************* SNIPET TITLE **************************/
+
+.SnipetFont {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 16px;
+	letter-spacing: 0.4px;
+	margin-left: 10px;
+	margin-bottom: 0px;
+	word-spacing: -2.2px;
+	color: #4675B1;
+	font-weight: 700;
+	text-decoration: rgb(68, 68, 68);
+	font-style: normal;
+	font-variant: normal;
+	text-transform: none;
+}
+
+/************************* SNIPET BUTTON **************************/
+
+.SnipetButton {
+	background-color: #476e9e;
+	border-radius:42px;
+	border:0px;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:12px;
+	padding:2px 3px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #2f6627;
+}
+
+/************************* SNIPET CONTENT **************************/
+
+.SnipetContent {
+	width: calc(100vw - 1150px);
+	margin-left: 10px;
+}
+
+/************************* SNIPET CONTAINER **************************/
+
+.Container {
+	position: fixed;
+	margin-left: 0px;
+	overflow-y: auto;
+	padding-left: 10px;
+	height: 95%;
+	top: 70px;
+	left: 1100px;
+}

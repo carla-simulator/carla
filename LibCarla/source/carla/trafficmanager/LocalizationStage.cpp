@@ -234,16 +234,23 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
 
     // Extend buffer if safe point not found.
     if (!safe_point_found) {
-      while (!past_junction) {
-        current_waypoint = current_waypoint->GetNextWaypoint().front();
-        PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
-        if (!current_waypoint->CheckJunction()) {
-          past_junction = true;
-          junction_end_point = current_waypoint;
+      bool abort = false;
+
+      while (!past_junction && !abort) {
+        NodeList next_waypoints = current_waypoint->GetNextWaypoint();
+        if (!next_waypoints.empty()) {
+          current_waypoint = next_waypoints.front();
+          PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
+          if (!current_waypoint->CheckJunction()) {
+            past_junction = true;
+            junction_end_point = current_waypoint;
+          }
+        } else {
+          abort = true;
         }
       }
 
-      while (!safe_point_found) {
+      while (!safe_point_found && !abort) {
         std::vector<SimpleWaypointPtr> next_waypoints = current_waypoint->GetNextWaypoint();
         if ((junction_end_point->DistanceSquared(current_waypoint) > safe_distance_squared)
             || next_waypoints.size() > 1
@@ -252,13 +259,20 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
           safe_point_found = true;
           safe_point_after_junction = current_waypoint;
         } else {
-          current_waypoint = next_waypoints.front();
-          PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
+          if (!next_waypoints.empty()) {
+            current_waypoint = next_waypoints.front();
+            PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
+          } else {
+            abort = true;
+          }
         }
       }
     }
 
-    if (junction_begin_point->DistanceSquared(junction_end_point) < SQUARE(MIN_JUNCTION_LENGTH)) {
+    if (junction_end_point != nullptr &&
+        safe_point_after_junction != nullptr &&
+        junction_begin_point->DistanceSquared(junction_end_point) < SQUARE(MIN_JUNCTION_LENGTH)) {
+
       junction_end_point = nullptr;
       safe_point_after_junction = nullptr;
     }
@@ -405,7 +419,7 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
 
 void LocalizationStage::DrawBuffer(Buffer &buffer) {
   uint64_t buffer_size = buffer.size();
-  uint64_t step_size =  buffer_size/20u;
+  uint64_t step_size = std::max(buffer_size/20u, static_cast<uint64_t>(1));
   cc::DebugHelper::Color color {0u, 0u, 0u};
   cg::Location two_meters_up = cg::Location(0.0f, 0.0f, 2.0f);
   for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {

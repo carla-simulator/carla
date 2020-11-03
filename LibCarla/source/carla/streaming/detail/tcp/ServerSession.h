@@ -26,6 +26,8 @@ namespace streaming {
 namespace detail {
 namespace tcp {
 
+  class Server;
+
   /// A TCP server session. When a session opens, it reads from the socket a
   /// stream id object and passes itself to the callback functor. The session
   /// closes itself after @a timeout of inactivity is met.
@@ -40,7 +42,8 @@ namespace tcp {
 
     explicit ServerSession(
         boost::asio::io_context &io_context,
-        time_duration timeout);
+        time_duration timeout,
+        Server &server);
 
     /// Starts the session and calls @a on_opened after successfully reading the
     /// stream id, and @a on_closed once the session is closed.
@@ -81,6 +84,8 @@ namespace tcp {
     void CloseNow();
 
     friend class Server;
+
+    Server &_server;
 
     const size_t _session_id;
 

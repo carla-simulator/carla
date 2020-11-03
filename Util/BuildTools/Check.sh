@@ -40,11 +40,9 @@ RUN_BENCHMARK=false
 
 OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api,smoke,benchmark,python-version:, -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
-PY_VERSION=3
+PY_VERSION_LIST=3
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -82,7 +80,7 @@ while [[ $# -gt 0 ]]; do
       GTEST_ARGS="--gtest_filter=benchmark*";
       shift ;;
     --python-version )
-      PY_VERSION="$2"
+      PY_VERSION_LIST="$2"
       shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -97,6 +95,9 @@ done
 if ! { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG} || ${PYTHON_API} || ${SMOKE_TESTS}; }; then
   fatal_error "Nothing selected to be done."
 fi
+
+# Convert comma-separated string to array of unique elements.
+IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 
 # ==============================================================================
 # -- Download Content need it by the tests -------------------------------------
@@ -178,9 +179,13 @@ fi
 
 if ${PYTHON_API} ; then
 
-  log "Running Python API for Python 3 unit tests."
+  for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
-  /usr/bin/env python${PY_VERSION} -m nose2 ${EXTRA_ARGS}
+    log "Running Python API for Python ${PY_VERSION} unit tests."
+
+    /usr/bin/env python${PY_VERSION} -m nose2 ${EXTRA_ARGS}
+
+  done
 
   if ${XML_OUTPUT} ; then
     mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/python-api-3.xml
@@ -197,7 +202,9 @@ popd >/dev/null
 if ${SMOKE_TESTS} ; then
   pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/util" >/dev/null
     log "Checking connection with the simulator."
-    /usr/bin/env python${PY_VERSION} test_connection.py -p 3654 --timeout=60.0
+    for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
+      /usr/bin/env python${PY_VERSION} test_connection.py -p 3654 --timeout=60.0
+    done
   popd >/dev/null
 fi
 
@@ -211,9 +218,10 @@ fi
 
 if ${SMOKE_TESTS} ; then
 
-  log "Running smoke tests for Python 3."
-
-  /usr/bin/env python${PY_VERSION} -m nose2 ${EXTRA_ARGS}
+  for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
+    log "Running smoke tests for Python ${PY_VERSION}."
+    /usr/bin/env python${PY_VERSION} -m nose2 ${EXTRA_ARGS}
+  done
 
   if ${XML_OUTPUT} ; then
     mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/smoke-tests-3.xml
