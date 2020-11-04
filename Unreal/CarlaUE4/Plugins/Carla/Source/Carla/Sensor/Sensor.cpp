@@ -20,7 +20,15 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   RootComponent = Mesh;
 }
 
-const FTransform &ASensor::GetSyncActorTransform() const {
+void ASensor::BeginPlay()
+{
+  Super::BeginPlay();
+  OnPostTickDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(
+      this, &ASensor::PostPhysTick);
+}
+
+const FTransform &ASensor::GetSyncActorTransform() const
+{
   return GetActorTransform();
 }
 
@@ -33,6 +41,12 @@ void ASensor::Set(const FActorDescription &Description)
         UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
         0.0f));
   }
+}
+
+void ASensor::Tick(const float DeltaTime)
+{
+  AActor::Tick(DeltaTime);
+  PrePhysTick(DeltaTime);
 }
 
 void ASensor::SetSeed(const int32 InSeed)
@@ -65,4 +79,6 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
   Stream = FDataStream();
+
+  FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickDelegate);
 }

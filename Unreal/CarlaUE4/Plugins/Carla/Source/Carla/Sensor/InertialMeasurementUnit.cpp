@@ -182,10 +182,8 @@ float AInertialMeasurementUnit::ComputeCompass()
   return Compass;
 }
 
-void AInertialMeasurementUnit::Tick(float DeltaTime)
+void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
   auto Stream = GetDataStream(*this);
   Stream.Send(
       *this,
