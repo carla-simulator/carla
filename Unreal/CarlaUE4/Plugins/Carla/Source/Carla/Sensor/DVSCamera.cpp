@@ -115,11 +115,9 @@ void ADVSCamera::Set(const FActorDescription &Description)
       1e-03);
 }
 
-void ADVSCamera::Tick(float DeltaTime)
+void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   //Super (ASceneCaptureSensor) Capture the Scene in a (UTextureRenderTarget2D) CaptureRenderTarge from the CaptureComponent2D
-  Super::Tick(DeltaTime);
-
   /** Read the image **/
   TArray<FColor> image;
   this->ReadPixels(image);

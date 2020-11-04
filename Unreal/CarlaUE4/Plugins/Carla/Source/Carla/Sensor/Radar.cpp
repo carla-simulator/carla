@@ -63,15 +63,11 @@ void ARadar::BeginPlay()
 {
   Super::BeginPlay();
 
-  World = GetWorld();
-
   PrevLocation = GetActorLocation();
 }
 
-void ARadar::Tick(const float DeltaTime)
+void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
   CalculateCurrentVelocity(DeltaTime);
 
   RadarData.Reset();
@@ -130,7 +126,7 @@ void ARadar::SendLineTraces(float DeltaTime)
       MaxRy * Radius * Sin
     });
 
-    const bool Hitted = World->LineTraceSingleByChannel(
+    const bool Hitted = GetWorld()->LineTraceSingleByChannel(
       OutHit,
       RadarLocation,
       EndLocation,

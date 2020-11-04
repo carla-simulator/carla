@@ -48,7 +48,8 @@ protected:
 
   void BeginPlay() override;
 
-  virtual void Tick(float DeltaTime) override;
+  // virtual void PrePhysTick(float DeltaTime) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Detection")
   float Range;

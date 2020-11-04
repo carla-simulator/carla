@@ -498,10 +498,8 @@ void ASceneCaptureSensor::BeginPlay()
   SendPixelsDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
 }
 
-void ASceneCaptureSensor::Tick(float DeltaTime)
+void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
   // Add the view information every tick. Its only used for one tick and then
   // removed by the streamer.
   IStreamingManager::Get().AddViewInformation(
