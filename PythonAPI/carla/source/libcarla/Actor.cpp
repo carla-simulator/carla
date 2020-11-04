@@ -40,7 +40,7 @@ boost::python::list StdVectorToPyList(const std::vector<T> &vec) {
 }
 
 static boost::python::list GetSemanticTags(const carla::client::Actor &self) {
-  const std::vector<int> &tags = self.GetSemanticTags();
+  const std::vector<uint8_t> &tags = self.GetSemanticTags();
   return StdVectorToPyList(tags);
 }
 
