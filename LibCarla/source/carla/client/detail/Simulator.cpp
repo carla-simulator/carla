@@ -82,9 +82,9 @@ namespace detail {
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
 
-  EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
+  EpisodeProxy Simulator::LoadEpisode(std::string map_name, rpc::MapLayer map_layers) {
     const auto id = GetCurrentEpisode().GetId();
-    _client.LoadEpisode(std::move(map_name));
+    _client.LoadEpisode(std::move(map_name), map_layers);
     size_t number_of_attempts = _client.GetTimeout().milliseconds() / 10u;
     for (auto i = 0u; i < number_of_attempts; ++i) {
       using namespace std::literals::chrono_literals;
