@@ -53,6 +53,9 @@ ATrafficLightManager::ATrafficLightManager()
 
 void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComponent * TrafficLightComponent)
 {
+  ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
+  check(GM);
+
   // Cast to std::string
   carla::road::SignId SignId(TCHAR_TO_UTF8(*(TrafficLightComponent->GetSignId())));
 
@@ -78,8 +81,10 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
     // Search/create TrafficGroup (junction traffic light manager)
     if(!TrafficGroups.Contains(JunctionId))
     {
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
       auto * NewTrafficLightGroup =
-          GetWorld()->SpawnActor<ATrafficLightGroup>();
+          GetWorld()->SpawnActor<ATrafficLightGroup>(SpawnParams);
       NewTrafficLightGroup->JunctionId = JunctionId;
       TrafficGroups.Add(JunctionId, NewTrafficLightGroup);
     }
@@ -97,8 +102,10 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
   }
   else
   {
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
     auto * NewTrafficLightGroup =
-          GetWorld()->SpawnActor<ATrafficLightGroup>();
+          GetWorld()->SpawnActor<ATrafficLightGroup>(SpawnParams);
     NewTrafficLightGroup->JunctionId = TrafficLightGroupMissingId;
     TrafficGroups.Add(NewTrafficLightGroup->JunctionId, NewTrafficLightGroup);
     TrafficLightGroup = NewTrafficLightGroup;
@@ -439,6 +446,9 @@ void ATrafficLightManager::SpawnTrafficLights()
       }
     }
   }
+
+  ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
+  check(GM);
   for(auto &SignalId : SignalsToSpawn)
   {
     // TODO: should this be an assert?
@@ -468,6 +478,7 @@ void ATrafficLightManager::SpawnTrafficLights()
     SpawnParams.Owner = this;
     SpawnParams.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
     ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
         TrafficLightModel,
         SpawnLocation,
@@ -509,6 +520,9 @@ void ATrafficLightManager::SpawnTrafficLights()
 
 void ATrafficLightManager::SpawnSignals()
 {
+  ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
+  check(GM);
+
   const auto &Signals = GetMap()->GetSignals();
   for (auto& SignalPair : Signals)
   {
@@ -559,6 +573,7 @@ void ATrafficLightManager::SpawnSignals()
       SpawnParams.Owner = this;
       SpawnParams.SpawnCollisionHandlingOverride =
           ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficSigns");
       ATrafficSignBase * TrafficSign = GetWorld()->SpawnActor<ATrafficSignBase>(
           TrafficSignsModels[SignalType],
           SpawnLocation,

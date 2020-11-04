@@ -20,6 +20,7 @@
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/MapLayer.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
@@ -57,6 +58,10 @@ namespace client {
 
     /// Return the map that describes this world.
     SharedPtr<Map> GetMap() const;
+
+    void LoadLevelLayer(rpc::MapLayer map_layers) const;
+
+    void UnloadLevelLayer(rpc::MapLayer map_layers) const;
 
     /// Return the list of blueprints available in this world. This blueprints
     /// can be used to spawning actor into the world.
