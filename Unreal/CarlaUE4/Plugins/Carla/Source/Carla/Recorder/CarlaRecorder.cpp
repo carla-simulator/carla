@@ -101,6 +101,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
           if (bAdditionalData)
           {
             AddActorKinematics(View);
+			AddActorBoundingBox(View);
           }
           break;
 
@@ -117,6 +118,8 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
         // save the state of each traffic light
         case FActorView::ActorType::TrafficLight:
           AddTrafficLightState(View);
+		  ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(View.GetActor());	
+		  AddTriggerVolume(*TrafficSign);
           break;
       }
     }
