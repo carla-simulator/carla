@@ -188,11 +188,6 @@ public:
         return tm->SynchronousTick();
       });
 
-      /// Method to reset all traffic lights.
-      server->bind("reset_all_traffic_lights", [=]() {
-        tm->ResetAllTrafficLights();
-      });
-
       /// Method to check server is alive or not.
       server->bind("health_check_remote_TM", [=](){});
 

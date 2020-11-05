@@ -22,6 +22,14 @@ namespace client {
     return _episode.Lock()->GetCurrentMap();
   }
 
+  void World::LoadLevelLayer(rpc::MapLayer map_layers) const {
+    _episode.Lock()->LoadLevelLayer(map_layers);
+  }
+
+  void World::UnloadLevelLayer(rpc::MapLayer map_layers) const {
+    _episode.Lock()->UnloadLevelLayer(map_layers);
+  }
+
   SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
     return _episode.Lock()->GetBlueprintLibrary();
   }
@@ -174,6 +182,26 @@ namespace client {
       std::vector<uint64_t> env_objects_ids,
       bool enable) const {
     _episode.Lock()->EnableEnvironmentObjects(env_objects_ids, enable);
+  }
+
+  boost::optional<rpc::LabelledPoint> World::ProjectPoint(
+      geom::Location location, geom::Vector3D direction, float search_distance) const {
+    auto result = _episode.Lock()->ProjectPoint(location, direction, search_distance);
+    if (result.first) {
+      return result.second;
+    }
+    return {};
+  }
+
+  boost::optional<rpc::LabelledPoint> World::GroundProjection(
+      geom::Location location, float search_distance) const {
+    const geom::Vector3D DownVector(0,0,-1);
+    return ProjectPoint(location, DownVector, search_distance);
+  }
+
+  std::vector<rpc::LabelledPoint> World::CastRay(
+      geom::Location start_location, geom::Location end_location) const {
+    return _episode.Lock()->CastRay(start_location, end_location);
   }
 
 } // namespace client

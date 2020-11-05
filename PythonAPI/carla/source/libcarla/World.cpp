@@ -81,7 +81,6 @@ static auto GetVehiclesLightStates(carla::client::World &self) {
 }
 
 static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
   for (const auto &bb : self.GetLevelBBs(queried_tag)) {
     result.append(bb);
@@ -90,7 +89,6 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
 }
 
 static auto GetEnvironmentObjects(const carla::client::World &self) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
   for (const auto &geometry : self.GetEnvironmentObjects()) {
     result.append(geometry);
@@ -201,6 +199,25 @@ void export_world() {
     .value("Terrain", cr::CityObjectLabel::Terrain)
   ;
 
+  class_<cr::LabelledPoint>("LabelledPoint", no_init)
+    .def_readonly("location", &cr::LabelledPoint::_location)
+    .def_readonly("label", &cr::LabelledPoint::_label)
+  ;
+
+  enum_<cr::MapLayer>("MapLayer")
+    .value("NONE", cr::MapLayer::None)
+    .value("Buildings", cr::MapLayer::Buildings)
+    .value("Decals", cr::MapLayer::Decals)
+    .value("Foliage", cr::MapLayer::Foliage)
+    .value("Ground", cr::MapLayer::Ground)
+    .value("ParkedVehicles", cr::MapLayer::ParkedVehicles)
+    .value("Particles", cr::MapLayer::Particles)
+    .value("Props", cr::MapLayer::Props)
+    .value("StreetLights", cr::MapLayer::StreetLights)
+    .value("Walls", cr::MapLayer::Walls)
+    .value("All", cr::MapLayer::All)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -219,6 +236,8 @@ void export_world() {
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
     .add_property("debug", &cc::World::MakeDebugHelper)
+    .def("load_map_layer", CONST_CALL_WITHOUT_GIL_1(cc::World, LoadLevelLayer, cr::MapLayer), arg("map_layers"))
+    .def("unload_map_layer", CONST_CALL_WITHOUT_GIL_1(cc::World, UnloadLevelLayer, cr::MapLayer), arg("map_layers"))
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_vehicles_light_states", &GetVehiclesLightStates)
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
@@ -247,6 +266,9 @@ void export_world() {
     .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
     .def("get_environment_objects", &GetEnvironmentObjects)
     .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))
+    .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
+    .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
+    .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
     .def(self_ns::str(self_ns::self))
   ;
 

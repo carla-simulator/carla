@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,7 +14,7 @@
 #include "GameFramework/Character.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
-
+#include "Engine/SkeletalMeshSocket.h"
 
 namespace crp = carla::rpc;
 
@@ -129,22 +129,79 @@ FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
   UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-  USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
+  USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
 
   // Filter by tag
-  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*ParentComp);
   if(FilterByTagEnabled && Tag != TagQueried) return {};
 
-  USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+  USkeletalMesh* SkeletalMesh = ParentComp->SkeletalMesh;
   FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+
   if(BoundingBox.Extent.IsZero())
   {
     UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Vehicle->GetName());
     return {};
   }
 
+  // Two wheel vehicle have more than one SKM
+  TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+  Vehicle->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+
+  if(SkeletalMeshComps.Num() > 1)
+  {
+    FVector VehicleLocation = Vehicle->GetActorLocation();
+    FRotator VehicleRotation = Vehicle->GetActorRotation();
+    float MaxHeadLocation = TNumericLimits<float>::Lowest();
+    float MaxKneeLocation = TNumericLimits<float>::Lowest();
+    bool SocketFound = false;
+    for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
+    {
+      if(Comp == ParentComp) continue; // ignore vehicle skeleton
+
+      // Location of sockets are in world space
+      FVector HeadLocation = Comp->GetSocketLocation("crl_Head__C") - VehicleLocation;
+      FVector KneeLocation = Comp->GetSocketLocation("crl_leg__L") - VehicleLocation;
+
+      HeadLocation = VehicleRotation.UnrotateVector(HeadLocation);
+      KneeLocation = VehicleRotation.UnrotateVector(KneeLocation);
+
+      MaxHeadLocation = (HeadLocation.Z > MaxHeadLocation) ? HeadLocation.Z : MaxHeadLocation;
+      MaxKneeLocation = (KneeLocation.Y > MaxKneeLocation) ? KneeLocation.Y : MaxKneeLocation;
+
+      SocketFound = true;
+    }
+
+    if(SocketFound)
+    {
+      FVector MinVertex = BoundingBox.Origin - BoundingBox.Extent;
+      FVector MaxVertex = BoundingBox.Origin + BoundingBox.Extent;
+      MaxHeadLocation += 20.0f; // hack, the bone of the head is at he bottom
+
+      MaxVertex.Y = (MaxKneeLocation > MaxVertex.Y) ? MaxKneeLocation : MaxVertex.Y;
+      MinVertex.Y = (-MaxKneeLocation < MinVertex.Y) ? MaxKneeLocation : MinVertex.Y;
+      MaxVertex.Z = (MaxHeadLocation > MaxVertex.Z) ? MaxHeadLocation : MaxVertex.Z;
+
+      FVector Extent (
+        (MaxVertex.X - MinVertex.X) * 0.5f,
+        (MaxVertex.Y - MinVertex.Y) * 0.5f,
+        (MaxVertex.Z - MinVertex.Z) * 0.5f
+      );
+
+      // Calculate middle point
+      FVector Origin (
+        (MinVertex.X + Extent.X),
+        (MinVertex.Y + Extent.Y),
+        (MinVertex.Z + Extent.Z)
+      );
+
+      BoundingBox.Origin = Origin;
+      BoundingBox.Extent = Extent;
+    }
+  }
+
   // Component-to-world transform for this component
-  const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+  const FTransform& CompToWorldTransform = ParentComp->GetComponentTransform();
   BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
 
   return BoundingBox;
@@ -229,7 +286,7 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
       IndicesDiscarded.Emplace(i);
       FBoundingBox MergedBB = CombineBBs(BBsToCombine);
       MergedBB.Rotation = BB1.Rotation;
-      OutBB.Add(MergedBB);
+      OutBB.Emplace(MergedBB);
     }
   }
 
@@ -239,7 +296,7 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     // Check if the index was used to merge a previous BB
     if(IndicesDiscarded.Contains(i)) continue;
     FBoundingBox& BB = BBsOfTL[i];
-    OutBB.Add(BB);
+    OutBB.Emplace(BB);
   }
 
 }
