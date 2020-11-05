@@ -100,7 +100,7 @@ void ARadar::SendLineTraces(float DeltaTime)
   const FVector TransformYAxis = ActorTransform.GetUnitAxis(EAxis::Y);
   const FVector TransformZAxis = ActorTransform.GetUnitAxis(EAxis::Z);
 
-  // Maximun radar radius in horizontal and vertical direction
+  // Maximum radar radius in horizontal and vertical direction
   const float MaxRx = FMath::Tan(FMath::DegreesToRadians(HorizontalFOV * 0.5f)) * Range;
   const float MaxRy = FMath::Tan(FMath::DegreesToRadians(VerticalFOV * 0.5f)) * Range;
   const int NumPoints = (int)(PointsPerSecond * DeltaTime);
