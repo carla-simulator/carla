@@ -52,7 +52,7 @@ class Scenario():
         self.active = True
 
         snapshot = self.world.get_snapshot()
-        self.init_timestamp = {'frame0' : snapshot.frame, 'time0' : 
+        self.init_timestamp = {'frame0' : snapshot.frame, 'time0' :
                 snapshot.timestamp.elapsed_seconds}
 
     def wait(self, frames=100):
@@ -251,7 +251,7 @@ class TestScenario():
 
     def compare_files(self, file_i, file_j):
 
-        # First, we check if the files are exactly equal, 
+        # First, we check if the files are exactly equal,
         # if they are the simulations are equivalent
         check_ij = filecmp.cmp(file_i, file_j)
         if check_ij:

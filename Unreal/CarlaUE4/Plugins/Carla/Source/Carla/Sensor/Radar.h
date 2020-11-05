@@ -89,6 +89,6 @@ private:
     FVector2D AzimuthAndElevation;
     float Distance;
   };
-  
+
   std::vector<RayData> Rays;
 };
