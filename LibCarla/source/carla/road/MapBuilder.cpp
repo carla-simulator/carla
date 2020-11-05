@@ -990,10 +990,7 @@ void MapBuilder::CreateController(
       auto& road_info = _temp_road_info_container[GetRoad(road_id)];
       road_info.erase(std::remove_if(road_info.begin(), road_info.end(),
           [=] (auto& info_ptr) {
-            if (info_ptr.get() == element) {
-              return true;
-            }
-            return false;
+            return (info_ptr.get() == element);
           }), road_info.end());
       _temp_signal_reference_container.erase(std::remove(_temp_signal_reference_container.begin(),
           _temp_signal_reference_container.end(), element),

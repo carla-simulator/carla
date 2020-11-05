@@ -343,14 +343,16 @@ namespace road {
         } else {
           distance_to_signal = waypoint.s - signal->GetDistance();
         }
-        Waypoint signal_waypoint;
         if (distance_to_signal == 0) {
-          signal_waypoint = waypoint;
+          result.emplace_back(SignalSearchData
+              {signal, waypoint,
+              distance_to_signal});
         } else {
-          signal_waypoint = GetNext(waypoint, distance_to_signal).front();
+          result.emplace_back(SignalSearchData
+              {signal, GetNext(waypoint, distance_to_signal).front(),
+              distance_to_signal});
         }
-        SignalSearchData signal_data{signal, signal_waypoint, distance_to_signal};
-        result.emplace_back(signal_data);
+
       }
       return result;
     }
