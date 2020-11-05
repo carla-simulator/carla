@@ -138,7 +138,7 @@ void ARayCastSemanticLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPoints
 
   for (auto& conds : RayPreprocessCondition) {
     conds.clear();
-    conds.reserve(MaxPointsPerChannel);
+    conds.resize(MaxPointsPerChannel);
     std::fill(conds.begin(), conds.end(), true);
   }
 }
