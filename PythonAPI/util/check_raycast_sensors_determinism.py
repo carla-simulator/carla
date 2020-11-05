@@ -150,6 +150,7 @@ class SpawnLidarNoDropff(Scenario):
         lidar_bp.set_attribute('channels', '64')
         lidar_bp.set_attribute('points_per_second', '200000')
         lidar_bp.set_attribute('dropoff_general_rate', '0.0')
+        lidar_bp.set_attribute('noise_seed', '43233')
 
         lidar_tr = carla.Transform(carla.Location(z=2))
         lidar = world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
@@ -203,6 +204,7 @@ class SpawnRadar(Scenario):
         vehicle00.set_target_velocity(carla.Vector3D(-25, 0, 0))
 
         radar_bp = world.get_blueprint_library().find('sensor.other.radar')
+        radar_bp.set_attribute('noise_seed', '54283')
 
         radar_tr = carla.Transform(carla.Location(z=2))
         radar = world.spawn_actor(radar_bp, radar_tr, attach_to=vehicle00)
@@ -230,6 +232,7 @@ class SpawnLidarWithDropff(Scenario):
         lidar_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
         lidar_bp.set_attribute('channels', '64')
         lidar_bp.set_attribute('points_per_second', '200000')
+        lidar_bp.set_attribute('noise_seed', '249013')
 
         lidar_tr = carla.Transform(carla.Location(z=2))
         lidar = world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
