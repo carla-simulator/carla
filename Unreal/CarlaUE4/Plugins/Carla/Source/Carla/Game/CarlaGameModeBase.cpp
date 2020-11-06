@@ -39,6 +39,8 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
 
+  ObjectRegister = CreateDefaultSubobject<UObjectRegister>(TEXT("ObjectRegister"));
+
   // HUD
   HUDClass = ACarlaHUD::StaticClass();
 
@@ -361,51 +363,17 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
 
 void ACarlaGameModeBase::RegisterEnvironmentObject()
 {
-  UWorld* World = GetWorld();
-
   // Get all actors of the level
   TArray<AActor*> FoundActors;
-  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
-
-  // Empties the array but doesn't change memory allocations
-  EnvironmentObjects.Reset();
-
-  for(AActor* Actor : FoundActors)
-  {
-    FString ActorName = Actor->GetName();
-    const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
-
-    FEnvironmentObject EnvironmentObject;
-    EnvironmentObject.Transform = Actor->GetActorTransform();
-    EnvironmentObject.Id = CityHash64(ActorNameChar, ActorName.Len());
-    EnvironmentObject.Name = ActorName;
-    EnvironmentObject.Actor = Actor;
-    EnvironmentObject.CanTick = Actor->IsActorTickEnabled();
-
-    EnvironmentObjects.Emplace(EnvironmentObject);
-  }
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+  ObjectRegister->RegisterObjects(FoundActors);
 }
 
 void ACarlaGameModeBase::EnableEnvironmentObjects(
   const TSet<uint64>& EnvObjectIds,
   bool Enable)
 {
-
-  for(FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
-  {
-    if(EnvObjectIds.Contains(EnvironmentObject.Id))
-    {
-      AActor* Actor = EnvironmentObject.Actor;
-
-      Actor->SetActorHiddenInGame(!Enable);
-      Actor->SetActorEnableCollision(Enable);
-      if(EnvironmentObject.CanTick)
-      {
-        Actor->SetActorTickEnabled(Enable);
-      }
-    }
-  }
-
+  ObjectRegister->EnableEnvironmentObjects(EnvObjectIds, Enable);
 }
 
 void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
