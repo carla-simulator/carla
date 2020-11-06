@@ -46,6 +46,7 @@ public:
   static void GetTrafficLightBoundingBox(
     const ATrafficLightBase* TrafficLight,
     TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
     uint8 InTagQueried = 0);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
@@ -56,19 +57,21 @@ public:
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static void GetISMBoundingBox(
-    UInstancedStaticMeshComponent* HISMComp,
+    UInstancedStaticMeshComponent* ISMComp,
     TArray<FBoundingBox>& OutBoundingBox);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static void GetBBsOfStaticMeshComponents(
     const TArray<UStaticMeshComponent*>& StaticMeshComps,
     TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
     uint8 InTagQueried = 0);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static void GetBBsOfSkeletalMeshComponents(
     const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
     TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
     uint8 InTagQueried = 0);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
@@ -80,5 +83,28 @@ public:
   static TArray<FBoundingBox> GetBBsOfActor(
     const AActor* Actor,
     uint8 InTagQueried = 0);
+
+  // Combines the BBs of an actor based on the distance and type of the BB
+  // The BBs not combined are included too (ie: TL BBs and pole)
+  // DistanceThreshold is the maximum distance between BBs to combine, if 0.0 the distance is ignored
+  // TagToCombine defines the type of the BBs to combine, if 0 the type is ignored
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static void CombineBBsOfActor(
+    const AActor* Actor,
+    TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
+    const float DistanceThreshold = 0.0f,
+    uint8 TagToCombine = 0);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static FBoundingBox CombineBBs(const TArray<FBoundingBox>& BBsToCombine);
+
+  // Returns Static Mesh Components that generate the InBB of the Actor
+  // ie: the SMComps that creates the BB of the TL light box
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void GetMeshCompsFromActorBoundingBox(
+    const AActor* Actor,
+    const FBoundingBox& InBB,
+    TArray<UStaticMeshComponent*>& OutStaticMeshComps);
 
 };
