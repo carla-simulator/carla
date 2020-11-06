@@ -90,8 +90,8 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
 
 static auto GetEnvironmentObjects(const carla::client::World &self) {
   boost::python::list result;
-  for (const auto &geometry : self.GetEnvironmentObjects()) {
-    result.append(geometry);
+  for (const auto &object : self.GetEnvironmentObjects()) {
+    result.append(object);
   }
   return result;
 }
@@ -168,9 +168,11 @@ void export_world() {
 
   class_<cr::EnvironmentObject>("EnvironmentObject", no_init)
     .def_readwrite("transform", &cr::EnvironmentObject::transform)
-    //.def_readwrite("bounding_box", &cr::EnvironmentObject::bounding_box)
+    .def_readwrite("bounding_box", &cr::EnvironmentObject::bounding_box)
+    cr::CityObjectLabel::None
     .def_readwrite("id", &cr::EnvironmentObject::id)
     .def_readwrite("name", &cr::EnvironmentObject::name)
+    .def_readwrite("type", &cr::CityObjectLabel::type)
     .def(self_ns::str(self_ns::self))
   ;
 
