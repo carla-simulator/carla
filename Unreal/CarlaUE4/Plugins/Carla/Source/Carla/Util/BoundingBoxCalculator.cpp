@@ -290,7 +290,7 @@ FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(const UStaticMesh*
 {
   if(!StaticMesh)
   {
-    UE_LOG(LogCarla, Error, TEXT("GetStaticMeshBoundingBox no StaticMesh"));
+    // UE_LOG(LogCarla, Error, TEXT("GetStaticMeshBoundingBox no StaticMesh"));
     return {};
   }
 
@@ -356,7 +356,7 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 
     if(BoundingBox.Extent.IsZero())
     {
-      UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Comp->GetOwner()->GetName());
+      // UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Comp->GetOwner()->GetName());
     }
     else
     {
@@ -606,7 +606,7 @@ void UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(
   TArray<UStaticMeshComponent*> StaticMeshComps;
   Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
   GetBBsOfStaticMeshComponents(StaticMeshComps, BBsOfTL, InternalOutTags);
-  check((StaticMeshComps.Num() == BBsOfTL.Num()) && (StaticMeshComps.Num() == InternalOutTags.Num()));
+  check(BBsOfTL.Num() == InternalOutTags.Num());
 
   const float DistanceThreshold = 100.0f * 100.0f;
 
