@@ -8,12 +8,14 @@
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Engine/DecalActor.h"
+#include "Engine/LevelStreaming.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/WeatherParameters.h>
+#include <carla/rpc/MapLayer.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "Async/ParallelFor.h"
@@ -23,6 +25,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 namespace cr = carla::road;
+namespace crp = carla::rpc;
 namespace cre = carla::road::element;
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
@@ -120,6 +123,9 @@ void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
 void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
+
+  LoadMapLayer(GameInstance->GetCurrentMapLayer());
+
 
   if (true) { /// @todo If semantic segmentation enabled.
     check(GetWorld() != nullptr);
@@ -223,10 +229,13 @@ ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
 {
   if (!TrafficLightManager)
   {
-    AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(GetWorld(), ATrafficLightManager::StaticClass());
+    UWorld* World = GetWorld();
+    AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
     if(TrafficLightManagerActor == nullptr)
     {
-      TrafficLightManager = GetWorld()->SpawnActor<ATrafficLightManager>();
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.OverrideLevel = GetULevelFromName("TrafficLights");
+      TrafficLightManager = World->SpawnActor<ATrafficLightManager>(SpawnParams);
     }
     else
     {
@@ -350,11 +359,6 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   return BoundingBoxes;
 }
 
-TArray<FEnvironmentObject> ACarlaGameModeBase::GetEnvironmentObjects() const
-{
-  return EnvironmentObjects;
-}
-
 void ACarlaGameModeBase::RegisterEnvironmentObject()
 {
   UWorld* World = GetWorld();
@@ -402,4 +406,109 @@ void ACarlaGameModeBase::EnableEnvironmentObjects(
     }
   }
 
+}
+
+void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
+{
+  const UWorld* World = GetWorld();
+
+  TArray<FName> LevelsToLoad;
+  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
+
+  FLatentActionInfo LatentInfo;
+  LatentInfo.UUID = 1;
+  for(FName& LevelName : LevelsToLoad)
+  {
+    UGameplayStatics::LoadStreamLevel(World, LevelName, true, true, LatentInfo);
+    LatentInfo.UUID++;
+  }
+
+  // Register new actors and tag them
+  RegisterEnvironmentObject();
+  ATagger::TagActorsInLevel(*GetWorld(), true);
+
+}
+
+void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
+{
+  const UWorld* World = GetWorld();
+
+  TArray<FName> LevelsToLoad;
+  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
+
+  FLatentActionInfo LatentInfo;
+  LatentInfo.UUID = 1;
+  for(FName& LevelName : LevelsToLoad)
+  {
+    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, true);
+    LatentInfo.UUID++;
+  }
+
+  // Update stored registered objects (discarding the deleted objects)
+  RegisterEnvironmentObject();
+}
+
+void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames)
+{
+  UWorld* World = GetWorld();
+  const TArray <ULevelStreaming*> Levels = World->GetStreamingLevels();
+  TArray<FString> LayersToLoad;
+
+  // Get all the requested layers
+  int32 LayerMask = 1;
+  int32 AllLayersMask = static_cast<crp::MapLayerType>(crp::MapLayer::All);
+
+  while(LayerMask > 0)
+  {
+    // Convert enum to FString
+    FString LayerName = UTF8_TO_TCHAR(MapLayerToString(static_cast<crp::MapLayer>(LayerMask)).c_str());
+    bool included = static_cast<crp::MapLayerType>(MapLayer) & LayerMask;
+    if(included)
+    {
+      LayersToLoad.Emplace(LayerName);
+    }
+    LayerMask = (LayerMask << 1) & AllLayersMask;
+  }
+
+  // Get all the requested level maps
+  for(ULevelStreaming* Level : Levels)
+  {
+    TArray<FString> StringArray;
+    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    // Discard full path, we just need the umap name
+    FullSubMapName.ParseIntoArray(StringArray, TEXT("/"), false);
+    FString SubMapName = StringArray[StringArray.Num() - 1];
+    for(FString LayerName : LayersToLoad)
+    {
+      if(SubMapName.Contains(LayerName))
+      {
+        OutLevelNames.Emplace(FName(*SubMapName));
+        break;
+      }
+    }
+  }
+
+}
+
+ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
+{
+  ULevel* OutLevel = nullptr;
+  UWorld* World = GetWorld();
+  const TArray <ULevelStreaming*> Levels = World->GetStreamingLevels();
+
+  for(ULevelStreaming* Level : Levels)
+  {
+    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    if(FullSubMapName.Contains(LevelName))
+    {
+      OutLevel = Level->GetLoadedLevel();
+      if(!OutLevel)
+      {
+        UE_LOG(LogCarla, Warning, TEXT("%s has not been loaded"), *LevelName);
+      }
+      break;
+    }
+  }
+
+  return OutLevel;
 }

@@ -148,6 +148,7 @@ void TrafficManagerLocal::Run() {
       previous_update_instance = current_instance;
     }
 
+    std::unique_lock<std::mutex> registration_lock(registration_mutex);
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
 
@@ -174,6 +175,7 @@ void TrafficManagerLocal::Run() {
 
       registered_vehicles_state = registered_vehicles.GetState();
     }
+    registration_lock.unlock();
 
     // Reset frames for current cycle.
     localization_frame.clear();
@@ -278,6 +280,7 @@ void TrafficManagerLocal::Reset() {
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
+  std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
   for (const ActorPtr &vehicle: vehicle_list) {
     random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
@@ -285,7 +288,7 @@ void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-
+  std::lock_guard<std::mutex> registration_lock(registration_mutex);
   std::vector<ActorId> actor_id_list;
   for (auto &actor : actor_list) {
     alsm.RemoveActor(actor->GetId(), true);

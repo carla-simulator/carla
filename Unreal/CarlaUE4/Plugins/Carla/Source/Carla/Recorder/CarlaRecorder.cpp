@@ -88,6 +88,11 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
 
       switch (View.GetActorType())
       {
+        // save the transform for props
+        case FActorView::ActorType::Other:
+          AddActorPosition(View);
+          break;
+
         // save the transform of all vehicles
         case FActorView::ActorType::Vehicle:
           AddActorPosition(View);

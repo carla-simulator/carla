@@ -81,7 +81,6 @@ static auto GetVehiclesLightStates(carla::client::World &self) {
 }
 
 static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
   for (const auto &bb : self.GetLevelBBs(queried_tag)) {
     result.append(bb);
@@ -90,7 +89,6 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
 }
 
 static auto GetEnvironmentObjects(const carla::client::World &self) {
-  carla::PythonUtil::ReleaseGIL unlock;
   boost::python::list result;
   for (const auto &geometry : self.GetEnvironmentObjects()) {
     result.append(geometry);
@@ -143,12 +141,18 @@ void export_world() {
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
-    .def(init<bool, bool, double>(
+    .def(init<bool, bool, double, bool, double, int>(
         (arg("synchronous_mode")=false,
          arg("no_rendering_mode")=false,
-         arg("fixed_delta_seconds")=0.0)))
+         arg("fixed_delta_seconds")=0.0,
+         arg("substepping")=true,
+         arg("max_substep_delta_time")=0.01,
+         arg("max_substeps")=10)))
     .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
     .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
+    .def_readwrite("substepping", &cr::EpisodeSettings::substepping)
+    .def_readwrite("max_substep_delta_time", &cr::EpisodeSettings::max_substep_delta_time)
+    .def_readwrite("max_substeps", &cr::EpisodeSettings::max_substeps)
     .add_property("fixed_delta_seconds",
         +[](const cr::EpisodeSettings &self) {
           return OptionalToPythonObject(self.fixed_delta_seconds);
@@ -157,8 +161,8 @@ void export_world() {
           double fds = (value == object{} ? 0.0 : extract<double>(value));
           self.fixed_delta_seconds = fds > 0.0 ? fds : boost::optional<double>{};
         })
-    .def("__eq__", &cc::Timestamp::operator==)
-    .def("__ne__", &cc::Timestamp::operator!=)
+    .def("__eq__", &cr::EpisodeSettings::operator==)
+    .def("__ne__", &cr::EpisodeSettings::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -206,6 +210,20 @@ void export_world() {
     .def_readonly("label", &cr::LabelledPoint::_label)
   ;
 
+  enum_<cr::MapLayer>("MapLayer")
+    .value("NONE", cr::MapLayer::None)
+    .value("Buildings", cr::MapLayer::Buildings)
+    .value("Decals", cr::MapLayer::Decals)
+    .value("Foliage", cr::MapLayer::Foliage)
+    .value("Ground", cr::MapLayer::Ground)
+    .value("ParkedVehicles", cr::MapLayer::ParkedVehicles)
+    .value("Particles", cr::MapLayer::Particles)
+    .value("Props", cr::MapLayer::Props)
+    .value("StreetLights", cr::MapLayer::StreetLights)
+    .value("Walls", cr::MapLayer::Walls)
+    .value("All", cr::MapLayer::All)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -224,6 +242,8 @@ void export_world() {
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
     .add_property("debug", &cc::World::MakeDebugHelper)
+    .def("load_map_layer", CONST_CALL_WITHOUT_GIL_1(cc::World, LoadLevelLayer, cr::MapLayer), arg("map_layers"))
+    .def("unload_map_layer", CONST_CALL_WITHOUT_GIL_1(cc::World, UnloadLevelLayer, cr::MapLayer), arg("map_layers"))
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_vehicles_light_states", &GetVehiclesLightStates)
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))

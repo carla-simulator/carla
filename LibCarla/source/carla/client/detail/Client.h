@@ -21,6 +21,7 @@
 #include "carla/rpc/LabelledPoint.h"
 #include "carla/rpc/LightState.h"
 #include "carla/rpc/MapInfo.h"
+#include "carla/rpc/MapLayer.h"
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
@@ -90,7 +91,11 @@ namespace detail {
 
     std::string GetServerVersion();
 
-    void LoadEpisode(std::string map_name);
+    void LoadEpisode(std::string map_name, rpc::MapLayer map_layer = rpc::MapLayer::All);
+
+    void LoadLevelLayer(rpc::MapLayer map_layer) const;
+
+    void UnloadLevelLayer(rpc::MapLayer map_layer) const;
 
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
