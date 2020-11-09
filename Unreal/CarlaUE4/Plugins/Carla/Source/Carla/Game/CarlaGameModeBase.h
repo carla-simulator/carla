@@ -91,7 +91,7 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
-  void RegisterEnvironmentObject();
+  void RegisterEnvironmentObjects();
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
 
@@ -129,5 +129,7 @@ private:
   ATrafficLightManager* TrafficLightManager = nullptr;
 
   boost::optional<carla::road::Map> Map;
+
+  bool ReadyToRegisterObjects = false;
 
 };
