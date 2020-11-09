@@ -9,6 +9,10 @@
 
 #include "Carla/Game/Tagger.h"
 
+// TODO: remove
+#include "FileHelper.h"
+#include "Paths.h"
+
 namespace crp = carla::rpc;
 
 void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
@@ -18,6 +22,10 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 
   for(AActor* Actor : Actors)
   {
+    const FString ActorName = Actor->GetName();
+
+    // Discard Sky to not broke the global ilumination
+    if(ActorName.Contains("BP_Sky")) continue;
 
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
     if (Vehicle)
@@ -46,6 +54,31 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 
     RegisterSKMComponents(Actor);
   }
+
+  // Temporal
+  FString FileContent;
+  FileContent += FString::Printf(TEXT("Num actors %d\n"), Actors.Num());
+  FileContent += FString::Printf(TEXT("Num registered objects %d\n\n"), EnvironmentObjects.Num());
+
+  for(const FEnvironmentObject& Object : EnvironmentObjects)
+  {
+    FileContent += FString::Printf(TEXT("%llu\t"), Object.Id);
+    FileContent += FString::Printf(TEXT("%s\t"), *Object.Name);
+    FileContent += FString::Printf(TEXT("%d\n"), static_cast<int32>(Object.Type));
+  }
+
+
+  FString FilePath = "~/Desktop/RegisteredObjects.txt";
+  FFileHelper::SaveStringToFile(
+    FileContent,
+    *FilePath,
+    FFileHelper::EEncodingOptions::AutoDetect,
+    &IFileManager::Get(),
+    EFileWrite::FILEWRITE_Silent);
+
+  UE_LOG(LogCarla, Warning, TEXT("Num actors %d"), Actors.Num());
+  UE_LOG(LogCarla, Warning, TEXT("Num registered objects %d"), EnvironmentObjects.Num());
+  UE_LOG(LogCarla, Warning, TEXT("Num comps %d"), ObjectIdToComp.Num());
 }
 
 void UObjectRegister::EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable)
@@ -110,7 +143,7 @@ void UObjectRegister::RegisterTrafficLight(ATrafficLightBase* TrafficLight)
 
   for(int i = 0; i < BBs.Num(); i++)
   {
-    const FBoundingBox& BB = BBs
+    const FBoundingBox& BB = BBs[i];
     const uint8 Tag = Tags[i];
 
     crp::CityObjectLabel ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
@@ -130,6 +163,7 @@ void UObjectRegister::RegisterTrafficLight(ATrafficLightBase* TrafficLight)
     EnvironmentObjects.Emplace(EnvironmentObject);
 
     // Register components with its ID; it's not the best solution since we are recalculating the BBs
+    // But this is only calculated when the level is loaded
     TArray<UStaticMeshComponent*> StaticMeshComps;
     UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(TrafficLight, BB, StaticMeshComps);
     for(const UStaticMeshComponent* Comp : StaticMeshComps)
@@ -147,12 +181,8 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
   Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
 
   const FString ActorName = Actor->GetName();
+  int InstanceCount = 0;
   bool IsActorTickEnabled = Actor->IsActorTickEnabled();
-
-  if(ISMComps.Num() > 0)
-  {
-    UE_LOG(LogCarla, Warning, TEXT("ISM ActorName = %s"), *ActorName);
-  }
 
   for(UInstancedStaticMeshComponent* Comp : ISMComps)
   {
@@ -174,12 +204,13 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       const int32 Y = static_cast<int32>(InstanceLocation.Y);
       const int32 Z = static_cast<int32>(InstanceLocation.Z);
 
-      const FString InstanceName = FString::Printf(TEXT("%s_Inst_%d"), *ActorName, i);
-      const FString InstanceId = FString::Printf(TEXT("%s_%d_%d_%d"), *ActorName, X, Y, Z);
+      const FString InstanceName = FString::Printf(TEXT("%s_Inst_%d_%d"), *ActorName, InstanceCount, i);
+      const FString InstanceIdStr = FString::Printf(TEXT("%s_%d_%d_%d"), *ActorName, X, Y, Z);
+      uint64 InstanceId = CityHash64(TCHAR_TO_ANSI(*InstanceIdStr), InstanceIdStr.Len());
 
       FEnvironmentObject EnvironmentObject;
       EnvironmentObject.Transform = InstanceTransform;
-      EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*InstanceId), InstanceId.Len());
+      EnvironmentObject.Id = InstanceId;
       EnvironmentObject.Name = InstanceName;
       EnvironmentObject.Actor = Actor;
       EnvironmentObject.CanTick = IsActorTickEnabled;
@@ -187,6 +218,9 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       EnvironmentObject.Type = EnvironmentObjectType::ISMComp;
       EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
       EnvironmentObjects.Emplace(EnvironmentObject);
+
+      ObjectIdToComp.Emplace(InstanceId, Comp);
+      InstanceCount++;
     }
   }
 }
@@ -221,7 +255,6 @@ void UObjectRegister::RegisterSMComponents(AActor* Actor)
     EnvironmentObject.Type = EnvironmentObjectType::SMComp;
     EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tags[i]);
     EnvironmentObjects.Emplace(EnvironmentObject);
-
   }
 }
 
@@ -268,16 +301,15 @@ void UObjectRegister::EnableEnvironmentObject(
   {
   case EnvironmentObjectType::Vehicle:
   case EnvironmentObjectType::Character:
+  case EnvironmentObjectType::SMComp:
+  case EnvironmentObjectType::SKMComp:
     EnableActor(EnvironmentObject, Enable);
     break;
   case EnvironmentObjectType::TrafficLight:
     EnableTrafficLight(EnvironmentObject, Enable);
     break;
   case EnvironmentObjectType::ISMComp:
-    break;
-  case EnvironmentObjectType::SMComp:
-    break;
-  case EnvironmentObjectType::SKMComp:
+    EnableISMComp(EnvironmentObject, Enable);
     break;
   default:
     check(false);
@@ -300,7 +332,46 @@ void UObjectRegister::EnableActor(FEnvironmentObject& EnvironmentObject, bool En
 
 void UObjectRegister::EnableTrafficLight(FEnvironmentObject& EnvironmentObject, bool Enable)
 {
+  // We need to look for the component(s) that form the EnvironmentObject
+  // i.e.: The light box is composed by various SMComponents, one per light,
+  //       we need to enable/disable all of them
 
+  TArray<const UStaticMeshComponent*> ObjectComps;
+  ObjectIdToComp.MultiFind(EnvironmentObject.Id, ObjectComps);
 
+  for(const UStaticMeshComponent* Comp : ObjectComps)
+  {
+    UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(Comp);
+    SMComp->SetHiddenInGame(!Enable);
+    ECollisionEnabled::Type CollisionType = Enable ? ECollisionEnabled::Type::QueryAndPhysics : ECollisionEnabled::Type::NoCollision;
+    SMComp->SetCollisionEnabled(CollisionType);
+  }
+
+}
+
+void UObjectRegister::EnableISMComp(FEnvironmentObject& EnvironmentObject, bool Enable)
+{
+  TArray<const UStaticMeshComponent*> ObjectComps;
+  TArray<FString> InstanceName;
+  FTransform InstanceTransform = EnvironmentObject.Transform;
+
+  ObjectIdToComp.MultiFind(EnvironmentObject.Id, ObjectComps);
+  EnvironmentObject.Name.ParseIntoArray(InstanceName, TEXT("_"), false);
+
+  int Index = FCString::Atoi(*InstanceName[InstanceName.Num() - 1]);
+
+  if(!Enable)
+  {
+    InstanceTransform.SetScale3D(FVector(0.0f));
+  }
+
+  for(const UStaticMeshComponent* Comp : ObjectComps)
+  {
+    UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(Comp);
+    UInstancedStaticMeshComponent* ISMComp = Cast<UInstancedStaticMeshComponent>(SMComp);
+    bool Result = ISMComp->UpdateInstanceTransform(Index, InstanceTransform, false, true);
+
+    UE_LOG(LogCarla, Warning, TEXT("EnableISMComp disabling instance %d"), Result);
+  }
 
 }
