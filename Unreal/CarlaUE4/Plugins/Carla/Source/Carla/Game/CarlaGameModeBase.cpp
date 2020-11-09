@@ -127,7 +127,7 @@ void ACarlaGameModeBase::BeginPlay()
   Super::BeginPlay();
 
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
-
+  ReadyToRegisterObjects = true;
 
   if (true) { /// @todo If semantic segmentation enabled.
     check(GetWorld() != nullptr);
@@ -163,8 +163,7 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  RegisterEnvironmentObject();
-
+  RegisterEnvironmentObjects();
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -361,7 +360,7 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   return BoundingBoxes;
 }
 
-void ACarlaGameModeBase::RegisterEnvironmentObject()
+void ACarlaGameModeBase::RegisterEnvironmentObjects()
 {
   // Get all actors of the level
   TArray<AActor*> FoundActors;
@@ -392,8 +391,11 @@ void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
   }
 
   // Register new actors and tag them
-  RegisterEnvironmentObject();
-  ATagger::TagActorsInLevel(*GetWorld(), true);
+  if(ReadyToRegisterObjects)
+  {
+    RegisterEnvironmentObjects();
+    ATagger::TagActorsInLevel(*GetWorld(), true);
+  }
 
 }
 
@@ -413,7 +415,10 @@ void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
   }
 
   // Update stored registered objects (discarding the deleted objects)
-  RegisterEnvironmentObject();
+  if(ReadyToRegisterObjects)
+  {
+    RegisterEnvironmentObjects();
+  }
 }
 
 void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames)
