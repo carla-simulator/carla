@@ -63,8 +63,9 @@ private:
 
   void EnableTrafficLight(FEnvironmentObject& EnvironmentObject, bool Enable);
 
-  UPROPERTY(Category = "Carla Object Register", EditAnywhere)
-  TMultiMap<uint64, UStaticMeshComponent*> ObjectIdToComp;
+  void EnableISMComp(FEnvironmentObject& EnvironmentObject, bool Enable);
+
+  TMultiMap<uint64, const UStaticMeshComponent*> ObjectIdToComp;
 
   UPROPERTY(Category = "Carla Object Register", EditAnywhere)
   TArray<FEnvironmentObject> EnvironmentObjects;
