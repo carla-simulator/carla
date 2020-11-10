@@ -99,8 +99,8 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   void ARayCastLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
     Super::PreprocessRays(Channels, MaxPointsPerChannel);
 
-    for (auto ch = 0; ch < Channels; ch++) {
-      for (auto p = 0; p < MaxPointsPerChannel; p++) {
+    for (auto ch = 0u; ch < Channels; ch++) {
+      for (auto p = 0u; p < MaxPointsPerChannel; p++) {
         RayPreprocessCondition[ch][p] = !(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate);
       }
     }
