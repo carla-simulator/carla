@@ -9,9 +9,10 @@
 
 #include "Carla/Game/Tagger.h"
 
-// TODO: remove
+#if WITH_EDITOR
 #include "FileHelper.h"
 #include "Paths.h"
+#endif // WITH_EDITOR
 
 namespace crp = carla::rpc;
 
@@ -55,7 +56,8 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
     RegisterSKMComponents(Actor);
   }
 
-  // Temporal
+#if WITH_EDITOR
+  // To help debug
   FString FileContent;
   FileContent += FString::Printf(TEXT("Num actors %d\n"), Actors.Num());
   FileContent += FString::Printf(TEXT("Num registered objects %d\n\n"), EnvironmentObjects.Num());
@@ -64,6 +66,7 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
   {
     FileContent += FString::Printf(TEXT("%llu\t"), Object.Id);
     FileContent += FString::Printf(TEXT("%s\t"), *Object.Name);
+    FileContent += FString::Printf(TEXT("%s\t"), *Object.IdStr);
     FileContent += FString::Printf(TEXT("%d\n"), static_cast<int32>(Object.Type));
   }
 
@@ -79,6 +82,8 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
   UE_LOG(LogCarla, Warning, TEXT("Num actors %d"), Actors.Num());
   UE_LOG(LogCarla, Warning, TEXT("Num registered objects %d"), EnvironmentObjects.Num());
   UE_LOG(LogCarla, Warning, TEXT("Num comps %d"), ObjectIdToComp.Num());
+#endif // WITH_EDITOR
+
 }
 
 void UObjectRegister::EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable)
@@ -184,6 +189,12 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
   int InstanceCount = 0;
   bool IsActorTickEnabled = Actor->IsActorTickEnabled();
 
+  // Foliage actor is a special case, it can appear more than once while traversing the actor list
+  if(Cast<AInstancedFoliageActor>(Actor))
+  {
+    InstanceCount = FoliageActorInstanceCount;
+  }
+
   for(UInstancedStaticMeshComponent* Comp : ISMComps)
   {
     const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData = Comp->PerInstanceSMData;
@@ -191,6 +202,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
     TArray<FBoundingBox> BoundingBoxes;
     UBoundingBoxCalculator::GetISMBoundingBox(Comp, BoundingBoxes);
 
+    FString CompName = Comp->GetName();
     const crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
 
     for(int i = 0; i < PerInstanceSMData.Num(); i++)
@@ -205,13 +217,14 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       const int32 Z = static_cast<int32>(InstanceLocation.Z);
 
       const FString InstanceName = FString::Printf(TEXT("%s_Inst_%d_%d"), *ActorName, InstanceCount, i);
-      const FString InstanceIdStr = FString::Printf(TEXT("%s_%d_%d_%d"), *ActorName, X, Y, Z);
+      const FString InstanceIdStr = FString::Printf(TEXT("%s_%s_%d_%d_%d"), *ActorName, *CompName, X, Y, Z);
       uint64 InstanceId = CityHash64(TCHAR_TO_ANSI(*InstanceIdStr), InstanceIdStr.Len());
 
       FEnvironmentObject EnvironmentObject;
       EnvironmentObject.Transform = InstanceTransform;
       EnvironmentObject.Id = InstanceId;
       EnvironmentObject.Name = InstanceName;
+      EnvironmentObject.IdStr = InstanceIdStr;
       EnvironmentObject.Actor = Actor;
       EnvironmentObject.CanTick = IsActorTickEnabled;
       EnvironmentObject.BoundingBox = BoundingBoxes[i];
@@ -222,6 +235,11 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       ObjectIdToComp.Emplace(InstanceId, Comp);
       InstanceCount++;
     }
+  }
+
+  if(Cast<AInstancedFoliageActor>(Actor))
+  {
+    FoliageActorInstanceCount = InstanceCount;
   }
 }
 
@@ -362,16 +380,12 @@ void UObjectRegister::EnableISMComp(FEnvironmentObject& EnvironmentObject, bool 
 
   if(!Enable)
   {
+    InstanceTransform.SetTranslation(FVector(5000000.0f));
     InstanceTransform.SetScale3D(FVector(0.0f));
   }
 
-  for(const UStaticMeshComponent* Comp : ObjectComps)
-  {
-    UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(Comp);
-    UInstancedStaticMeshComponent* ISMComp = Cast<UInstancedStaticMeshComponent>(SMComp);
-    bool Result = ISMComp->UpdateInstanceTransform(Index, InstanceTransform, false, true);
-
-    UE_LOG(LogCarla, Warning, TEXT("EnableISMComp disabling instance %d"), Result);
-  }
+  UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(ObjectComps[0]);
+  UInstancedStaticMeshComponent* ISMComp = Cast<UInstancedStaticMeshComponent>(SMComp);
+  bool Result = ISMComp->UpdateInstanceTransform(Index, InstanceTransform, true, true);
 
 }

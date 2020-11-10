@@ -70,4 +70,6 @@ private:
   UPROPERTY(Category = "Carla Object Register", EditAnywhere)
   TArray<FEnvironmentObject> EnvironmentObjects;
 
+  int FoliageActorInstanceCount = 0;
+
 };
