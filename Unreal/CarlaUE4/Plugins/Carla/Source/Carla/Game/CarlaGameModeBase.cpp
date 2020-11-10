@@ -493,8 +493,6 @@ void ACarlaGameModeBase::OnLoadStreamLevel()
 {
   PendingLevelsToLoad--;
 
-  UE_LOG(LogCarla, Warning, TEXT("OnLoadStreamLevel"));
-
   // Register new actors and tag them
   if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
   {
@@ -506,9 +504,6 @@ void ACarlaGameModeBase::OnLoadStreamLevel()
 void ACarlaGameModeBase::OnUnloadStreamLevel()
 {
   PendingLevelsToUnLoad--;
-
-  UE_LOG(LogCarla, Warning, TEXT("OnUnloadStreamLevel"));
-
   // Update stored registered objects (discarding the deleted objects)
   if(ReadyToRegisterObjects && PendingLevelsToUnLoad == 0)
   {
