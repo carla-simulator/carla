@@ -36,6 +36,9 @@ struct CARLA_API FEnvironmentObject
   FString Name;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString IdStr;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FTransform Transform;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
