@@ -163,7 +163,10 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  RegisterEnvironmentObjects();
+  if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
+  {
+    RegisterEnvironmentObjects();
+  }
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -383,18 +386,17 @@ void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
   ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
 
   FLatentActionInfo LatentInfo;
+  LatentInfo.CallbackTarget = this;
+  LatentInfo.ExecutionFunction = "OnLoadStreamLevel";
+  LatentInfo.Linkage = 0;
   LatentInfo.UUID = 1;
+
+  PendingLevelsToLoad = LevelsToLoad.Num();
+
   for(FName& LevelName : LevelsToLoad)
   {
-    UGameplayStatics::LoadStreamLevel(World, LevelName, true, true, LatentInfo);
+    UGameplayStatics::LoadStreamLevel(World, LevelName, true, false, LatentInfo);
     LatentInfo.UUID++;
-  }
-
-  // Register new actors and tag them
-  if(ReadyToRegisterObjects)
-  {
-    RegisterEnvironmentObjects();
-    ATagger::TagActorsInLevel(*GetWorld(), true);
   }
 
 }
@@ -403,22 +405,23 @@ void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
 {
   const UWorld* World = GetWorld();
 
-  TArray<FName> LevelsToLoad;
-  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
+  TArray<FName> LevelsToUnLoad;
+  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToUnLoad);
 
   FLatentActionInfo LatentInfo;
+  LatentInfo.CallbackTarget = this;
+  LatentInfo.ExecutionFunction = "OnUnloadStreamLevel";
   LatentInfo.UUID = 1;
-  for(FName& LevelName : LevelsToLoad)
+  LatentInfo.Linkage = 0;
+
+  PendingLevelsToUnLoad = LevelsToUnLoad.Num();
+
+  for(FName& LevelName : LevelsToUnLoad)
   {
-    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, true);
+    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, false);
     LatentInfo.UUID++;
   }
 
-  // Update stored registered objects (discarding the deleted objects)
-  if(ReadyToRegisterObjects)
-  {
-    RegisterEnvironmentObjects();
-  }
 }
 
 void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames)
@@ -447,7 +450,7 @@ void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FN
   for(ULevelStreaming* Level : Levels)
   {
     TArray<FString> StringArray;
-    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    FString FullSubMapName = Level->GetWorldAssetPackageFName().ToString();
     // Discard full path, we just need the umap name
     FullSubMapName.ParseIntoArray(StringArray, TEXT("/"), false);
     FString SubMapName = StringArray[StringArray.Num() - 1];
@@ -471,7 +474,7 @@ ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
 
   for(ULevelStreaming* Level : Levels)
   {
-    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    FString FullSubMapName = Level->GetWorldAssetPackageFName().ToString();
     if(FullSubMapName.Contains(LevelName))
     {
       OutLevel = Level->GetLoadedLevel();
@@ -484,4 +487,31 @@ ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
   }
 
   return OutLevel;
+}
+
+void ACarlaGameModeBase::OnLoadStreamLevel()
+{
+  PendingLevelsToLoad--;
+
+  UE_LOG(LogCarla, Warning, TEXT("OnLoadStreamLevel"));
+
+  // Register new actors and tag them
+  if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
+  {
+    RegisterEnvironmentObjects();
+    ATagger::TagActorsInLevel(*GetWorld(), true);
+  }
+}
+
+void ACarlaGameModeBase::OnUnloadStreamLevel()
+{
+  PendingLevelsToUnLoad--;
+
+  UE_LOG(LogCarla, Warning, TEXT("OnUnloadStreamLevel"));
+
+  // Update stored registered objects (discarding the deleted objects)
+  if(ReadyToRegisterObjects && PendingLevelsToUnLoad == 0)
+  {
+    RegisterEnvironmentObjects();
+  }
 }

@@ -73,6 +73,12 @@ public:
   UFUNCTION(Category = "Carla Game Mode")
   ULevel* GetULevelFromName(FString LevelName);
 
+  UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
+  void OnLoadStreamLevel();
+
+  UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
+  void OnUnloadStreamLevel();
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -129,6 +135,9 @@ private:
   ATrafficLightManager* TrafficLightManager = nullptr;
 
   boost::optional<carla::road::Map> Map;
+
+  int PendingLevelsToLoad = 0;
+  int PendingLevelsToUnLoad = 0;
 
   bool ReadyToRegisterObjects = false;
 
