@@ -103,9 +103,9 @@ def main():
         print("Capturing", len(weathers), "weathers")
 
         # Set weather
-        weather = weathers[0]
+        # weather = weathers[0]
         # if weather is not None:
-        weathers = [weather]
+
         for weather in weathers:
 
             world.set_weather(weather[0])
