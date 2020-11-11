@@ -94,6 +94,4 @@ private:
   FDelegateHandle OnPostTickHandle;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
-
-  BenchmarkAgent Benchmark;
 };
