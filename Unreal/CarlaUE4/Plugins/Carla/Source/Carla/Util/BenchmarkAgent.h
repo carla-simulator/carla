@@ -6,6 +6,7 @@
 
 #include "Stats/StatsData.h"
 
+#include <carla/rpc/Benchmark.h>
 
 struct FGroupFilter : public IItemFilter
 {
@@ -60,7 +61,10 @@ public:
   BenchmarkAgent();
   ~BenchmarkAgent();
 
-  void CollectFrameStats();
+  using StatsReturnType = std::map<std::string, carla::rpc::BenchmarkQueryValue>;
+  using StatsQueriesType = std::multimap<std::string, std::string>;
+
+  StatsReturnType CollectFrameStats(const StatsQueriesType& queries);
 
 private:
 
@@ -69,11 +73,12 @@ private:
   void CollectStatsFromGroup(
     const FStatsThreadStateOverlay& StatsThread,
     const FName& GroupName,
+    const TSet<FName>& StatNames,
     int64 Frame);
 
 
+/*
   TMap<FName, FName> ShortToRawNameMap;
-
   TMap<FName, TSet<FName>> Queries =
   {
     // RenderCore.cpp
@@ -99,7 +104,7 @@ private:
                                   }
     }
   };
-
+*/
   bool once = true;
 
 };

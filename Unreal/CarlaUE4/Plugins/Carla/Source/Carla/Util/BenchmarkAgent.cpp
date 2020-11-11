@@ -11,8 +11,11 @@ BenchmarkAgent::~BenchmarkAgent()
 {
 }
 
-void BenchmarkAgent::CollectFrameStats()
+BenchmarkAgent::StatsReturnType BenchmarkAgent::CollectFrameStats(
+  const BenchmarkAgent::StatsQueriesType& Queries)
 {
+  StatsReturnType Result;
+
   // Get the reference to the stats thread
   FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState(); // FStatsThreadState&
 
@@ -20,17 +23,44 @@ void BenchmarkAgent::CollectFrameStats()
   int64 LastGoodGameFrame = StatsThread.GetLastFullFrameProcessed();
   if (StatsThread.IsFrameValid(LastGoodGameFrame) == false)
   {
-    return;
+    return Result;
   }
 
   if(once)
   {
     once = false;
-    //DumpStatGroups(StatsThread);
+    // DumpStatGroups(StatsThread);
   }
 
-  UE_LOG(LogCarla, Error, TEXT("Frame %d"), LastGoodGameFrame);
-  CollectStatsFromGroup(StatsThread, TEXT("STATGROUP_SceneRendering"), LastGoodGameFrame);
+
+  UE_LOG(LogCarla, Error, TEXT("=================================================="));
+  UE_LOG(LogCarla, Error, TEXT("Frame %d\n"), LastGoodGameFrame);
+  for(auto It : Queries)
+  {
+    FName GroupName(It.first.c_str());
+
+    UE_LOG(LogCarla, Error, TEXT("StatGroup %s"), *GroupName.ToString());
+
+    TSet<FName> StatNamesSet;
+    std::pair<StatsQueriesType::iterator, StatsQueriesType::iterator> StatNames;
+    for (StatsQueriesType::iterator It2 = StatNames.first; It2 != StatNames.second; It2++)
+    {
+      FName StatName(It2->second.c_str());
+
+      UE_LOG(LogCarla, Error, TEXT("\tStat %s"), *StatName.ToString());
+
+      StatNamesSet.Emplace(StatName);
+    }
+    UE_LOG(LogCarla, Error, TEXT("Num Stats %d"), StatNamesSet.Num());
+
+    //CollectStatsFromGroup(StatsThread, TEXT("STATGROUP_SceneRendering"), LastGoodGameFrame);
+
+    CollectStatsFromGroup(StatsThread, GroupName, StatNamesSet, LastGoodGameFrame);
+  }
+
+  UE_LOG(LogCarla, Error, TEXT("=================================================="));
+
+  return Result;
 
 }
 
@@ -64,12 +94,9 @@ void BenchmarkAgent::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
 void BenchmarkAgent::CollectStatsFromGroup(
   const FStatsThreadStateOverlay& StatsThread,
   const FName& GroupName,
+  const TSet<FName>& StatNames,
   int64 Frame)
 {
-
-    // Get Stats queried for the group
-  TSet<FName> Stats = Queries[GroupName];
-
   // Gather the names of the stats that are in this group.
   //TArray<FName> GroupItems;
   //StatsThread.Groups.MultiFind(GroupName, GroupItems);
@@ -92,7 +119,7 @@ void BenchmarkAgent::CollectStatsFromGroup(
   */
 
   // Create a filter (needed by stats gathering function)
-  FGroupFilter Filter(Stats);
+  FGroupFilter Filter(StatNames);
 
   // Create empty stat stack node (needed by stats gathering function)
   FRawStatStackNode HierarchyInclusive;
