@@ -14,6 +14,7 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/AttachmentType.h"
+#include "carla/rpc/Benchmark.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
@@ -338,6 +339,9 @@ namespace detail {
 
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
+
+    std::map<std::string, rpc::BenchmarkQueryValue> BenchmarkSnapshot(
+      const std::multimap<std::string, std::string>& queries) const;
 
   private:
 

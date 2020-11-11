@@ -10,6 +10,7 @@
 #include "carla/Version.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/rpc/ActorDescription.h"
+#include "carla/rpc/Benchmark.h"
 #include "carla/rpc/BoneTransformData.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
@@ -520,6 +521,12 @@ namespace detail {
       geom::Location start_location, geom::Location end_location) const {
     using return_t = std::vector<rpc::LabelledPoint>;
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
+  std::map<std::string, rpc::BenchmarkQueryValue> Client::BenchmarkSnapshot(
+      const std::multimap<std::string, std::string>& queries) const {
+    using return_t = std::map<std::string, rpc::BenchmarkQueryValue>;
+    return _pimpl->CallAndWait<return_t>("benchmark_snapshot", queries);
   }
 
 } // namespace detail

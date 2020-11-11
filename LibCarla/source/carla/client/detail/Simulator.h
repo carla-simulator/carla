@@ -247,8 +247,8 @@ namespace detail {
     }
 
     void EnableEnvironmentObjects(
-      std::vector<uint64_t> env_objects_ids,
-      bool enable) const {
+        std::vector<uint64_t> env_objects_ids,
+        bool enable) const {
       _client.EnableEnvironmentObjects(env_objects_ids, enable);
     }
 
@@ -260,6 +260,11 @@ namespace detail {
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const {
       return _client.CastRay(start_location, end_location);
+    }
+
+    std::map<std::string, rpc::BenchmarkQueryValue> BenchmarkSnapshot(
+        const std::multimap<std::string, std::string>& queries) const {
+      return _client.BenchmarkSnapshot(queries);
     }
 
     /// @}

@@ -17,6 +17,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/AttachmentType.h"
+#include "carla/rpc/Benchmark.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/LabelledPoint.h"
@@ -176,6 +177,9 @@ namespace client {
 
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
+
+    std::map<std::string, rpc::BenchmarkQueryValue> BenchmarkSnapshot(
+      const std::multimap<std::string, std::string>& queries) const;
 
   private:
 
