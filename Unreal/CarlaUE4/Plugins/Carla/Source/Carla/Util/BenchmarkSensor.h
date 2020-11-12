@@ -2,11 +2,19 @@
 
 #pragma once
 
+#include "Carla/Sensor/Sensor.h"
+
 #include "CoreMinimal.h"
 
 #include "Stats/StatsData.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/sensor/data/BenchmarkData.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include <carla/rpc/Benchmark.h>
+
+#include "BenchmarkSensor.generated.h"
 
 struct FGroupFilter : public IItemFilter
 {
@@ -55,16 +63,34 @@ public:
   }
 };
 
-class CARLA_API BenchmarkAgent
+UCLASS()
+class CARLA_API ABenchmarkSensor : public ASensor
 {
+  GENERATED_BODY()
+
+  using FBenchmarkData = carla::sensor::data::BenchmarkData;
+
 public:
-  BenchmarkAgent();
-  ~BenchmarkAgent();
+
+  ABenchmarkSensor(const FObjectInitializer &ObjectInitializer);
+  ~ABenchmarkSensor() {}
+
+  static FActorDefinition GetSensorDefinition();
+
+  void Set(const FActorDescription &Description) override;
+
+  void SetQueries(FString InQueries) {
+    Queries = InQueries;
+  }
+
 
   using StatsReturnType = std::map<std::string, carla::rpc::BenchmarkQueryValue>;
   using StatsQueriesType = std::multimap<std::string, std::string>;
 
-  StatsReturnType CollectFrameStats(const StatsQueriesType& queries);
+  StatsReturnType CollectFrameStats(UWorld* World, const StatsQueriesType& queries);
+
+protected:
+  void Tick(float DeltaTime) override;
 
 private:
 
@@ -76,6 +102,9 @@ private:
     const TSet<FName>& StatNames,
     int64 Frame);
 
+  FBenchmarkData BenchmarkData;
+
+  FString Queries;
 
 /*
   TMap<FName, FName> ShortToRawNameMap;

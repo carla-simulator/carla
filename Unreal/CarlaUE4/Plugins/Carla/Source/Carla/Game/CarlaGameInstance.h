@@ -11,7 +11,6 @@
 #include "Carla/Game/CarlaEngine.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Server/CarlaServer.h"
-#include "Carla/Util/BenchmarkAgent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/MapLayer.h>
@@ -104,20 +103,12 @@ public:
     return CurrentMapLayer;
   }
 
-  BenchmarkAgent::StatsReturnType CollectFrameStats(
-    const BenchmarkAgent::StatsQueriesType& Queries)
-  {
-    return Benchmark.CollectFrameStats(Queries);
-  }
-
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
   UCarlaSettings *CarlaSettings = nullptr;
 
   FCarlaEngine CarlaEngine;
-
-  BenchmarkAgent Benchmark;
 
   UPROPERTY()
   ACarlaRecorder *Recorder = nullptr;

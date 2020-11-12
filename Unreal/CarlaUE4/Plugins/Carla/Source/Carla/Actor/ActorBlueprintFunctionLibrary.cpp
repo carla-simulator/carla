@@ -1234,6 +1234,34 @@ void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
   });
 
 }
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeBenchmarkSensorDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeBenchmarkSensorDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeBenchmarkSensorDefinition(
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("benchmark"));
+  AddVariationsForSensor(Definition);
+
+  FActorVariation Queries;
+  Queries.Id = TEXT("queries");
+  Queries.Type = EActorAttributeType::String;
+  Queries.RecommendedValues = { TEXT("") };
+  Queries.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({Queries});
+
+  Success = CheckActorDefinition(Definition);
+}
+
 /// ============================================================================
 /// -- Helpers to retrieve attribute values ------------------------------------
 /// ============================================================================
@@ -1624,6 +1652,18 @@ void UActorBlueprintFunctionLibrary::SetRadar(
       RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
   Radar->SetPointsPerSecond(
       RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
+}
+
+void UActorBlueprintFunctionLibrary::SetBenchmarkSensor(
+  const FActorDescription &Description,
+  ABenchmarkSensor *BenchmarkSensor)
+{
+  CARLA_ABFL_CHECK_ACTOR(BenchmarkSensor);
+
+  BenchmarkSensor->SetQueries(
+    RetrieveActorAttributeToString("queries", Description.Variations, "")
+  );
+
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR

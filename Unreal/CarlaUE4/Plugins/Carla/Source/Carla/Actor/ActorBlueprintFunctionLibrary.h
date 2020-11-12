@@ -14,6 +14,7 @@
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
+#include "Carla/Util/BenchmarkSensor.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
@@ -151,6 +152,13 @@ public:
       const FString &Id,
       FActorDefinition &Definition);
 
+  static FActorDefinition MakeBenchmarkSensorDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeBenchmarkSensorDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
   /// @}
   /// ==========================================================================
   /// @name Helpers to retrieve attribute values
@@ -219,4 +227,6 @@ public:
   static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
   static void SetRadar(const FActorDescription &Description, ARadar *Radar);
+
+  static void SetBenchmarkSensor(const FActorDescription &Description, ABenchmarkSensor *BenchmarkSensor);
 };

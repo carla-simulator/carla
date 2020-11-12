@@ -25,7 +25,6 @@
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
-#include <carla/rpc/Benchmark.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
@@ -1610,21 +1609,6 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     auto *World = Episode->GetWorld();
     return URayTracer::CastRay(StartLocation, EndLocation, World);
-  };
-
-  // ~~ Benchmark ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  BIND_SYNC(benchmark_snapshot) << [this]
-      (std::multimap<std::string, std::string> Queries)
-       -> R<std::map<std::string, cr::BenchmarkQueryValue>>
-  {
-    REQUIRE_CARLA_EPISODE();
-    UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
-    if (!GameInstance)
-    {
-      RESPOND_ERROR("unable to find CARLA game instance");
-    }
-    return GameInstance->CollectFrameStats(Queries);
   };
 
 }

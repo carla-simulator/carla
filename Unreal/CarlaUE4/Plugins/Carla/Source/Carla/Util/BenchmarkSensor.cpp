@@ -1,18 +1,36 @@
 // Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 
-#include "BenchmarkAgent.h"
+#include "BenchmarkSensor.h"
 
-BenchmarkAgent::BenchmarkAgent()
+ABenchmarkSensor::ABenchmarkSensor(const FObjectInitializer &ObjectInitializer)
+  : Super(ObjectInitializer)
 {
+  PrimaryActorTick.bCanEverTick = true;
 }
 
-BenchmarkAgent::~BenchmarkAgent()
+FActorDefinition ABenchmarkSensor::GetSensorDefinition()
 {
+  return UActorBlueprintFunctionLibrary::MakeBenchmarkSensorDefinition();
 }
 
-BenchmarkAgent::StatsReturnType BenchmarkAgent::CollectFrameStats(
-  const BenchmarkAgent::StatsQueriesType& Queries)
+void ABenchmarkSensor::Set(const FActorDescription &Description)
+{
+  Super::Set(Description);
+  UActorBlueprintFunctionLibrary::SetBenchmarkSensor(Description, this);
+}
+
+void ABenchmarkSensor::Tick(float DeltaTime)
+{
+  Super::Tick(DeltaTime);
+
+  auto DataStream = GetDataStream(*this);
+  DataStream.Send(*this, BenchmarkData, DataStream.PopBufferFromPool());
+}
+
+ABenchmarkSensor::StatsReturnType ABenchmarkSensor::CollectFrameStats(
+  UWorld* World,
+  const ABenchmarkSensor::StatsQueriesType& Queries)
 {
   StatsReturnType Result;
 
@@ -32,18 +50,24 @@ BenchmarkAgent::StatsReturnType BenchmarkAgent::CollectFrameStats(
     // DumpStatGroups(StatsThread);
   }
 
-
   UE_LOG(LogCarla, Error, TEXT("=================================================="));
   UE_LOG(LogCarla, Error, TEXT("Frame %d\n"), LastGoodGameFrame);
   for(auto It : Queries)
   {
-    FName GroupName(It.first.c_str());
+    FString GroupName(It.first.c_str());
 
-    UE_LOG(LogCarla, Error, TEXT("StatGroup %s"), *GroupName.ToString());
+    TArray<FString> StringArray;
+    GroupName.ParseIntoArray(StringArray, TEXT("_"), false);
+    FString Cmd = StringArray[StringArray.Num() - 1];
+    // Enable command to capture it
+    World->Exec(World, *Cmd);
+
+    UE_LOG(LogCarla, Error, TEXT("StatGroup %s %s"), *GroupName, *Cmd);
 
     TSet<FName> StatNamesSet;
-    std::pair<StatsQueriesType::iterator, StatsQueriesType::iterator> StatNames;
-    for (StatsQueriesType::iterator It2 = StatNames.first; It2 != StatNames.second; It2++)
+    // std::pair<StatsQueriesType::iterator, StatsQueriesType::iterator> StatNames;
+    auto StatNames = Queries.equal_range(It.first);
+    for (auto It2 = StatNames.first; It2 != StatNames.second; It2++)
     {
       FName StatName(It2->second.c_str());
 
@@ -55,7 +79,10 @@ BenchmarkAgent::StatsReturnType BenchmarkAgent::CollectFrameStats(
 
     //CollectStatsFromGroup(StatsThread, TEXT("STATGROUP_SceneRendering"), LastGoodGameFrame);
 
-    CollectStatsFromGroup(StatsThread, GroupName, StatNamesSet, LastGoodGameFrame);
+    CollectStatsFromGroup(StatsThread, *GroupName, StatNamesSet, LastGoodGameFrame);
+
+    // Disable command to capture it
+    //World->Exec(World, *Cmd);
   }
 
   UE_LOG(LogCarla, Error, TEXT("=================================================="));
@@ -64,7 +91,7 @@ BenchmarkAgent::StatsReturnType BenchmarkAgent::CollectFrameStats(
 
 }
 
-void BenchmarkAgent::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
+void ABenchmarkSensor::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
 {
   const TMultiMap<FName, FName>& Groups = StatsThread.Groups;
   TArray<FName> GroupNames;
@@ -91,7 +118,7 @@ void BenchmarkAgent::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
   UE_LOG(LogCarla, Error, TEXT("%s"), *Output);
 }
 
-void BenchmarkAgent::CollectStatsFromGroup(
+void ABenchmarkSensor::CollectStatsFromGroup(
   const FStatsThreadStateOverlay& StatsThread,
   const FName& GroupName,
   const TSet<FName>& StatNames,
