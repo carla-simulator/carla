@@ -11,10 +11,10 @@
 #include "Carla/Actor/PedestrianParameters.h"
 #include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
+#include "Carla/Sensor/BenchmarkSensor.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
-#include "Carla/Util/BenchmarkSensor.h"
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 
