@@ -33,27 +33,6 @@ struct FGroupFilter : public IItemFilter
   }
 };
 
-struct DynamicStats
-{
-  int64 Frame;
-
-};
-
-struct StaticStats
-{
-  int32 NumMeshesOnLevel;
-  int32 NumDecalsOnLevel;
-  int32 NumLightsOnLevel;
-
-};
-
-struct BenchmarkSnapshot
-{
-  FName MapName;
-  StaticStats Statics;
-  TArray<DynamicStats> Frame;
-};
-
 class CARLA_API FStatsThreadStateOverlay : public FStatsThreadState
 {
 public:

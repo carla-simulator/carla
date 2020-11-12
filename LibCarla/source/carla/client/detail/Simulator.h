@@ -262,11 +262,6 @@ namespace detail {
       return _client.CastRay(start_location, end_location);
     }
 
-    std::map<std::string, rpc::BenchmarkQueryValue> BenchmarkSnapshot(
-        const std::multimap<std::string, std::string>& queries) const {
-      return _client.BenchmarkSnapshot(queries);
-    }
-
     /// @}
     // =========================================================================
     /// @name AI

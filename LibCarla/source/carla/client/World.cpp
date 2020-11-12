@@ -226,11 +226,5 @@ namespace client {
     return _episode.Lock()->CastRay(start_location, end_location);
   }
 
-  std::map<std::string, rpc::BenchmarkQueryValue> World::BenchmarkSnapshot(
-      const std::multimap<std::string, std::string>& queries) const
-  {
-    return _episode.Lock()->BenchmarkSnapshot(queries);
-  }
-
 } // namespace client
 } // namespace carla

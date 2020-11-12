@@ -178,9 +178,6 @@ namespace client {
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
 
-    std::map<std::string, rpc::BenchmarkQueryValue> BenchmarkSnapshot(
-      const std::multimap<std::string, std::string>& queries) const;
-
   private:
 
     detail::EpisodeProxy _episode;

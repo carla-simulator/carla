@@ -523,12 +523,6 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
   }
 
-  std::map<std::string, rpc::BenchmarkQueryValue> Client::BenchmarkSnapshot(
-      const std::multimap<std::string, std::string>& queries) const {
-    using return_t = std::map<std::string, rpc::BenchmarkQueryValue>;
-    return _pimpl->CallAndWait<return_t>("benchmark_snapshot", queries);
-  }
-
 } // namespace detail
 } // namespace client
 } // namespace carla
