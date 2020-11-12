@@ -17,7 +17,6 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/AttachmentType.h"
-#include "carla/rpc/Benchmark.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/LabelledPoint.h"

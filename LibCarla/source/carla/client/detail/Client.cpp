@@ -10,7 +10,6 @@
 #include "carla/Version.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/rpc/ActorDescription.h"
-#include "carla/rpc/Benchmark.h"
 #include "carla/rpc/BoneTransformData.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
