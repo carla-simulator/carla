@@ -82,7 +82,7 @@ void ABenchmarkSensor::SetQueries(FString InQueries)
 
     // Enable command to capture it
     FString Cmd = It.Key;
-    GWorld->Exec(GWorld, *Cmd);
+    GEngine->Exec(GWorld, *Cmd);
   }
 
   UE_LOG(LogCarla, Warning, TEXT("Final result"));
@@ -102,13 +102,13 @@ void ABenchmarkSensor::SetQueries(FString InQueries)
 void ABenchmarkSensor::BeginPlay()
 {
   Super::BeginPlay();
-  GWorld->Exec(GWorld, TEXT("stat unit"));
+  GEngine->Exec(GWorld, TEXT("stat unit"));
 }
 
 void ABenchmarkSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
-  GWorld->Exec(GWorld, TEXT("stat none"));
+  GEngine->Exec(GWorld, TEXT("stat none"));
 }
 
 void ABenchmarkSensor::Tick(float DeltaTime)
@@ -224,7 +224,9 @@ void ABenchmarkSensor::CollectStatsFromGroup(
   const TSet<FName>& StatNames,
   int64 Frame)
 {
-  UE_LOG(LogCarla, Error, TEXT("CollectStatsFromGroup %d\n"), StatsThread.Groups.Num());
+  TArray<FName> Keys;
+  StatsThread.Groups.GetKeys(Keys);
+  UE_LOG(LogCarla, Error, TEXT("CollectStatsFromGroup %d  Keys = %d \n"), StatsThread.Groups.Num(), Keys.Num());
   return;
   // Gather the names of the stats that are in this group.
   //TArray<FName> GroupItems;
