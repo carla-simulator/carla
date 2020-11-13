@@ -8,17 +8,16 @@
 
 #include "carla/Memory.h"
 #include "carla/sensor/RawData.h"
-#include "carla/sensor/data/BenchmarkData.h"
 
 namespace carla {
 namespace sensor {
 
-  class BenchmarkData;
+  class SensorData;
 
 namespace s11n {
 
   // ===========================================================================
-  // -- BenchmarkData ---------------------------------------------------------
+  // -- BenchmarkSerializer ---------------------------------------------------------
   // ===========================================================================
 
   class BenchmarkSerializer {
@@ -26,8 +25,11 @@ namespace s11n {
     template <typename Sensor>
     static Buffer Serialize(
         const Sensor &sensor,
-        const data::BenchmarkData &measurement,
-        Buffer &&output);
+        const std::string &result);
+
+    static std::string DeserializeRawData(const RawData &data) {
+      return MsgPack::UnPack<std::string>(data.begin(), data.size());
+    }
 
     static SharedPtr<SensorData> Deserialize(RawData &&data);
   };
@@ -35,10 +37,8 @@ namespace s11n {
   template <typename Sensor>
   inline Buffer BenchmarkSerializer::Serialize(
       const Sensor &,
-      const data::BenchmarkData &measurement,
-      Buffer &&output) {
-    output.copy_from(measurement._benchmark_result);
-    return std::move(output);
+      const std::string &result) {
+    return MsgPack::Pack(result);
   }
 
 

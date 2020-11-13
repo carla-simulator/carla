@@ -10,6 +10,7 @@
 #include <carla/image/ImageView.h>
 #include <carla/pointcloud/PointCloudIO.h>
 #include <carla/sensor/SensorData.h>
+#include <carla/sensor/data/BenchmarkMeasurement.h>
 #include <carla/sensor/data/CollisionEvent.h>
 #include <carla/sensor/data/IMUMeasurement.h>
 #include <carla/sensor/data/ObstacleDetectionEvent.h>
@@ -150,6 +151,14 @@ namespace data {
         << ", cos_inc_angle=" << std::to_string(det.cos_inc_angle)
         << ", object_idx=" << std::to_string(det.object_idx)
         << ", object_tag=" << std::to_string(det.object_tag)
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const BenchmarkMeasurement &meas) {
+    out << "BenchmarkMeasurement(frame=" << std::to_string(meas.GetFrame())
+        << ", timestamp=" << std::to_string(meas.GetTimestamp())
+        << ", result=" << meas.GetResult()
         << ')';
     return out;
   }
@@ -405,4 +414,10 @@ void export_sensor_data() {
     .def("to_array_pol", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayPol))
     .def(self_ns::str(self_ns::self))
   ;
+
+  class_<csd::BenchmarkMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::BenchmarkMeasurement>>("BenchmarkMeasurement", no_init)
+    .add_property("result", &csd::BenchmarkMeasurement::GetResult)
+    .def(self_ns::str(self_ns::self))
+  ;
+
 }

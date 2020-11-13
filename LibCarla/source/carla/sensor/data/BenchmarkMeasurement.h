@@ -9,14 +9,13 @@
 #include "carla/Debug.h"
 #include "carla/sensor/data/Array.h"
 #include "carla/sensor/s11n/BenchmarkSerializer.h"
-#include "carla/sensor/data/BenchmarkData.h"
 
 namespace carla {
 namespace sensor {
 namespace data {
 
-  class BenchmarkMeasurement : public Array<data::BenchmarkResult> {
-    using Super = Array<data::BenchmarkResult>;
+  class BenchmarkMeasurement : public SensorData {
+    using Super = SensorData;
   protected:
 
     using Serializer = s11n::BenchmarkSerializer;
@@ -24,13 +23,18 @@ namespace data {
     friend Serializer;
 
     explicit BenchmarkMeasurement(RawData &&data)
-      : Super(0u, std::move(data)) {}
+      : Super(data),
+        _result(Serializer::DeserializeRawData(data)) {}
 
   public:
-
-    Super::size_type GetDetectionAmount() const {
-      return Super::size();
+    std::string GetResult() const
+    {
+      return _result;
     }
+
+  private:
+    std::string _result;
+
   };
 
 } // namespace data
