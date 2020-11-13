@@ -4,14 +4,19 @@
   * Added `enable_environment_objects`call to enable/disable objects of the level
   * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions
   * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation
+  * Added the possibility of changing physics substepping options from client
+  * Added 'noise_seed' to sensors to initialize the random generators
   * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
   * Fixed random dead-lock on synchronous mode at high frame rate
   * API extensions:
     - Added `actor.set_enable_gravity()` function to enable/disable the gravity affecting the actor
   * Upgraded to DirectX 12 on Windows
   * Fixed bug on Windows causing sun reflection artifacts
+  * Fixed bug in `waypoint.get_landmarks()` causing some landmarks to be missed when s = 0
   * Fixed the `actor.set_simulate_physics()` for pedestrians and vehicles
   * Fixed bug causing camera-based sensors to stop sending data
+  * Fixed the lack of determinism on the output of raycast sensors
+  * Fixed bug in the actor's id returned by the semantic lidar
   * Fixed dependency of library **Xerces-c** on package
   * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
 

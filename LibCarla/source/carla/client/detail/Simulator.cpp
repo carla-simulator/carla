@@ -175,6 +175,21 @@ namespace detail {
           "synchronous mode enabled with variable delta seconds. It is highly "
           "recommended to set 'fixed_delta_seconds' when running on synchronous mode.");
     }
+    else if (settings.synchronous_mode && settings.substepping) {
+      if(settings.max_substeps < 1 || settings.max_substeps > 16) {
+        log_warning(
+            "synchronous mode and substepping are enabled but the number of substeps is not valid. "
+            "Please be aware that this value needs to be in the range [1-16].");
+      }
+      double n_substeps = settings.fixed_delta_seconds.get() / settings.max_substep_delta_time;
+
+      if (n_substeps > static_cast<double>(settings.max_substeps)) {
+        log_warning(
+            "synchronous mode and substepping are enabled but the values for the simulation are not valid. "
+            "The values should fulfil fixed_delta_seconds <= max_substep_delta_time * max_substeps. "
+            "Be very careful about that, the time deltas are not guaranteed.");
+      }
+    }
     const auto frame = _client.SetEpisodeSettings(settings);
     using namespace std::literals::chrono_literals;
     SynchronizeFrame(frame, *_episode, 10s);
