@@ -211,6 +211,10 @@ namespace detail {
         rpc::ActorId vehicle,
         const rpc::VehicleControl &control);
 
+    void SetCarSimEnabled(
+        rpc::ActorId vehicle,
+        bool enabled);
+
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);

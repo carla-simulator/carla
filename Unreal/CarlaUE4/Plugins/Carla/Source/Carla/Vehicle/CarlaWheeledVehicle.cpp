@@ -33,6 +33,8 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
+  CarSimMovementComponent = CreateDefaultSubobject<UCarSimMovementComponent>(TEXT("CarSimMovement"));
+
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }
 
@@ -110,6 +112,8 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
+
+  SetCarSimEnabled(false);
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -177,25 +181,53 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
-  auto *MovementComponent = GetVehicleMovementComponent();
-  MovementComponent->SetThrottleInput(InputControl.Control.Throttle);
-  MovementComponent->SetSteeringInput(InputControl.Control.Steer);
-  MovementComponent->SetBrakeInput(InputControl.Control.Brake);
-  MovementComponent->SetHandbrakeInput(InputControl.Control.bHandBrake);
-  if (LastAppliedControl.bReverse != InputControl.Control.bReverse)
+  if (bCarSimEnabled)
   {
-    MovementComponent->SetUseAutoGears(!InputControl.Control.bReverse);
-    MovementComponent->SetTargetGear(InputControl.Control.bReverse ? -1 : 1, true);
+    CarSimMovementComponent->SetThrottleInput(InputControl.Control.Throttle);
+    CarSimMovementComponent->SetSteeringInput(InputControl.Control.Steer);
+    CarSimMovementComponent->SetBrakeInput(InputControl.Control.Brake);
+    if (InputControl.Control.bHandBrake)
+    {
+      CarSimMovementComponent->SetBrakeInput(InputControl.Control.Brake + 1.0);
+    }
+    // CarSimMovementComponent->SetHandbrakeInput(InputControl.Control.bHandBrake);
+    // if (LastAppliedControl.bReverse != InputControl.Control.bReverse)
+    // {
+    //   CarSimMovementComponent->SetUseAutoGears(!InputControl.Control.bReverse);
+    //   CarSimMovementComponent->SetTargetGear(InputControl.Control.bReverse ? -1 : 1, true);
+    // }
+    // else
+    // {
+    //   CarSimMovementComponent->SetUseAutoGears(!InputControl.Control.bManualGearShift);
+    //   if (InputControl.Control.bManualGearShift)
+    //   {
+    //     CarSimMovementComponent->SetTargetGear(InputControl.Control.Gear, true);
+    //   }
+    // }
+    InputControl.Control.Gear = CarSimMovementComponent->GetCurrentGear();
   }
   else
   {
-    MovementComponent->SetUseAutoGears(!InputControl.Control.bManualGearShift);
-    if (InputControl.Control.bManualGearShift)
+    auto *MovementComponent = GetVehicleMovementComponent();
+    MovementComponent->SetThrottleInput(InputControl.Control.Throttle);
+    MovementComponent->SetSteeringInput(InputControl.Control.Steer);
+    MovementComponent->SetBrakeInput(InputControl.Control.Brake);
+    MovementComponent->SetHandbrakeInput(InputControl.Control.bHandBrake);
+    if (LastAppliedControl.bReverse != InputControl.Control.bReverse)
     {
-      MovementComponent->SetTargetGear(InputControl.Control.Gear, true);
+      MovementComponent->SetUseAutoGears(!InputControl.Control.bReverse);
+      MovementComponent->SetTargetGear(InputControl.Control.bReverse ? -1 : 1, true);
     }
+    else
+    {
+      MovementComponent->SetUseAutoGears(!InputControl.Control.bManualGearShift);
+      if (InputControl.Control.bManualGearShift)
+      {
+        MovementComponent->SetTargetGear(InputControl.Control.Gear, true);
+      }
+    }
+    InputControl.Control.Gear = MovementComponent->GetCurrentGear();
   }
-  InputControl.Control.Gear = MovementComponent->GetCurrentGear();
   InputControl.Control.bReverse = InputControl.Control.Gear < 0;
   LastAppliedControl = InputControl.Control;
   InputControl.Priority = EVehicleInputPriority::INVALID;
@@ -453,3 +485,29 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightS
   InputControl.LightState = LightState;
   RefreshLightState(LightState);
 }
+
+//-----CARSIM--------------------------------
+void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled)
+{
+  carla::log_warning("Enabling CarSim", bEnabled);
+  bCarSimEnabled = bEnabled;
+  if (bCarSimEnabled)
+  {
+    GetVehicleMovementComponent()->SetComponentTickEnabled(false);
+    GetVehicleMovementComponent()->Deactivate();
+    CarSimMovementComponent->Activate();
+    CarSimMovementComponent->ResetVsVehicle(false);
+    CarSimMovementComponent->SyncVsVehicleLocOri();
+    CarSimMovementComponent->SetComponentTickEnabled(true);
+    GetMesh()->SetSimulatePhysics(false);
+  }
+  else
+  {
+    GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+    GetVehicleMovementComponent()->Activate();
+    CarSimMovementComponent->SetComponentTickEnabled(false);
+    CarSimMovementComponent->Deactivate();
+    GetMesh()->SetSimulatePhysics(true);
+  }
+}
+//-------------------------------------------

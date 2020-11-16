@@ -445,6 +445,10 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
+    void SetCarSimEnabled(Vehicle &vehicle, bool enabled) {
+      _client.SetCarSimEnabled(vehicle.GetId(), enabled);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder

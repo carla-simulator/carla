@@ -18,6 +18,10 @@
 
 #include "CoreMinimal.h"
 
+//-----CARSIM--------------------------------
+#include "CarSimMovementComponent.h"
+//-------------------------------------------
+
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
@@ -235,4 +239,20 @@ private:
   InputControl;
 
   FVehicleControl LastAppliedControl;
+
+
+  //-----CARSIM--------------------------------
+public:
+
+  UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetCarSimEnabled(bool bEnabled);
+
+private:
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
+  bool bCarSimEnabled = false;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  UCarSimMovementComponent * CarSimMovementComponent;
+  //-------------------------------------------
 };
