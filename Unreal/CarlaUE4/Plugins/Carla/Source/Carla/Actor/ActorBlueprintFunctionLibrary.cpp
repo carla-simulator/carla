@@ -784,11 +784,19 @@ void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
   PointsPerSecond.RecommendedValues = { TEXT("1500") };
   PointsPerSecond.bRestrictToRecommended = false;
 
+  // Noise seed
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
+
   Definition.Variations.Append({
     HorizontalFOV,
     VerticalFOV,
     Range,
-    PointsPerSecond});
+    PointsPerSecond,
+    NoiseSeed});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -846,6 +854,12 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   AtmospAttenRate.Id = TEXT("atmosphere_attenuation_rate");
   AtmospAttenRate.Type = EActorAttributeType::Float;
   AtmospAttenRate.RecommendedValues = { TEXT("0.004") };
+  // Noise seed
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
   // Dropoff General Rate
   FActorVariation DropOffGenRate;
   DropOffGenRate.Id = TEXT("dropoff_general_rate");
@@ -868,14 +882,28 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.RecommendedValues = { TEXT("0.0") };
 
   if (Id == "ray_cast") {
-    Definition.Variations.Append(
-        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV,
-            AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
-            DropOffAtZeroIntensity, StdDevLidar});
+    Definition.Variations.Append({
+      Channels,
+      Range,
+      PointsPerSecond,
+      Frequency,
+      UpperFOV,
+      LowerFOV,
+      AtmospAttenRate,
+      NoiseSeed,
+      DropOffGenRate,
+      DropOffIntensityLimit,
+      DropOffAtZeroIntensity,
+      StdDevLidar});
   }
   else if (Id == "ray_cast_semantic") {
-    Definition.Variations.Append(
-        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
+    Definition.Variations.Append({
+      Channels,
+      Range,
+      PointsPerSecond,
+      Frequency,
+      UpperFOV,
+      LowerFOV});
   }
   else {
     DEBUG_ASSERT(false);
@@ -1490,6 +1518,8 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
   Lidar.AtmospAttenRate =
       RetrieveActorAttributeToFloat("atmosphere_attenuation_rate", Description.Variations, Lidar.AtmospAttenRate);
+  Lidar.RandomSeed =
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, Lidar.RandomSeed);
   Lidar.DropOffGenRate =
       RetrieveActorAttributeToFloat("dropoff_general_rate", Description.Variations, Lidar.DropOffGenRate);
   Lidar.DropOffIntensityLimit =
@@ -1537,7 +1567,7 @@ void UActorBlueprintFunctionLibrary::SetIMU(
   if (Description.Variations.Contains("noise_seed"))
   {
     IMU->SetSeed(
-      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+        RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
   }
   else
   {
@@ -1545,22 +1575,19 @@ void UActorBlueprintFunctionLibrary::SetIMU(
   }
 
   IMU->SetAccelerationStandardDeviation({
-    RetrieveActorAttributeToFloat("noise_accel_stddev_x", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_accel_stddev_y", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_accel_stddev_z", Description.Variations, 0.0f)
-  });
+      RetrieveActorAttributeToFloat("noise_accel_stddev_x", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_accel_stddev_y", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_accel_stddev_z", Description.Variations, 0.0f)});
 
   IMU->SetGyroscopeStandardDeviation({
-    RetrieveActorAttributeToFloat("noise_gyro_stddev_x", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_stddev_y", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_stddev_z", Description.Variations, 0.0f)
-  });
+      RetrieveActorAttributeToFloat("noise_gyro_stddev_x", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_stddev_y", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_stddev_z", Description.Variations, 0.0f)});
 
   IMU->SetGyroscopeBias({
-    RetrieveActorAttributeToFloat("noise_gyro_bias_x", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)
-  });
+      RetrieveActorAttributeToFloat("noise_gyro_bias_x", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)});
 }
 
 void UActorBlueprintFunctionLibrary::SetRadar(
@@ -1570,14 +1597,24 @@ void UActorBlueprintFunctionLibrary::SetRadar(
   CARLA_ABFL_CHECK_ACTOR(Radar);
   constexpr float TO_CENTIMETERS = 1e2;
 
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    Radar->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    Radar->SetSeed(Radar->GetRandomEngine()->GenerateRandomSeed());
+  }
+
   Radar->SetHorizontalFOV(
-    RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
+      RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
   Radar->SetVerticalFOV(
-    RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
+      RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
   Radar->SetRange(
-    RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
+      RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
   Radar->SetPointsPerSecond(
-    RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
+      RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR

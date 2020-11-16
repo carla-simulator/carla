@@ -181,9 +181,9 @@ namespace detail {
             "synchronous mode and substepping are enabled but the number of substeps is not valid. "
             "Please be aware that this value needs to be in the range [1-16].");
       }
-      float n_substeps = settings.fixed_delta_seconds.get() / settings.max_substep_delta_time;
+      double n_substeps = settings.fixed_delta_seconds.get() / settings.max_substep_delta_time;
 
-      if (n_substeps > static_cast<float>(settings.max_substeps)) {
+      if (n_substeps > static_cast<double>(settings.max_substeps)) {
         log_warning(
             "synchronous mode and substepping are enabled but the values for the simulation are not valid. "
             "The values should fulfil fixed_delta_seconds <= max_substep_delta_time * max_substeps. "

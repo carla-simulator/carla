@@ -39,19 +39,23 @@ struct CARLA_API FLidarDescription
   UPROPERTY(EditAnywhere)
   float LowerFovLimit = -30.0f;
 
-  /// Attenuation Rate in the atmosphere in m^-1
+  /// Attenuation Rate in the atmosphere in m^-1.
   UPROPERTY(EditAnywhere)
   float AtmospAttenRate = 0.004f;
 
-  /// General drop off rate
+  /// Random seed for the noise/dropoff used by this sensor.
+  UPROPERTY(EditAnywhere)
+  int RandomSeed = 0;
+
+  /// General drop off rate.
   UPROPERTY(EditAnywhere)
   float DropOffGenRate = 0.45f;
 
-  /// General drop off rate
+  /// General drop off rate.
   UPROPERTY(EditAnywhere)
   float DropOffIntensityLimit = 0.8f;
 
-  /// General drop off rate
+  /// General drop off rate.
   UPROPERTY(EditAnywhere)
   float DropOffAtZeroIntensity = 0.4f;
 

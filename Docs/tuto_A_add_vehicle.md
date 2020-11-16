@@ -40,10 +40,10 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 *   __1. Create a new folder__ named `<vehicle_name>` in `Content/Carla/Static/Vehicle`.  
 <br>
 
-*   __2. Import the `.fbx`__ in its folder. The Skelletal Mesh will appear along with two new files, `<vehicle_name>_PhysicsAssets` and `<vehicle_name>_Skeleton`.  
+*   __2. Import the `.fbx`__ in its folder. The Skeletal Mesh will appear along with two new files, `<vehicle_name>_PhysicsAssets` and `<vehicle_name>_Skeleton`.  
 	*   __2.1 - *Import Content Type*__ — `Geometry and Skinning Weights`.  
 	*   __2.2 - *Normal Import Method*__ — `Import Normals`.  
-	*   __2.3 - *Material import method*__ — Optionally choose `Do not create materials` and uncheck `Import Textures` to avoid Unreal creating its own default materials.  
+	*   __2.3 - *Material Import Method*__ — Optionally choose `Do not create materials` and uncheck `Import Textures` to avoid Unreal creating its own default materials.  
 
 !!! Note
     If Unreal does not create the vehicle materials, these will have to be created manually.  
@@ -71,7 +71,7 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 <br>
 *   __6. Create blueprints for the wheels__. Inside the folder, right-click and go to `Created advanced assets/Blueprints class`. Create two blueprints derived from `VehicleWheel`, one named `<vehicle_name>_FrontWheel` and the other `<vehicle_name>_RearWheel`.  
 	*   __6.1 - *Shape radius*__ — Exactly the radius, not diameter, of the wheel mesh.  
-	*   __6.2 - *Rig Config*__ — `CommonTireConfig`.  
+	*   __6.2 - *Tire Config*__ — `CommonTireConfig`.  
 	*   __6.3 - On the front wheel__ — Set `Steer Angle`, default is `70`. Uncheck `Affected by Handbrake`.  
 	*   __6.4 - On the rear wheel__ — Set `Steer Angle` to `0`. Check `Affected by Handbrake`.  
 
@@ -79,9 +79,9 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 <div style="text-align: right"><i>Step 6.3, front wheel setup.</i></div>
 
 *   __7. Create a blueprint for the vehicle__. Inside the folder, create another blueprint derived from `BaseVehiclePawn` and named `BP_<vehicle_name>`.  
-	*   __7.1 - *Mesh*__ — Choose the skelletal mesh of the vehicle.  
+	*   __7.1 - *Mesh*__ — Choose the skeletal mesh of the vehicle.  
 	*   __7.2 - *Anim class*__ — Choose the Animation blueprint created in *step 4*.  
-	*   __7.3 - *Vehicle bound*__ — Adjust it to include the whole volume of the vehicle.  
+	*   __7.3 - *Vehicle bounds*__ — Adjust it to include the whole volume of the vehicle.  
 
 !!! Note
     These options appear in the menu *Components* on the left side of the window. 
@@ -104,7 +104,7 @@ __4.   Export the result__. Select all the meshes and the base of the skeleton a
 	*   __10.1 - *Make*__ — Choose a name to be used in Unreal.  
 	*   __10.2 - *Model*__ — Choose the name to be used in the blueprint library in CARLA.  
 	*   __10.3 - *Class*__ — `BP_<vehicle_name>`.  
-	*   __10.4 - *Recommended colours*__ — Optionally, provide a set of recommended colours for the vehicle.  
+	*   __10.4 - *Recommended colors*__ — Optionally, provide a set of recommended colors for the vehicle.  
 
 ![add_vehicle_step_10](img/add_vehicle_step_10.jpg)
 <div style="text-align: right"><i>Step 10, add the new vehicle.</i></div>
