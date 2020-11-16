@@ -103,6 +103,12 @@ public:
     return CurrentMapLayer;
   }
 
+  UFUNCTION(Category = "Carla Game Mode")
+  void ExecuteConsoleCommand(FString Cmd)
+  {
+    GEngine->Exec(GWorld, *Cmd);
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)

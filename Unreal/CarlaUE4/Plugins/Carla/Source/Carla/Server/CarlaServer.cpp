@@ -1611,6 +1611,20 @@ void FCarlaServer::FPimpl::BindActions()
     return URayTracer::CastRay(StartLocation, EndLocation, World);
   };
 
+  // ~~ Console commands ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(send_console_command) << [this] (std::string command) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
+    if (!GameInstance)
+    {
+      RESPOND_ERROR("unable to find CARLA game instance");
+    }
+    GameInstance->ExecuteConsoleCommand(FString(command.c_str()));
+    return R<void>::Success();
+  };
+
 }
 
 // =============================================================================
