@@ -71,11 +71,13 @@ private:
 
   void DumpStatGroups(const FStatsThreadStateOverlay& StatsThread);
 
-  void CollectStatsFromGroup(
+  FString CollectStatsFromGroup(
     const FStatsThreadStateOverlay& StatsThread,
     const FName& GroupName,
     const TSet<FName>& StatNames,
     int64 Frame);
+
+  FString ConvertStatCommandToStatGroup(FString StatCmd);
 
   TMap<FName, TSet<FName>> Queries;
 
@@ -109,6 +111,5 @@ private:
     }
   };
 */
-  bool once = true;
 
 };

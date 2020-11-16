@@ -60,7 +60,6 @@ void ABenchmarkSensor::Set(const FActorDescription &Description)
 
 void ABenchmarkSensor::SetQueries(FString InQueries)
 {
-  // queries = "{ "STATGROUP_SceneRendering" : { "STAT_MeshDrawCalls" } }"
   UE_LOG(LogCarla, Error, TEXT("SetQueries %s"), *InQueries);
 
   TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(InQueries);
@@ -72,13 +71,16 @@ void ABenchmarkSensor::SetQueries(FString InQueries)
     return;
   }
 
-
   UE_LOG(LogCarla, Warning, TEXT("SetQueries Num pairse %d"), JsonParsed->Values.Num());
   for(auto& It :  JsonParsed->Values)
   {
     TSet<FName> StatValues;
     FillSetOfJsonValues(It.Value, StatValues);
-    Queries.Emplace(*It.Key, StatValues);
+
+    // Convert stat comand to STATGROUP, ie: stat sceneredering -> STATGROUP_SceneRendering
+    FName StatGroup = FName(*ConvertStatCommandToStatGroup(It.Key));
+
+    Queries.Emplace(StatGroup, StatValues);
 
     // Enable command to capture it
     FString Cmd = It.Key;
@@ -103,6 +105,9 @@ void ABenchmarkSensor::BeginPlay()
 {
   Super::BeginPlay();
   GEngine->Exec(GWorld, TEXT("stat unit"));
+
+  FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState();
+  DumpStatGroups(StatsThread);
 }
 
 void ABenchmarkSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -118,8 +123,8 @@ void ABenchmarkSensor::Tick(float DeltaTime)
   FString StatsOutput;
   int64 Frame = CollectFrameStats(StatsOutput);
 
-  FString Output = "{";
-  Output += FString::Printf(TEXT("\"Frame\""), Frame);
+  FString Output = "";
+  Output += FString::Printf(TEXT("{\n  Frame:%lld,\n"), Frame);
   Output += CollectStatUnit();
   Output += StatsOutput;
   Output += "}";
@@ -139,7 +144,6 @@ void ABenchmarkSensor::Tick(float DeltaTime)
 
 FString ABenchmarkSensor::CollectStatUnit()
 {
-
   FStatUnitData* StatUnitData = GetWorld()->GetGameViewport()->GetStatUnitData();
   float FrameTime = 0.0f;
   float GameThreadTime = 0.0f;
@@ -159,7 +163,7 @@ FString ABenchmarkSensor::CollectStatUnit()
       StatUnitData->FrameTime, StatUnitData->GameThreadTime, StatUnitData->RenderThreadTime, StatUnitData->GPUFrameTime, StatUnitData->RHITTime);
     */
   }
-  return FString::Printf(TEXT("\"FrameTime\":%.2f, \"GameThreadTime\":%.2f, \"RenderThreadTime\":%.2f, \"GPUFrameTime\":%.2f, \"RHITTime\":%.2f, "),
+  return FString::Printf(TEXT("  FrameTime : %.2f,\n  GameThreadTime : %.2f,\n  RenderThreadTime : %.2f,\n  GPUFrameTime : %.2f,\n  RHITime : %.2f,\n"),
                               FrameTime, GameThreadTime, RenderThreadTime, GPUFrameTime, RHITTime);
 }
 
@@ -168,7 +172,7 @@ int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
   FString Result;
 
   // Get the reference to the stats thread
-  FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState(); // FStatsThreadState&
+  FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState();
 
   // Get the number of the last processed frame and check if it is valid (just for sure)
   int64 LastGoodGameFrame = StatsThread.GetLastFullFrameProcessed();
@@ -177,15 +181,13 @@ int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
     return LastGoodGameFrame;
   }
 
-  if(once)
-  {
-    once = false;
-    // DumpStatGroups(StatsThread);
-  }
-
+  int NumIt = 0;
   for(auto It : Queries)
   {
-    CollectStatsFromGroup(StatsThread, It.Key, It.Value, LastGoodGameFrame);
+    Output += FString::Printf(TEXT("  %s : ["), *It.Key.ToString());
+    Output += CollectStatsFromGroup(StatsThread, It.Key, It.Value, LastGoodGameFrame);
+    NumIt++;
+    Output += (NumIt < Queries.Num() - 1) ? "],\n" : "]\n";
   }
 
   return LastGoodGameFrame;
@@ -193,44 +195,45 @@ int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
 
 void ABenchmarkSensor::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
 {
+  FString Output = "";
   const TMultiMap<FName, FName>& Groups = StatsThread.Groups;
-  TArray<FName> GroupNames;
-  FString Output = "==================================================\n";
 
-  Groups.GenerateKeyArray(GroupNames);
+  TArray<FName> Keys;
+  Groups.GetKeys(Keys);
 
-  for(const FName& GroupName : GroupNames)
+  for(const FName& Key : Keys)
   {
-    FString GroupNameString = GroupName.ToString();
-    if(GroupNameString.Contains(TEXT("UObject"))) continue;
-    Output += GroupNameString + "\n";
+    TArray<FName> Values;
+    Groups.MultiFind(Key, Values);
 
-    TArray<FName> GroupItems;
-    Groups.MultiFind(GroupName, GroupItems);
+    Output += Key.ToString() + "\n";
 
-    for(const FName& GroupItem : GroupItems)
+    for(const FName& Value : Values)
     {
-      Output += "    " + GroupItem.ToString() + "\n";
+      Output += "\t" + Value.ToString() + "\n";
     }
   }
 
-  Output += "==================================================";
-  UE_LOG(LogCarla, Error, TEXT("%s"), *Output);
+  FString FilePath = FPaths::GameAgnosticSavedDir() + "StatGroups.txt";
+  FFileHelper::SaveStringToFile(
+    Output,
+    *FilePath,
+    FFileHelper::EEncodingOptions::AutoDetect,
+    &IFileManager::Get(),
+    EFileWrite::FILEWRITE_Silent);
 }
 
-void ABenchmarkSensor::CollectStatsFromGroup(
+FString ABenchmarkSensor::CollectStatsFromGroup(
   const FStatsThreadStateOverlay& StatsThread,
   const FName& GroupName,
   const TSet<FName>& StatNames,
   int64 Frame)
 {
-  TArray<FName> Keys;
-  StatsThread.Groups.GetKeys(Keys);
-  UE_LOG(LogCarla, Error, TEXT("CollectStatsFromGroup %d  Keys = %d \n"), StatsThread.Groups.Num(), Keys.Num());
-  return;
+  FString Output = "";
+
   // Gather the names of the stats that are in this group.
-  //TArray<FName> GroupItems;
-  //StatsThread.Groups.MultiFind(GroupName, GroupItems);
+  TArray<FName> GroupItems;
+  StatsThread.Groups.MultiFind(GroupName, GroupItems);
 
   // Prepare the set of names and raw names of the stats we want to get
   /*
@@ -261,12 +264,13 @@ void ABenchmarkSensor::CollectStatsFromGroup(
   // COLLECT ALL STATS TO THE ARRAY HERE
   StatsThread.UncondenseStackStats(Frame, HierarchyInclusive, &Filter, &NonStackStats);
   //StatsThread.UncondenseStackStats(Frame, HierarchyInclusive, nullptr, &NonStackStats);
-  UE_LOG(LogCarla, Error, TEXT("NonStackStats %d"), NonStackStats.Num());
 
   // Go through all stats
   // There are many ways to display them, dig around the code to display it as you want :)
-  for (const FStatMessage& Stat : NonStackStats)
+  for (int i = 0; i < NonStackStats.Num(); i++)
   {
+    const FStatMessage& Stat = NonStackStats[i];
+
     // Here we are getting the raw name
     FName StatName = Stat.NameAndInfo.GetShortName(); //GetRawName();
 
@@ -276,24 +280,56 @@ void ABenchmarkSensor::CollectStatsFromGroup(
       case EStatDataType::ST_int64:
         {
           int64 Value = Stat.GetValue_int64();
-          UE_LOG(LogCarla, Error, TEXT("Stat: %s is int64: %lld"), *StatName.ToString(), Value);
+          Output += FString::Printf(TEXT("{%s:%lld}"),  *StatName.ToString(), Value);
         }
         break;
       case EStatDataType::ST_double:
         {
           double Value = Stat.GetValue_double();
-          UE_LOG(LogCarla, Error, TEXT("Stat: %s is double: %f"), *StatName.ToString(), Value);
+          Output += FString::Printf(TEXT("{%s:%f}"),  *StatName.ToString(), Value);
         }
         break;
       case EStatDataType::ST_Ptr:
         {
           uint64 Value = Stat.GetValue_Ptr();
-          UE_LOG(LogCarla, Error, TEXT("Stat: %s is uint64: %lld"), *StatName.ToString(), Value);
+          Output += FString::Printf(TEXT("{%s:%lld}"),  *StatName.ToString(), Value);
         }
         break;
       default:
         UE_LOG(LogCarla, Error, TEXT("Stat: %s is %d"), *StatName.ToString(), static_cast<int32>(Stat.NameAndInfo.GetField<EStatDataType>()));
         check(0);
     }
+    if(i < NonStackStats.Num() - 1)
+    {
+      Output += ", ";
+    }
   }
+  return Output;
+}
+
+FString ABenchmarkSensor::ConvertStatCommandToStatGroup(FString StatCmd)
+{
+  FString StatGroupResult = "";
+  // Split the command (ie: stat scenerendering)
+  TArray<FString> StringCmd;
+  StatCmd.ParseIntoArray(StringCmd, TEXT(" "), true);
+  // 0: stat
+  // 1: scenerendering
+
+  // Get all the STATGROUPs
+  FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState();
+  TArray<FName> Keys;
+  StatsThread.Groups.GetKeys(Keys);
+
+  for(const FName& Key : Keys)
+  {
+    FString StatGroupStr = Key.ToString();
+    // STATGROUP_SceneRendering Contains scenerendering; case ignored by default on compare
+    if(StatGroupStr.Contains(StringCmd[1]))
+    {
+      StatGroupResult = StatGroupStr;
+      break;
+    }
+  }
+  return StatGroupResult;
 }
