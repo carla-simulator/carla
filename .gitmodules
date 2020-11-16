@@ -1,0 +1,3 @@
+[submodule "veins_vagrant"]
+	path = veins_vagrant
+	url = https://github.com/uruzahe/veins_vagrant.git
