@@ -339,6 +339,8 @@ namespace detail {
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
 
+    void SendConsoleCommand(std::string command) const;
+
   private:
 
     class Pimpl;

@@ -262,6 +262,10 @@ namespace detail {
       return _client.CastRay(start_location, end_location);
     }
 
+    void SendConsoleCommand(std::string command) const {
+      _client.SendConsoleCommand(command);
+    }
+
     /// @}
     // =========================================================================
     /// @name AI

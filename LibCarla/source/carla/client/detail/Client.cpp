@@ -522,6 +522,10 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
   }
 
+  void Client::SendConsoleCommand(std::string command) const {
+    _pimpl->AsyncCall("send_console_command", std::move(command));
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
