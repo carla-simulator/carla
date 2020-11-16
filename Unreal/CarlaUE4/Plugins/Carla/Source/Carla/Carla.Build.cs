@@ -42,6 +42,13 @@ public class Carla : ModuleRules
         // ... add other public dependencies that you statically link with here ...
       }
       );
+    PublicDependencyModuleNames.AddRange(
+      new string[]
+      {
+        "CarSim"
+        // ... add other public dependencies that you statically link with here ...
+      }
+      );
 
 	 if (Target.Type == TargetType.Editor)
 	 {
@@ -68,6 +75,14 @@ public class Carla : ModuleRules
         // ... add private dependencies that you statically link with here ...
       }
       );
+    PrivateDependencyModuleNames.AddRange(
+      new string[]
+      {
+        "CarSim"
+        // ... add private dependencies that you statically link with here ...
+      }
+      );
+    PrivateIncludePathModuleNames.AddRange(new string[] { "CarSim" });
 
     DynamicallyLoadedModuleNames.AddRange(
       new string[]

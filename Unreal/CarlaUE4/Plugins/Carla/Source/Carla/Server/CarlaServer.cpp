@@ -1083,6 +1083,24 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_carsim_enabled) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set carsim: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set carsim: not actor is not a vehicle");
+    }
+    Vehicle->SetCarSimEnabled(bEnabled);
+    return R<void>::Success();
+  };
   // ~~ Traffic lights ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(set_traffic_light_state) << [this](

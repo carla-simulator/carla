@@ -87,6 +87,9 @@ namespace client {
     /// Retrieve the traffic light actor currently affecting this vehicle.
     SharedPtr<TrafficLight> GetTrafficLight() const;
 
+    /// Enables CarSim simulation if it is availiable
+    void SetCarSimEnabled(bool enabled);
+
   private:
 
     const bool _is_control_sticky;
