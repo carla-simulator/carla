@@ -113,7 +113,9 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
         return {};
       }
     }
-
+    // Other, by default BB
+    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
+    return CombineBBs(BBs);
 
   }
   return {};
