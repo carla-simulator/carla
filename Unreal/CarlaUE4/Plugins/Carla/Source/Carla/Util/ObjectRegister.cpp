@@ -112,7 +112,7 @@ void UObjectRegister::RegisterEnvironmentObject(
   EnvironmentObject.BoundingBox = BoundingBox;
   EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
   EnvironmentObject.Type = Type;
-  EnvironmentObjects.Emplace(EnvironmentObject);
+  EnvironmentObjects.Emplace(std::move(EnvironmentObject));
 }
 
 void UObjectRegister::RegisterVehicle(ACarlaWheeledVehicle* Vehicle)
@@ -377,7 +377,7 @@ void UObjectRegister::EnableISMComp(FEnvironmentObject& EnvironmentObject, bool 
 
   if(!Enable)
   {
-    InstanceTransform.SetTranslation(FVector(5000000.0f));
+    InstanceTransform.SetTranslation(FVector(1000000.0f));
     InstanceTransform.SetScale3D(FVector(0.0f));
   }
 
