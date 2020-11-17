@@ -42,7 +42,17 @@ class BenchmarkSensor(object):
         bp = world.get_blueprint_library().find('sensor.other.benchmark')
 
         # queries = "{\"STATGROUP_SceneRendering\": [ \"STAT_MeshDrawCalls\", \"STAT_DecalsDrawTime\" ]}"
-        queries = "{\"stat scenerendering\": [ \"STAT_MeshDrawCalls\", \"STAT_DecalsDrawTime\" ]}"
+        queries = """
+          {\"stat scenerendering\": [ \"STAT_MeshDrawCalls\",
+                                      \"STAT_DecalsDrawTime\",
+                                      \"STAT_SceneDecals\",
+                                      \"STAT_Decals\",
+                                      \"STAT_DecalsDrawTime\",
+                                      \"STAT_SceneLights\",
+                                      \"STAT_InitViewsTime\",
+                                      \"STAT_RenderQueryResultTime\"
+                                    ]
+          }"""
         bp.set_attribute('queries', queries)
 
         self.sensor = world.spawn_actor(bp, carla.Transform())
@@ -60,7 +70,7 @@ class BenchmarkSensor(object):
         self = weak_self()
         if not self:
             return
-        print("\r" + benchmark_data.result)
+        print(benchmark_data.result)
 
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
@@ -76,6 +86,8 @@ def main():
         world = client.get_world()
 
         benchmark_sensor = BenchmarkSensor(world)
+
+        world.send_console_command("show decals")
 
         if run_sync:
             settings = carla.WorldSettings(
