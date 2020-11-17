@@ -131,15 +131,6 @@ void ABenchmarkSensor::Tick(float DeltaTime)
 
   auto DataStream = GetDataStream(*this);
   DataStream.Send(*this, TCHAR_TO_UTF8(*Output));
-
-  /*
-  const TArray<FString>* EnabledStats = World->GetGameViewport()->GetEnabledStats();
-  for(const FString& Stat : *EnabledStats)
-  {
-    UE_LOG(LogCarla, Error, TEXT(" Stat %s"), *Stat);
-  }
-  */
-
 }
 
 FString ABenchmarkSensor::CollectStatUnit()
@@ -158,10 +149,6 @@ FString ABenchmarkSensor::CollectStatUnit()
     RenderThreadTime = StatUnitData->RenderThreadTime;
     GPUFrameTime = StatUnitData->GPUFrameTime;
     RHITTime = StatUnitData->RHITTime;
-    /*
-    UE_LOG(LogCarla, Error, TEXT("Frame: %.2f, Game: %.2f, Draw: %.2f, GPU: %.2f,  RHI: %.2f"),
-      StatUnitData->FrameTime, StatUnitData->GameThreadTime, StatUnitData->RenderThreadTime, StatUnitData->GPUFrameTime, StatUnitData->RHITTime);
-    */
   }
   return FString::Printf(TEXT("  FrameTime : %.2f,\n  GameThreadTime : %.2f,\n  RenderThreadTime : %.2f,\n  GPUFrameTime : %.2f,\n  RHITime : %.2f,\n"),
                               FrameTime, GameThreadTime, RenderThreadTime, GPUFrameTime, RHITTime);
@@ -234,23 +221,6 @@ FString ABenchmarkSensor::CollectStatsFromGroup(
   // Gather the names of the stats that are in this group.
   TArray<FName> GroupItems;
   StatsThread.Groups.MultiFind(GroupName, GroupItems);
-
-  // Prepare the set of names and raw names of the stats we want to get
-  /*
-  TSet<FName> EnabledItems;
-  for (const FName& ShortName : GroupItems)
-  {
-    UE_LOG(LogCarla, Error, TEXT("Items %s"), *ShortName.ToString());
-    //EnabledItems.Add(ShortName);
-    // TODO: RawName is faster
-
-    //const FStatMessage* LongName = StatsThread.ShortNameToLongName.Find(ShortName);
-    //if (LongName)
-    //{
-    //  EnabledItems.Add(LongName->NameAndInfo.GetRawName());
-    //}
-  }
-  */
 
   // Create a filter (needed by stats gathering function)
   FGroupFilter Filter(StatNames);
