@@ -16,6 +16,24 @@
 
 namespace crp = carla::rpc;
 
+TArray<FEnvironmentObject> UObjectRegister::GetEnvironmentObjects(uint8 InTagQueried) const
+{
+  TArray<FEnvironmentObject> Result;
+
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+
+  for(const FEnvironmentObject& It : EnvironmentObjects)
+  {
+    if(!FilterByTagEnabled || (It.ObjectLabel == TagQueried))
+    {
+      Result.Emplace(It);
+    }
+  }
+
+  return Result;
+}
+
 void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 {
   // Empties the array but doesn't change memory allocations

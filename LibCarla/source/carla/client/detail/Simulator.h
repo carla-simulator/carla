@@ -240,8 +240,8 @@ namespace detail {
       return _client.GetLevelBBs(queried_tag);
     }
 
-    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects() const {
-      return _client.GetEnvironmentObjects();
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const {
+      return _client.GetEnvironmentObjects(queried_tag);
     }
 
     void EnableEnvironmentObjects(

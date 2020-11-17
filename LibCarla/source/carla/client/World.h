@@ -162,7 +162,7 @@ namespace client {
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
 
-    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects() const;
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const;
 
     void EnableEnvironmentObjects(
       std::vector<uint64_t> env_objects_ids,

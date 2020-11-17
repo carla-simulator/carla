@@ -25,11 +25,8 @@ public:
   UObjectRegister() {}
   ~UObjectRegister() {}
 
-  UFUNCTION(Category = "Carla Object Register", BlueprintCallable, CallInEditor, Exec)
-  const TArray<FEnvironmentObject>& GetEnvironmentObjects() const
-  {
-    return EnvironmentObjects;
-  }
+  UFUNCTION(Category = "Carla Object Register", BlueprintCallable, CallInEditor)
+  TArray<FEnvironmentObject> GetEnvironmentObjects(uint8 InTagQueried = 0) const;
 
   UFUNCTION(Category = "Carla Object Register")
   void RegisterObjects(TArray<AActor*> Actors);
