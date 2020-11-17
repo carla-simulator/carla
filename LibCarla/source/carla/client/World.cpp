@@ -174,8 +174,8 @@ namespace client {
     return _episode.Lock()->GetLevelBBs(queried_tag);
   }
 
-  std::vector<rpc::EnvironmentObject> World::GetEnvironmentObjects() const {
-    return _episode.Lock()->GetEnvironmentObjects();
+  std::vector<rpc::EnvironmentObject> World::GetEnvironmentObjects(uint8_t queried_tag) const {
+    return _episode.Lock()->GetEnvironmentObjects(queried_tag);
   }
 
   void World::EnableEnvironmentObjects(

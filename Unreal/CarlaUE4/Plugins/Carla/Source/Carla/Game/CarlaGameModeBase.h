@@ -57,9 +57,9 @@ public:
   TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  const TArray<FEnvironmentObject>& GetEnvironmentObjects() const
+  TArray<FEnvironmentObject> GetEnvironmentObjects(uint8 QueriedTag = 0) const
   {
-    return ObjectRegister->GetEnvironmentObjects();
+    return ObjectRegister->GetEnvironmentObjects(QueriedTag);
   }
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);

@@ -88,9 +88,9 @@ static auto GetLevelBBs(const carla::client::World &self, uint8_t queried_tag) {
   return result;
 }
 
-static auto GetEnvironmentObjects(const carla::client::World &self) {
+static auto GetEnvironmentObjects(const carla::client::World &self, uint8_t queried_tag) {
   boost::python::list result;
-  for (const auto &object : self.GetEnvironmentObjects()) {
+  for (const auto &object : self.GetEnvironmentObjects(queried_tag)) {
     result.append(object);
   }
   return result;
@@ -270,8 +270,8 @@ void export_world() {
     .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
-    .def("get_level_bbs", &GetLevelBBs, (arg("actor_type")=cr::CityObjectLabel::None))
-    .def("get_environment_objects", &GetEnvironmentObjects)
+    .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::None))
+    .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::None))
     .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))
     .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
