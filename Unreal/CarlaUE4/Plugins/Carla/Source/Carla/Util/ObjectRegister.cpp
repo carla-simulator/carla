@@ -71,7 +71,7 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
   }
 
 
-  FString FilePath = "~/Desktop/RegisteredObjects.txt";
+  FString FilePath = FPaths::ProjectSavedDir() + "RegisteredObjects.txt";
   FFileHelper::SaveStringToFile(
     FileContent,
     *FilePath,
@@ -79,9 +79,6 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
     &IFileManager::Get(),
     EFileWrite::FILEWRITE_Silent);
 
-  UE_LOG(LogCarla, Warning, TEXT("Num actors %d"), Actors.Num());
-  UE_LOG(LogCarla, Warning, TEXT("Num registered objects %d"), EnvironmentObjects.Num());
-  UE_LOG(LogCarla, Warning, TEXT("Num comps %d"), ObjectIdToComp.Num());
 #endif // WITH_EDITOR
 
 }
