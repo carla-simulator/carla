@@ -733,7 +733,7 @@ def game_loop(args):
                 control.manual_gear_shift = False
                 world.player.apply_control(control)
             else:
-                agent.update_information(world)
+                agent.update_information()
 
                 world.tick(clock)
                 world.render(display)

@@ -40,7 +40,7 @@ private:
   float ComputeIntensity(const FSemanticDetection& RawDetection) const;
   FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const;
 
-  bool PreprocessRay() const override;
+  void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) override;
   bool PostprocessDetection(FDetection& Detection) const;
 
   void ComputeAndSaveDetections(const FTransform& SensorTransform) override;

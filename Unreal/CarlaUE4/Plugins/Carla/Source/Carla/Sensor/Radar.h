@@ -81,4 +81,14 @@ private:
 
   UWorld* World;
 
+  struct RayData {
+    float Radius;
+    float Angle;
+    bool Hitted;
+    float RelativeVelocity;
+    FVector2D AzimuthAndElevation;
+    float Distance;
+  };
+
+  std::vector<RayData> Rays;
 };

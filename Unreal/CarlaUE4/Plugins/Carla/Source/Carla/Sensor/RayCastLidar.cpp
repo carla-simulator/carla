@@ -31,6 +31,7 @@ ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer) {
 
   RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+  SetSeed(Description.RandomSeed);
 }
 
 void ARayCastLidar::Set(const FActorDescription &ActorDescription)
@@ -95,11 +96,14 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   return Detection;
 }
 
-  bool ARayCastLidar::PreprocessRay() const {
-    if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
-      return false;
-    else
-      return true;
+  void ARayCastLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+    Super::PreprocessRays(Channels, MaxPointsPerChannel);
+
+    for (auto ch = 0u; ch < Channels; ch++) {
+      for (auto p = 0u; p < MaxPointsPerChannel; p++) {
+        RayPreprocessCondition[ch][p] = !(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate);
+      }
+    }
   }
 
   bool ARayCastLidar::PostprocessDetection(FDetection& Detection) const
