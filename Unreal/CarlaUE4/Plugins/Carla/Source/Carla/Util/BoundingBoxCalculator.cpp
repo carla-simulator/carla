@@ -99,7 +99,7 @@ FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
   check(Vehicle);
 
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
   USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
@@ -187,7 +187,7 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
   check(Character);
 
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTag = TagQueried == crp::CityObjectLabel::None ||
+  bool FilterByTag = TagQueried == crp::CityObjectLabel::Any ||
                      TagQueried == crp::CityObjectLabel::Pedestrians;
 
   UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
@@ -232,7 +232,7 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
   CombineBBsOfActor(TrafficLight, BBsOfTL, TagsOfTL, DistanceThreshold, TLTag);
   check(BBsOfTL.Num() == TagsOfTL.Num());
 
-  bool FilterByTagEnabled = (InTagQueried != static_cast<uint8>(crp::CityObjectLabel::None));
+  bool FilterByTagEnabled = (InTagQueried != static_cast<uint8>(crp::CityObjectLabel::Any));
 
   for(int i = 0; i < BBsOfTL.Num(); i++)
   {
@@ -346,7 +346,7 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
     uint8 InTagQueried)
 {
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   for(UStaticMeshComponent* Comp : StaticMeshComps)
   {
@@ -383,7 +383,7 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
     uint8 InTagQueried)
 {
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
   {
@@ -430,7 +430,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBBsOfActor(
   TArray<FBoundingBox> Result;
   TArray<uint8> Tags;
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   FString ClassName = Actor->GetClass()->GetName();
 

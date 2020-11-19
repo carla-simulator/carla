@@ -21,7 +21,7 @@ TArray<FEnvironmentObject> UObjectRegister::GetEnvironmentObjects(uint8 InTagQue
   TArray<FEnvironmentObject> Result;
 
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   for(const FEnvironmentObject& It : EnvironmentObjects)
   {
