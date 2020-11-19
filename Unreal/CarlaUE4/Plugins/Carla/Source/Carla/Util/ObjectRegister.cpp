@@ -213,6 +213,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
   for(UInstancedStaticMeshComponent* Comp : ISMComps)
   {
     const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData = Comp->PerInstanceSMData;
+    const FTransform CompTransform = Comp->GetComponentTransform();
 
     TArray<FBoundingBox> BoundingBoxes;
     UBoundingBoxCalculator::GetISMBoundingBox(Comp, BoundingBoxes);
@@ -236,7 +237,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       uint64 InstanceId = CityHash64(TCHAR_TO_ANSI(*InstanceIdStr), InstanceIdStr.Len());
 
       FEnvironmentObject EnvironmentObject;
-      EnvironmentObject.Transform = InstanceTransform;
+      EnvironmentObject.Transform = InstanceTransform * CompTransform;
       EnvironmentObject.Id = InstanceId;
       EnvironmentObject.Name = InstanceName;
       EnvironmentObject.IdStr = InstanceIdStr;
