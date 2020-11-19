@@ -608,23 +608,27 @@ void UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(
 {
   check(Actor);
 
-  TArray<FBoundingBox> BBsOfTL;
-  TArray<uint8> InternalOutTags;
-  TArray<UStaticMeshComponent*> StaticMeshComps;
-  Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-  GetBBsOfStaticMeshComponents(StaticMeshComps, BBsOfTL, InternalOutTags);
-  check(BBsOfTL.Num() == InternalOutTags.Num());
 
   const float DistanceThreshold = 100.0f * 100.0f;
 
-  for(int i = 0; i < BBsOfTL.Num(); i++)
+  TArray<UStaticMeshComponent*> SMComps;
+  Actor->GetComponents<UStaticMeshComponent>(SMComps);
+
+  for(UStaticMeshComponent* Comp : SMComps)
   {
-    const FBoundingBox& BB = BBsOfTL[i];
+    if(!Comp->IsVisible()) continue;
+
+    TArray<FBoundingBox> BBs;
+    TArray<uint8> InternalOutTags;
+    GetBBsOfStaticMeshComponents({Comp}, BBs, InternalOutTags);
+
+    if(BBs.Num() == 0) continue;
+
+    const FBoundingBox& BB = BBs[0];
     float Distance = FVector::DistSquared(InBB.Origin, BB.Origin);
     if(Distance <= DistanceThreshold)
     {
-      OutStaticMeshComps.Emplace(StaticMeshComps[i]);
+      OutStaticMeshComps.Emplace(Comp);
     }
   }
-
 }
