@@ -43,8 +43,9 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
   {
     const FString ActorName = Actor->GetName();
 
-    // Discard Sky to not broke the global ilumination
-    if(ActorName.Contains("BP_Sky")) continue;
+    FString ClassName = Actor->GetClass()->GetName();
+    // Discard Sky to not break the global ilumination
+    if(ClassName.Equals("BP_Sky_C")) continue;
 
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
     if (Vehicle)
