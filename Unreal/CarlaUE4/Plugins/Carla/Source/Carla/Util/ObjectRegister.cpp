@@ -41,7 +41,6 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 
   for(AActor* Actor : Actors)
   {
-    const FString ActorName = Actor->GetName();
 
     FString ClassName = Actor->GetClass()->GetName();
     // Discard Sky to not break the global ilumination
@@ -104,13 +103,24 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 
 void UObjectRegister::EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable)
 {
-  for(FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
+  for(uint64 It : EnvObjectIds)
   {
-    if(EnvObjectIds.Contains(EnvironmentObject.Id))
+    bool found = false;
+    for(FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
     {
-      EnableEnvironmentObject(EnvironmentObject, Enable);
+      if(It == EnvironmentObject.Id)
+      {
+        EnableEnvironmentObject(EnvironmentObject, Enable);
+        found = true;
+        break;
+      }
+    }
+    if(!found)
+    {
+      UE_LOG(LogCarla, Error, TEXT("EnableEnvironmentObjects id not found %llu"), It);
     }
   }
+
 }
 
 void UObjectRegister::RegisterEnvironmentObject(
