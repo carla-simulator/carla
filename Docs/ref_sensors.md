@@ -1,18 +1,21 @@
 # Sensors reference
 
-*   [__Collision detector__](#collision-detector)  
-*   [__Depth camera__](#depth-camera)  
-*   [__GNSS sensor__](#gnss-sensor)  
-*   [__IMU sensor__](#imu-sensor)  
-*   [__Lane invasion detector__](#lane-invasion-detector)  
-*   [__LIDAR sensor__](#lidar-sensor)  
-*   [__Obstacle detector__](#obstacle-detector)  
-*   [__Radar sensor__](#radar-sensor)  
-*   [__RGB camera__](#rgb-camera)  
-*   [__RSS sensor__](#rss-sensor)  
-*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)  
-*   [__Semantic segmentation camera__](#semantic-segmentation-camera)  
-*   [__DVS camera__](#dvs-camera)  
+*   [__Collision detector__](#collision-detector)
+*   [__Depth camera__](#depth-camera)
+*   [__GNSS sensor__](#gnss-sensor)
+*   [__IMU sensor__](#imu-sensor)
+*   [__Lane invasion detector__](#lane-invasion-detector)
+*   [__LIDAR sensor__](#lidar-sensor)
+*   [__Obstacle detector__](#obstacle-detector)
+*   [__Radar sensor__](#radar-sensor)
+*   [__RGB camera__](#rgb-camera)
+*   [__RSS sensor__](#rss-sensor)
+*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
+*   [__Semantic segmentation camera__](#semantic-segmentation-camera)
+*   [__DVS camera__](#dvs-camera)
+
+!!! Important
+    All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
 
 ---
 ## Collision detector
@@ -475,10 +478,10 @@ This sensor does not have any configurable attribute.
 * __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
 
 This sensor simulates a rotating LIDAR implemented using ray-casting.
-The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.  
+The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the Lidar rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.
 `points_per_channel_each_step = points_per_second / (FPS * channels)`
 
-A LIDAR measurement contains a package with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene.  
+A LIDAR measurement contains a package with all the points generated during a `1/FPS` interval. During this interval the physics are not updated so all the points in a measurement reflect the same "static picture" of the scene.
 
 This output contains a cloud of simulation points and thus, it can be iterated to retrieve a list of their [`carla.Location`](python_api.md#carla.Location):
 
@@ -487,21 +490,21 @@ for location in lidar_measurement:
     print(location)
 ```
 
-The information of the LIDAR measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.  
+The information of the LIDAR measurement is enconded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
 <br>
-![LidarIntensityComputation](img/lidar_intensity.jpg)  
+![LidarIntensityComputation](img/lidar_intensity.jpg)
 
-`a` — Attenuation coefficient. This may depend on the sensor's wavelenght, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.  
-`d` — Distance from the hit point to the sensor.  
+`a` — Attenuation coefficient. This may depend on the sensor's wavelenght, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
+`d` — Distance from the hit point to the sensor.
 
-For a better realism, points in the cloud can be dropped off. This is an easy way to simulate loss due to external perturbations. This can done combining two different.  
+For a better realism, points in the cloud can be dropped off. This is an easy way to simulate loss due to external perturbations. This can done combining two different.
 
 *   __General drop-off__ — Proportion of points that are dropped off randomly. This is done before the tracing, meaning the points being dropped are not calculated, and therefore improves the performance. If `dropoff_general_rate = 0.5`, half of the points will be dropped.
-*   __Instensity-based drop-off__ — For each point detected, and extra drop-off is performed with a probability based in the computed intensity. This probability is determined by two parameters. `dropoff_zero_intensity` is the probability of points with zero intensity to be dropped. `dropoff_intensity_limit` is a threshold intensity above which no points will be dropped. The probability of a point within the range to be dropped is a linear proportion based on these two parameters.  
+*   __Instensity-based drop-off__ — For each point detected, and extra drop-off is performed with a probability based in the computed intensity. This probability is determined by two parameters. `dropoff_zero_intensity` is the probability of points with zero intensity to be dropped. `dropoff_intensity_limit` is a threshold intensity above which no points will be dropped. The probability of a point within the range to be dropped is a linear proportion based on these two parameters.
 
 Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
 
-The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 config.py --fps=10`.  
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 config.py --fps=10`.
 
 ![LidarPointCloud](img/lidar_point_cloud.jpg)
 
@@ -1127,36 +1130,34 @@ Since these effects are provided by UE, please make sure to check their document
 ---
 ## RSS sensor
 
-*   __Blueprint:__ sensor.other.rss  
-*   __Output:__ [carla.RssResponse](python_api.md#carla.RssResponse) per step (unless `sensor_tick` says otherwise).  
+*   __Blueprint:__ sensor.other.rss
+*   __Output:__ [carla.RssResponse](python_api.md#carla.RssResponse) per step (unless `sensor_tick` says otherwise).
 
 !!! Important
-    It is highly recommended to read the specific [rss documentation](adv_rss.md) before reading this.  
+    It is highly recommended to read the specific [rss documentation](adv_rss.md) before reading this.
 
-This sensor integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in CARLA. It is disabled by default in CARLA, and it has to be explicitly built in order to be used.  
+This sensor integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in CARLA. It is disabled by default in CARLA, and it has to be explicitly built in order to be used.
 
-The RSS sensor calculates the RSS state of a vehicle and retrieves the current RSS Response as sensor data. The [carla.RssRestrictor](python_api.md#carla.RssRestrictor) will use this data to adapt a [carla.VehicleControl](python_api.md#carla.VehicleControl) before applying it to a vehicle.  
+The RSS sensor calculates the RSS state of a vehicle and retrieves the current RSS Response as sensor data. The [carla.RssRestrictor](python_api.md#carla.RssRestrictor) will use this data to adapt a [carla.VehicleControl](python_api.md#carla.VehicleControl) before applying it to a vehicle.
 
-These controllers can be generated by an *Automated Driving* stack or user input. For instance, hereunder there is a fragment of code from `PythonAPI/examples/manual_control_rss.py`, where the user input is modified using RSS when necessary.  
+These controllers can be generated by an *Automated Driving* stack or user input. For instance, hereunder there is a fragment of code from `PythonAPI/examples/rss/manual_control_rss.py`, where the user input is modified using RSS when necessary.
 
-__1.__ Checks if the __RssSensor__ generates a valid response containing restrictions.  
-__2.__ Gathers the current dynamics of the vehicle and the vehicle physics.  
-__3.__ Applies restrictions to the vehicle control using the response from the RssSensor, and the current dynamics and physicis of the vehicle.  
+__1.__ Checks if the __RssSensor__ generates a valid response containing restrictions.
+__2.__ Gathers the current dynamics of the vehicle and the vehicle physics.
+__3.__ Applies restrictions to the vehicle control using the response from the RssSensor, and the current dynamics and physicis of the vehicle.
 
 ```py
-rss_restriction = self._world.rss_sensor.acceleration_restriction if self._world.rss_sensor and self._world.rss_sensor.response_valid else None
-if rss_restriction:
-    rss_ego_dynamics_on_route = self._world.rss_sensor.ego_dynamics_on_route
-    vehicle_physics = world.player.get_physics_control()
+rss_proper_response = self._world.rss_sensor.proper_response if self._world.rss_sensor and self._world.rss_sensor.response_valid else None
+if rss_proper_response:
 ...
         vehicle_control = self._restrictor.restrict_vehicle_control(
-            vehicle_control, rss_restriction, rss_ego_dynamics_on_route, vehicle_physics)
+            vehicle_control, rss_proper_response, self._world.rss_sensor.ego_dynamics_on_route, self._vehicle_physics)
 ```
 
 
 #### The carla.RssSensor class
 
-The blueprint for this sensor has no modifiable attributes. However, the [carla.RssSensor](python_api.md#carla.RssSensor) object that it instantiates has attributes and methods that are detailed in the Python API reference. Here is a summary of them.  
+The blueprint for this sensor has no modifiable attributes. However, the [carla.RssSensor](python_api.md#carla.RssSensor) object that it instantiates has attributes and methods that are detailed in the Python API reference. Here is a summary of them.
 
 <table class ="defTable">
 <thead>
@@ -1165,42 +1166,42 @@ The blueprint for this sensor has no modifiable attributes. However, the [carla.
 <th>Description</th>
 </thead>
 <tbody>
-<td>
-<code>ego_vehicle_dynamics</code> </td>
-<td><a href="https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/">libad_rss_python.RssDynamics</a></td>
+<td><code>ego_vehicle_dynamics</code> </td>
+<td><a href="https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/">ad.rss.world.RssDynamics</a></td>
 <td>RSS parameters to be applied for the ego vehicle </td>
 <tr>
-<td>
-<code>other_vehicle_dynamics</code> </td>
-<td><a href="https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/">libad_rss_python.RssDynamics</a></td>
+<td><code>other_vehicle_dynamics</code> </td>
+<td><a href="https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/">ad.rss.world.RssDynamics</a></td>
 <td>RSS parameters to be applied for the other vehicles</td>
+<tr>
+<td><code>pedestrian_dynamics</code> </td>
+<td><a href="https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/">ad.rss.world.RssDynamics</a></td>
+<td>RSS parameters to be applied for pedestrians</td>
 <tr>
 <td><code>road_boundaries_mode</code></td>
 <td><a href="../python_api#carlarssroadboundariesmode">carla.RssRoadBoundariesMode</a></td>
 <td>Enables/Disables the <a href="https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries">stay on road</a> feature. Default is <b>Off</b>.</td>
-<tr>
-<td><code>visualization_mode</code></td>
-<td><a href="../python_api#carlarssvisualizationmode">carla.RssVisualizationMode</a></td>
-<td>States the visualization of the RSS calculations. Default is <b>All</b>.</td>
 </table>
 <br>
 
 ```py
-# Fragment of manual_control_rss.py
+# Fragment of rss_sensor.py
 # The carla.RssSensor is updated when listening for a new carla.RssResponse
 def _on_rss_response(weak_self, response):
 ...
         self.timestamp = response.timestamp
         self.response_valid = response.response_valid
         self.proper_response = response.proper_response
-        self.acceleration_restriction = response.acceleration_restriction
         self.ego_dynamics_on_route = response.ego_dynamics_on_route
+        self.rss_state_snapshot = response.rss_state_snapshot
+        self.situation_snapshot = response.situation_snapshot
+        self.world_model = response.world_model
 ```
 
 !!! Warning
     This sensor works fully on the client side. There is no blueprint in the server. Changes on the attributes will have effect __after__ the *listen()* has been called.
 
-The methods available in this class are related to the routing of the vehicle. RSS calculations are always based on a route of the ego vehicle through the road network.  
+The methods available in this class are related to the routing of the vehicle. RSS calculations are always based on a route of the ego vehicle through the road network.
 
 The sensor allows to control the considered route by providing some key points, which could be the [carla.Transform](python_api.md#carla.Transform) in a [carla.Waypoint](python_api.md#carla.Waypoint). These points are best selected after the intersections to force the route to take the desired turn.
 
@@ -1228,6 +1229,9 @@ The sensor allows to control the considered route by providing some key points, 
 <tr>
 <td><code>set_log_level</code></td>
 <td>Sets the log level.</td>
+<tr>
+<td><code>set_map_log_level</code></td>
+<td>Sets the log level used for map related logs.</td>
 </table>
 <br>
 
@@ -1256,24 +1260,24 @@ if routing_targets:
 <td>Validity of the response data.</td>
 <tr>
 <td><code>proper_response</code> </td>
-<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a></td>
-<td>Proper response that the RSS calculated for the vehicle.</td>
-<tr>
-<td><code>acceleration_restriction</code></td>
-<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1AccelerationRestriction.html">libad_rss_python.AccelerationRestriction</a></td>
-<td>Acceleration restrictions of the RSS calculation.</td>
+<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">ad.rss.state.ProperResponse</a></td>
+<td>Proper response that the RSS calculated for the vehicle including acceleration restrictions.</td>
 <tr>
 <td><code>rss_state_snapshot</code></td>
-<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a></td>
-<td>RSS states at the current point in time.</td>
+<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">ad.rss.state.RssStateSnapshot</a></td>
+<td>RSS states at the current point in time. This is the detailed individual output of the RSS calclulations.</td>
+<tr>
+<td><code>situation_snapshot</code></td>
+<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">ad.rss.situation.SituationSnapshot</a></td>
+<td>RSS situation at the current point in time. This is the processed input data for the RSS calclulations.</td>
+<tr>
+<td><code>world_model</code></td>
+<td><a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">ad.rss.world.WorldModel</a></td>
+<td>RSS world model at the current point in time. This is the input data for the RSS calculations.</td>
 <tr>
 <td><code>ego_dynamics_on_route</code></td>
 <td><a href="../python_api#carlarssegodynamicsonroute">carla.RssEgoDynamicsOnRoute</a></td>
 <td>Current ego vehicle dynamics regarding the route.</td>
-<tr>
-<td><code>situation_snapshot</code></td>
-<td><a href="../python_api#carlarssegodynamicsonroute">carla.RssEgoDynamicsOnRoute</a></td>
-<td>Current situation snapshot extracted from the world model.</td>
 </tbody>
 </table>
 
@@ -1283,14 +1287,14 @@ In case a actor_constellation_callback is registered, a call is triggered for:
 2. per-actor calculation
 
 ```py
-# Fragment of manual_control_rss.py
+# Fragment of rss_sensor.py
 # The function is registered as actor_constellation_callback
 def _on_actor_constellation_request(self, actor_constellation_data):
     actor_constellation_result = carla.RssActorConstellationResult()
-    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.NotRelevant
-    actor_constellation_result.restrict_speed_limit_mode = rssmap.RssSceneCreation.RestrictSpeedLimitMode.IncreasedSpeedLimit10
+    actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.NotRelevant
+    actor_constellation_result.restrict_speed_limit_mode = ad.rss.map.RssSceneCreation.RestrictSpeedLimitMode.IncreasedSpeedLimit10
     actor_constellation_result.ego_vehicle_dynamics = self.current_vehicle_parameters
-    actor_constellation_result.actor_object_type = rss.ObjectType.Invalid
+    actor_constellation_result.actor_object_type = ad.rss.world.ObjectType.Invalid
     actor_constellation_result.actor_dynamics = self.current_vehicle_parameters
 
     actor_id = -1
@@ -1311,15 +1315,15 @@ def _on_actor_constellation_request(self, actor_constellation_data):
 * __Blueprint:__ sensor.lidar.ray_cast_semantic
 * __Output:__ [carla.SemanticLidarMeasurement](python_api.md#carla.SemanticLidarMeasurement) per step (unless `sensor_tick` says otherwise).
 
-This sensor simulates a rotating LIDAR implemented using ray-casting that exposes all the information about the raycast hit. Its behaviour is quite similar to the [LIDAR sensor](#lidar-sensor), but there are two main differences between them.  
+This sensor simulates a rotating LIDAR implemented using ray-casting that exposes all the information about the raycast hit. Its behaviour is quite similar to the [LIDAR sensor](#lidar-sensor), but there are two main differences between them.
 
 *   The raw data retrieved by the semantic LIDAR includes more data per point.
-	*   Coordinates of the point (as the normal LIDAR does).  
-	*   The cosine between the angle of incidence and the normal of the surface hit. 
-	*   Instance and semantic ground-truth. Basically the index of the CARLA object hit, and its semantic tag.  
-*   The semantic LIDAR does not include neither intensity, drop-off nor noise model attributes.  
+	*   Coordinates of the point (as the normal LIDAR does).
+	*   The cosine between the angle of incidence and the normal of the surface hit.
+	*   Instance and semantic ground-truth. Basically the index of the CARLA object hit, and its semantic tag.
+*   The semantic LIDAR does not include neither intensity, drop-off nor noise model attributes.
 
-The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the LIDAR rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.  
+The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the LIDAR rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.
 ```sh
 points_per_channel_each_step = points_per_second / (FPS * channels)
 ```
@@ -1333,8 +1337,8 @@ for detection in semantic_lidar_measurement:
     print(detection)
 ```
 
-The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> 
-__1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> 
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br>
+__1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br>
 __2.__ Run the simulation using `python3 config.py --fps=10`.
 
 ![LidarPointCloud](img/semantic_lidar_point_cloud.jpg)
@@ -1428,18 +1432,18 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 - XYZ coordinates. <br>
 - cosine of the incident angle. <br>
 - Unsigned int containing the index of the object hit.  <br>
-- Unsigned int containing the semantic tag of the object it.  
+- Unsigned int containing the semantic tag of the object it.
 </tbody>
 </table>
 
 ---
 ## Semantic segmentation camera
 
-*   __Blueprint:__ sensor.camera.semantic_segmentation  
-*   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).  
+*   __Blueprint:__ sensor.camera.semantic_segmentation
+*   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
 This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).
-When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.  
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUE4/Content/Static/Pedestrians` are tagged as `Pedestrian`.
 
 ![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
 
@@ -1580,8 +1584,7 @@ The following tags are currently available:
 <br>
 
 !!! Note
-    **Adding new tags**:
-    It requires some C++ coding. Add a new label to the `ECityObjectLabel` enum in "Tagger.h", and its corresponding filepath check inside `GetLabelByFolderName()` function in "Tagger.cpp".
+    Read [this](tuto_D_create_semantic_tags.md) tutorial to create new semantic tags. 
 
 #### Basic camera attributes
 
@@ -1705,8 +1708,8 @@ The following tags are currently available:
 ---
 ## DVS camera
 
-*   __Blueprint:__ sensor.camera.dvs  
-*   __Output:__ [carla.DVSEventArray](python_api.md#carla.DVSEventArray) per step (unless `sensor_tick` says otherwise).  
+*   __Blueprint:__ sensor.camera.dvs
+*   __Output:__ [carla.DVSEventArray](python_api.md#carla.DVSEventArray) per step (unless `sensor_tick` says otherwise).
 
 
 A Dynamic Vision Sensor (DVS) or Event camera is a sensor that works radically differently from a conventional camera. Instead of capturing

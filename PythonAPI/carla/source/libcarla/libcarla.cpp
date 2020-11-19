@@ -111,6 +111,16 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
       return OptionalToPythonObject(optional); \
     }
 
+#define CALL_RETURNING_OPTIONAL_2(cls, fn, T1_, T2_) +[](const cls &self, T1_ t1, T2_ t2) { \
+      auto optional = self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2)); \
+      return OptionalToPythonObject(optional); \
+    }
+
+#define CALL_RETURNING_OPTIONAL_3(cls, fn, T1_, T2_, T3_) +[](const cls &self, T1_ t1, T2_ t2, T3_ t3) { \
+      auto optional = self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3)); \
+      return OptionalToPythonObject(optional); \
+    }
+
 #define CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cls, fn) +[](const cls &self) { \
       carla::PythonUtil::ReleaseGIL unlock; \
       auto optional = self.fn(); \

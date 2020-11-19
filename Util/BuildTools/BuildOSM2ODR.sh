@@ -24,12 +24,10 @@ BUILD_OSM2ODR=false
 
 OPTS=`getopt -o h --long help,rebuild,build,clean -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
-while true; do
-  case $1 in
+while [[ $# -gt 0 ]]; do
+  case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;
       BUILD_OSM2ODR=true;
@@ -46,7 +44,8 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      log "Here22. $1"
+      shift ;;
   esac
 done
 

@@ -54,8 +54,7 @@ python3 spawn_npc.py
 # Terminal B
 cd PythonAPI/examples
 python3 dynamic_weather.py 
-# The PythonAPI will be built based on the installed Python version
-# The docs will use Python3, as support for  Python2 was provided until 0.9.10 (not included)
+# The PythonAPI will be built based on the installed Python version, but the docs will use Python3 by default.
 
 ```
 </details>
@@ -171,8 +170,7 @@ python3 spawn_npc.py
 # Terminal B
 cd PythonAPI/examples
 python3 dynamic_weather.py 
-# The PythonAPI will be built based on the installed Python version
-# The docs will use Python3, as support for  Python2 was provided until 0.9.10 (not included)
+# The PythonAPI will be built based on the installed Python version, but the docs will use Python3 by default.
 ```
 
 !!! Important

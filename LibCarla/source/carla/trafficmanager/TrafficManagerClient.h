@@ -156,12 +156,6 @@ public:
     return _client->call("synchronous_tick").as<bool>();
   }
 
-  /// Method to reset all traffic light groups to the initial stage.
-  void ResetAllTrafficLights() {
-    DEBUG_ASSERT(_client != nullptr);
-    _client->call("reset_all_traffic_lights");
-  }
-
   /// Check if remote traffic manager is alive
   void HealthCheckRemoteTM() {
     DEBUG_ASSERT(_client != nullptr);

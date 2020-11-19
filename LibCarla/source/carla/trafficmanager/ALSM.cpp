@@ -313,9 +313,7 @@ void ALSM::UpdateUnregisteredActorsData() {
 void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id) {
   if (idle_time.find(actor_id) != idle_time.end()) {
     double &idle_duration = idle_time.at(actor_id);
-    TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
-    if (simulation_state.GetVelocity(actor_id).SquaredLength() > SQUARE(STOPPED_VELOCITY_THRESHOLD)
-        || (tl_state.at_traffic_light && tl_state.tl_state != TLS::Green && tl_state.tl_state != TLS::Off)) {
+    if (simulation_state.GetVelocity(actor_id).SquaredLength() > SQUARE(STOPPED_VELOCITY_THRESHOLD)) {
       idle_duration = current_timestamp.elapsed_seconds;
     }
 
@@ -329,7 +327,9 @@ void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const Actor
 bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
   if (idle_time.find(actor_id) != idle_time.end()) {
     double delta_idle_time = current_timestamp.elapsed_seconds - idle_time.at(actor_id);
-    if (delta_idle_time >= BLOCKED_TIME_THRESHOLD) {
+    TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
+    if ((!tl_state.at_traffic_light && tl_state.tl_state != TLS::Red && delta_idle_time >= BLOCKED_TIME_THRESHOLD)
+    || (delta_idle_time >= RED_TL_BLOCKED_TIME_THRESHOLD)) {
       return true;
     }
   }

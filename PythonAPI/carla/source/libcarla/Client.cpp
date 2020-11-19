@@ -181,7 +181,7 @@ void export_client() {
     .def("get_world", &cc::Client::GetWorld)
     .def("get_available_maps", &GetAvailableMaps)
     .def("reload_world", CONST_CALL_WITHOUT_GIL(cc::Client, ReloadWorld))
-    .def("load_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, LoadWorld, std::string), (arg("map_name")))
+    .def("load_world", CONST_CALL_WITHOUT_GIL_2(cc::Client, LoadWorld, std::string, rpc::MapLayer), (arg("map_name"), arg("map_layers")=rpc::MapLayer::All))
     .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_2(cc::Client, GenerateOpenDriveWorld, std::string,
         rpc::OpendriveGenerationParameters), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters()))
     .def("start_recorder", CALL_WITHOUT_GIL_2(cc::Client, StartRecorder, std::string, bool), (arg("name"), arg("additional_data")=false))

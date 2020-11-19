@@ -6,23 +6,24 @@
 
 #pragma once
 
-#include "Carla/Actor/CarlaActorFactory.h"
-#include "Carla/Game/CarlaEpisode.h"
-#include "Carla/Game/CarlaGameInstance.h"
-#include "Carla/Recorder/CarlaRecorder.h"
-#include "Carla/Game/TaggerDelegate.h"
-#include "Carla/OpenDrive/OpenDrive.h"
-#include "Carla/Sensor/SceneCaptureSensor.h"
-#include "Carla/Settings/CarlaSettingsDelegate.h"
-#include "Carla/Weather/Weather.h"
-#include "Carla/Traffic/TrafficLightManager.h"
-
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
 #include <compiler/enable-ue4-macros.h>
+
+#include "Carla/Actor/CarlaActorFactory.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Game/TaggerDelegate.h"
+#include "Carla/OpenDrive/OpenDrive.h"
+#include "Carla/Recorder/CarlaRecorder.h"
+#include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Settings/CarlaSettingsDelegate.h"
+#include "Carla/Traffic/TrafficLightManager.h"
+#include "Carla/Util/EnvironmentObject.h"
+#include "Carla/Weather/Weather.h"
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -55,6 +56,23 @@ public:
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
 
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  TArray<FEnvironmentObject> GetEnvironmentObjects() const
+  {
+    return EnvironmentObjects;
+  }
+
+  void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  void LoadMapLayer(int32 MapLayers);
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  void UnLoadMapLayer(int32 MapLayers);
+
+  UFUNCTION(Category = "Carla Game Mode")
+  ULevel* GetULevelFromName(FString LevelName);
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -73,6 +91,10 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
+  void RegisterEnvironmentObject();
+
+  void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
+
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
 
@@ -86,7 +108,9 @@ private:
   UCarlaEpisode *Episode = nullptr;
 
   UPROPERTY()
-  ACarlaRecorder *Recorder = nullptr; 
+  ACarlaRecorder *Recorder = nullptr;
+
+  TArray<FEnvironmentObject> EnvironmentObjects;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)

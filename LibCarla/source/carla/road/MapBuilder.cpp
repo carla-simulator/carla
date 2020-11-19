@@ -28,6 +28,7 @@
 
 #include <iterator>
 #include <memory>
+#include <algorithm>
 
 using namespace carla::road::element;
 
@@ -37,6 +38,7 @@ namespace road {
   boost::optional<Map> MapBuilder::Build() {
 
     CreatePointersBetweenRoadSegments();
+    RemoveZeroLaneValiditySignalReferences();
 
     for (auto &&info : _temp_road_info_container) {
       DEBUG_ASSERT(info.first != nullptr);
@@ -962,6 +964,37 @@ void MapBuilder::CreateController(
           }
         }
       }
+    }
+  }
+
+  void MapBuilder::RemoveZeroLaneValiditySignalReferences() {
+    std::vector<element::RoadInfoSignal*> elements_to_remove;
+    for (auto * signal_reference : _temp_signal_reference_container) {
+      bool should_remove = true;
+      for (auto & lane_validity : signal_reference->_validities) {
+        if ( (lane_validity._from_lane != 0) ||
+             (lane_validity._to_lane != 0)) {
+          should_remove = false;
+          break;
+        }
+      }
+      if (signal_reference->_validities.size() == 0) {
+        should_remove = false;
+      }
+      if (should_remove) {
+        elements_to_remove.push_back(signal_reference);
+      }
+    }
+    for (auto* element : elements_to_remove) {
+      auto road_id = element->GetRoadId();
+      auto& road_info = _temp_road_info_container[GetRoad(road_id)];
+      road_info.erase(std::remove_if(road_info.begin(), road_info.end(),
+          [=] (auto& info_ptr) {
+            return (info_ptr.get() == element);
+          }), road_info.end());
+      _temp_signal_reference_container.erase(std::remove(_temp_signal_reference_container.begin(),
+          _temp_signal_reference_container.end(), element),
+          _temp_signal_reference_container.end());
     }
   }
 
