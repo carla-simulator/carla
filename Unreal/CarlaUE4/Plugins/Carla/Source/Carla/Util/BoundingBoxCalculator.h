@@ -72,7 +72,7 @@ public:
     const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
     TArray<FBoundingBox>& OutBB,
     TArray<uint8>& OutTag,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static TArray<FBoundingBox> GetBoundingBoxOfActors(
