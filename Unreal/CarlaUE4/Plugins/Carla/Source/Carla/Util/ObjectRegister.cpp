@@ -232,7 +232,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       const int32 Z = static_cast<int32>(InstanceLocation.Z);
 
       const FString InstanceName = FString::Printf(TEXT("%s_Inst_%d_%d"), *ActorName, InstanceCount, i);
-      const FString InstanceIdStr = FString::Printf(TEXT("%s_%s_%d_%d_%d"), *ActorName, *CompName, X, Y, Z);
+      const FString InstanceIdStr = FString::Printf(TEXT("%s_%s_%d_%d_%d_%d"), *ActorName, *CompName, X, Y, Z, InstanceCount);
       uint64 InstanceId = CityHash64(TCHAR_TO_ANSI(*InstanceIdStr), InstanceIdStr.Len());
 
       FEnvironmentObject EnvironmentObject;
