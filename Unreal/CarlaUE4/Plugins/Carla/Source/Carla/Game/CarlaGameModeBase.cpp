@@ -349,7 +349,7 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
 
 }
 
-TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried) const
 {
   UWorld* World = GetWorld();
 

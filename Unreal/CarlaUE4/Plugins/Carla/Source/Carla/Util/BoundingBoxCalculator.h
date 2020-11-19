@@ -30,24 +30,24 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FBoundingBox GetActorBoundingBox(
     const AActor *Actor,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FBoundingBox GetVehicleBoundingBox(
     const ACarlaWheeledVehicle* Vehicle,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FBoundingBox GetCharacterBoundingBox(
     const ACharacter* Character,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void GetTrafficLightBoundingBox(
     const ATrafficLightBase* TrafficLight,
     TArray<FBoundingBox>& OutBB,
     TArray<uint8>& OutTag,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh);
@@ -65,7 +65,7 @@ public:
     const TArray<UStaticMeshComponent*>& StaticMeshComps,
     TArray<FBoundingBox>& OutBB,
     TArray<uint8>& OutTag,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static void GetBBsOfSkeletalMeshComponents(
@@ -77,12 +77,12 @@ public:
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static TArray<FBoundingBox> GetBoundingBoxOfActors(
     const TArray<AActor*>& Actors,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static TArray<FBoundingBox> GetBBsOfActor(
     const AActor* Actor,
-    uint8 InTagQueried = 0);
+    uint8 InTagQueried = 0xFF);
 
   // Combines the BBs of an actor based on the distance and type of the BB
   // The BBs not combined are included too (ie: TL BBs and pole)
@@ -94,7 +94,7 @@ public:
     TArray<FBoundingBox>& OutBB,
     TArray<uint8>& OutTag,
     const float DistanceThreshold = 0.0f,
-    uint8 TagToCombine = 0);
+    uint8 TagToCombine = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox CombineBBs(const TArray<FBoundingBox>& BBsToCombine);

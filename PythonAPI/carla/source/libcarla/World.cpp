@@ -181,7 +181,7 @@ void export_world() {
   ;
 
   enum_<cr::CityObjectLabel>("CityObjectLabel")
-    .value("Any", cr::CityObjectLabel::None)
+    .value("NONE", cr::CityObjectLabel::None)
     .value("Buildings", cr::CityObjectLabel::Buildings)
     .value("Fences", cr::CityObjectLabel::Fences)
     .value("Other", cr::CityObjectLabel::Other)
@@ -204,6 +204,7 @@ void export_world() {
     .value("Dynamic", cr::CityObjectLabel::Dynamic)
     .value("Water", cr::CityObjectLabel::Water)
     .value("Terrain", cr::CityObjectLabel::Terrain)
+    .value("Any", cr::CityObjectLabel::Any)
   ;
 
   class_<cr::LabelledPoint>("LabelledPoint", no_init)
@@ -270,8 +271,8 @@ void export_world() {
     .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
-    .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::None))
-    .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::None))
+    .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::Any))
+    .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::Any))
     .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))
     .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
