@@ -16,6 +16,7 @@ AProceduralBuilding::AProceduralBuilding()
 
   UStaticMeshComponent* StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
   RootComponent = StaticMeshComponent;
+  RootComponent->SetMobility(EComponentMobility::Static);
 }
 
 UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
