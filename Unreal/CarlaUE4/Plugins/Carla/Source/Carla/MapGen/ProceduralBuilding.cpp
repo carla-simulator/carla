@@ -109,6 +109,20 @@ void AProceduralBuilding::ConvertOldBP_ToNativeCodeObject(AActor* BP_Building)
   }
 }
 
+void AProceduralBuilding::HideAllChildren()
+{
+  for(UChildActorComponent* ChildActorComp : ChildActorComps)
+  {
+    AActor* ChildActor = ChildActorComp->GetChildActor();
+    TArray<UStaticMeshComponent*> SMComps;
+    ChildActor->GetComponents<UStaticMeshComponent>(SMComps);
+    if(SMComps.Num() > 0)
+    {
+      SMComps[0]->SetVisibility(false, false);
+    }
+  }
+}
+
 void AProceduralBuilding::SetBaseParameters(
   const TSet<int>& InDoorsIndexPosition,
   const TArray<bool>& InUseWallMesh,
