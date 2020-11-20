@@ -82,12 +82,12 @@ namespace rpc {
     << ", drag_coefficient=" << std::to_string(control.drag_coefficient)
     << ", center_of_mass=" << control.center_of_mass
     << ", steering_curve=" << control.steering_curve
-    << ", wheels=" << control.wheels << ')';
+    << ", wheels=" << control.wheels
+    << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision << ')';
     return out;
   }
 } // namespace rpc
 } // namespace carla
-
 
 static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
   std::vector<carla::geom::Vector2D> v;
@@ -181,7 +181,7 @@ static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boos
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
   // Args names
-  const uint32_t NUM_ARGUMENTS = 16;
+  const uint32_t NUM_ARGUMENTS = 17;
   const char *args_names[NUM_ARGUMENTS] = {
     "torque_curve",
     "max_rpm",
@@ -201,7 +201,8 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
 
     "center_of_mass",
     "steering_curve",
-    "wheels"
+    "wheels",
+    "use_sweep_wheel_collision",
   };
 
   boost::python::object self = args[0];
@@ -373,6 +374,7 @@ void export_control() {
     .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .add_property("wheels", &GetWheels, &SetWheels)
+    .def_readwrite("use_sweep_wheel_collision", &cr::VehiclePhysicsControl::use_sweep_wheel_collision)
     .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
