@@ -62,27 +62,15 @@ A playback can be started at any point during a simulation. Besides the path to 
 client.replay_file("recording01.log", start, duration, camera)
 ```
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-<th>Notes</th>
-</thead>
-<tbody>
-<td><code>start</code> </td>
-<td>Recording time in seconds to start the simulation at.</td>
-<td>If positive, time will be considered from the beginning of the recording. <br>If negative, it will be considered from the end.</td>
-<tr>
-<td><code>duration</code></td>
-<td>Seconds to playback. 0 is all the recording.</td>
-<td>By the end of the playback, vehicles will be set to autopilot and pedestrians will stop.</td>
-<tr>
-<td><code>camera</code></td>
-<td>ID of the actor that the camera will focus on. </td>
-<td>Set it to <code>0</code> to let the spectator move freely.</td>
-</tbody>
-</table>
+| Parameter                                                                                                                        | Description                                                                                                                      | Notes                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `start`                                                                                                                          | Recording time in seconds to start the simulation at.                                                                            | If positive, time will be considered from the beginning of the recording. <br> If negative, it will be considered from the end. |
+| `duration`                                                                                                                       | Seconds to playback. 0 is all the recording.                                                                                     | By the end of the playback, vehicles will be set to autopilot and pedestrians will stop.                                         |
+| `camera`                                                                                                                         | ID of the actor that the camera will focus on.                                                                                   | Set it to `0` to let the spectator move freely.                                                                                  |
+
 <br>
+
+
 
 ### Setting a time factor
 

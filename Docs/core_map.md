@@ -180,43 +180,20 @@ So far there are seven different maps available. Each one has unique features an
 !!! Note
     Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_add_map.md) to be used in CARLA.  
 
-<table class ="defTable">
-<thead>
-<th>Town</th>
-<th>Summary</th>
-</thead>
-<tbody>
-<td><b>Town01</b></td>
-<td>A basic town layout with all "T junctions".</td>
-</tr>
-<tr>
-<td><b>Town02</b></td>
-<td>Similar to <b>Town01</b>, but smaller.</td>
-</tr>
-<tr>
-<td><b>Town03</b></td>
-<td>The most complex town, with a 5-lane junction, a roundabout, unevenness, a tunnel, and much more. Essentially a medley.</td>
-</tr>
-<tr>
-<td><b>Town04</b></td>
-<td>An infinite loop with a highway and a small town.</td>
-</tr>
-<tr>
-<td><b>Town05</b></td>
-<td>Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.</td>
-</tr>
-<tr>
-<td><b>Town06</b></td>
-<td>Long highways with many highway entrances and exits. It also has a <a href="https://en.wikipedia.org/wiki/Michigan_left"><b>Michigan left</b></a>.</td>
-<tr>
-<td><b>Town07</b></td>
-<td>A rural environment with narrow roads, barely non traffic lights and barns.</td>
-<tr>
-<td><b>Town10</b></td>
-<td>A city environment with with different environments such as an avenue or a promenade, and more realistic textures.</td>
-</tbody>
-</table>
+| Town                                                                                                                                   | Summary                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Town01**                                                                                                                             | A basic town layout with all "T junctions".                                                                                            |
+| **Town02**                                                                                                                             | Similar to **Town01**, but smaller.                                                                                                    |
+| **Town03**                                                                                                                             | The most complex town, with a 5-lane junction, a roundabout, unevenness, a tunnel, and much more. Essentially a medley.                |
+| **Town04**                                                                                                                             | An infinite loop with a highway and a small town.                                                                                      |
+| **Town05**                                                                                                                             | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.              |
+| **Town06**                                                                                                                             | Long highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
+| **Town07**                                                                                                                             | A rural environment with narrow roads, barely non traffic lights and barns.                                                            |
+| **Town10**                                                                                                                             | A city environment with with different environments such as an avenue or a promenade, and more realistic textures.                     |
+
 <br>
+
+
 
  <!--container -->
 <div class="townslider-container">

@@ -47,19 +47,14 @@ According to their system suspension, vehicles in CARLA can be classified in fiv
 
 The five groups are: *Coupe*, *Off-road*, *Truck*, *Urban*, and *Van*. In closer observation, the parameterization of these groups follows a specific pattern.  
 
-<table class ="defTable">
-<tbody>
-<td><b>Stiff suspension</b></td>
-<td>Coupe</td>
-<td>Urban</td>
-<td>Van</td>
-<td>Off-road</td>
-<td>Truck</td>
-<td><b>Soft suspension</b></td>
-</tbody>
-</table>
-<br>
 
+| Stiff suspension | Coupe            | Urban            | Van              | Off-road         | Truck            | Soft suspension  |
+| ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- |
+
+
+
+
+<br>
 When moving from a soft to a stiff suspension, there are some clear tendencies in the parameterization.  
 
 *   __Decrease__ of `Suspension Max Raise` and `Suspension Max Drop` — Stiff vehicles are meant to drive over plane roads with no bumps. For the sake of aerodynamics, the chassis is not supposed to move greatly, but remain constantly close to the ground.  
@@ -69,145 +64,51 @@ When moving from a soft to a stiff suspension, there are some clear tendencies i
 
 Vehicles with the stiffest suspension.  
 
-<table class ="defTable">
-<thead>
-<th>Parameterization</th>
-<th>Vehicles</th>
-</thead>
-<tbody>
-<td>
-<code>Suspension Force Offset</code> — <code>0.0</code><br>
-<code>Suspension Max Raise</code> — <code>7.5</code><br>
-<code>Suspension Max Drop</code> — <code>7.5</code><br>
-<code>Suspension Natural Frequency</code> — <code>9.5</code><br>
-<code>Suspension Damping Ratio</code> — <code>1.0</code><br>
-<code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
-</td>
-<td>
-<code>vehicle.audi.tt</code><br>
-<code>vehicle.lincoln.mkz2017</code><br>
-<code>vehicle.mercedes-benz.coupe</code><br>
-<code>vehicle.seat.leon</code><br>
-<code>vehicle.tesla.model3</code><br>
-</td>
-</tbody>
-</table>
-<br>
+| Parameterization                                                                                                                                                                                                                        | Vehicles                                                                                                                                                                                                                                |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `7.5`<br>`Suspension Max Drop` — `7.5`<br>`Suspension Natural Frequency` — `9.5`<br>`Suspension Damping Ratio` — `1.0`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.audi.tt`<br>`vehicle.lincoln.mkz2017`<br>`vehicle.mercedes-benz.coupe`<br>`vehicle.seat.leon`<br>`vehicle.tesla.model3`<br>                                                                                            |
 
-### Off-road
+<br>### Off-road
 
 Vehicles with a soft suspension.  
 
-<table class ="defTable">
-<thead>
-<th>Parameterization</th>
-<th>Vehicles</th>
-</thead>
-<tbody>
-<td>
-<code>Suspension Force Offset</code> — <code>0.0</code><br>
-<code>Suspension Max Raise</code> — <code>15.0</code><br>
-<code>Suspension Max Drop</code> — <code>15.0</code><br>
-<code>Suspension Natural Frequency</code> — <code>7.0</code><br>
-<code>Suspension Damping Ratio</code> — <code>0.5</code><br>
-<code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
-</td>
-<td>
-<code>vehicle.audi.etron</code><br>
-<code>vehicle.jeep.wrangler_rubicon</code><br>
-<code>vehicle.nissan.patrol</code><br>
-<code>vehicle.tesla.cybertruck</code><br>
-</td>
-</tbody>
-</table>
-<br>
+| Parameterization                                                                                                                                                                                                                          | Vehicles                                                                                                                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `15.0`<br>`Suspension Max Drop` — `15.0`<br>`Suspension Natural Frequency` — `7.0`<br>`Suspension Damping Ratio` — `0.5`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.audi.etron`<br>`vehicle.jeep.wrangler_rubicon`<br>`vehicle.nissan.patrol`<br>`vehicle.tesla.cybertruck`<br>                                                                                                                |
 
+<br>
 
 ### Truck
 
 Vehicles with the softest suspension.  
 
-<table class ="defTable">
-<thead>
-<th>Parameterization</th>
-<th>Vehicles</th>
-</thead>
-<tbody>
-<td>
-<code>Suspension Force Offset</code> — <code>0.0</code><br>
-<code>Suspension Max Raise</code> — <code>17.0</code><br>
-<code>Suspension Max Drop</code> — <code>17.0</code><br>
-<code>Suspension Natural Frequency</code> — <code>6.0</code><br>
-<code>Suspension Damping Ratio</code> — <code>0.4</code><br>
-<code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
-</td>
-<td>
-<code>vehicle.carlamotors.carlacola</code><br>
-</td>
-</tbody>
-</table>
-<br>
 
+| Parameterization                                                                                                                                                                                                                          | Vehicles                                                                                                                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `17.0`<br>`Suspension Max Drop` — `17.0`<br>`Suspension Natural Frequency` — `6.0`<br>`Suspension Damping Ratio` — `0.4`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.carlamotors.carlacola`<br>                                                                                                                                                                                                       |
+
+<br>
 
 ### Urban
 
 Vehicles with a soft suspension.  
 
-<table class ="defTable">
-<thead>
-<th>Parameterization</th>
-<th>Vehicles</th>
-</thead>
-<tbody>
-<td>
-<code>Suspension Force Offset</code> — <code>0.0</code><br>
-<code>Suspension Max Raise</code> — <code>8.0</code><br>
-<code>Suspension Max Drop</code> — <code>8.0</code><br>
-<code>Suspension Natural Frequency</code> — <code>9.0</code><br>
-<code>Suspension Damping Ratio</code> — <code>0.8</code><br>
-<code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
-</td>
-<td>
-<code>vehicle.audi.a2</code><br>
-<code>vehicle.bmw.grandtourer</code><br>
-<code>vehicle.chevrolet.impala</code><br>
-<code>vehicle.citroen.c3</code><br>
-<code>vehicle.dodge_charger.police</code><br>
-<code>vehicle.mini.cooperst</code><br>
-<code>vehicle.mustang.mustang</code><br>
-<code>vehicle.nissan.micra</code><br>
-<code>vehicle.toyota.prius</code><br>
-</td>
-</tbody>
-</table>
+| Parameterization                                                                                                                                                                                                                                                       | Vehicles                                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `8.0`<br>`Suspension Max Drop` — `8.0`<br>`Suspension Natural Frequency` — `9.0`<br>`Suspension Damping Ratio` — `0.8`<br>`Sweep Type` — `SimpleAndComplex`<br>                                | `vehicle.audi.a2`<br>`vehicle.bmw.grandtourer`<br>`vehicle.chevrolet.impala`<br>`vehicle.citroen.c3`<br>`vehicle.dodge_charger.police`<br>`vehicle.mini.cooperst`<br>`vehicle.mustang.mustang`<br>`vehicle.nissan.micra`<br>`vehicle.toyota.prius`<br> |
+
+
 <br>
 
 ### Van
 
 Vehicles with a middle-ground suspension.  
 
-<table class ="defTable">
-<thead>
-<th>Parameterization</th>
-<th>Vehicles</th>
-</thead>
-<tbody>
-<td>
-<code>Suspension Force Offset</code> — <code>0.0</code><br>
-<code>Suspension Max Raise</code> — <code>9.0</code><br>
-<code>Suspension Max Drop</code> — <code>9.0</code><br>
-<code>Suspension Natural Frequency</code> — <code>8.0</code><br>
-<code>Suspension Damping Ratio</code> — <code>0.8</code><br>
-<code>Sweep Type</code> — <code>SimpleAndComplex</code><br>
-</td>
-<td>
-<code>vehicle.volkswagen.t2</code><br>
-</td>
-</tbody>
-</table>
+| Parameterization                                                                                                                                                                                                                        | Vehicles                                                                                                                                                                                                                                |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `9.0`<br>`Suspension Max Drop` — `9.0`<br>`Suspension Natural Frequency` — `8.0`<br>`Suspension Damping Ratio` — `0.8`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.volkswagen.t2`<br>                                                                                                                                                                                                             |
+
 <br>
-
-
 ---
 
 Use the forum to post any doubts, issues or suggestions regarding this topic.  

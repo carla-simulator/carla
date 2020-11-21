@@ -202,41 +202,14 @@ First of all there are some general behaviour patterns the TM will generate that
 
 The TM provides a set of possibilities so the user can establish specific behaviours. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
 
-<table class ="defTable">
-<tbody>
-<td><b>General:</b> </td>
-<td><br>
-    <b>1.</b> Use a carla.Client to create a TM instance connected to a port.<br>
-    <b>2.</b> Retrieve the port where a TM is connected.</td>
-<tr>
-<td><b>Safety conditions:</b> </td>
-<td><br>
-    <b>1.</b> Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>
-    <b>2.</b> Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>
-    <b>3.</b> Reset traffic lights. 
-</td>
-<tr>
-<td><b>Collision managing:</b> </td>
-<td><br>
-    <b>1.</b> Enable/Disable collisions between a vehicle and a specific actor.  <br>
-    <b>2.</b> Make a vehicle ignore all the other vehicles. <br>
-    <b>3.</b> Make a vehicle ignore all the walkers.  <br>
-    <b>4.</b> Make a vehicle ignore all the traffic lights. 
-</td>
-<tr>
-<td><b>Lane changes:</b> </td>
-<td><br>
-    <b>1.</b> Force a lane change disregarding possible collisions. <br>
-    <b>2.</b> Enable/Disable lane changes for a vehicle.
-</td>
-<tr>
-<td><b>Hybrid physics mode:</b> </td>
-<td><br>
-    <b>1.</b> Enable/Disable the hybrid physics mode.  <br>
-    <b>2.</b> Change the radius where physics are enabled.  
-</td>
-</tbody>
-</table>
+| -                                                                                                                                                                                                                                                                               | -                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **General:**                                                                                                                                                                                                                                                                           | <br>**1\.** Use a carla.Client to create a TM instance connected to a port.<br>**2\.** Retrieve the port where a TM is connected.                                                                                                                                                  |
+| **Safety conditions:**                                                                                                                                                                                                                                                                 | <br>**1\.** Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>**2\.** Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>**3\.** Reset traffic lights. |
+| **Collision managing:**                                                                                                                                                                                                                                                                | <br>**1\.** Enable/Disable collisions between a vehicle and a specific actor. <br>**2\.** Make a vehicle ignore all the other vehicles. <br>**3\.** Make a vehicle ignore all the walkers. <br>**4\.** Make a vehicle ignore all the traffic lights.                           |
+| **Lane changes:**                                                                                                                                                                                                                                                                      | <br>**1\.** Force a lane change disregarding possible collisions. <br>**2\.** Enable/Disable lane changes for a vehicle.                                                                                                                                                           |
+| **Hybrid physics mode:**                                                                                                                                                                                                                                                               | <br>**1\.** Enable/Disable the hybrid physics mode. <br>**2\.** Change the radius where physics are enabled.                                                                                                                                                                       |
+
 <br>
 
 ### Creating a Traffic Manager

@@ -164,17 +164,12 @@ To modify the way CARLA works along with the ROS bridge, edit [`share/carla_ros_
 
 To control the step update when in synchronous mode, use the following topic. The message contains a constant named `command` that allows to __Pause/Play__ the simulation, and execute a __single step__.  
 
-<table class ="defTable">
-<thead>
-<th>Topic</th>
-<th>Message type</th>
-</thead>
-<tbody>
-<td><code>/carla/control</code> </td>
-<td><a href="../ros_msgs#carlacontrolmsg">carla_msgs.CarlaControl</a></td>
-</tbody>
-</table>
+| Topic                                                     | Message type                                              |
+| --------------------------------------------------------- | --------------------------------------------------------- |
+| `/carla/control`                                          | [carla\_msgs.CarlaControl](<../ros_msgs#carlacontrolmsg>) |
+
 <br>
+
 
 The [Control rqt plugin](https://github.com/carla-simulator/ros-bridge/blob/master/rqt_carla_control/README.md) launches a new window with a simple interface. It is used to manage the steps and publish in the corresponding topic. Simply run the following when CARLA in synchronous mode.  
 ```sh
