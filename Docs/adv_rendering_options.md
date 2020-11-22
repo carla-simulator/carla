@@ -41,12 +41,14 @@ The images below compare both modes. The flag used is the same for Windows and L
 
 #### Epic mode
 `./CarlaUE4.sh -quality-level=Epic`
-![Epic mode screenshot](../img/rendering_quality_epic.jpg)
+
+![Epic mode screenshot](img/rendering_quality_epic.jpg)
 *Epic mode screenshot*
 
 #### Low mode
 `./CarlaUE4.sh -quality-level=Low`
-![Low mode screenshot](../img/rendering_quality_low.jpg)
+
+![Low mode screenshot](img/rendering_quality_low.jpg)
 *Low mode screenshot*
 
 <br>

@@ -194,96 +194,30 @@ So far there are seven different maps available. Each one has unique features an
 <br>
 
 
+![Town01](img/Town01.jpg)
+*Above: Town01*
 
- <!--container -->
-<div class="townslider-container">
-  <!-- Town slide images -->
-  <div class="townslide fade">
-  <img src="../img/Town01.jpg">
-    <div class="text">Town01</div>
-  </div>
+![Town02](img/Town02.jpg)
+*Above: Town02*
 
-  <div class="townslide fade">
-  <img src="../img/Town02.jpg">
-    <div class="text">Town02</div>
-  </div>
+![Town03](img/Town03.jpg)
+*Above: Town03*
 
-  <div class="townslide fade">
-    <img src="../img/Town03.jpg">
-    <div class="text">Town03</div>
-  </div>
+![Town04](img/Town04.jpg)
+*Above: Town04*
 
-  <div class="townslide fade">
-    <img src="../img/Town04.jpg">
-    <div class="text">Town04</div>
-  </div>
+![Town05](img/Town05.jpg)
+*Above: Town05*
 
-  <div class="townslide fade">
-    <img src="../img/Town05.jpg">
-    <div class="text">Town05</div>
-  </div>
+![Town06](img/Town06.jpg)
+*Above: Town06*
 
-  <div class="townslide fade">
-    <img src="../img/Town06.jpg">
-    <div class="text">Town06</div>
-  </div>
+![Town07](img/Town07.jpg)
+*Above: Town07*
 
-  <div class="townslide fade">
-    <img src="../img/Town07.jpg">
-    <div class="text">Town07</div>
-  </div>
+![Town10](img/Town10.jpg)
+*Above: Town10*
 
-  <div class="townslide fade">
-    <img src="../img/Town10.jpg">
-    <div class="text">Town10</div>
-  </div>
-
-
-  <!-- Next and previous buttons -->
-  <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-  <a class="next" onclick="plusSlides(1)">&#10095;</a>
-</div>
-
-<!-- The dots -->
-<div style="text-align:center">
-  <span class="dot" onclick="currentSlide(1)"></span>
-  <span class="dot" onclick="currentSlide(2)"></span>
-  <span class="dot" onclick="currentSlide(3)"></span>
-  <span class="dot" onclick="currentSlide(4)"></span>
-  <span class="dot" onclick="currentSlide(5)"></span>
-  <span class="dot" onclick="currentSlide(6)"></span>
-  <span class="dot" onclick="currentSlide(7)"></span>
-  <span class="dot" onclick="currentSlide(8)"></span>
-</div> 
-
-<script>
-var slideIndex = 1;
-showSlides(slideIndex);
-
-function plusSlides(n) {
-  showSlides(slideIndex += n);
-}
-
-function currentSlide(n) {
-  showSlides(slideIndex = n);
-}
-
-function showSlides(n) {
-  var i;
-  var slides = document.getElementsByClassName("townslide");
-  var dots = document.getElementsByClassName("dot");
-  if (n > slides.length) {slideIndex = 1}    
-  if (n < 1) {slideIndex = slides.length}
-  for (i = 0; i < slides.length; i++) {
-      slides[i].style.display = "none";  
-  }
-  for (i = 0; i < dots.length; i++) {
-      dots[i].className = dots[i].className.replace(" active", "");
-  }
-  slides[slideIndex-1].style.display = "block";  
-  dots[slideIndex-1].className += " active";
-}
-</script>
 
 <br>
 

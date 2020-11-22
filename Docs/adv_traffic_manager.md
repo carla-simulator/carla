@@ -39,9 +39,11 @@ Users must have some control over the traffic flow by setting parameters that al
 
 ---
 ## Architecture
-<div style="text-align:center">
-<img src="../img/tm_2_architecture.jpg">
-</div>
+
+![Architecture](img/tm_2_architecture.jpg)
+
+
+
 
 The previous diagram is a summary of the internal architecture of the Traffic Manager. The inner structure of the TM can be easily translated to code, and each relevant component has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. The functions and relations of these components are explained in the following sections.  
 

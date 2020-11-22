@@ -94,7 +94,7 @@ class MarkdownFile:
 
     def inherit_join(self, inh):
         self._data = join([
-            self._data,'<div class="Inherited"><small><b>Inherited from ',inh,'</b></small></div></p><p>'])
+            self._data,'<div class="Inherited"><small><b>Inherited from ',inh,'</b></small></div>'])
 
     def note(self, buf):
         self._data = join([self._data, buf])
@@ -676,7 +676,7 @@ class Documentation:
                         md.textn(create_hyperlinks(md.prettify_doc(cl['doc'])))
                     # Generate instance variable doc (if any)
                     if valid_dic_val(cl, 'instance_variables'):
-                        md.title_html(3, 'Instance Variables')
+                        md.title(3, 'Instance Variables')
                         for inst_var in cl['instance_variables']:
                             add_doc_inst_var(md, inst_var, class_key)
                     # Generate method doc (if any)
@@ -695,19 +695,19 @@ class Documentation:
                                 set_list.append(method)
                             else:
                                 method_list.append(method)
-                        md.title_html(3, 'Methods')
+                        md.title(3, 'Methods')
                         for method in method_list:
                             add_doc_method(md, method, class_key)
                         if len(get_list)>0:
-                            md.title_html(5, 'Getters')
+                            md.title(5, 'Getters')
                         for method in get_list:
                             add_doc_getter_setter(md, method, class_key, True, set_list)
                         if len(set_list)>0:
-                            md.title_html(5, 'Setters')
+                            md.title(5, 'Setters')
                         for method in set_list:
                             add_doc_getter_setter(md, method, class_key, False, get_list)
                         if len(dunder_list)>0:
-                            md.title_html(5, 'Dunder methods')
+                            md.title(5, 'Dunder methods')
                         for method in dunder_list:
                             add_doc_dunder(md, method, class_key)
                     md.separator()
