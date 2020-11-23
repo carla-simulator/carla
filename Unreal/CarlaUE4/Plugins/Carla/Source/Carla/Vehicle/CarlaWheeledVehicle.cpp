@@ -38,6 +38,28 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 
+void ACarlaWheeledVehicle::SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W,
+    const FVehiclePhysicsControl &PhysicsControl ) {
+
+  #ifdef WHEEL_SWEEP_ENABLED
+
+    const bool IsEqual = Vehicle4W->UseSweepWheelCollision == PhysicsControl.UseSweepWheelCollision;
+
+    if (IsEqual)
+      return;
+
+    Vehicle4W->UseSweepWheelCollision = PhysicsControl.UseSweepWheelCollision;
+
+  #else
+
+    if (PhysicsControl.UseSweepWheelCollision)
+      UE_LOG(LogCarla, Warning, TEXT("Error: Sweep for wheel collision is not available. \
+      Make sure you have installed the required patch.") );
+
+  #endif
+
+}
+
 void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
@@ -77,7 +99,7 @@ void ACarlaWheeledVehicle::BeginPlay()
     check(Wheel != nullptr);
 
     // Assigning new tire config
-    Wheel->TireConfig = NewObject<UTireConfig>();
+    //Wheel->TireConfig = NewObjectNewObject<UTireConfig>();
 
     // Setting a new value to friction
     Wheel->TireConfig->SetFrictionScale(FrictionScale);
@@ -375,9 +397,6 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   // Transmission Setup
   Vehicle4W->SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
-  // Recreate Physics State only for vehicle setup
-  Vehicle4W->RecreatePhysicsState();
-
   // Wheels Setup
   const int PhysicsWheelsNum = PhysicsControl.Wheels.Num();
   if (PhysicsWheelsNum != 4)
@@ -385,6 +404,9 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     UE_LOG(LogCarla, Error, TEXT("Number of WheelPhysicsControl is not 4."));
     return;
   }
+
+  // Change, if required, the collision mode for wheels
+  SetWheelCollision(Vehicle4W, PhysicsControl);
 
   for (int32 i = 0; i < PhysicsWheelsNum; ++i)
   {
@@ -399,6 +421,11 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     Vehicle4W->PVehicle->mWheelsSimData.setWheelData(i, PWheelData);
     Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
   }
+
+  // Recreate Physics State for vehicle setup
+  GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();
+  Vehicle4W->RecreatePhysicsState();
+  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockWrite();
 
   auto * Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
