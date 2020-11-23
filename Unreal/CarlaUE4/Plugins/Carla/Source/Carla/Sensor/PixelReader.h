@@ -62,7 +62,10 @@ public:
   ///
   /// @pre To be called from game-thread.
   template <typename TSensor>
-  static void SendPixelsInRenderThread(TSensor &Sensor);
+  static void SendPixelsInRenderThread(
+      TSensor &Sensor,
+      bool CaptureTexture = true,
+      bool StreamTexture = true);
 
 private:
 
@@ -73,7 +76,8 @@ private:
       UTextureRenderTarget2D &RenderTarget,
       carla::Buffer &Buffer,
       uint32 Offset,
-      FRHICommandListImmediate &InRHICmdList);
+      FRHICommandListImmediate &InRHICmdList,
+      bool CaptureTexture = true);
 
 };
 
@@ -82,7 +86,10 @@ private:
 // =============================================================================
 
 template <typename TSensor>
-void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
+void FPixelReader::SendPixelsInRenderThread(
+    TSensor &Sensor,
+    bool CaptureTexture,
+    bool StreamTexture)
 {
   check(Sensor.CaptureRenderTarget != nullptr);
 
@@ -99,7 +106,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
   // game-thread.
   ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
   (
-    [&Sensor, Stream=Sensor.GetDataStream(Sensor)](auto &InRHICmdList) mutable
+    [&Sensor, Stream=Sensor.GetDataStream(Sensor), CaptureTexture, StreamTexture]
+    (auto &InRHICmdList) mutable
     {
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())

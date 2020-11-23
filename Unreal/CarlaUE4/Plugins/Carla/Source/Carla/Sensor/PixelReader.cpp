@@ -44,7 +44,8 @@ static void WritePixelsToBuffer_Vulkan(
     const UTextureRenderTarget2D &RenderTarget,
     carla::Buffer &Buffer,
     uint32 Offset,
-    FRHICommandListImmediate &InRHICmdList)
+    FRHICommandListImmediate &InRHICmdList,
+    bool CaptureTexture)
 {
   check(IsInRenderingThread());
   auto RenderResource =
@@ -127,14 +128,15 @@ void FPixelReader::WritePixelsToBuffer(
     UTextureRenderTarget2D &RenderTarget,
     carla::Buffer &Buffer,
     uint32 Offset,
-    FRHICommandListImmediate &InRHICmdList
+    FRHICommandListImmediate &InRHICmdList,
+    bool CaptureTexture
     )
 {
   check(IsInRenderingThread());
 
   if (IsVulkanPlatform(GMaxRHIShaderPlatform) || IsD3DPlatform(GMaxRHIShaderPlatform, false))
   {
-    WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
+    WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList, CaptureTexture);
     return;
   }
 
