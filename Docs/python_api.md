@@ -503,7 +503,8 @@ Sets the maxixum time a network call is allowed before blocking it and raising a
 ---
 
 ## carla.CollisionEvent<a name="carla.CollisionEvent"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of this for every collision detected which may be many for one simulation step. Learn more about this [here](ref_sensors.md#collision-detector).  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines a collision data for <b>sensor.other.collision</b>. The sensor creates one of this for every collision detected which may be many for one simulation step. Learn more about this [here](ref_sensors.md#collision-detector).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.CollisionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -712,7 +713,8 @@ Height regarding ground level.
 ---
 
 ## carla.GnssMeasurement<a name="carla.GnssMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the Gnss data registered by a <b>sensor.other.gnss</b>. It essentially reports its position with the position of the sensor and an OpenDRIVE geo-reference.  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines the Gnss data registered by a <b>sensor.other.gnss</b>. It essentially reports its position with the position of the sensor and an OpenDRIVE geo-reference.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.GnssMeasurement.altitude"></a>**<font color="#f8805a">altitude</font>** (_float<small> – meters</small>_)  
@@ -730,7 +732,8 @@ West/East value of a point on the map.
 ---
 
 ## carla.IMUMeasurement<a name="carla.IMUMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the data registered by a <b>sensor.other.imu</b>, regarding the sensor's transformation according to the current [carla.World](#carla.World). It essentially acts as accelerometer, gyroscope and compass.  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines the data registered by a <b>sensor.other.imu</b>, regarding the sensor's transformation according to the current [carla.World](#carla.World). It essentially acts as accelerometer, gyroscope and compass.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.IMUMeasurement.accelerometer"></a>**<font color="#f8805a">accelerometer</font>** (_[carla.Vector3D](#carla.Vector3D)<small> – m/s<sup>2</sup></small>_)  
@@ -748,7 +751,8 @@ Angular velocity.
 ---
 
 ## carla.Image<a name="carla.Image"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines an image of 32-bit BGRA colors that will be used as initial data retrieved by camera sensors. There are different camera sensors (currently three, RGB, depth and semantic segmentation) and each of these makes different use for the images. Learn more about them [here](ref_sensors.md).  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines an image of 32-bit BGRA colors that will be used as initial data retrieved by camera sensors. There are different camera sensors (currently three, RGB, depth and semantic segmentation) and each of these makes different use for the images. Learn more about them [here](ref_sensors.md).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Image.fov"></a>**<font color="#f8805a">fov</font>** (_float<small> – degrees</small>_)  
@@ -965,7 +969,8 @@ Traffic rules allow turning either right or left.
 ---
 
 ## carla.LaneInvasionEvent<a name="carla.LaneInvasionEvent"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines lanes invasion for <b>sensor.other.lane_invasion</b>. It works only client-side and is dependant on OpenDRIVE to provide reliable information. The sensor creates one of this every time there is a lane invasion, which may be more than once per simulation step. Learn more about this [here](ref_sensors.md#lane-invasion-detector).  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines lanes invasion for <b>sensor.other.lane_invasion</b>. It works only client-side and is dependant on OpenDRIVE to provide reliable information. The sensor creates one of this every time there is a lane invasion, which may be more than once per simulation step. Learn more about this [here](ref_sensors.md#lane-invasion-detector).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LaneInvasionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -1076,7 +1081,8 @@ Computed intensity for this point as a scalar value between [0.0 , 1.0].
 ---
 
 ## carla.LidarMeasurement<a name="carla.LidarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.LidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
@@ -1306,7 +1312,8 @@ Switch of a light. It is __True__ when the light is on.
 ---
 
 ## carla.Location<a name="carla.Location"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Vector3D](#carla.Vector3D)_</b></small></div></p><p>Represents a spot in the world.  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.Vector3D](#carla.Vector3D)_**</small></br>
+Represents a spot in the world.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Location.x"></a>**<font color="#f8805a">x</font>** (_float<small> – meters</small>_)  
@@ -1420,7 +1427,8 @@ Returns a waypoint if all the parameters passed are correct. Otherwise, returns 
 ---
 
 ## carla.ObstacleDetectionEvent<a name="carla.ObstacleDetectionEvent"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the obstacle data for <b>sensor.other.obstacle</b>. Learn more about this [here](ref_sensors.md#obstacle-detector).  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines the obstacle data for <b>sensor.other.obstacle</b>. Learn more about this [here](ref_sensors.md#obstacle-detector).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.ObstacleDetectionEvent.actor"></a>**<font color="#f8805a">actor</font>** (_[carla.Actor](#carla.Actor)_)  
@@ -1509,7 +1517,8 @@ The velocity of the detected object towards the sensor.
 ---
 
 ## carla.RadarMeasurement<a name="carla.RadarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines and gathers the measures registered by a <b>sensor.other.radar</b>, representing a wall of points in front of the sensor with a distance, angle and velocity in relation to it. The data consists of a [carla.RadarDetection](#carla.RadarDetection) array. Learn more about this [here](ref_sensors.md#radar-sensor).  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines and gathers the measures registered by a <b>sensor.other.radar</b>, representing a wall of points in front of the sensor with a distance, angle and velocity in relation to it. The data consists of a [carla.RadarDetection](#carla.RadarDetection) array. Learn more about this [here](ref_sensors.md#radar-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.RadarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
@@ -1674,7 +1683,8 @@ Enum declaration used in [carla.RssSensor](#carla.RssSensor) to set the log leve
 ---
 
 ## carla.RssResponse<a name="carla.RssResponse"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that contains the output of a [carla.RssSensor](#carla.RssSensor). This is the result of the RSS calculations performed for the parent vehicle of the sensor.
 
 A [carla.RssRestrictor](#carla.RssRestrictor) will use the data to modify the [carla.VehicleControl](#carla.VehicleControl) of the vehicle.  
 
@@ -1726,7 +1736,8 @@ Disables the _stay on road_ feature.
 ---
 
 ## carla.RssSensor<a name="carla.RssSensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Sensor](#carla.Sensor)_</b></small></div></p><p>This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.Sensor](#carla.Sensor)_**</small></br>
+This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.
 
 The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle. The output retrieved by the sensor is a [carla.RssResponse](#carla.RssResponse). This will be used by a [carla.RssRestrictor](#carla.RssRestrictor) to modify a [carla.VehicleControl](#carla.VehicleControl) before applying it to a vehicle.  
 
@@ -1788,7 +1799,8 @@ ID of the actor hit by the ray.
 ---
 
 ## carla.SemanticLidarMeasurement<a name="carla.SemanticLidarMeasurement"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.SensorData](#carla.SensorData)_</b></small></div></p><p>Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.SensorData](#carla.SensorData)_**</small></br>
+Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).  
 
 <h3>Instance Variables</h3>
 - <a name="carla.SemanticLidarMeasurement.channels"></a>**<font color="#f8805a">channels</font>** (_int_)  
@@ -1820,7 +1832,8 @@ Retrieves the number of points sorted by channel that are generated by this meas
 ---
 
 ## carla.Sensor<a name="carla.Sensor"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.Actor](#carla.Actor)_**</small></br>
+Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at [carla.World](#carla.World) to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from [carla.SensorData](#carla.SensorData) (depending on the sensor).
 
   Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in [carla.BlueprintLibrary](#carla.BlueprintLibrary). All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.  
   <br><b>Receive data on every tick.</b>  
@@ -1907,7 +1920,8 @@ Time register of the frame at which this measurement was taken given by the OS i
 ---
 
 ## carla.TrafficLight<a name="carla.TrafficLight"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.TrafficSign](#carla.TrafficSign)_</b></small></div></p><p>A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.TrafficSign](#carla.TrafficSign)_**</small></br>
+A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
      
   Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to learn how to do so.  
 
@@ -2076,7 +2090,8 @@ Enables or disables the OSM mode. This mode allows the user to run TM in a map c
 ---
 
 ## carla.TrafficSign<a name="carla.TrafficSign"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Traffic signs appearing in the simulation except for traffic lights. These have their own class inherited from this in [carla.TrafficLight](#carla.TrafficLight). Right now, speed signs, stops and yields are mainly the ones implemented, but many others are borne in mind.  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.Actor](#carla.Actor)_**</small></br>
+Traffic signs appearing in the simulation except for traffic lights. These have their own class inherited from this in [carla.TrafficLight](#carla.TrafficLight). Right now, speed signs, stops and yields are mainly the ones implemented, but many others are borne in mind.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.TrafficSign.trigger_volume"></a>**<font color="#f8805a">trigger_volume</font>**  
@@ -2201,7 +2216,8 @@ Returns the axis values for the vector parsed as string.
 ---
 
 ## carla.Vehicle<a name="carla.Vehicle"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.Actor](#carla.Actor)_**</small></br>
+One of the most important group of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in [carla.BlueprintLibrary](#carla.BlueprintLibrary) to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Vehicle.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -2385,7 +2401,8 @@ VehiclePhysicsControl constructor.
 ---
 
 ## carla.Walker<a name="carla.Walker"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>This class inherits from the [carla.Actor](#carla.Actor) and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled either by an AI ([carla.WalkerAIController](#carla.WalkerAIController)) or manually via script, using a series of [carla.WalkerControl](#carla.WalkerControl) to move these and their skeletons.  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.Actor](#carla.Actor)_**</small></br>
+This class inherits from the [carla.Actor](#carla.Actor) and defines pedestrians in the simulation. Walkers are a special type of actor that can be controlled either by an AI ([carla.WalkerAIController](#carla.WalkerAIController)) or manually via script, using a series of [carla.WalkerControl](#carla.WalkerControl) to move these and their skeletons.  
 
 <h3>Instance Variables</h3>
 - <a name="carla.Walker.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
@@ -2412,7 +2429,8 @@ The client returns the control applied to this walker during last tick. The meth
 ---
 
 ## carla.WalkerAIController<a name="carla.WalkerAIController"></a>
-<div style="padding-left:30px;margin-top:-20px"><small><b>Inherited from _[carla.Actor](#carla.Actor)_</b></small></div></p><p>Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way.  
+<small style="display:block;margin-top:-20px;">**Inherited from _[carla.Actor](#carla.Actor)_**</small></br>
+Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way.  
 
 <h3>Methods</h3>
 - <a name="carla.WalkerAIController.go_to_location"></a>**<font color="#7fb800">go_to_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**destination**</font>)  
