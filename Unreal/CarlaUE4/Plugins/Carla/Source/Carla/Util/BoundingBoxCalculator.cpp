@@ -113,7 +113,14 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
         return {};
       }
     }
-
+    // Other, by default BB
+    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
+    FBoundingBox BB = CombineBBs(BBs);
+    // Conver to local space; GetBBsOfActor return BBs in world space
+    FTransform Transform = Actor->GetTransform();
+    BB.Origin = Transform.InverseTransformPosition(BB.Origin);
+    BB.Rotation = Transform.InverseTransformRotation(BB.Rotation.Quaternion()).Rotator();
+    return BB;
 
   }
   return {};
