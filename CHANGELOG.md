@@ -4,6 +4,7 @@
   * Added `enable_environment_objects`call to enable/disable objects of the level
   * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions
   * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation
+  * Added the option to sweep the wheel shape for collision. This requires to patch the engine
   * Added the possibility of changing physics substepping options from client
   * Added 'noise_seed' to sensors to initialize the random generators
   * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
