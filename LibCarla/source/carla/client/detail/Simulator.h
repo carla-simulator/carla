@@ -445,8 +445,12 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
-    void SetCarSimEnabled(Vehicle &vehicle, bool enabled) {
-      _client.SetCarSimEnabled(vehicle.GetId(), enabled);
+    void SetCarSimEnabled(Vehicle &vehicle, bool enabled, std::string simfile_path) {
+      _client.SetCarSimEnabled(vehicle.GetId(), enabled, simfile_path);
+    }
+
+    void UseCarSimRoad(Vehicle &vehicle, bool enabled) {
+      _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
     /// @}

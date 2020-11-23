@@ -330,8 +330,12 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
   }
 
-  void Client::SetCarSimEnabled(rpc::ActorId vehicle, bool enabled) {
-    _pimpl->AsyncCall("set_carsim_enabled", vehicle, enabled);
+  void Client::SetCarSimEnabled(rpc::ActorId vehicle, bool enabled, std::string simfile_path) {
+    _pimpl->AsyncCall("set_carsim_enabled", vehicle, enabled, simfile_path);
+  }
+
+  void Client::UseCarSimRoad(rpc::ActorId vehicle, bool enabled) {
+    _pimpl->AsyncCall("use_carsim_road", vehicle, enabled);
   }
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {

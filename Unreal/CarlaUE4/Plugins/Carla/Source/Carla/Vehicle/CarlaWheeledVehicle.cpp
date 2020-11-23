@@ -183,6 +183,7 @@ void ACarlaWheeledVehicle::FlushVehicleControl()
 {
   if (bCarSimEnabled)
   {
+    //-----CARSIM--------------------------------
     CarSimMovementComponent->SetThrottleInput(InputControl.Control.Throttle);
     CarSimMovementComponent->SetSteeringInput(InputControl.Control.Steer);
     CarSimMovementComponent->SetBrakeInput(InputControl.Control.Brake);
@@ -205,6 +206,7 @@ void ACarlaWheeledVehicle::FlushVehicleControl()
     //   }
     // }
     InputControl.Control.Gear = CarSimMovementComponent->GetCurrentGear();
+    //-----------------------------------------
   }
   else
   {
@@ -487,14 +489,16 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightS
 }
 
 //-----CARSIM--------------------------------
-void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled)
+void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
 {
   carla::log_warning("Enabling CarSim", bEnabled);
   bCarSimEnabled = bEnabled;
   if (bCarSimEnabled)
   {
+    carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
     GetVehicleMovementComponent()->SetComponentTickEnabled(false);
     GetVehicleMovementComponent()->Deactivate();
+    CarSimMovementComponent->VsConfigFile = SimfilePath;
     CarSimMovementComponent->Activate();
     CarSimMovementComponent->ResetVsVehicle(false);
     CarSimMovementComponent->SyncVsVehicleLocOri();
@@ -507,7 +511,16 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled)
     GetVehicleMovementComponent()->Activate();
     CarSimMovementComponent->SetComponentTickEnabled(false);
     CarSimMovementComponent->Deactivate();
+    CarSimMovementComponent->VsConfigFile = "";
     GetMesh()->SetSimulatePhysics(true);
   }
+}
+
+void ACarlaWheeledVehicle::UseCarSimRoad(bool bEnabled)
+{
+  carla::log_warning("Enabling CarSim Road", bEnabled);
+  CarSimMovementComponent->UseVehicleSimRoad = bEnabled;
+  CarSimMovementComponent->ResetVsVehicle(false);
+  CarSimMovementComponent->SyncVsVehicleLocOri();
 }
 //-------------------------------------------

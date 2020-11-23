@@ -213,6 +213,11 @@ namespace detail {
 
     void SetCarSimEnabled(
         rpc::ActorId vehicle,
+        bool enabled,
+        std::string simfile_path);
+
+    void UseCarSimRoad(
+        rpc::ActorId vehicle,
         bool enabled);
 
     void ApplyControlToWalker(

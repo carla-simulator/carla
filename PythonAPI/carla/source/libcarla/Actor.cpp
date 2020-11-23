@@ -141,7 +141,8 @@ void export_actor() {
       .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
       .def("is_at_traffic_light", &cc::Vehicle::IsAtTrafficLight)
       .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
-      .def("set_carsim_enabled", &cc::Vehicle::SetCarSimEnabled)
+      .def("set_carsim_enabled", &cc::Vehicle::SetCarSimEnabled, (arg("enabled"), arg("simfile_path") = ""))
+      .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
       .def(self_ns::str(self_ns::self))
   ;
 
