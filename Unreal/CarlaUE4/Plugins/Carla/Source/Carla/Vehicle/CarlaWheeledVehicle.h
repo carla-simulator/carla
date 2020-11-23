@@ -245,7 +245,10 @@ private:
 public:
 
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
-  void SetCarSimEnabled(bool bEnabled);
+  void SetCarSimEnabled(bool bEnabled, FString SimfilePath = "");
+
+  UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
+  void UseCarSimRoad(bool bEnabled);
 
 private:
 
