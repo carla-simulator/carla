@@ -369,7 +369,7 @@ void FCarlaServer::FPimpl::BindActions()
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
   };
 
-  BIND_SYNC(get_environment_objects) << [this]() -> R<std::vector<cr::EnvironmentObject>>
+  BIND_SYNC(get_environment_objects) << [this](uint8 QueriedTag) -> R<std::vector<cr::EnvironmentObject>>
   {
     REQUIRE_CARLA_EPISODE();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
@@ -377,7 +377,7 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to find CARLA game mode");
     }
-    TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects();
+    TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects(QueriedTag);
     return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
   };
 

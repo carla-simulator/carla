@@ -460,9 +460,9 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);
   }
 
-  std::vector<rpc::EnvironmentObject> Client::GetEnvironmentObjects() const {
+  std::vector<rpc::EnvironmentObject> Client::GetEnvironmentObjects(uint8_t queried_tag) const {
     using return_t = std::vector<rpc::EnvironmentObject>;
-    return _pimpl->CallAndWait<return_t>("get_environment_objects");
+    return _pimpl->CallAndWait<return_t>("get_environment_objects", queried_tag);
   }
 
   void Client::EnableEnvironmentObjects(
