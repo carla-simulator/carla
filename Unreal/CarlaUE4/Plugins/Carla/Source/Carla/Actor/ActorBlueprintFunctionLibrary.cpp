@@ -900,8 +900,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       DropOffIntensityLimit,
       DropOffAtZeroIntensity,
       StdDevLidar,
-      HorizontalFOV
-    });
+      HorizontalFOV});
   }
   else if (Id == "ray_cast_semantic") {
     Definition.Variations.Append({
