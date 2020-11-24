@@ -13,6 +13,17 @@
 
 namespace crp = carla::rpc;
 
+enum EnvironmentObjectType
+{
+  Invalid,
+  Vehicle,
+  Character,
+  TrafficLight,
+  ISMComp,
+  SMComp,
+  SKMComp
+};
+
 // Name is under discussion
 USTRUCT(BlueprintType)
 struct CARLA_API FEnvironmentObject
@@ -25,12 +36,17 @@ struct CARLA_API FEnvironmentObject
   FString Name;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString IdStr;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FTransform Transform;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FBoundingBox BoundingBox;
 
   uint64 Id = 0;
+
+  EnvironmentObjectType Type = EnvironmentObjectType::Invalid;
 
   crp::CityObjectLabel ObjectLabel;
 
