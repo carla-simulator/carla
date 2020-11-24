@@ -27,7 +27,7 @@ class SmokeTest(unittest.TestCase):
     def setUp(self):
         self.testing_address = TESTING_ADDRESS
         self.client = carla.Client(*TESTING_ADDRESS)
-        self.client.set_timeout(60.0)
+        self.client.set_timeout(120.0)
 
     def tearDown(self):
         self.client = None

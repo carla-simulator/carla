@@ -96,7 +96,7 @@ namespace road {
       if (lane.GetId() == 0) {
         continue;
       }
-      if ((static_cast<uint32_t>(lane.GetType()) & static_cast<uint32_t>(lane_type)) > 0) {
+      if ((static_cast<int32_t>(lane.GetType()) & static_cast<int32_t>(lane_type)) > 0) {
         std::forward<FuncT>(func)(Waypoint{
             road_id,
             lane_section.GetId(),
@@ -155,12 +155,12 @@ namespace road {
 
   boost::optional<Waypoint> Map::GetClosestWaypointOnRoad(
       const geom::Location &pos,
-      uint32_t lane_type) const {
+      int32_t lane_type) const {
     std::vector<Rtree::TreeElement> query_result =
         _rtree.GetNearestNeighboursWithFilter(Rtree::BPoint(pos.x, pos.y, pos.z),
         [&](Rtree::TreeElement const &element) {
           const Lane &lane = GetLane(element.second.first);
-          return (lane_type & static_cast<uint32_t>(lane.GetType())) > 0;
+          return (lane_type & static_cast<int32_t>(lane.GetType())) > 0;
         });
 
     if (query_result.size() == 0) {
@@ -202,7 +202,7 @@ namespace road {
 
   boost::optional<Waypoint> Map::GetWaypoint(
       const geom::Location &pos,
-      uint32_t lane_type) const {
+      int32_t lane_type) const {
     boost::optional<Waypoint> w = GetClosestWaypointOnRoad(pos, lane_type);
 
     if (!w.has_value()) {
@@ -343,9 +343,16 @@ namespace road {
         } else {
           distance_to_signal = waypoint.s - signal->GetDistance();
         }
-        Waypoint signal_waypoint = GetNext(waypoint, distance_to_signal).front();
-        SignalSearchData signal_data{signal, signal_waypoint, distance_to_signal};
-        result.emplace_back(signal_data);
+        if (distance_to_signal == 0) {
+          result.emplace_back(SignalSearchData
+              {signal, waypoint,
+              distance_to_signal});
+        } else {
+          result.emplace_back(SignalSearchData
+              {signal, GetNext(waypoint, distance_to_signal).front(),
+              distance_to_signal});
+        }
+
       }
       return result;
     }
@@ -366,9 +373,16 @@ namespace road {
       result.emplace_back(signal_data);
     }
     // If we run out of remaining_lane_length we have to go to the successors.
-    for (const auto &successor : GetSuccessors(waypoint)) {
+    for (auto &successor : GetSuccessors(waypoint)) {
       if(_data.GetRoad(successor.road_id).IsJunction() && stop_at_junction){
         continue;
+      }
+      auto& sucessor_lane = _data.GetRoad(successor.road_id).
+            GetLaneByDistance(successor.s, successor.lane_id);
+      if (successor.lane_id < 0) {
+        successor.s = sucessor_lane.GetDistance();
+      } else {
+        successor.s = sucessor_lane.GetDistance() + sucessor_lane.GetLength();
       }
       auto sucessor_signals = GetSignalsInDistance(
           successor, distance - remaining_lane_length, stop_at_junction);
@@ -609,7 +623,7 @@ namespace road {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the right (negative) lanes
           if (lane.first < 0 &&
-              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+              static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
         }
@@ -620,7 +634,7 @@ namespace road {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the left (positive) lanes
           if (lane.first > 0 &&
-              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+              static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(
               Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
           }
@@ -641,7 +655,7 @@ namespace road {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the right (negative) lanes
           if (lane.first < 0 &&
-              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+              static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
         }
@@ -652,7 +666,7 @@ namespace road {
         for (const auto &lane : lane_section.GetLanes()) {
           // add only the left (positive) lanes
           if (lane.first > 0 &&
-              static_cast<uint32_t>(lane.second.GetType()) & static_cast<uint32_t>(lane_type)) {
+              static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(
               Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
           }

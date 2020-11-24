@@ -43,11 +43,9 @@ BUILD_RSS_VARIANT=false
 
 OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;
@@ -81,7 +79,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
@@ -131,7 +129,7 @@ function build_libcarla {
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_BUILD_CLIENT_FOLDER}.rss.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_CLIENT_FOLDER}
-    CMAKE_EXTRA_OPTIONS="${CMAKE_EXTRA_OPTIONS:+${CMAKE_EXTRA_OPTIONS} }-DBUILD_RSS_VARIANT=ON -DADRSS_INSTALL_DIR=${CARLA_BUILD_FOLDER}/ad-rss-4.0.0/install"
+    CMAKE_EXTRA_OPTIONS="${CMAKE_EXTRA_OPTIONS:+${CMAKE_EXTRA_OPTIONS} }-DBUILD_RSS_VARIANT=ON -DADRSS_INSTALL_DIR=${CARLA_BUILD_FOLDER}/ad-rss-4.4.0/install"
   else
     fatal_error "Invalid build configuration \"$1\""
   fi

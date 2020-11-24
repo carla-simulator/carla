@@ -3,7 +3,7 @@
 The ROS bridge enables two-way communication between ROS and CARLA. The information from the CARLA server is translated to ROS topics. In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA.
 
 *   [__Requirements__](#requirements)  
-	*   [Python2](#python2)  
+	*   [Python version](#python-version)  
 *   [__Bridge installation__](#bridge-installation)  
 	*   [A. Using Debian repository](#a-using-debian-repository)  
 	*   [B. Using source repository](#b-using-source-repository)  
@@ -19,31 +19,32 @@ The ROS bridge enables two-way communication between ROS and CARLA. The informat
 Make sure that both requirements work properly before continuing with the installation.  
 
 *  __ROS Kinetic/Melodic__ — Install the ROS version corresponding to your system. Additional ROS packages may be required, depending on the user needs. [rviz](http://wiki.ros.org/rviz) is highly recommended to visualize ROS data.  
-	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 16.04 (Xenial).  
-	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 18.04 (Bionic).  
+	*   [__ROS Kinetic__](http://wiki.ros.org/kinetic/Installation) — For Ubuntu 16.04 (Xenial).  
+	*   [__ROS Melodic__](http://wiki.ros.org/melodic/Installation/Ubuntu) — For Ubuntu 18.04 (Bionic).  
 	*   [__ROS Noetic__](http://wiki.ros.org/noetic#Installation) — For Ubuntu 20.04 (Focal).
 *  __CARLA 0.9.7 or later__ — Previous versions are not compatible with the ROS bridge. Follow the [quick start installation](start_quickstart.md) or make the build for [Linux](build_linux.md).
 
-### Python
+### Python version
 
-The version of Python needed to run the ROS bridge depends on the ROS version being used.  
+The Python version needed to run the ROS bridge depends on the ROS version being used.  
 
-*   __ROS Melodic__ and __ROS Kinetic__ — Python2.  
+*   __ROS Kinetic__ and __ROS Melodic__ — Python2.  
 *   __ROS Noetic__ — Python3.  
 
-All the CARLA releases provide support for Python3, so ROS Noetic users do not need more preparation. However, ROS Melodic/Kinetic users cannot use the latest CARLA release packages. Since 0.9.10 (included), CARLA does not provide support for Python2, so users will have to make the [build from source](build_linux.md), and compile the PythonAPI for Python2.  
+CARLA provides different Python support depending on the installation method. Here is a summary. 
 
-*   Run the following command in the root CARLA directory of your Linux build to compile the PythonAPI for Python2.  
-
+*   __CARLA release packages__ — Provide support for Python2 and Python3, so these can be used with any ROS version.  
+*   __Windows build__ — Provides Support for the default Python installation in the system, so the ROS installation should match this.  
+*   __Linux build__ — Provides support for Python3 by default (ROS Noetic). If Python2 is needed, the PythonAPI can be built for Python2 running the following command in the CARLA root directory. 
 ```sh
-make PythonAPI ARGS="--python-version=2"
+make PythonAPI ARGS="--python-version=2" # The numeric argument can be changed to build for any specific Python version
 ```
 
 ---
 ## Bridge installation 
 
 !!! Important
-    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions.  
+    To install ROS bridge versions prior to 0.9.10, change to a previous version of the documentation using the pannel in the bottom right corner of the window, and follow the old instructions. ![docs_version_panel](img/docs_version_panel.jpg)
 
 ### A. Using Debian repository
 
@@ -100,7 +101,7 @@ __2) Add the source path.__ The source path for the workspace has to be added, s
 
 *  __Source for apt ROS bridge.__
 ```sh
-source /opt/carla-ros-bridge/<melodic or kinetic>/setup.bash
+source /opt/carla-ros-bridge/<kinetic or melodic>/setup.bash
 ```
 
 *  __Source for ROS bridge repository download.__

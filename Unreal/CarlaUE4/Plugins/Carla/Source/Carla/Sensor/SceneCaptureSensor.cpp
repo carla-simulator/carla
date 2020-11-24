@@ -9,16 +9,17 @@
 
 #include "Carla/Game/CarlaStatics.h"
 
+#include "Async/Async.h"
 #include "Components/DrawFrustumComponent.h"
-#include "Engine/Classes/Engine/Scene.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "HighResScreenshot.h"
 #include "ContentStreaming.h"
-#include "Async/Async.h"
-#include "RHICommandList.h"
+#include "Engine/Classes/Engine/Scene.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "HAL/UnrealMemory.h"
+#include "HighResScreenshot.h"
+#include "Misc/CoreDelegates.h"
+#include "RHICommandList.h"
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -69,6 +70,10 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
   ++SCENE_CAPTURE_COUNTER;
+}
+
+const FTransform &ASceneCaptureSensor::GetSyncActorTransform() const {
+  return OldTransform;
 }
 
 void ASceneCaptureSensor::Set(const FActorDescription &Description)
@@ -490,7 +495,7 @@ void ASceneCaptureSensor::BeginPlay()
 
   Super::BeginPlay();
 
-  SendPixelsDelegate = FCoreDelegates::OnEndFrameRT.AddUObject(this, &ASceneCaptureSensor::SendPixels);
+  SendPixelsDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
 }
 
 void ASceneCaptureSensor::Tick(float DeltaTime)
@@ -504,6 +509,10 @@ void ASceneCaptureSensor::Tick(float DeltaTime)
       ImageWidth,
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
+  ReadyToCapture = true;
+
+  // TODO: delete once the new tick pipeline is done
+  OldTransform = GetActorTransform();
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -511,7 +520,7 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
 
-  FCoreDelegates::OnEndFrameRT.Remove(SendPixelsDelegate);
+  FWorldDelegates::OnWorldPostActorTick.Remove(SendPixelsDelegate);
 }
 
 // =============================================================================

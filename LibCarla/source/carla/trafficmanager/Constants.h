@@ -24,10 +24,12 @@ static const int64_t TM_TIMEOUT = 2000; // ms
 namespace VehicleRemoval {
 static const float STOPPED_VELOCITY_THRESHOLD = 0.8f;
 static const double BLOCKED_TIME_THRESHOLD = 90.0;
+static const double RED_TL_BLOCKED_TIME_THRESHOLD = 180.0;
 static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
 namespace HybridMode {
+static const float HYBRID_MODE_DT_FL = 0.05f;
 static const double HYBRID_MODE_DT = 0.05;
 static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;

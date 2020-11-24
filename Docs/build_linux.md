@@ -33,12 +33,12 @@ sudo apt-add-repository "deb http://apt.llvm.org/$(lsb_release -c --short)/ llvm
 sudo apt-get update
 
 # Additional dependencies for Ubuntu 18.04
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user -Iv setuptools==47.3.1
 
 # Additional dependencies for previous Ubuntu versions
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user -Iv setuptools==47.3.1 &&
 pip2 install --user distro &&
@@ -86,8 +86,8 @@ cd PythonAPI/examples
 python3 spawn_npc.py 
 # Terminal B
 cd PythonAPI/examples
-python3 spawn_npc.py # Support for Python2 was provided until 0.9.10 (not included)
-python3 dynamic_weather.py # Support for Python2 was provided until 0.9.10 (not included)
+python3 spawn_npc.py
+python3 dynamic_weather.py
 
 # Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory
 make PythonAPI ARGS="--python-version=2"
@@ -101,7 +101,7 @@ make PythonAPI ARGS="--python-version=2"
 ### System specifics
 
 * __Ubuntu 18.04.__ CARLA provides support for previous Ubuntu versions up to 16.04. **However** proper compilers are needed for UE to work properly. Dependencies for Ubuntu 18.04 and previous versions are listed separatedly below. Make sure to install the ones corresponding to your system.
-* __30GB disk space.__ The complete build will require quite a lot of space, especially Unreal Engine. Make sure to have around 30/50GB of free disk space.
+* __100GB disk space.__ The complete build will require quite a lot of space, especially the Unreal Engine build (around 80GB). Make sure to have around 100GB of free disk space.
 * __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 4GB GPU. A dedicated GPU is highly recommended for machine learning.
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Be sure neither the firewall nor any other application block these.
 
@@ -124,7 +124,7 @@ sudo apt-get update
 
 __Ubuntu 18.04__.
 ```sh
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user -Iv setuptools==47.3.1 &&
 pip2 install --user distro &&
@@ -132,7 +132,7 @@ pip3 install --user distro
 ```
 __Previous Ubuntu__ versions.
 ```sh
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
 pip2 install --user setuptools &&
 pip3 install --user -Iv setuptools==47.3.1 &&
 pip2 install --user distro &&

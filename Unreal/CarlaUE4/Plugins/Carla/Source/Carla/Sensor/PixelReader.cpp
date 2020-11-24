@@ -11,13 +11,6 @@
 #include "HighResScreenshot.h"
 #include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
 
-// For now we only support Vulkan on Windows.
-#if PLATFORM_WINDOWS
-#  define CARLA_WITH_VULKAN_SUPPORT 1
-#else
-#  define CARLA_WITH_VULKAN_SUPPORT 1
-#endif
-
 // =============================================================================
 // -- Local variables and types ------------------------------------------------
 // =============================================================================
@@ -43,8 +36,6 @@ struct LockTexture
 // -- Static local functions ---------------------------------------------------
 // =============================================================================
 
-#if CARLA_WITH_VULKAN_SUPPORT == 1
-
 // Temporal; this avoid allocating the array each time and also avoids checking
 // for a bigger texture, ReadSurfaceData will allocate the space needed.
 TArray<FColor> gPixels;
@@ -61,7 +52,6 @@ static void WritePixelsToBuffer_Vulkan(
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
-    UE_LOG(LogCarla, Error, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
     return;
   }
 
@@ -76,8 +66,6 @@ static void WritePixelsToBuffer_Vulkan(
 
   Buffer.copy_from(Offset, gPixels);
 }
-
-#endif // CARLA_WITH_VULKAN_SUPPORT
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
@@ -139,21 +127,16 @@ void FPixelReader::WritePixelsToBuffer(
     UTextureRenderTarget2D &RenderTarget,
     carla::Buffer &Buffer,
     uint32 Offset,
-    FRHICommandListImmediate &
-#if CARLA_WITH_VULKAN_SUPPORT == 1
-    InRHICmdList
-#endif // CARLA_WITH_VULKAN_SUPPORT
+    FRHICommandListImmediate &InRHICmdList
     )
 {
   check(IsInRenderingThread());
 
-#if CARLA_WITH_VULKAN_SUPPORT == 1
-  if (IsVulkanPlatform(GMaxRHIShaderPlatform))
+  if (IsVulkanPlatform(GMaxRHIShaderPlatform) || IsD3DPlatform(GMaxRHIShaderPlatform, false))
   {
     WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
     return;
   }
-#endif // CARLA_WITH_VULKAN_SUPPORT
 
   FTextureRenderTargetResource* RenderTargetResource = RenderTarget.GetRenderTargetResource();
   if(!RenderTargetResource)

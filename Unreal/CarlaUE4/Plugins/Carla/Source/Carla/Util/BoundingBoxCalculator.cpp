@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,7 +14,7 @@
 #include "GameFramework/Character.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
-
+#include "Engine/SkeletalMeshSocket.h"
 
 namespace crp = carla::rpc;
 
@@ -113,7 +113,14 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
         return {};
       }
     }
-
+    // Other, by default BB
+    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
+    FBoundingBox BB = CombineBBs(BBs);
+    // Conver to local space; GetBBsOfActor return BBs in world space
+    FTransform Transform = Actor->GetTransform();
+    BB.Origin = Transform.InverseTransformPosition(BB.Origin);
+    BB.Rotation = Transform.InverseTransformRotation(BB.Rotation.Quaternion()).Rotator();
+    return BB;
 
   }
   return {};
@@ -129,22 +136,79 @@ FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
   UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-  USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
+  USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
 
   // Filter by tag
-  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*ParentComp);
   if(FilterByTagEnabled && Tag != TagQueried) return {};
 
-  USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+  USkeletalMesh* SkeletalMesh = ParentComp->SkeletalMesh;
   FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+
   if(BoundingBox.Extent.IsZero())
   {
     UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Vehicle->GetName());
     return {};
   }
 
+  // Two wheel vehicle have more than one SKM
+  TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+  Vehicle->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+
+  if(SkeletalMeshComps.Num() > 1)
+  {
+    FVector VehicleLocation = Vehicle->GetActorLocation();
+    FRotator VehicleRotation = Vehicle->GetActorRotation();
+    float MaxHeadLocation = TNumericLimits<float>::Lowest();
+    float MaxKneeLocation = TNumericLimits<float>::Lowest();
+    bool SocketFound = false;
+    for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
+    {
+      if(Comp == ParentComp) continue; // ignore vehicle skeleton
+
+      // Location of sockets are in world space
+      FVector HeadLocation = Comp->GetSocketLocation("crl_Head__C") - VehicleLocation;
+      FVector KneeLocation = Comp->GetSocketLocation("crl_leg__L") - VehicleLocation;
+
+      HeadLocation = VehicleRotation.UnrotateVector(HeadLocation);
+      KneeLocation = VehicleRotation.UnrotateVector(KneeLocation);
+
+      MaxHeadLocation = (HeadLocation.Z > MaxHeadLocation) ? HeadLocation.Z : MaxHeadLocation;
+      MaxKneeLocation = (KneeLocation.Y > MaxKneeLocation) ? KneeLocation.Y : MaxKneeLocation;
+
+      SocketFound = true;
+    }
+
+    if(SocketFound)
+    {
+      FVector MinVertex = BoundingBox.Origin - BoundingBox.Extent;
+      FVector MaxVertex = BoundingBox.Origin + BoundingBox.Extent;
+      MaxHeadLocation += 20.0f; // hack, the bone of the head is at he bottom
+
+      MaxVertex.Y = (MaxKneeLocation > MaxVertex.Y) ? MaxKneeLocation : MaxVertex.Y;
+      MinVertex.Y = (-MaxKneeLocation < MinVertex.Y) ? MaxKneeLocation : MinVertex.Y;
+      MaxVertex.Z = (MaxHeadLocation > MaxVertex.Z) ? MaxHeadLocation : MaxVertex.Z;
+
+      FVector Extent (
+        (MaxVertex.X - MinVertex.X) * 0.5f,
+        (MaxVertex.Y - MinVertex.Y) * 0.5f,
+        (MaxVertex.Z - MinVertex.Z) * 0.5f
+      );
+
+      // Calculate middle point
+      FVector Origin (
+        (MinVertex.X + Extent.X),
+        (MinVertex.Y + Extent.Y),
+        (MinVertex.Z + Extent.Z)
+      );
+
+      BoundingBox.Origin = Origin;
+      BoundingBox.Extent = Extent;
+    }
+  }
+
   // Component-to-world transform for this component
-  const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+  const FTransform& CompToWorldTransform = ParentComp->GetComponentTransform();
   BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
 
   return BoundingBox;
@@ -156,8 +220,14 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
 {
   check(Character);
 
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTag = TagQueried == crp::CityObjectLabel::None ||
+                     TagQueried == crp::CityObjectLabel::Pedestrians;
+
   UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
-  if (Capsule)
+
+
+  if (Capsule && FilterByTag)
   {
     const float Radius = Capsule->GetScaledCapsuleRadius();
     const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
@@ -223,7 +293,7 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
       IndicesDiscarded.Emplace(i);
       FBoundingBox MergedBB = CombineBBs(BBsToCombine);
       MergedBB.Rotation = BB1.Rotation;
-      OutBB.Add(MergedBB);
+      OutBB.Emplace(MergedBB);
     }
   }
 
@@ -233,7 +303,7 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     // Check if the index was used to merge a previous BB
     if(IndicesDiscarded.Contains(i)) continue;
     FBoundingBox& BB = BBsOfTL[i];
-    OutBB.Add(BB);
+    OutBB.Emplace(BB);
   }
 
 }
@@ -318,12 +388,15 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
     return;
   }
 
-  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData =  ISMComp->PerInstanceSMData;
+  const TArray<FInstancedStaticMeshInstanceData>& PerInstanceSMData = ISMComp->PerInstanceSMData;
+
+  const FTransform ParentTransform = ISMComp->GetComponentTransform();
 
   for(auto& InstSMIData : PerInstanceSMData)
   {
-    const FTransform Transform = FTransform(InstSMIData.Transform);
+    const FTransform Transform = FTransform(InstSMIData.Transform) * ParentTransform;
     FBoundingBox BoundingBox = ApplyTransformToBB(SMBoundingBox, Transform);
+
     OutBoundingBox.Add(BoundingBox);
   }
 
@@ -339,6 +412,10 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 
   for(UStaticMeshComponent* Comp : StaticMeshComps)
   {
+
+    // Avoid duplication with SMComp and not visible meshes
+    if(!Comp->IsVisible() || Cast<UInstancedStaticMeshComponent>(Comp)) continue;
+
     // Filter by tag
     crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
     if(FilterByTagEnabled && Tag != TagQueried) continue;
@@ -372,7 +449,8 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
   {
     // Filter by tag
     crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    if(!Comp->IsVisible() || (FilterByTagEnabled && Tag != TagQueried)) continue;
 
     USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
     FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
@@ -395,75 +473,84 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   uint8 InTagQueried)
 {
   TArray<FBoundingBox> Result;
+  for(AActor* Actor : Actors)
+  {
+    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor, InTagQueried);
+    Result.Append(BBs.GetData(), BBs.Num());
+  }
+
+  return Result;
+}
+
+TArray<FBoundingBox> UBoundingBoxCalculator::GetBBsOfActor(
+  const AActor* Actor,
+  uint8 InTagQueried)
+{
+  TArray<FBoundingBox> Result;
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
   bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
 
-  for(AActor* Actor : Actors)
+  FString ClassName = Actor->GetClass()->GetName();
+
+  // Avoid the BP_Procedural_Building to avoid duplication with their child actors
+  // When improved the BP_Procedural_Building this maybe should be removed
+  // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
+  //       than getting the UClass of the BP to cast the actor.
+  if( ClassName.Contains("Procedural_Bulding") ) return Result;
+
+  // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
+  const ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  if (Vehicle)
   {
-    FString ClassName = Actor->GetClass()->GetName();
-
-    // Avoid the BP_Procedural_Building to avoid duplication with their child actors
-    // When improved the BP_Procedural_Building this maybe should be removed
-    // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
-    //       than getting the UClass of the BP to cast the actor.
-    if(ClassName.Contains("BP_Procedural_Bulding")) continue;
-
-    // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
-    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
-    if (Vehicle)
+    FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
+    if(!BoundingBox.Extent.IsZero())
     {
-      FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
-      if(!BoundingBox.Extent.IsZero())
-      {
-        Result.Add(BoundingBox);
-      }
-      continue;
+      Result.Add(BoundingBox);
     }
-
-
-    // Pedestrians, we just use the capsule component at the moment.
-    ACharacter* Character = Cast<ACharacter>(Actor);
-    if (Character)
-    {
-      FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
-      if(!BoundingBox.Extent.IsZero())
-      {
-        Result.Add(BoundingBox);
-      }
-      continue;
-    }
-
-    // TrafficLight, we need to join all the BB of the lights in one
-    ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
-    if(TrafficLight)
-    {
-      GetTrafficLightBoundingBox(TrafficLight, Result, InTagQueried);
-      continue;
-    }
-
-    // Calculate FBoundingBox of SM
-    TArray<UStaticMeshComponent*> StaticMeshComps;
-    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
-
-    // Calculate FBoundingBox of SK_M
-    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
-    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
-
-    // Calculate FBoundingBox of ISM
-    TArray<UInstancedStaticMeshComponent *> ISMComps;
-    Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
-    for(UInstancedStaticMeshComponent* Comp: ISMComps)
-    {
-      // Filter by tag
-      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-      if(FilterByTagEnabled && Tag != TagQueried) continue;
-
-      GetISMBoundingBox(Comp, Result);
-    }
-
+    return Result;;
   }
+
+  // Pedestrians, we just use the capsule component at the moment.
+  const ACharacter* Character = Cast<ACharacter>(Actor);
+  if (Character)
+  {
+    FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
+    if(!BoundingBox.Extent.IsZero())
+    {
+      Result.Add(BoundingBox);
+    }
+    return Result;
+  }
+
+  // TrafficLight, we need to join all the BB of the lights in one
+  const ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
+  if(TrafficLight)
+  {
+    GetTrafficLightBoundingBox(TrafficLight, Result, InTagQueried);
+    return Result;
+  }
+
+  // Calculate FBoundingBox of ISM
+  TArray<UInstancedStaticMeshComponent *> ISMComps;
+  Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
+  for(UInstancedStaticMeshComponent* Comp: ISMComps)
+  {
+    // Filter by tag
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    GetISMBoundingBox(Comp, Result);
+  }
+
+  // Calculate FBoundingBox of SM
+  TArray<UStaticMeshComponent*> StaticMeshComps;
+  Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+  GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
+
+  // Calculate FBoundingBox of SK_M
+  TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+  Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+  GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
 
   return Result;
 }

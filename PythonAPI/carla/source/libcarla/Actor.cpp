@@ -30,11 +30,18 @@ namespace client {
 } // namespace client
 } // namespace carla
 
-static auto GetSemanticTags(const carla::client::Actor &self) {
-  const auto &tags = self.GetSemanticTags();
-  boost::python::object get_iter = boost::python::iterator<std::vector<int>>();
-  boost::python::object iter = get_iter(tags);
-  return boost::python::list(iter);
+template<class T>
+boost::python::list StdVectorToPyList(const std::vector<T> &vec) {
+  boost::python::list l;
+  for (auto &e : vec) {
+    l.append(e);
+  }
+  return l;
+}
+
+static boost::python::list GetSemanticTags(const carla::client::Actor &self) {
+  const std::vector<uint8_t> &tags = self.GetSemanticTags();
+  return StdVectorToPyList(tags);
 }
 
 static void AddActorImpulse(carla::client::Actor &self,
@@ -48,13 +55,8 @@ static void AddActorForce(carla::client::Actor &self,
 }
 
 static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
-  namespace py = boost::python;
   auto values = self.GetGroupTrafficLights();
-  py::list result;
-  for (auto value : values) {
-    result.append(value);
-  }
-  return result;
+  return StdVectorToPyList(values);
 }
 
 template <typename ControlT>
@@ -81,12 +83,13 @@ void export_actor() {
       .add_property("semantic_tags", &GetSemanticTags)
       .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
       .add_property("attributes", +[] (const cc::Actor &self) {
-    boost::python::dict atttribute_dict;
-    for (auto &&attribute_value : self.GetAttributes()) {
-      atttribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
-    }
-    return atttribute_dict;
-  })
+        boost::python::dict attribute_dict;
+        for (auto &&attribute_value : self.GetAttributes()) {
+          attribute_dict[attribute_value.GetId()] = attribute_value.GetValue();
+        }
+        return attribute_dict;
+      })
+      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Actor, GetBoundingBox))
       .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
       .def("get_location", &cc::Actor::GetLocation)
       .def("get_transform", &cc::Actor::GetTransform)
@@ -104,6 +107,7 @@ void export_actor() {
       .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("angular_impulse")))
       .def("add_torque", &cc::Actor::AddTorque, (arg("torque")))
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
+      .def("set_enable_gravity", &cc::Actor::SetEnableGravity, (arg("enabled") = true))
       .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
       .def(self_ns::str(self_ns::self))
   ;
@@ -126,7 +130,6 @@ void export_actor() {
 
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
-      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
       .def("get_control", &cc::Vehicle::GetControl)
       .def("set_light_state", &cc::Vehicle::SetLightState, (arg("light_state")))
@@ -142,7 +145,6 @@ void export_actor() {
   ;
 
   class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
-      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Walker, GetBoundingBox))
       .def("apply_control", &ApplyControl<cr::WalkerControl>, (arg("control")))
       .def("apply_control", &ApplyControl<cr::WalkerBoneControl>, (arg("control")))
       .def("get_control", &cc::Walker::GetWalkerControl)

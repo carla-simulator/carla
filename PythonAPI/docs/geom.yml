@@ -383,7 +383,7 @@
   - class_name: BoundingBox
     # - DESCRIPTION ------------------------
     doc: >
-      Helper class defining a box location and its dimensions that will later be used by carla.DebugHelper or a carla.Client to draw shapes and detect collisions. Bounding boxes normally act for object colliders. Check out this [recipe](ref_code_recipes.md#debug-bounding-box-recipe) where the user takes a snapshot of the world and then proceeds to draw bounding boxes for traffic lights.
+      Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by carla.DebugHelper or a carla.Client to draw their shapes for debugging. Check out the snipet in carla.DebugHelper.draw_box where a snapshot of the world is used to draw bounding boxes for traffic lights.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: extent
@@ -397,7 +397,11 @@
       type: carla.Location
       var_units: meters
       doc: >
-        The center of the bounding box relative to its parent actor.
+        The center of the bounding box.
+    - var_name: rotation
+      type: carla.Rotation
+      doc: >
+        The orientation of the bounding box.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__

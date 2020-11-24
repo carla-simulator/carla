@@ -8,7 +8,7 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -17,17 +17,10 @@ except IndexError:
 
 import inspect
 import carla
+from carla import ad
 import math
 from rss_visualization import RssDebugVisualizer # pylint: disable=relative-import
 
-if sys.version_info.major == 3:
-    import libad_rss_python3 as rss
-    import libad_map_access_python3 as admap
-    import libad_rss_map_integration_python3 as rssmap
-else:
-    import libad_rss_python2 as rss
-    import libad_map_access_python2 as admap
-    import libad_rss_map_integration_python2 as rssmap
 
 # ==============================================================================
 # -- RssSensor -----------------------------------------------------------------
@@ -39,11 +32,11 @@ class RssStateInfo(object):
     def __init__(self, rss_state, ego_dynamics_on_route, world_model):
         self.rss_state = rss_state
         self.distance = -1
-        self.is_dangerous = rss.isDangerous(rss_state)
-        if rss_state.situationType == rss.SituationType.Unstructured:
-            self.actor_calculation_mode = rssmap.RssMode.Unstructured
+        self.is_dangerous = ad.rss.state.isDangerous(rss_state)
+        if rss_state.situationType == ad.rss.situation.SituationType.Unstructured:
+            self.actor_calculation_mode = ad.rss.map.RssMode.Unstructured
         else:
-            self.actor_calculation_mode = rssmap.RssMode.Structured
+            self.actor_calculation_mode = ad.rss.map.RssMode.Structured
 
         # calculate distance to other vehicle
         object_state = None
@@ -57,7 +50,12 @@ class RssStateInfo(object):
                                       (float(ego_dynamics_on_route.ego_center.y) - float(object_state.centerPoint.y))**2)
 
     def get_actor(self, world):
-        return world.get_actor(self.rss_state.objectId)
+        if self.rss_state.objectId == 18446744073709551614:
+            return None # "Border Left"
+        elif self.rss_state.objectId == 18446744073709551615:
+            return None # "Border Right"
+        else:
+            return world.get_actor(self.rss_state.objectId)
 
     def __str__(self):
         return "RssStateInfo: object=" + str(self.rss_state.objectId) + " dangerous=" + str(self.is_dangerous)
@@ -127,10 +125,10 @@ class RssSensor(object):
         # print("_on_actor_constellation_request: ", str(actor_constellation_data))
 
         actor_constellation_result = carla.RssActorConstellationResult()
-        actor_constellation_result.rss_calculation_mode = rssmap.RssMode.NotRelevant
-        actor_constellation_result.restrict_speed_limit_mode = rssmap.RssSceneCreation.RestrictSpeedLimitMode.IncreasedSpeedLimit10
+        actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.NotRelevant
+        actor_constellation_result.restrict_speed_limit_mode = ad.rss.map.RssSceneCreation.RestrictSpeedLimitMode.IncreasedSpeedLimit10
         actor_constellation_result.ego_vehicle_dynamics = self.current_vehicle_parameters
-        actor_constellation_result.actor_object_type = rss.ObjectType.Invalid
+        actor_constellation_result.actor_object_type = ad.rss.world.ObjectType.Invalid
         actor_constellation_result.actor_dynamics = self.current_vehicle_parameters
 
         actor_id = -1
@@ -142,12 +140,12 @@ class RssSensor(object):
             ego_on_the_sidewalk = False
             ego_on_routeable_road = False
             for occupied_region in actor_constellation_data.ego_match_object.mapMatchedBoundingBox.laneOccupiedRegions:
-                lane = admap.getLane(occupied_region.laneId)
-                if lane.type == admap.LaneType.PEDESTRIAN:
+                lane = ad.map.lane.getLane(occupied_region.laneId)
+                if lane.type == ad.map.lane.LaneType.PEDESTRIAN:
                     # if not ego_on_the_sidewalk:
                     #   print ( "ego-{} on lane of lane type {} => sidewalk".format(actor_id, lane.type))
                     ego_on_the_sidewalk = True
-                elif admap.isRouteable(lane):
+                elif ad.map.lane.isRouteable(lane):
                     # if not ego_on_routeable_road:
                     #   print ( "ego-{} on lane of lane type {} => road".format(actor_id, lane.type))
                     ego_on_routeable_road = True
@@ -157,8 +155,8 @@ class RssSensor(object):
                 pedestrian_on_the_road = False
                 pedestrian_on_the_sidewalk = False
                 for occupied_region in actor_constellation_data.other_match_object.mapMatchedBoundingBox.laneOccupiedRegions:
-                    lane = admap.getLane(occupied_region.laneId)
-                    if lane.type == admap.LaneType.PEDESTRIAN:
+                    lane = ad.map.lane.getLane(occupied_region.laneId)
+                    if lane.type == ad.map.lane.LaneType.PEDESTRIAN:
                         # if not pedestrian_on_the_sidewalk:
                         #   print ( "pedestrian-{} on lane of lane type {} => sidewalk".format(actor_id, lane.type))
                         pedestrian_on_the_sidewalk = True
@@ -172,24 +170,24 @@ class RssSensor(object):
                     # In addition, the road network has to be correct to work best
                     # (currently there are no sidewalks in intersection areas)
                     # print ( "pedestrian-{} Off".format(actor_id))
-                    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.NotRelevant
+                    actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.NotRelevant
                 else:
                     # print ( "pedestrian-{} Unstructured".format(actor_id))
-                    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Unstructured
-                actor_constellation_result.actor_object_type = rss.ObjectType.Pedestrian
+                    actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
+                actor_constellation_result.actor_object_type = ad.rss.world.ObjectType.Pedestrian
                 actor_constellation_result.actor_dynamics = self.get_pedestrian_parameters()
             elif 'vehicle' in actor_constellation_data.other_actor.type_id:
-                actor_constellation_result.actor_object_type = rss.ObjectType.OtherVehicle
+                actor_constellation_result.actor_object_type = ad.rss.world.ObjectType.OtherVehicle
 
                 # set the response time of others vehicles to 2 seconds; the rest stays the same
                 actor_constellation_result.actor_dynamics.responseTime = 2.0
 
                 # per default, if ego is not on the road -> unstructured
                 if ego_on_routeable_road:
-                    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Structured
+                    actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Structured
                 else:
                     # print("vehicle-{} unstructured: reason other ego not on routeable road".format(actor_id))
-                    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Unstructured
+                    actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
 
                 # special handling for vehicles standing still
                 actor_vel = actor_constellation_data.other_actor.get_velocity()
@@ -198,7 +196,7 @@ class RssSensor(object):
                     # reduce response time
                     actor_constellation_result.actor_dynamics.responseTime = 1.0
                     # still in structured?
-                    if actor_constellation_result.rss_calculation_mode == rssmap.RssMode.Structured:
+                    if actor_constellation_result.rss_calculation_mode == ad.rss.map.RssMode.Structured:
 
                         actor_distance = math.sqrt(float(actor_constellation_data.ego_match_object.enuPosition.centerPoint.x -
                                                          actor_constellation_data.other_match_object.enuPosition.centerPoint.x)**2 +
@@ -214,8 +212,8 @@ class RssSensor(object):
                                 # the other has to be near enough to trigger a switch to unstructured
                                 other_outside_routeable_road = False
                                 for occupied_region in actor_constellation_data.other_match_object.mapMatchedBoundingBox.laneOccupiedRegions:
-                                    lane = admap.getLane(occupied_region.laneId)
-                                    if not admap.isRouteable(lane):
+                                    lane = ad.map.lane.getLane(occupied_region.laneId)
+                                    if not ad.map.lane.isRouteable(lane):
                                         other_outside_routeable_road = True
 
                                 if other_outside_routeable_road:
@@ -223,7 +221,7 @@ class RssSensor(object):
                                     # we immediately decide for unstructured
                                     # print("vehicle-{} unstructured: reason other outside routeable
                                     # road".format(actor_id))
-                                    actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Unstructured
+                                    actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
                                 else:
                                     # otherwise we have to look in the orientation delta in addition to get some basic idea of the
                                     # constellation (we don't want to go into unstructured if we both waiting
@@ -233,7 +231,7 @@ class RssSensor(object):
                                     if heading_delta > 0.2:  # around 11 degree
                                         # print("vehicle-{} unstructured: reason heading delta
                                         # {}".format(actor_id, heading_delta))
-                                        actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Unstructured
+                                        actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
                                         self.change_to_unstructured_position_map[
                                             actor_id] = actor_constellation_data.other_match_object.enuPosition
                         else:
@@ -246,7 +244,7 @@ class RssSensor(object):
                                         heading_delta = abs(float(actor_constellation_data.ego_match_object.enuPosition.heading -
                                                                   actor_constellation_data.other_match_object.enuPosition.heading))
                                         if heading_delta > 0.2:
-                                            actor_constellation_result.rss_calculation_mode = rssmap.RssMode.Unstructured
+                                            actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
                                         else:
                                             del self.change_to_unstructured_position_map[actor_id]
                                 except (AttributeError, KeyError):
@@ -256,7 +254,7 @@ class RssSensor(object):
                                     del self.change_to_unstructured_position_map[actor_id]
 
                     # still in structured?
-                    if actor_constellation_result.rss_calculation_mode == rssmap.RssMode.Structured:
+                    if actor_constellation_result.rss_calculation_mode == ad.rss.map.RssMode.Structured:
                         # in structured case we have to cope with not yet implemented lateral intersection checks in core RSS implementation
                         # if the other is standing still, we don't assume that he will accelerate
                         # otherwise if standing at the intersection the acceleration within reaction time
@@ -300,8 +298,8 @@ class RssSensor(object):
 
     @staticmethod
     def get_default_parameters():
-        ego_dynamics = rss.RssDynamics()
-        ego_dynamics.alphaLon.accelMax = 3.5
+        ego_dynamics = ad.rss.world.RssDynamics()
+        ego_dynamics.alphaLon.accelMax = 5
         ego_dynamics.alphaLon.brakeMax = -8
         ego_dynamics.alphaLon.brakeMin = -4
         ego_dynamics.alphaLon.brakeMinCorrect = -3
@@ -312,14 +310,19 @@ class RssSensor(object):
         ego_dynamics.maxSpeedOnAcceleration = 100
         ego_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
         ego_dynamics.unstructuredSettings.driveAwayMaxAngle = 2.4
-        ego_dynamics.unstructuredSettings.vehicleYawRateChange = 0.3
+        ego_dynamics.unstructuredSettings.vehicleYawRateChange = 1.3
         ego_dynamics.unstructuredSettings.vehicleMinRadius = 3.5
         ego_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
-        ego_dynamics.unstructuredSettings.vehicleFrontIntermediateRatioSteps = 4
-        ego_dynamics.unstructuredSettings.vehicleBackIntermediateRatioSteps = 0
-        ego_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 0
-        ego_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 0
-        ego_dynamics.unstructuredSettings.vehicleResponseTimeIntermediateAccelerationSteps = 4
+        ego_dynamics.unstructuredSettings.vehicleFrontIntermediateYawRateChangeRatioSteps = 4
+        ego_dynamics.unstructuredSettings.vehicleBackIntermediateYawRateChangeRatioSteps = 0
+        ego_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 3
+        ego_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 3
+        ego_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
+        ego_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateHeadingChangeRatioSteps = 3
+        ego_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateAccelerationSteps = 0
+        ego_dynamics.unstructuredSettings.pedestrianBrakeIntermediateAccelerationSteps = 3
+        ego_dynamics.unstructuredSettings.pedestrianFrontIntermediateHeadingChangeRatioSteps = 4
+        ego_dynamics.unstructuredSettings.pedestrianBackIntermediateHeadingChangeRatioSteps = 0
         return ego_dynamics
 
     def set_default_parameters(self):
@@ -328,29 +331,32 @@ class RssSensor(object):
 
     @staticmethod
     def get_pedestrian_parameters():
-        pedestrian_dynamics = rss.RssDynamics()
+        pedestrian_dynamics = ad.rss.world.RssDynamics()
         pedestrian_dynamics.alphaLon.accelMax = 2.0
-        pedestrian_dynamics.alphaLon.brakeMax = -4.0
+        pedestrian_dynamics.alphaLon.brakeMax = -2.0
         pedestrian_dynamics.alphaLon.brakeMin = -2.0
         pedestrian_dynamics.alphaLon.brakeMinCorrect = -2.0
         pedestrian_dynamics.alphaLat.accelMax = 0.001
         pedestrian_dynamics.alphaLat.brakeMin = -0.001
         pedestrian_dynamics.lateralFluctuationMargin = 0.1
-        pedestrian_dynamics.responseTime = 0.5
+        pedestrian_dynamics.responseTime = 0.8
         pedestrian_dynamics.maxSpeedOnAcceleration = 10
         pedestrian_dynamics.unstructuredSettings.pedestrianTurningRadius = 2.0
         pedestrian_dynamics.unstructuredSettings.driveAwayMaxAngle = 2.4
+        pedestrian_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateHeadingChangeRatioSteps = 3
+        pedestrian_dynamics.unstructuredSettings.pedestrianContinueForwardIntermediateAccelerationSteps = 0
+        pedestrian_dynamics.unstructuredSettings.pedestrianBrakeIntermediateAccelerationSteps = 3
+        pedestrian_dynamics.unstructuredSettings.pedestrianFrontIntermediateHeadingChangeRatioSteps = 4
+        pedestrian_dynamics.unstructuredSettings.pedestrianBackIntermediateHeadingChangeRatioSteps = 0
 
         #not used:
-        pedestrian_dynamics.unstructuredSettings.vehicleYawRateChange = 0.3
+        pedestrian_dynamics.unstructuredSettings.vehicleYawRateChange = 1.3
         pedestrian_dynamics.unstructuredSettings.vehicleMinRadius = 3.5
         pedestrian_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
-        pedestrian_dynamics.unstructuredSettings.vehicleTrajectoryCalculationStep = 0.2
-        pedestrian_dynamics.unstructuredSettings.vehicleFrontIntermediateRatioSteps = 4
-        pedestrian_dynamics.unstructuredSettings.vehicleBackIntermediateRatioSteps = 0
-        pedestrian_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 0
-        pedestrian_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 0
-        pedestrian_dynamics.unstructuredSettings.vehicleResponseTimeIntermediateAccelerationSteps = 4
+        pedestrian_dynamics.unstructuredSettings.vehicleFrontIntermediateYawRateChangeRatioSteps = 4
+        pedestrian_dynamics.unstructuredSettings.vehicleBackIntermediateYawRateChangeRatioSteps = 0
+        pedestrian_dynamics.unstructuredSettings.vehicleContinueForwardIntermediateAccelerationSteps = 3
+        pedestrian_dynamics.unstructuredSettings.vehicleBrakeIntermediateAccelerationSteps = 3
         return pedestrian_dynamics
 
     def get_steering_ranges(self):
@@ -382,10 +388,10 @@ class RssSensor(object):
             if response.proper_response.headingRanges:
                 heading = float(response.ego_dynamics_on_route.ego_heading)
                 heading_ranges = response.proper_response.headingRanges
-                steering_range = rss.HeadingRange()
+                steering_range = ad.rss.state.HeadingRange()
                 steering_range.begin = - self._max_steer_angle + heading
                 steering_range.end = self._max_steer_angle + heading
-                rss.getHeadingOverlap(steering_range, heading_ranges)
+                ad.rss.unstructured.getHeadingOverlap(steering_range, heading_ranges)
                 self._allowed_heading_ranges = heading_ranges
             else:
                 self._allowed_heading_ranges = []

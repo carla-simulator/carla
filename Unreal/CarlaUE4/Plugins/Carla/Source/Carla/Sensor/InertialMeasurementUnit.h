@@ -30,6 +30,9 @@ public:
 
   static FActorDefinition GetSensorDefinition();
 
+  /// @TODO: delete once the new tick pipeline is done
+  const FTransform &GetSyncActorTransform() const override;
+
   void Set(const FActorDescription &ActorDescription) override;
 
   void SetOwner(AActor *Owner) override;
@@ -67,6 +70,9 @@ public:
   static const FVector CarlaNorthVector;
 
 private:
+
+  /// @TODO: delete once the new tick pipeline is done
+  FTransform OldTransform;
 
   void BeginPlay() override;
 

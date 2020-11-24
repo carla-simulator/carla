@@ -51,8 +51,8 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libRecast.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
-                os.path.join(pwd, 'dependencies/lib/libosm2odr.a')]
-            extra_link_args += ['-lxerces-c']
+                os.path.join(pwd, 'dependencies/lib/libosm2odr.a'),
+                os.path.join(pwd, 'dependencies/lib/libxerces-c.a')]
             extra_link_args += ['-lz']
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
@@ -66,13 +66,13 @@ def get_libcarla_extensions():
             if is_rss_variant_enabled():
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
                 extra_compile_args += ['-DLIBCARLA_PYTHON_MAJOR_' +  str(sys.version_info.major)]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_opendrive_reader.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_program_options.a')]

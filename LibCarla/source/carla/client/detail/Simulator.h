@@ -23,6 +23,7 @@
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/LabelledPoint.h"
 
 #include <boost/optional.hpp>
 
@@ -67,7 +68,15 @@ namespace detail {
       return LoadEpisode("");
     }
 
-    EpisodeProxy LoadEpisode(std::string map_name);
+    EpisodeProxy LoadEpisode(std::string map_name, rpc::MapLayer map_layers = rpc::MapLayer::All);
+
+    void LoadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.LoadLevelLayer(map_layers);
+    }
+
+    void UnloadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.UnloadLevelLayer(map_layers);
+    }
 
     EpisodeProxy LoadOpenDriveEpisode(
         std::string opendrive,
@@ -231,6 +240,26 @@ namespace detail {
       return _client.GetLevelBBs(queried_tag);
     }
 
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects() const {
+      return _client.GetEnvironmentObjects();
+    }
+
+    void EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+      _client.EnableEnvironmentObjects(env_objects_ids, enable);
+    }
+
+    std::pair<bool,rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance) const {
+      return _client.ProjectPoint(location, direction, search_distance);
+    }
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const {
+      return _client.CastRay(start_location, end_location);
+    }
+
     /// @}
     // =========================================================================
     /// @name AI
@@ -376,6 +405,10 @@ namespace detail {
 
     void SetActorSimulatePhysics(Actor &actor, bool enabled) {
       _client.SetActorSimulatePhysics(actor.GetId(), enabled);
+    }
+
+    void SetActorEnableGravity(Actor &actor, bool enabled) {
+      _client.SetActorEnableGravity(actor.GetId(), enabled);
     }
 
     /// @}

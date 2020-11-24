@@ -98,12 +98,6 @@ PythonAPI.rebuild: LibCarla.client.release osm2odr
 PythonAPI.rss: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rss $(ARGS)
 
-PythonAPI.rss.2: LibCarla.client.rss.release osm2odr
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --python-version=2 --rss
-
-PythonAPI.rss.3: LibCarla.client.rss.release osm2odr
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --python-version=3 --rss
-
 PythonAPI.rss.rebuild: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild --rss $(ARGS)
 
@@ -143,7 +137,7 @@ setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh $(ARGS)
 
 ad-rss:
-	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh
+	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh $(ARGS)
 
 deploy:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Deploy.sh $(ARGS)

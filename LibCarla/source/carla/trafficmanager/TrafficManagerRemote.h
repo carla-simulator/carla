@@ -108,9 +108,6 @@ public:
   /// Method to provide synchronous tick
   bool SynchronousTick();
 
-  /// Method to reset all traffic lights.
-  void ResetAllTrafficLights();
-
   /// Get CARLA episode information.
   carla::client::detail::EpisodeProxy& GetEpisodeProxy();
 

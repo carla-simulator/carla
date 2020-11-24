@@ -2,7 +2,7 @@
 
 This page introduces the main features and modules in CARLA. Detailed explanations of the different subjects can be found in their corresponding page.  
 
-In order to learn about the different classes and methods in the API, take a look at the [Python API reference](python_api.md). Besides, the [Code recipes](ref_code_recipes.md) reference contains some common code chunks, specially useful during these first steps. 
+In order to learn about the different classes and methods in the API, take a look at the [Python API reference](python_api.md).
 
 *   [__First steps__](#first-steps)  
 	*   [1st- World and client](#1st-world-and-client)  

@@ -15,6 +15,7 @@
 #include "Carla/Settings/EpisodeSettings.h"
 
 #include "Runtime/Core/Public/Misc/App.h"
+#include "PhysicsEngine/PhysicsSettings.h"
 
 #include <thread>
 
@@ -127,10 +128,10 @@ void FCarlaEngine::OnPostTick(UWorld *, ELevelTick, float DeltaSeconds)
 {
   if (GetCurrentEpisode())
   {
-    auto* Recorder = GetCurrentEpisode()->GetRecorder();
-    if (Recorder)
+    auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
+    if (EpisodeRecorder)
     {
-      Recorder->Ticking(DeltaSeconds);
+      EpisodeRecorder->Ticking(DeltaSeconds);
     }
   }
   do
@@ -150,6 +151,12 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
   }
 
   FCarlaEngine_SetFixedDeltaSeconds(Settings.FixedDeltaSeconds);
+
+  // Setting parameters for physics substepping
+  UPhysicsSettings* PhysSett = UPhysicsSettings::Get();
+  PhysSett->bSubstepping = Settings.bSubstepping;
+  PhysSett->MaxSubstepDeltaTime = Settings.MaxSubstepDeltaTime;
+  PhysSett->MaxSubsteps = Settings.MaxSubsteps;
 }
 
 void FCarlaEngine::ResetSimulationState()

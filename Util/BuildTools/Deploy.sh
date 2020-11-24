@@ -23,11 +23,9 @@ USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-ru
 
 OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --replace-latest )
       REPLACE_LATEST=true;
@@ -46,7 +44,7 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
 
@@ -60,6 +58,10 @@ S3_PREFIX=s3://carla-releases/Linux
 LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/CARLA_Latest.tar.gz
 
 if [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  log "Detected tag ${REPOSITORY_TAG}."
+  DEPLOY_NAME=CARLA_${REPOSITORY_TAG}.tar.gz
+  DOCKER_TAG=${REPOSITORY_TAG}
+elif [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   log "Detected tag ${REPOSITORY_TAG}."
   DEPLOY_NAME=CARLA_${REPOSITORY_TAG}.tar.gz
   DOCKER_TAG=${REPOSITORY_TAG}

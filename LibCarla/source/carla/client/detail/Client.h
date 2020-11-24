@@ -10,6 +10,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/Time.h"
 #include "carla/geom/Transform.h"
+#include "carla/geom/Location.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/AttachmentType.h"
@@ -17,8 +18,11 @@
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/EpisodeSettings.h"
+#include "carla/rpc/LabelledPoint.h"
 #include "carla/rpc/LightState.h"
 #include "carla/rpc/MapInfo.h"
+#include "carla/rpc/MapLayer.h"
+#include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
@@ -87,7 +91,11 @@ namespace detail {
 
     std::string GetServerVersion();
 
-    void LoadEpisode(std::string map_name);
+    void LoadEpisode(std::string map_name, rpc::MapLayer map_layer = rpc::MapLayer::All);
+
+    void LoadLevelLayer(rpc::MapLayer map_layer) const;
+
+    void UnloadLevelLayer(rpc::MapLayer map_layer) const;
 
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
@@ -191,6 +199,10 @@ namespace detail {
         rpc::ActorId actor,
         bool enabled);
 
+    void SetActorEnableGravity(
+        rpc::ActorId actor,
+        bool enabled);
+
     void SetActorAutopilot(
         rpc::ActorId vehicle,
         bool enabled);
@@ -285,6 +297,18 @@ namespace detail {
 
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
+
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects() const;
+
+    void EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const;
+
+    std::pair<bool,rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance) const;
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const;
 
   private:
 

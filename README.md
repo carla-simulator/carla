@@ -15,18 +15,25 @@ validation of autonomous driving systems. In addition to open-source code and pr
 vehicles) that were created for this purpose and can be used freely. The simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
-[![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=TOojcifcRBA)
+[![CARLA Video](Docs/img/video_thumbnail_0910.jpg)](https://www.youtube.com/watch?v=7jej46ALVRE)
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
 [Benchmarking](https://github.com/carla-simulator/driving-benchmarks).
 
-* [**Give feedback for CARLA 0.9.10 pre-release**](https://github.com/carla-simulator/carla/blob/master/Docs/download.md#pre-release-0910)
 * [**Get CARLA overnight build**](http://carla-releases.s3.amazonaws.com/Linux/Dev/CARLA_Latest.tar.gz)
+
+### Recommended system
+
+* Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9
+* +16 GB RAM memory 
+* NVIDIA RTX 2070 / NVIDIA RTX 2080 / NVIDIA RTX 3070, NVIDIA RTX 3080
+* Ubuntu 18.04
 
 ## CARLA Ecosystem
 Repositories associated to the CARLA simulation platform:
 
+* [**CARLA Autonomous Driving leaderboard**](https://leaderboard.carla.org/): Automatic platform to validate Autonomous Driving stacks
 * [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
 * [**ROS-bridge**](https://github.com/carla-simulator/ros-bridge): Interface to connect CARLA 0.9.X to ROS
 * [**Driving-benchmarks**](https://github.com/carla-simulator/driving-benchmarks): Benchmark tools for Autonomous Driving tasks

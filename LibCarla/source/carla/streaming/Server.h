@@ -60,6 +60,10 @@ namespace streaming {
       _pool.AsyncRun(worker_threads);
     }
 
+    void SetSynchronousMode(bool is_synchro) {
+      _server.SetSynchronousMode(is_synchro);
+    }
+
   private:
 
     // The order of these two arguments is very important.
