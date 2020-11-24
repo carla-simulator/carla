@@ -34,6 +34,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   CarSimMovementComponent = CreateDefaultSubobject<UCarSimMovementComponent>(TEXT("CarSimMovement"));
+  CarSimMovementComponent->DisableVehicle = true;
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }
@@ -498,6 +499,7 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
     carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
     GetVehicleMovementComponent()->SetComponentTickEnabled(false);
     GetVehicleMovementComponent()->Deactivate();
+    CarSimMovementComponent->DisableVehicle = false;
     CarSimMovementComponent->VsConfigFile = SimfilePath;
     CarSimMovementComponent->Activate();
     CarSimMovementComponent->ResetVsVehicle(false);
@@ -509,6 +511,7 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
   {
     GetVehicleMovementComponent()->SetComponentTickEnabled(true);
     GetVehicleMovementComponent()->Activate();
+    CarSimMovementComponent->DisableVehicle = true;
     CarSimMovementComponent->SetComponentTickEnabled(false);
     CarSimMovementComponent->Deactivate();
     CarSimMovementComponent->VsConfigFile = "";
