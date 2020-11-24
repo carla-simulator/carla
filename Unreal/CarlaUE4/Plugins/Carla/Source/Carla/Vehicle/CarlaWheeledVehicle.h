@@ -250,6 +250,11 @@ public:
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
   void UseCarSimRoad(bool bEnabled);
 
+  virtual FVector GetVelocity() const override;
+
+  UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintPure)
+  bool IsCarSimEnabled() const;
+
 private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)

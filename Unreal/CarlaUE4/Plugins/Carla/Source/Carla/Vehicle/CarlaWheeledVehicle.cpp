@@ -144,7 +144,14 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
 
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
-  return GetVehicleMovementComponent()->GetForwardSpeed();
+  if (bCarSimEnabled)
+  {
+    return CarSimMovementComponent->GetForwardSpeed();
+  }
+  else
+  {
+    return GetVehicleMovementComponent()->GetForwardSpeed();
+  }
 }
 
 FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
@@ -154,7 +161,14 @@ FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
 {
-  return GetVehicleMovementComponent()->GetCurrentGear();
+  if (bCarSimEnabled)
+  {
+    return CarSimMovementComponent->GetCurrentGear();
+  }
+  else
+  {
+    return GetVehicleMovementComponent()->GetCurrentGear();
+  }
 }
 
 FTransform ACarlaWheeledVehicle::GetVehicleBoundingBoxTransform() const
@@ -525,5 +539,22 @@ void ACarlaWheeledVehicle::UseCarSimRoad(bool bEnabled)
   CarSimMovementComponent->UseVehicleSimRoad = bEnabled;
   CarSimMovementComponent->ResetVsVehicle(false);
   CarSimMovementComponent->SyncVsVehicleLocOri();
+}
+
+FVector ACarlaWheeledVehicle::GetVelocity() const
+{
+  if (bCarSimEnabled)
+  {
+    return GetActorForwardVector() * CarSimMovementComponent->GetForwardSpeed();
+  }
+  else
+  {
+    return Super::GetVelocity();
+  }
+}
+
+bool ACarlaWheeledVehicle::IsCarSimEnabled() const
+{
+  return bCarSimEnabled;
 }
 //-------------------------------------------
