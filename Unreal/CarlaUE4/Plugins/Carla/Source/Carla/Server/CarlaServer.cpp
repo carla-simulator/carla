@@ -938,12 +938,21 @@ void FCarlaServer::FPimpl::BindActions()
       {
         RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
       }
-      RootComponent->SetSimulatePhysics(bEnabled);
-      RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
       auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
       if(Vehicle)
+      {
         Vehicle->SetActorEnableCollision(true);
+        if(!Vehicle->IsCarSimEnabled())
+        {
+          RootComponent->SetSimulatePhysics(bEnabled);
+          RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        }
+      }
+      else
+      {
+        RootComponent->SetSimulatePhysics(bEnabled);
+        RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+      }
     }
 
     return R<void>::Success();
