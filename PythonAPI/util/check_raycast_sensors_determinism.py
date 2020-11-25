@@ -53,15 +53,15 @@ class Scenario():
         self.sensor_queue = Queue()
         self.active = True
 
+        # Init timestamp
         snapshot = self.world.get_snapshot()
-        self.init_timestamp = {'frame0' : snapshot.frame, 'time0' :
-                snapshot.timestamp.elapsed_seconds}
+        self.init_timestamp = {'frame0' : snapshot.frame, 'time0' : snapshot.timestamp.elapsed_seconds}
 
     def wait(self, frames=100):
         for _i in range(0, frames):
             self.world.tick()
             if self.active:
-                for s in self.sensor_list:
+                for _s in self.sensor_list:
                     self.sensor_queue.get(True, 1.0)
 
     def add_sensor(self, sensor, sensor_type):
@@ -90,7 +90,7 @@ class Scenario():
         frame = lidar_data.frame - self.init_timestamp['frame0']
         time_f = lidar_data.timestamp - self.init_timestamp['time0']
 
-        np.savetxt(self.get_filename(frame, name), points)
+        np.savetxt(self.get_filename(name, frame), points)
 
         self.sensor_queue.put((lidar_data.frame, name))
 
@@ -107,7 +107,7 @@ class Scenario():
         frame = lidar_data.frame - self.init_timestamp['frame0']
         time_f = lidar_data.timestamp - self.init_timestamp['time0']
 
-        np.savetxt(self.get_filename(frame, name), points)
+        np.savetxt(self.get_filename(name, frame), points)
 
         self.sensor_queue.put((lidar_data.frame, name))
 
@@ -121,7 +121,7 @@ class Scenario():
         frame = radar_data.frame - self.init_timestamp['frame0']
         time_f = radar_data.timestamp - self.init_timestamp['time0']
 
-        np.savetxt(self.get_filename(frame, name), points)
+        np.savetxt(self.get_filename(name, frame), points)
 
         self.sensor_queue.put((radar_data.frame, name))
 
@@ -134,13 +134,13 @@ class Scenario():
 
         self.active = False
 
-    def get_filename_with_prefix(self, prefix, f, id=""):
-        add_id = "" if id=="" else id + "_"
-        return prefix + add_id + ("%04d") % f + ".out"
+    def get_filename_with_prefix(self, prefix, actor_id=None, frame=None):
+        add_id = "" if actor_id is None else "_" + actor_id
+        add_frame = "" if frame is None else ("_%04d") % frame
+        return prefix + add_id + add_frame + ".out"
 
-    def get_filename(self, f, id=""):
-        add_id = "" if id=="" else id + "_"
-        return self.prefix + add_id + ("%04d") % f + ".out"
+    def get_filename(self, actor_id=None, frame=None):
+        return self.get_filename_with_prefix(self.prefix, actor_id, frame)
 
     def run_simulation(self, prefix, tics = 200):
         self.init_scene(prefix)
@@ -307,11 +307,12 @@ class SpawnAllRaycastSensors(Scenario):
         self.wait(1)
 
 class TestScenario():
-    def __init__(self, scene):
+    def __init__(self, scene, output_path):
         self.scene = scene
         self.world = self.scene.world
         self.client = self.scene.client
         self.scenario_name = self.scene.__class__.__name__
+        self.output_path = output_path
 
     def compare_files(self, file_i, file_j):
 
@@ -345,8 +346,8 @@ class TestScenario():
                 sim_check = True
                 for f_idx in range(1, sim_tics):
                     for sensor in self.scene.sensor_list:
-                        file_i = self.scene.get_filename_with_prefix(rep_prefixes[i], f_idx, sensor[0])
-                        file_j = self.scene.get_filename_with_prefix(rep_prefixes[j], f_idx, sensor[0])
+                        file_i = self.scene.get_filename_with_prefix(rep_prefixes[i], sensor[0], f_idx)
+                        file_j = self.scene.get_filename_with_prefix(rep_prefixes[j], sensor[0], f_idx)
 
                         check_ij = self.compare_files(file_i, file_j)
                         sim_check = sim_check and check_ij
@@ -370,17 +371,12 @@ class TestScenario():
         settings.fixed_delta_seconds = 0.05
         self.world.apply_settings(settings)
 
-        path = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(path, "_sensors") + os.path.sep
-        if not os.path.exists(path):
-            os.mkdir(path)
-
-        prefix = path + self.scenario_name
+        prefix = self.output_path + self.scenario_name
 
         t_start = time.perf_counter()
         sim_prefixes = []
         for i in range(0, repetitions):
-            prefix_rep = prefix + "_rep_" + ("%03d" % i) + "_"
+            prefix_rep = prefix + "_rep_" + ("%03d" % i)
             self.scene.run_simulation(prefix_rep, tics=sim_tics)
             sim_prefixes.append(prefix_rep)
 
@@ -406,21 +402,38 @@ def main(arg):
     spectator.set_transform(spectator_transform)
 
     try:
+        # Setting output temporal folder
+        output_path = os.path.dirname(os.path.realpath(__file__))
+        output_path = os.path.join(output_path, "_sensors") + os.path.sep
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+
         repetitions = 10
-        test_all = TestScenario(SpawnAllRaycastSensors(client, world))
+
+        print("--------------------------------------------------------------")
+        test_all = TestScenario(SpawnAllRaycastSensors(client, world), output_path)
         test_all.test_scenario(repetitions)
 
-        test_lidar_1 = TestScenario(SpawnLidarNoDropff(client, world))
+        print("--------------------------------------------------------------")
+        test_lidar_1 = TestScenario(SpawnLidarNoDropff(client, world), output_path)
         test_lidar_1.test_scenario(repetitions)
 
-        test_lidar_2 = TestScenario(SpawnLidarWithDropff(client, world))
+        print("--------------------------------------------------------------")
+        test_lidar_2 = TestScenario(SpawnLidarWithDropff(client, world), output_path)
         test_lidar_2.test_scenario(repetitions)
 
-        test_semlidar = TestScenario(SpawnSemanticLidar(client, world))
+        print("--------------------------------------------------------------")
+        test_semlidar = TestScenario(SpawnSemanticLidar(client, world), output_path)
         test_semlidar.test_scenario(repetitions)
 
-        test_radar = TestScenario(SpawnRadar(client, world))
+        print("--------------------------------------------------------------")
+        test_radar = TestScenario(SpawnRadar(client, world), output_path)
         test_radar.test_scenario(repetitions)
+
+        print("--------------------------------------------------------------")
+
+        # Remove all the output files
+        #shutil.rmtree(path)
 
     finally:
         world.apply_settings(pre_settings)
