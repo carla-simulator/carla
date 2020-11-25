@@ -8,8 +8,6 @@
 
 #include "Stats/StatsData.h"
 
-#include <carla/rpc/Benchmark.h>
-
 #include "BenchmarkSensor.generated.h"
 
 struct FGroupFilter : public IItemFilter
@@ -80,36 +78,5 @@ private:
   FString ConvertStatCommandToStatGroup(FString StatCmd);
 
   TMap<FName, TSet<FName>> Queries;
-
-  //FString Queries;
-
-/*
-  TMap<FName, FName> ShortToRawNameMap;
-  TMap<FName, TSet<FName>> Queries =
-  {
-    // RenderCore.cpp
-    {"STATGROUP_SceneRendering",  { "STAT_TotalGPUFrameTime",
-                                    // DrawCalls
-                                    "STAT_MeshDrawCalls",
-                                    // Lights
-                                    "STAT_SceneLights",
-                                    // Shadows
-                                    // Decals
-                                    "STAT_SceneDecals"
-                                    "STAT_Decals",
-                                    "STAT_DecalsDrawTime",
-                                  }
-    },
-    {"STATGROUP_InitViews",       { "STAT_ViewVisibilityTime",
-                                    "STAT_FrustumCull",
-                                    "STAT_OcclusionCull",
-                                    "STAT_SoftwareOcclusionCull",
-
-                                    "STAT_ProcessedPrimitives",
-                                    "STAT_CulledPrimitives",
-                                  }
-    }
-  };
-*/
 
 };

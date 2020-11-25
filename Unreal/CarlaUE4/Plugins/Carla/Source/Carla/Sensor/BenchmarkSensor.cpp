@@ -120,12 +120,13 @@ void ABenchmarkSensor::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
-  FString StatsOutput;
+  FString StatsOutput = "";
   int64 Frame = CollectFrameStats(StatsOutput);
 
-  FString Output = "";
-  Output += FString::Printf(TEXT("{\n  Frame:%lld,\n"), Frame);
+  FString Output = "{";
+  //Output += FString::Printf(TEXT("  Frame:%lld,\n"), Frame);
   Output += CollectStatUnit();
+  if(StatsOutput != "") Output += ",";
   Output += StatsOutput;
   Output += "}";
 
@@ -150,7 +151,7 @@ FString ABenchmarkSensor::CollectStatUnit()
     GPUFrameTime = StatUnitData->GPUFrameTime;
     RHITTime = StatUnitData->RHITTime;
   }
-  return FString::Printf(TEXT("  FrameTime : %.2f,\n  GameThreadTime : %.2f,\n  RenderThreadTime : %.2f,\n  GPUFrameTime : %.2f,\n  RHITime : %.2f,\n"),
+  return FString::Printf(TEXT("\n  \"FrameTime\": \"%.2f\",\n  \"GameThreadTime\": \"%.2f\",\n  \"RenderThreadTime\": \"%.2f\",\n  \"GPUFrameTime\": \"%.2f\",\n  \"RHITime\": \"%.2f\""),
                               FrameTime, GameThreadTime, RenderThreadTime, GPUFrameTime, RHITTime);
 }
 
@@ -171,10 +172,10 @@ int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
   int NumIt = 0;
   for(auto It : Queries)
   {
-    Output += FString::Printf(TEXT("  %s : ["), *It.Key.ToString());
+    Output += FString::Printf(TEXT("\n  \"%s\": ["), *It.Key.ToString());
     Output += CollectStatsFromGroup(StatsThread, It.Key, It.Value, LastGoodGameFrame);
+    Output += (NumIt < (Queries.Num() - 1)) ? "]," : "]";
     NumIt++;
-    Output += (NumIt < Queries.Num() - 1) ? "],\n" : "]\n";
   }
 
   return LastGoodGameFrame;
@@ -250,19 +251,19 @@ FString ABenchmarkSensor::CollectStatsFromGroup(
       case EStatDataType::ST_int64:
         {
           int64 Value = Stat.GetValue_int64();
-          Output += FString::Printf(TEXT("{%s:%lld}"),  *StatName.ToString(), Value);
+          Output += FString::Printf(TEXT("{\"%s\":\"%lld\"}"),  *StatName.ToString(), Value);
         }
         break;
       case EStatDataType::ST_double:
         {
           double Value = Stat.GetValue_double();
-          Output += FString::Printf(TEXT("{%s:%f}"),  *StatName.ToString(), Value);
+          Output += FString::Printf(TEXT("{\"%s\":\"%f\"}"),  *StatName.ToString(), Value);
         }
         break;
       case EStatDataType::ST_Ptr:
         {
           uint64 Value = Stat.GetValue_Ptr();
-          Output += FString::Printf(TEXT("{%s:%lld}"),  *StatName.ToString(), Value);
+          Output += FString::Printf(TEXT("{\"%s\":\"%lld\"}"),  *StatName.ToString(), Value);
         }
         break;
       default:
