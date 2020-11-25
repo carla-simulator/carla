@@ -148,23 +148,13 @@ world.on_tick(lambda world_snapshot: do_something(world_snapshot))
 
 The configuration of time-step and synchrony, leads for different settings. Here is a brief summary on the possibilities.
 
-<table class ="defTable">
-<thead>
-<th></th>
-<th><b>Fixed time-step</b></th>
-<th><b>Variable time-step</b></th>
-</thead>
-<tbody>
-<td><b>Synchronous mode</b></td>
-<td>Client is in total control over the simulation and its information.</td>
-<td>Risk of non reliable simulations.</td>
-<tr>
-<td><b>Asynchronous mode</b></td>
-<td>Good time references for information. Server runs as fast as possible.</td>
-<td>Non easily repeatable simulations.</td>
-</tbody>
-</table>
+|                                                                        | **Fixed time-step**                                                    | **Variable time-step**                                                 |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Synchronous mode**                                                   | Client is in total control over the simulation and its information.    | Risk of non reliable simulations.                                      |
+| **Asynchronous mode**                                                  | Good time references for information. Server runs as fast as possible. | Non easily repeatable simulations.                                     |
+
 <br>
+
 
 * __Synchronous mode + variable time-step.__ This is almost for sure a non-desirable state. Physics cannot run properly when the time-step is bigger than 0.1s and. If the server has to wait for the client to compute the steps, this is likely to happen. Simulation time and physics will not be in synchrony. The simulation will not be reliable.  
 

@@ -14,6 +14,7 @@ The first thing to do is use [OpenStreetMap](https://www.openstreetmap.org) to g
 __1.1. Go to [openstreetmap.org](https://www.openstreetmap.org)__. If the map is not properly visualized, try changing the layer in the righ pannel.
 
 __1.2 Search for a desired location__ and zoom in to a specific area.
+
 ![openstreetmap_view](img/tuto_g_osm_web.jpg)
 
 !!! Warning
