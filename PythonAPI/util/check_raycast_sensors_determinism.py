@@ -40,6 +40,7 @@ class Scenario():
         self.world = world
         self.client = client
         self.actor_list = []
+        self.sensor_list = []
         self.init_timestamp = []
         self.sensor_queue = Queue()
         self.active = False
@@ -48,6 +49,7 @@ class Scenario():
     def init_scene(self, prefix):
         self.prefix = prefix
         self.actor_list = []
+        self.sensor_list = []
         self.sensor_queue = Queue()
         self.active = True
 
@@ -59,9 +61,26 @@ class Scenario():
         for _i in range(0, frames):
             self.world.tick()
             if self.active:
-                self.sensor_queue.get(True, 1.0)
+                for s in self.sensor_list:
+                    self.sensor_queue.get(True, 1.0)
 
-    def add_lidar_snapshot(self, lidar_data):
+    def add_sensor(self, sensor, sensor_type):
+
+        sen_idx = len(self.sensor_list)
+        if sensor_type == "LiDAR":
+            name = str(sen_idx) + "_LiDAR"
+            sensor.listen(lambda data : self.add_lidar_snapshot(data, name))
+        elif sensor_type == "SemLiDAR":
+            name = str(sen_idx) + "_SemLiDAR"
+            sensor.listen(lambda data : self.add_semlidar_snapshot(data, name))
+        elif sensor_type == "Radar":
+            name = str(sen_idx) + "_Radar"
+            sensor.listen(lambda data : self.add_radar_snapshot(data, name))
+
+        self.sensor_list.append((name, sensor))
+
+
+    def add_lidar_snapshot(self, lidar_data, name="LiDAR"):
         if not self.active:
             return
 
@@ -71,11 +90,11 @@ class Scenario():
         frame = lidar_data.frame - self.init_timestamp['frame0']
         time_f = lidar_data.timestamp - self.init_timestamp['time0']
 
-        np.savetxt(self.get_filename(frame), points)
+        np.savetxt(self.get_filename(frame, name), points)
 
-        self.sensor_queue.put((lidar_data.frame, "LiDAR"))
+        self.sensor_queue.put((lidar_data.frame, name))
 
-    def add_semlidar_snapshot(self, lidar_data):
+    def add_semlidar_snapshot(self, lidar_data, name="SemLiDAR"):
         if not self.active:
             return
 
@@ -88,11 +107,11 @@ class Scenario():
         frame = lidar_data.frame - self.init_timestamp['frame0']
         time_f = lidar_data.timestamp - self.init_timestamp['time0']
 
-        np.savetxt(self.get_filename(frame), points)
+        np.savetxt(self.get_filename(frame, name), points)
 
-        self.sensor_queue.put((lidar_data.frame, "SemLiDAR"))
+        self.sensor_queue.put((lidar_data.frame, name))
 
-    def add_radar_snapshot(self, radar_data):
+    def add_radar_snapshot(self, radar_data, name="Radar"):
         if not self.active:
             return
 
@@ -102,21 +121,26 @@ class Scenario():
         frame = radar_data.frame - self.init_timestamp['frame0']
         time_f = radar_data.timestamp - self.init_timestamp['time0']
 
-        np.savetxt(self.get_filename(frame), points)
+        np.savetxt(self.get_filename(frame, name), points)
 
-        self.sensor_queue.put((radar_data.frame, "Radar"))
+        self.sensor_queue.put((radar_data.frame, name))
 
     def clear_scene(self):
+        for sensor in self.sensor_list:
+            sensor[1].destroy()
+
         for actor in self.actor_list:
             actor.destroy()
 
         self.active = False
 
-    def get_filename_with_prefix(self, prefix, f):
-        return prefix + ("%04d") % f + ".out"
+    def get_filename_with_prefix(self, prefix, f, id=""):
+        add_id = "" if id=="" else id + "_"
+        return prefix + add_id + ("%04d") % f + ".out"
 
-    def get_filename(self, f):
-        return self.prefix + ("%04d") % f + ".out"
+    def get_filename(self, f, id=""):
+        add_id = "" if id=="" else id + "_"
+        return self.prefix + add_id + ("%04d") % f + ".out"
 
     def run_simulation(self, prefix, tics = 200):
         self.init_scene(prefix)
@@ -124,13 +148,14 @@ class Scenario():
         for _i in range(0, tics):
             self.world.tick()
             w_frame = self.world.get_snapshot().frame
-            s_frame = self.sensor_queue.get(True, 1.0)[0]
 
-            if w_frame != s_frame:
-                print("Error!!! frame are not equal: %d %d" % (w_frame, s_frame))
+            for s in self.sensor_list:
+                s_frame = self.sensor_queue.get(True, 1.0)[0]
+
+                if w_frame != s_frame:
+                    print("Error!!! frames are not equal for %d: %d %d" % (s[0], w_frame, s_frame))
 
         self.clear_scene()
-        self.wait(10)
 
 
 class SpawnLidarNoDropff(Scenario):
@@ -155,9 +180,7 @@ class SpawnLidarNoDropff(Scenario):
         lidar_tr = carla.Transform(carla.Location(z=2))
         lidar = world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
 
-        lidar.listen(self.add_lidar_snapshot)
-
-        self.actor_list.append(lidar)
+        self.add_sensor(lidar, "LiDAR")
         self.actor_list.append(vehicle00)
 
         self.wait(1)
@@ -182,9 +205,7 @@ class SpawnSemanticLidar(Scenario):
         lidar_tr = carla.Transform(carla.Location(z=2))
         lidar = world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
 
-        lidar.listen(self.add_semlidar_snapshot)
-
-        self.actor_list.append(lidar)
+        self.add_sensor(lidar, "SemLiDAR")
         self.actor_list.append(vehicle00)
 
         self.wait(1)
@@ -209,9 +230,7 @@ class SpawnRadar(Scenario):
         radar_tr = carla.Transform(carla.Location(z=2))
         radar = world.spawn_actor(radar_bp, radar_tr, attach_to=vehicle00)
 
-        radar.listen(self.add_radar_snapshot)
-
-        self.actor_list.append(radar)
+        self.add_sensor(radar, "Radar")
         self.actor_list.append(vehicle00)
 
         self.wait(1)
@@ -237,13 +256,55 @@ class SpawnLidarWithDropff(Scenario):
         lidar_tr = carla.Transform(carla.Location(z=2))
         lidar = world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
 
-        lidar.listen(self.add_lidar_snapshot)
-
-        self.actor_list.append(lidar)
+        self.add_sensor(lidar, "LiDAR")
         self.actor_list.append(vehicle00)
 
         self.wait(1)
 
+class SpawnAllRaycastSensors(Scenario):
+
+    def init_scene(self, prefix):
+        super().init_scene(prefix)
+
+        world = self.world
+
+        blueprint_library = world.get_blueprint_library()
+
+        vehicle00_tr = carla.Transform(carla.Location(140, -205, 0.1), carla.Rotation(yaw=181.5))
+        vehicle00 = world.spawn_actor(blueprint_library.filter("tt")[0], vehicle00_tr)
+        vehicle00.set_target_velocity(carla.Vector3D(-25, 0, 0))
+
+        vehicle01_tr = carla.Transform(carla.Location(50, -200, 0.1), carla.Rotation(yaw=-178.5))
+        vehicle01 = world.spawn_actor(blueprint_library.filter("lincoln")[0], vehicle01_tr)
+        vehicle01.set_target_velocity(carla.Vector3D(+25, 0, 0))
+
+        radar_bp = world.get_blueprint_library().find('sensor.other.radar')
+        radar_bp.set_attribute('noise_seed', '54283')
+        radar_tr = carla.Transform(carla.Location(z=2))
+        radar = world.spawn_actor(radar_bp, radar_tr, attach_to=vehicle00)
+
+        lidar01_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
+        lidar01_bp.set_attribute('noise_seed', '12134')
+        lidar01_tr = carla.Transform(carla.Location(x=1, z=2))
+        lidar01 = world.spawn_actor(lidar01_bp, lidar01_tr, attach_to=vehicle00)
+
+        lidar02_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
+        lidar02_tr = carla.Transform(carla.Location(x=1, z=2))
+        lidar02 = world.spawn_actor(lidar02_bp, lidar02_tr, attach_to=vehicle01)
+
+        lidar03_bp = world.get_blueprint_library().find('sensor.lidar.ray_cast')
+        lidar03_bp.set_attribute('noise_seed', '23135')
+        lidar03_tr = carla.Transform(carla.Location(z=2))
+        lidar03 = world.spawn_actor(lidar03_bp, lidar03_tr, attach_to=vehicle01)
+
+        self.add_sensor(radar, "Radar")
+        self.add_sensor(lidar01, "LiDAR")
+        self.add_sensor(lidar02, "SemLiDAR")
+        self.add_sensor(lidar03, "LiDAR")
+        self.actor_list.append(vehicle00)
+        self.actor_list.append(vehicle01)
+
+        self.wait(1)
 
 class TestScenario():
     def __init__(self, scene):
@@ -283,11 +344,12 @@ class TestScenario():
             for j in range(0, i):
                 sim_check = True
                 for f_idx in range(1, sim_tics):
-                    file_i = self.scene.get_filename_with_prefix(rep_prefixes[i], f_idx)
-                    file_j = self.scene.get_filename_with_prefix(rep_prefixes[j], f_idx)
+                    for sensor in self.scene.sensor_list:
+                        file_i = self.scene.get_filename_with_prefix(rep_prefixes[i], f_idx, sensor[0])
+                        file_j = self.scene.get_filename_with_prefix(rep_prefixes[j], f_idx, sensor[0])
 
-                    check_ij = self.compare_files(file_i, file_j)
-                    sim_check = sim_check and check_ij
+                        check_ij = self.compare_files(file_i, file_j)
+                        sim_check = sim_check and check_ij
 
                 mat_check[i][j] = int(sim_check)
                 mat_check[j][i] = int(sim_check)
@@ -345,6 +407,9 @@ def main(arg):
 
     try:
         repetitions = 10
+        test_all = TestScenario(SpawnAllRaycastSensors(client, world))
+        test_all.test_scenario(repetitions)
+
         test_lidar_1 = TestScenario(SpawnLidarNoDropff(client, world))
         test_lidar_1.test_scenario(repetitions)
 
