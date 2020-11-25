@@ -85,6 +85,7 @@ import math
 import random
 import re
 import weakref
+import json
 
 try:
     import pygame
@@ -98,6 +99,11 @@ try:
     from pygame.locals import K_DOWN
     from pygame.locals import K_ESCAPE
     from pygame.locals import K_F1
+    from pygame.locals import K_F2
+    from pygame.locals import K_F3
+    from pygame.locals import K_F4
+    from pygame.locals import K_F5
+    from pygame.locals import K_F12
     from pygame.locals import K_LEFT
     from pygame.locals import K_PERIOD
     from pygame.locals import K_RIGHT
@@ -167,7 +173,7 @@ class World(object):
             sys.exit(1)
 
         self.sync = args.sync
-        self.sync = False
+        # self.sync = False
         self.hud = hud
         self.player = None
         self.benchmark_sensor = None
@@ -195,19 +201,24 @@ class World(object):
         blueprint.set_attribute('color', '0,0,0')
         # Select spawn point
         spawn_point = self.map.get_spawn_points()[self.current_spawn_point]
-        spawn_point.location.z += 2.0
+        spawn_point.location.z += 1.0
 
-        self.player = self.world.spawn_actor(blueprint, spawn_point)
+        while self.player is None:
+            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+
         # Set up the sensors.
         self.camera_manager = CameraManager(self.player, self.hud)
         self.benchmark_sensor = BenchmarkSensor(self.player)
 
     def tick(self, clock):
-        self.hud.tick(self, clock)
         if self.sync:
-                self.world.tick()
+            if not self.camera_manager.ready_for_tick():
+                return
+            self.world.tick()
+            self.camera_manager.tick()
         else:
-                self.world.wait_for_tick()
+            self.world.wait_for_tick()
+        self.hud.tick(self, clock)
 
     def render(self, display):
         self.camera_manager.render(display)
@@ -246,11 +257,26 @@ class World(object):
         if self.current_spawn_point > len(spawn_points):
             self.current_spawn_point = 0
         spawn_point = spawn_points[self.current_spawn_point]
-        spawn_point.location.z += 2.0
+        spawn_point.location.z += 1.0
         self.player.set_transform(carla.Transform(spawn_point.location, spawn_point.rotation))
 
     def toggle_hud(self):
         self.hud.enabled = not self.hud.enabled
+
+    def toggle_image_diff(self):
+        for camera in self.camera_manager.sensor:
+            camera.show_image_diff = not camera.show_image_diff
+
+    def freeze_render(self):
+        for camera in self.camera_manager.sensor:
+            camera.freeze_render = not camera.freeze_render
+
+    def freeze_image_diff(self):
+        for camera in self.camera_manager.sensor:
+            camera.freeze_image_diff = not camera.freeze_image_diff
+
+    def profile(self):
+        self.benchmark_sensor.toggle_capture()
 
 # ==============================================================================
 # -- KeyboardControl -----------------------------------------------------------
@@ -296,20 +322,20 @@ class KeyboardControl(object):
                     world.next_position()
                 elif event.key == K_F1:
                     world.toggle_hud()
-                elif event.key == K_TAB:
-                    world.camera_manager.toggle_camera()
+                elif event.key == K_F2:
+                    world.toggle_image_diff()
+                elif event.key == K_F3:
+                    world.freeze_image_diff()
+                elif event.key == K_F4:
+                    world.freeze_render()
+                elif event.key == K_F5:
+                    world.profile()
+                elif event.key == K_F12:
+                    world.camera_manager.screenshot(0)
                 elif event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT:
                     world.next_weather(reverse=True)
                 elif event.key == K_c:
                     world.next_weather()
-                elif event.key == K_g:
-                    world.toggle_radar()
-                elif event.key == K_BACKQUOTE:
-                    world.camera_manager.next_sensor()
-                elif event.key == K_n:
-                    world.camera_manager.next_sensor()
-                elif event.key > K_0 and event.key <= K_9:
-                    world.camera_manager.set_sensor(event.key - 1 - K_0)
                 elif event.key == K_p and (pygame.key.get_mods() & KMOD_CTRL):
                     # stop recorder
                     client.stop_recorder()
@@ -429,7 +455,7 @@ class HUD(object):
             ' ',
         ]
 
-        for i in range(0 , len(world.camera_manager.sensor)):
+        for i in range(len(world.camera_manager.sensor)):
             camera = world.camera_manager.sensor[i]
             loc = camera.sensor.get_transform().location
             rot = camera.sensor.get_transform().rotation
@@ -463,7 +489,6 @@ class CameraManager(object):
         self.hud = hud
         self.recording = False
         self.num_sensors = 4
-        self.images_received_this_frame = 0
 
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         Attachment = carla.AttachmentType
@@ -480,14 +505,14 @@ class CameraManager(object):
 
         x = 0
         y = 0
-        width_offset = self.hud.dim[0]/2
-        height_offset = self.hud.dim[1]/2
+        width_offset = int(self.hud.dim[0]/2)
+        height_offset = int(self.hud.dim[1]/2)
 
         # We need to pass the lambda a weak reference to self to avoid circular reference.
         weak_self = weakref.ref(self)
-        for i in range(0, self.num_sensors):
+        for i in range(self.num_sensors):
             new_sensor = world.spawn_actor(bp, self.transforms[i], attach_to=self._parent)
-            camera = Camera(new_sensor, (width_offset*x, height_offset*y))
+            camera = Camera(new_sensor, [width_offset, height_offset], (width_offset*x, height_offset*y))
             self.sensor.append(camera)
             x += 1
             if(x == 2):
@@ -495,7 +520,7 @@ class CameraManager(object):
                 y += 1
 
     def destroy(self):
-        for i in range(0, self.num_sensors):
+        for i in range(self.num_sensors):
             self.sensor[i].destroy()
 
     def toggle_recording(self):
@@ -504,20 +529,45 @@ class CameraManager(object):
         self.hud.notification('Recording %s' % ('On' if self.recording else 'Off'))
 
     def render(self, display):
-        # if self.images_received_this_frame == self.num_sensors:
+        # display.fill((40,40,40))
         for sensor in self.sensor:
-            if sensor.surface is not None:
-                display.blit(sensor.surface, sensor.rect)
-        self.images_received_this_frame = 0
+            sensor.render(display)
 
-class Camera(object):
-    def __init__(self, sensor, rect):
+    def ready_for_tick(self):
+        for sensor in self.sensor:
+            if not sensor.image_ready:
+                return False
+        return True
+
+    def tick (self):
+        for sensor in self.sensor:
+            sensor.image_ready = False
+
+    def screenshot(self, index):
+        image = self.sensor[index].image
+        image.save_to_disk('_out/camera%02d_%08d' % (index, image.frame))
+
+class Camera(object,):
+    def __init__(self, sensor, size, rect):
         self.sensor = sensor
         self.surface = None
+        self.prev_surface = None
         self.recording = False
+        self.size = size
         self.rect = rect
+        self.diff_surface = None
+        self.show_image_diff = False
+        self.freeze_render = False
+        self.freeze_image_diff = False
+        self.image_ready = True
 
         self.sensor.listen(lambda image: self.parse_image(image) )
+
+    def render(self, display):
+        if self.freeze_render:
+            return
+        if self.surface is not None:
+            display.blit(self.surface, self.rect)
 
     def parse_image(self, image):
         image.convert(cc.Raw)
@@ -525,13 +575,36 @@ class Camera(object):
         array = np.reshape(array, (int(image.height), int(image.width), 4))
         array = array[:, :, :3]
         array = array[:, :, ::-1]
-        self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
+        array = array.swapaxes(0, 1)
+
+        surface = pygame.surfarray.make_surface(array)
+
+        if self.show_image_diff:
+            self.surface = self.image_diff(surface)
+        else:
+            self.surface = surface
 
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
 
+        self.image_ready = True
+
     def destroy(self):
         self.sensor.destroy()
+
+    def image_diff(self, surface):
+        if self.prev_surface is None:
+            self.prev_surface = surface
+            return
+
+        img1_arr = pygame.PixelArray(self.prev_surface)
+        img2_arr = pygame.PixelArray(surface)
+        diff_arr = img2_arr.compare(img1_arr, distance=0.075)
+        if not self.freeze_image_diff:
+            self.prev_surface = surface
+
+        return diff_arr.surface.copy()
+
 
 
 # ==============================================================================
@@ -543,36 +616,102 @@ class BenchmarkSensor(object):
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
-        world = self._parent.get_world()
-        self.debug = world.debug
-        """
-        bp = world.get_blueprint_library().find('sensor.other.benchmark')
+        self.world = self._parent.get_world()
+        self.capture = False
 
-        # queries = "{\"STATGROUP_SceneRendering\": [ \"STAT_MeshDrawCalls\", \"STAT_DecalsDrawTime\" ]}"
-        queries = "{\"stat scenerendering\": [ \"STAT_MeshDrawCalls\", \"STAT_DecalsDrawTime\" ]}"
+        self.num_samples = 1000
+        self.current_samples = 0
 
-        bp.set_attribute('queries', queries)
-        self.sensor = world.spawn_actor(
-            bp,
-            carla.Transform(),
-            attach_to=self._parent)
-        # We need a weak reference to self to avoid circular reference.
-        weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda benchmark_data: BenchmarkSensor._Benchmark_callback(weak_self, benchmark_data))
-        """
+        self.result_list = []
+        self.total = {}
+
+        # self.start()
+
+    def start(self):
+        # Reset previous stats
+        self.world.send_console_command("stat none")
+        self.world.send_console_command("stat fps")
+
+        # Disable spectator
+        spectator = self.world.get_spectator()
+        spectator.set_transform(carla.Transform(carla.Location(z=500), carla.Rotation(pitch=90)))
+        self.world.send_console_command("r.screenpercentage 1")
+
+        bp = self.world.get_blueprint_library().find('sensor.other.benchmark')
+
+        with open('performance_queries.json') as f:
+            queries = f.read()
+        bp.set_attribute('queries', str(queries))
+        self.sensor = self.world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
+        self.sensor.listen( lambda benchmark_data: self.benchmark_callback(benchmark_data))
+
 
     def destroy(self):
+        self.world.send_console_command("r.screenpercentage 100")
+        self.world.send_console_command("stat none")
+
+        if self.sensor is not None:
+            self.sensor.destroy()
         return
-        # self.sensor.destroy()
 
-    @staticmethod
-    def _Benchmark_callback(weak_self, benchmark_data):
-        self = weak_self()
-        if not self:
+    def toggle_capture(self, samples = 2):
+        self.capture = not self.capture
+        self.num_samples = samples
+        if self.capture:
+            self.result_list = []
+            self.total = {}
+
+    def benchmark_callback(self, benchmark_data):
+        if not self or not self.capture:
             return
+        data = json.loads(benchmark_data.result)
 
-        # print(benchmark_data.result)
+        self.result_list.append(data)
+
+        self.current_samples += 1
+
+        if self.current_samples >= self.num_samples:
+            self.capture = False
+            self.current_samples = 0
+            self.calculate_results()
+
+    def calculate_results(self):
+        for result in self.result_list:
+            for key in result:
+                print(key)
+                if "STATGROUP_" in key:
+                    for stat in result[key]:
+                        for stat_key in stat:
+                            value_dict = self.total.get(key, {})
+                            value_list = value_dict.get(stat_key, [])
+                            value_list.append(float(stat[stat_key]))
+                            value_dict[stat_key] = value_list
+                            self.total[key] = value_dict
+                else:
+                    value_list = self.total.get(key, [])
+                    value_list.append(float(result[key]))
+                    self.total[key] = value_list
+
+        print("Total: ")
+        for key in self.total:
+            if "STATGROUP_" in key:
+                for stat_key in self.total[key]:
+                    print(stat_key)
+                    mean, std, amin, amax = self.calculate_stadistics(self.total[key][stat_key])
+                    self.total[key][stat_key] = { "mean":mean, "std":std, "min":amin, "max":amax }
+                    print(stat_key, ":", self.total[key][stat_key])
+            else:
+                mean, std, amin, amax = self.calculate_stadistics(self.total[key])
+                self.total[key] = { "mean":mean, "std":std, "min":amin, "max":amax }
+                print(key,":", self.total[key])
+
+    def calculate_stadistics(self, values):
+        mean = np.mean(values)
+        std = np.std(values)
+        amin = np.amin(values)
+        amax = np.amax(values)
+        return mean, std, amin, amax
+
 
 # ==============================================================================
 # -- game_loop() ---------------------------------------------------------------
