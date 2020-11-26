@@ -27,4 +27,8 @@ struct CARLA_API FEpisodeSettings
   double MaxSubstepDeltaTime = 0.01;
 
   int MaxSubsteps = 10;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bDeterministicRagdolls = true;
+
 };
