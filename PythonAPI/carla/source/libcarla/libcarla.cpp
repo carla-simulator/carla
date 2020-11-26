@@ -216,7 +216,9 @@ static auto MakeCallback(boost::python::object callback) {
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
+#if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 7
   PyEval_InitThreads();
+#endif
   scope().attr("__path__") = "libcarla";
   export_geom();
   export_control();
