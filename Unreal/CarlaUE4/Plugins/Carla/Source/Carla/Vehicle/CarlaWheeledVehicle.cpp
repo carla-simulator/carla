@@ -42,6 +42,10 @@ void ACarlaWheeledVehicle::SetWheelCollision(UWheeledVehicleMovementComponent4W 
     const FVehiclePhysicsControl &PhysicsControl ) {
 
   #ifdef WHEEL_SWEEP_ENABLED
+    const bool IsBike = IsTwoWheeledVehicle();
+
+    if (IsBike)
+      return;
 
     const bool IsEqual = Vehicle4W->UseSweepWheelCollision == PhysicsControl.UseSweepWheelCollision;
 
