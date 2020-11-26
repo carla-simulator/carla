@@ -15,6 +15,7 @@
   * Fixed bug in `waypoint.get_landmarks()` causing some landmarks to be missed when s = 0
   * Fixed the `actor.set_simulate_physics()` for pedestrians and vehicles
   * Fixed bug causing camera-based sensors to stop sending data
+  * Added `WorldSettings.deterministic_ragdolls` to enable deterministic or physically based ragdolls
   * Fixed the lack of determinism on the output of raycast sensors
   * Fixed bug in the actor's id returned by the semantic lidar
   * Fixed dependency of library **Xerces-c** on package
