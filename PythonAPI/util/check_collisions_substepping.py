@@ -442,62 +442,25 @@ def main(arg):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
+
+        test_list = [
+            #TestCollisionScenario(TwoSpawnedCars(client, world, True), output_path),
+            TestCollisionScenario(TwoCarsSlowSpeedCollision(client, world, True), output_path),
+            TestCollisionScenario(TwoCarsHighSpeedCollision(client, world, True), output_path),
+            TestCollisionScenario(CarBikeCollision(client, world, True), output_path),
+            TestCollisionScenario(CarWalkerCollision(client, world, True), output_path),
+            TestCollisionScenario(ThreeCarsSlowSpeedCollision(client, world, True), output_path),
+            TestCollisionScenario(ThreeCarsHighSpeedCollision(client, world, True), output_path),
+        ]
+
         repetitions = 10
-
-        #test00 = TestCollisionScenario(TwoSpawnedCars(client, world))
-        #test00.test_scenario(20, 20, repetitions)
-        #test00.test_scenario(20, 40, repetitions)
-        #test00.test_scenario(20, 60, repetitions)
-        #test00.test_scenario(20, 80, repetitions)
-        #test00.test_scenario(20, 100, repetitions)
-
-        print("--------------------------------------------------------------")
-        test01 = TestCollisionScenario(TwoCarsSlowSpeedCollision(client, world, True), output_path)
-        test01.test_scenario(20,  20, repetitions)
-        test01.test_scenario(20,  40, repetitions)
-        test01.test_scenario(20,  60, repetitions)
-        test01.test_scenario(20,  80, repetitions)
-        test01.test_scenario(20, 100, repetitions)
-
-        print("--------------------------------------------------------------")
-        test02 = TestCollisionScenario(TwoCarsHighSpeedCollision(client, world, True), output_path)
-        test02.test_scenario(20,  20, repetitions)
-        test02.test_scenario(20,  40, repetitions)
-        test02.test_scenario(20,  60, repetitions)
-        test02.test_scenario(20,  80, repetitions)
-        test02.test_scenario(20, 100, repetitions)
-
-        print("--------------------------------------------------------------")
-        testBike01 = TestCollisionScenario(CarBikeCollision(client, world, True), output_path)
-        testBike01.test_scenario(20,  20, repetitions)
-        testBike01.test_scenario(20,  40, repetitions)
-        testBike01.test_scenario(20,  60, repetitions)
-        testBike01.test_scenario(20,  80, repetitions)
-        testBike01.test_scenario(20, 100, repetitions)
-
-        print("--------------------------------------------------------------")
-        test05 = TestCollisionScenario(CarWalkerCollision(client, world, True), output_path)
-        test05.test_scenario(20,  20, repetitions)
-        test05.test_scenario(20,  40, repetitions)
-        test05.test_scenario(20,  60, repetitions)
-        test05.test_scenario(20,  80, repetitions)
-        test05.test_scenario(20, 100, repetitions)
-
-        print("--------------------------------------------------------------")
-        test03 = TestCollisionScenario(ThreeCarsSlowSpeedCollision(client, world, True), output_path)
-        test03.test_scenario(20, 20,  repetitions)
-        test03.test_scenario(20, 40,  repetitions)
-        test03.test_scenario(20, 60,  repetitions)
-        test03.test_scenario(20, 80,  repetitions)
-        test03.test_scenario(20, 100, repetitions)
-
-        print("--------------------------------------------------------------")
-        test04 = TestCollisionScenario(ThreeCarsHighSpeedCollision(client, world, True), output_path)
-        test04.test_scenario(20, 20,  repetitions)
-        test04.test_scenario(20, 40,  repetitions)
-        test04.test_scenario(20, 60,  repetitions)
-        test04.test_scenario(20, 80,  repetitions)
-        test04.test_scenario(20, 100, repetitions)
+        for item in test_list:
+            print("--------------------------------------------------------------")
+            #item.test_scenario(20,  20, repetitions)
+            #item.test_scenario(20,  40, repetitions)
+            #item.test_scenario(20,  60, repetitions)
+            #item.test_scenario(20,  80, repetitions)
+            item.test_scenario(20, 100, repetitions)
 
         print("--------------------------------------------------------------")
 
