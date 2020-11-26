@@ -37,8 +37,10 @@ namespace rpc {
 
     int max_substeps = 10;
 
+    bool deterministic_ragdolls = true;
+
     MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
-        max_substep_delta_time, max_substeps);
+        max_substep_delta_time, max_substeps, deterministic_ragdolls);
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------
@@ -52,13 +54,15 @@ namespace rpc {
         double fixed_delta_seconds = 0.0,
         bool substepping = true,
         double max_substep_delta_time = 0.01,
-        int max_substeps = 10)
+        int max_substeps = 10,
+        bool deterministic_ragdolls = true)
       : synchronous_mode(synchronous_mode),
         no_rendering_mode(no_rendering_mode),
         fixed_delta_seconds(
             fixed_delta_seconds > 0.0 ? fixed_delta_seconds : boost::optional<double>{}),
         substepping(substepping),
-        max_substep_delta_time(max_substep_delta_time), max_substeps(max_substeps) {}
+        max_substep_delta_time(max_substep_delta_time), max_substeps(max_substeps),
+        deterministic_ragdolls(deterministic_ragdolls) {}
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
@@ -71,7 +75,8 @@ namespace rpc {
           (substepping == rhs.substepping) &&
           (fixed_delta_seconds == rhs.fixed_delta_seconds) &&
           (max_substep_delta_time == rhs.max_substep_delta_time) &&
-          (max_substeps == rhs.max_substeps);
+          (max_substeps == rhs.max_substeps) &&
+          (deterministic_ragdolls == rhs.deterministic_ragdolls);
     }
 
     bool operator!=(const EpisodeSettings &rhs) const {
@@ -91,7 +96,8 @@ namespace rpc {
             Settings.FixedDeltaSeconds.Get(0.0),
             Settings.bSubstepping,
             Settings.MaxSubstepDeltaTime,
-            Settings.MaxSubsteps) {}
+            Settings.MaxSubsteps,
+            Settings.bDeterministicRagdolls) {}
 
     operator FEpisodeSettings() const {
       FEpisodeSettings Settings;
@@ -103,6 +109,7 @@ namespace rpc {
       Settings.bSubstepping = substepping;
       Settings.MaxSubstepDeltaTime = max_substep_delta_time;
       Settings.MaxSubsteps = max_substeps;
+      Settings.bDeterministicRagdolls = deterministic_ragdolls;
 
       return Settings;
     }
