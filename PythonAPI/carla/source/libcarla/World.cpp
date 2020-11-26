@@ -141,7 +141,7 @@ void export_world() {
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
-    .def(init<bool, bool, double, bool, double, int>(
+    .def(init<bool, bool, double, bool, double, int, bool>(
         (arg("synchronous_mode")=false,
          arg("no_rendering_mode")=false,
          arg("fixed_delta_seconds")=0.0,
