@@ -394,8 +394,7 @@ class TestCollisionScenario():
                 #os.remove(file_repetition)
 
     def test_scenario(self, fps, fps_phys, repetitions = 1, sim_tics = 100):
-        print("Testing Determinism in %s for %3d render FPS and %3d physics FPS -> " % \
-                (self.scenario_name, fps, fps_phys),  end='')
+        output_str = "Testing Determinism in %s for %3d render FPS and %3d physics FPS -> " % (self.scenario_name, fps, fps_phys)
 
         # Creating run features: prefix, settings and spectator options
         prefix = self.output_path + self.scenario_name + "_" + str(fps) + "_" + str(fps_phys)
@@ -417,8 +416,13 @@ class TestCollisionScenario():
             sim_prefixes.append(prefix_rep)
 
         determ_repet = self.check_simulations(sim_prefixes, prefix)
-        print("Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions), end="")
-        print("  -> Comp. Time per frame: %.0f" % (t_comp/repetitions*sim_tics))
+        output_str += "Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions)
+        output_str += "  -> Comp. Time per frame: %.0f" % (t_comp/repetitions*sim_tics)
+
+        if determ_repet == repetitions:
+            print("Error!!! Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet, repetitions))
+
+        return output_str
 
 
 
@@ -460,7 +464,8 @@ def main(arg):
             #item.test_scenario(20,  40, repetitions)
             #item.test_scenario(20,  60, repetitions)
             #item.test_scenario(20,  80, repetitions)
-            item.test_scenario(20, 100, repetitions)
+            out = item.test_scenario(20, 100, repetitions)
+            print(out)
 
         print("--------------------------------------------------------------")
 
