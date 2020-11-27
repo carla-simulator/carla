@@ -103,6 +103,7 @@ try:
     from pygame.locals import K_F3
     from pygame.locals import K_F4
     from pygame.locals import K_F5
+    from pygame.locals import K_F6
     from pygame.locals import K_F12
     from pygame.locals import K_LEFT
     from pygame.locals import K_PERIOD
@@ -180,7 +181,9 @@ class World(object):
         self.camera_manager = None
         self.recording_enabled = False
         self.recording_start = 0
-        self.current_spawn_point = 8
+        self.current_spawn_point = 0
+
+        self.environment_objects_state = False
 
         self.restart()
         self.world.on_tick(hud.on_world_tick)
@@ -190,7 +193,7 @@ class World(object):
             settings = carla.WorldSettings(
                 no_rendering_mode=False,
                 synchronous_mode=True,
-                fixed_delta_seconds=1.0/20.0)
+                fixed_delta_seconds=1.0/30.0)
             self.world.apply_settings(settings)
 
         self.player_max_speed = 1.589
@@ -278,6 +281,15 @@ class World(object):
     def profile(self):
         self.benchmark_sensor.toggle_capture()
 
+    def toggle_environment_objects(self):
+        env_objs = self.world.get_environment_objects()
+        temp_objs = set()
+        for obj in env_objs:
+            temp_objs.add(obj.id)
+        self.world.enable_environment_objects(temp_objs, self.environment_objects_state)
+        self.environment_objects_state = not self.environment_objects_state
+
+
 # ==============================================================================
 # -- KeyboardControl -----------------------------------------------------------
 # ==============================================================================
@@ -330,6 +342,8 @@ class KeyboardControl(object):
                     world.freeze_render()
                 elif event.key == K_F5:
                     world.profile()
+                elif event.key == K_F6:
+                    world.toggle_environment_objects()
                 elif event.key == K_F12:
                     world.camera_manager.screenshot(0)
                 elif event.key == K_c and pygame.key.get_mods() & KMOD_SHIFT:
@@ -619,7 +633,7 @@ class BenchmarkSensor(object):
         self.world = self._parent.get_world()
         self.capture = False
 
-        self.num_samples = 1000
+        self.num_samples = 100
         self.current_samples = 0
 
         self.result_list = []
@@ -634,8 +648,11 @@ class BenchmarkSensor(object):
 
         # Disable spectator
         spectator = self.world.get_spectator()
-        spectator.set_transform(carla.Transform(carla.Location(z=500), carla.Rotation(pitch=90)))
+        spectator.set_transform(
+            carla.Transform(carla.Location(z=500),
+            carla.Rotation(pitch=90)))
         self.world.send_console_command("r.screenpercentage 1")
+        #self.world.send_console_command("r.setRes 128x72w")
 
         bp = self.world.get_blueprint_library().find('sensor.other.benchmark')
 
@@ -647,6 +664,7 @@ class BenchmarkSensor(object):
 
 
     def destroy(self):
+        #self.world.send_console_command("r.setRes 1280x720w")
         self.world.send_console_command("r.screenpercentage 100")
         self.world.send_console_command("stat none")
 
@@ -654,7 +672,7 @@ class BenchmarkSensor(object):
             self.sensor.destroy()
         return
 
-    def toggle_capture(self, samples = 2):
+    def toggle_capture(self, samples = 100):
         self.capture = not self.capture
         self.num_samples = samples
         if self.capture:
@@ -670,7 +688,10 @@ class BenchmarkSensor(object):
 
         self.current_samples += 1
 
+        print(str(self.current_samples) + "/" + str(self.num_samples), end="\r")
+
         if self.current_samples >= self.num_samples:
+            print("\nDone")
             self.capture = False
             self.current_samples = 0
             self.calculate_results()
@@ -678,7 +699,6 @@ class BenchmarkSensor(object):
     def calculate_results(self):
         for result in self.result_list:
             for key in result:
-                print(key)
                 if "STATGROUP_" in key:
                     for stat in result[key]:
                         for stat_key in stat:
@@ -692,18 +712,53 @@ class BenchmarkSensor(object):
                     value_list.append(float(result[key]))
                     self.total[key] = value_list
 
-        print("Total: ")
         for key in self.total:
             if "STATGROUP_" in key:
+                # print("")
                 for stat_key in self.total[key]:
-                    print(stat_key)
                     mean, std, amin, amax = self.calculate_stadistics(self.total[key][stat_key])
                     self.total[key][stat_key] = { "mean":mean, "std":std, "min":amin, "max":amax }
-                    print(stat_key, ":", self.total[key][stat_key])
+                    # print(key, stat_key, ":", self.total[key][stat_key])
             else:
                 mean, std, amin, amax = self.calculate_stadistics(self.total[key])
                 self.total[key] = { "mean":mean, "std":std, "min":amin, "max":amax }
-                print(key,":", self.total[key])
+                # print(key,":", self.total[key])
+
+        FrameTime = self.total["FrameTime"]
+        self.total["FPS"] = {
+            "mean": 1000.0 / FrameTime["mean"],
+            "std" : 1000.0 / FrameTime["std"],
+            "min" : 1000.0 / FrameTime["min"],
+            "max" : 1000.0 / FrameTime["max"]
+        }
+        # print("\nFPS:",":", self.total["FPS"])
+
+        print("Total ")
+        print('FPS: %d'% self.total["FPS"]["mean"])
+        print('FrameTime: %0.2f ms'% self.total["FrameTime"]["mean"])
+        print('GameThreadTime: %0.2f ms'% self.total["GameThreadTime"]["mean"])
+        print('RenderThreadTime: %0.2f ms'% self.total["RenderThreadTime"]["mean"])
+        print('GPUFrameTime: %0.2f ms'% self.total["GPUFrameTime"]["mean"])
+        print('RHITime: %0.2f ms'% self.total["RHITime"]["mean"])
+        print("")
+        print('MeshDrawCalls: %d'% self.total["STATGROUP_SceneRendering"]["STAT_MeshDrawCalls"]["mean"])
+        print('DrawPrimitiveCalls: %d'% self.total["STATGROUP_VulkanRHI"]["STAT_RHIDrawPrimitiveCalls"]["mean"])
+        print("")
+        print('VisibleStaticMeshElements: %d'% self.total["STATGROUP_InitViews"]["STAT_VisibleStaticMeshElements"]["mean"])
+        print('VisibleDynamicPrimitives: %d'% self.total["STATGROUP_InitViews"]["STAT_VisibleDynamicPrimitives"]["mean"])
+
+        print("Total ")
+        print('%d'% self.total["FPS"]["mean"])
+        print('%0.2f'% self.total["FrameTime"]["mean"])
+        print('%0.2f'% self.total["GameThreadTime"]["mean"])
+        print('%0.2f'% self.total["RenderThreadTime"]["mean"])
+        print('%0.2f'% self.total["GPUFrameTime"]["mean"])
+        print('%0.2f'% self.total["RHITime"]["mean"])
+        print('%d'% self.total["STATGROUP_SceneRendering"]["STAT_MeshDrawCalls"]["mean"])
+        print('%d'% self.total["STATGROUP_VulkanRHI"]["STAT_RHIDrawPrimitiveCalls"]["mean"])
+        print('%d'% self.total["STATGROUP_InitViews"]["STAT_VisibleStaticMeshElements"]["mean"])
+        print('%d'% self.total["STATGROUP_InitViews"]["STAT_VisibleDynamicPrimitives"]["mean"])
+        print("")
 
     def calculate_stadistics(self, values):
         mean = np.mean(values)
