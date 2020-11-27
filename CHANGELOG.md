@@ -17,6 +17,7 @@
   * Fixed bug causing camera-based sensors to stop sending data
   * Fixed the lack of determinism on the output of raycast sensors
   * Fixed bug in the actor's id returned by the semantic lidar
+  * Fixed error when using `--config` parameter in `make package`
   * Fixed dependency of library **Xerces-c** on package
   * Fixed minor typo in the simulation data section of the documentation
   * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
