@@ -41,6 +41,8 @@ public:
   UFUNCTION(BlueprintCallable, Category = "CARLA Settings", meta = (HidePin = "InWorld"))
   void ApplyQualityLevelPreRestart();
 
+  void SetAllActorsDrawDistance(UWorld *world, float max_draw_distance) const;
+
 private:
 
   UWorld *GetLocalWorld();
@@ -64,8 +66,6 @@ private:
       const TArray<FStaticMaterial> &road_pieces_materials) const;
 
   void SetActorComponentsDrawDistance(AActor *actor, float max_draw_distance) const;
-
-  void SetAllActorsDrawDistance(UWorld *world, float max_draw_distance) const;
 
   void SetPostProcessEffectsEnabled(UWorld *world, bool enabled) const;
 
