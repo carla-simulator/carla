@@ -419,8 +419,8 @@ class TestCollisionScenario():
         output_str += "Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions)
         output_str += "  -> Comp. Time per frame: %.0f" % (t_comp/repetitions*sim_tics)
 
-        if determ_repet == repetitions:
-            print("Error!!! Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet, repetitions))
+        if determ_repet[0] != repetitions:
+            print("Error!!! Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet[0], repetitions))
 
         return output_str
 
@@ -432,7 +432,7 @@ def main(arg):
     client.set_timeout(4.0)
     world = client.get_world()
     pre_settings = world.get_settings()
-    world.apply_settings(pre_settings)
+    world = client.load_world("Town03")
 
     spectator_transform = carla.Transform(carla.Location(120, -256, 5), carla.Rotation(yaw=180))
     spectator_transform.location.z += 5
@@ -474,9 +474,6 @@ def main(arg):
 
 
     finally:
-        settings = world.get_settings()
-        settings.synchronous_mode = False
-        settings.fixed_delta_seconds = 0.0
         world.apply_settings(pre_settings)
 
 
