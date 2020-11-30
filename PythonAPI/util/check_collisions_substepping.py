@@ -390,7 +390,7 @@ class CollisionScenarioTester():
                 actor_id = actor[0]
                 file_repetition = self.scene.get_filename_with_prefix(r_prefix, actor_id)
 
-                #os.remove(file_repetition)
+                os.remove(file_repetition)
 
     def test_scenario(self, fps=20, fps_phys=100, repetitions = 1, sim_tics = 100):
         output_str = "Testing Determinism in %s for %3d render FPS and %3d physics FPS -> " % (self.scenario_name, fps, fps_phys)
