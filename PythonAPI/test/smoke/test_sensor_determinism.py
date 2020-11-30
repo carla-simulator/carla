@@ -75,7 +75,7 @@ class Scenario():
             sensor[1].destroy()
 
         for actor in self.actor_list:
-            actor.destroy()
+            actor[1].destroy()
 
         self.active = False
 
@@ -235,12 +235,12 @@ class SpawnAllRaycastSensors(Scenario):
         self.add_sensor(lidar01, "LiDAR")
         self.add_sensor(lidar02, "SemLiDAR")
         self.add_sensor(lidar03, "LiDAR")
-        self.actor_list.append(vehicle00)
-        self.actor_list.append(vehicle01)
+        self.add_actor(vehicle00, "Car")
+        self.add_actor(vehicle01, "Car")
 
         self.wait(1)
 
-class TestSensorScenario():
+class SensorScenarioTester():
     def __init__(self, scene, output_path):
         self.scene = scene
         self.world = self.scene.world
@@ -328,7 +328,7 @@ class TestSensorDeterminism(SyncSmokeTest):
             os.mkdir(output_path)
 
         try:
-            test_sensors = TestSensorScenario(SpawnAllRaycastSensors(self.client, self.world), output_path)
+            test_sensors = SensorScenarioTester(SpawnAllRaycastSensors(self.client, self.world), output_path)
             test_sensors.test_scenario(repetitions=5, sim_tics = 100)
         except DeterminismError as err:
             test_sensors.scene.clear_scene()
