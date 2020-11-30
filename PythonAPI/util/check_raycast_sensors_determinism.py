@@ -140,8 +140,8 @@ class Scenario():
         t_start = time.perf_counter()
         for _i in range(0, tics):
             self.world.tick()
-            self.save_snapshots()
             self.sensor_syncronization()
+            self.save_snapshots()
         t_end = time.perf_counter()
 
         self.world.apply_settings(original_settings)
@@ -417,8 +417,8 @@ class TestSensorScenario():
         output_str += "Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions)
         output_str += "  -> Comp. FPS: %.0f" % ((repetitions*sim_tics)/t_comp)
 
-        if determ_repet == repetitions:
-            print("Error!!! Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet, repetitions))
+        if determ_repet[0] != repetitions:
+            print("Error!!! Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet[0], repetitions))
 
         return output_str
 
@@ -429,7 +429,7 @@ def main(arg):
     client.set_timeout(5.0)
     world = client.get_world()
     pre_settings = world.get_settings()
-    world.apply_settings(pre_settings)
+    world = client.load_world("Town03")
 
     try:
         # Setting output temporal folder
