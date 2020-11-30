@@ -5,7 +5,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 #from . import SyncSmokeTest
-from __init__ import SyncSmokeTest
+from . import SyncSmokeTest
 
 import carla
 import time
