@@ -84,7 +84,7 @@ class Scenario():
             sensor[1].destroy()
 
         for actor in self.actor_list:
-            actor.destroy()
+            actor[1].destroy()
 
         self.active = False
 
@@ -105,8 +105,8 @@ class Scenario():
         actor_snapshot = np.array([
                 float(snapshot.frame - self.init_timestamp['frame0']), \
                 snapshot.timestamp.elapsed_seconds - self.init_timestamp['time0'], \
-                actor.get_velocity().x, actor.get_velocity().y, actor.get_velocity().z, \
                 actor.get_location().x, actor.get_location().y, actor.get_location().z, \
+                actor.get_velocity().x, actor.get_velocity().y, actor.get_velocity().z, \
                 actor.get_angular_velocity().x, actor.get_angular_velocity().y, actor.get_angular_velocity().z])
         return actor_snapshot
 
@@ -227,7 +227,7 @@ class SpawnLidarNoDropff(Scenario):
         lidar = self.world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
 
         self.add_sensor(lidar, "LiDAR")
-        self.actor_list.append(vehicle00)
+        self.add_actor(vehicle00, "Car")
 
         self.wait(1)
 
@@ -248,7 +248,7 @@ class SpawnSemanticLidar(Scenario):
         lidar = self.world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
 
         self.add_sensor(lidar, "SemLiDAR")
-        self.actor_list.append(vehicle00)
+        self.add_actor(vehicle00, "Car")
 
         self.wait(1)
 
@@ -270,7 +270,7 @@ class SpawnRadar(Scenario):
         radar = self.world.spawn_actor(radar_bp, radar_tr, attach_to=vehicle00)
 
         self.add_sensor(radar, "Radar")
-        self.actor_list.append(vehicle00)
+        self.add_actor(vehicle00, "Car")
 
         self.wait(1)
 
@@ -293,7 +293,7 @@ class SpawnLidarWithDropff(Scenario):
         lidar = self.world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
 
         self.add_sensor(lidar, "LiDAR")
-        self.actor_list.append(vehicle00)
+        self.add_actor(vehicle00, "Car")
 
         self.wait(1)
 
@@ -334,12 +334,12 @@ class SpawnAllRaycastSensors(Scenario):
         self.add_sensor(lidar01, "LiDAR")
         self.add_sensor(lidar02, "SemLiDAR")
         self.add_sensor(lidar03, "LiDAR")
-        self.actor_list.append(vehicle00)
-        self.actor_list.append(vehicle01)
+        self.add_actor(vehicle00, "Car")
+        self.add_actor(vehicle01, "Car")
 
         self.wait(1)
 
-class TestSensorScenario():
+class SensorScenarioTester():
     def __init__(self, scene, output_path):
         self.scene = scene
         self.world = self.scene.world
@@ -439,11 +439,11 @@ def main(arg):
             os.mkdir(output_path)
 
         test_list = [
-            TestSensorScenario(SpawnAllRaycastSensors(client, world), output_path),
-            TestSensorScenario(SpawnLidarNoDropff(client, world), output_path),
-            TestSensorScenario(SpawnLidarWithDropff(client, world), output_path),
-            TestSensorScenario(SpawnSemanticLidar(client, world), output_path),
-            TestSensorScenario(SpawnRadar(client, world), output_path)
+            SensorScenarioTester(SpawnAllRaycastSensors(client, world), output_path),
+            SensorScenarioTester(SpawnLidarNoDropff(client, world), output_path),
+            SensorScenarioTester(SpawnLidarWithDropff(client, world), output_path),
+            SensorScenarioTester(SpawnSemanticLidar(client, world), output_path),
+            SensorScenarioTester(SpawnRadar(client, world), output_path)
         ]
 
         repetitions = 10

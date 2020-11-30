@@ -93,8 +93,8 @@ class Scenario():
         actor_snapshot = np.array([
                 float(snapshot.frame - self.init_timestamp['frame0']), \
                 snapshot.timestamp.elapsed_seconds - self.init_timestamp['time0'], \
-                actor.get_velocity().x, actor.get_velocity().y, actor.get_velocity().z, \
                 actor.get_location().x, actor.get_location().y, actor.get_location().z, \
+                actor.get_velocity().x, actor.get_velocity().y, actor.get_velocity().z, \
                 actor.get_angular_velocity().x, actor.get_angular_velocity().y, actor.get_angular_velocity().z])
         return actor_snapshot
 
@@ -312,7 +312,7 @@ class CarWalkerCollision(Scenario):
 
 
 
-class TestCollisionScenario():
+class CollisionScenarioTester():
     def __init__(self, scene, output_path):
         self.scene = scene
         self.world = self.scene.world
@@ -330,9 +330,8 @@ class TestCollisionScenario():
         data_j = np.loadtxt(file_j)
 
         max_error = np.amax(np.abs(data_i-data_j))
-        #print(max_error)
 
-        return max_error < 0.2
+        return max_error < 0.01
 
     def check_simulations(self, rep_prefixes, gen_prefix):
         repetitions = len(rep_prefixes)
@@ -393,7 +392,7 @@ class TestCollisionScenario():
 
                 #os.remove(file_repetition)
 
-    def test_scenario(self, fps, fps_phys, repetitions = 1, sim_tics = 100):
+    def test_scenario(self, fps=20, fps_phys=100, repetitions = 1, sim_tics = 100):
         output_str = "Testing Determinism in %s for %3d render FPS and %3d physics FPS -> " % (self.scenario_name, fps, fps_phys)
 
         # Creating run features: prefix, settings and spectator options
@@ -448,13 +447,13 @@ def main(arg):
 
 
         test_list = [
-            #TestCollisionScenario(TwoSpawnedCars(client, world, True), output_path),
-            TestCollisionScenario(TwoCarsSlowSpeedCollision(client, world, True), output_path),
-            TestCollisionScenario(TwoCarsHighSpeedCollision(client, world, True), output_path),
-            TestCollisionScenario(CarBikeCollision(client, world, True), output_path),
-            TestCollisionScenario(CarWalkerCollision(client, world, True), output_path),
-            TestCollisionScenario(ThreeCarsSlowSpeedCollision(client, world, True), output_path),
-            TestCollisionScenario(ThreeCarsHighSpeedCollision(client, world, True), output_path),
+            CollisionScenarioTester(TwoSpawnedCars(client, world, True), output_path),
+            CollisionScenarioTester(TwoCarsSlowSpeedCollision(client, world, True), output_path),
+            CollisionScenarioTester(TwoCarsHighSpeedCollision(client, world, True), output_path),
+            CollisionScenarioTester(CarBikeCollision(client, world, True), output_path),
+            CollisionScenarioTester(CarWalkerCollision(client, world, True), output_path),
+            CollisionScenarioTester(ThreeCarsSlowSpeedCollision(client, world, True), output_path),
+            CollisionScenarioTester(ThreeCarsHighSpeedCollision(client, world, True), output_path),
         ]
 
         repetitions = 10
