@@ -96,8 +96,8 @@ class Scenario():
         actor_snapshot = np.array([
                 float(snapshot.frame - self.init_timestamp['frame0']), \
                 snapshot.timestamp.elapsed_seconds - self.init_timestamp['time0'], \
-                actor.get_velocity().x, actor.get_velocity().y, actor.get_velocity().z, \
                 actor.get_location().x, actor.get_location().y, actor.get_location().z, \
+                actor.get_velocity().x, actor.get_velocity().y, actor.get_velocity().z, \
                 actor.get_angular_velocity().x, actor.get_angular_velocity().y, actor.get_angular_velocity().z])
         return actor_snapshot
 
@@ -332,4 +332,9 @@ class TestSensorDeterminism(SyncSmokeTest):
             test_sensors.test_scenario(repetitions=5, sim_tics = 100)
         except DeterminismError as err:
             test_sensors.scene.clear_scene()
+            # Remove all the output files
+            shutil.rmtree(output_path)
             self.fail(err)
+
+        # Remove all the output files
+        shutil.rmtree(output_path)
