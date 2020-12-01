@@ -327,6 +327,9 @@ class TestSensorDeterminism(SyncSmokeTest):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
+        # Loading Town03 for test
+        self.client.load_world("Town03")
+
         try:
             test_sensors = SensorScenarioTester(SpawnAllRaycastSensors(self.client, self.world), output_path)
             test_sensors.test_scenario(repetitions=5, sim_tics = 100)

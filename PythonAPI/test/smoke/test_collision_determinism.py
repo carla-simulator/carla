@@ -403,6 +403,9 @@ class TestCollisionDeterminism(SyncSmokeTest):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
+        # Loading Town03 for test
+        self.client.load_world("Town03")
+
         try:
             test_collision = CollisionScenarioTester(scene=TwoCarsHighSpeedCollision(self.client, self.world, True), output_path=output_path)
             test_collision.test_scenario(repetitions=5, sim_tics = 100)
@@ -423,6 +426,9 @@ class TestCollisionDeterminism(SyncSmokeTest):
         output_path = os.path.join(output_path, "_collisions") + os.path.sep
         if not os.path.exists(output_path):
             os.mkdir(output_path)
+
+        # Loading Town03 for test
+        self.client.load_world("Town03")
 
         try:
             test_collision = CollisionScenarioTester(scene=ThreeCarsSlowSpeedCollision(self.client, self.world, True), output_path=output_path)
@@ -445,6 +451,9 @@ class TestCollisionDeterminism(SyncSmokeTest):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
+        # Loading Town03 for test
+        self.client.load_world("Town03")
+
         try:
             test_collision = CollisionScenarioTester(scene=CarBikeCollision(self.client, self.world, True), output_path=output_path)
             test_collision.test_scenario(repetitions=5, sim_tics = 100)
@@ -465,6 +474,9 @@ class TestCollisionDeterminism(SyncSmokeTest):
         output_path = os.path.join(output_path, "_collisions") + os.path.sep
         if not os.path.exists(output_path):
             os.mkdir(output_path)
+
+        # Loading Town03 for test
+        self.client.load_world("Town03")
 
         try:
             test_collision = CollisionScenarioTester(scene=CarWalkerCollision(self.client, self.world, True), output_path=output_path)
