@@ -50,6 +50,9 @@ The five groups are: *Coupe*, *Off-road*, *Truck*, *Urban*, and *Van*. In closer
 
 | Stiff suspension | Coupe            | Urban            | Van              | Off-road         | Truck            | Soft suspension  |
 | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- | ---------------- |
+
+
+
 <br>
 
 When moving from a soft to a stiff suspension, there are some clear tendencies in the parameterization.  
@@ -61,20 +64,20 @@ When moving from a soft to a stiff suspension, there are some clear tendencies i
 
 Vehicles with the stiffest suspension.  
 
-| Parameterization                                                                                                                                                                                                                        | Vehicles                                                                                                                                                                                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+
+| Parameterization   | Vehicles       |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `7.5`<br>`Suspension Max Drop` — `7.5`<br>`Suspension Natural Frequency` — `9.5`<br>`Suspension Damping Ratio` — `1.0`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.audi.tt`<br>`vehicle.lincoln.mkz2017`<br>`vehicle.mercedes-benz.coupe`<br>`vehicle.seat.leon`<br>`vehicle.tesla.model3`<br>                                                                                            |
-<br>
+
+
 
 ### Off-road
 
 Vehicles with a soft suspension.  
 
-| Parameterization                                                                                                                                                                                                                          | Vehicles                                                                                                                                                                                                                                  |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `15.0`<br>`Suspension Max Drop` — `15.0`<br>`Suspension Natural Frequency` — `7.0`<br>`Suspension Damping Ratio` — `0.5`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.audi.etron`<br>`vehicle.jeep.wrangler_rubicon`<br>`vehicle.nissan.patrol`<br>`vehicle.tesla.cybertruck`<br>                                                                                                                |
-
-<br>
+| Parameterization    | Vehicles     |
+| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `15.0`<br>`Suspension Max Drop` — `15.0`<br>`Suspension Natural Frequency` — `7.0`<br>`Suspension Damping Ratio` — `0.5`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.audi.etron`<br>`vehicle.jeep.wrangler_rubicon`<br>`vehicle.nissan.patrol`<br>`vehicle.tesla.cybertruck`<br>     |
 
 
 ### Truck
@@ -102,10 +105,13 @@ Vehicles with a soft suspension.
 
 Vehicles with a middle-ground suspension.  
 
-| Parameterization                                                                                                                                                                                                                        | Vehicles                                                                                                                                                                                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `9.0`<br>`Suspension Max Drop` — `9.0`<br>`Suspension Natural Frequency` — `8.0`<br>`Suspension Damping Ratio` — `0.8`<br>`Sweep Type` — `SimpleAndComplex`<br> | `vehicle.volkswagen.t2`<br>                                                                                                                                                                                                             |
-<br>
+
+
+| Parameterization    | Vehicles    |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `Suspension Force Offset` — `0.0`<br>`Suspension Max Raise` — `9.0`<br>`Suspension Max Drop` — `9.0`<br>`Suspension Natural Frequency` — `8.0`<br>`Suspension Damping Ratio` — `0.8`<br>`Sweep Type` — `SimpleAndComplex`<br> |  `vehicle.volkswagen.t2`<br>    |
+
+
 
 
 ---

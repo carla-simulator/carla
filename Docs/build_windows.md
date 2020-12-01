@@ -178,8 +178,8 @@ python3 dynamic_weather.py
 
 Now CARLA is ready to go. Here is a brief summary of the most useful `make` commands available.  
 
-| Command                                                               | Description                                                           |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Command | Description |
+| ------- | ------- |
 | `make help`                                                           | Prints all available commands.                                        |
 | `make launch`                                                         | Launches CARLA server in Editor window.                               |
 | `make PythonAPI`                                                      | Builds the CARLA client.                                              |

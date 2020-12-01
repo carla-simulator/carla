@@ -44,8 +44,9 @@ make LibCarla
 
 Two configurations:
 
-|                       | Server                | Client                |
-| --------------------- | --------------------- | --------------------- |
+
+|  | Server | Client |
+| ---------- | ---------- | ---------- |
 | **Unit tests**        | Yes                   | No                    |
 | **Requirements**      | rpclib, gtest, boost  | rpclib, boost         |
 | **std runtime**       | LLVM's `libc++`       | Default `libstdc++`   |
@@ -53,8 +54,6 @@ Two configurations:
 | **Required by**       | Carla plugin          | PythonAPI             |
 
 
-
-<br>
 
 ---
 ## CarlaUE4 and Carla plugin

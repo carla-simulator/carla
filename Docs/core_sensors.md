@@ -106,8 +106,9 @@ Take a shot of the world from their point of view. The helper class [carla.Color
 
 * __Retrieve data__ every simulation step.  
 
-| Sensor                                                                               | Output                                                                               | Overview                                                                             |
-| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+
+| Sensor                                                                                                                                                                                          | Output                                                                                                                                                                                          | Overview                                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Depth                                                                                | [carla.Image](<../python_api#carlaimage>)                                            | Renders the depth of the elements in the field of view in a gray-scale map.          |
 | RGB                                                                                  | [carla.Image](<../python_api#carlaimage>)                                            | Provides clear vision of the surroundings. Looks like a normal photo of the scene.   |
 | Semantic segmentation                                                                | [carla.Image](<../python_api#carlaimage>)                                            | Renders elements in the field of view with a specific color according to their tags. |
@@ -116,14 +117,15 @@ Take a shot of the world from their point of view. The helper class [carla.Color
 
 
 
+---
 ### Detectors
 
 Retrieve data when the object they are attached to registers a specific event.  
 
 * __Retrieve data__ when triggered.  
 
-| Sensor                                                                      | Output                                                                      | Overview                                                                    |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Sensor                                                                                                                                                                                          | Output                                                                                                                                                                                          | Overview                                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Collision                                                                   | [carla.CollisionEvent](<../python_api#carlacollisionevent>)                 | Retrieves collisions between its parent and other actors.                   |
 | Lane invasion                                                               | [carla.LaneInvasionEvent](<../python_api#carlalaneinvasionevent>)           | Registers when its parent crosses a lane marking.                           |
 | Obstacle                                                                    | [carla.ObstacleDetectionEvent](<../python_api#carlaobstacledetectionevent>) | Detects possible obstacles ahead of its parent.                             |

@@ -202,12 +202,13 @@ print(client.show_recorder_actors_blocked("recording01.log", min_time, min_dista
 ```
 
 | Parameter                                                 | Description                                               | Default                                                   |
-| --------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
+| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
 | `min_time`                                                | Minimum seconds to move \`min\_distance\`.                | 30secs.                                                   |
 | `min_distance`                                            | Minimum centimeters to move to not be considered blocked. | 10cm.                                                     |
 
-<br>
 
+
+---
 
 !!! Note
     Sometimes vehicles are stopped at traffic lights for longer than expected.  
@@ -247,52 +248,53 @@ client.replay_file("col3.log", 34, 0, 173)
 
 Some of the provided scripts in `PythonAPI/examples` facilitate the use of the recorder.
 
+
+
 * __start_recording.py__ starts the recording. The duration of the recording can be set, and actors can be spawned at the beginning of it.  
 
 | Parameter                         | Description                       |
-| --------------------------------- | --------------------------------- |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
 | `-f`                              | Filename.                         |
 | `-n`<small> (optional)</small>    | Vehicles to spawn. Default is 10. |
 | `-t`<small> (optional)</small>    | Duration of the recording.        |
-
-<br>
 
 
 
 * __start_replaying.py__ starts the playback of a recording. Starting time, duration, and actor to follow can be set.
 
+
 | Parameter                      | Description                    |
-| ------------------------------ | ------------------------------ |
+| ----------------------------- | ----------------------------- |
 | `-f`                           | Filename.                      |
 | `-s`<small> (optional)</small> | Starting time. Default is 10.  |
 | `-d`<small> (optional)</small> | Duration. Default is all.      |
 | `-c`<small> (optional)</small> | IDof the actor to follow.      |
 
-<br>
 
 
 
 * __show_recorder_file_info.py__ shows all the information in the recording file. By default, it only shows frames where an event is recorded. However, all of them can be shown.  
 
+
 | Parameter                      | Description                    |
-| ------------------------------ | ------------------------------ |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
 | `-f`                           | Filename.                      |
 | `-s`<small> (optional)</small> | Flag to show all details.      |
-
-<br>
 
 
 
 * __show_recorder_collisions.py__ shows recorded collisions between two flags of actors of types __A__ and __B__. `-t = vv` would show all collisions between vehicles. 
+
 
 | Parameter                                                                                                                                         | Description                                                                                                                                       |
 | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `-f`                                                                                                                                              | Filename.                                                                                                                                         |
 | `-t`                                                                                                                                              | Flags of the actors involved. <br>`h` = hero <br> `v` = vehicle <br> `w` = walker <br> `t` = traffic light <br>`o` = other <br>`a` = any |
 
-<br> 
+
 
 * __show_recorder_actors_blocked.py__ lists vehicles considered blocked. Actors are considered blocked when not moving a minimum distance in a certain time.  
+
 
 | Parameter                                          | Description                                        |
 | -------------------------------------------------- | -------------------------------------------------- |
@@ -300,7 +302,7 @@ Some of the provided scripts in `PythonAPI/examples` facilitate the use of the r
 | `-t`<small> (optional)</small>                     | Time to move `-d` before being considered blocked. |
 | `-d`<small> (optional)</small>                     | Distance to move to not be considered blocked.     |
 
-<br>
+
 
 
 
