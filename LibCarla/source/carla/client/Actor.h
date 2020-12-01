@@ -26,6 +26,8 @@ namespace client {
       : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(init.GetDisplayId()),
         Super(std::move(init)) {}
 
+    using ActorState::GetBoundingBox;
+
     virtual ~Actor() = default;
 
     /// Return the current location of the actor.

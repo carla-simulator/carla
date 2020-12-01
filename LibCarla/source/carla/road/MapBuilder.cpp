@@ -194,10 +194,10 @@ namespace road {
       lc = RoadInfoMarkRecord::LaneChange::Increase;
     } else if (lane_change == "decrease") {
       lc = RoadInfoMarkRecord::LaneChange::Decrease;
-    } else if (lane_change == "both") {
-      lc = RoadInfoMarkRecord::LaneChange::Both;
-    } else {
+    } else if (lane_change == "none") {
       lc = RoadInfoMarkRecord::LaneChange::None;
+    } else {
+      lc = RoadInfoMarkRecord::LaneChange::Both;
     }
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoMarkRecord>(s, road_mark_id, type,
         weight, color,

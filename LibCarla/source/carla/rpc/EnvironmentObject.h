@@ -31,11 +31,12 @@ namespace rpc {
       : transform(EnvironmentObject.Transform),
         bounding_box(EnvironmentObject.BoundingBox),
         id(EnvironmentObject.Id),
-        name(TCHAR_TO_UTF8(*EnvironmentObject.Name)) {}
+        name(TCHAR_TO_UTF8(*EnvironmentObject.Name)),
+        type(EnvironmentObject.ObjectLabel) {}
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    MSGPACK_DEFINE_ARRAY(transform, bounding_box, id, name);
+    MSGPACK_DEFINE_ARRAY(transform, bounding_box, id, name, type);
   };
 
 } // namespace rpc

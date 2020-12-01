@@ -1081,6 +1081,8 @@ def game_loop(args):
         display = pygame.display.set_mode(
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
+        display.fill((0,0,0))
+        pygame.display.flip()
 
         hud = HUD(args.width, args.height)
         world = World(client.get_world(), hud, args)

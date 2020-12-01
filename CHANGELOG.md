@@ -18,7 +18,9 @@
   * Fixed the lack of determinism on the output of raycast sensors
   * Fixed bug in the actor's id returned by the semantic lidar
   * Fixed dependency of library **Xerces-c** on package
+  * Fixed minor typo in the simulation data section of the documentation
   * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
+  * Added `horizontal_fov` parameter to lidar sensor to allow for restriction of its field of view
 
 ## CARLA 0.9.10
 
