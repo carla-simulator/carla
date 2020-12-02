@@ -91,6 +91,9 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
     return;
   }
 
+  // FlushRenderingCommands();
+  // Sensor.CaptureRenderTarget->UpdateResourceImmediate(true);
+
   // Enqueue a command in the render-thread that will write the image buffer to
   // the data stream. The stream is created in the capture thus executed in the
   // game-thread.
@@ -107,7 +110,6 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
             Buffer,
             carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
             InRHICmdList);
-
         if(Buffer.data())
         {
           SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);

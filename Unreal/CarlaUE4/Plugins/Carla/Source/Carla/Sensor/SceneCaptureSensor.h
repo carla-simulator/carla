@@ -9,6 +9,7 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
 
+#include "Runtime/RenderCore/Public/RenderCommandFence.h"
 #include "SceneCaptureSensor.generated.h"
 
 class UDrawFrustumComponent;
@@ -42,7 +43,7 @@ public:
   ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer);
 
   /// @TODO: delete once the new tick pipeline is done
-  const FTransform &GetSyncActorTransform() const override;
+  // const FTransform &GetSyncActorTransform() const override;
 
   void Set(const FActorDescription &ActorDescription) override;
 
@@ -315,6 +316,8 @@ protected:
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
 
-  bool ReadyToCapture = false;
+  FRenderCommandFence RenderFence;
+
+  bool ReadyToCapture = true;
 
 };
