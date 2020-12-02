@@ -558,13 +558,17 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
     CarSimMovementComponent->DisableVehicle = false;
     CarSimMovementComponent->VsConfigFile = SimfilePath;
     CarSimMovementComponent->Activate();
+    // super hack to work arround CarSim component limitations to specify simfiles
+    CarSimMovementComponent->EndPlay(EEndPlayReason::Type::RemovedFromWorld);
+    CarSimMovementComponent->BeginPlay();
+
     CarSimMovementComponent->ResetVsVehicle(false);
     // set carsim position to actor's
     CarSimMovementComponent->SyncVsVehicleLocOri();
     CarSimMovementComponent->SetComponentTickEnabled(true);
     // set kinematic mode for root component and bones
     GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
-    auto * Bone = GetMesh()->GetBodyInstance("Vehicle_Base");
+    auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
     if (Bone)
     {
       Bone->SetInstanceSimulatePhysics(false);
@@ -586,7 +590,7 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
     CarSimMovementComponent->Deactivate();
     CarSimMovementComponent->VsConfigFile = "";
     GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
-    auto * Bone = GetMesh()->GetBodyInstance("Vehicle_Base");
+    auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
     if (Bone)
     {
       Bone->SetInstanceSimulatePhysics(true);
@@ -598,6 +602,7 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
     OnActorHit.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
     GetMesh()->OnComponentBeginOverlap.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
     GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+    GetMesh()->SetCollisionProfileName("Vehicle");
   }
   bCarSimEnabled = bEnabled;
 }
