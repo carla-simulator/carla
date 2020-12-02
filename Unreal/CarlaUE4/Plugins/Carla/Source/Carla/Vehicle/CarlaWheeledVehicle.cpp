@@ -533,7 +533,7 @@ void ACarlaWheeledVehicle::SwitchToUE4Physics()
   SetCarSimEnabled(false);
   FTimerHandle TimerHandler;
   GetWorld()->GetTimerManager().
-      SetTimer(TimerHandler, this, &ACarlaWheeledVehicle::RevertToCarSimPhysics, 1.0);
+      SetTimer(TimerHandler, this, &ACarlaWheeledVehicle::RevertToCarSimPhysics, 0.1);
   carla::log_warning("There was a hit");
 }
 
@@ -576,8 +576,9 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
   }
   else
   {
-    auto Velocity = GetVelocity();
-    GetMesh()->SetPhysicsLinearVelocity(Velocity, false, "Vehicle_Base");
+    // auto Velocity = GetVelocity();
+    // GetMesh()->SetPhysicsLinearVelocity(Velocity, false, "Vehicle_Base");
+    GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
     GetVehicleMovementComponent()->SetComponentTickEnabled(true);
     GetVehicleMovementComponent()->Activate();
     CarSimMovementComponent->DisableVehicle = true;
