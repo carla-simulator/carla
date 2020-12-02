@@ -110,9 +110,10 @@ void FCarlaEngine::NotifyEndEpisode()
 void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 {
   if (TickType == ELevelTick::LEVELTICK_All)
-  {  
+  {
     // update frame counter
     UpdateFrameCounter();
+    // UE_LOG(LogCarla, Warning, TEXT("-- UpdateFrameCounter() -> %d ---------------"), GetFrameCounter());
 
     // process RPC commands
     do
@@ -131,6 +132,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   // tick the recorder/replayer system
+  // UE_LOG(LogCarla, Warning, TEXT("CarlaEngine - PostPhysTick - frame counter: %d"), FCarlaEngine::GetFrameCounter());
   if (GetCurrentEpisode())
   {
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();

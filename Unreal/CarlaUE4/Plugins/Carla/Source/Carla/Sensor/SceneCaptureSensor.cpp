@@ -72,9 +72,9 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   ++SCENE_CAPTURE_COUNTER;
 }
 
-const FTransform &ASceneCaptureSensor::GetSyncActorTransform() const {
-  return OldTransform;
-}
+// const FTransform &ASceneCaptureSensor::GetSyncActorTransform() const {
+//   return OldTransform;
+// }
 
 void ASceneCaptureSensor::Set(const FActorDescription &Description)
 {
@@ -489,18 +489,19 @@ void ASceneCaptureSensor::BeginPlay()
   SceneCaptureSensor_local_ns::ConfigureShowFlags(CaptureComponent2D->ShowFlags,
       bEnablePostProcessingEffects);
 
-  // This ensures the camera is always spawning the rain drops in case the
-  // weather was previously set to has rain
+  // This ensures the camera is always spawning the raindrops in case the
+  // weather was previously set to have rain.
   GetEpisode().GetWeather()->NotifyWeather();
 
   Super::BeginPlay();
 
-  SendPixelsDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
+  SendPixelsDelegate = FWorldDelegates::OnWorldPreActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
+  // SendPixelsDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
 }
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  // Add the view information every tick. Its only used for one tick and then
+  // Add the view information every tick. It's only used for one tick and then
   // removed by the streamer.
   IStreamingManager::Get().AddViewInformation(
       CaptureComponent2D->GetComponentLocation(),
@@ -510,7 +511,7 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
   ReadyToCapture = true;
 
   // TODO: delete once the new tick pipeline is done
-  OldTransform = GetActorTransform();
+  // OldTransform = GetActorTransform();
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -518,7 +519,8 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
 
-  FWorldDelegates::OnWorldPostActorTick.Remove(SendPixelsDelegate);
+  FWorldDelegates::OnWorldPreActorTick.Remove(SendPixelsDelegate);
+  // FWorldDelegates::OnWorldPostActorTick.Remove(SendPixelsDelegate);
 }
 
 // =============================================================================
