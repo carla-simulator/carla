@@ -257,6 +257,26 @@ public:
 
 private:
 
+  UFUNCTION()
+  void OnCarSimHit(AActor *Actor,
+      AActor *OtherActor,
+      FVector NormalImpulse,
+      const FHitResult &Hit);
+
+  UFUNCTION()
+  void OnCarSimOverlap(UPrimitiveComponent* OverlappedComponent,
+      AActor* OtherActor,
+      UPrimitiveComponent* OtherComp,
+      int32 OtherBodyIndex,
+      bool bFromSweep,
+      const FHitResult & SweepResult);
+
+  UFUNCTION()
+  void SwitchToUE4Physics();
+
+  UFUNCTION()
+  void RevertToCarSimPhysics();
+
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
   bool bCarSimEnabled = false;
 
