@@ -14,8 +14,8 @@ AProceduralBuilding::AProceduralBuilding()
   CornerVisibility.Init(true, 4);
   UseWallMesh.Init(false, 4);
 
-  UStaticMeshComponent* StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
-  RootComponent = StaticMeshComponent;
+  RootSMComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
+  RootComponent = RootSMComp;
   RootComponent->SetMobility(EComponentMobility::Static);
 }
 
