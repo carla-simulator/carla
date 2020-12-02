@@ -5,7 +5,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 #from . import SyncSmokeTest
-from . import SyncSmokeTest
+from . import SmokeTest
 
 import carla
 import time
@@ -393,8 +393,28 @@ class CollisionScenarioTester():
             raise DeterminismError("CollisionTransfError: Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet[0], repetitions))
 
 
-class TestCollisionDeterminism(SyncSmokeTest):
-    def test_two_cars(self):
+class TestCollisionDeterminism(SmokeTest):
+    def setUp(self):
+        print("Hola")
+        super(TestCollisionDeterminism, self).setUp()
+        self.world = self.client.get_world()
+        self.settings = self.world.get_settings()
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
+        self.world.apply_settings(settings)
+        self.world.tick()
+
+    def tearDown(self):
+        self.settings.synchronous_mode = False
+        self.world.apply_settings(self.settings)
+        self.world.tick()
+        self.settings = None
+        self.world = None
+        super(TestCollisionDeterminism, self).tearDown()
+
+    def xtest_two_cars(self):
         print("TestCollisionDeterminism.test_two_cars")
 
         # Setting output temporal folder
@@ -418,7 +438,7 @@ class TestCollisionDeterminism(SyncSmokeTest):
         # Remove all the output files
         shutil.rmtree(output_path)
 
-    def test_three_cars(self):
+    def xtest_three_cars(self):
         print("TestCollisionDeterminism.test_three_cars")
 
         # Setting output temporal folder
@@ -442,7 +462,7 @@ class TestCollisionDeterminism(SyncSmokeTest):
         # Remove all the output files
         shutil.rmtree(output_path)
 
-    def test_car_bike(self):
+    def xtest_car_bike(self):
         print("TestCollisionDeterminism.test_car_bike")
 
         # Setting output temporal folder
