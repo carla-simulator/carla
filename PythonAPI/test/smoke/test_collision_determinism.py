@@ -65,7 +65,7 @@ class Scenario():
 
     def wait(self, frames=100):
         for _i in range(0, frames):
-            self.world.tick()
+            self.world.tick(60.0)
             if self.active:
                 for _s in self.sensor_list:
                     self.sensor_queue.get(True, 1.0)
@@ -130,7 +130,7 @@ class Scenario():
 
         t_start = time.perf_counter()
         for _i in range(0, tics):
-            self.world.tick()
+            self.world.tick(60.0)
             self.sensor_syncronization()
             self.save_snapshots()
         t_end = time.perf_counter()
@@ -395,7 +395,6 @@ class CollisionScenarioTester():
 
 class TestCollisionDeterminism(SmokeTest):
     def setUp(self):
-        print("Hola")
         super(TestCollisionDeterminism, self).setUp()
         self.world = self.client.get_world()
         self.settings = self.world.get_settings()
@@ -404,17 +403,17 @@ class TestCollisionDeterminism(SmokeTest):
             synchronous_mode=True,
             fixed_delta_seconds=0.05)
         self.world.apply_settings(settings)
-        self.world.tick()
+        self.world.tick(60.0)
 
     def tearDown(self):
         self.settings.synchronous_mode = False
         self.world.apply_settings(self.settings)
-        self.world.tick()
+        self.world.tick(60.0)
         self.settings = None
         self.world = None
         super(TestCollisionDeterminism, self).tearDown()
 
-    def xtest_two_cars(self):
+    def test_two_cars(self):
         print("TestCollisionDeterminism.test_two_cars")
 
         # Setting output temporal folder
@@ -438,7 +437,7 @@ class TestCollisionDeterminism(SmokeTest):
         # Remove all the output files
         shutil.rmtree(output_path)
 
-    def xtest_three_cars(self):
+    def test_three_cars(self):
         print("TestCollisionDeterminism.test_three_cars")
 
         # Setting output temporal folder
@@ -462,7 +461,7 @@ class TestCollisionDeterminism(SmokeTest):
         # Remove all the output files
         shutil.rmtree(output_path)
 
-    def xtest_car_bike(self):
+    def test_car_bike(self):
         print("TestCollisionDeterminism.test_car_bike")
 
         # Setting output temporal folder
@@ -470,9 +469,11 @@ class TestCollisionDeterminism(SmokeTest):
         output_path = os.path.join(output_path, "_collisions") + os.path.sep
         if not os.path.exists(output_path):
             os.mkdir(output_path)
+        print("test_car_bike: folder created")
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        print("test_car_bike: load town")
 
         try:
             test_collision = CollisionScenarioTester(scene=CarBikeCollision(self.client, self.world, True), output_path=output_path)
@@ -482,9 +483,11 @@ class TestCollisionDeterminism(SmokeTest):
             # Remove all the output files
             shutil.rmtree(output_path)
             self.fail(err)
+        print("test_car_bike: test finished")
 
         # Remove all the output files
         shutil.rmtree(output_path)
+        print("test_car_bike: folder removed")
 
     def test_car_walker(self):
         print("TestCollisionDeterminism.test_car_walker")
