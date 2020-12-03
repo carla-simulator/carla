@@ -1,4 +1,5 @@
 ## Latest
+  * Improved the documentation for use with pandoc tool by converting html tags to their markdown equivalent    
   * Added `load_map_layer` and `unload_map_layer` to control map layers on new maps that support subleveling
   * Added `get_environment_objects`call to get all the placed objects in the level
   * Added `enable_environment_objects`call to enable/disable objects of the level
