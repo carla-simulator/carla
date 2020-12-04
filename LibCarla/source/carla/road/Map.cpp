@@ -368,9 +368,15 @@ namespace road {
       } else {
         distance_to_signal = waypoint.s - signal->GetDistance();
       }
-      Waypoint signal_waypoint = GetNext(waypoint, distance_to_signal).front();
-      SignalSearchData signal_data{signal, signal_waypoint, distance_to_signal};
-      result.emplace_back(signal_data);
+      if (distance_to_signal == 0) {
+        result.emplace_back(SignalSearchData
+            {signal, waypoint,
+            distance_to_signal});
+      } else {
+        result.emplace_back(SignalSearchData
+            {signal, GetNext(waypoint, distance_to_signal).front(),
+            distance_to_signal});
+      }
     }
     // If we run out of remaining_lane_length we have to go to the successors.
     for (auto &successor : GetSuccessors(waypoint)) {

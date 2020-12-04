@@ -13,6 +13,7 @@
 #include "Carla/Util/RayTracer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
 
@@ -553,6 +554,12 @@ void FCarlaServer::FPimpl::BindActions()
     if (!ActorView.IsValid())
     {
       RESPOND_ERROR("unable to set walker state: actor not found");
+    }
+
+    auto * Walker = Cast<AWalkerBase>(ActorView.GetActor());
+    if (Walker && !Walker->bAlive)
+    {
+      RESPOND_ERROR("unable to set actor state: walker is dead");
     }
 
     // apply walker transform
