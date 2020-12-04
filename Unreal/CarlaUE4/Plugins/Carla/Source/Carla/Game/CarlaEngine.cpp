@@ -112,6 +112,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   if (TickType == ELevelTick::LEVELTICK_All)
   {
     // update frame counter
+    UE_LOG(LogCarla, Warning, TEXT("FCarlaEngine::OnPreTick() - UpdateFrameCounter"));
     UpdateFrameCounter();
     // UE_LOG(LogCarla, Warning, TEXT("-- UpdateFrameCounter() -> %d ---------------"), GetFrameCounter());
 

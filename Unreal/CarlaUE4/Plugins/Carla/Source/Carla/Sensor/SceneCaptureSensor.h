@@ -318,6 +318,6 @@ protected:
 
   FRenderCommandFence RenderFence;
 
-  bool ReadyToCapture = true;
+  bool ReadyToCapture = false;
 
 };
