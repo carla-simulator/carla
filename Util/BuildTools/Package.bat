@@ -23,6 +23,7 @@ set DO_COPY_FILES=true
 set DO_TARBALL=true
 set DO_CLEAN=false
 set PACKAGES=Carla
+set USE_CARSIM=false
 
 
 :arg-parse
@@ -48,6 +49,10 @@ if not "%1"=="" (
         set DO_COPY_FILES=false
         set PACKAGES=%~2
         shift
+    )
+
+    if "%1"=="--carsim" (
+        set USE_CARSIM=true
     )
 
     if "%1"=="-h" (
@@ -93,6 +98,13 @@ rem -- Create Carla package ----------------------------------------------------
 rem ============================================================================
 
 if %DO_PACKAGE%==true (
+
+    if %USE_CARSIM% == true (
+        echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    ) else (
+        echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    )
+
     if not exist "!BUILD_FOLDER!" mkdir "!BUILD_FOLDER!"
 
     call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
