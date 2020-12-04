@@ -19,7 +19,9 @@
 #include "CoreMinimal.h"
 
 //-----CARSIM--------------------------------
+#ifdef WITH_CARSIM
 #include "CarSimMovementComponent.h"
+#endif
 //-------------------------------------------
 
 #include "CarlaWheeledVehicle.generated.h"
@@ -241,7 +243,7 @@ private:
   FVehicleControl LastAppliedControl;
 
 
-  //-----CARSIM--------------------------------
+//-----CARSIM--------------------------------
 public:
 
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
@@ -250,7 +252,9 @@ public:
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
   void UseCarSimRoad(bool bEnabled);
 
+  #ifdef WITH_CARSIM
   virtual FVector GetVelocity() const override;
+  #endif
 
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintPure)
   bool IsCarSimEnabled() const;
@@ -281,6 +285,11 @@ private:
   bool bCarSimEnabled = false;
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  UMovementComponent * ExternalMovementComponent;
+
+  #ifdef WITH_CARSIM
+  // Casted version of ExternalMovementComponent
   UCarSimMovementComponent * CarSimMovementComponent;
+  #endif
   //-------------------------------------------
 };

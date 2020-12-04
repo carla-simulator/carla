@@ -33,8 +33,11 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
-  CarSimMovementComponent = CreateDefaultSubobject<UCarSimMovementComponent>(TEXT("CarSimMovement"));
+  #ifdef WITH_CARSIM
+  ExternalMovementComponent = CreateDefaultSubobject<UCarSimMovementComponent>(TEXT("CarSimMovement"));
+  CarSimMovementComponent = Cast<UCarSimMovementComponent>(ExternalMovementComponent);
   CarSimMovementComponent->DisableVehicle = true;
+  #endif
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }
@@ -114,7 +117,9 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   Vehicle4W->WheelSetups = NewWheelSetups;
 
+  #ifdef WITH_CARSIM
   SetCarSimEnabled(false);
+  #endif
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -144,14 +149,13 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
 
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
+  #ifdef WITH_CARSIM
   if (bCarSimEnabled)
   {
     return CarSimMovementComponent->GetForwardSpeed();
   }
-  else
-  {
-    return GetVehicleMovementComponent()->GetForwardSpeed();
-  }
+  #endif
+  return GetVehicleMovementComponent()->GetForwardSpeed();
 }
 
 FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
@@ -161,14 +165,13 @@ FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
 {
+  #ifdef WITH_CARSIM
   if (bCarSimEnabled)
   {
     return CarSimMovementComponent->GetCurrentGear();
   }
-  else
-  {
-    return GetVehicleMovementComponent()->GetCurrentGear();
-  }
+  #endif
+  return GetVehicleMovementComponent()->GetCurrentGear();
 }
 
 FTransform ACarlaWheeledVehicle::GetVehicleBoundingBoxTransform() const
@@ -196,6 +199,7 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
+  #ifdef WITH_CARSIM
   if (bCarSimEnabled)
   {
     //-----CARSIM--------------------------------
@@ -224,6 +228,7 @@ void ACarlaWheeledVehicle::FlushVehicleControl()
     //-----------------------------------------
   }
   else
+  #endif
   {
     auto *MovementComponent = GetVehicleMovementComponent();
     MovementComponent->SetThrottleInput(InputControl.Control.Throttle);
@@ -539,12 +544,15 @@ void ACarlaWheeledVehicle::SwitchToUE4Physics()
 
 void ACarlaWheeledVehicle::RevertToCarSimPhysics()
 {
+  #ifdef WITH_CARSIM
   SetCarSimEnabled(true, CarSimMovementComponent->VsConfigFile);
   carla::log_warning("Collision: giving control to carsim");
+  #endif
 }
 
 void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
 {
+  #ifdef WITH_CARSIM
   if (bEnabled == bCarSimEnabled)
   {
     return;
@@ -605,16 +613,20 @@ void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
     GetMesh()->SetCollisionProfileName("Vehicle");
   }
   bCarSimEnabled = bEnabled;
+  #endif
 }
 
 void ACarlaWheeledVehicle::UseCarSimRoad(bool bEnabled)
 {
+  #ifdef WITH_CARSIM
   carla::log_warning("Enabling CarSim Road", bEnabled);
   CarSimMovementComponent->UseVehicleSimRoad = bEnabled;
   CarSimMovementComponent->ResetVsVehicle(false);
   CarSimMovementComponent->SyncVsVehicleLocOri();
+  #endif
 }
 
+#ifdef WITH_CARSIM
 FVector ACarlaWheeledVehicle::GetVelocity() const
 {
   if (bCarSimEnabled)
@@ -626,6 +638,7 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
     return Super::GetVelocity();
   }
 }
+#endif
 
 bool ACarlaWheeledVehicle::IsCarSimEnabled() const
 {

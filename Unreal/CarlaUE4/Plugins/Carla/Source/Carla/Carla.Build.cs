@@ -6,6 +6,7 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
+  bool UsingCarSim = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -18,6 +19,21 @@ public class Carla : ModuleRules
     if (IsWindows(Target))
     {
       bEnableExceptions = true;
+    }
+
+    // Read config about carsim
+    string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
+    string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
+    string CarSimConfigFile = Path.Combine(ConfigDir, "CarSimConfig.ini");
+    string[] text = System.IO.File.ReadAllLines(CarSimConfigFile);
+    foreach (string line in text)
+    {
+      Console.WriteLine(line);
+      if (line == "CarSim ON")
+      {
+        UsingCarSim = true;
+        PublicDefinitions.Add("WITH_CARSIM");
+      }
     }
 
     PublicIncludePaths.AddRange(
@@ -42,13 +58,10 @@ public class Carla : ModuleRules
         // ... add other public dependencies that you statically link with here ...
       }
       );
-    PublicDependencyModuleNames.AddRange(
-      new string[]
-      {
-        "CarSim"
-        // ... add other public dependencies that you statically link with here ...
-      }
-      );
+    if (UsingCarSim)
+    {
+      PublicDependencyModuleNames.AddRange(new string[] { "CarSim" });
+    }
 
 	 if (Target.Type == TargetType.Editor)
 	 {
@@ -75,14 +88,12 @@ public class Carla : ModuleRules
         // ... add private dependencies that you statically link with here ...
       }
       );
-    PrivateDependencyModuleNames.AddRange(
-      new string[]
-      {
-        "CarSim"
-        // ... add private dependencies that you statically link with here ...
-      }
-      );
-    PrivateIncludePathModuleNames.AddRange(new string[] { "CarSim" });
+    if (UsingCarSim)
+    {
+      PrivateDependencyModuleNames.AddRange(new string[] { "CarSim" });
+      PrivateIncludePathModuleNames.AddRange(new string[] { "CarSim" });
+    }
+
 
     DynamicallyLoadedModuleNames.AddRange(
       new string[]
