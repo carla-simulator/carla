@@ -28,19 +28,25 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
 void ASceneCaptureCamera::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
+  UE_LOG(LogCarla, Warning, TEXT("ASceneCaptureCamera::Tick() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
   // FlushRenderingCommands(true);
-  // UE_LOG(LogCarla, Warning, TEXT("FlushRenderingCommands()"));
   // FPixelReader::SendPixelsInRenderThread(*this);
   // RenderFence.BeginFence();
   // UE_LOG(LogCarla, Warning, TEXT("RenderFence.BeginFence()"));
 }
 
+void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+{
+  Super::PostPhysTick(World, TickType, DeltaTime);
+  UE_LOG(LogCarla, Warning, TEXT("ASceneCaptureCamera::PostPhysTick() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
+}
+
 void ASceneCaptureCamera::SendPixels(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
+
+  UE_LOG(LogCarla, Warning, TEXT("ASceneCaptureCamera - ReadyToCapture: %d"), ReadyToCapture);
   if(ReadyToCapture)
   {
-    UE_LOG(LogCarla, Warning, TEXT("FlushRenderingCommands()"));
-    FlushRenderingCommands(true);
 
     // UE_LOG(LogCarla, Warning, TEXT("RenderFence.Wait() (waiting...)"));
     // RenderFence.Wait();
@@ -51,6 +57,10 @@ void ASceneCaptureCamera::SendPixels(UWorld *World, ELevelTick TickType, float D
 
     FPixelReader::SendPixelsInRenderThread(*this);
     // UE_LOG(LogCarla, Warning, TEXT("Pixels sended!"));
+
+    // UE_LOG(LogCarla, Warning, TEXT("FlushRenderingCommands()"));
+    // FlushRenderingCommands(true);
+
     ReadyToCapture = false;
   }
 }

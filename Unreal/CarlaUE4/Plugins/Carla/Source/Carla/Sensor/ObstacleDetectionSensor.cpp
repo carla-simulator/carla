@@ -52,6 +52,7 @@ void AObstacleDetectionSensor::Set(const FActorDescription &Description)
 
 void AObstacleDetectionSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  Super::PostPhysTick(World, TickType, DeltaTime);
   const FVector &Start = GetActorLocation();
   const FVector &End = Start + (GetActorForwardVector() * Distance);
   UWorld* CurrentWorld = GetWorld();

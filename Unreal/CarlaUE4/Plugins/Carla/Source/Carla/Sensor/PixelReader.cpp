@@ -63,8 +63,8 @@ static void WritePixelsToBuffer_Vulkan(
       FIntRect(0, 0, Rect.X, Rect.Y),
       gPixels,
       FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
   Buffer.copy_from(Offset, gPixels);
+  UE_LOG(LogCarla, Warning, TEXT("After - ReadSurfaceData() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
 }
 
 // =============================================================================
@@ -130,6 +130,7 @@ void FPixelReader::WritePixelsToBuffer(
     FRHICommandListImmediate &InRHICmdList
     )
 {
+  UE_LOG(LogCarla, Warning, TEXT("WritePixelsToBuffer() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
   check(IsInRenderingThread());
 
   if (IsVulkanPlatform(GMaxRHIShaderPlatform) || IsD3DPlatform(GMaxRHIShaderPlatform, false))
@@ -143,6 +144,7 @@ void FPixelReader::WritePixelsToBuffer(
   {
     return;
   }
+
   FRHITexture2D *Texture = RenderTargetResource->GetRenderTargetTexture();
   checkf(Texture != nullptr, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
 

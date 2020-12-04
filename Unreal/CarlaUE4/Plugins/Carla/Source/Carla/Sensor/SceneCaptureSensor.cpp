@@ -501,6 +501,7 @@ void ASceneCaptureSensor::BeginPlay()
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  Super::PostPhysTick(World, TickType, DeltaTime);
   // Add the view information every tick. It's only used for one tick and then
   // removed by the streamer.
   IStreamingManager::Get().AddViewInformation(
@@ -509,6 +510,7 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
   ReadyToCapture = true;
+  UE_LOG(LogCarla, Warning, TEXT("ASceneCaptureSensor - ReadyToCapture: %d"), ReadyToCapture);
 
   // TODO: delete once the new tick pipeline is done
   // OldTransform = GetActorTransform();

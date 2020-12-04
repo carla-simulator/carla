@@ -26,6 +26,8 @@ public:
 
   virtual void Tick(const float DeltaTime);
 
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime);
+
 protected:
 
   void SendPixels(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
