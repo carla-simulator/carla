@@ -15,8 +15,9 @@ DO_TARBALL=true
 DO_CLEAN_INTERMEDIATE=false
 PROPS_MAP_NAME=PropsMap
 PACKAGE_CONFIG=Shipping
+USE_CARSIM=false
 
-OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,packages:,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -34,6 +35,9 @@ while [[ $# -gt 0 ]]; do
     --packages )
       PACKAGES="$2"
       shift 2 ;;
+    --carsim )
+      USE_CARSIM=true;
+      shift ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -86,6 +90,12 @@ log "Packaging version '${REPOSITORY_TAG}' (${PACKAGE_CONFIG})."
 if ${DO_CARLA_RELEASE} ; then
 
   pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
+
+  if [ ${USE_CARSIM} ]; then
+    echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
+  else
+    echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
+  fi
 
   log "Cooking CARLA project."
 
