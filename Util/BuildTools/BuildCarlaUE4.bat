@@ -17,6 +17,7 @@ rem ============================================================================
 set BUILD_UE4_EDITOR=false
 set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
+set USE_CARSIM=false
 
 :arg-parse
 echo %1
@@ -29,6 +30,9 @@ if not "%1"=="" (
     )
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
+    )
+    if "%1"=="--carsim" (
+        set USE_CARSIM=true
     )
     if "%1"=="-h" (
         goto help
@@ -100,6 +104,12 @@ rem Build Carla Editor
 rem
 if %BUILD_UE4_EDITOR% == true (
     echo %FILE_N% Building Unreal Editor...
+
+    if %USE_CARSIM% == true (
+        echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    ) else (
+        echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    )
 
     call "%UE4_ROOT%Engine\Build\BatchFiles\Build.bat"^
         CarlaUE4Editor^
