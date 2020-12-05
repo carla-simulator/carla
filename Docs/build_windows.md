@@ -4,7 +4,7 @@
 *   [__Requirements__](#requirements)  
 	*   [System specifics](#system-specifics)  
 *   [__Necessary software__](#necessary-software)  
-	*   [Minor installations (CMake, git, make, Python3 x64)](#minor-installations)  
+	*   [Minor installations (CMake, git, Python3 x64)](#minor-installations)  
 	*   [Visual Studio 2017](#visual-studio-2017)  
 	*   [Unreal Engine (4.24)](#unreal-engine)  
 *   [__CARLA build__](#carla-build)  
@@ -30,9 +30,8 @@ To execute the <code>make</code> commands below, you <b>must</b> use the Visual 
 # Make sure to meet the minimum requirements
 
 # Necessary software: 
-#   CMake
+#   CMake and Nmake ( Built into Visual Studio 2017, no futher action is required)
 #   Git
-#   Make
 #   Python3 x64
 #   Unreal Engine 4.24
 #   Visual Studio 2017 with Windows 8.1 SDK and x64 Visual C++ Toolset
@@ -55,7 +54,7 @@ python3 spawn_npc.py
 cd PythonAPI/examples
 python3 dynamic_weather.py 
 # The PythonAPI will be built based on the installed Python version
-# The docs will use Python3, as support for  Python2 was provided until 0.9.10 (not included)
+# The docs will use Python3, as support for Python2 was provided until 0.9.10 (not included)
 
 ```
 </details>
@@ -74,9 +73,8 @@ python3 dynamic_weather.py
 ## Necessary software
 ### Minor installations
 
-* [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files.  
+* [__CMake_and Nmake_] Built into Visual Studio 2017. Generates standard build files from simple configuration files.  
 * [__Git__](https://git-scm.com/downloads) is a version control system to manage CARLA repositories.  
-* [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables.  
 * [__Python3 x64__](https://www.python.org/downloads/) is the main script language in CARLA. Having a x32 version installed may cause conflict, so it is highly advisable to have it uninstalled.  
 
 !!! Important
