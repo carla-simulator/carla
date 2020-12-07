@@ -91,7 +91,9 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
     return;
   }
 
-  UE_LOG(LogCarla, Warning, TEXT("SendPixelsInRenderThread() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
+  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false
+  Sensor.GetCaptureComponent2D()->CaptureScene();
+
   // Enqueue a command in the render-thread that will write the image buffer to
   // the data stream. The stream is created in the capture thus executed in the
   // game-thread.
@@ -99,7 +101,6 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
   (
     [&Sensor, Stream=Sensor.GetDataStream(Sensor)](auto &InRHICmdList) mutable
     {
-      UE_LOG(LogCarla, Warning, TEXT("ENQUEUE_RENDER_COMMAND() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())
       {
@@ -112,16 +113,12 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
         if(Buffer.data())
         {
           SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-          UE_LOG(LogCarla, Warning, TEXT("ENQUEUE_RENDER_COMMAND - Send"));
           Stream.Send(Sensor, std::move(Buffer));
         }
       }
     }
   );
 
-  UE_LOG(LogCarla, Warning, TEXT("Before - FlushRenderingCommands() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
+  // Blocks until the render thread has finished all it's tasks
   FlushRenderingCommands();
-  // Sensor.CaptureRenderTarget->UpdateResourceImmediate(true);
-  UE_LOG(LogCarla, Warning, TEXT("FlushRenderingCommands() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
-
 }

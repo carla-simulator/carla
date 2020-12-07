@@ -27,11 +27,6 @@ void ASensor::BeginPlay()
       this, &ASensor::PostPhysTick);
 }
 
-const FTransform &ASensor::GetSyncActorTransform() const
-{
-  return GetActorTransform();
-}
-
 void ASensor::Set(const FActorDescription &Description)
 {
   // set the tick interval of the sensor

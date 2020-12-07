@@ -180,7 +180,6 @@ float AInertialMeasurementUnit::ComputeCompass()
 
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::PostPhysTick(World, TickType, DeltaTime);
   // UE_LOG(LogCarla, Warning, TEXT("IMU         - PostPhysTick - frame counter: %d"), FCarlaEngine::GetFrameCounter());
   auto Stream = GetDataStream(*this);
   Stream.Send(

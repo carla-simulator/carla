@@ -24,12 +24,8 @@ public:
 
   ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
 
-  virtual void Tick(const float DeltaTime);
-
-  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime);
-
 protected:
 
-  void SendPixels(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
+  void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
 };
