@@ -52,7 +52,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2"'
-                                sh 'make CarlaUE4Editor'
+                                sh 'make CarlaUE4Editor ARGS="--carsim"'
                                 sh 'make examples'
                             }
                             post
@@ -90,8 +90,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2"'
-                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
+                                sh 'make package ARGS="--python-version=3.7,2 --carsim'
+                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7,2 --carsim'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
