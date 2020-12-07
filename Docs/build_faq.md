@@ -12,80 +12,107 @@ CARLA forum</a>
 ---
 ## System requirements
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Expected disk space to build CARLA.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
-It is advised to have at least 30/50GB. Building CARLA requires about 25GB of disk space, plus Unreal Engine, which is quite a similar size. 
+<h5 style="display: inline">Expected disk space to build CARLA.</h5>
 
+</summary>
+
+<br>
+It is advised to have at least 30/50GB. Building CARLA requires about 25GB of disk space, plus Unreal Engine, which is of a similar size.     
+<br>
 Unreal Engine on Linux requires much more disk space as it keeps all the intermediate files. [This thread](https://answers.unrealengine.com/questions/430541/linux-engine-size.html) discusses the matter.
-  </details>
-
+<br>
+<br>
+</details>
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Recommended hardware to run CARLA.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">Recommended hardware to run CARLAS.</h5>
+
+</summary>
+<br>
 CARLA is a very performance demanding software. At the very minimum it needs for a 4GB GPU or, even better, a dedicated GPU capable of running Unreal Engine.  
-
+<br>
 Take a look at [Unreal Engine's recommended hardware](https://wiki.unrealengine.com/Recommended_Hardware).
-  </details>
+<br>
+<br>
+</details>
 
 ---
 ## Linux build
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    "CarlaUE4.sh" script does not appear when downloading from GitHub.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">"CarlaUE4.sh" script does not appear when downloading from GitHub.</h5>
+
+</summary>
+<br>
 There is no `CarlaUE4.sh` script in the source version of CARLA. Follow the [build instructions](build_linux.md) to build CARLA from source.  
-
-To run CARLA using `CarlaUE4.sh`, follow the [quick start installation](start_quickstart.md).  
-  </details>
+<br>
+To run CARLA using `CarlaUE4.sh`, follow the [quick start installation](start_quickstart.md).
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    "make launch" is not working on Linux.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
-Many different issues can be dragged during the build installation, and show like this. Here is a list of the most likely reasons why.  
+<h5 style="display:inline">"make launch" is not working on Linux.</h5>
 
-* __Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Try running UE editor on its own and check out that it is the 4.24 release.  
-* __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
-* __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=~/UnrealEngine_4.24` to set the variable this time.  
-* __Check dependencies.__ Make sure that everything was installed properly. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
-* __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
-* __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 15GB of disk space and a dedicated GPU (or at least one with 4GB) to run.  
-
+</summary>
+<br>
+Many different issues can be dragged during the build installation, and show like this. Here is a list of the most likely reasons why:
+<br>
+<br>
+<ul markdown="span">
+    <li markdown="span">__Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Try running UE editor on its own and check out that it is the 4.24 release.  
+    <li markdown="span"> __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
+    <li markdown="span"> __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=~/UnrealEngine_4.24` to set the variable this time.  
+    <li markdown="span"> __Check dependencies.__ Make sure that everything was installed properly. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
+    <li markdown="span"> __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
+    <li markdown="span"> __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 15GB of disk space and a dedicated GPU (or at least one with 4GB) to run.
+</ul>
 Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the forum so the team can get to know more about them.   
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Cloning the Unreal Engine repository shows an error.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
-__1. Is the Unreal Engine account activated?__ The UE repository is private. In order to clone it, create the [UE](https://www.unrealengine.com/en-US/) account, activate it (check the verification mail), and [link your GitHub](https://www.unrealengine.com/en-US/blog/updated-authentication-process-for-connecting-epic-github-accounts) account.  
+<h5 style="display:inline">Cloning the Unreal Engine repository shows an error.</h5>
 
-__2. Is git properly installated?__ Sometimes an error shows incompatibilities with the `https` protocol. It can be solved easily by uninstalling and reinstalling git. Open a terminal and run the following commands.  
+</summary>
+<br>
+__1. Is the Unreal Engine account activated?__ 
+<br>
+The UE repository is private. In order to clone it, create the [UE](https://www.unrealengine.com/en-US/) account, activate it (check the verification mail), and [link your GitHub](https://www.unrealengine.com/en-US/blog/updated-authentication-process-for-connecting-epic-github-accounts) account.  
+<br>
+__2. Is git properly installed?__ 
+<br>
+Sometimes an error shows incompatibilities with the `https` protocol. It can be solved easily by uninstalling and reinstalling git. Open a terminal and run the following commands.  
 ```sh
 sudo apt-get remove git #Uninstall git
 sudo apt install git-all #install git
 ```
-
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    AttributeError: module 'carla' has no attribute 'Client' when running a script. 
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">AttributeError: module 'carla' has no attribute 'Client' when running a script.</h5>
+
+</summary>
+<br>
 Run the following command. 
 ```sh
 pip3 install -Iv setuptools==47.3.1
@@ -100,20 +127,25 @@ Try to build the docs to test if everything is running properly. A successful me
 ```sh
 make PythonAPI.docs
 ```
-
-  </details>
+<br>
+<br>
+</details>
 
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version" 
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version"</h5>
+
+</summary>
+<br>
 ![faq_rpc_error](img/faq_rpc_error.jpg)
-
+<br>
+<br>
 If running a script returns an output similar to this, there is a problem with the `.egg` file in the PythonAPI. 
-
+<br>
+<br>
 First of all, open `<root_carla>/PythonAPI/carla/dist`. There should be an `.egg` file for the corresponding CARLA and Python version you are using (similar to `carla-0.X.X-pyX.X-linux-x86_64.egg`). Make sure the file matches the Python version you are using. To check your Python version use the following command.  
 
 ```sh
@@ -157,210 +189,278 @@ export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
 ```
 
 After cleaning the PythonPATH or adding the path to the build `.egg` file, all the example scripts should work properly.  
-
-  </details>
+<br>
+<br>
+</details>
 
 
 ---
 ## Windows build
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    "CarlaUE4.exe" does not appear when downloading from GitHub.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">"CarlaUE4.exe" does not appear when downloading from GitHub.</h5>
+
+</summary>
+<br>
 There is no `CarlaUE4.exe` executable in the source version of CARLA. Follow the [build instructions](build_windows.md) to build CARLA from source. To directly get the `CarlaUE4.exe`, follow the [quick start instructions](start_quickstart.md).  
-
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    CarlaUE4 could not be compiled. Try rebuilding it from source manually. 
-    </h5></summary>
+<details markdown="span">
+<summary>
 
-Something went wrong when trying to build CARLA. Rebuild using Visual Studio to discover what happened.  
+<h5 style="display:inline">CarlaUE4 could not be compiled. Try rebuilding it from source manually.</h5>
 
-__1.__ Go to `carla/Unreal/CarlaUE4` and right-click the `CarlaUE4.uproject`.  
-__2.__ Click on __Generate Visual Studio project files__.  
-__3.__ Open the file generated with Visual Studio 2017.  
-__4.__ Compile the project with Visual Studio. The shortcut is F7. The build will fail, but the issues found will be shown below.
+</summary>
+<br>
+Something went wrong when trying to build CARLA. Rebuild using Visual Studio to discover what happened.
+
+<ol markdown="span" style="font-weight: bold;">    
+    <li markdown="span">Go to `carla/Unreal/CarlaUE4` and right-click the `CarlaUE4.uproject`.  </li>
+    <li markdown="span">Click on __Generate Visual Studio project files__.</li>
+    <li markdown="span">Open the file generated with Visual Studio 2017.</li>
+    <li markdown="span">Compile the project with Visual Studio. The shortcut is F7. The build will fail, but the issues found will be shown below.</li>
+</ol>
 
 Different issues may result in this specific error message. The user [@tamakoji](https://github.com/tamakoji) solved a recurrent case where the source code hadn't been cloned properly and the CARLA version could not be set (when downloading this as a .zip from git).  
-
-*   __Check the `Build/CMakeLists.txt.in`.__ If it shows like `set(CARLA_VERSION )` do the following.  
-
-__1.__ Go to `Setup.bat` line 198.  
-
-__2.__ Update the line from: 
+<br>
+<ul markdown="span">
+    <li markdown="span">__Check the `Build/CMakeLists.txt.in`.__ If it shows `set(CARLA_VERSION )` do the following:</li>
+        <ol markdown="span" style="font-weight: bold;">    
+            <li markdown="span">Go to `Setup.bat` line 198.</li>
+            <li markdown="span">
+        Update the line from:
+        
 ```sh
 for /f %%i in ('git describe --tags --dirty --always') do set carla_version=%%i
 ```
+
 to:
+
 ```sh
 for /f %%i in ('git describe --tags --dirty --always') do set carla_version="0.9.9"
 ```
-  </details>
+</li>
+</ol>
+</ul>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    CMake error shows but CMake is properly installed.
-    </h5></summary>
-	
-This issue occurs when trying to use the _make_ command either to build the server or the client. Even if CMake is installed, updated, and added to the environment path. There may be a conflict between Visual Studio versions.  
+<details markdown="span">
+<summary>
 
-Leave only VS2017 and completely erase the rest.  
-  </details>
+<h5 style="display:inline">CMake error shows but CMake is properly installed.</h5>
+
+</summary>
+<br>
+This issue occurs when trying to use the `make` command either to build the server or the client. Even if CMake is installed, updated, and added to the environment path. There may be a conflict between Visual Studio versions.  
+<br>
+Leave only VS2017 and completely erase the rest.
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Error C2440, C2672: compiler version.
-    </h5></summary>
-	
+<details markdown="span">
+<summary>
+
+<h5 style="display:inline">Error C2440, C2672: compiler version.</h5>
+
+</summary>
+<br>
 The build is not using the 2017 compiler due to conflicts with other Visual Studio or Microsoft Compiler versions. Uninstall these and rebuild again.  
-
+<br>
 Visual Studio is not good at getting rid of itself. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`. This may need admin permissions.  
-
-To keep other Visual Studio versions, edit ```%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml``` by adding the following lines. 
+<br>
+To keep other Visual Studio versions, edit ```%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml``` by adding the following lines: 
 
 ```xml
 <VCProjectFileGenerator>
-    <Version>VisualStudio2017</Version>
+<Version>VisualStudio2017</Version>
 </VCProjectFileGenerator>
 
 <WindowsPlatform>
-    <Compiler>VisualStudio2017</Compiler>
+<Compiler>VisualStudio2017</Compiler>
 </WindowsPlatform>
 ```
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    "make launch" is not working on Windows.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
-Many different issues can be dragged during the build installation, and show like this. Here is a list of the most likely reasons why.  
+<h5 style="display:inline">"make launch" is not working on Windows.</h5>
 
-* __Restart the computer.__ There are many going on in the Windows build. Restart and make sure that everything is updated properly.  
-* __Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Run the Editor and check that 4.24 is being used.  
-* __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
-* __Visual Studio 2017.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.  
-* __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
-* __Meet system requirements.__ CARLA needs around 30/50GB of disk space and a dedicated GPU (or at least one with 4GB) to run.  
+</summary>
+<br>
+Many different issues can be dragged out during the build installation. Here is a list of the most likely culprits and resolutions:  
 
-Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the forum so the team can get to know more about them.   
-  </details>
+<ul markdown="span">
+    <li markdown="span">__Restart the computer.__ There's a lot going on in the Windows build. Restart and make sure that everything is updated properly.</li>
+    <li markdown="span">__Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Run the Editor and check that 4.24 is being used.</li>
+    <li markdown="span">__Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.</li>
+    <li markdown="span">__Visual Studio 2017.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.</li>
+    <li markdown="span">__Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.</li>
+    <li markdown="span">__Meet system requirements.__ CARLA needs around 30/50GB of disk space and a dedicated GPU (or at least one with 4GB) to run.</li>
+</ul>
 
-<!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Make is missing libintl3.dll or/and libiconv2.dll.
-    </h5></summary>
-
-Download the [dependencies](http://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php) and extract the _bin_ content into the __make__ installation path.   
-  </details>
+Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the forum so the team can get to know more about them. 
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Modules are missing or built with a different engine version.  
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">Make is missing libintl3.dll or/and libiconv2.dll.</h5>
+
+</summary>
+<br>
+Download the [dependencies](http://gnuwin32.sourceforge.net/downlinks/make-dep-zip.php) and extract the _bin_ content into the __make__ installation path.
+<br>
+<br>
+</details>
+
+<!-- ======================================================================= -->
+<details markdown="span">
+<summary>
+
+<h5 style="display:inline">Modules are missing or built with a different engine version.</h5>
+
+</summary>
+<br>
 Click on __Accept__ to rebuild them. 
-  </details>
+<br>
+<br>
+</details>
 
 ---
 ## Running CARLA
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Low FPS rate when running the server in Unreal Editor.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">Low FPS rate when running the server in Unreal Editor.</h5>
+
+</summary>
+<br>
 UE4 Editor goes to a low performance mode when out of focus.  
-
+<br>
 Go to `Edit/Editor Preferences/Performance` in the editor preferences, and disable the "Use Less CPU When in Background" option.
-
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Can't run a script.
-    </h5></summary>
-	
+<details markdown="span">
+<summary>
+
+<h5 style="display:inline">Can't run a script.</h5>
+
+</summary>
+<br>
 Some scripts have requirements. These are listed in files named __Requirements.txt__, in the same path as the script itself. Be sure to check these in order to run the script. The majority of them can be installed with a simple `pip` command.  
-
+<br>
 Sometimes on Windows, scripts cannot run with just `> script_name.py`. Try adding `> python3 script_name.py`, and make sure to be in the right directory.  
-
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
+<details markdown="span">
+<summary>
 
-  <details>
-    <summary><h5 style="display:inline">
-    Connect to the simulator while running within Unreal Editor.
-    </h5></summary>
+<h5 style="display:inline">Connect to the simulator while running within Unreal Editor.</h5>
 
+</summary>
+<br>
 Click on __Play__ and wait until the scene is loaded. At that point, a Python client can connect to the simulator as with the standalone simulator.
-
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-   Can't run CARLA neither binary nor source build.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">Can't run CARLA neither binary nor source build.</h5>
+
+</summary>
+<br>
 NVIDIA drivers may be outdated. Make sure that this is not the case. If the issue is still unresolved, take a look at the [forum](https://forum.carla.org/) and post the specific issue. 
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    ImportError: DLL load failed: The specified module could not be found.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">ImportError: DLL load failed: The specified module could not be found.</h5>
+
+</summary>
+<br>
 One of the libraries needed has not been properly installed. As a work around, go to `carla\Build\zlib-source\build`, and copy the file named `zlib.dll` in the directory of the script. 
-  </details>
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    ImportError: DLL load failed while importing libcarla: %1 is not a valid Win32 app. 
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">ImportError: DLL load failed while importing libcarla: %1 is not a valid Win32 app.</h5>
+
+</summary>
+<br>
 A 32-bit Python version is creating conflicts when trying to run a script. Uninstall it and leave only the Python3 x64 required. 
-  </details>
+<br>
+<br>
+</details>
 
 ---
 ## Other
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Fatal error: 'version.h' has been modified since the precompiled header.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">Fatal error: 'version.h' has been modified since the precompiled header.</h5>
+
+</summary>
+<br>
 This happens from time to time due to Linux updates. There is a special target in the Makefile for this issue. It takes a long time but fixes the issue:
 
-      $ make hard-clean
-      $ make CarlaUE4Editor
-
-  </details>
+```
+  $ make hard-clean
+  $ make CarlaUE4Editor
+```
+<br>
+<br>
+</details>
 
 <!-- ======================================================================= -->
-  <details>
-    <summary><h5 style="display:inline">
-    Create a binary version of CARLA.
-    </h5></summary>
+<details markdown="span">
+<summary>
 
+<h5 style="display:inline">Create a binary version of CARLA.</h5>
+
+</summary>
+<br>
 In Linux, run `make package` in the project folder. The package will include the project, and the Python API modules.  
-
+<br>
 Alternatively, it is possible to compile a binary version of CARLA within Unreal Editor. Open the CarlaUE4 project, go to the menu `File/Package Project`, and select a platform. This may take a while. 
-  </details>
+<br>
+<br>
+</details>
 
 ---
