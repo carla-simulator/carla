@@ -281,8 +281,9 @@ protected:
 
   virtual void BeginPlay() override;
 
-  // virtual void PrePhysTick(float DeltaTime) override;
+  virtual void PrePhysTick(float DeltaSeconds) override;
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
+
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
