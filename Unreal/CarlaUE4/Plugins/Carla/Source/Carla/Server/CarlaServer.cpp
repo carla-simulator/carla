@@ -1095,9 +1095,8 @@ void FCarlaServer::FPimpl::BindActions()
   };
 
 //-----CARSIM--------------------------------
-  BIND_SYNC(set_carsim_enabled) << [this](
+  BIND_SYNC(enable_carsim) << [this](
       cr::ActorId ActorId,
-      bool bEnabled,
       std::string SimfilePath) -> R<void>
   {
     #ifdef WITH_CARSIM
@@ -1112,7 +1111,11 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set carsim: not actor is not a vehicle");
     }
-    Vehicle->SetCarSimEnabled(bEnabled, carla::rpc::ToFString(SimfilePath));
+    if (Vehicle->IsCarSimEnabled())
+    {
+      RESPOND_ERROR("unable to set carsim: carsim is already enabled");
+    }
+    Vehicle->EnableCarSim(carla::rpc::ToFString(SimfilePath));
     return R<void>::Success();
     #else
       RESPOND_ERROR("CarSim plugin is not enabled");

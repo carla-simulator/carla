@@ -246,9 +246,12 @@ private:
 //-----CARSIM--------------------------------
 public:
 
+  // Enables carsim once enabled it won't turn back to UE4 physics simulation
+  // (for some reason the UE4 physics get meesed up after enabling carsim)
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
-  void SetCarSimEnabled(bool bEnabled, FString SimfilePath = "");
+  void EnableCarSim(FString SimfilePath = "");
 
+  // Enables usage of carsim terrain
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintCallable)
   void UseCarSimRoad(bool bEnabled);
 
@@ -261,12 +264,15 @@ public:
 
 private:
 
+  // On car mesh hit, only works when carsim is enabled
   UFUNCTION()
   void OnCarSimHit(AActor *Actor,
       AActor *OtherActor,
       FVector NormalImpulse,
       const FHitResult &Hit);
 
+  // On car mesh overlap, only works when carsim is enabled
+  // (this event triggers when overlapping with static environment)
   UFUNCTION()
   void OnCarSimOverlap(UPrimitiveComponent* OverlappedComponent,
       AActor* OtherActor,
@@ -284,6 +290,7 @@ private:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
   bool bCarSimEnabled = false;
 
+  // Small workarround to allow optional CarSim plugin usage
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   UMovementComponent * ExternalMovementComponent;
 
