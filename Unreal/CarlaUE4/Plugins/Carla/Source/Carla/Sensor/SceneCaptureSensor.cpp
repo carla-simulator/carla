@@ -496,6 +496,12 @@ void ASceneCaptureSensor::BeginPlay()
   Super::BeginPlay();
 }
 
+void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
+{
+  // Allows the sensor to tick with the tick rate from UE4.
+  ReadyToCapture = true;
+}
+
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   // Add the view information every tick. It's only used for one tick and then

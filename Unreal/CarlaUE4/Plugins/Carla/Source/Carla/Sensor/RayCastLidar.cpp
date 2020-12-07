@@ -57,9 +57,6 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
 
 void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  // ASensor::Tick(DeltaTime);
-  // UE_LOG(LogCarla, Warning, TEXT("PrePhysTick: %f"), DeltaTime);
-  UE_LOG(LogCarla, Warning, TEXT("ARayCastLidar::PostPhysTick() - %d, %d, %d"), GFrameCounter, GFrameNumber, GFrameNumberRenderThread);
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
