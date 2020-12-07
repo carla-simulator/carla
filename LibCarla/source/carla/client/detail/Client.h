@@ -211,9 +211,8 @@ namespace detail {
         rpc::ActorId vehicle,
         const rpc::VehicleControl &control);
 
-    void SetCarSimEnabled(
+    void EnableCarSim(
         rpc::ActorId vehicle,
-        bool enabled,
         std::string simfile_path);
 
     void UseCarSimRoad(

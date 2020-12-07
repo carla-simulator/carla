@@ -88,7 +88,7 @@ namespace client {
     SharedPtr<TrafficLight> GetTrafficLight() const;
 
     /// Enables CarSim simulation if it is availiable
-    void SetCarSimEnabled(bool enabled, std::string simfile_path);
+    void EnableCarSim(std::string simfile_path);
 
     /// Enables the use of CarSim internal road definition instead of unreal's
     void UseCarSimRoad(bool enabled);

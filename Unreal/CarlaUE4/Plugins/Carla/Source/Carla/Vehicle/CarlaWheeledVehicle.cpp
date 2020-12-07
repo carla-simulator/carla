@@ -34,9 +34,9 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   #ifdef WITH_CARSIM
-  ExternalMovementComponent = CreateDefaultSubobject<UCarSimMovementComponent>(TEXT("CarSimMovement"));
-  CarSimMovementComponent = Cast<UCarSimMovementComponent>(ExternalMovementComponent);
-  CarSimMovementComponent->DisableVehicle = true;
+  // ExternalMovementComponent = CreateDefaultSubobject<UCarSimMovementComponent>(TEXT("CarSimMovement"));
+  // CarSimMovementComponent = Cast<UCarSimMovementComponent>(ExternalMovementComponent);
+  // CarSimMovementComponent->DisableVehicle = true;
   #endif
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
@@ -117,9 +117,6 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   Vehicle4W->WheelSetups = NewWheelSetups;
 
-  #ifdef WITH_CARSIM
-  SetCarSimEnabled(false);
-  #endif
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -514,7 +511,7 @@ void ACarlaWheeledVehicle::OnCarSimHit(AActor *Actor,
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  SwitchToUE4Physics();
+  // handle collision forces here
 }
 
 
@@ -529,90 +526,93 @@ void ACarlaWheeledVehicle::OnCarSimOverlap(UPrimitiveComponent* OverlappedCompon
       ECollisionChannel::ECC_WorldDynamic) ==
       ECollisionResponse::ECR_Block)
   {
-    SwitchToUE4Physics();
+    // handle collision forces here
   }
 }
 
 void ACarlaWheeledVehicle::SwitchToUE4Physics()
 {
-  SetCarSimEnabled(false);
-  FTimerHandle TimerHandler;
-  GetWorld()->GetTimerManager().
-      SetTimer(TimerHandler, this, &ACarlaWheeledVehicle::RevertToCarSimPhysics, 0.1);
+  #ifdef WITH_CARSIM
+  GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
+  GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+  GetVehicleMovementComponent()->Activate();
+  CarSimMovementComponent->DisableVehicle = true;
+  CarSimMovementComponent->SetComponentTickEnabled(false);
+  CarSimMovementComponent->Deactivate();
+  CarSimMovementComponent->VsConfigFile = "";
+  GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+  auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(true);
+  }
+  else
+  {
+    carla::log_warning("No bone with name");
+  }
+  OnActorHit.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
+  GetMesh()->OnComponentBeginOverlap.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  GetMesh()->SetCollisionProfileName("Vehicle");
   carla::log_warning("There was a hit");
+  #endif
 }
 
 void ACarlaWheeledVehicle::RevertToCarSimPhysics()
 {
   #ifdef WITH_CARSIM
-  SetCarSimEnabled(true, CarSimMovementComponent->VsConfigFile);
+  GetVehicleMovementComponent()->SetComponentTickEnabled(false);
+  GetVehicleMovementComponent()->Deactivate();
+  CarSimMovementComponent->DisableVehicle = false;
+  CarSimMovementComponent->Activate();
+  // CarSimMovementComponent->ResetVsVehicle(false);
+  // set carsim position to actor's
+  CarSimMovementComponent->SyncVsVehicleLocOri();
+  CarSimMovementComponent->SetComponentTickEnabled(true);
+  // set kinematic mode for root component and bones
+  GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
+  auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(false);
+  }
+  // set callbacks to react to collisions
+  OnActorHit.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
+  GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
   carla::log_warning("Collision: giving control to carsim");
   #endif
 }
 
-void ACarlaWheeledVehicle::SetCarSimEnabled(bool bEnabled, FString SimfilePath)
+void ACarlaWheeledVehicle::EnableCarSim(FString SimfilePath)
 {
   #ifdef WITH_CARSIM
-  if (bEnabled == bCarSimEnabled)
-  {
-    return;
-  }
-  carla::log_warning("Enabling CarSim", bEnabled);
-  if (bEnabled)
-  {
-    carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
-    GetVehicleMovementComponent()->SetComponentTickEnabled(false);
-    GetVehicleMovementComponent()->Deactivate();
-    CarSimMovementComponent->DisableVehicle = false;
-    CarSimMovementComponent->VsConfigFile = SimfilePath;
-    CarSimMovementComponent->Activate();
-    // super hack to work arround CarSim component limitations to specify simfiles
-    CarSimMovementComponent->EndPlay(EEndPlayReason::Type::RemovedFromWorld);
-    CarSimMovementComponent->BeginPlay();
+  CarSimMovementComponent = NewObject<UCarSimMovementComponent>(this);
+  ExternalMovementComponent = CarSimMovementComponent;
+  carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
+  GetVehicleMovementComponent()->SetComponentTickEnabled(false);
+  GetVehicleMovementComponent()->Deactivate();
+  CarSimMovementComponent->DisableVehicle = false;
+  CarSimMovementComponent->VsConfigFile = SimfilePath;
+  CarSimMovementComponent->Activate();
+  CarSimMovementComponent->RegisterComponent();
 
-    CarSimMovementComponent->ResetVsVehicle(false);
-    // set carsim position to actor's
-    CarSimMovementComponent->SyncVsVehicleLocOri();
-    CarSimMovementComponent->SetComponentTickEnabled(true);
-    // set kinematic mode for root component and bones
-    GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
-    auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
-    if (Bone)
-    {
-      Bone->SetInstanceSimulatePhysics(false);
-    }
-    // set callbacks to react to collisions
-    OnActorHit.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
-    GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
-    GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
-  }
-  else
+  CarSimMovementComponent->ResetVsVehicle(false);
+  // set carsim position to actor's
+  CarSimMovementComponent->SyncVsVehicleLocOri();
+  CarSimMovementComponent->SetComponentTickEnabled(true);
+  // set kinematic mode for root component and bones
+  GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
+  auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
   {
-    // auto Velocity = GetVelocity();
-    // GetMesh()->SetPhysicsLinearVelocity(Velocity, false, "Vehicle_Base");
-    GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
-    GetVehicleMovementComponent()->SetComponentTickEnabled(true);
-    GetVehicleMovementComponent()->Activate();
-    CarSimMovementComponent->DisableVehicle = true;
-    CarSimMovementComponent->SetComponentTickEnabled(false);
-    CarSimMovementComponent->Deactivate();
-    CarSimMovementComponent->VsConfigFile = "";
-    GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
-    auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
-    if (Bone)
-    {
-      Bone->SetInstanceSimulatePhysics(true);
-    }
-    else
-    {
-      carla::log_warning("No bone with name");
-    }
-    OnActorHit.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
-    GetMesh()->OnComponentBeginOverlap.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
-    GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-    GetMesh()->SetCollisionProfileName("Vehicle");
+    Bone->SetInstanceSimulatePhysics(false);
   }
-  bCarSimEnabled = bEnabled;
+  // set callbacks to react to collisions
+  OnActorHit.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
+  GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+  bCarSimEnabled = true;
   #endif
 }
 
