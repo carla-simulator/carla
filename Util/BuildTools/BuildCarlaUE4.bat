@@ -124,7 +124,8 @@ rem Launch Carla Editor
 rem
 if %LAUNCH_UE4_EDITOR% == true (
     echo %FILE_N% Launching Unreal Editor...
-    call "%UE4_PROJECT_FOLDER%CarlaUE4.uproject"
+    call "%UE4_ROOT%\Engine\Binaries\Win64\UE4Editor.exe"^
+        "%UE4_PROJECT_FOLDER%CarlaUE4.uproject"
     if %errorlevel% neq 0 goto error_build
 )
 

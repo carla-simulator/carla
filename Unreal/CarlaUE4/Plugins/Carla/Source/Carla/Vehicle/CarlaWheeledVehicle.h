@@ -118,7 +118,15 @@ public:
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
+  void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
+
   void SetVehicleLightState(const FVehicleLightState &LightState);
+
+  UFUNCTION(BlueprintNativeEvent)
+  bool IsTwoWheeledVehicle();
+  virtual bool IsTwoWheeledVehicle_Implementation() {
+    return false;
+  }
 
   /// @}
   // ===========================================================================

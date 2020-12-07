@@ -39,8 +39,10 @@ namespace rpc {
 
     float max_culling_distance = 0.0f;
 
-    MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds,
-        substepping, max_substep_delta_time, max_substeps, max_culling_distance);
+    bool deterministic_ragdolls = true;
+
+    MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
+        max_substep_delta_time, max_substeps, max_culling_distance, deterministic_ragdolls);
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------
@@ -55,7 +57,8 @@ namespace rpc {
         bool substepping = true,
         double max_substep_delta_time = 0.01,
         int max_substeps = 10,
-        float max_culling_distance = 0.0f)
+        float max_culling_distance = 0.0f,
+        bool deterministic_ragdolls = true)
       : synchronous_mode(synchronous_mode),
         no_rendering_mode(no_rendering_mode),
         fixed_delta_seconds(
@@ -63,7 +66,8 @@ namespace rpc {
         substepping(substepping),
         max_substep_delta_time(max_substep_delta_time),
         max_substeps(max_substeps),
-        max_culling_distance(max_culling_distance) {}
+        max_culling_distance(max_culling_distance),
+        deterministic_ragdolls(deterministic_ragdolls) {}
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
@@ -77,7 +81,8 @@ namespace rpc {
           (fixed_delta_seconds == rhs.fixed_delta_seconds) &&
           (max_substep_delta_time == rhs.max_substep_delta_time) &&
           (max_substeps == rhs.max_substeps) &&
-          (max_culling_distance == rhs.max_culling_distance);
+          (max_culling_distance == rhs.max_culling_distance) &&
+          (deterministic_ragdolls == rhs.deterministic_ragdolls);
     }
 
     bool operator!=(const EpisodeSettings &rhs) const {
@@ -98,7 +103,8 @@ namespace rpc {
             Settings.bSubstepping,
             Settings.MaxSubstepDeltaTime,
             Settings.MaxSubsteps,
-            Settings.MaxCullingDistance) {}
+            Settings.MaxCullingDistance,
+            Settings.bDeterministicRagdolls) {}
 
     operator FEpisodeSettings() const {
       FEpisodeSettings Settings;
@@ -111,6 +117,8 @@ namespace rpc {
       Settings.MaxSubstepDeltaTime = max_substep_delta_time;
       Settings.MaxSubsteps = max_substeps;
       Settings.MaxCullingDistance = max_culling_distance;
+      Settings.bDeterministicRagdolls = deterministic_ragdolls;
+
       return Settings;
     }
 
