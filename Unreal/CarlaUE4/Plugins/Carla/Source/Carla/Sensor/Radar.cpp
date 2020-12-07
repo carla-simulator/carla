@@ -68,7 +68,6 @@ void ARadar::BeginPlay()
 
 void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::PostPhysTick(World, TickType, DeltaTime);
   CalculateCurrentVelocity(DeltaTime);
 
   RadarData.Reset();

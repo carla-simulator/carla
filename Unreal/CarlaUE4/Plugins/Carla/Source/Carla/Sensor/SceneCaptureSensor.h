@@ -33,17 +33,9 @@ class CARLA_API ASceneCaptureSensor : public ASensor
   friend class ACarlaGameModeBase;
   friend class FPixelReader;
 
-private:
-
-  /// @TODO: delete once the new tick pipeline is done
-  FTransform OldTransform;
-
 public:
 
   ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer);
-
-  /// @TODO: delete once the new tick pipeline is done
-  // const FTransform &GetSyncActorTransform() const override;
 
   void Set(const FActorDescription &ActorDescription) override;
 
@@ -279,6 +271,12 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
+  UFUNCTION(BlueprintCallable)
+  USceneCaptureComponent2D *GetCaptureComponent2D()
+  {
+    return CaptureComponent2D;
+  }
+
 protected:
 
   virtual void BeginPlay() override;
@@ -288,10 +286,6 @@ protected:
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
-
-  virtual void SendPixels(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
-
-  FDelegateHandle SendPixelsDelegate;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)

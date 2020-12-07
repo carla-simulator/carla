@@ -67,14 +67,14 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureComponent2D->SetupAttachment(RootComponent);
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
 
+  CaptureComponent2D->bCaptureEveryFrame = false;
+  CaptureComponent2D->bAlwaysPersistRenderingState = true;
+  // CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorHDR;
+
   SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 
   ++SCENE_CAPTURE_COUNTER;
 }
-
-// const FTransform &ASceneCaptureSensor::GetSyncActorTransform() const {
-//   return OldTransform;
-// }
 
 void ASceneCaptureSensor::Set(const FActorDescription &Description)
 {
@@ -494,14 +494,10 @@ void ASceneCaptureSensor::BeginPlay()
   GetEpisode().GetWeather()->NotifyWeather();
 
   Super::BeginPlay();
-
-  SendPixelsDelegate = FWorldDelegates::OnWorldPreActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
-  // SendPixelsDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(this, &ASceneCaptureSensor::SendPixels);
 }
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::PostPhysTick(World, TickType, DeltaTime);
   // Add the view information every tick. It's only used for one tick and then
   // removed by the streamer.
   IStreamingManager::Get().AddViewInformation(
@@ -510,19 +506,12 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
   ReadyToCapture = true;
-  UE_LOG(LogCarla, Warning, TEXT("ASceneCaptureSensor - ReadyToCapture: %d"), ReadyToCapture);
-
-  // TODO: delete once the new tick pipeline is done
-  // OldTransform = GetActorTransform();
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
   SCENE_CAPTURE_COUNTER = 0u;
-
-  FWorldDelegates::OnWorldPreActorTick.Remove(SendPixelsDelegate);
-  // FWorldDelegates::OnWorldPostActorTick.Remove(SendPixelsDelegate);
 }
 
 // =============================================================================
