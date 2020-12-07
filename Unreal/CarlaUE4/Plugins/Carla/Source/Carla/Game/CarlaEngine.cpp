@@ -62,7 +62,6 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   {
     const auto StreamingPort = Settings.StreamingPort.Get(Settings.RPCPort + 1u);
     auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort);
-    // UE_LOG(LogCarla, Warning, TEXT("Threads: %d"), FCarlaEngine_GetNumberOfThreadsForRPCServer());
     Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
 
     WorldObserver.SetStream(BroadcastStream);
@@ -112,9 +111,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   if (TickType == ELevelTick::LEVELTICK_All)
   {
     // update frame counter
-    UE_LOG(LogCarla, Warning, TEXT("FCarlaEngine::OnPreTick() - UpdateFrameCounter"));
     UpdateFrameCounter();
-    // UE_LOG(LogCarla, Warning, TEXT("-- UpdateFrameCounter() -> %d ---------------"), GetFrameCounter());
 
     // process RPC commands
     do
@@ -133,7 +130,6 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   // tick the recorder/replayer system
-  // UE_LOG(LogCarla, Warning, TEXT("CarlaEngine - PostPhysTick - frame counter: %d"), FCarlaEngine::GetFrameCounter());
   if (GetCurrentEpisode())
   {
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
