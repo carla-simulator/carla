@@ -141,19 +141,21 @@ void export_world() {
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
-    .def(init<bool, bool, double, bool, double, int, bool>(
+    .def(init<bool, bool, double, bool, double, int, float, bool>(
         (arg("synchronous_mode")=false,
          arg("no_rendering_mode")=false,
          arg("fixed_delta_seconds")=0.0,
          arg("substepping")=true,
          arg("max_substep_delta_time")=0.01,
          arg("max_substeps")=10,
+         arg("max_culling_distance")=0.0f,
          arg("deterministic_ragdolls")=false)))
     .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
     .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
     .def_readwrite("substepping", &cr::EpisodeSettings::substepping)
     .def_readwrite("max_substep_delta_time", &cr::EpisodeSettings::max_substep_delta_time)
     .def_readwrite("max_substeps", &cr::EpisodeSettings::max_substeps)
+    .def_readwrite("max_culling_distance", &cr::EpisodeSettings::max_culling_distance)
     .def_readwrite("deterministic_ragdolls", &cr::EpisodeSettings::deterministic_ragdolls)
     .add_property("fixed_delta_seconds",
         +[](const cr::EpisodeSettings &self) {
