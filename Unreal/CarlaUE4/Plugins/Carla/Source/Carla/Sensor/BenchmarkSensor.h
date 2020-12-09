@@ -69,7 +69,9 @@ private:
 
   int64 CollectFrameStats(FString& Output);
 
+#if WITH_EDITOR
   void DumpStatGroups(const FStatsThreadStateOverlay& StatsThread);
+#endif // WITH_EDITOR
 
   FString CollectStatsFromGroup(
     const FStatsThreadStateOverlay& StatsThread,

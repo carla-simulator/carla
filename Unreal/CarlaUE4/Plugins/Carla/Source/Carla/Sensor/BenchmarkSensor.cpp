@@ -11,13 +11,11 @@ static void FillSetOfJsonValues(TSharedPtr<FJsonValue> JsonValue, TSet<FName>& O
   switch(JsonType)
   {
     case EJson::String:
-      // UE_LOG(LogCarla, Warning, TEXT("\t String: (%s, %s)"), *It.Key, *JsonValue->AsString());
       OutStatValues.Emplace(*JsonValue->AsString());
       break;
     case EJson::Array:
     {
       const TArray<TSharedPtr<FJsonValue>>& ValuesArray = JsonValue->AsArray();
-      // UE_LOG(LogCarla, Warning, TEXT("\t Array: (%s, %d)"), *It.Key, ValuesArray.Num());
       for(const TSharedPtr<FJsonValue>& It2 : ValuesArray)
       {
         FillSetOfJsonValues(It2, OutStatValues);
@@ -25,20 +23,6 @@ static void FillSetOfJsonValues(TSharedPtr<FJsonValue> JsonValue, TSet<FName>& O
 
       break;
     }
-    /*
-    case EJson::Number:
-      UE_LOG(LogCarla, Warning, TEXT("\t Number: (%s, %f)"), *It.Key, JsonValue->AsNumber());
-      break;
-    case EJson::Boolean:
-      UE_LOG(LogCarla, Warning, TEXT("\t Boolean: (%s, %d)"), *It.Key, JsonValue->AsBool());
-      break;
-    case EJson::Object:
-      UE_LOG(LogCarla, Warning, TEXT("\t Object: (%s, _)"), *It.Key);
-      break;
-    */
-    default:
-      //UE_LOG(LogCarla, Warning, TEXT("\t Invalid: %d (%s, _)"), JsonType,*It.Key);
-      break;
   }
 }
 
@@ -61,8 +45,6 @@ void ABenchmarkSensor::Set(const FActorDescription &Description)
 
 void ABenchmarkSensor::SetQueries(FString InQueries)
 {
-  UE_LOG(LogCarla, Error, TEXT("SetQueries %s"), *InQueries);
-
   TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(InQueries);
   TSharedPtr<FJsonObject> JsonParsed;
 
@@ -72,7 +54,6 @@ void ABenchmarkSensor::SetQueries(FString InQueries)
     return;
   }
 
-  UE_LOG(LogCarla, Warning, TEXT("SetQueries Num pairse %d"), JsonParsed->Values.Num());
   for(auto& It :  JsonParsed->Values)
   {
     TSet<FName> StatValues;
@@ -88,7 +69,6 @@ void ABenchmarkSensor::SetQueries(FString InQueries)
     GEngine->Exec(GWorld, *Cmd);
   }
 
-  UE_LOG(LogCarla, Warning, TEXT("Final result"));
   for(auto& It : Queries)
   {
     FString Values;
@@ -97,7 +77,6 @@ void ABenchmarkSensor::SetQueries(FString InQueries)
       Values += *It2.ToString();
       Values += " ";
     }
-    UE_LOG(LogCarla, Warning, TEXT("%s -> %s"), *It.Key.ToString(), *Values);
   }
 
 }
@@ -107,8 +86,11 @@ void ABenchmarkSensor::BeginPlay()
   Super::BeginPlay();
   GEngine->Exec(GWorld, TEXT("stat unit"));
 
+#if WITH_EDITOR
   FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState();
   DumpStatGroups(StatsThread);
+#endif // WITH_EDITOR
+
 }
 
 void ABenchmarkSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -125,7 +107,6 @@ void ABenchmarkSensor::Tick(float DeltaTime)
   int64 Frame = CollectFrameStats(StatsOutput);
 
   FString Output = "{";
-  //Output += FString::Printf(TEXT("  Frame:%lld,\n"), Frame);
   Output += CollectStatUnit();
   if(StatsOutput != "") Output += ",";
   Output += StatsOutput;
@@ -152,8 +133,15 @@ FString ABenchmarkSensor::CollectStatUnit()
     GPUFrameTime = StatUnitData->GPUFrameTime;
     RHITTime = StatUnitData->RHITTime;
   }
-  return FString::Printf(TEXT("\n  \"FrameTime\": \"%.2f\",\n  \"GameThreadTime\": \"%.2f\",\n  \"RenderThreadTime\": \"%.2f\",\n  \"GPUFrameTime\": \"%.2f\",\n  \"RHITime\": \"%.2f\""),
-                              FrameTime, GameThreadTime, RenderThreadTime, GPUFrameTime, RHITTime);
+
+  FString Output = "\n";
+  Output += FString::Printf(TEXT("  \"%s\": \"%.2f\",\n"), *FString("FrameTime"), FrameTime);
+  Output += FString::Printf(TEXT("  \"%s\": \"%.2f\",\n"), *FString("GameThreadTime"), GameThreadTime);
+  Output += FString::Printf(TEXT("  \"%s\": \"%.2f\",\n"), *FString("RenderThreadTime"), RenderThreadTime);
+  Output += FString::Printf(TEXT("  \"%s\": \"%.2f\",\n"), *FString("GPUFrameTime"), GPUFrameTime);
+  Output += FString::Printf(TEXT("  \"%s\": \"%.2f\""), *FString("RHITime"), RHITTime);
+
+  return Output;
 }
 
 int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
@@ -182,6 +170,7 @@ int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
   return LastGoodGameFrame;
 }
 
+#if WITH_EDITOR
 void ABenchmarkSensor::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
 {
   FString Output = "";
@@ -203,7 +192,7 @@ void ABenchmarkSensor::DumpStatGroups(const FStatsThreadStateOverlay& StatsThrea
     }
   }
 
-  FString FilePath = FPaths::GameAgnosticSavedDir() + "StatGroups.txt";
+  FString FilePath = FPaths::ProjectSavedDir() + "StatGroups.txt";
   FFileHelper::SaveStringToFile(
     Output,
     *FilePath,
@@ -211,6 +200,7 @@ void ABenchmarkSensor::DumpStatGroups(const FStatsThreadStateOverlay& StatsThrea
     &IFileManager::Get(),
     EFileWrite::FILEWRITE_Silent);
 }
+#endif // WITH_EDITOR
 
 FString ABenchmarkSensor::CollectStatsFromGroup(
   const FStatsThreadStateOverlay& StatsThread,
@@ -285,8 +275,6 @@ FString ABenchmarkSensor::ConvertStatCommandToStatGroup(FString StatCmd)
   // Split the command (ie: stat scenerendering)
   TArray<FString> StringCmd;
   StatCmd.ParseIntoArray(StringCmd, TEXT(" "), true);
-  // 0: stat
-  // 1: scenerendering
 
   // Get all the STATGROUPs
   FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState();
@@ -296,7 +284,6 @@ FString ABenchmarkSensor::ConvertStatCommandToStatGroup(FString StatCmd)
   for(const FName& Key : Keys)
   {
     FString StatGroupStr = Key.ToString();
-    // STATGROUP_SceneRendering Contains scenerendering; case ignored by default on compare
     if(StatGroupStr.Contains(StringCmd[1]))
     {
       StatGroupResult = StatGroupStr;
