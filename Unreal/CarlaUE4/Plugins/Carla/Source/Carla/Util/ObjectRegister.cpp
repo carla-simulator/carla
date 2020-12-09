@@ -254,7 +254,11 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       EnvironmentObject.IdStr = InstanceIdStr;
       EnvironmentObject.Actor = Actor;
       EnvironmentObject.CanTick = IsActorTickEnabled;
-      EnvironmentObject.BoundingBox = BoundingBoxes[i];
+      if( i < BoundingBoxes.Num())
+      {
+        EnvironmentObject.BoundingBox = BoundingBoxes[i];
+      }
+
       EnvironmentObject.Type = EnvironmentObjectType::ISMComp;
       EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
       EnvironmentObjects.Emplace(EnvironmentObject);
