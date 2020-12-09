@@ -101,6 +101,8 @@ private:
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
 
+  void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
+
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
 
@@ -133,6 +135,8 @@ private:
 
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
+
+  FDelegateHandle OnEpisodeSettingsChangeHandle;
 
   boost::optional<carla::road::Map> Map;
 
