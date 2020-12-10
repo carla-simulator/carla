@@ -271,19 +271,14 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
         set /p PACKAGE_FILE=<%PACKAGE_PATH_FILE%
         set /p MAPS_TO_COOK=<%MAP_LIST_FILE%
 
-        REM # Cook maps (including all sublevels, we use temporal file to fix the 1024 string limitation)
-        echo | set /p dummyName=""%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe^" " > cook_command.bat
-        echo | set /p dummyName=""%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject^" " >> cook_command.bat
-        echo | set /p dummyName="-run=cook " >> cook_command.bat
-        echo | set /p dummyName="-cooksinglepackage " >> cook_command.bat
-        echo | set /p dummyName="-targetplatform="WindowsNoEditor" " >> cook_command.bat
-        echo | set /p dummyName="-OutputDir="!BUILD_FOLDER!" " >> cook_command.bat
-        echo | set /p dummyName="-stdout " >> cook_command.bat
-        echo | set /p dummyName="-AllowStdOutLogVerbosity " >> cook_command.bat
-        echo | set /p dummyName="-map=" >> cook_command.bat
-        for /f "tokens=* delims=+" %%a in (%MAP_LIST_FILE%) do echo %%a >> cook_command.bat
-        call cook_command.bat
-        del cook_command.bat /Q /F
+        REM # Cook maps
+        call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
+        "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
+        -run=cook^
+        -map="!MAPS_TO_COOK!"^
+        -cooksinglepackage^
+        -targetplatform="WindowsNoEditor"^
+        -OutputDir="!BUILD_FOLDER!"
 
         REM remove the props folder if exist
         set PROPS_MAP_FOLDER="%PACKAGE_PATH%/Maps/PropsMap"
