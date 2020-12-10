@@ -445,6 +445,14 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
+    void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
+      _client.EnableCarSim(vehicle.GetId(), simfile_path);
+    }
+
+    void UseCarSimRoad(Vehicle &vehicle, bool enabled) {
+      _client.UseCarSimRoad(vehicle.GetId(), enabled);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder

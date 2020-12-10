@@ -33,6 +33,12 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
+  #ifdef WITH_CARSIM
+  // ExternalMovementComponent = CreateDefaultSubobject<UCarSimMovementComponent>(TEXT("CarSimMovement"));
+  // CarSimMovementComponent = Cast<UCarSimMovementComponent>(ExternalMovementComponent);
+  // CarSimMovementComponent->DisableVehicle = true;
+  #endif
+
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 }
 
@@ -110,6 +116,7 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
+
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -139,6 +146,12 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
 
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
+  #ifdef WITH_CARSIM
+  if (bCarSimEnabled)
+  {
+    return CarSimMovementComponent->GetForwardSpeed();
+  }
+  #endif
   return GetVehicleMovementComponent()->GetForwardSpeed();
 }
 
@@ -149,6 +162,12 @@ FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
 {
+  #ifdef WITH_CARSIM
+  if (bCarSimEnabled)
+  {
+    return CarSimMovementComponent->GetCurrentGear();
+  }
+  #endif
   return GetVehicleMovementComponent()->GetCurrentGear();
 }
 
@@ -177,25 +196,57 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
-  auto *MovementComponent = GetVehicleMovementComponent();
-  MovementComponent->SetThrottleInput(InputControl.Control.Throttle);
-  MovementComponent->SetSteeringInput(InputControl.Control.Steer);
-  MovementComponent->SetBrakeInput(InputControl.Control.Brake);
-  MovementComponent->SetHandbrakeInput(InputControl.Control.bHandBrake);
-  if (LastAppliedControl.bReverse != InputControl.Control.bReverse)
+  #ifdef WITH_CARSIM
+  if (bCarSimEnabled)
   {
-    MovementComponent->SetUseAutoGears(!InputControl.Control.bReverse);
-    MovementComponent->SetTargetGear(InputControl.Control.bReverse ? -1 : 1, true);
+    //-----CARSIM--------------------------------
+    CarSimMovementComponent->SetThrottleInput(InputControl.Control.Throttle);
+    CarSimMovementComponent->SetSteeringInput(InputControl.Control.Steer);
+    CarSimMovementComponent->SetBrakeInput(InputControl.Control.Brake);
+    if (InputControl.Control.bHandBrake)
+    {
+      CarSimMovementComponent->SetBrakeInput(InputControl.Control.Brake + 1.0);
+    }
+    // CarSimMovementComponent->SetHandbrakeInput(InputControl.Control.bHandBrake);
+    // if (LastAppliedControl.bReverse != InputControl.Control.bReverse)
+    // {
+    //   CarSimMovementComponent->SetUseAutoGears(!InputControl.Control.bReverse);
+    //   CarSimMovementComponent->SetTargetGear(InputControl.Control.bReverse ? -1 : 1, true);
+    // }
+    // else
+    // {
+    //   CarSimMovementComponent->SetUseAutoGears(!InputControl.Control.bManualGearShift);
+    //   if (InputControl.Control.bManualGearShift)
+    //   {
+    //     CarSimMovementComponent->SetTargetGear(InputControl.Control.Gear, true);
+    //   }
+    // }
+    InputControl.Control.Gear = CarSimMovementComponent->GetCurrentGear();
+    //-----------------------------------------
   }
   else
+  #endif
   {
-    MovementComponent->SetUseAutoGears(!InputControl.Control.bManualGearShift);
-    if (InputControl.Control.bManualGearShift)
+    auto *MovementComponent = GetVehicleMovementComponent();
+    MovementComponent->SetThrottleInput(InputControl.Control.Throttle);
+    MovementComponent->SetSteeringInput(InputControl.Control.Steer);
+    MovementComponent->SetBrakeInput(InputControl.Control.Brake);
+    MovementComponent->SetHandbrakeInput(InputControl.Control.bHandBrake);
+    if (LastAppliedControl.bReverse != InputControl.Control.bReverse)
     {
-      MovementComponent->SetTargetGear(InputControl.Control.Gear, true);
+      MovementComponent->SetUseAutoGears(!InputControl.Control.bReverse);
+      MovementComponent->SetTargetGear(InputControl.Control.bReverse ? -1 : 1, true);
     }
+    else
+    {
+      MovementComponent->SetUseAutoGears(!InputControl.Control.bManualGearShift);
+      if (InputControl.Control.bManualGearShift)
+      {
+        MovementComponent->SetTargetGear(InputControl.Control.Gear, true);
+      }
+    }
+    InputControl.Control.Gear = MovementComponent->GetCurrentGear();
   }
-  InputControl.Control.Gear = MovementComponent->GetCurrentGear();
   InputControl.Control.bReverse = InputControl.Control.Gear < 0;
   LastAppliedControl = InputControl.Control;
   InputControl.Priority = EVehicleInputPriority::INVALID;
@@ -453,3 +504,144 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightS
   InputControl.LightState = LightState;
   RefreshLightState(LightState);
 }
+
+//-----CARSIM--------------------------------
+void ACarlaWheeledVehicle::OnCarSimHit(AActor *Actor,
+    AActor *OtherActor,
+    FVector NormalImpulse,
+    const FHitResult &Hit)
+{
+  // handle collision forces here
+}
+
+
+void ACarlaWheeledVehicle::OnCarSimOverlap(UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex,
+    bool bFromSweep,
+    const FHitResult & SweepResult)
+{
+  if (OtherComp->GetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldDynamic) ==
+      ECollisionResponse::ECR_Block)
+  {
+    // handle collision forces here
+  }
+}
+
+void ACarlaWheeledVehicle::SwitchToUE4Physics()
+{
+  #ifdef WITH_CARSIM
+  GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
+  GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+  GetVehicleMovementComponent()->Activate();
+  CarSimMovementComponent->DisableVehicle = true;
+  CarSimMovementComponent->SetComponentTickEnabled(false);
+  CarSimMovementComponent->Deactivate();
+  CarSimMovementComponent->VsConfigFile = "";
+  GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+  auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(true);
+  }
+  else
+  {
+    carla::log_warning("No bone with name");
+  }
+  OnActorHit.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
+  GetMesh()->OnComponentBeginOverlap.RemoveDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  GetMesh()->SetCollisionProfileName("Vehicle");
+  carla::log_warning("There was a hit");
+  #endif
+}
+
+void ACarlaWheeledVehicle::RevertToCarSimPhysics()
+{
+  #ifdef WITH_CARSIM
+  GetVehicleMovementComponent()->SetComponentTickEnabled(false);
+  GetVehicleMovementComponent()->Deactivate();
+  CarSimMovementComponent->DisableVehicle = false;
+  CarSimMovementComponent->Activate();
+  // CarSimMovementComponent->ResetVsVehicle(false);
+  // set carsim position to actor's
+  CarSimMovementComponent->SyncVsVehicleLocOri();
+  CarSimMovementComponent->SetComponentTickEnabled(true);
+  // set kinematic mode for root component and bones
+  GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
+  auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(false);
+  }
+  // set callbacks to react to collisions
+  OnActorHit.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
+  GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+  carla::log_warning("Collision: giving control to carsim");
+  #endif
+}
+
+void ACarlaWheeledVehicle::EnableCarSim(FString SimfilePath)
+{
+  #ifdef WITH_CARSIM
+  CarSimMovementComponent = NewObject<UCarSimMovementComponent>(this);
+  ExternalMovementComponent = CarSimMovementComponent;
+  carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
+  GetVehicleMovementComponent()->SetComponentTickEnabled(false);
+  GetVehicleMovementComponent()->Deactivate();
+  CarSimMovementComponent->DisableVehicle = false;
+  CarSimMovementComponent->VsConfigFile = SimfilePath;
+  CarSimMovementComponent->Activate();
+  CarSimMovementComponent->RegisterComponent();
+
+  CarSimMovementComponent->ResetVsVehicle(false);
+  // set carsim position to actor's
+  CarSimMovementComponent->SyncVsVehicleLocOri();
+  CarSimMovementComponent->SetComponentTickEnabled(true);
+  // set kinematic mode for root component and bones
+  GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
+  auto * Bone = GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(false);
+  }
+  // set callbacks to react to collisions
+  OnActorHit.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
+  GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+  bCarSimEnabled = true;
+  #endif
+}
+
+void ACarlaWheeledVehicle::UseCarSimRoad(bool bEnabled)
+{
+  #ifdef WITH_CARSIM
+  carla::log_warning("Enabling CarSim Road", bEnabled);
+  CarSimMovementComponent->UseVehicleSimRoad = bEnabled;
+  CarSimMovementComponent->ResetVsVehicle(false);
+  CarSimMovementComponent->SyncVsVehicleLocOri();
+  #endif
+}
+
+#ifdef WITH_CARSIM
+FVector ACarlaWheeledVehicle::GetVelocity() const
+{
+  if (bCarSimEnabled)
+  {
+    return GetActorForwardVector() * CarSimMovementComponent->GetForwardSpeed();
+  }
+  else
+  {
+    return Super::GetVelocity();
+  }
+}
+#endif
+
+bool ACarlaWheeledVehicle::IsCarSimEnabled() const
+{
+  return bCarSimEnabled;
+}
+//-------------------------------------------

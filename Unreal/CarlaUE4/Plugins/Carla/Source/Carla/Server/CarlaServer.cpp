@@ -938,12 +938,23 @@ void FCarlaServer::FPimpl::BindActions()
       {
         RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
       }
-      RootComponent->SetSimulatePhysics(bEnabled);
-      RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
       auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
       if(Vehicle)
+      {
         Vehicle->SetActorEnableCollision(true);
+        #ifdef WITH_CARSIM
+        if(!Vehicle->IsCarSimEnabled())
+        #endif
+        {
+          RootComponent->SetSimulatePhysics(bEnabled);
+          RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        }
+      }
+      else
+      {
+        RootComponent->SetSimulatePhysics(bEnabled);
+        RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+      }
     }
 
     return R<void>::Success();
@@ -1083,6 +1094,57 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+//-----CARSIM--------------------------------
+  BIND_SYNC(enable_carsim) << [this](
+      cr::ActorId ActorId,
+      std::string SimfilePath) -> R<void>
+  {
+    #ifdef WITH_CARSIM
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set carsim: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set carsim: not actor is not a vehicle");
+    }
+    if (Vehicle->IsCarSimEnabled())
+    {
+      RESPOND_ERROR("unable to set carsim: carsim is already enabled");
+    }
+    Vehicle->EnableCarSim(carla::rpc::ToFString(SimfilePath));
+    return R<void>::Success();
+    #else
+      RESPOND_ERROR("CarSim plugin is not enabled");
+    #endif
+  };
+
+  BIND_SYNC(use_carsim_road) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    #ifdef WITH_CARSIM
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set carsim road: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set carsim road: not actor is not a vehicle");
+    }
+    Vehicle->UseCarSimRoad(bEnabled);
+    return R<void>::Success();
+    #else
+    RESPOND_ERROR("CarSim plugin is not enabled");
+    #endif
+  };
+//-----CARSIM--------------------------------
   // ~~ Traffic lights ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(set_traffic_light_state) << [this](

@@ -24,11 +24,12 @@ REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
+USE_CARSIM=false
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -56,6 +57,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --opengl )
       RHI="-opengl";
+      shift ;;
+    --carsim )
+      USE_CARSIM=true;
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -114,6 +118,12 @@ fi
 if ${BUILD_CARLAUE4} ; then
 
   if [ ! -f Makefile ]; then
+
+    if ${USE_CARSIM} ; then
+      echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
+    else
+      echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
+    fi
 
     # This command fails sometimes but normally we can continue anyway.
     set +e
