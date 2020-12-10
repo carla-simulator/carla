@@ -8,6 +8,7 @@
   * Added the option to sweep the wheel shape for collision. This requires to patch the engine
   * Added the possibility of changing physics substepping options from client
   * Added 'noise_seed' to sensors to initialize the random generators
+  * Added the possibility to set the steering by an angle
   * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
   * Fixed random dead-lock on synchronous mode at high frame rate
   * API extensions:
