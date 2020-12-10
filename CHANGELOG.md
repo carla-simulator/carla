@@ -1,10 +1,13 @@
 ## Latest
-  * Improved the documentation for use with pandoc tool by converting html tags to their markdown equivalent    
+
+  * Improved the documentation for use with pandoc tool by converting html tags to their markdown equivalent
+  * Added parameter to carla settings to control culling
   * Added `load_map_layer` and `unload_map_layer` to control map layers on new maps that support subleveling
   * Added `get_environment_objects`call to get all the placed objects in the level
   * Added `enable_environment_objects`call to enable/disable objects of the level
   * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions
   * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation
+  * Added the option to sweep the wheel shape for collision. This requires to patch the engine
   * Added the possibility of changing physics substepping options from client
   * Added 'noise_seed' to sensors to initialize the random generators
   * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
@@ -16,6 +19,7 @@
   * Fixed bug in `waypoint.get_landmarks()` causing some landmarks to be missed when s = 0
   * Fixed the `actor.set_simulate_physics()` for pedestrians and vehicles
   * Fixed bug causing camera-based sensors to stop sending data
+  * Added `WorldSettings.deterministic_ragdolls` to enable deterministic or physically based ragdolls
   * Fixed the lack of determinism on the output of raycast sensors
   * Fixed bug in the actor's id returned by the semantic lidar
   * Fixed error when using `--config` parameter in `make package`
@@ -23,6 +27,7 @@
   * Fixed minor typo in the simulation data section of the documentation
   * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
   * Added `horizontal_fov` parameter to lidar sensor to allow for restriction of its field of view
+  * Extended the local planner with a lateral `offset`.
 
 ## CARLA 0.9.10
 
