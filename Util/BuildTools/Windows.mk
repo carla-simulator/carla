@@ -17,7 +17,7 @@ import: server
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Import.py" $(ARGS)
 
 CarlaUE4Editor: LibCarla
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build $(ARGS)
 
 launch: CarlaUE4Editor
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
