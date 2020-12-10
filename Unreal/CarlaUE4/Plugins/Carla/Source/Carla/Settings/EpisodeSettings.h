@@ -28,6 +28,8 @@ struct CARLA_API FEpisodeSettings
 
   int MaxSubsteps = 10;
 
+  float MaxCullingDistance = 0.0f;
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   bool bDeterministicRagdolls = true;
 

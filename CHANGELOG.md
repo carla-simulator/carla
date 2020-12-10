@@ -1,4 +1,5 @@
 ## Latest
+  * Added parameter to carla settings to control culling
   * Added `load_map_layer` and `unload_map_layer` to control map layers on new maps that support subleveling
   * Added `get_environment_objects`call to get all the placed objects in the level
   * Added `enable_environment_objects`call to enable/disable objects of the level
@@ -24,6 +25,7 @@
   * Fixed minor typo in the simulation data section of the documentation
   * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
   * Added `horizontal_fov` parameter to lidar sensor to allow for restriction of its field of view
+  * Extended the local planner with a lateral `offset`.
 
 ## CARLA 0.9.10
 
