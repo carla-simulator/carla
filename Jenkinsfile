@@ -92,7 +92,7 @@ pipeline
                             steps
                             {
                                 sh 'make package ARGS="--python-version=3.7,2 --carsim"'
-                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7,2 --carsim"'
+                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --clean-intermediate --python-version=3.7,2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -287,7 +287,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps --clean-intermediate --carsim"
+                                    make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --clean-intermediate"
                                 """
                             }
                             post {
