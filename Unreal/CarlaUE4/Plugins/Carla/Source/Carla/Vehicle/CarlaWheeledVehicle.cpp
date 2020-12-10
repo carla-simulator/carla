@@ -211,7 +211,14 @@ void ACarlaWheeledVehicle::SetThrottleInput(const float Value)
 void ACarlaWheeledVehicle::SetSteeringInput(const float Value)
 {
   FVehicleControl Control = InputControl.Control;
-  Control.Steer = Value;
+  if(SteerWithAngles)
+  {
+    Control.Steer =  FMath::Sign(Value) * FMath::Max(FMath::Abs(Value), GetMaximumSteerAngle());
+  }
+  else
+  {
+    Control.Steer = Value;
+  }
   ApplyVehicleControl(Control, EVehicleInputPriority::User);
 }
 
@@ -411,6 +418,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Change, if required, the collision mode for wheels
   SetWheelCollision(Vehicle4W, PhysicsControl);
+
+  SteerWithAngles = PhysicsControl.SteerWithAngles;
 
   for (int32 i = 0; i < PhysicsWheelsNum; ++i)
   {

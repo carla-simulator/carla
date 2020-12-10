@@ -83,7 +83,8 @@ namespace rpc {
     << ", center_of_mass=" << control.center_of_mass
     << ", steering_curve=" << control.steering_curve
     << ", wheels=" << control.wheels
-    << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision << ')';
+    << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision
+    << ", steer_with_angles=" << control.steer_with_angles << ')';
     return out;
   }
 } // namespace rpc
@@ -181,7 +182,7 @@ static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boos
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
   // Args names
-  const uint32_t NUM_ARGUMENTS = 17;
+  const uint32_t NUM_ARGUMENTS = 18;
   const char *args_names[NUM_ARGUMENTS] = {
     "torque_curve",
     "max_rpm",
@@ -203,6 +204,7 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
     "steering_curve",
     "wheels",
     "use_sweep_wheel_collision",
+    "steer_with_angles"
   };
 
   boost::python::object self = args[0];
@@ -375,6 +377,7 @@ void export_control() {
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .add_property("wheels", &GetWheels, &SetWheels)
     .def_readwrite("use_sweep_wheel_collision", &cr::VehiclePhysicsControl::use_sweep_wheel_collision)
+    .def_readwrite("steer_with_angles", &cr::VehiclePhysicsControl::steer_with_angles)
     .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))

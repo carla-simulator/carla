@@ -85,4 +85,7 @@ struct CARLA_API FVehiclePhysicsControl
 
   UPROPERTY(Category = "Vehicle Wheels Configuration", EditAnywhere, BlueprintReadWrite)
   bool UseSweepWheelCollision = false;
+
+  UPROPERTY(Category = "Vehicle Wheels Configuration", EditAnywhere, BlueprintReadWrite)
+  bool SteerWithAngles = false;
 };

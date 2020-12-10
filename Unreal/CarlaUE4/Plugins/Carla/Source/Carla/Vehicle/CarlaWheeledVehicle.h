@@ -235,4 +235,7 @@ private:
   InputControl;
 
   FVehicleControl LastAppliedControl;
+
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
+  bool SteerWithAngles = false;
 };
