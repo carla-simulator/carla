@@ -26,13 +26,17 @@ public class Carla : ModuleRules
     string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
     string CarSimConfigFile = Path.Combine(ConfigDir, "CarSimConfig.ini");
     string[] text = System.IO.File.ReadAllLines(CarSimConfigFile);
+    Console.WriteLine("----------------------------------------------");
     foreach (string line in text)
     {
       Console.WriteLine(line);
-      if (line == "CarSim ON")
+      if (line.Contains("CarSim ON"))
       {
+        Console.WriteLine("Enabling carsim-----------");
         UsingCarSim = true;
         PublicDefinitions.Add("WITH_CARSIM");
+        PrivateDefinitions.Add("WITH_CARSIM");
+        Definitions.Add("WITH_CARSIM");
       }
     }
 
