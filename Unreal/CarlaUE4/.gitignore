@@ -17,7 +17,6 @@ Plugins/Carla/Saved
 Config/CarlaSettings.ini
 Config/DefaultEditor.ini
 Config/CarSimConfig.ini
-CarlaUE4.uproject
 
 *.code-workspace
 .idea

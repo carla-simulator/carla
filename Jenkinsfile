@@ -43,6 +43,7 @@ pipeline
                         {
                             steps
                             {
+                                sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
                                 sh 'make setup ARGS="--python-version=3.7,2"'
                             }
                         }
@@ -230,6 +231,10 @@ pipeline
                         {
                             steps
                             {
+                                bat """
+                                    call ../setEnv64.bat
+                                    git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject
+                                """
                                 bat """
                                     call ../setEnv64.bat
                                     make setup
