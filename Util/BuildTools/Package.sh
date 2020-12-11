@@ -91,9 +91,11 @@ if ${DO_CARLA_RELEASE} ; then
 
   pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
 
-  if [ ${USE_CARSIM} ]; then
+  if ${USE_CARSIM} ; then
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
     echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
   else
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
     echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
   fi
 

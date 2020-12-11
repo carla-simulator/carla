@@ -106,8 +106,10 @@ if %BUILD_UE4_EDITOR% == true (
     echo %FILE_N% Building Unreal Editor...
 
     if %USE_CARSIM% == true (
+        py -3 %ROOT_PATH%../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
         echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
     ) else (
+        py -3 %ROOT_PATH%../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
         echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
     )
 
