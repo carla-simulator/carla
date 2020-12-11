@@ -100,10 +100,10 @@ rem ============================================================================
 if %DO_PACKAGE%==true (
 
     if %USE_CARSIM% == true (
-        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
         echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
     ) else (
-        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
         echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
     )
 
