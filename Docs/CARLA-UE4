@@ -1,0 +1,17 @@
+This is a short guide on how to start Carla from inside UE4.
+
+__Prerequisitions__
+You need to have build Carla as a plugin.
+You need to have copied Carla into your UE4-plugins directory.
+
+__How to__
+Start up UE4 for the first time with Carla in the Plugins directory.
+Ignore the warning about rebuilding the Carla-plugin.
+Enable the Carla plugin on the Plugin-window that appears when UE4 starts.
+Do a restart.
+The Carla-content directory is now visible in your content-browser.
+Press'Play'.
+You can see the gameworld and if you click in the windows you can look and move around like in a regular UE4 game.
+Open the console for more options and commands. The key to press to open the console is ~. On most keyboard the most left and top key on your keyboard.
+Commands are similar to those typed into the command prompt in Windows. So go to your Carla install directory, for example "C:\carla\PythonAPI\examples".
+The fill the streets with cars and pedestrians, type in "C:\carla\PythonAPI\examples>spawn_npc.py" (without the " ").
