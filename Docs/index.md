@@ -33,6 +33,7 @@ CARLA forum</a>
 [__Build system__](build_system.md) — Learn about the build and how it is made.  
 [__Running in a Docker__](build_docker.md) — Run CARLA using a container solution.  
 [__F.A.Q.__](build_faq.md) — Some of the most frequent installation issues.  
+[__Carla as UE4 plugin__] - How to run Carla from inside UE4.
 
 
 ## First steps
