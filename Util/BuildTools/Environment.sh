@@ -2,7 +2,7 @@
 
 # Sets the environment for other shell scripts.
 
-set -e
+# set -e
 
 CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
 source $(dirname "$0")/Vars.mk
