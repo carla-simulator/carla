@@ -117,13 +117,15 @@ fi
 
 if ${BUILD_CARLAUE4} ; then
 
-  if [ ! -f Makefile ]; then
+  if ${USE_CARSIM} ; then
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+    echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
+  else
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+    echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
+  fi
 
-    if ${USE_CARSIM} ; then
-      echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
-    else
-      echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
-    fi
+  if [ ! -f Makefile ]; then
 
     # This command fails sometimes but normally we can continue anyway.
     set +e
