@@ -1,6 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
 
+rem don't remove next two empty lines after next
+set LF=^
+
+
 rem Bat script that compiles and exports the carla project (carla.org)
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 rem https://wiki.unrealengine.com/How_to_package_your_game_with_commands
@@ -47,7 +51,7 @@ if not "%1"=="" (
     if "%1"=="--packages" (
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
-        set PACKAGES=%~2
+        set PACKAGES=%*
         shift
     )
 
@@ -221,8 +225,27 @@ set CARLAUE4_ROOT_FOLDER=%ROOT_PATH%Unreal/CarlaUE4
 set PACKAGE_PATH_FILE=%CARLAUE4_ROOT_FOLDER%/Content/PackagePath.txt
 set MAP_LIST_FILE=%CARLAUE4_ROOT_FOLDER%/Content/MapPaths.txt
 
+rem get the packages to cook from the arguments whole string
+rem (to support multiple packages)
+echo Parsing packages...
+if not "%PACKAGES%" == "Carla" (
+    set ARGUMENTS=%PACKAGES:--=!LF!%
+    for /f "tokens=*" %%i in ("!ARGUMENTS!") do (
+        set a=%%i
+        if "!a:~0,9!" == "packages=" (
+            set RESULT=!a:~9!
+        ) else (
+            if "!a:~0,9!" == "packages " (
+                set RESULT=!a:~9!
+            )
+        )
+    )
+) else (
+    set RESULT=%PACKAGES%
+)
 rem through all maps to cook (parameter)
-for %%i in (%PACKAGES%) do (
+set PACKAGES=%RESULT:,=!LF!%
+for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
     set PACKAGE_NAME=%%i
 
