@@ -180,133 +180,44 @@ So far there are seven different maps available. Each one has unique features an
 !!! Note
     Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_add_map.md) to be used in CARLA.  
 
-<table class ="defTable">
-<thead>
-<th>Town</th>
-<th>Summary</th>
-</thead>
-<tbody>
-<td><b>Town01</b></td>
-<td>A basic town layout with all "T junctions".</td>
-</tr>
-<tr>
-<td><b>Town02</b></td>
-<td>Similar to <b>Town01</b>, but smaller.</td>
-</tr>
-<tr>
-<td><b>Town03</b></td>
-<td>The most complex town, with a 5-lane junction, a roundabout, unevenness, a tunnel, and much more. Essentially a medley.</td>
-</tr>
-<tr>
-<td><b>Town04</b></td>
-<td>An infinite loop with a highway and a small town.</td>
-</tr>
-<tr>
-<td><b>Town05</b></td>
-<td>Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.</td>
-</tr>
-<tr>
-<td><b>Town06</b></td>
-<td>Long highways with many highway entrances and exits. It also has a <a href="https://en.wikipedia.org/wiki/Michigan_left"><b>Michigan left</b></a>.</td>
-<tr>
-<td><b>Town07</b></td>
-<td>A rural environment with narrow roads, barely non traffic lights and barns.</td>
-<tr>
-<td><b>Town10</b></td>
-<td>A city environment with with different environments such as an avenue or a promenade, and more realistic textures.</td>
-</tbody>
-</table>
+| Town                                                                                                                                   | Summary                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Town01**                                                                                                                             | A basic town layout with all "T junctions".                                                                                            |
+| **Town02**                                                                                                                             | Similar to **Town01**, but smaller.                                                                                                    |
+| **Town03**                                                                                                                             | The most complex town, with a 5-lane junction, a roundabout, unevenness, a tunnel, and much more. Essentially a medley.                |
+| **Town04**                                                                                                                             | An infinite loop with a highway and a small town.                                                                                      |
+| **Town05**                                                                                                                             | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.              |
+| **Town06**                                                                                                                             | Long highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
+| **Town07**                                                                                                                             | A rural environment with narrow roads, barely non traffic lights and barns.                                                            |
+| **Town10**                                                                                                                             | A city environment with with different environments such as an avenue or a promenade, and more realistic textures.                     |
+
 <br>
 
- <!--container -->
-<div class="townslider-container">
-  <!-- Town slide images -->
-  <div class="townslide fade">
-  <img src="../img/Town01.jpg">
-    <div class="text">Town01</div>
-  </div>
 
-  <div class="townslide fade">
-  <img src="../img/Town02.jpg">
-    <div class="text">Town02</div>
-  </div>
+![Town01](img/Town01.jpg)
+*Above: Town01*
 
-  <div class="townslide fade">
-    <img src="../img/Town03.jpg">
-    <div class="text">Town03</div>
-  </div>
+![Town02](img/Town02.jpg)
+*Above: Town02*
 
-  <div class="townslide fade">
-    <img src="../img/Town04.jpg">
-    <div class="text">Town04</div>
-  </div>
+![Town03](img/Town03.jpg)
+*Above: Town03*
 
-  <div class="townslide fade">
-    <img src="../img/Town05.jpg">
-    <div class="text">Town05</div>
-  </div>
+![Town04](img/Town04.jpg)
+*Above: Town04*
 
-  <div class="townslide fade">
-    <img src="../img/Town06.jpg">
-    <div class="text">Town06</div>
-  </div>
+![Town05](img/Town05.jpg)
+*Above: Town05*
 
-  <div class="townslide fade">
-    <img src="../img/Town07.jpg">
-    <div class="text">Town07</div>
-  </div>
+![Town06](img/Town06.jpg)
+*Above: Town06*
 
-  <div class="townslide fade">
-    <img src="../img/Town10.jpg">
-    <div class="text">Town10</div>
-  </div>
+![Town07](img/Town07.jpg)
+*Above: Town07*
 
+![Town10](img/Town10.jpg)
+*Above: Town10*
 
-  <!-- Next and previous buttons -->
-  <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-  <a class="next" onclick="plusSlides(1)">&#10095;</a>
-</div>
-
-<!-- The dots -->
-<div style="text-align:center">
-  <span class="dot" onclick="currentSlide(1)"></span>
-  <span class="dot" onclick="currentSlide(2)"></span>
-  <span class="dot" onclick="currentSlide(3)"></span>
-  <span class="dot" onclick="currentSlide(4)"></span>
-  <span class="dot" onclick="currentSlide(5)"></span>
-  <span class="dot" onclick="currentSlide(6)"></span>
-  <span class="dot" onclick="currentSlide(7)"></span>
-  <span class="dot" onclick="currentSlide(8)"></span>
-</div> 
-
-<script>
-var slideIndex = 1;
-showSlides(slideIndex);
-
-function plusSlides(n) {
-  showSlides(slideIndex += n);
-}
-
-function currentSlide(n) {
-  showSlides(slideIndex = n);
-}
-
-function showSlides(n) {
-  var i;
-  var slides = document.getElementsByClassName("townslide");
-  var dots = document.getElementsByClassName("dot");
-  if (n > slides.length) {slideIndex = 1}    
-  if (n < 1) {slideIndex = slides.length}
-  for (i = 0; i < slides.length; i++) {
-      slides[i].style.display = "none";  
-  }
-  for (i = 0; i < dots.length; i++) {
-      dots[i].className = dots[i].className.replace(" active", "");
-  }
-  slides[slideIndex-1].style.display = "block";  
-  dots[slideIndex-1].className += " active";
-}
-</script>
 
 <br>
 

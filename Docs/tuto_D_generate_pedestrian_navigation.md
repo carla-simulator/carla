@@ -15,34 +15,15 @@ If we need to generate this `.BIN` file for a custom map, we need to follow this
 
 We have several types of meshes for navigation. The meshes need to be identified as one of those types, using specific nomenclature.
 
-<table class ="defTable">
-<thead>
-<th>Type</th>
-<th>Start with</th>
-<th>Description</th>
-</thead>
-<tbody>
-<td>Ground</td>
-<td><code>Road_Sidewalk</code></td>
-<td>Pedestrians can walk over these meshes freely (sidewalks...).</td>
-<tr>
-<td>Grass</td>
-<td><code>Road_Crosswalk</code></td>
-<td>Pedestrians can walk over these meshes but as a second option if no ground is found.</td>
-<tr>
-<td>Road</td>
-<td><code>Road_Grass</code></td>
-<td>Pedestrians won't be allowed to walk on it unless we specify some percentage of pedestrians that will be allowed.</td>
-<tr>
-<td>Crosswalk</td>
-<td><code>Road_Road</code>, <code>Road_Curb</code>, <code>Road_Gutter</code>, <code>Road_Marking</code></td>
-<td>Pedestrians can cross the roads only through these meshes.</td>
-<tr>
-<td>Block</td>
-<td>Any other name</td>
-<td>Pedestrians will avoid these meshes always (are obstacles like traffic lights, trees, houses...).</td>
-</tbody>
-</table>
+| Type                                                                                                              | Start with                                                                                                        | Description                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Ground                                                                                                            | `Road_Sidewalk`                                                                                                   | Pedestrians can walk over these meshes freely (sidewalks...).                                                     |
+| Grass                                                                                                             | `Road_Crosswalk`                                                                                                  | Pedestrians can walk over these meshes but as a second option if no ground is found.                              |
+| Road                                                                                                              | `Road_Grass`                                                                                                      | Pedestrians won't be allowed to walk on it unless we specify some percentage of pedestrians that will be allowed. |
+| Crosswalk                                                                                                         | `Road_Road`, `Road_Curb`, `Road_Gutter`, `Road_Marking`                                                           | Pedestrians can cross the roads only through these meshes.                                                        |
+| Block                                                                                                             | Any other name                                                                                                    | Pedestrians will avoid these meshes always (are obstacles like traffic lights, trees, houses...).                 |
+
+
 
 <br>
 

@@ -15,27 +15,27 @@
 
 /************************* DEFAULT TABLES **************************/
 
-table.defTable {
+table {
   border: 1px solid #242424;
   background-color: #f3f6f6;
   text-align: left;
   border-collapse: collapse;
 }
 
-table.defTable thead {
-  background: #ffffff;
+table thead {
+  background: #ffffff; 
   border-bottom: 1px solid #444444;
 }
 
-table.defTable tr:nth-child(even) {
+table tr:nth-child(even) {
   background: #ffffff;
 }
 
-table.defTable thead th {
+table thead th {
   padding: 7px 13px;
 }
 
-table.defTable tbody td{
+table tbody td{
   padding: 7px 13px;
 }
 
