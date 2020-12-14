@@ -9,6 +9,7 @@
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/NonCopyable.h"
 
 #include "Misc/CoreDelegates.h"
@@ -82,6 +83,8 @@ private:
   FWorldObserver WorldObserver;
 
   UCarlaEpisode *CurrentEpisode = nullptr;
+
+  FEpisodeSettings CurrentSettings;
 
   ACarlaRecorder *Recorder = nullptr;
 
