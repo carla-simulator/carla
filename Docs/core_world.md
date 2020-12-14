@@ -52,7 +52,7 @@ A client can connect and retrieve the current world fairly easily.
 
 ```py
 world = client.get_world()
-
+```
 
 The client can also get a list of available maps to change the current one. This will destroy the current world and create a new one.
 ```py
