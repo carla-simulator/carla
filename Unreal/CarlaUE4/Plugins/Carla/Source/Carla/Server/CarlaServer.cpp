@@ -239,7 +239,7 @@ void FCarlaServer::FPimpl::BindActions()
     return result;
   };
 
-  BIND_SYNC(load_new_episode) << [this](const std::string &map_name, cr::MapLayer MapLayers) -> R<void>
+  BIND_SYNC(load_new_episode) << [this](const std::string &map_name, const bool reset_settings, cr::MapLayer MapLayers) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
 
@@ -250,7 +250,7 @@ void FCarlaServer::FPimpl::BindActions()
     }
     GameInstance->SetMapLayer(static_cast<int32>(MapLayers));
 
-    if(!Episode->LoadNewEpisode(cr::ToFString(map_name)))
+    if(!Episode->LoadNewEpisode(cr::ToFString(map_name), reset_settings))
     {
       RESPOND_ERROR("map not found");
     }

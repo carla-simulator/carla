@@ -87,6 +87,9 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 {
   Episode.EpisodeSettings.FixedDeltaSeconds = FCarlaEngine_GetFixedDeltaSeconds();
   CurrentEpisode = &Episode;
+
+  CurrentEpisode->ApplySettings(CurrentSettings);
+
   ResetFrameCounter();
 
   // make connection between Episode and Recorder
@@ -160,6 +163,8 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
 
 void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 {
+  CurrentSettings = FEpisodeSettings(Settings);
+
   bSynchronousMode = Settings.bSynchronousMode;
 
   if (GEngine && GEngine->GameViewport)

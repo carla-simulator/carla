@@ -91,7 +91,7 @@ namespace detail {
 
     std::string GetServerVersion();
 
-    void LoadEpisode(std::string map_name, rpc::MapLayer map_layer = rpc::MapLayer::All);
+    void LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layer = rpc::MapLayer::All);
 
     void LoadLevelLayer(rpc::MapLayer map_layer) const;
 
