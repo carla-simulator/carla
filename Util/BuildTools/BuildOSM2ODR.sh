@@ -44,7 +44,6 @@ while [[ $# -gt 0 ]]; do
       exit 1
       ;;
     * )
-      log "Here22. $1"
       shift ;;
   esac
 done
@@ -70,7 +69,7 @@ fi
 # ==============================================================================
 
 if ${BUILD_OSM2ODR} ; then
-
+  log "Building OSM2ODR."
   [ ! -d ${OSM2ODR_BUILD_FOLDER} ] && mkdir ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
   # define clang compiler

@@ -112,6 +112,7 @@ class LocalPlanner(object):
             'K_D': 0,
             'K_I': 0.05,
             'dt': self._dt}
+        self._offset = 0
 
         # parameters overload
         if opt_dict:
@@ -132,14 +133,17 @@ class LocalPlanner(object):
                 self._max_brake = opt_dict['max_brake']
             if 'max_steering' in opt_dict:
                 self._max_steer = opt_dict['max_steering']
+            if 'offset' in opt_dict:
+                self._offset = opt_dict['offset']
 
         self._current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         self._vehicle_controller = VehiclePIDController(self._vehicle,
                                                         args_lateral=args_lateral_dict,
                                                         args_longitudinal=args_longitudinal_dict,
+                                                        offset=self._offset,
                                                         max_throttle=self._max_throt,
                                                         max_brake=self._max_brake,
-                                                        max_steering=self._max_steer,)
+                                                        max_steering=self._max_steer)
 
         self._global_plan = False
 

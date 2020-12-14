@@ -43,6 +43,7 @@ pipeline
                         {
                             steps
                             {
+                                sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
                                 sh 'make setup ARGS="--python-version=3.7,2"'
                             }
                         }
@@ -52,7 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2"'
-                                sh 'make CarlaUE4Editor'
+                                sh 'make CarlaUE4Editor ARGS="--carsim"'
                                 sh 'make examples'
                             }
                             post
@@ -90,8 +91,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2"'
-                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
+                                sh 'make package ARGS="--python-version=3.7,2 --carsim"'
+                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7,2 --carsim"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -232,6 +233,10 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
+                                    git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject
+                                """
+                                bat """
+                                    call ../setEnv64.bat
                                     make setup
                                 """
                             }
@@ -250,7 +255,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make CarlaUE4Editor
+                                    make CarlaUE4Editor ARGS="--carsim"
                                 """
                             }
                             post
@@ -278,11 +283,11 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
-                                    make package
+                                    make package ARGS="--carsim"
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps --clean-intermediate"
+                                    make package ARGS="--packages=AdditionalMaps --clean-intermediate --carsim"
                                 """
                             }
                             post {

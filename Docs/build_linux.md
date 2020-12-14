@@ -55,9 +55,10 @@ sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clan
 git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.24
 cd ~/UnrealEngine_4.24
 
-# Download and install the UE patch
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt 430667-13636743-patch.txt
-patch --strip=4 < 430667-13636743-patch.txt
+# Download and install the UE patches
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_vulkan.patch
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_wheels.patch
+git apply UE4_patch_vulkan.patch UE4_patch_wheels.patch
 
 # Build UE
 ./Setup.sh && ./GenerateProjectFiles.sh && make
