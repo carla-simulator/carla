@@ -80,8 +80,6 @@ private:
   /// Used to compute the velocity of the radar
   FVector PrevLocation;
 
-  UWorld* World;
-
   struct RayData {
     float Radius;
     float Angle;
