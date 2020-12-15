@@ -40,7 +40,6 @@ public:
   virtual void Set(const FLidarDescription &LidarDescription);
 
 protected:
-  // virtual void PrePhysTick(float DeltaTime) override;
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   /// Creates a Laser for each channel.

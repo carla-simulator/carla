@@ -32,11 +32,7 @@ void AGnssSensor::Set(const FActorDescription &ActorDescription)
 
 void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  // FVector l = ActorToWorld().GetLocation();
-  // UE_LOG(LogCarla, Warning, TEXT("PostPhysTick: X: %f, Y: %f\n"), l.X, l.Y);
-
   carla::geom::Location Location = GetActorLocation();
-
   carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
 
   // Compute the noise for the sensor
