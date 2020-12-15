@@ -379,7 +379,7 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
     if (Map.Path.StartsWith(TEXT("/Game/")))
     {
       // replacing relative /Game/... address by absolute address to be able to parse files
-      FString FullPath(FPaths::GameDir() + TEXT("/Content/") + Map.Path.Mid(6, Map.Path.Len() - 6) + TEXT("/Sublevels/") + Map.Name);
+      FString FullPath(FPaths::ProjectDir() + TEXT("/Content/") + Map.Path.Mid(6, Map.Path.Len() - 6) + TEXT("/Sublevels/") + Map.Name);
       TArray<FString> Sublevels;
       FileManager.FindFiles(Sublevels, *FullPath, TEXT("*.umap"));
       for (auto Sublevel : Sublevels)
