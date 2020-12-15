@@ -4,7 +4,6 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-#from . import SyncSmokeTest
 from . import SyncSmokeTest
 
 import carla
@@ -200,7 +199,7 @@ class Scenario():
 
 class SpawnAllRaycastSensors(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
+        super(SpawnAllRaycastSensors, self).init_scene(prefix, settings, spectator_tr)
 
         blueprint_library = self.world.get_blueprint_library()
 
