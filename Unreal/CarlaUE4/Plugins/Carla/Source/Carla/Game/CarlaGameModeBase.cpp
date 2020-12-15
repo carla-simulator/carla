@@ -401,7 +401,7 @@ void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
 
   for(FName& LevelName : LevelsToLoad)
   {
-    UGameplayStatics::LoadStreamLevel(World, LevelName, true, false, LatentInfo);
+    UGameplayStatics::LoadStreamLevel(World, LevelName, true, true, LatentInfo);
     LatentInfo.UUID++;
   }
 
