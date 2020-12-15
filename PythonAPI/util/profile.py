@@ -539,8 +539,8 @@ class CameraManager(object):
         if self.num_sensors > 2:
             height_offset = int(height_offset/2)
 
-        bp.set_attribute('image_size_x', str(width_offset)) #str(1920))  # str(hud.dim[0])) # str(1))
-        bp.set_attribute('image_size_y', str(height_offset)) #str(1080))  # str(hud.dim[1])) # str(1))
+        bp.set_attribute('image_size_x', str(width_offset))
+        bp.set_attribute('image_size_y', str(height_offset))
 
         # We need to pass the lambda a weak reference to self to avoid circular reference.
         weak_self = weakref.ref(self)
