@@ -58,7 +58,8 @@ cd ~/UnrealEngine_4.24
 # Download and install the UE patches
 wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_vulkan.patch
 wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_wheels.patch
-git apply UE4_patch_vulkan.patch UE4_patch_wheels.patch
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_benchmark.patch
+git apply UE4_patch_vulkan.patch UE4_patch_wheels.patch UE4_patch_benchmark.patch
 
 # Build UE
 ./Setup.sh && ./GenerateProjectFiles.sh && make
