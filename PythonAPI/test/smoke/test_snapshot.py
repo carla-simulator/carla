@@ -27,7 +27,7 @@ class TestSnapshot(SyncSmokeTest):
         vehicles = self.world.get_blueprint_library().filter('vehicle.*')
         batch = [(random.choice(vehicles), t) for t in spawn_points]
         batch = [carla.command.SpawnActor(*args) for args in batch]
-        response = self.client.apply_batch_sync(batch, True)
+        response = self.client.apply_batch_sync(batch, False)
 
         self.assertFalse(any(x.error for x in response))
         ids = [x.actor_id for x in response]
