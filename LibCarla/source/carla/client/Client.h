@@ -67,9 +67,10 @@ namespace client {
 
     World GenerateOpenDriveWorld(
         std::string opendrive,
-        const rpc::OpendriveGenerationParameters & params) const {
+        const rpc::OpendriveGenerationParameters & params,
+        bool reset_settings = true) const {
       return World{_simulator->LoadOpenDriveEpisode(
-          std::move(opendrive), params)};
+          std::move(opendrive), params, reset_settings)};
     }
 
     /// Return an instance of the world currently active in the simulator.
