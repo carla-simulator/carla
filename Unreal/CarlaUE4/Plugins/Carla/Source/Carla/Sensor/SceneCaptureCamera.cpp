@@ -8,7 +8,6 @@
 #include "Carla/Sensor/SceneCaptureCamera.h"
 
 #include "Runtime/RenderCore/Public/RenderingThread.h"
-// #include "Runtime/Engine/Public/UnrealEngine.h"
 
 FActorDefinition ASceneCaptureCamera::GetSensorDefinition()
 {
