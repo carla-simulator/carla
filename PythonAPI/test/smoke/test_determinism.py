@@ -61,7 +61,7 @@ class TestDeterminism(SmokeTest):
                 world.tick()
         return simulation_record
 
-    def test_determ(self):
+    def xtest_determ(self):
         print("TestDeterminism.test_determ")
         number_of_vehicles = 100
         tm_seed = 1
