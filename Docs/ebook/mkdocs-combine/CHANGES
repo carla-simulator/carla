@@ -1,0 +1,54 @@
+0.4.0.0 by Daniel Nüst
+ 
+ * Add verbose option and some logging
+ * Single version definition in setup.py
+ * Switch to mkdocs 1.0.4 or later, incl. support for new "nav" config property, which deprecates "pages", see https://github.com/mkdocs/mkdocs/pull/1504
+
+0.3.1.1 by Adam Twardoch:
+
+ * Compatibility fix for unicode filenames
+
+0.3.1.0 by Daniel Nüst:
+
+* Added admonition processing
+
+0.3.0.1 by Jeff Hastings:
+
+ * Add ability to insert page breaks between pages
+
+0.3.0.0 by Adam Twardoch:
+
+ * Renamed project to 'mkdocs-combine'
+ * Added more commandline options to mkdocscombine tool
+
+0.2.6.3:
+
+ * Added support for pages without titles specified in mkdocs.yml
+
+0.2.6:
+
+ * Fixed issues/11 (added support for underwide header rows in tables)
+ * Fixed issues/9  (added support for list-style pages data structure)
+
+0.2.5:
+
+  * Fixed issues/8 (missing empty lines between pages)
+  * Fixed issues/5 (path delimiter handling on Windows)
+  * Documented installation on Windows
+
+0.2.4:
+
+  * Fixed crash on missing `markdown_extensions` in mkdocs.yml
+
+0.2.3:
+
+  * Fixed writing to standard output (broke in 0.2.2).
+
+0.2.2:
+
+  * Merged Marcin Klick's Python3 compatibility fixes
+  * Documented packages required for generating PDF from Pandoc source
+
+0.2.1:
+
+  Initial public release.
