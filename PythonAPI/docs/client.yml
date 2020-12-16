@@ -71,6 +71,12 @@
         default: (2.0, 50.0, 1.0, 0.6, true, true)
         doc: >
            Additional settings for the mesh generation. If none are provided, default values will be used.
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+          This is usefull to keep sync mode when change map and keep deterministic scenarios.
       doc: >
         Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
         It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
@@ -83,6 +89,12 @@
         doc: >
           Name of the map to be used in this world. Accepts both full paths and map names, e.g.
           '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+          This is usefull to keep sync mode when change map and keep deterministic scenarios.
       - param_name: map_layers
         type: carla.MapLayer
         default: carla.MapLayer.All
@@ -95,6 +107,12 @@
     # --------------------------------------
     - def_name: reload_world
       params:
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+          This is usefull to keep sync mode when change map and keep deterministic scenarios.
       raises: RuntimeError when corresponding.
       doc: >
         Reload the current world, note that a new world is created with default
