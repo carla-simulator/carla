@@ -516,7 +516,6 @@
       params: 
       - param_name: map_layers
         type: carla.MapLayer
-        default: None
         doc: > 
           Mask of level layers to be loaded. 
       doc: >
@@ -528,7 +527,6 @@
       params: 
       - param_name: map_layers
         type: carla.MapLayer
-        default: None
         doc: > 
           Mask of level layers to be unloaded. 
       doc: >
