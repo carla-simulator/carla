@@ -83,6 +83,13 @@
         doc: >
           Name of the map to be used in this world. Accepts both full paths and map names, e.g.
           '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.
+      - param_name: map_layers
+        type: carla.MapLayer
+        default: carla.MapLayer.All
+        doc: >
+          Layers of the map that will be loaded, by default all layers are loaded.
+          This parameter works like a flag mask.
+          _Warning: This only affect to "Opt" maps.
       doc: >
         Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
     # --------------------------------------
