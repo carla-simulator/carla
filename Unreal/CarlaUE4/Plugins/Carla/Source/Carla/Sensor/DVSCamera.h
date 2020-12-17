@@ -50,7 +50,8 @@ public:
   void Set(const FActorDescription &ActorDescription) override;
 
 protected:
-  void Tick(float DeltaTime) override;
+  // void PrePhysTick(float DeltaTime) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
   void imageToGray(const TArray<FColor> &image, TArray<float> &gray);
   void imageToLogGray(const TArray<FColor> &image, TArray<float> &gray);
   ADVSCamera::DVSEventArray simulation (float DeltaTime);

@@ -217,7 +217,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
     ++TickCuesReceived;
-    return GFrameCounter + 1u;
+    return FCarlaEngine::GetFrameCounter();
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -239,7 +239,7 @@ void FCarlaServer::FPimpl::BindActions()
     return result;
   };
 
-  BIND_SYNC(load_new_episode) << [this](const std::string &map_name, cr::MapLayer MapLayers) -> R<void>
+  BIND_SYNC(load_new_episode) << [this](const std::string &map_name, const bool reset_settings, cr::MapLayer MapLayers) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
 
@@ -250,7 +250,7 @@ void FCarlaServer::FPimpl::BindActions()
     }
     GameInstance->SetMapLayer(static_cast<int32>(MapLayers));
 
-    if(!Episode->LoadNewEpisode(cr::ToFString(map_name)))
+    if(!Episode->LoadNewEpisode(cr::ToFString(map_name), reset_settings))
     {
       RESPOND_ERROR("map not found");
     }
@@ -337,7 +337,7 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
     StreamingServer.SetSynchronousMode(settings.synchronous_mode);
-    return GFrameCounter;
+    return FCarlaEngine::GetFrameCounter();
   };
 
   BIND_SYNC(get_actor_definitions) << [this]() -> R<std::vector<cr::ActorDefinition>>

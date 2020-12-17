@@ -9,6 +9,7 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
 
+#include "Runtime/RenderCore/Public/RenderCommandFence.h"
 #include "SceneCaptureSensor.generated.h"
 
 class UDrawFrustumComponent;
@@ -32,17 +33,9 @@ class CARLA_API ASceneCaptureSensor : public ASensor
   friend class ACarlaGameModeBase;
   friend class FPixelReader;
 
-private:
-
-  /// @TODO: delete once the new tick pipeline is done
-  FTransform OldTransform;
-
 public:
 
   ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer);
-
-  /// @TODO: delete once the new tick pipeline is done
-  const FTransform &GetSyncActorTransform() const override;
 
   void Set(const FActorDescription &ActorDescription) override;
 
@@ -278,19 +271,22 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
+  UFUNCTION(BlueprintCallable)
+  USceneCaptureComponent2D *GetCaptureComponent2D()
+  {
+    return CaptureComponent2D;
+  }
+
 protected:
 
   virtual void BeginPlay() override;
 
-  virtual void Tick(float DeltaTime) override;
+  virtual void PrePhysTick(float DeltaSeconds) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
-
-  virtual void SendPixels(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
-
-  FDelegateHandle SendPixelsDelegate;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)
@@ -314,6 +310,8 @@ protected:
   /// Whether to render the post-processing effects present in the scene.
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
+
+  FRenderCommandFence RenderFence;
 
   bool ReadyToCapture = false;
 

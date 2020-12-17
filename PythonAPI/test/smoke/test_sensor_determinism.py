@@ -1,41 +1,31 @@
-#!/usr/bin/env python
-
-# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""
-Check raycast sensors determinism for CARLA
-This script spawn all the raycast sensors in a simple scenario and check if their
-output are deterministic.
-"""
-
-import glob
-import os
-import sys
-import argparse
-import time
-import filecmp
-import shutil
-from queue import Queue
-from queue import Empty
-
-import numpy as np
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+from __init__ import SyncSmokeTest
 
 import carla
+import time
+import numpy as np
+import filecmp
+import shutil
+import os
 
+try:
+    # python 3
+    from queue import Queue as Queue
+    from queue import Empty
+except ImportError:
+    # python 2
+    from Queue import Queue as Queue
+    from Queue import Empty
 
-class Scenario():
+class DeterminismError(Exception):
+    pass
+
+class Scenario(object):
     def __init__(self, client, world, save_snapshots_mode=False):
         self.world = world
         self.client = client
@@ -137,18 +127,14 @@ class Scenario():
 
         self.init_scene(prefix, run_settings, spectator_tr)
 
-        t_start = time.perf_counter()
         for _i in range(0, tics):
             self.world.tick()
             self.sensor_syncronization()
             self.save_snapshots()
-        t_end = time.perf_counter()
 
         self.world.apply_settings(original_settings)
         self.save_snapshots_to_disk()
         self.clear_scene()
-
-        return t_end - t_start
 
     def add_sensor(self, sensor, sensor_type):
         sen_idx = len(self.sensor_list)
@@ -205,101 +191,11 @@ class Scenario():
         for sensor in self.sensor_list:
             s_frame = self.sensor_queue.get(True, 1.0)[0]
             if w_frame != s_frame:
-                print("Error!!! frames are not equal for %s: %d %d" % (sensor[0], w_frame, s_frame))
-
-
-class SpawnLidarNoDropff(Scenario):
-    def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
-
-        blueprint_library = self.world.get_blueprint_library()
-
-        vehicle00_tr = carla.Transform(carla.Location(140, -205, 0.1), carla.Rotation(yaw=181.5))
-        vehicle00 = self.world.spawn_actor(blueprint_library.filter("tt")[0], vehicle00_tr)
-
-        vehicle00.set_target_velocity(carla.Vector3D(-25, 0, 0))
-
-        lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast')
-        lidar_bp.set_attribute('dropoff_general_rate', '0.0')
-        lidar_bp.set_attribute('noise_seed', '43233')
-
-        lidar_tr = carla.Transform(carla.Location(z=2))
-        lidar = self.world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
-
-        self.add_sensor(lidar, "LiDAR")
-        self.add_actor(vehicle00, "Car")
-
-        self.wait(1)
-
-class SpawnSemanticLidar(Scenario):
-    def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
-
-        blueprint_library = self.world.get_blueprint_library()
-
-        vehicle00_tr = carla.Transform(carla.Location(140, -205, 0.1), carla.Rotation(yaw=181.5))
-        vehicle00 = self.world.spawn_actor(blueprint_library.filter("tt")[0], vehicle00_tr)
-
-        vehicle00.set_target_velocity(carla.Vector3D(-25, 0, 0))
-
-        lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
-
-        lidar_tr = carla.Transform(carla.Location(z=2))
-        lidar = self.world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
-
-        self.add_sensor(lidar, "SemLiDAR")
-        self.add_actor(vehicle00, "Car")
-
-        self.wait(1)
-
-class SpawnRadar(Scenario):
-    def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
-
-        blueprint_library = self.world.get_blueprint_library()
-
-        vehicle00_tr = carla.Transform(carla.Location(140, -205, 0.1), carla.Rotation(yaw=181.5))
-        vehicle00 = self.world.spawn_actor(blueprint_library.filter("tt")[0], vehicle00_tr)
-
-        vehicle00.set_target_velocity(carla.Vector3D(-25, 0, 0))
-
-        radar_bp = self.world.get_blueprint_library().find('sensor.other.radar')
-        radar_bp.set_attribute('noise_seed', '54283')
-
-        radar_tr = carla.Transform(carla.Location(z=2))
-        radar = self.world.spawn_actor(radar_bp, radar_tr, attach_to=vehicle00)
-
-        self.add_sensor(radar, "Radar")
-        self.add_actor(vehicle00, "Car")
-
-        self.wait(1)
-
-class SpawnLidarWithDropff(Scenario):
-    def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
-
-        blueprint_library = self.world.get_blueprint_library()
-
-        vehicle00_tr = carla.Transform(carla.Location(140, -205, 0.1), carla.Rotation(yaw=181.5))
-        vehicle00 = self.world.spawn_actor(blueprint_library.filter("tt")[0], vehicle00_tr)
-
-        vehicle00.set_target_velocity(carla.Vector3D(-25, 0, 0))
-
-        lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast')
-        lidar_bp.set_attribute('channels', '64')
-        lidar_bp.set_attribute('noise_seed', '249013')
-
-        lidar_tr = carla.Transform(carla.Location(z=2))
-        lidar = self.world.spawn_actor(lidar_bp, lidar_tr, attach_to=vehicle00)
-
-        self.add_sensor(lidar, "LiDAR")
-        self.add_actor(vehicle00, "Car")
-
-        self.wait(1)
+                raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d" % (sensor[0], w_frame, s_frame))
 
 class SpawnAllRaycastSensors(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
+        super(SpawnAllRaycastSensors, self).init_scene(prefix, settings, spectator_tr)
 
         blueprint_library = self.world.get_blueprint_library()
 
@@ -348,7 +244,6 @@ class SensorScenarioTester():
         self.output_path = output_path
 
     def compare_files(self, file_i, file_j):
-
         # First, we check if the files are exactly equal,
         # if they are the simulations are equivalent
         check_ij = filecmp.cmp(file_i, file_j)
@@ -396,8 +291,6 @@ class SensorScenarioTester():
         return determinism_set
 
     def test_scenario(self, repetitions = 1, sim_tics = 100):
-        output_str = "Testing Determinism in %s -> " % (self.scenario_name)
-
         prefix = self.output_path + self.scenario_name
 
         config_settings = self.world.get_settings()
@@ -407,85 +300,38 @@ class SensorScenarioTester():
         spectator_tr = carla.Transform(carla.Location(160, -205, 10), carla.Rotation(yaw=180))
 
         sim_prefixes = []
-        t_comp = 0
         for i in range(0, repetitions):
             prefix_rep = prefix + "_rep_" + ("%03d" % i)
-            t_comp += self.scene.run_simulation(prefix_rep, config_settings, spectator_tr, tics=sim_tics)
+            self.scene.run_simulation(prefix_rep, config_settings, spectator_tr, tics=sim_tics)
             sim_prefixes.append(prefix_rep)
 
         determ_repet = self.check_simulations(sim_prefixes, sim_tics)
-        output_str += "Deterministic Repetitions: %r / %2d" % (determ_repet, repetitions)
-        output_str += "  -> Comp. FPS: %.0f" % ((repetitions*sim_tics)/t_comp)
-
+    
         if determ_repet[0] != repetitions:
-            print("Error!!! Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet[0], repetitions))
-
-        return output_str
+            raise DeterminismError("SensorOutputError: Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet[0], repetitions))
 
 
-def main(arg):
-    """Main function of the script"""
-    client = carla.Client(arg.host, arg.port)
-    client.set_timeout(5.0)
-    world = client.get_world()
-    pre_settings = world.get_settings()
-    world = client.load_world("Town03")
+class TestSensorDeterminism(SyncSmokeTest):
+    def test_all_sensors(self):
+        print("TestSensorDeterminism.test_all_sensors")
 
-    try:
         # Setting output temporal folder
         output_path = os.path.dirname(os.path.realpath(__file__))
         output_path = os.path.join(output_path, "_sensors") + os.path.sep
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
-        test_list = [
-            SensorScenarioTester(SpawnAllRaycastSensors(client, world), output_path),
-            SensorScenarioTester(SpawnLidarNoDropff(client, world), output_path),
-            SensorScenarioTester(SpawnLidarWithDropff(client, world), output_path),
-            SensorScenarioTester(SpawnSemanticLidar(client, world), output_path),
-            SensorScenarioTester(SpawnRadar(client, world), output_path)
-        ]
+        # Loading Town03 for test
+        self.client.load_world("Town03")
 
-        repetitions = 10
-        for item in test_list:
-            print("--------------------------------------------------------------")
-            out = item.test_scenario(repetitions)
-            print(out)
-
-        print("--------------------------------------------------------------")
+        try:
+            test_sensors = SensorScenarioTester(SpawnAllRaycastSensors(self.client, self.world), output_path)
+            test_sensors.test_scenario(repetitions=5, sim_tics = 100)
+        except DeterminismError as err:
+            test_sensors.scene.clear_scene()
+            # Remove all the output files
+            shutil.rmtree(output_path)
+            self.fail(err)
 
         # Remove all the output files
-        #shutil.rmtree(path)
-
-    finally:
-        world.apply_settings(pre_settings)
-
-
-
-if __name__ == "__main__":
-
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port of CARLA Simulator (default: 2000)')
-    argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='model3',
-        help='actor filter (default: "vehicle.*")')
-    args = argparser.parse_args()
-
-    try:
-        main(args)
-    except KeyboardInterrupt:
-        print(' - Exited by user.')
-
+        shutil.rmtree(output_path)

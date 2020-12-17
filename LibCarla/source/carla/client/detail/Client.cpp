@@ -140,9 +140,9 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("version");
   }
 
-  void Client::LoadEpisode(std::string map_name, rpc::MapLayer map_layer) {
+  void Client::LoadEpisode(std::string map_name, bool reset_settings, rpc::MapLayer map_layer) {
     // Await response, we need to be sure in this one.
-    _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name), map_layer);
+    _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name), reset_settings, map_layer);
   }
 
   void Client::LoadLevelLayer(rpc::MapLayer map_layer) const {

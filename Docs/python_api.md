@@ -2255,9 +2255,17 @@ Applies a control object on the next tick, containing driving parameters such as
 Applies a physics control object in the next tick containing the parameters that define the vehicle as a corporeal body. E.g.: moment of inertia, mass, drag coefficient and many more.  
     - **Parameters:**
         - `physics_control` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_)  
+- <a name="carla.Vehicle.enable_carsim"></a>**<font color="#7fb800">enable_carsim</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**simfile_path**</font>)  
+Enables the CarSim physics solver for this particular vehicle. In order for this function to work, there needs to be a valid license manager running on the server side. The control inputs are redirected to CarSim which will provide the position and orientation of the vehicle for every frame.  
+    - **Parameters:**
+        - `simfile_path` (_str_) – Path to the `.simfile` file with the parameters of the simulation.  
 - <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
 Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).  
     - **Return:** _bool_  
+- <a name="carla.Vehicle.use_carsim_road"></a>**<font color="#7fb800">use_carsim_road</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**</font>)  
+Enables or disables the usage of CarSim vs terrain file specified in the `.simfile`. By default this option is disabled and CarSim uses unreal engine methods to process the geometry of the scene.  
+    - **Parameters:**
+        - `enabled` (_bool_)  
 
 ##### Getters
 - <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2857,6 +2865,8 @@ States the synchrony between client and server. When set to true, the server wil
 When enabled, the simulation will run no rendering at all. This is mainly used to avoid overhead during heavy traffic simulations. It is false by default.  
 - <a name="carla.WorldSettings.fixed_delta_seconds"></a>**<font color="#f8805a">fixed_delta_seconds</font>** (_float_)  
 Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
+- <a name="carla.WorldSettings.deterministic_ragdolls"></a>**<font color="#f8805a">deterministic_ragdolls</font>** (_bool_)  
+Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation.  When enabled, pedestrians have less realistic death animation but ensures determinism.  When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured.  
 
 ### Methods
 - <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>)  
@@ -3226,6 +3236,40 @@ document.getElementById("snipets-container").innerHTML = null;
 }
 </script>
   
+<div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.ActorBlueprint.set_attribute
+</p>
+<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe changes attributes of different type of blueprint actors.
+
+# ...
+walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
+walker_bp.set_attribute('is_invincible', True)
+
+# ...
+# Changes attribute randomly by the recommended value
+vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
+color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
+vehicle_bp.set_attribute('color', color)
+
+# ...
+
+camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
+camera_bp.set_attribute('image_size_x', 600)
+camera_bp.set_attribute('image_size_y', 600)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
 <div id ="carla.Client.apply_batch_sync-snipet" style="display: none;">
 <p class="SnipetFont">
 Snipet for carla.Client.apply_batch_sync
@@ -3299,118 +3343,60 @@ for i in range(0, len(all_actors), 2):
   
 </div>
   
-<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
+<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.DebugHelper.draw_box
+Snipet for carla.WalkerAIController.stop
 </p>
-<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
 
-# ....
-debug = world.debug
-world_snapshot = world.get_snapshot()
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
 
-for actor_snapshot in world_snapshot:
-    actual_actor = world.get_actor(actor_snapshot.id)
-    if actual_actor.type_id == 'traffic.traffic_light':
-        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
-# ...
-
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
-<div id ="carla.World.spawn_actor-snipet" style="display: none;">
+<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.World.spawn_actor
+Snipet for carla.Map.get_waypoint
 </p>
-<div id="carla.World.spawn_actor-code" class="SnipetContent">
+<div id="carla.Map.get_waypoint-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe attaches different camera / sensors to a vehicle with different attachments.
+# This recipe shows the current traffic rules affecting the vehicle. 
+# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
 
 # ...
-camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
-# Default attachment:  Attachment.Rigid
-gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
-collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
-lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-</div>
-  
-<div id ="carla.Sensor.listen-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.Sensor.listen
-</p>
-<div id="carla.Sensor.listen-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe applies a color conversion to the image taken by a camera sensor,
-# so it is converted to a semantic segmentation image.
-
-# ...
-camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
-# ...
-cc = carla.ColorConverter.CityScapesPalette
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
+waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
+print("Current lane type: " + str(waypoint.lane_type))
+# Check current lane change allowed
+print("Current Lane change:  " + str(waypoint.lane_change))
+# Left and Right lane markings
+print("L lane marking type: " + str(waypoint.left_lane_marking.type))
+print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
+print("R lane marking type: " + str(waypoint.right_lane_marking.type))
+print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
 # ...
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-</div>
-  
-<div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.ActorBlueprint.set_attribute
-</p>
-<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
-
-```py
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 
-# This recipe changes attributes of different type of blueprint actors.
-
-# ...
-walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
-walker_bp.set_attribute('is_invincible', True)
-
-# ...
-# Changes attribute randomly by the recommended value
-vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
-color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
-vehicle_bp.set_attribute('color', color)
-
-# ...
-
-camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
-camera_bp.set_attribute('image_size_x', 600)
-camera_bp.set_attribute('image_size_y', 600)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
   
 </div>
   
@@ -3453,39 +3439,6 @@ while True:
   
 
 <img src="/img/snipets_images/carla.DebugHelper.draw_line.jpg">
-  
-</div>
-  
-<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.Map.get_waypoint
-</p>
-<div id="carla.Map.get_waypoint-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows the current traffic rules affecting the vehicle. 
-# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
-
-# ...
-waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
-print("Current lane type: " + str(waypoint.lane_type))
-# Check current lane change allowed
-print("Current Lane change:  " + str(waypoint.lane_change))
-# Left and Right lane markings
-print("L lane marking type: " + str(waypoint.left_lane_marking.type))
-print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
-print("R lane marking type: " + str(waypoint.right_lane_marking.type))
-print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
   
 </div>
   
@@ -3535,62 +3488,34 @@ if vehicle_actor.is_at_traffic_light():
   
 </div>
   
-<div id ="carla.World.get_spectator-snipet" style="display: none;">
+<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.World.get_spectator
+Snipet for carla.DebugHelper.draw_box
 </p>
-<div id="carla.World.get_spectator-code" class="SnipetContent">
+<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe spawns an actor and the spectator camera at the actor's location.
+# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
 
+# ....
+debug = world.debug
+world_snapshot = world.get_snapshot()
+
+for actor_snapshot in world_snapshot:
+    actual_actor = world.get_actor(actor_snapshot.id)
+    if actual_actor.type_id == 'traffic.traffic_light':
+        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
 # ...
-world = client.get_world()
-spectator = world.get_spectator()
 
-vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
-transform = random.choice(world.get_map().get_spawn_points())
-vehicle = world.try_spawn_actor(vehicle_bp, transform)
-
-# Wait for world to get the vehicle actor
-world.tick()
-
-world_snapshot = world.wait_for_tick()
-actor_snapshot = world_snapshot.find(vehicle.id)
-
-# Set spectator at given transform (vehicle transform)
-spectator.set_transform(actor_snapshot.get_transform())
-# ...
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-</div>
-  
-<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
-<p class="SnipetFont">
-Snipet for carla.WalkerAIController.stop
-</p>
-<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
-
-```py
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 
-#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
-
-# stop pedestrians (list is [controller, actor, controller, actor ...])
-for i in range(0, len(all_id), 2):
-    all_actors[i].stop()
-
-# destroy pedestrian (actor and controller)
-client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
   
 </div>
   
@@ -3636,6 +3561,91 @@ Snipet for carla.Client.__init__
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Sensor.listen-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.Sensor.listen
+</p>
+<div id="carla.Sensor.listen-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe applies a color conversion to the image taken by a camera sensor,
+# so it is converted to a semantic segmentation image.
+
+# ...
+camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
+# ...
+cc = carla.ColorConverter.CityScapesPalette
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.spawn_actor-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.World.spawn_actor
+</p>
+<div id="carla.World.spawn_actor-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe attaches different camera / sensors to a vehicle with different attachments.
+
+# ...
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
+# Default attachment:  Attachment.Rigid
+gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
+collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
+lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.get_spectator-snipet" style="display: none;">
+<p class="SnipetFont">
+Snipet for carla.World.get_spectator
+</p>
+<div id="carla.World.get_spectator-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe spawns an actor and the spectator camera at the actor's location.
+
+# ...
+world = client.get_world()
+spectator = world.get_spectator()
+
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
+transform = random.choice(world.get_map().get_spawn_points())
+vehicle = world.try_spawn_actor(vehicle_bp, transform)
+
+# Wait for world to get the vehicle actor
+world.tick()
+
+world_snapshot = world.wait_for_tick()
+actor_snapshot = world_snapshot.find(vehicle.id)
+
+# Set spectator at given transform (vehicle transform)
+spectator.set_transform(actor_snapshot.get_transform())
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   

@@ -69,8 +69,6 @@ class TestDeterminism(SmokeTest):
         self.client.load_world("Town03")
 
         # set setting for round 1
-        traffic_manager = self.client.get_trafficmanager(TM_PORT)
-        traffic_manager.set_synchronous_mode(True)
         world = self.client.get_world()
         old_settings = world.get_settings()
         new_settings = world.get_settings()
@@ -78,7 +76,6 @@ class TestDeterminism(SmokeTest):
         new_settings.fixed_delta_seconds = 0.05
         world.apply_settings(new_settings)
 
-        traffic_manager.set_random_device_seed(tm_seed)
         blueprints = world.get_blueprint_library().filter('vehicle.*')
 
         # filter bad vehicles
@@ -110,17 +107,21 @@ class TestDeterminism(SmokeTest):
             blueprint.set_attribute('role_name', 'autopilot')
             blueprint_transform_list.append((blueprint, transform))
 
+        # reset for simulation 1
+        self.client.reload_world(False)
+        world = self.client.get_world()
+        traffic_manager = self.client.get_trafficmanager(TM_PORT)
+        traffic_manager.set_synchronous_mode(True)
+        traffic_manager.set_random_device_seed(tm_seed)
 
         # run simulation 1
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run1 = self.run_simulation(world, vehicle_actor_list)
         traffic_manager.set_synchronous_mode(False)
-        world.apply_settings(old_settings)
 
-        # reset the settings
-        self.client.reload_world()
+        # reset for simulation 2
+        self.client.reload_world(False)
         world = self.client.get_world()
-        world.apply_settings(new_settings)
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
         traffic_manager.set_random_device_seed(tm_seed)
@@ -129,7 +130,6 @@ class TestDeterminism(SmokeTest):
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run2 = self.run_simulation(world, vehicle_actor_list)
         traffic_manager.set_synchronous_mode(False)
-        world.apply_settings(old_settings)
 
         self.client.reload_world()
         world.apply_settings(old_settings)

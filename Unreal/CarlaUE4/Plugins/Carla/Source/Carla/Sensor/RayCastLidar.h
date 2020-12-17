@@ -35,6 +35,8 @@ public:
   virtual void Set(const FActorDescription &Description) override;
   virtual void Set(const FLidarDescription &LidarDescription) override;
 
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime);
+
 private:
   /// Compute the received intensity of the point
   float ComputeIntensity(const FSemanticDetection& RawDetection) const;
@@ -44,8 +46,6 @@ private:
   bool PostprocessDetection(FDetection& Detection) const;
 
   void ComputeAndSaveDetections(const FTransform& SensorTransform) override;
-
-  virtual void Tick(float DeltaTime) override;
 
   FLidarData LidarData;
 

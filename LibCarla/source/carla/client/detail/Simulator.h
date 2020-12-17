@@ -64,11 +64,11 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    EpisodeProxy ReloadEpisode() {
-      return LoadEpisode("");
+    EpisodeProxy ReloadEpisode(bool reset_settings = true) {
+      return LoadEpisode("", reset_settings);
     }
 
-    EpisodeProxy LoadEpisode(std::string map_name, rpc::MapLayer map_layers = rpc::MapLayer::All);
+    EpisodeProxy LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layers = rpc::MapLayer::All);
 
     void LoadLevelLayer(rpc::MapLayer map_layers) const {
       _client.LoadLevelLayer(map_layers);
@@ -80,7 +80,8 @@ namespace detail {
 
     EpisodeProxy LoadOpenDriveEpisode(
         std::string opendrive,
-        const rpc::OpendriveGenerationParameters & params);
+        const rpc::OpendriveGenerationParameters & params,
+        bool reset_settings = true);
 
     /// @}
     // =========================================================================

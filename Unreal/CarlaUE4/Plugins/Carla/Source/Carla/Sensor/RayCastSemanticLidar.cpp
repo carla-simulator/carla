@@ -64,10 +64,8 @@ void ARayCastSemanticLidar::CreateLasers()
   }
 }
 
-void ARayCastSemanticLidar::Tick(const float DeltaTime)
+void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);

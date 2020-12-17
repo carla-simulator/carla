@@ -55,7 +55,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
 }
 
-bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
+bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool reset_settings)
 {
   FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
   bool bIsFileFound = false;
@@ -104,7 +104,8 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
   {
     UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
-    ApplySettings(FEpisodeSettings{});
+    if (reset_settings)
+      ApplySettings(FEpisodeSettings{});
   }
   return bIsFileFound;
 }

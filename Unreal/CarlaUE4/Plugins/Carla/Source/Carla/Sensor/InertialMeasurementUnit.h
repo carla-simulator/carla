@@ -30,14 +30,11 @@ public:
 
   static FActorDefinition GetSensorDefinition();
 
-  /// @TODO: delete once the new tick pipeline is done
-  const FTransform &GetSyncActorTransform() const override;
-
   void Set(const FActorDescription &ActorDescription) override;
 
   void SetOwner(AActor *Owner) override;
 
-  void Tick(float DeltaTime) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   const carla::geom::Vector3D ComputeAccelerometerNoise(
       const FVector &Accelerometer);
@@ -70,9 +67,6 @@ public:
   static const FVector CarlaNorthVector;
 
 private:
-
-  /// @TODO: delete once the new tick pipeline is done
-  FTransform OldTransform;
 
   void BeginPlay() override;
 
