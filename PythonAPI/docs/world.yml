@@ -422,7 +422,7 @@
         doc: > 
           State to be applied to all the EnvironmentObject of the set.
       doc: >
-        Enable or disable a set of EnvironmentObject identified by their id. This objects will appear or dissapear from the level.
+        Enable or disable a set of EnvironmentObject identified by their id. These objects will appear or disappear from the level.
     # --------------------------------------
     - def_name: get_lightmanager
       return: carla.LightManager
