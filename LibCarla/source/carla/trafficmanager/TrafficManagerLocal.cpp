@@ -175,7 +175,6 @@ void TrafficManagerLocal::Run() {
 
       registered_vehicles_state = registered_vehicles.GetState();
     }
-    registration_lock.unlock();
 
     // Reset frames for current cycle.
     localization_frame.clear();
@@ -200,6 +199,8 @@ void TrafficManagerLocal::Run() {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
     }
+
+    registration_lock.unlock();
 
     // Sending the current cycle's batch command to the simulator.
     if (synchronous_mode) {
