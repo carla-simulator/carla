@@ -15,6 +15,8 @@
 #include "PhysXVehicleManager.h"
 #include "TireConfig.h"
 #include "VehicleWheel.h"
+#include "Carla/Util/ActorAttacher.h"
+#include "Carla/Util/EmptyActor.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
 
@@ -587,8 +589,18 @@ void ACarlaWheeledVehicle::RevertToCarSimPhysics()
 void ACarlaWheeledVehicle::EnableCarSim(FString SimfilePath)
 {
   #ifdef WITH_CARSIM
-  CarSimMovementComponent = NewObject<UCarSimMovementComponent>(this);
-  ExternalMovementComponent = CarSimMovementComponent;
+  // workarround to compensate carsim coordinate origin offset
+  FActorSpawnParameters SpawnParams;
+  SpawnParams.SpawnCollisionHandlingOverride =
+      ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+  OffsetActor = GetWorld()->SpawnActor<AEmptyActor>(
+      GetActorLocation() + GetActorForwardVector() * CarSimOriginOffset,
+      GetActorRotation(),
+      SpawnParams);
+  CarSimMovementComponent = NewObject<UCarSimMovementComponent>(OffsetActor);
+
+  // CarSimMovementComponent = NewObject<UCarSimMovementComponent>(this);
+  // ExternalMovementComponent = CarSimMovementComponent;
   carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
   GetVehicleMovementComponent()->SetComponentTickEnabled(false);
   GetVehicleMovementComponent()->Deactivate();
@@ -612,6 +624,13 @@ void ACarlaWheeledVehicle::EnableCarSim(FString SimfilePath)
   OnActorHit.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimHit);
   GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &ACarlaWheeledVehicle::OnCarSimOverlap);
   GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+
+  // workaround to prevent carsim from interacting with its own car
+  GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
+
+  // attach to actor with an offset
+  AttachToActor(OffsetActor, FAttachmentTransformRules::KeepWorldTransform);
+
   bCarSimEnabled = true;
   #endif
 }
@@ -643,5 +662,13 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 bool ACarlaWheeledVehicle::IsCarSimEnabled() const
 {
   return bCarSimEnabled;
+}
+
+void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  if (OffsetActor)
+  {
+    OffsetActor->Destroy();
+  }
 }
 //-------------------------------------------
