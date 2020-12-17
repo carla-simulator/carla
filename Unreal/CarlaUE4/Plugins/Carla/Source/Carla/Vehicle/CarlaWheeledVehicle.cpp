@@ -666,9 +666,11 @@ bool ACarlaWheeledVehicle::IsCarSimEnabled() const
 
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+  #ifdef WITH_CARSIM
   if (OffsetActor)
   {
     OffsetActor->Destroy();
   }
+  #endif
 }
 //-------------------------------------------
