@@ -8,7 +8,7 @@ source $(dirname "$0")/Environment.sh
 
 DOC_STRING="Makes a packaged version of CARLA and other content packages ready for distribution."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...]"
+USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...] [--target-archive=]"
 
 PACKAGES="Carla"
 DO_TARBALL=true
@@ -16,8 +16,9 @@ DO_CLEAN_INTERMEDIATE=false
 PROPS_MAP_NAME=PropsMap
 PACKAGE_CONFIG=Shipping
 USE_CARSIM=false
+SINGLE_PACKAGE=false
 
-OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version,target-archive:, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -34,6 +35,10 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --packages )
       PACKAGES="$2"
+      shift 2 ;;
+    --target-archive )
+      SINGLE_PACKAGE=true
+      TARGET_ARCHIVE="$2"
       shift 2 ;;
     --carsim )
       USE_CARSIM=true;
@@ -184,7 +189,7 @@ if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
   rm -Rf ./CarlaUE4/Saved
   rm -Rf ./Engine/Saved
 
-  tar -czvf ${DESTINATION} *
+  tar -czf ${DESTINATION} *
 
   popd >/dev/null
 
@@ -213,8 +218,14 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   log "Preparing environment for cooking '${PACKAGE_NAME}'."
 
+  if ${SINGLE_PACKAGE} ; then
+      BUILD_FOLDER_TARGET=${CARLA_DIST_FOLDER}/${TARGET_ARCHIVE}_${REPOSITORY_TAG}
+  else
+      BUILD_FOLDER_TARGET=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
+  fi
+
   BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
-  DESTINATION=${BUILD_FOLDER}.tar.gz
+  DESTINATION=${BUILD_FOLDER_TARGET}.tar
   PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
 
   mkdir -p ${BUILD_FOLDER}
@@ -246,8 +257,6 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   if ${DO_TARBALL} ; then
 
     pushd "${BUILD_FOLDER}" > /dev/null
-
-    log "\nPackaging '${PACKAGE_NAME}'..."
 
     SUBST_PATH="${BUILD_FOLDER}/CarlaUE4"
     SUBST_FILE="${PACKAGE_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
@@ -295,7 +304,11 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
     rm -f "./CarlaUE4/AssetRegistry.bin"
 
-    tar -czvf ${DESTINATION} *
+    if ${SINGLE_PACKAGE} ; then
+      tar -rf ${DESTINATION} *
+    else
+      tar -czf ${DESTINATION}.gz *
+    fi
 
     popd >/dev/null
 
@@ -311,14 +324,19 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
 fi ; done
 
+# compress the TAR if it is a single package
+if ${SINGLE_PACKAGE} ; then
+  gzip -f ${DESTINATION}
+fi
+
 # ==============================================================================
 # -- Log paths of generated packages -------------------------------------------
 # ==============================================================================
 
-for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
-  FINAL_PACKAGE=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}.tar.gz
-  log "Package '${PACKAGE_NAME}' created at ${FINAL_PACKAGE}"
-fi ; done
+# for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
+#   FINAL_PACKAGE=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}.tar.gz
+#   log "Package '${PACKAGE_NAME}' created at ${FINAL_PACKAGE}"
+# fi ; done
 
 if ${DO_CARLA_RELEASE} ; then
   if ${DO_TARBALL} ; then

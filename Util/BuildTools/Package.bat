@@ -20,7 +20,7 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean] [--target-archive]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
@@ -28,7 +28,7 @@ set DO_TARBALL=true
 set DO_CLEAN=false
 set PACKAGES=Carla
 set USE_CARSIM=false
-
+set SINGLE_PACKAGE=false
 
 :arg-parse
 if not "%1"=="" (
@@ -52,6 +52,12 @@ if not "%1"=="" (
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
         set PACKAGES=%*
+        shift
+    )
+
+    if "%1"=="--target-archive" (
+        set SINGLE_PACKAGE=true
+        set TARGET_ARCHIVE=%2
         shift
     )
 
@@ -185,7 +191,7 @@ rem ============================================================================
 rem -- Zip the project -----------------------------------------------------------
 rem ==============================================================================
 
-if %DO_TARBALL%==true (
+if %DO_PACKAGE%==true if %DO_TARBALL%==true (
     set SRC_PATH=%SOURCE:/=\%
 
     echo %FILE_N% Building package...
@@ -340,9 +346,14 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
         if %DO_TARBALL%==true (
 
-            echo Packaging '!PACKAGE_NAME!'...
+            if %SINGLE_PACKAGE%==true (
+                echo Packaging '%TARGET_ARCHIVE%'...
+                set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/%TARGET_ARCHIVE%_%CARLA_VERSION%.zip
+            ) else (
+                echo Packaging '!PACKAGE_NAME!'...
+                set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%.zip
+            )
 
-            set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%.zip
             set SOURCE=!BUILD_FOLDER:/=\!\
             set DST_ZIP=!DESTINATION_ZIP:/=\!
 
@@ -352,7 +363,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
                 "%ProgramW6432%/7-Zip/7z.exe" a "!DST_ZIP!" . -tzip -mmt -mx5
             ) else (
                 rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
-                powershell -command "& { Compress-Archive -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
+                powershell -command "& { Compress-Archive -Update -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
             )
 
             popd
