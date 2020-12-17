@@ -69,6 +69,11 @@ static auto Tick(carla::client::World &world, double seconds) {
   return world.Tick(TimeDurationFromSeconds(seconds));
 }
 
+static auto ApplySettings(carla::client::World &world, carla::rpc::EpisodeSettings settings, double seconds) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return world.ApplySettings(settings, TimeDurationFromSeconds(seconds));
+}
+
 static auto GetActorsById(carla::client::World &self, const boost::python::list &actor_ids) {
   std::vector<carla::ActorId> ids{
       boost::python::stl_input_iterator<carla::ActorId>(actor_ids),
@@ -262,7 +267,7 @@ void export_world() {
     .def("get_random_location_from_navigation", CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cc::World, GetRandomLocationFromNavigation))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
-    .def("apply_settings", CALL_WITHOUT_GIL_1(cc::World, ApplySettings, cr::EpisodeSettings), arg("settings"))
+    .def("apply_settings", &ApplySettings, (arg("settings"), arg("seconds")=10.0))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
     .def("get_snapshot", &cc::World::GetSnapshot)
