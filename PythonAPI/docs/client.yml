@@ -76,7 +76,7 @@
         default: true
         doc: >
           Option to reset the episode setting to default values, set to false to keep the current settings.
-          This is usefull to keep sync mode when change map and keep deterministic scenarios.
+          This is useful to keep sync mode when changing map and to keep deterministic scenarios.
       doc: >
         Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
         It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
@@ -94,14 +94,15 @@
         default: true
         doc: >
           Option to reset the episode setting to default values, set to false to keep the current settings.
-          This is usefull to keep sync mode when change map and keep deterministic scenarios.
+          This is useful to keep sync mode when changing map and to keep deterministic scenarios.
       - param_name: map_layers
         type: carla.MapLayer
         default: carla.MapLayer.All
         doc: >
-          Layers of the map that will be loaded, by default all layers are loaded.
+          Layers of the map that will be loaded. By default all layers are loaded.
           This parameter works like a flag mask.
-          _Warning: This only affect to "Opt" maps.
+      warning: >
+        `map_layers` are only available for "Opt" maps
       doc: >
         Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
     # --------------------------------------
@@ -112,7 +113,7 @@
         default: true
         doc: >
           Option to reset the episode setting to default values, set to false to keep the current settings.
-          This is usefull to keep sync mode when change map and keep deterministic scenarios.
+          This is useful to keep sync mode when changing map and to keep deterministic scenarios.
       raises: RuntimeError when corresponding.
       doc: >
         Reload the current world, note that a new world is created with default

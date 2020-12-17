@@ -210,7 +210,7 @@
     # - DESCRIPTION ------------------------
     doc: >
       Class that represents each manageable layer of the map. Can be used as flags.
-      _Warning: Only "Opt" maps are prepared to work with map layers.
+      __WARNING: Only "Opt" maps are able to work with map layers.__
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -521,7 +521,7 @@
       doc: >
         Loads the selected layers to the level.
         If the layer is already loaded the call has no effect.
-        _Warning: This only affect to "Opt" maps.
+      warning: This only affects "Opt" maps.
     # --------------------------------------
     - def_name: unload_map_layer
       params: 
@@ -532,7 +532,7 @@
       doc: >
         Unloads the selected layers to the level.
         If the layer is already unloaded the call has no effect.
-        _Warning: This only affect to "Opt" maps.
+      warning: This only affects "Opt" maps.
     # --------------------------------------
     - def_name: __str__
       return:
