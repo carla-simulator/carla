@@ -122,6 +122,10 @@
       type: float
       doc: >
         Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
+    - var_name: max_culling_distance
+      type: float
+      doc: >
+        Configure the max draw distance for each mesh of the level.  
     - var_name: deterministic_ragdolls
       type: bool
       doc: >
