@@ -22,7 +22,7 @@ END
 REMOVE_INTERMEDIATE=false
 BUILD_OSM2ODR=false
 
-OPTS=`getopt -o h --long help,rebuild,build,clean -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,build,clean,carsim -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
