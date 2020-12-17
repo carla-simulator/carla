@@ -1,18 +1,6 @@
 #! /bin/bash
 
 # ==============================================================================
-# -- Set up environment --------------------------------------------------------
-# ==============================================================================
-
-source $(dirname "$0")/Environment.sh
-
-if [ ! -d "${UE4_ROOT}" ]; then
-  fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
-else
-  log "Using Unreal Engine at '$UE4_ROOT'"
-fi
-
-# ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
@@ -70,6 +58,18 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+# ==============================================================================
+# -- Set up environment --------------------------------------------------------
+# ==============================================================================
+
+source $(dirname "$0")/Environment.sh
+
+if [ ! -d "${UE4_ROOT}" ]; then
+  fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
+else
+  log "Using Unreal Engine at '$UE4_ROOT'"
+fi
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_CARLAUE4} || ${LAUNCH_UE4_EDITOR}; }; then
   fatal_error "Nothing selected to be done."

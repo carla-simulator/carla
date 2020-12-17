@@ -1,12 +1,5 @@
 #! /bin/bash
 
-source $(dirname "$0")/Environment.sh
-
-function get_source_code_checksum {
-  local EXCLUDE='*__pycache__*'
-  find "${LIBCARLA_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
-}
-
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
@@ -82,6 +75,13 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
+
+function get_source_code_checksum {
+  local EXCLUDE='*__pycache__*'
+  find "${LIBCARLA_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
+}
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_SERVER} || ${BUILD_CLIENT}; }; then
   fatal_error "Nothing selected to be done."
