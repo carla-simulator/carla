@@ -262,6 +262,8 @@ public:
   UFUNCTION(Category="CARLA Wheeled Vehicle", BlueprintPure)
   bool IsCarSimEnabled() const;
 
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
+
 private:
 
   // On car mesh hit, only works when carsim is enabled
@@ -290,11 +292,15 @@ private:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
   bool bCarSimEnabled = false;
 
+  UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
+  float CarSimOriginOffset = 150.f;
+
   // Small workarround to allow optional CarSim plugin usage
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   UMovementComponent * ExternalMovementComponent;
 
   #ifdef WITH_CARSIM
+  AActor* OffsetActor;
   // Casted version of ExternalMovementComponent
   UCarSimMovementComponent * CarSimMovementComponent;
   #endif
