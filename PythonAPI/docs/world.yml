@@ -178,40 +178,38 @@
     # --------------------------------------
 
   - class_name: EnvironmentObject
-      # - DESCRIPTION ------------------------
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents a geometry in the level, this geometry could be part of an actor formed with other EnvironmentObjects (ie: buildings).  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: transform
+      type: carla.Transform
       doc: >
-        Class that represents a geometry in the level, this geometry could be part of an actor formed with other EnvironmentObjects (ie: buildings)
-        
-      # - PROPERTIES -------------------------
-      instance_variables:
-      - var_name: transform
-        type: carla.Transform
-        doc: >
-          Contains the location and orientation of the EnvironmentObject in world space. 
-      - var_name: bounding_box
-        type: carla.BoundingBox
-        doc: >
-          Object containing a location, rotation and the length of a box for every axis in world space. 
-      - var_name: id
-        type: int
-        doc: >
-          Unique ID to identify the object in the level. 
-      - var_name: name
-        type: string
-        doc: >
-          Name of the EnvironmentObject.
-      - var_name: type
-        type: carla.CityObjectLabel
-        doc: >
-          Semantic tag. 
-          
-      # - METHODS ----------------------------
-      - def_name: __str__
-        return: str
-        doc: > 
-          Parses the EnvironmentObject to a string and shows them in command line. 
-      # --------------------------------------
-
+        Contains the location and orientation of the EnvironmentObject in world space. 
+    - var_name: bounding_box
+      type: carla.BoundingBox
+      doc: >
+        Object containing a location, rotation and the length of a box for every axis in world space. 
+    - var_name: id
+      type: int
+      doc: >
+        Unique ID to identify the object in the level. 
+    - var_name: name
+      type: string
+      doc: >
+        Name of the EnvironmentObject.
+    - var_name: type
+      type: carla.CityObjectLabel
+      doc: >
+        Semantic tag. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      return: str
+      doc: > 
+        Parses the EnvironmentObject to a string and shows them in command line. 
+    # --------------------------------------
 
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
