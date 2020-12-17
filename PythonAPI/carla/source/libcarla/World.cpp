@@ -34,7 +34,13 @@ namespace rpc {
   std::ostream &operator<<(std::ostream &out, const EpisodeSettings &settings) {
     auto BoolToStr = [](bool b) { return b ? "True" : "False"; };
     out << "WorldSettings(synchronous_mode=" << BoolToStr(settings.synchronous_mode)
-        << ",no_rendering_mode=" << BoolToStr(settings.no_rendering_mode) << ')';
+        << ",no_rendering_mode=" << BoolToStr(settings.no_rendering_mode)
+        << ",fixed_delta_seconds=" << settings.fixed_delta_seconds.get()
+        << ",substepping=" << BoolToStr(settings.substepping)
+        << ",max_substep_delta_time=" << settings.max_substep_delta_time
+        << ",max_substeps=" << settings.max_substeps
+        << ",max_culling_distance=" << settings.max_culling_distance
+        << ",deterministic_ragdolls=" << BoolToStr(settings.deterministic_ragdolls) << ')';
     return out;
   }
 
