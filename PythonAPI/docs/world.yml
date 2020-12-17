@@ -209,6 +209,30 @@
       doc: >
         Semantic tag of the point.
     # --------------------------------------
+  
+  - class_name: MapLayer
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents each manageable layer of the map. Can be used as flags.
+      __WARNING: Only "Opt" maps are able to work with map layers.__
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+        No layers selected
+    - var_name: Buildings
+    - var_name: Decals
+    - var_name: Foliage
+    - var_name: Ground
+    - var_name: ParkedVehicles
+    - var_name: Particles
+    - var_name: Props
+    - var_name: StreetLights
+    - var_name: Walls
+    - var_name: All
+      doc: >
+        All layers selected
+    # --------------------------------------
 
   - class_name: World
     # - DESCRIPTION ------------------------
@@ -491,6 +515,28 @@
           The maximum distance to perform the projection
       doc: >
         Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.Labelled object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
+    # --------------------------------------
+    - def_name: load_map_layer
+      params: 
+      - param_name: map_layers
+        type: carla.MapLayer
+        doc: > 
+          Mask of level layers to be loaded. 
+      doc: >
+        Loads the selected layers to the level.
+        If the layer is already loaded the call has no effect.
+      warning: This only affects "Opt" maps.
+    # --------------------------------------
+    - def_name: unload_map_layer
+      params: 
+      - param_name: map_layers
+        type: carla.MapLayer
+        doc: > 
+          Mask of level layers to be unloaded. 
+      doc: >
+        Unloads the selected layers to the level.
+        If the layer is already unloaded the call has no effect.
+      warning: This only affects "Opt" maps.
     # --------------------------------------
     - def_name: __str__
       return:
