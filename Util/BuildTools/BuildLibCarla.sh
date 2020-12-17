@@ -41,7 +41,7 @@ BUILD_OPTION_RELEASE=false
 BUILD_OPTION_DUMMY=false
 BUILD_RSS_VARIANT=false
 
-OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,carsim -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
