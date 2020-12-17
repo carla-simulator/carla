@@ -57,7 +57,7 @@ namespace client {
       using namespace std::literals::chrono_literals;
 
       const auto number_of_attemps = 15u;
-      int tics_correct = 0;
+      uint64_t tics_correct = 0;
       for (auto i = 0u; i < number_of_attemps; i++) {
         const auto curr_snapshot = GetSnapshot();
 
