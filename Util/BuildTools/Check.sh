@@ -1,7 +1,5 @@
 #! /bin/bash
 
-source $(dirname "$0")/Environment.sh
-
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
@@ -91,6 +89,8 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
 
 if ! { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG} || ${PYTHON_API} || ${SMOKE_TESTS}; }; then
   fatal_error "Nothing selected to be done."

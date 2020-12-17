@@ -4,7 +4,7 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-source $(dirname "$0")/Environment.sh
+
 
 REPLACE_LATEST=false
 DOCKER_PUSH=false
@@ -47,6 +47,8 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
 
 REPOSITORY_TAG=$(get_git_repository_version)
 
