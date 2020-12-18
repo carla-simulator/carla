@@ -69,16 +69,24 @@ CARLA has a [recorder feature](adv_recorder.md) that allows a simulation to be r
 
 	* There is also a __float-point arithmetic error__ that variable time-step introduces. The simulation is running with a time-step equal to the real one. Real time is a continuous variable, represented in the simulation with a `float` value, which has decimal limitations. The time that is cropped for each step accumulates, and prevents the simulation from a precise repetition of what has happened.  
 
-### Time-step limitations
+### Physics substepping
 
-Physics must be computed within very low time steps to be precise. The more time goes by, the more variables and chaos come to place, and the more defective the simulation will be. 
-CARLA uses up to 6 substeps to compute physics in every step, each with a maximum delta time of 0.016667s.  
+Physics must be computed within very low time steps to be precise. This can be a huge issue when selecting a delta time for our simulation in which we usually perform multiple computations at each frame like sensor rendering. As this limitation happens only because of the physics simulation, we can do a number of physics substeps between steps only for the physical computations. By default, this is enabled and is set to have a maximum of physics 10 substeps with a maximum physical delta time of 0.01.
+These options can be changed through the API in the world settings as:
+```py
+settings = world.get_settings()
+settings.substepping = True
+settings.max_substep_delta_time = 0.01
+settings.max_substeps = 10
+world.apply_settings(settings)
+```
 
-To know how many of these are needed, the time-step used gets divided by the maximum delta time a substep can use `number_of_substeps = time_step/0.016667`. Being these a maximum of 6, `6*0.016667 = 0.1`. If the time-step is greater than `0.1`, there will not be enough physical substeps. Physics will not be in synchrony with the delta time. 
+Be aware that if you have set the synchronous mode and the fixed time step, the options of the substepping, need to be consistent with the value of the fixed delta seconds. The condition to fulfilled is:
+```py
+fixed_delta_seconds <= max_substep_delta_time * max_substeps
+```
 
-!!! Warning
-    __Do not use a time-step greater than 0.1s.__<br>
-    As explained above, the physics will not be representative for the simulation. The original issue can be found in ref. [#695](https://github.com/carla-simulator/carla/issues/695)
+In order to have a proper physical simulation the substep delta time should be below at least below 0.01666 and ideally below 0.1.
 
 ---
 ## Client-server synchrony 
