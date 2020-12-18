@@ -50,8 +50,30 @@ namespace client {
     return _episode.Lock()->GetEpisodeSettings();
   }
 
-  uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings) {
-    return _episode.Lock()->SetEpisodeSettings(settings);
+  uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout) {
+    rpc::EpisodeSettings new_settings = settings;
+    uint64_t id = _episode.Lock()->SetEpisodeSettings(settings);
+    if (settings.synchronous_mode) {
+      using namespace std::literals::chrono_literals;
+
+      const auto number_of_attemps = 15u;
+      uint64_t tics_correct = 0;
+      for (auto i = 0u; i < number_of_attemps; i++) {
+        const auto curr_snapshot = GetSnapshot();
+
+        const double error = abs(new_settings.fixed_delta_seconds.get() - curr_snapshot.GetTimestamp().delta_seconds);
+        if (error < std::numeric_limits<float>::epsilon())
+          tics_correct++;
+
+        if (tics_correct >= 2)
+          return id;
+
+        Tick(timeout);
+      }
+
+      log_warning("World::ApplySettings: After", number_of_attemps, ", the settings were not correctly setted. Please check that everything is consistent.");
+    }
+    return id;
   }
 
   rpc::WeatherParameters World::GetWeather() const {
