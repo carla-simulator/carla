@@ -93,6 +93,9 @@ class SimulationSynchronization(object):
         settings.fixed_delta_seconds = self.carla.step_length
         self.carla.world.apply_settings(settings)
 
+        traffic_manager = self.carla.client.get_trafficmanager()
+        traffic_manager.set_synchronous_mode(True)
+
     def tick(self):
         """
         Tick to simulation synchronization

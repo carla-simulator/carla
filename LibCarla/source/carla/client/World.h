@@ -81,7 +81,7 @@ namespace client {
     rpc::EpisodeSettings GetSettings() const;
 
     /// @return The id of the frame when the settings were applied.
-    uint64_t ApplySettings(const rpc::EpisodeSettings &settings);
+    uint64_t ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout);
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
