@@ -51,6 +51,7 @@ def main():
     physics_control.drag_coefficient = 0.25
     physics_control.steering_curve = [carla.Vector2D(x=0, y=1), carla.Vector2D(x=100, y=1), carla.Vector2D(x=300, y=1)]
     physics_control.wheels = wheels
+    physics_control.use_sweep_wheel_collision = True
 
     # Apply Vehicle Physics Control for the vehicle
     vehicle.apply_physics_control(physics_control)
