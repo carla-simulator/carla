@@ -53,10 +53,10 @@ namespace client {
   uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout) {
     rpc::EpisodeSettings new_settings = settings;
     uint64_t id = _episode.Lock()->SetEpisodeSettings(settings);
-    if (settings.synchronous_mode) {
+    if (settings.fixed_delta_seconds.has_value()) {
       using namespace std::literals::chrono_literals;
 
-      const auto number_of_attemps = 15u;
+      const auto number_of_attemps = 30u;
       uint64_t tics_correct = 0;
       for (auto i = 0u; i < number_of_attemps; i++) {
         const auto curr_snapshot = GetSnapshot();
@@ -71,7 +71,7 @@ namespace client {
         Tick(timeout);
       }
 
-      log_warning("World::ApplySettings: After", number_of_attemps, ", the settings were not correctly setted. Please check that everything is consistent.");
+      log_warning("World::ApplySettings: After", number_of_attemps, " attemps, the settings were not correctly set. Please check that everything is consistent.");
     }
     return id;
   }
