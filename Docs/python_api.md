@@ -3418,35 +3418,25 @@ print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
   
 <div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.ActorBlueprint.set_attribute
+Snipet for carla.WalkerAIController.stop
 </p>
-<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe changes attributes of different type of blueprint actors.
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
 
-# ...
-walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
-walker_bp.set_attribute('is_invincible', True)
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
 
-# ...
-# Changes attribute randomly by the recommended value
-vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
-color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
-vehicle_bp.set_attribute('color', color)
-
-# ...
-
-camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
-camera_bp.set_attribute('image_size_x', 600)
-camera_bp.set_attribute('image_size_y', 600)
-# ...
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
@@ -3462,14 +3452,6 @@ Snipet for carla.Sensor.listen
 # This recipe applies a color conversion to the image taken by a camera sensor,
 # so it is converted to a semantic segmentation image.
 
-# ....
-debug = world.debug
-world_snapshot = world.get_snapshot()
-
-for actor_snapshot in world_snapshot:
-    actual_actor = world.get_actor(actor_snapshot.id)
-    if actual_actor.type_id == 'traffic.traffic_light':
-        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
 # ...
 camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
 # ...
@@ -3708,15 +3690,14 @@ if vehicle_actor.is_at_traffic_light():
   
 <div id ="carla.World.get_spectator-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.TrafficLight.set_state
+Snipet for carla.World.get_spectator
 </p>
-<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
+<div id="carla.World.get_spectator-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe changes from red to green the traffic light that affects the vehicle. 
-# This is done by detecting if the vehicle actor is at a traffic light.
+# This recipe spawns an actor and the spectator camera at the actor's location.
 
 # ...
 world = client.get_world()
@@ -3734,21 +3715,11 @@ actor_snapshot = world_snapshot.find(vehicle.id)
 
 # Set spectator at given transform (vehicle transform)
 spectator.set_transform(actor_snapshot.get_transform())
-# ...# ...
-if vehicle_actor.is_at_traffic_light():
-    traffic_light = vehicle_actor.get_traffic_light()
-    if traffic_light.get_state() == carla.TrafficLightState.Red:
-       # world.hud.notification("Traffic light changed! Good to go!")
-        traffic_light.set_state(carla.TrafficLightState.Green)
 # ...
-
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
