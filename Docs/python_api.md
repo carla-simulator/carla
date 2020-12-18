@@ -381,6 +381,7 @@ Enum declaration that contains the different tags available to filter the boundi
 - <a name="carla.CityObjectLabel.Dynamic"></a>**<font color="#f8805a">Dynamic</font>**  
 - <a name="carla.CityObjectLabel.Water"></a>**<font color="#f8805a">Water</font>**  
 - <a name="carla.CityObjectLabel.Terrain"></a>**<font color="#f8805a">Terrain</font>**  
+- <a name="carla.CityObjectLabel.Any"></a>**<font color="#f8805a">Any</font>**  
 
 ---
 
@@ -666,6 +667,30 @@ Draws a string in a given location of the simulation which can only be seen serv
         - `draw_shadow` (_bool_) – Casts a shadow for the string that could help in visualization. It is disabled by default.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the string. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
+
+---
+
+## carla.EnvironmentObject<a name="carla.EnvironmentObject"></a>
+Class that represents a geometry in the level, this geometry could be part of an actor formed with other EnvironmentObjects (ie: buildings).  
+
+### Instance Variables
+- <a name="carla.EnvironmentObject.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
+Contains the location and orientation of the EnvironmentObject in world space.  
+- <a name="carla.EnvironmentObject.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
+Object containing a location, rotation and the length of a box for every axis in world space.  
+- <a name="carla.EnvironmentObject.id"></a>**<font color="#f8805a">id</font>** (_int_)  
+Unique ID to identify the object in the level.  
+- <a name="carla.EnvironmentObject.name"></a>**<font color="#f8805a">name</font>** (_string_)  
+Name of the EnvironmentObject.  
+- <a name="carla.EnvironmentObject.type"></a>**<font color="#f8805a">type</font>** (_[carla.CityObjectLabel](#carla.CityObjectLabel)_)  
+Semantic tag.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.EnvironmentObject.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the EnvironmentObject to a string and shows them in command line.  
+    - **Return:** _str_  
 
 ---
 
@@ -2754,6 +2779,11 @@ Casts a ray from the specified initial_location to final_location. The function 
         - `initial_location` (_[carla.Location](#carla.Location)_) – The initial position of the ray.  
         - `final_location` (_[carla.Location](#carla.Location)_) – The final position of the ray.  
     - **Return:** _list([carla.LabelledPoint](#carla.LabelledPoint))_  
+- <a name="carla.World.enable_environment_objects"></a>**<font color="#7fb800">enable_environment_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**env_objects_ids**</font>, <font color="#00a6ed">**enable**</font>)  
+Enable or disable a set of EnvironmentObject identified by their id. These objects will appear or disappear from the level.  
+    - **Parameters:**
+        - `env_objects_ids` (_set(int)_) – Set of EnvironmentObject ids to change.  
+        - `enable` (_bool_) – State to be applied to all the EnvironmentObject of the set.  
 - <a name="carla.World.freeze_all_traffic_lights"></a>**<font color="#7fb800">freeze_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**frozen**</font>)  
 Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen.  
     - **Parameters:**
@@ -2835,7 +2865,12 @@ Retrieves a list of [carla.Actor](#carla.Actor) elements, either using a list of
 - <a name="carla.World.get_blueprint_library"></a>**<font color="#7fb800">get_blueprint_library</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of actor blueprints available to ease the spawn of these into the world.  
     - **Return:** _[carla.BlueprintLibrary](#carla.BlueprintLibrary)_  
-- <a name="carla.World.get_level_bbs"></a>**<font color="#7fb800">get_level_bbs</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_type**=None</font>)  
+- <a name="carla.World.get_environment_objects"></a>**<font color="#7fb800">get_environment_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**object_type**=Any</font>)  
+Returns a list of EnvironmentObject with the requested semantic tag.  The method returns all the EnvironmentObjects in the level by default, but the query can be filtered by semantic tags with the argument `object_type`.  
+    - **Parameters:**
+        - `object_type` (_[carla.CityObjectLabel](#carla.CityObjectLabel)_) – Semantic tag of the EnvironmentObjects that are returned.  
+    - **Return:** _array([carla.EnvironmentObject](#carla.EnvironmentObject))_  
+- <a name="carla.World.get_level_bbs"></a>**<font color="#7fb800">get_level_bbs</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_type**=Any</font>)  
 Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`.  
     - **Parameters:**
         - `actor_type` (_[carla.CityObjectLabel](#carla.CityObjectLabel)_) – Semantic tag of the elements contained in the bounding boxes that are returned.  

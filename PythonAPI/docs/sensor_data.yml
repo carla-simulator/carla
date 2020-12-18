@@ -82,6 +82,7 @@
     - var_name: Dynamic
     - var_name: Water
     - var_name: Terrain
+    - var_name: Any
 
   - class_name: Image
     parent: carla.SensorData

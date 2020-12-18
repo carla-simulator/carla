@@ -181,6 +181,40 @@
         Parses the established settings to a string and shows them in command line. 
     # --------------------------------------
 
+  - class_name: EnvironmentObject
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents a geometry in the level, this geometry could be part of an actor formed with other EnvironmentObjects (ie: buildings).  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Contains the location and orientation of the EnvironmentObject in world space. 
+    - var_name: bounding_box
+      type: carla.BoundingBox
+      doc: >
+        Object containing a location, rotation and the length of a box for every axis in world space. 
+    - var_name: id
+      type: int
+      doc: >
+        Unique ID to identify the object in the level. 
+    - var_name: name
+      type: string
+      doc: >
+        Name of the EnvironmentObject.
+    - var_name: type
+      type: carla.CityObjectLabel
+      doc: >
+        Semantic tag. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      return: str
+      doc: > 
+        Parses the EnvironmentObject to a string and shows them in command line. 
+    # --------------------------------------
+
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
     doc: >
@@ -386,12 +420,37 @@
       params:
       - param_name: actor_type
         type: carla.CityObjectLabel
-        default: None
+        default: Any
         doc: > 
           Semantic tag of the elements contained in the bounding boxes that are returned. 
       return: array(carla.BoundingBox)
       doc: >
         Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`. 
+    # --------------------------------------
+    - def_name: get_environment_objects
+      params:
+      - param_name: object_type
+        type: carla.CityObjectLabel
+        default: Any
+        doc: > 
+          Semantic tag of the EnvironmentObjects that are returned. 
+      return: array(carla.EnvironmentObject)
+      doc: >
+        Returns a list of EnvironmentObject with the requested semantic tag. 
+        The method returns all the EnvironmentObjects in the level by default, but the query can be filtered by semantic tags with the argument `object_type`. 
+    # --------------------------------------
+    - def_name: enable_environment_objects
+      params:
+      - param_name: env_objects_ids
+        type: set(int)
+        doc: > 
+          Set of EnvironmentObject ids to change.
+      - param_name: enable
+        type: bool
+        doc: > 
+          State to be applied to all the EnvironmentObject of the set.
+      doc: >
+        Enable or disable a set of EnvironmentObject identified by their id. These objects will appear or disappear from the level.
     # --------------------------------------
     - def_name: get_lightmanager
       return: carla.LightManager
