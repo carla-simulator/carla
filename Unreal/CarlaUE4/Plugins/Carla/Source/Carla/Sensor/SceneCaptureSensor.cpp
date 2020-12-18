@@ -454,6 +454,11 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
+void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
+  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+  CaptureComponent2D->CaptureScene();
+}
+
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
