@@ -40,7 +40,7 @@ void ASensor::Set(const FActorDescription &Description)
 
 void ASensor::Tick(const float DeltaTime)
 {
-  AActor::Tick(DeltaTime);
+  Super::Tick(DeltaTime);
   PrePhysTick(DeltaTime);
 }
 
