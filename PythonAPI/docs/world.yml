@@ -121,7 +121,19 @@
     - var_name: fixed_delta_seconds
       type: float
       doc: >
-        Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
+        Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.
+    - var_name: substepping
+      type: bool
+      doc: >
+        Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of carla.WorldSettings.max_substep and carla.WorldSettings.max_substep_delta_time. These last two parameters need to be compatible with carla.WorldSettings.fixed_delta_seconds. Enabled by default.
+    - var_name: max_substep_delta_time
+      type: float
+      doc: >
+       Maximum delta time of the substeps. If the carla.WorldSettingsmax_substep is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01.
+    - var_name: max_substeps
+      type: int
+      doc: >
+        The maximum number of physics substepping that are allowed. By default, the value is set to 10.
     - var_name: max_culling_distance
       type: float
       doc: >
