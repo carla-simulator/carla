@@ -297,6 +297,11 @@
       doc: >
         Curve that indicates the maximum steering for a specific forward speed.
     # --------------------------------------
+    - var_name: use_sweep_wheel_collision
+      type: bool
+      doc: >
+        Enable the use of sweep for wheel collision. By default, it is disabled and it uses a simple raycast from the axis to the floor is computed for each wheel. This option provides a better collision model in which the full volume of the wheel is checked again collisions.
+    # --------------------------------------
     - var_name: wheels
       type: list(carla.WheelPhysicsControl)
       doc: >
