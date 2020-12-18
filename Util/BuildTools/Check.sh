@@ -1,7 +1,5 @@
 #! /bin/bash
 
-source $(dirname "$0")/Environment.sh
-
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
@@ -41,6 +39,8 @@ RUN_BENCHMARK=false
 OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api,smoke,benchmark,python-version:, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
+
+source $(dirname "$0")/Environment.sh
 
 PY_VERSION_LIST=3
 
