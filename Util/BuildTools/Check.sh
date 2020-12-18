@@ -40,6 +40,8 @@ OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-
 
 eval set -- "$OPTS"
 
+source $(dirname "$0")/Environment.sh
+
 PY_VERSION_LIST=3
 
 while [[ $# -gt 0 ]]; do
@@ -89,8 +91,6 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
-
-source $(dirname "$0")/Environment.sh
 
 if ! { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG} || ${PYTHON_API} || ${SMOKE_TESTS}; }; then
   fatal_error "Nothing selected to be done."
