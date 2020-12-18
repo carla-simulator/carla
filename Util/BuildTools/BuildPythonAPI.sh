@@ -12,7 +12,7 @@ REMOVE_INTERMEDIATE=false
 BUILD_RSS_VARIANT=false
 BUILD_PYTHONAPI=true
 
-OPTS=`getopt -o h --long help,config:,rebuild,clean,rss,carsim,python-version:,packages:,clean-intermediate,all,xml, -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,rebuild,clean,rss,carsim,python-version:,packages:,clean-intermediate,all,xml,target-archive:, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
