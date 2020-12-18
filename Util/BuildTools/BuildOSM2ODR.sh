@@ -1,12 +1,4 @@
 #! /bin/bash
-
-source $(dirname "$0")/Environment.sh
-
-function get_source_code_checksum {
-  local EXCLUDE='*__pycache__*'
-  find "${OSM2ODR_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
-}
-
 DOC_STRING="Build OSM2ODR."
 
 USAGE_STRING=$(cat <<- END
@@ -22,7 +14,7 @@ END
 REMOVE_INTERMEDIATE=false
 BUILD_OSM2ODR=false
 
-OPTS=`getopt -o h --long help,rebuild,build,clean -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,build,clean,carsim -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -47,6 +39,13 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
+
+function get_source_code_checksum {
+  local EXCLUDE='*__pycache__*'
+  find "${OSM2ODR_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
+}
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_OSM2ODR}; }; then
   fatal_error "Nothing selected to be done."
