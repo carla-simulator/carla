@@ -24,6 +24,7 @@
   * Fixed bug causing camera-based sensors to stop sending data
   * Added `WorldSettings.deterministic_ragdolls` to enable deterministic or physically based ragdolls
   * Fixed the lack of determinism on the output of raycast sensors
+  * Fixed missing `laneChange` record in converted OSM maps
   * Fixed bug in the actor's id returned by the semantic lidar
   * Fixed error when using `--config` parameter in `make package`
   * Fixed dependency of library **Xerces-c** on package

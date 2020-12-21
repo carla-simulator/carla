@@ -454,6 +454,11 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
+void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
+  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+  CaptureComponent2D->CaptureScene();
+}
+
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
@@ -498,12 +503,8 @@ void ASceneCaptureSensor::BeginPlay()
 
 void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
 {
-  // Allows the sensor to tick with the tick rate from UE4.
-  ReadyToCapture = true;
-}
+  Super::PrePhysTick(DeltaSeconds);
 
-void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
-{
   // Add the view information every tick. It's only used for one tick and then
   // removed by the streamer.
   IStreamingManager::Get().AddViewInformation(
@@ -511,6 +512,13 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
       ImageWidth,
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 
+  // Allows the sensor to tick with the tick rate from UE4.
+  ReadyToCapture = true;
+}
+
+void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+{
+  Super::PostPhysTick(World, TickType, DeltaTime);
   ReadyToCapture = true;
 }
 

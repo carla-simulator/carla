@@ -277,6 +277,14 @@ public:
     return CaptureComponent2D;
   }
 
+  /// Immediate enqueues render commands of the scene at the current time.
+  void EnqueueRenderSceneImmediate();
+
+  /// Blocks until the render thread has finished all it's tasks.
+  void WaitForRenderThreadToFinsih() {
+    FlushRenderingCommands();
+  }
+
 protected:
 
   virtual void BeginPlay() override;

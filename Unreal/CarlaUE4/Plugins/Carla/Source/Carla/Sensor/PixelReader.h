@@ -91,8 +91,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
     return;
   }
 
-  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false
-  Sensor.GetCaptureComponent2D()->CaptureScene();
+  /// Blocks until the render thread has finished all it's tasks.
+  Sensor.EnqueueRenderSceneImmediate();
 
   // Enqueue a command in the render-thread that will write the image buffer to
   // the data stream. The stream is created in the capture thus executed in the
@@ -120,5 +120,5 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
   );
 
   // Blocks until the render thread has finished all it's tasks
-  FlushRenderingCommands();
+  Sensor.WaitForRenderThreadToFinsih();
 }

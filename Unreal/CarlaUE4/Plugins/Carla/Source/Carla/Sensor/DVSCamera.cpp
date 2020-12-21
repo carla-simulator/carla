@@ -13,6 +13,11 @@
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Sensor/DVSCamera.h"
 
+static float FColorToGrayScaleFloat(FColor Color)
+{
+  return 0.2989 * Color.R + 0.587 * Color.G + 0.114 * Color.B;
+}
+
 ADVSCamera::ADVSCamera(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -117,23 +122,33 @@ void ADVSCamera::Set(const FActorDescription &Description)
 
 void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  check(CaptureRenderTarget != nullptr);
+  if (!HasActorBegunPlay() || IsPendingKill())
+  {
+    return;
+  }
+
+  /// Immediate enqueues render commands of the scene at the current time.
+  EnqueueRenderSceneImmediate();
+  WaitForRenderThreadToFinsih();
+
   //Super (ASceneCaptureSensor) Capture the Scene in a (UTextureRenderTarget2D) CaptureRenderTarge from the CaptureComponent2D
   /** Read the image **/
-  TArray<FColor> image;
-  this->ReadPixels(image);
+  TArray<FColor> RawImage;
+  this->ReadPixels(RawImage);
 
   /** Convert image to gray scale **/
   if (this->config.use_log)
   {
-    this->imageToLogGray(image, this->last_image);
+    this->ImageToLogGray(RawImage);
   }
   else
   {
-    this->imageToGray(image, this->last_image);
+    this->ImageToGray(RawImage);
   }
 
   /** DVS Simulator **/
-  ADVSCamera::DVSEventArray events = this->simulation(DeltaTime);
+  ADVSCamera::DVSEventArray events = this->Simulation(DeltaTime);
 
   if (events.size() > 0)
   {
@@ -144,39 +159,39 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   }
 }
 
-void ADVSCamera::imageToGray(const TArray<FColor> &image, TArray<float> &gray)
+void ADVSCamera::ImageToGray(const TArray<FColor> &image)
 {
   /** Sanity check **/
   if (image.Num() != (this->GetImageHeight() * this->GetImageWidth()))
     return;
 
   /** Reserve HxW elements **/
-  gray.SetNumUninitialized(image.Num());
+  last_image.SetNumUninitialized(image.Num());
 
   /** Convert image to gray raw image values **/
-  for (size_t i = 0; i<image.Num(); ++i)
+  for (size_t i = 0; i < image.Num(); ++i)
   {
-    gray[i] = 0.2989*image[i].R +  0.5870*image[i].G + 0.1140*image[i].B;
+    last_image[i] = FColorToGrayScaleFloat(image[i]);
   }
 }
 
-void ADVSCamera::imageToLogGray(const TArray<FColor> &image, TArray<float> &gray)
+void ADVSCamera::ImageToLogGray(const TArray<FColor> &image)
 {
   /** Sanity check **/
   if (image.Num() != (this->GetImageHeight() * this->GetImageWidth()))
     return;
 
   /** Reserve HxW elements **/
-  gray.SetNumUninitialized(image.Num());
+  last_image.SetNumUninitialized(image.Num());
 
   /** Convert image to gray raw image values **/
-  for (size_t i = 0; i<image.Num(); ++i)
+  for (size_t i = 0; i < image.Num(); ++i)
   {
-    gray[i] = std::log(this->config.log_eps + ((0.2989*image[i].R +  0.5870*image[i].G + 0.1140*image[i].B)/255.0));
+    last_image[i] = std::log(this->config.log_eps + (FColorToGrayScaleFloat(image[i]) / 255.0));
   }
 }
 
-ADVSCamera::DVSEventArray ADVSCamera::simulation (float DeltaTime)
+ADVSCamera::DVSEventArray ADVSCamera::Simulation (float DeltaTime)
 {
   /** Array of events **/
   ADVSCamera::DVSEventArray events;
