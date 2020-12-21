@@ -60,7 +60,28 @@ PORTS_EXP 0
 DLLFILE D:\carsim\Programs\solvers\carsim_64.dll
 END
 ```
-For Ubuntu there is no a GUI way to create the file, so you should build your own .sim file from this one changing the paths accordingly, and the solver (Ubuntu uses libcarsim.so.2020.0).
+### Simfiles in Ubuntu
+For Ubuntu there is no a GUI way to create these files. You need to generate them in Windows and move the related .par, .txt, .vs files to Ubuntu. Then you need to modify the .sim file so that the variables `INPUT`, `INPUTARCHIVE`, `LOGFILE`, etc point towards the same files in your Ubuntu system. Finally, you need to replace the `DLLFILE` line to point towards the CarSim solver which th default installation will be `SOFILE /opt/carsim_2020.0/lib64/libcarsim.so.2020.0`. Your .sim file should similar to this:
+
+```
+SIMFILE
+
+FILEBASE /path/to/LastRun
+INPUT /path/to/Run_all.par
+INPUTARCHIVE /path/to/LastRun_all.par
+ECHO /path/to/LastRun_echo.par
+FINAL /path/to/LastRun_end.par
+LOGFILE /path/to/LastRun_log.txt
+ERDFILE /path/to/LastRun.vs
+PROGDIR /opt/carsim_2020.0/lib64/
+DATADIR .
+PRODUCT_ID CarSim
+PRODUCT_VER 2020.1
+VEHICLE_CODE i_i
+
+SOFILE /opt/carsim_2020.0/lib64/libcarsim.so.2020.0
+END
+```
 
 * Create a vehicle and enable it for Carsim:
 
