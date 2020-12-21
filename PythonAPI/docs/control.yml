@@ -300,7 +300,9 @@
     - var_name: use_sweep_wheel_collision
       type: bool
       doc: >
-        Enable the use of sweep for wheel collision. By default, it is disabled and it uses a simple raycast from the axis to the floor is computed for each wheel. This option provides a better collision model in which the full volume of the wheel is checked again collisions.
+        Enable the use of sweep for wheel collision. By default, it is disabled and it uses a
+        simple raycast from the axis to the floor for each wheel. This option provides a better
+        collision model in which the full volume of the wheel is checked against collisions.
     # --------------------------------------
     - var_name: wheels
       type: list(carla.WheelPhysicsControl)

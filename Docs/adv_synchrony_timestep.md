@@ -71,7 +71,13 @@ CARLA has a [recorder feature](adv_recorder.md) that allows a simulation to be r
 
 ### Physics substepping
 
-Physics must be computed within very low time steps to be precise. This can be a huge issue when selecting a delta time for our simulation in which we usually perform multiple computations at each frame like sensor rendering. As this limitation happens only because of the physics simulation, we can do a number of physics substeps between steps only for the physical computations. By default, this is enabled and is set to have a maximum of physics 10 substeps with a maximum physical delta time of 0.01.
+Physics must be computed within very low time steps to be precise. This can be an issue when 
+selecting a delta time for our simulation in which we usually perform multiple computations at 
+each frame, for example with sensor rendering. As this limitation only happens due to the 
+physics simulation, we can apply substeps to only the physical computations. This 
+is enabled by default and is set to have a maximum of 10 physics substeps with a maximum 
+physical delta time of 0.01.
+
 These options can be changed through the API in the world settings as:
 ```py
 settings = world.get_settings()
@@ -81,12 +87,14 @@ settings.max_substeps = 10
 world.apply_settings(settings)
 ```
 
-Be aware that if you have set the synchronous mode and the fixed time step, the options of the substepping, need to be consistent with the value of the fixed delta seconds. The condition to fulfilled is:
+Be aware that if you have set synchronous mode and the fixed time step then substepping options 
+need to be consistent with the value of the fixed delta seconds. The condition to be fulfilled is:
 ```py
 fixed_delta_seconds <= max_substep_delta_time * max_substeps
 ```
 
-In order to have a proper physical simulation the substep delta time should be below at least below 0.01666 and ideally below 0.1.
+In order to have an optimal physical simulation, the substep delta time should at least 
+be below 0.01666 and ideally below 0.01.
 
 ---
 ## Client-server synchrony 
