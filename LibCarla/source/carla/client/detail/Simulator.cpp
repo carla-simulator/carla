@@ -205,6 +205,9 @@ namespace detail {
     }
     const auto frame = _client.SetEpisodeSettings(settings);
 
+    using namespace std::literals::chrono_literals;
+    SynchronizeFrame(frame, *_episode, 1s);
+
     return frame;
   }
 
