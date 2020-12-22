@@ -50,6 +50,7 @@ nav:
   - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
   - 'Generate maps with OpenStreetMap': 'tuto_G_openstreetmap.md'
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
+  - 'CarSim Integration (Beta)': "carsim_integration.md"
 - Tutorials (assets):
   - 'Add a new map': 'tuto_A_add_map.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
