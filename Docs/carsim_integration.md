@@ -1,44 +1,47 @@
-# CARSIM integration (first beta)
+# CARSIM Integration (Beta)
 
-CARLA has integrated Carsim so we can forward all vehicle controls to Carsim and let him make all the physics calculations of the vehicle and send back the new state of the vehicle to CARLA.
+This integration allows CARLA to forward all vehicle controls to CarSim in order to make all 
+the physics calculations of the vehicle and send back the new state of the vehicle to CARLA.
 
 *   [__Requisites__](#requisites)  
-*   [__Setup Carsim__](#setup-carsim)  
+*   [__Setup Carsim__](#set-up-carsim)  
 	*   [__SIM file__](#sim-file)  
-        * [__on Windows__](#on-windows)
-        * [__on Ubuntu__](#on-ubuntu)
-	*   [__Vehicle sizes__](#vehicle-sizes)  
-*   [__Run simulation__](#run-simulation)  
+        * [__On Windows__](#on-windows)
+        * [__On Ubuntu__](#on-ubuntu)
+	*   [__Vehicle Sizes__](#vehicle-sizes)  
+*   [__Run Simulation__](#run-simulation)  
 
 ---
 ## Requisites
 
-* Carsim software + licence
-* Unreal 4.24 plugin: Vehicle dynamics
-* CARLA compiled with flag **--carsim** (CARLA packages are Carsim ready)
+* [CarSim](https://www.carsim.com/products/carsim/index.php) software + licence
+* Unreal 4.24 plugin: [Vehicle dynamics](https://www.unrealengine.com/marketplace/en-US/product/carsim-vehicle-dynamics)
+* CARLA compiled with flag **--carsim** (CARLA packages are CarSim ready)
 
-We need to have a licence for Carsim software setup and running.
+It is necessary to have a licence for CarSim software set up and running.
 
-For the comunication with Unreal we need to install the plugin in UE called **vehicle dynamics** (it is free)
+For the communication with Unreal it is necessary to install the free plugin in UE called [**vehicle 
+dynamics**](https://www.unrealengine.com/marketplace/en-US/product/carsim-vehicle-dynamics) 
 
-If you use CARLA from source, then you need to compile the server part with the **--carsim** flag:
+If you use CARLA from source, then you need to compile the server with the **--carsim** flag:
 ```sh
 make CarlaUE4Editor ARGS="--carsim"
 ```
-All packages are already compiled with the **--carsim**, so they are ready to use with Carsim.
+All packages are already compiled with the **--carsim** flag, so they are ready to use with CarSim.
 
-## Setup Carsim
-#### SIM file
+## Set Up CarSim
+#### SIM File
 
-We need to generate the .sim file that describes the simulation to run in both parts (CARLA and Carsim). The Carsim plugin needs this file to know about the simulation to run.
+You need to generate the .sim file that describes the simulation to run in both CARLA and 
+CarSim. The CarSim plugin needs this file to know about the simulation to run.
 
-##### on Windows
+##### On Windows
 
 You can use the GUI to generate the file once you have all the parameters configured.
 
 ![generate .sim file](img/carsim_generate.jpg)
 
-For Windows systems, a **.sim** file is like this:
+For Windows systems, a **.sim** file looks like this:
 
 ```
 SIMFILE
@@ -70,8 +73,13 @@ PORTS_EXP 0
 DLLFILE D:\carsim\Programs\solvers\carsim_64.dll
 END
 ```
-##### on Ubuntu
-For Ubuntu there is no a GUI way to create these files. You need to generate them in Windows and move the related .par, .txt, .vs files to Ubuntu. Then you need to modify the .sim file so that the variables `INPUT`, `INPUTARCHIVE`, `LOGFILE`, etc point towards the same files in your Ubuntu system. Finally, you need to replace the `DLLFILE` line to point towards the CarSim solver which th default installation will be `SOFILE /opt/carsim_2020.0/lib64/libcarsim.so.2020.0`. Your .sim file should be similar to this:
+##### On Ubuntu
+For Ubuntu there is no way to create these files via GUI. You need to generate them in Windows and 
+move the related .par, .txt, .vs files to Ubuntu. You then need to modify the .sim file so that the 
+variables `INPUT`, `INPUTARCHIVE`, `LOGFILE`, etc point towards the same files in your Ubuntu 
+system. Finally, you need to replace the `DLLFILE` line to point towards the CarSim solver which 
+in the default installation will be `SOFILE /opt/carsim_2020.0/lib64/libcarsim.so.2020.0`. Your .sim
+file should be similar to this:
 
 ```
 SIMFILE
@@ -92,23 +100,26 @@ VEHICLE_CODE i_i
 SOFILE /opt/carsim_2020.0/lib64/libcarsim.so.2020.0
 END
 ```
-#### Vehicle sizes
+#### Vehicle Sizes
 
-Some mention need to be done about the vehicles sizes. Carsim let you specify each dimension of the vehicle to use, but currently there is no correspondence between a Carsim vehicle and a CARLA vehicle. That means that the vehicles in both parts have different dimensions, and the CARLA vehicle is only used as a placeholder in the simulation.
+Care needs to be taken regarding the sizes of vehicles. CarSim lets you specify the dimensions of 
+the vehicle to use, but currently there is no correlation between a CarSim vehicle and a CARLA 
+vehicle. That means that the vehicles in both parts have different dimensions, and the CARLA vehicle is only used as a placeholder in the simulation.
 
 ![carsim vehicle sizes](img/carsim_vehicle_sizes.jpg)
 
-## Run simulation
+## Run Simulation
 
-You only need to spawn a CARLA vehicle and enable Carsim on that with the Python API function
+You only need to spawn a CARLA vehicle and enable CarSim on it with the Python API function
 
 ```sh
 vehicle.enable_carsim(<path_to_ue4simfile.sim>)
 ```
 
-Now all input controls sent to the vehicle will be forwarded to Carsim, who will update the physics and send back the status of the vehicle (the transform) back to the CARLA vehicle. 
+Now all input controls sent to the vehicle will be forwarded to CarSim, which will update the 
+physics and send back the status of the vehicle (the transform) to the CARLA vehicle. 
 
-Once the simulation has finished you can analyze all the data in Carsim as usually. 
+Once the simulation has finished you can analyze all the data in CarSim as usual. 
 
 ![carsim analysis](img/carsim_analysis.jpg)
 
