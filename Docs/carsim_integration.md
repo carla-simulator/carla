@@ -15,13 +15,16 @@ the physics calculations of the vehicle and send back the new state of the vehic
 ## Requisites
 
 * [CarSim](https://www.carsim.com/products/carsim/index.php) software + licence
-* Unreal 4.24 plugin: [Vehicle dynamics](https://www.unrealengine.com/marketplace/en-US/product/carsim-vehicle-dynamics)
+* Unreal 4.24 plugin (version 2020.0): [Vehicle dynamics](https://www.unrealengine.com/marketplace/en-US/product/carsim-vehicle-dynamics)
 * CARLA compiled with flag **--carsim** (CARLA packages are CarSim ready)
 
 It is necessary to have a licence for CarSim software set up and running.
 
 For the communication with Unreal it is necessary to install the free plugin in UE called [**vehicle 
-dynamics**](https://www.unrealengine.com/marketplace/en-US/product/carsim-vehicle-dynamics) 
+dynamics**](https://www.unrealengine.com/marketplace/en-US/product/carsim-vehicle-dynamics). 
+* **For Ubuntu** only:
+        1) Download the plugin version 2020.0 from [here](https://www.carsim.com/users/unreal_plugin/unreal_plugin_2020_0.php)
+        2) After downloading the plugin replace the file **CarSim.Build.cs** with the one [here](https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/CarSim.Build.cs). We added the proper solver to use. 
 
 If you use CARLA from source, then you need to compile the server with the **--carsim** flag:
 ```sh
