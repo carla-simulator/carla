@@ -54,6 +54,7 @@ pipeline
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2"'
                                 sh 'make CarlaUE4Editor ARGS="--carsim"'
+                                sh 'make plugins'
                                 sh 'make examples'
                             }
                             post
@@ -257,6 +258,10 @@ pipeline
                                     call ../setEnv64.bat
                                     make CarlaUE4Editor ARGS="--carsim"
                                 """
+                                bat """
+                                    call ../setEnv64.bat
+                                    make plugins
+                                """
                             }
                             post
                             {
@@ -287,7 +292,6 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps --target-archive=AdditionalMaps --clean-intermediate"
                                     make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate"
                                 """
                             }
