@@ -53,8 +53,7 @@ CARLA forum</a>
 [__Traffic Manager__](adv_traffic_manager.md) — Simulate urban traffic by setting vehicles to autopilot mode.  
 
 ## References
-[__Python API reference__](python_api.md) — Classes and methods in the Python API.  
-[__Code recipes__](ref_code_recipes.md) — Some code fragments commonly used.  
+[__Python API reference__](python_api.md) — Classes and methods in the Python API.   
 [__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.  
 [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.  
 [__Recorder binary file format__](ref_recorder_binary_file_format.md) — Detailed explanation of the recorder file format.  
