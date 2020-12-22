@@ -128,7 +128,6 @@ void TrafficManagerLocal::Run() {
   while (run_traffic_manger.load()) {
 
     bool synchronous_mode = parameters.GetSynchronousMode();
-    bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
 
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
@@ -138,7 +137,7 @@ void TrafficManagerLocal::Run() {
     }
 
     // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
-    if (!synchronous_mode && hybrid_physics_mode) {
+    if (!synchronous_mode) {
       TimePoint current_instance = chr::system_clock::now();
       chr::duration<float> elapsed_time = current_instance - previous_update_instance;
       chr::duration<float> time_to_wait = chr::duration<float>(HYBRID_MODE_DT) - elapsed_time;
