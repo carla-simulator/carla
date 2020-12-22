@@ -370,9 +370,24 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
     const FString &PropsMapPath)
 {
   FString MapPathData;
+  IFileManager &FileManager = IFileManager::Get();
   for (const auto &Map : AssetsPaths.MapsPaths)
   {
     MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
+  
+    // add all possible sublevels of the map
+    if (Map.Path.StartsWith(TEXT("/Game/")))
+    {
+      // replacing relative /Game/... address by absolute address to be able to parse files
+      FString FullPath(FPaths::GameDir() + TEXT("/Content/") + Map.Path.Mid(6, Map.Path.Len() - 6) + TEXT("/Sublevels/") + Map.Name);
+      TArray<FString> Sublevels;
+      FileManager.FindFiles(Sublevels, *FullPath, TEXT("*.umap"));
+      for (auto Sublevel : Sublevels)
+      {
+        MapPathData.Append(Map.Path + TEXT("/Sublevels/") + Map.Name + TEXT("/") + Sublevel + TEXT("+"));
+        UE_LOG(LogTemp, Log, TEXT("Sublevel: %s"), *Sublevel);
+      }
+    }
   }
 
   if (!PropsMapPath.IsEmpty())

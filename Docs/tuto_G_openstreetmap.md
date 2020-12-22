@@ -14,6 +14,7 @@ The first thing to do is use [OpenStreetMap](https://www.openstreetmap.org) to g
 __1.1. Go to [openstreetmap.org](https://www.openstreetmap.org)__. If the map is not properly visualized, try changing the layer in the righ pannel.
 
 __1.2 Search for a desired location__ and zoom in to a specific area.
+
 ![openstreetmap_view](img/tuto_g_osm_web.jpg)
 
 !!! Warning
@@ -45,9 +46,9 @@ CARLA can read a the content in the `.osm` file generated with OpenStreetMap, an
 	*   `elevation_layer_height` *(default 0.0)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).
 
 The input and output of the conversion are not the `.osm` and `.xodr` files itself, but their content. For said reason, the code should be similar to the following.
-```
+```py
 # Read the .osm data
-f = open("path/to/osm/file", 'r')
+f = open("path/to/osm/file", 'r') # Windows will need to encode the file in UTF-8. Read the note below. 
 osm_data = f.read()
 f.close()
 
@@ -61,12 +62,17 @@ f = open("path/to/output/file", 'w')
 f.write(xodr_data)
 f.close()
 ```
+
+!!! Note
+    To read the OSM file in Windows, import `io` at the beginning of the script and change the open line to `f = io.open("test", mode="r", encoding="utf-8")`.
+
+
 The resulting file contains the road information in OpenDRIVE format.
 
 ---
 ## 3- Import into CARLA
 
-Finally, the OpenDRIVE file can be easily ingested in CARLA using the [OpenDRIVE Standalone Mode](#adv_opendrive.md).
+Finally, the OpenDRIVE file can be easily ingested in CARLA using the [OpenDRIVE Standalone Mode](adv_opendrive.md).
 
 __a) Using your own script__ — Call for [`client.generate_opendrive_world()`](python_api.md#carla.Client.generate_opendrive_world) through the API. This will generate the new map, and block the simulation until it is ready.  
 Use the [carla.OpendriveGenerationParameters](python_api.md#carla.OpendriveGenerationParameters) class to set the parameterization of the mesh generation.
@@ -91,7 +97,7 @@ world = client.generate_opendrive_world(
 
 __b) Using `config.py`__ — The script can load an OpenStreetMap file directly into CARLA using a new argument.  
 ```
-python3 config.py --osm-file=/path/to/OSM/file
+python3 config.py --osm-path=/path/to/OSM/file
 ```
 !!! Important
     [client.generate_opendrive_world()](python_api.md#carla.Client.generate_opendrive_world) requires the __content of the OpenDRIVE file parsed as string__, and allows parameterization. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__ and always uses default parameters.

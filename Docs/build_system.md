@@ -44,36 +44,16 @@ make LibCarla
 
 Two configurations:
 
-<table class ="defTable">
-<thead>
-<th> </th>
-<th>Server</th>
-<th>Client</th>
-</thead>
-<tbody>
-<td><b>Unit tests<b></td>
-<td> Yes </td>
-<td> No </td>
-<tr>
-<td><b>Requirements</b></td>
-<td> rpclib, gtest, boost </td>
-<td> rpclib, boost </td>
-<tr>
-<td><b>std runtime</b></td>
-<td> LLVM's <code>libc++</code></td>
-<td> Default <code>libstdc++</code> </td>
-<tr>
-<td><b>Output</b></td>
-<td> headers and test exes </td>
-<td> <code>ibcarla_client.a</code></td>
-<tr>
-<td><b>Required by</b></td>
-<td> Carla plugin </td>
-<td> PythonAPI </td>
-</tbody>
-</table>
 
-<br>
+|  | Server | Client |
+| ---------- | ---------- | ---------- |
+| **Unit tests**        | Yes                   | No                    |
+| **Requirements**      | rpclib, gtest, boost  | rpclib, boost         |
+| **std runtime**       | LLVM's `libc++`       | Default `libstdc++`   |
+| **Output**            | headers and test exes | `ibcarla_client.a`    |
+| **Required by**       | Carla plugin          | PythonAPI             |
+
+
 
 ---
 ## CarlaUE4 and Carla plugin

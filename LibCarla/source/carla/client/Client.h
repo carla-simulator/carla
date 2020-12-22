@@ -54,19 +54,23 @@ namespace client {
       return _simulator->GetAvailableMaps();
     }
 
-    World ReloadWorld() const {
-      return World{_simulator->ReloadEpisode()};
+    World ReloadWorld(bool reset_settings = true) const {
+      return World{_simulator->ReloadEpisode(reset_settings)};
     }
 
-    World LoadWorld(std::string map_name) const {
-      return World{_simulator->LoadEpisode(std::move(map_name))};
+    World LoadWorld(
+        std::string map_name,
+        bool reset_settings = true,
+        rpc::MapLayer map_layers = rpc::MapLayer::All) const {
+      return World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
     }
 
     World GenerateOpenDriveWorld(
         std::string opendrive,
-        const rpc::OpendriveGenerationParameters & params) const {
+        const rpc::OpendriveGenerationParameters & params,
+        bool reset_settings = true) const {
       return World{_simulator->LoadOpenDriveEpisode(
-          std::move(opendrive), params)};
+          std::move(opendrive), params, reset_settings)};
     }
 
     /// Return an instance of the world currently active in the simulator.

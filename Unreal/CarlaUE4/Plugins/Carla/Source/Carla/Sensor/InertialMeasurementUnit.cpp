@@ -145,6 +145,7 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
 
 carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscope()
 {
+  check(GetOwner() != nullptr);
   const FVector AngularVelocity =
       FIMU_GetActorAngularVelocityInRadians(*GetOwner());
 
@@ -177,10 +178,8 @@ float AInertialMeasurementUnit::ComputeCompass()
   return Compass;
 }
 
-void AInertialMeasurementUnit::Tick(float DeltaTime)
+void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
   auto Stream = GetDataStream(*this);
   Stream.Send(
       *this,
@@ -222,6 +221,4 @@ const FVector &AInertialMeasurementUnit::GetGyroscopeBias() const
 void AInertialMeasurementUnit::BeginPlay()
 {
   Super::BeginPlay();
-
-  constexpr float TO_METERS = 1e-2;
 }

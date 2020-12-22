@@ -82,14 +82,27 @@ namespace detail {
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
 
-  EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
+  EpisodeProxy Simulator::LoadEpisode(std::string map_name, bool reset_settings, rpc::MapLayer map_layers) {
     const auto id = GetCurrentEpisode().GetId();
-    _client.LoadEpisode(std::move(map_name));
-    size_t number_of_attempts = _client.GetTimeout().milliseconds() / 10u;
+    _client.LoadEpisode(std::move(map_name), reset_settings, map_layers);
+
+    // We are waiting 50ms for the server to reload the episode.
+    // If in this time we have not detected a change of episode, we try again
+    // 'number_of_attempts' times.
+    // TODO This time is completly arbitrary so we need to improve
+    // this pipeline to not depend in this time because this timeout
+    // could result that the client resume the simulation in different
+    // initial ticks when loading a map in syncronous mode.
+    size_t number_of_attempts = _client.GetTimeout().milliseconds() / 50u;
+
     for (auto i = 0u; i < number_of_attempts; ++i) {
       using namespace std::literals::chrono_literals;
-      _episode->WaitForState(10ms);
+      if (_client.GetEpisodeSettings().synchronous_mode)
+        _client.SendTickCue();
+
+      _episode->WaitForState(50ms);
       auto episode = GetCurrentEpisode();
+
       if (episode.GetId() != id) {
         return episode;
       }
@@ -99,13 +112,13 @@ namespace detail {
 
   EpisodeProxy Simulator::LoadOpenDriveEpisode(
       std::string opendrive,
-      const rpc::OpendriveGenerationParameters & params) {
+      const rpc::OpendriveGenerationParameters & params, bool reset_settings) {
     // The "OpenDriveMap" is an ".umap" located in:
     // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
     // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
     constexpr auto custom_opendrive_map = "OpenDriveMap";
     _client.CopyOpenDriveToServer(std::move(opendrive), params);
-    return LoadEpisode(custom_opendrive_map);
+    return LoadEpisode(custom_opendrive_map, reset_settings);
   }
 
   // ===========================================================================
@@ -175,9 +188,26 @@ namespace detail {
           "synchronous mode enabled with variable delta seconds. It is highly "
           "recommended to set 'fixed_delta_seconds' when running on synchronous mode.");
     }
+    else if (settings.synchronous_mode && settings.substepping) {
+      if(settings.max_substeps < 1 || settings.max_substeps > 16) {
+        log_warning(
+            "synchronous mode and substepping are enabled but the number of substeps is not valid. "
+            "Please be aware that this value needs to be in the range [1-16].");
+      }
+      double n_substeps = settings.fixed_delta_seconds.get() / settings.max_substep_delta_time;
+
+      if (n_substeps > static_cast<double>(settings.max_substeps)) {
+        log_warning(
+            "synchronous mode and substepping are enabled but the values for the simulation are not valid. "
+            "The values should fulfil fixed_delta_seconds <= max_substep_delta_time * max_substeps. "
+            "Be very careful about that, the time deltas are not guaranteed.");
+      }
+    }
     const auto frame = _client.SetEpisodeSettings(settings);
+
     using namespace std::literals::chrono_literals;
-    SynchronizeFrame(frame, *_episode, 10s);
+    SynchronizeFrame(frame, *_episode, 1s);
+
     return frame;
   }
 

@@ -180,10 +180,11 @@ void export_client() {
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
     .def("get_available_maps", &GetAvailableMaps)
-    .def("reload_world", CONST_CALL_WITHOUT_GIL(cc::Client, ReloadWorld))
-    .def("load_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, LoadWorld, std::string), (arg("map_name")))
-    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_2(cc::Client, GenerateOpenDriveWorld, std::string,
-        rpc::OpendriveGenerationParameters), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters()))
+    .def("reload_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, ReloadWorld, bool), (arg("reset_settings")=true))
+    .def("load_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, LoadWorld, std::string, bool, rpc::MapLayer), (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
+    .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, GenerateOpenDriveWorld, std::string,
+        rpc::OpendriveGenerationParameters, bool), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters(),
+        arg("reset_settings")=true))
     .def("start_recorder", CALL_WITHOUT_GIL_2(cc::Client, StartRecorder, std::string, bool), (arg("name"), arg("additional_data")=false))
     .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))

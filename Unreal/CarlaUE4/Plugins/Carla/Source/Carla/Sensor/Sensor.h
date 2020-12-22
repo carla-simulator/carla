@@ -33,6 +33,8 @@ public:
 
   virtual void Set(const FActorDescription &Description);
 
+  virtual void BeginPlay();
+
   /// Replace the FDataStream associated with this sensor.
   ///
   /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
@@ -46,6 +48,11 @@ public:
   {
     return Stream.GetToken();
   }
+
+  void Tick(const float DeltaTime) final;
+
+  virtual void PrePhysTick(float DeltaSeconds) {}
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
@@ -95,6 +102,8 @@ protected:
 private:
 
   FDataStream Stream;
+
+  FDelegateHandle OnPostTickDelegate;
 
   const UCarlaEpisode *Episode = nullptr;
 };

@@ -48,16 +48,10 @@ namespace rpc {
   // Slower conversion to fstring for long text
   static inline FString ToLongFString(const std::string &str) {
     FString result = "";
-    size_t i = 0;
-    while(i + MaxStringLength < str.size()) {
-      auto substr = str.substr(i, MaxStringLength);
-      FString temp_string(substr.size(), UTF8_TO_TCHAR(substr.c_str()));
-      result += temp_string;
-      i += MaxStringLength;
+    for (size_t i = 0; i < str.size(); i++)
+    {
+      result += str[i];
     }
-    auto substr = str.substr(i);
-    FString temp_string(substr.size(), UTF8_TO_TCHAR(substr.c_str()));
-    result += temp_string;
     return result;
   }
 

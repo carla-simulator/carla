@@ -6,6 +6,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "Carla/Game/CarlaEpisode.h"
 
 #include "FrictionTrigger.generated.h"
 

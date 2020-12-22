@@ -50,16 +50,16 @@ public:
   void Set(const FActorDescription &ActorDescription) override;
 
 protected:
-  void Tick(float DeltaTime) override;
-  void imageToGray(const TArray<FColor> &image, TArray<float> &gray);
-  void imageToLogGray(const TArray<FColor> &image, TArray<float> &gray);
-  ADVSCamera::DVSEventArray simulation (float DeltaTime);
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
+  void ImageToGray(const TArray<FColor> &image);
+  void ImageToLogGray(const TArray<FColor> &image);
+  ADVSCamera::DVSEventArray Simulation (float DeltaTime);
 
 private:
   /// Images containing last (current) and previous image
   TArray<float> last_image, prev_image;
 
-  /// Image containing the last reference vaklue to trigger event
+  /// Image containing the last reference value to trigger event
   TArray<float> ref_values;
 
   /// Image containing time of last event in seconds

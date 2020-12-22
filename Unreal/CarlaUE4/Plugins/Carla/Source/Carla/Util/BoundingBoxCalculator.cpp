@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,7 +14,7 @@
 #include "GameFramework/Character.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
-
+#include "Engine/SkeletalMeshSocket.h"
 
 namespace crp = carla::rpc;
 
@@ -33,40 +33,6 @@ static FBoundingBox ApplyTransformToBB(
   BoundingBox.Rotation = Rotation;
 
   return BoundingBox;
-}
-
-static FBoundingBox CombineBBs(const TArray<FBoundingBox>& BBsToCombine)
-{
-  FVector MaxVertex(TNumericLimits<float>::Lowest());
-  FVector MinVertex(TNumericLimits<float>::Max());
-
-  for(const FBoundingBox& BB : BBsToCombine) {
-    FVector MaxVertexOfBB = BB.Origin + BB.Extent;
-    FVector MinVertexOfBB = BB.Origin - BB.Extent;
-
-    MaxVertex.X = (MaxVertexOfBB.X > MaxVertex.X) ? MaxVertexOfBB.X : MaxVertex.X;
-    MaxVertex.Y = (MaxVertexOfBB.Y > MaxVertex.Y) ? MaxVertexOfBB.Y : MaxVertex.Y;
-    MaxVertex.Z = (MaxVertexOfBB.Z > MaxVertex.Z) ? MaxVertexOfBB.Z : MaxVertex.Z;
-    MinVertex.X = (MinVertexOfBB.X < MinVertex.X) ? MinVertexOfBB.X : MinVertex.X;
-    MinVertex.Y = (MinVertexOfBB.Y < MinVertex.Y) ? MinVertexOfBB.Y : MinVertex.Y;
-    MinVertex.Z = (MinVertexOfBB.Z < MinVertex.Z) ? MinVertexOfBB.Z : MinVertex.Z;
-  }
-
-  // Calculate box extent
-  FVector Extent (
-    (MaxVertex.X - MinVertex.X) * 0.5f,
-    (MaxVertex.Y - MinVertex.Y) * 0.5f,
-    (MaxVertex.Z - MinVertex.Z) * 0.5f
-  );
-
-  // Calculate middle point
-  FVector Origin (
-    (MinVertex.X + Extent.X),
-    (MinVertex.Y + Extent.Y),
-    (MinVertex.Z + Extent.Z)
-  );
-
-  return {Origin, Extent};
 }
 
 FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, uint8 InTagQueried)
@@ -113,7 +79,14 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
         return {};
       }
     }
-
+    // Other, by default BB
+    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
+    FBoundingBox BB = CombineBBs(BBs);
+    // Conver to local space; GetBBsOfActor return BBs in world space
+    FTransform Transform = Actor->GetTransform();
+    BB.Origin = Transform.InverseTransformPosition(BB.Origin);
+    BB.Rotation = Transform.InverseTransformRotation(BB.Rotation.Quaternion()).Rotator();
+    return BB;
 
   }
   return {};
@@ -126,25 +99,82 @@ FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
   check(Vehicle);
 
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   UActorComponent *ActorComp = Vehicle->GetComponentByClass(USkeletalMeshComponent::StaticClass());
-  USkeletalMeshComponent* Comp = Cast<USkeletalMeshComponent>(ActorComp);
+  USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
 
   // Filter by tag
-  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+  crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*ParentComp);
   if(FilterByTagEnabled && Tag != TagQueried) return {};
 
-  USkeletalMesh* SkeletalMesh = Comp->SkeletalMesh;
+  USkeletalMesh* SkeletalMesh = ParentComp->SkeletalMesh;
   FBoundingBox BoundingBox = GetSkeletalMeshBoundingBox(SkeletalMesh);
+
   if(BoundingBox.Extent.IsZero())
   {
     UE_LOG(LogCarla, Error, TEXT("%s has no SKM assigned"), *Vehicle->GetName());
     return {};
   }
 
+  // Two wheel vehicle have more than one SKM
+  TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+  Vehicle->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+
+  if(SkeletalMeshComps.Num() > 1)
+  {
+    FVector VehicleLocation = Vehicle->GetActorLocation();
+    FRotator VehicleRotation = Vehicle->GetActorRotation();
+    float MaxHeadLocation = TNumericLimits<float>::Lowest();
+    float MaxKneeLocation = TNumericLimits<float>::Lowest();
+    bool SocketFound = false;
+    for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
+    {
+      if(Comp == ParentComp) continue; // ignore vehicle skeleton
+
+      // Location of sockets are in world space
+      FVector HeadLocation = Comp->GetSocketLocation("crl_Head__C") - VehicleLocation;
+      FVector KneeLocation = Comp->GetSocketLocation("crl_leg__L") - VehicleLocation;
+
+      HeadLocation = VehicleRotation.UnrotateVector(HeadLocation);
+      KneeLocation = VehicleRotation.UnrotateVector(KneeLocation);
+
+      MaxHeadLocation = (HeadLocation.Z > MaxHeadLocation) ? HeadLocation.Z : MaxHeadLocation;
+      MaxKneeLocation = (KneeLocation.Y > MaxKneeLocation) ? KneeLocation.Y : MaxKneeLocation;
+
+      SocketFound = true;
+    }
+
+    if(SocketFound)
+    {
+      FVector MinVertex = BoundingBox.Origin - BoundingBox.Extent;
+      FVector MaxVertex = BoundingBox.Origin + BoundingBox.Extent;
+      MaxHeadLocation += 20.0f; // hack, the bone of the head is at he bottom
+
+      MaxVertex.Y = (MaxKneeLocation > MaxVertex.Y) ? MaxKneeLocation : MaxVertex.Y;
+      MinVertex.Y = (-MaxKneeLocation < MinVertex.Y) ? MaxKneeLocation : MinVertex.Y;
+      MaxVertex.Z = (MaxHeadLocation > MaxVertex.Z) ? MaxHeadLocation : MaxVertex.Z;
+
+      FVector Extent (
+        (MaxVertex.X - MinVertex.X) * 0.5f,
+        (MaxVertex.Y - MinVertex.Y) * 0.5f,
+        (MaxVertex.Z - MinVertex.Z) * 0.5f
+      );
+
+      // Calculate middle point
+      FVector Origin (
+        (MinVertex.X + Extent.X),
+        (MinVertex.Y + Extent.Y),
+        (MinVertex.Z + Extent.Z)
+      );
+
+      BoundingBox.Origin = Origin;
+      BoundingBox.Extent = Extent;
+    }
+  }
+
   // Component-to-world transform for this component
-  const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+  const FTransform& CompToWorldTransform = ParentComp->GetComponentTransform();
   BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
 
   return BoundingBox;
@@ -157,7 +187,7 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
   check(Character);
 
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTag = TagQueried == crp::CityObjectLabel::None ||
+  bool FilterByTag = TagQueried == crp::CityObjectLabel::Any ||
                      TagQueried == crp::CityObjectLabel::Pedestrians;
 
   UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
@@ -184,66 +214,37 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
 void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     const ATrafficLightBase* TrafficLight,
     TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
     uint8 InTagQueried)
 {
   check(TrafficLight);
 
   TArray<FBoundingBox> BBsOfTL;
-  TArray<UStaticMeshComponent*> StaticMeshComps;
-  TrafficLight->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-  GetBBsOfStaticMeshComponents(StaticMeshComps, BBsOfTL, InTagQueried);
+  TArray<uint8> TagsOfTL;
 
   // This kind of a magic number relying that the lights of a TL are not bigger than 100.
   // and we are gonna compare against a squared distance
   const float DistanceThreshold = 100.0f * 100.0f;
 
   // The BBs of the TL are calculated per light, so we need to merge the full-box
-  TSet<int> IndicesDiscarded;
+  uint8 TLTag = static_cast<uint8>(crp::CityObjectLabel::TrafficLight);
+
+  CombineBBsOfActor(TrafficLight, BBsOfTL, TagsOfTL, DistanceThreshold, TLTag);
+  check(BBsOfTL.Num() == TagsOfTL.Num());
+
+  bool FilterByTagEnabled = (InTagQueried != static_cast<uint8>(crp::CityObjectLabel::Any));
+
   for(int i = 0; i < BBsOfTL.Num(); i++)
   {
-    // Check if the index was used to merge a previous BB
-    if(IndicesDiscarded.Contains(i)) continue;
-
-    TArray<FBoundingBox> BBsToCombine;
-    FBoundingBox& BB1 = BBsOfTL[i];
-
-    for(int j = i + 1; j < BBsOfTL.Num(); j++)
-    {
-      // Check if the index was used to merge a previous BB
-      if(IndicesDiscarded.Contains(j)) continue;
-
-      FBoundingBox& BB2 = BBsOfTL[j];
-
-      float Distance = FVector::DistSquared(BB1.Origin, BB2.Origin);
-
-      // If the lights are close enough, we merge it
-      if(Distance <= DistanceThreshold)
-      {
-        BBsToCombine.Emplace(BB2);
-        IndicesDiscarded.Emplace(j);
-      }
-    }
-    if(BBsToCombine.Num() > 0)
-    {
-      BBsToCombine.Emplace(BB1);
-      IndicesDiscarded.Emplace(i);
-      FBoundingBox MergedBB = CombineBBs(BBsToCombine);
-      MergedBB.Rotation = BB1.Rotation;
-      OutBB.Add(MergedBB);
-    }
-  }
-
-  // Add the BB of the meshes that didn't need to combine (ie: poles)
-  for(int i = 0; i < BBsOfTL.Num(); i++)
-  {
-    // Check if the index was used to merge a previous BB
-    if(IndicesDiscarded.Contains(i)) continue;
     FBoundingBox& BB = BBsOfTL[i];
-    OutBB.Add(BB);
+    uint8 Tag = TagsOfTL[i];
+
+    if(FilterByTagEnabled && Tag != InTagQueried) continue;
+
+    OutBB.Emplace(BB);
+    OutTag.Emplace(Tag);
   }
-
 }
-
 
 // TODO: update to calculate current animation pose
 FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh)
@@ -296,7 +297,7 @@ FBoundingBox UBoundingBoxCalculator::GetStaticMeshBoundingBox(const UStaticMesh*
 {
   if(!StaticMesh)
   {
-    UE_LOG(LogCarla, Error, TEXT("GetStaticMeshBoundingBox no StaticMesh"));
+    // UE_LOG(LogCarla, Error, TEXT("GetStaticMeshBoundingBox no StaticMesh"));
     return {};
   }
 
@@ -341,10 +342,11 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
 void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
     const TArray<UStaticMeshComponent*>& StaticMeshComps,
     TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
     uint8 InTagQueried)
 {
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   for(UStaticMeshComponent* Comp : StaticMeshComps)
   {
@@ -361,14 +363,15 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 
     if(BoundingBox.Extent.IsZero())
     {
-      UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Comp->GetOwner()->GetName());
+      // UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Comp->GetOwner()->GetName());
     }
     else
     {
       // Component-to-world transform for this component
       const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
       BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
-      OutBB.Add(BoundingBox);
+      OutBB.Emplace(BoundingBox);
+      OutTag.Emplace(static_cast<uint8>(Tag));
     }
   }
 }
@@ -376,10 +379,11 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
 void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
     const TArray<USkeletalMeshComponent*>& SkeletalMeshComps,
     TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
     uint8 InTagQueried)
 {
   crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
 
   for(USkeletalMeshComponent* Comp : SkeletalMeshComps)
   {
@@ -399,7 +403,8 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
       // Component-to-world transform for this component
       const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
       BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
-      OutBB.Add(BoundingBox);
+      OutBB.Emplace(BoundingBox);
+      OutTag.Emplace(static_cast<uint8>(Tag));
     }
   }
 }
@@ -409,75 +414,221 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   uint8 InTagQueried)
 {
   TArray<FBoundingBox> Result;
-  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
-  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::None);
-
   for(AActor* Actor : Actors)
   {
-    FString ClassName = Actor->GetClass()->GetName();
-
-    // Avoid the BP_Procedural_Building to avoid duplication with their child actors
-    // When improved the BP_Procedural_Building this maybe should be removed
-    // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
-    //       than getting the UClass of the BP to cast the actor.
-    if( ClassName.Contains("Procedural_Bulding") ) continue;
-
-    // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
-    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
-    if (Vehicle)
-    {
-      FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
-      if(!BoundingBox.Extent.IsZero())
-      {
-        Result.Add(BoundingBox);
-      }
-      continue;
-    }
-
-
-    // Pedestrians, we just use the capsule component at the moment.
-    ACharacter* Character = Cast<ACharacter>(Actor);
-    if (Character)
-    {
-      FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
-      if(!BoundingBox.Extent.IsZero())
-      {
-        Result.Add(BoundingBox);
-      }
-      continue;
-    }
-
-    // TrafficLight, we need to join all the BB of the lights in one
-    ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
-    if(TrafficLight)
-    {
-      GetTrafficLightBoundingBox(TrafficLight, Result, InTagQueried);
-      continue;
-    }
-
-    // Calculate FBoundingBox of ISM
-    TArray<UInstancedStaticMeshComponent *> ISMComps;
-    Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
-    for(UInstancedStaticMeshComponent* Comp: ISMComps)
-    {
-      // Filter by tag
-      crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
-      if(FilterByTagEnabled && Tag != TagQueried) continue;
-
-      GetISMBoundingBox(Comp, Result);
-    }
-
-    // Calculate FBoundingBox of SM
-    TArray<UStaticMeshComponent*> StaticMeshComps;
-    Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-    GetBBsOfStaticMeshComponents(StaticMeshComps, Result, InTagQueried);
-
-    // Calculate FBoundingBox of SK_M
-    TArray<USkeletalMeshComponent*> SkeletalMeshComps;
-    Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
-    GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, InTagQueried);
-
+    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor, InTagQueried);
+    Result.Append(BBs.GetData(), BBs.Num());
   }
 
   return Result;
+}
+
+TArray<FBoundingBox> UBoundingBoxCalculator::GetBBsOfActor(
+  const AActor* Actor,
+  uint8 InTagQueried)
+{
+  TArray<FBoundingBox> Result;
+  TArray<uint8> Tags;
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
+
+  FString ClassName = Actor->GetClass()->GetName();
+
+  // Avoid the BP_Procedural_Building to avoid duplication with their child actors
+  // When improved the BP_Procedural_Building this maybe should be removed
+  // Note: We don't use casting here because the base class is a BP and is easier to do it this way,
+  //       than getting the UClass of the BP to cast the actor.
+  if( ClassName.Contains("Procedural_Bulding") ) return Result;
+
+  // The vehicle's BP has a low-polystatic mesh for collisions, we should avoid it
+  const ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  if (Vehicle)
+  {
+    FBoundingBox BoundingBox = GetVehicleBoundingBox(Vehicle, InTagQueried);
+    if(!BoundingBox.Extent.IsZero())
+    {
+      Result.Add(BoundingBox);
+    }
+    return Result;;
+  }
+
+  // Pedestrians, we just use the capsule component at the moment.
+  const ACharacter* Character = Cast<ACharacter>(Actor);
+  if (Character)
+  {
+    FBoundingBox BoundingBox = GetCharacterBoundingBox(Character, InTagQueried);
+    if(!BoundingBox.Extent.IsZero())
+    {
+      Result.Add(BoundingBox);
+    }
+    return Result;
+  }
+
+  // TrafficLight, we need to join all the BB of the lights in one
+  const ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
+  if(TrafficLight)
+  {
+    GetTrafficLightBoundingBox(TrafficLight, Result, Tags, InTagQueried);
+    return Result;
+  }
+
+  // Calculate FBoundingBox of ISM
+  TArray<UInstancedStaticMeshComponent *> ISMComps;
+  Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
+  for(UInstancedStaticMeshComponent* Comp: ISMComps)
+  {
+    // Filter by tag
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if(FilterByTagEnabled && Tag != TagQueried) continue;
+
+    GetISMBoundingBox(Comp, Result);
+  }
+
+  // Calculate FBoundingBox of SM
+  TArray<UStaticMeshComponent*> StaticMeshComps;
+  Tags.Reset();
+  Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+  GetBBsOfStaticMeshComponents(StaticMeshComps, Result, Tags, InTagQueried);
+
+  // Calculate FBoundingBox of SK_M
+  TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+  Tags.Reset();
+  Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+  GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, Tags, InTagQueried);
+
+  return Result;
+}
+
+void UBoundingBoxCalculator::CombineBBsOfActor(
+    const AActor* Actor,
+    TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
+    const float DistanceThreshold,
+    uint8 TagToCombine)
+{
+  check(Actor);
+
+  TArray<FBoundingBox> BBsOfTL;
+  TArray<uint8> InternalOutTags;
+  TArray<UStaticMeshComponent*> StaticMeshComps;
+  Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+  GetBBsOfStaticMeshComponents(StaticMeshComps, BBsOfTL, InternalOutTags);
+
+  bool IgnoreDistanceFilter = (DistanceThreshold <= 0.0f);
+  bool IgnoreTag = (TagToCombine == 0);
+
+  TSet<int> IndicesDiscarded;
+  for(int i = 0; i < BBsOfTL.Num(); i++)
+  {
+    // Check if the index was used to merge a previous BB
+    if(IndicesDiscarded.Contains(i)) continue;
+
+    TArray<FBoundingBox> BBsToCombine;
+    FBoundingBox& BB1 = BBsOfTL[i];
+    uint8 Tag1 = InternalOutTags[i];
+
+    for(int j = i + 1; j < BBsOfTL.Num(); j++)
+    {
+      // Check if the index was used to merge a previous BB
+      if(IndicesDiscarded.Contains(j)) continue;
+
+      FBoundingBox& BB2 = BBsOfTL[j];
+      uint8 Tag2 = InternalOutTags[j];
+
+      float Distance = FVector::DistSquared(BB1.Origin, BB2.Origin);
+
+      // If the BBs are close enough and are from the same type, we merge it
+      if( ((Distance <= DistanceThreshold) || IgnoreDistanceFilter) &&
+          ((Tag1 == Tag2) || IgnoreTag) )
+      {
+        BBsToCombine.Emplace(BB2);
+        IndicesDiscarded.Emplace(j);
+      }
+    }
+    if(BBsToCombine.Num() > 0)
+    {
+      BBsToCombine.Emplace(BB1);
+      IndicesDiscarded.Emplace(i);
+      FBoundingBox MergedBB = CombineBBs(BBsToCombine);
+      MergedBB.Rotation = BB1.Rotation;
+      OutBB.Emplace(MergedBB);
+      OutTag.Emplace(InternalOutTags[i]);
+    }
+  }
+
+  // Add the BB of the meshes that didn't need to combine
+  for(int i = 0; i < BBsOfTL.Num(); i++)
+  {
+    // Check if the index was used to merge a previous BB
+    if(IndicesDiscarded.Contains(i)) continue;
+    FBoundingBox& BB = BBsOfTL[i];
+    OutBB.Emplace(BB);
+    OutTag.Emplace(InternalOutTags[i]);
+  }
+}
+
+FBoundingBox UBoundingBoxCalculator::CombineBBs(const TArray<FBoundingBox>& BBsToCombine)
+{
+  FVector MaxVertex(TNumericLimits<float>::Lowest());
+  FVector MinVertex(TNumericLimits<float>::Max());
+
+  for(const FBoundingBox& BB : BBsToCombine) {
+    FVector MaxVertexOfBB = BB.Origin + BB.Extent;
+    FVector MinVertexOfBB = BB.Origin - BB.Extent;
+
+    MaxVertex.X = (MaxVertexOfBB.X > MaxVertex.X) ? MaxVertexOfBB.X : MaxVertex.X;
+    MaxVertex.Y = (MaxVertexOfBB.Y > MaxVertex.Y) ? MaxVertexOfBB.Y : MaxVertex.Y;
+    MaxVertex.Z = (MaxVertexOfBB.Z > MaxVertex.Z) ? MaxVertexOfBB.Z : MaxVertex.Z;
+    MinVertex.X = (MinVertexOfBB.X < MinVertex.X) ? MinVertexOfBB.X : MinVertex.X;
+    MinVertex.Y = (MinVertexOfBB.Y < MinVertex.Y) ? MinVertexOfBB.Y : MinVertex.Y;
+    MinVertex.Z = (MinVertexOfBB.Z < MinVertex.Z) ? MinVertexOfBB.Z : MinVertex.Z;
+  }
+
+  // Calculate box extent
+  FVector Extent (
+    (MaxVertex.X - MinVertex.X) * 0.5f,
+    (MaxVertex.Y - MinVertex.Y) * 0.5f,
+    (MaxVertex.Z - MinVertex.Z) * 0.5f
+  );
+
+  // Calculate middle point
+  FVector Origin (
+    (MinVertex.X + Extent.X),
+    (MinVertex.Y + Extent.Y),
+    (MinVertex.Z + Extent.Z)
+  );
+
+  return {Origin, Extent};
+}
+
+void UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(
+  const AActor* Actor,
+  const FBoundingBox& InBB,
+  TArray<UStaticMeshComponent*>& OutStaticMeshComps)
+{
+  check(Actor);
+
+
+  const float DistanceThreshold = 100.0f * 100.0f;
+
+  TArray<UStaticMeshComponent*> SMComps;
+  Actor->GetComponents<UStaticMeshComponent>(SMComps);
+
+  for(UStaticMeshComponent* Comp : SMComps)
+  {
+    if(!Comp->IsVisible()) continue;
+
+    TArray<FBoundingBox> BBs;
+    TArray<uint8> InternalOutTags;
+    GetBBsOfStaticMeshComponents({Comp}, BBs, InternalOutTags);
+
+    if(BBs.Num() == 0) continue;
+
+    const FBoundingBox& BB = BBs[0];
+    float Distance = FVector::DistSquared(InBB.Origin, BB.Origin);
+    if(Distance <= DistanceThreshold)
+    {
+      OutStaticMeshComps.Emplace(Comp);
+    }
+  }
 }

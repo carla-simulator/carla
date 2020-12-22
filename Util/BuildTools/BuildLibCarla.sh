@@ -1,12 +1,5 @@
 #! /bin/bash
 
-source $(dirname "$0")/Environment.sh
-
-function get_source_code_checksum {
-  local EXCLUDE='*__pycache__*'
-  find "${LIBCARLA_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
-}
-
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
@@ -41,13 +34,11 @@ BUILD_OPTION_RELEASE=false
 BUILD_OPTION_DUMMY=false
 BUILD_RSS_VARIANT=false
 
-OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss -n 'parse-options' -- "$@"`
-
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,carsim -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;
@@ -81,9 +72,16 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
+
+function get_source_code_checksum {
+  local EXCLUDE='*__pycache__*'
+  find "${LIBCARLA_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
+}
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_SERVER} || ${BUILD_CLIENT}; }; then
   fatal_error "Nothing selected to be done."
@@ -131,7 +129,7 @@ function build_libcarla {
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_BUILD_CLIENT_FOLDER}.rss.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_CLIENT_FOLDER}
-    CMAKE_EXTRA_OPTIONS="${CMAKE_EXTRA_OPTIONS:+${CMAKE_EXTRA_OPTIONS} }-DBUILD_RSS_VARIANT=ON -DADRSS_INSTALL_DIR=${CARLA_BUILD_FOLDER}/ad-rss-4.0.0/install"
+    CMAKE_EXTRA_OPTIONS="${CMAKE_EXTRA_OPTIONS:+${CMAKE_EXTRA_OPTIONS} }-DBUILD_RSS_VARIANT=ON -DADRSS_INSTALL_DIR=${CARLA_BUILD_FOLDER}/ad-rss-4.4.0/install"
   else
     fatal_error "Invalid build configuration \"$1\""
   fi

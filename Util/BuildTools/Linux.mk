@@ -36,7 +36,7 @@ rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild $(ARGS)
 
 hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --hard-clean
@@ -80,7 +80,7 @@ run-examples:
 	@for D in ${CARLA_EXAMPLES_FOLDER}/*; do [ -d "$${D}" ] && make -C $${D} run.only; done
 
 CarlaUE4Editor: LibCarla.server.release
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --build $(ARGS)
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla.client.release osm2odr
@@ -97,12 +97,6 @@ PythonAPI.rebuild: LibCarla.client.release osm2odr
 
 PythonAPI.rss: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rss $(ARGS)
-
-PythonAPI.rss.2: LibCarla.client.rss.release osm2odr
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --python-version=2 --rss
-
-PythonAPI.rss.3: LibCarla.client.rss.release osm2odr
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --python-version=3 --rss
 
 PythonAPI.rss.rebuild: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild --rss $(ARGS)
@@ -143,7 +137,7 @@ setup:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Setup.sh $(ARGS)
 
 ad-rss:
-	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh
+	@${CARLA_BUILD_TOOLS_FOLDER}/Ad-rss.sh $(ARGS)
 
 deploy:
 	@${CARLA_BUILD_TOOLS_FOLDER}/Deploy.sh $(ARGS)

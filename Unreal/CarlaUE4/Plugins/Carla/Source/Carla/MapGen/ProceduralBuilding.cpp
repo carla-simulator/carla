@@ -14,8 +14,9 @@ AProceduralBuilding::AProceduralBuilding()
   CornerVisibility.Init(true, 4);
   UseWallMesh.Init(false, 4);
 
-  UStaticMeshComponent* StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
-  RootComponent = StaticMeshComponent;
+  RootSMComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RootComponent"));
+  RootComponent = RootSMComp;
+  RootComponent->SetMobility(EComponentMobility::Static);
 }
 
 UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
@@ -106,6 +107,20 @@ void AProceduralBuilding::ConvertOldBP_ToNativeCodeObject(AActor* BP_Building)
 
     ChildActorComps.Emplace(ChildActorComp);
 
+  }
+}
+
+void AProceduralBuilding::HideAllChildren()
+{
+  for(UChildActorComponent* ChildActorComp : ChildActorComps)
+  {
+    AActor* ChildActor = ChildActorComp->GetChildActor();
+    TArray<UStaticMeshComponent*> SMComps;
+    ChildActor->GetComponents<UStaticMeshComponent>(SMComps);
+    if(SMComps.Num() > 0)
+    {
+      SMComps[0]->SetVisibility(false, false);
+    }
   }
 }
 

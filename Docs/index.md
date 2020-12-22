@@ -14,8 +14,8 @@ The CARLA forum is available to post any doubts or suggestions that may arise du
 CARLA forum</a>
 </div>
 
-!!! Important
-    This documentation refers to CARLA 0.9.0 or later. To read about previous versions, check the [stable branch](https://carla.readthedocs.io/en/stable/).
+!!! Warning
+    Change the docs version to fit the CARLA version you are using. Use the pannel in the bottom-right side of this window to change to previous versions. ![docs_version_panel](img/docs_version_panel.jpg)
 
 ---
 
@@ -53,8 +53,7 @@ CARLA forum</a>
 [__Traffic Manager__](adv_traffic_manager.md) — Simulate urban traffic by setting vehicles to autopilot mode.  
 
 ## References
-[__Python API reference__](python_api.md) — Classes and methods in the Python API.  
-[__Code recipes__](ref_code_recipes.md) — Some code fragments commonly used.  
+[__Python API reference__](python_api.md) — Classes and methods in the Python API.   
 [__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.  
 [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.  
 [__Recorder binary file format__](ref_recorder_binary_file_format.md) — Detailed explanation of the recorder file format.  

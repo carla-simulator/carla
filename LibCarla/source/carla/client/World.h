@@ -18,6 +18,9 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/EpisodeSettings.h"
+#include "carla/rpc/EnvironmentObject.h"
+#include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/MapLayer.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
@@ -56,6 +59,10 @@ namespace client {
     /// Return the map that describes this world.
     SharedPtr<Map> GetMap() const;
 
+    void LoadLevelLayer(rpc::MapLayer map_layers) const;
+
+    void UnloadLevelLayer(rpc::MapLayer map_layers) const;
+
     /// Return the list of blueprints available in this world. This blueprints
     /// can be used to spawning actor into the world.
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
@@ -74,7 +81,7 @@ namespace client {
     rpc::EpisodeSettings GetSettings() const;
 
     /// @return The id of the frame when the settings were applied.
-    uint64_t ApplySettings(const rpc::EpisodeSettings &settings);
+    uint64_t ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout);
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
@@ -154,6 +161,21 @@ namespace client {
 
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
+
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const;
+
+    void EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const;
+
+    boost::optional<rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance = 10000.f) const;
+
+    boost::optional<rpc::LabelledPoint> GroundProjection(
+        geom::Location location, float search_distance = 10000.0) const;
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const;
 
   private:
 

@@ -1,12 +1,4 @@
 #! /bin/bash
-
-source $(dirname "$0")/Environment.sh
-
-function get_source_code_checksum {
-  local EXCLUDE='*__pycache__*'
-  find "${OSM2ODR_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
-}
-
 DOC_STRING="Build OSM2ODR."
 
 USAGE_STRING=$(cat <<- END
@@ -22,14 +14,12 @@ END
 REMOVE_INTERMEDIATE=false
 BUILD_OSM2ODR=false
 
-OPTS=`getopt -o h --long help,rebuild,build,clean -n 'parse-options' -- "$@"`
-
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+OPTS=`getopt -o h --long help,rebuild,build,clean,carsim -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
-while true; do
-  case $1 in
+while [[ $# -gt 0 ]]; do
+  case "$1" in
     --rebuild )
       REMOVE_INTERMEDIATE=true;
       BUILD_OSM2ODR=true;
@@ -46,9 +36,16 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
+
+function get_source_code_checksum {
+  local EXCLUDE='*__pycache__*'
+  find "${OSM2ODR_ROOT_FOLDER}"/* \! -path "${EXCLUDE}" -print0 | sha1sum | awk '{print $1}'
+}
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_OSM2ODR}; }; then
   fatal_error "Nothing selected to be done."
@@ -71,7 +68,7 @@ fi
 # ==============================================================================
 
 if ${BUILD_OSM2ODR} ; then
-
+  log "Building OSM2ODR."
   [ ! -d ${OSM2ODR_BUILD_FOLDER} ] && mkdir ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
   # define clang compiler

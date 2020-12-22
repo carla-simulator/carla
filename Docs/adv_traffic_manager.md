@@ -15,6 +15,7 @@
 	*   [Creating a Traffic Manager](#creating-a-traffic-manager)  
 	*   [Setting a Traffic Manager](#setting-a-traffic-manager)  
 	*   [Stopping a Traffic Manager](#stopping-a-traffic-manager)  
+*   [__Deterministic mode__](#deterministic-mode)  
 *   [__Hybrid physics mode__](#hybrid-physics-mode)  
 *   [__Running multiple Traffic Managers__](#running-multiple-traffic-managers)  
 	*   [Definitions](#definitions)  
@@ -22,7 +23,6 @@
 	*   [MultiTM](#multitm)  
 	*   [Multisimulation](#multisimulation)  
 *   [__Other considerations__](#other-considerations)  
-	*   [FPS limitations](#fps-limitations)  
 	*   [Synchronous mode](#synchronous-mode)  
 *   [__Summary__](#summary)  
 
@@ -39,24 +39,26 @@ Users must have some control over the traffic flow by setting parameters that al
 
 ---
 ## Architecture
-<div style="text-align:center">
-<img src="../img/tm_2_architecture.jpg">
-</div>
+
+![Architecture](img/tm_2_architecture.jpg)
+
+
+
 
 The previous diagram is a summary of the internal architecture of the Traffic Manager. The inner structure of the TM can be easily translated to code, and each relevant component has its equivalent in the C++ code (.cpp files) inside `LibCarla/source/carla/trafficmanager`. The functions and relations of these components are explained in the following sections.  
 
 Nevertheless, the logic of it can be simplified as follows.  
 
 __1. Store and update the current state of the simulation.__  
-First of all, the [ALSM](#ALSM) (Agent Lifecycle & State Management) scans the world to keep track of all the vehicles and walkers present in it, and clean up entries for those that no longer exist. All the data is retrieved from the server, and then passed to the [stages](#stages). In such way, calls to the server are isolated in the ALSM, and these information can be easily accessible onwards. The [vehicle registry](#vehicle-registry) contains an array with the registered vehicles, and a list with the rest of vehicles and pedestrians. The [simulation state](#simulation-state) stores in cache the position and velocity and some additional information of all the cars and walkers.  
+First of all, the [ALSM](#alsm) (Agent Lifecycle & State Management) scans the world to keep track of all the vehicles and walkers present in it, and clean up entries for those that no longer exist. All the data is retrieved from the server, and then passed to the [stages](#stages). In such way, calls to the server are isolated in the ALSM, and these information can be easily accessible onwards. The [vehicle registry](#vehicle-registry) contains an array with the registered vehicles, and a list with the rest of vehicles and pedestrians. The [simulation state](#simulation-state) stores in cache the position and velocity and some additional information of all the cars and walkers.  
 
 __2. Calculate the movement of every registered vehicle.__  
 The main goal of the TM is to generate viable commands for all the vehicles in the [vehicle registry](#vehicle-registry), according to the [simulation state](#simulation-state). The calculations for each vehicle are done separatedly. These calculations are divided in different [stages](#stages). The [control loop](#control-loop) makes sure that all the calculations are consistent by creating __synchronization barriers__ in between stages. No one moves to the following stage before the calculations for all the vehicles are finished in the current one. Each vehicle has to go through the following stages.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.1 - [Localization Stage](#stage-1-localization-stage).__  
-TM vehicles do not have a predefined route, and path choices are taken randomly at junctions. Having this in mind, the [In-Memory Map](#in-memory-map) simplifies the map as a grid of waypoints, and a near-future path to follow is created as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#PBVT) component (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
+TM vehicles do not have a predefined route, and path choices are taken randomly at junctions. Having this in mind, the [In-Memory Map](#in-memory-map) simplifies the map as a grid of waypoints, and a near-future path to follow is created as a list of waypoints ahead. The path of every vehicle will be stored by the [PBVT](#pbvt) component (Path Buffers & Vehicle Tracking), so that these can be easily accessible and modified in future stages.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.2 - [Collision Stage](#stage-2-collision-stage).__  
 During this stage, bounding boxes are extended over the path of each vehicle to identify potential collision hazards, which are then managed when necessary.  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - [Traffic Light Stage](#stage-3-traffic-light-stage)__  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.3 - [Traffic Light Stage](#stage-3-traffic-light-stage).__  
 Similar to the Collision Stage, this stage identifies potential hazards that affect the path of the vehicle according to traffic light influence, stop signs, and junction priority.  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__2.4 - [Motion Planner Stage](#stage-4-motion-planner-stage).__  
 Once a path has been defined, this stage computes vehicle movement. A [PID controller](#pid-controller) is used to determine how to reach the target values. This movement is then translated into an actual CARLA command to be applied.  
@@ -70,7 +72,7 @@ And thus the cycle is concluded. The TM follows this logic on every step of the 
 
 ALSM stands for __Agent Lifecycle and State Management__. First step in the logic cycle. Provides context over the current state of the simulation.  
 
-*   Scans the world to keep track of all the vehicles and walkers in it, their positions and velocities. If physics are enabled, the velocity is retrieved by [Vehicle.get_velocity()](#python_api.md#carla.Vehicle). Instead, if physics are disabled, the velocity is computed using the history of position updates over time.  
+*   Scans the world to keep track of all the vehicles and walkers in it, their positions and velocities. If physics are enabled, the velocity is retrieved by [Vehicle.get_velocity()](python_api.md#carla.Vehicle). Instead, if physics are disabled, the velocity is computed using the history of position updates over time.  
 *   Stores the position, velocity and additional information (traffic light influence, bounding boxes, etc) of every vehicle and walker in the [simulation state](#simulation-state) module.  
 *   Updates the list of registered vehicles stored by the [vehicle registry](#vehicle-registry).  
 *   Updates entries in the [control loop](#control-loop) and [PBVT](#pbvt) modules to match the list of registered vehicles.  
@@ -81,7 +83,7 @@ __Related .cpp files:__ `ALSM.h`, `ALSM.cpp`.
 
 Last step in the TM logic cycle. Receives commands for all the registered vehicles and applies them.  
 
-*   Receives a series of [carla.VehicleControl](#python_api.md#carla.VehicleControl) from the [Motion Planner Stage](#motion-planner-stage).  
+*   Receives a series of [carla.VehicleControl](python_api.md#carla.VehicleControl) from the [Motion Planner Stage](#stage-4-motion-planner-stage).  
 *   Constructs a batch for all the commands to be applied during the same frame.  
 *   Sends the batch to the CARLA server. Either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) will be called, depending if the simulation is running in asynchronous or synchronous mode, respectively.  
 
@@ -96,13 +98,13 @@ Manages the process of calculating the next command for all the registered vehic
 *   These calculations are divided in a series of [stages](#stages).  
 *   Synchronization barriers are placed between stages so that consistency is guaranteed. Calculations for all vehicles must finish before any of them moves to the next stage, ensuring that all vehicles are updated in the same frame.  
 *   Coordinates the transition between [stages](#stages) so that all the calculations are done in sync.  
-*   When the last stage ([Motion Planner Stage](#motion-planner-stage)) finishes, the [command array](#command-array) is sent to the server. In this way, there are no frame delays between the calculations of the control loop, and the commands being applied.  
+*   When the last stage ([Motion Planner Stage](#stage-4-motion-planner-stage)) finishes, the [command array](#command-array) is sent to the server. In this way, there are no frame delays between the calculations of the control loop, and the commands being applied.  
 
 __Related .cpp files:__ `TrafficManagerLocal.cpp`.  
 
 ### In-Memory Map
 
-Helper module contained by the [PBVT](#pbvt) and used during the [Localization Stage](#localization-stage).  
+Helper module contained by the [PBVT](#pbvt) and used during the [Localization Stage](#stage-1-localization-stage).  
 
 *   Discretizes the map into a grid of waypoints.  
 *   Includes waypoints in a specific data structure with more information to connect waypoints and identify roads, junctions...
@@ -116,13 +118,13 @@ PBVT stands for __Path Buffer and Vehicle Tracking__. This data structure contai
 
 *   Contains a map of deque objects with an entry per vehicle.  
 *   For each vehicle, contains a set of waypoints describing its current location and near-future path.  
-*   Contains the [In-Memory Map](#in-memory-map) that will be used by the [Localization Stage](#localization-stage) to relate every vehicle to the nearest waypoint, and possible overlapping paths.  
+*   Contains the [In-Memory Map](#in-memory-map) that will be used by the [Localization Stage](#stage-1-localization-stage) to relate every vehicle to the nearest waypoint, and possible overlapping paths.  
 
 ### PID controller
 
-Helper module that performs calculations during the [Motion Planner Stage](#motion-planner-stage).  
+Helper module that performs calculations during the [Motion Planner Stage](#stage-4-motion-planner-stage).  
 
-*   Using the information gathered by the [Motion Planner Stage](#motion-planner-stage), estimates the throttle, brake and steering input needed to reach a target value.  
+*   Using the information gathered by the [Motion Planner Stage](#stage-4-motion-planner-stage), estimates the throttle, brake and steering input needed to reach a target value.  
 *   The adjustment is made depending on the specific parameterization of the controller, which can be modified if desired. Read more about [PID controllers](https://en.wikipedia.org/wiki/PID_controller) to learn how to do it.  
 
 __Related .cpp files:__ `PIDController.cpp`.  
@@ -131,7 +133,7 @@ __Related .cpp files:__ `PIDController.cpp`.
 
 Stores information about the vehicles in the world so that it can be easily accessible during all the process.  
 
-*   Receives the current state of all vehicles and walkers in the world from the [ALSM](#ALSM), including their position, velocity and some additional information (such as traffic light influence and state). It also stores some additional information such as whereas these vehicles are under the inffluence of a traffic light and what is the current state of said traffic light.  
+*   Receives the current state of all vehicles and walkers in the world from the [ALSM](#alsm), including their position, velocity and some additional information (such as traffic light influence and state). It also stores some additional information such as whereas these vehicles are under the inffluence of a traffic light and what is the current state of said traffic light.  
 *   Stores in cache all the information so that no additional calls to the server are needed during the [control loop](#control-loop).  
 
 __Related .cpp files:__ `SimulationState.cpp`, `SimulationState.h`.  
@@ -144,9 +146,9 @@ First stage in the [control loop](#control-loop). Defines a near-future path for
 
 *   Obtains the position and velocity of all the vehicles from [simulation state](#simulation-state).  
 *   Using the [In-Memory Map](#in-memory-map), relates every vehicle with a list of waypoints that describes its current location and near-future path, according to its trajectory. The faster the vehicle goes, the larger said list will be.  
-*   The path is updated according to planning decisions such as lan changes, speed limit, distance to leading vehicle parameterization, etc.  
+*   The path is updated according to planning decisions such as lane changes, speed limit, distance to leading vehicle parameterization, etc.  
 *   The [PBVT](#pbvt) module stores the path for all the vehicles.  
-*   These paths are compared with each other, in order to estimate possible collision situations. Results are passed to the following stage: [Colllision stage](#collision-stage).  
+*   These paths are compared with each other, in order to estimate possible collision situations. Results are passed to the following stage: [Colllision stage](#stage-2-collision-stage).  
 
 __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.  
 
@@ -154,9 +156,9 @@ __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.
 
 Second stage in the [control loop](#control-loop). Triggers collision hazards.  
 
-*   Receives a list of pairs of vehicles with possible overlapping paths from the [Localization Stage](#localization-stage).  
+*   Receives a list of pairs of vehicles with possible overlapping paths from the [Localization Stage](#stage-1-localization-stage).  
 *   For every pair, extends bounding boxes along the path ahead (geodesic boundaries), to check if they actually overlap and the risk of collision is real.  
-*   Hazards for all the possible collisions will be sent to the [Motion Planner Stage](#motion-planner-stage) to modify the path accordingly.  
+*   Hazards for all the possible collisions will be sent to the [Motion Planner Stage](#stage-4-motion-planner-stage) to modify the path accordingly.  
 
 __Related .cpp files:__ `CollisionStage.cpp`.  
 
@@ -173,9 +175,9 @@ __Related .cpp files:__ `TrafficLightStage.cpp`.
 
 Fourth and last stage in the [control loop](#control-loop). Generates the CARLA command that will be applied to the vehicle.  
 
-*   Gathers all the information so far: position and velocity of the vehicles ([simulation state](#simulation-state)), their path ([PBVT](#pbvt)), hazards ([Collision Stage](#collision-stage) and [Traffic Light State](#traffic-light-state)).  
+*   Gathers all the information so far: position and velocity of the vehicles ([simulation state](#simulation-state)), their path ([PBVT](#pbvt)), hazards ([Collision Stage](#stage-2-collision-stage) and [Traffic Light Stage](#stage-3-traffic-light-stage)).  
 *   Makes high-level decisins about how should the vehicle move, for example computing the brake needed to prevent a collision hazard. A [PID controller](#pid-controller) is used to estimate behaviors according to target values.  
-*   Translates the desired movement to a [carla.VehicleControl](#python_api.md#carla.VehicleControl) that can be applied to the vehicle.  
+*   Translates the desired movement to a [carla.VehicleControl](python_api.md#carla.VehicleControl) that can be applied to the vehicle.  
 *   Sends the resulting CARLA commands to the [command array](#command-array).  
 
 __Related .cpp files:__ `MotionPlannerStage.cpp`.  
@@ -202,41 +204,15 @@ First of all there are some general behaviour patterns the TM will generate that
 
 The TM provides a set of possibilities so the user can establish specific behaviours. All the methods accessible from the Python API are listed in the [documentation](../python_api/#carla.TrafficManager). However, here is a brief summary of what the current possibilities are. 
 
-<table class ="defTable">
-<tbody>
-<td><b>General:</b> </td>
-<td><br>
-    <b>1.</b> Use a carla.Client to create a TM instance connected to a port.<br>
-    <b>2.</b> Retrieve the port where a TM is connected.</td>
-<tr>
-<td><b>Safety conditions:</b> </td>
-<td><br>
-    <b>1.</b> Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br>
-    <b>2.</b> Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br>
-    <b>3.</b> Reset traffic lights. 
-</td>
-<tr>
-<td><b>Collision managing:</b> </td>
-<td><br>
-    <b>1.</b> Enable/Disable collisions between a vehicle and a specific actor.  <br>
-    <b>2.</b> Make a vehicle ignore all the other vehicles. <br>
-    <b>3.</b> Make a vehicle ignore all the walkers.  <br>
-    <b>4.</b> Make a vehicle ignore all the traffic lights. 
-</td>
-<tr>
-<td><b>Lane changes:</b> </td>
-<td><br>
-    <b>1.</b> Force a lane change disregarding possible collisions. <br>
-    <b>2.</b> Enable/Disable lane changes for a vehicle.
-</td>
-<tr>
-<td><b>Hybrid physics mode:</b> </td>
-<td><br>
-    <b>1.</b> Enable/Disable the hybrid physics mode.  <br>
-    <b>2.</b> Change the radius where physics are enabled.  
-</td>
-</tbody>
-</table>
+| Topic                                                                                                                                                                                                                                                                                  | Description                                                                                                                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **General:**                                                                                                                                                                                                                                                                           | <br> **1\.** Use a carla.Client to create a TM instance connected to a port.<br> **2\.** Retrieve the port where a TM is connected.                                                                                                                                                  |
+| **Safety conditions:**                                                                                                                                                                                                                                                                 | <br> **1\.** Set a minimum distance between stopped vehicles (for a vehicle or all of them). This will affect the minimum moving distance. <br> **2\.** Set an intended speed regarding current speed limitation (for a vehicle or all of them). <br> **3\.** Reset traffic lights. |
+| **Collision  managing:**                                                                                                                                                                                                                                                                | <br> **1\.** Enable/Disable collisions between a vehicle and a specific actor. <br> **2\.** Make a vehicle ignore all the other vehicles. <br> **3\.** Make a vehicle ignore all the walkers. <br>**4\.** Make a vehicle ignore all the traffic lights.                           |
+| **Lane  changes:**                                                                                                                                                                                                                                                                      | <br> **1\.** Force a lane change disregarding possible collisions. <br> **2\.** Enable/Disable lane changes for a vehicle.                                                                                                                                                           |
+| **Hybrid physics mode:**                                                                                                                                                                                                                                                               | <br> **1\.** Enable/Disable the hybrid physics mode. <br> **2\.** Change the radius where physics are enabled.                                                                                                                                                                       |
+<br>
+
 <br>
 
 ### Creating a Traffic Manager
@@ -255,7 +231,7 @@ tm_port = tm.get_port()
      v.set_autopilot(True,tm_port)
 ```
 !!! Note 
-    In multiclient situations, creating or connecting to a TM is not that straightforward. Take a look into the [other considerations](#other-considerations) section to learn more about this. 
+    In multiclient situations, creating or connecting to a TM is not that straightforward. Take a look into the [*Running multiple Traffic Managers*](#running-multiple-traffic-managers) section to learn more about this. 
 
 The script `spawn_npc.py` in `/PythonAPI/examples` creates a TM instance in the port passed as argument and registers every vehicle spawned to it by setting the autopilot to True on a batch.
 
@@ -302,7 +278,33 @@ The TM is not an actor that needs to be destroyed, it will stop when the corresp
 However, it is important that when shutting down a TM, the vehicles registered to it are destroyed. Otherwise, they will stop at place, as no one will be conducting them. The script `spawn_npc.py` does this automatically. 
 
 !!! Warning 
-    Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__ read about [multiclient and multiTM](#multiclient-and-multitm-management). 
+    Shutting down a __TM-Server__ will shut down the __TM-Clients__ connecting to it. To learn the difference between a __TM-Server__ and a __TM-Client__ read about [*Running multiple Traffic Managers*](#running-multiple-traffic-managers). 
+
+---
+## Deterministic mode
+
+In deterministic mode, the Traffic Manager will always produce the same results and behaviours under the same conditions. Do not mistake determinism with the recorder. While the recorder allows you to store the log of a simulation to play it back, determinism ensures that Traffic Manager will always have the same output over different executions of a script, if the same conditions are maintained.  
+
+Deterministic mode is meant to be used __in synchronous mode only__. In asynchronous mode, there is much less control over the simulation, and determinism cannot be achieved. Read the considerations to run [TM in synchronous mode](#synchronous-mode) before using it.  
+
+
+To enable deterministic mode, simply call the following method in your script.  
+
+```py
+my_tm.set_random_device_seed(seed_value)
+``` 
+
+`seed_value` is an `int` number from which all the random numbers will be generated. The value is not relevant itself, but the same value will always result in the same output. Two simulations, with the same conditions, that use the same seed value, will be deterministic.  
+
+The deterministic mode can be tested when using the `spawn_npc.py` example script, using a simple argument. The following example sets the seed to `9` for no specific reason.  
+
+```sh
+cd PythonAPI/examples
+python3 spawn_npc.py -n 50 --sync --seed 9
+```
+
+!!! Warning
+    Make sure to set both the world and the TM to synchronous mode before enabling deterministic mode. 
 
 ---
 ## Hybrid physics mode
@@ -311,7 +313,7 @@ In hybrid mode, either all vehicle physics can be disabled, or enabled only in a
 
 The hybrid mode is disabled by default. There are two ways to enable it.  
 
-*   [__TrafficManager.set_hybrid_phisics_mode(True)__](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_physics_mode) — This method will enable the hybrid mode for the Traffic Manager object calling it.  
+*   [__TrafficManager.set_hybrid_physics_mode(True)__](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_physics_mode) — This method will enable the hybrid mode for the Traffic Manager object calling it.  
 *   __Running `spawn_npc.py` with the flag `--hybrid`__ — The vehicles spawned will be registered to a Traffic Manager stated inside the script, and this will run with the hybrid physics on.  
 
 The are two parameters ruling the hybrid mode. One is the __radius__ that states the proximity area around any ego vehicle where physics are enabled. The other is the __vehicle__ with , that will act as center of this radius.  
@@ -401,20 +403,46 @@ The only possible issue arising from this is a client trying to connect to an al
 
 The TM is a module constantly evolving and trying to adapt the range of possibilities that it presents. For instance, in order to get more realistic behaviours we can have many clients with different TM in charge of sets of vehicles with specific and distinct behaviours. This range of possibilities also makes for a lot of different configurations that can get really complex and specific. For such reason, here are listed of considerations that should be taken into account when working with the TM as it is by the time of writing.  
 
-### FPS limitations
-
-The TM stops working properly in asynchronous mode when the simulation is under 20fps. Below that rate, the server is going much faster than the client containing the TM and behaviours cannot be simulated properly. For said reason, under these circumstances it is recommended to work in __synchronous mode__.  
-
-!!! Important
-    The FPS limitations are specially relevant when working in the night mode. 
-
 ### Synchronous mode
 
-TM-Clients cannot tick the CARLA server in synchronous mode, __only a TM-Server can call for a tick__.  
-If more than one TM-Server ticks, the synchrony will fail, as the server will move forward on every tick. This is specially relevant when working with the __ScenarioRunner__, which runs a TM. In this case, the TM will be subordinated to the ScenarioRunner and wait for it. 
+If the CARLA server is set to synchronous mode, the Traffic Manager must be set to synchronous mode too. To do so, your script should be similar to the following: 
+```py
+...
+
+# Set the simulation to sync mode
+init_settings = world.get_settings()
+settings = world.get_settings()
+settings.synchronous_mode = True
+# Right after that, set the Traffic Manager to sync mode
+my_tm.set_synchronous_mode(True)
+
+...
+
+# Tick the world in the same client
+world.apply_settings(init_settings)
+world.tick()
+...
+
+# Disable the sync mode always, before the script ends
+settings.synchronous_mode = False
+my_tm.set_synchronous_mode(False)
+```
+
+When using the `spawn_npc.py` example script, the TM can be set to synchronous mode just by passing an argument.  
+
+```sh
+cd PythonAPI/examples
+python3 spawn_npc.py -n 50 --sync
+```
+
+If more than one Traffic Manager is set to synchronous mode, the synchrony will fail. Follow these general guidelines to avoid issues. 
+
+*   In a __[multiclient](#multiclient)__ situation, only the __TM-Server__ must be set to synchronous mode.  
+*   In a __[multiTM](#multitm)__ situation, only __one of the TM-Server__ must be set to synchronous mode.  
+*   The __[ScenarioRunner module](https://carla-scenariorunner.readthedocs.io/en/latest/)__, already runs a TM. In this case, the TM inside ScenarioRunner will be the one set to sync mode.  
 
 !!! Warning
-    Disable the synchronous mode in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
+    Disable the synchronous mode (both, world and TM sync mode) in the script doing the ticks before it finishes. Otherwise, the server will be blocked, waiting forever for a tick.  
 
 ---
 ## Summary

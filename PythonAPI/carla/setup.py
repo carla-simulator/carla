@@ -66,13 +66,13 @@ def get_libcarla_extensions():
             if is_rss_variant_enabled():
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
                 extra_compile_args += ['-DLIBCARLA_PYTHON_MAJOR_' +  str(sys.version_info.major)]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_map_integration.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_access.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_rss.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics_python' +  str(sys.version_info.major) + '.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics_python' +  str(sys.version_info.major) + str(sys.version_info.minor) + '.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_opendrive_reader.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_program_options.a')]
@@ -157,7 +157,7 @@ def get_license():
 
 setup(
     name='carla',
-    version='0.9.10',
+    version='0.9.11',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),

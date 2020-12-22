@@ -40,6 +40,9 @@ public:
   UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
   void ConvertOldBP_ToNativeCodeObject(AActor* BP_Building);
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
+  void HideAllChildren();
+
   UFUNCTION(BlueprintCallable, Category="Procedural Building|Conversion")
   void SetBaseParameters(
     const TSet<int>& InDoorsIndexPosition,
@@ -93,12 +96,15 @@ protected:
 
   // TODO: AdvancedDisplay
   // Map containing the pair with the name of the mesh and the component that uses it
-  UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Procedural Building|Debug")
+  UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Procedural Building|Debug")
   TMap<FString, UHierarchicalInstancedStaticMeshComponent*> HISMComps;
 
   // Contains all the ChildActorComps spawned for this Actor
-  UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category="Procedural Building|Debug")
+  UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Procedural Building|Debug")
   TArray<UChildActorComponent*> ChildActorComps;
+
+  UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Procedural Building")
+  UStaticMeshComponent* RootSMComp = nullptr;
 
   /**
    *  Base Parameters

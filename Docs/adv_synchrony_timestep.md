@@ -69,16 +69,32 @@ CARLA has a [recorder feature](adv_recorder.md) that allows a simulation to be r
 
 	* There is also a __float-point arithmetic error__ that variable time-step introduces. The simulation is running with a time-step equal to the real one. Real time is a continuous variable, represented in the simulation with a `float` value, which has decimal limitations. The time that is cropped for each step accumulates, and prevents the simulation from a precise repetition of what has happened.  
 
-### Time-step limitations
+### Physics substepping
 
-Physics must be computed within very low time steps to be precise. The more time goes by, the more variables and chaos come to place, and the more defective the simulation will be. 
-CARLA uses up to 6 substeps to compute physics in every step, each with a maximum delta time of 0.016667s.  
+Physics must be computed within very low time steps to be precise. This can be an issue when 
+selecting a delta time for our simulation in which we usually perform multiple computations at 
+each frame, for example with sensor rendering. As this limitation only happens due to the 
+physics simulation, we can apply substeps to only the physical computations. This 
+is enabled by default and is set to have a maximum of 10 physics substeps with a maximum 
+physical delta time of 0.01.
 
-To know how many of these are needed, the time-step used gets divided by the maximum delta time a substep can use `number_of_substeps = time_step/0.016667`. Being these a maximum of 6, `6*0.016667 = 0.1`. If the time-step is greater than `0.1`, there will not be enough physical substeps. Physics will not be in synchrony with the delta time. 
+These options can be changed through the API in the world settings as:
+```py
+settings = world.get_settings()
+settings.substepping = True
+settings.max_substep_delta_time = 0.01
+settings.max_substeps = 10
+world.apply_settings(settings)
+```
 
-!!! Warning
-    __Do not use a time-step greater than 0.1s.__<br>
-    As explained above, the physics will not be representative for the simulation. The original issue can be found in ref. [#695](https://github.com/carla-simulator/carla/issues/695)
+Be aware that if you have set synchronous mode and the fixed time step then substepping options 
+need to be consistent with the value of the fixed delta seconds. The condition to be fulfilled is:
+```py
+fixed_delta_seconds <= max_substep_delta_time * max_substeps
+```
+
+In order to have an optimal physical simulation, the substep delta time should at least 
+be below 0.01666 and ideally below 0.01.
 
 ---
 ## Client-server synchrony 
@@ -98,6 +114,8 @@ settings = world.get_settings()
 settings.synchronous_mode = True # Enables synchronous mode
 world.apply_settings(settings)
 ```
+!!! Warning
+    If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
 
 To disable synchronous mode just set the variable to false or use the script `PythonAPI/util/config.py`. 
 ```sh
@@ -146,23 +164,13 @@ world.on_tick(lambda world_snapshot: do_something(world_snapshot))
 
 The configuration of time-step and synchrony, leads for different settings. Here is a brief summary on the possibilities.
 
-<table class ="defTable">
-<thead>
-<th></th>
-<th><b>Fixed time-step</b></th>
-<th><b>Variable time-step</b></th>
-</thead>
-<tbody>
-<td><b>Synchronous mode</b></td>
-<td>Client is in total control over the simulation and its information.</td>
-<td>Risk of non reliable simulations.</td>
-<tr>
-<td><b>Asynchronous mode</b></td>
-<td>Good time references for information. Server runs as fast as possible.</td>
-<td>Non easily repeatable simulations.</td>
-</tbody>
-</table>
+|                                                                        | **Fixed time-step**                                                    | **Variable time-step**                                                 |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **Synchronous mode**                                                   | Client is in total control over the simulation and its information.    | Risk of non reliable simulations.                                      |
+| **Asynchronous mode**                                                  | Good time references for information. Server runs as fast as possible. | Non easily repeatable simulations.                                     |
+
 <br>
+
 
 * __Synchronous mode + variable time-step.__ This is almost for sure a non-desirable state. Physics cannot run properly when the time-step is bigger than 0.1s and. If the server has to wait for the client to compute the steps, this is likely to happen. Simulation time and physics will not be in synchrony. The simulation will not be reliable.  
 

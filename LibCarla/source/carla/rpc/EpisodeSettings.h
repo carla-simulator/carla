@@ -31,7 +31,18 @@ namespace rpc {
 
     boost::optional<double> fixed_delta_seconds;
 
-    MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds);
+    bool substepping = true;
+
+    double max_substep_delta_time = 0.01;
+
+    int max_substeps = 10;
+
+    float max_culling_distance = 0.0f;
+
+    bool deterministic_ragdolls = true;
+
+    MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
+        max_substep_delta_time, max_substeps, max_culling_distance, deterministic_ragdolls);
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------
@@ -42,11 +53,21 @@ namespace rpc {
     EpisodeSettings(
         bool synchronous_mode,
         bool no_rendering_mode,
-        double fixed_delta_seconds = 0.0)
+        double fixed_delta_seconds = 0.0,
+        bool substepping = true,
+        double max_substep_delta_time = 0.01,
+        int max_substeps = 10,
+        float max_culling_distance = 0.0f,
+        bool deterministic_ragdolls = true)
       : synchronous_mode(synchronous_mode),
         no_rendering_mode(no_rendering_mode),
         fixed_delta_seconds(
-            fixed_delta_seconds > 0.0 ? fixed_delta_seconds : boost::optional<double>{}) {}
+            fixed_delta_seconds > 0.0 ? fixed_delta_seconds : boost::optional<double>{}),
+        substepping(substepping),
+        max_substep_delta_time(max_substep_delta_time),
+        max_substeps(max_substeps),
+        max_culling_distance(max_culling_distance),
+        deterministic_ragdolls(deterministic_ragdolls) {}
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
@@ -56,7 +77,12 @@ namespace rpc {
       return
           (synchronous_mode == rhs.synchronous_mode) &&
           (no_rendering_mode == rhs.no_rendering_mode) &&
-          (fixed_delta_seconds == rhs.fixed_delta_seconds);
+          (substepping == rhs.substepping) &&
+          (fixed_delta_seconds == rhs.fixed_delta_seconds) &&
+          (max_substep_delta_time == rhs.max_substep_delta_time) &&
+          (max_substeps == rhs.max_substeps) &&
+          (max_culling_distance == rhs.max_culling_distance) &&
+          (deterministic_ragdolls == rhs.deterministic_ragdolls);
     }
 
     bool operator!=(const EpisodeSettings &rhs) const {
@@ -73,7 +99,12 @@ namespace rpc {
       : EpisodeSettings(
             Settings.bSynchronousMode,
             Settings.bNoRenderingMode,
-            Settings.FixedDeltaSeconds.Get(0.0)) {}
+            Settings.FixedDeltaSeconds.Get(0.0),
+            Settings.bSubstepping,
+            Settings.MaxSubstepDeltaTime,
+            Settings.MaxSubsteps,
+            Settings.MaxCullingDistance,
+            Settings.bDeterministicRagdolls) {}
 
     operator FEpisodeSettings() const {
       FEpisodeSettings Settings;
@@ -82,6 +113,12 @@ namespace rpc {
       if (fixed_delta_seconds.has_value()) {
         Settings.FixedDeltaSeconds = *fixed_delta_seconds;
       }
+      Settings.bSubstepping = substepping;
+      Settings.MaxSubstepDeltaTime = max_substep_delta_time;
+      Settings.MaxSubsteps = max_substeps;
+      Settings.MaxCullingDistance = max_culling_distance;
+      Settings.bDeterministicRagdolls = deterministic_ragdolls;
+
       return Settings;
     }
 

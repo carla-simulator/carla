@@ -22,6 +22,14 @@ namespace client {
     return _episode.Lock()->GetCurrentMap();
   }
 
+  void World::LoadLevelLayer(rpc::MapLayer map_layers) const {
+    _episode.Lock()->LoadLevelLayer(map_layers);
+  }
+
+  void World::UnloadLevelLayer(rpc::MapLayer map_layers) const {
+    _episode.Lock()->UnloadLevelLayer(map_layers);
+  }
+
   SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
     return _episode.Lock()->GetBlueprintLibrary();
   }
@@ -42,8 +50,30 @@ namespace client {
     return _episode.Lock()->GetEpisodeSettings();
   }
 
-  uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings) {
-    return _episode.Lock()->SetEpisodeSettings(settings);
+  uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout) {
+    rpc::EpisodeSettings new_settings = settings;
+    uint64_t id = _episode.Lock()->SetEpisodeSettings(settings);
+    if (settings.fixed_delta_seconds.has_value()) {
+      using namespace std::literals::chrono_literals;
+
+      const auto number_of_attemps = 30u;
+      uint64_t tics_correct = 0;
+      for (auto i = 0u; i < number_of_attemps; i++) {
+        const auto curr_snapshot = GetSnapshot();
+
+        const double error = abs(new_settings.fixed_delta_seconds.get() - curr_snapshot.GetTimestamp().delta_seconds);
+        if (error < std::numeric_limits<float>::epsilon())
+          tics_correct++;
+
+        if (tics_correct >= 2)
+          return id;
+
+        Tick(timeout);
+      }
+
+      log_warning("World::ApplySettings: After", number_of_attemps, " attemps, the settings were not correctly set. Please check that everything is consistent.");
+    }
+    return id;
   }
 
   rpc::WeatherParameters World::GetWeather() const {
@@ -164,6 +194,36 @@ namespace client {
 
   std::vector<geom::BoundingBox> World::GetLevelBBs(uint8_t queried_tag) const {
     return _episode.Lock()->GetLevelBBs(queried_tag);
+  }
+
+  std::vector<rpc::EnvironmentObject> World::GetEnvironmentObjects(uint8_t queried_tag) const {
+    return _episode.Lock()->GetEnvironmentObjects(queried_tag);
+  }
+
+  void World::EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+    _episode.Lock()->EnableEnvironmentObjects(env_objects_ids, enable);
+  }
+
+  boost::optional<rpc::LabelledPoint> World::ProjectPoint(
+      geom::Location location, geom::Vector3D direction, float search_distance) const {
+    auto result = _episode.Lock()->ProjectPoint(location, direction, search_distance);
+    if (result.first) {
+      return result.second;
+    }
+    return {};
+  }
+
+  boost::optional<rpc::LabelledPoint> World::GroundProjection(
+      geom::Location location, float search_distance) const {
+    const geom::Vector3D DownVector(0,0,-1);
+    return ProjectPoint(location, DownVector, search_distance);
+  }
+
+  std::vector<rpc::LabelledPoint> World::CastRay(
+      geom::Location start_location, geom::Location end_location) const {
+    return _episode.Lock()->CastRay(start_location, end_location);
   }
 
 } // namespace client

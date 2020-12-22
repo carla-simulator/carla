@@ -32,7 +32,8 @@ public:
 
   void Set(const FActorDescription &ActorDescription);
 
-  void Tick(float DeltaSeconds) override;
+  // virtual void PrePhysTick(float DeltaSeconds) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
   void SetLatitudeDeviation(float Value);
   void SetLongitudeDeviation(float Value);

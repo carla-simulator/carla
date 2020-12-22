@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -115,6 +116,8 @@ private:
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   std::vector<ActorId> marked_for_removal;
+  /// Mutex to prevent vehicle registration during frame array re-allocation.
+  std::mutex registration_mutex;
 
   /// Method to check if all traffic lights are frozen in a group.
   bool CheckAllFrozen(TLGroup tl_to_freeze);
@@ -198,12 +201,6 @@ public:
 
   /// Method to provide synchronous tick.
   bool SynchronousTick();
-
-  /// Method to reset all traffic light groups to the initial stage.
-  void ResetAllTrafficLights();
-
-  /// Method to start all traffic light groups to the initial stage.
-  void StartAllTrafficLights();
 
   /// Get CARLA episode information.
   carla::client::detail::EpisodeProxy &GetEpisodeProxy();

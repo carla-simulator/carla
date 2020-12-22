@@ -19,5 +19,18 @@ struct CARLA_API FEpisodeSettings
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   bool bNoRenderingMode = false;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bSubstepping = true;
+
   TOptional<double> FixedDeltaSeconds;
+
+  double MaxSubstepDeltaTime = 0.01;
+
+  int MaxSubsteps = 10;
+
+  float MaxCullingDistance = 0.0f;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bDeterministicRagdolls = true;
+
 };

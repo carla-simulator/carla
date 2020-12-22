@@ -63,7 +63,6 @@ static void WritePixelsToBuffer_Vulkan(
       FIntRect(0, 0, Rect.X, Rect.Y),
       gPixels,
       FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
   Buffer.copy_from(Offset, gPixels);
 }
 
@@ -143,6 +142,7 @@ void FPixelReader::WritePixelsToBuffer(
   {
     return;
   }
+
   FRHITexture2D *Texture = RenderTargetResource->GetRenderTargetTexture();
   checkf(Texture != nullptr, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
 

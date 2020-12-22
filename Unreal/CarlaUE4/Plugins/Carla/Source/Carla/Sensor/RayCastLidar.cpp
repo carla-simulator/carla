@@ -19,7 +19,6 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
 {
@@ -31,6 +30,7 @@ ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer) {
 
   RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+  SetSeed(Description.RandomSeed);
 }
 
 void ARayCastLidar::Set(const FActorDescription &ActorDescription)
@@ -54,10 +54,8 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
-void ARayCastLidar::Tick(const float DeltaTime)
+void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  ASensor::Tick(DeltaTime);
-
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
@@ -95,11 +93,14 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   return Detection;
 }
 
-  bool ARayCastLidar::PreprocessRay() const {
-    if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
-      return false;
-    else
-      return true;
+  void ARayCastLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+    Super::PreprocessRays(Channels, MaxPointsPerChannel);
+
+    for (auto ch = 0u; ch < Channels; ch++) {
+      for (auto p = 0u; p < MaxPointsPerChannel; p++) {
+        RayPreprocessCondition[ch][p] = !(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate);
+      }
+    }
   }
 
   bool ARayCastLidar::PostprocessDetection(FDetection& Detection) const

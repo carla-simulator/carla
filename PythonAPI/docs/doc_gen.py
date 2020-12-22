@@ -10,6 +10,7 @@
 import os
 import yaml
 import re
+import doc_gen_snipets
 
 COLOR_METHOD = '#7fb800'
 COLOR_PARAM = '#00a6ed'
@@ -90,7 +91,7 @@ class MarkdownFile:
 
     def inherit_join(self, inh):
         self._data = join([
-            self._data, '<small style="display:block;margin-top:-20px;">**Inherited from ', inh, '**</small></br>\n'])
+            self._data,'<div class="Inherited"><small><b>Inherited from ',inh,'</b></small></div>'])
 
     def note(self, buf):
         self._data = join([self._data, buf])
@@ -112,6 +113,9 @@ def italic(buf):
 def bold(buf):
     return join(['**', buf, '**'])
 
+def snipet(name,class_key):
+
+    return join(["<button class=\"SnipetButton\" id=\"",class_key,".",name,"-snipet_button\">", "snipet &rarr;", '</button>'])
 
 def code(buf):
     return join(['`', buf, '`'])
@@ -217,6 +221,52 @@ class YamlFile:
     def get_modules(self):
         return [module for module in self.data]
 
+def append_snipet_button_script(md):
+    md.textn("\n\n<script>\n"+
+                "function ButtonAction(container_name){\n"+
+                    "if(window_big){\n"+
+                        "snipet_name = container_name.replace('-snipet_button','-snipet');\n"+
+                        "document.getElementById(\"snipets-container\").innerHTML = document.getElementById(snipet_name).innerHTML;\n"+
+                    "}\n"+
+                    "else{\n"+
+                        "document.getElementById(\"snipets-container\").innerHTML = null;"+
+                        "code_name = container_name.replace('-snipet_button','-code');\n"+
+                        "var range = document.createRange();\n"+
+                        "range.selectNode(document.getElementById(code_name));\n"+
+                        "alert(range);\n"+
+                    "}\n"+
+                "}\n"+
+                "function WindowResize(){\n"+
+                    "if(window.innerWidth > 1200){\n"+
+                        "window_big = true;\n"+
+                    "}\n"+
+                    "else{\n"+
+                        "window_big = false;\n"+
+                    "}\n"+
+                "}\n"+
+
+                "var window_big;\n"+
+                "if(window.innerWidth > 1200){\n"+
+                    "window_big = true;\n"+
+                "}\n"+
+                "else{\n"+
+                    "window_big = false;\n"+
+                "}\n"+
+
+                "buttons = document.getElementsByClassName('SnipetButton')\n"+
+                "for (let i = 0; i < buttons.length; i++) {\n"+
+                    "buttons[i].addEventListener(\"click\",function(){ButtonAction(buttons[i].id);},true);\n"+
+                "}\n"+
+                "window.onresize = WindowResize;\n"+
+            "</script>\n")
+
+def append_code_snipets(md):
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+    snipets_path = os.path.join(current_folder, '../../Docs/python_api_snipets.md')
+    snipets = open(snipets_path, 'r')
+    md.text(snipets.read())
+    os.remove(snipets_path)
+
 
 def gen_stub_method_def(method):
     """Return python def as it should be written in stub files"""
@@ -231,14 +281,16 @@ def gen_stub_method_def(method):
     return join([method_name, parentheses(param), return_type])
 
 
-def gen_doc_method_def(method, is_indx=False, with_self=True):
+def gen_doc_method_def(method, class_key, is_indx=False, with_self=True):
     """Return python def as it should be written in docs"""
     param = ''
+    snipet_link = ''
     method_name = method['def_name']
+    full_method_name = method_name
     if valid_dic_val(method, 'static'):
         with_self = False
 
-    # to correclty render methods like __init__ in md
+    # to correctly render methods like __init__ in md
     if method_name[0] == '_':
         method_name = '\\' + method_name
     if is_indx:
@@ -265,7 +317,15 @@ def gen_doc_method_def(method, is_indx=False, with_self=True):
             del method['params']
 
     param = param[:-2]  # delete the last ', '
-    return join([method_name, parentheses(param)])
+
+    # Add snipet
+    current_folder = os.path.dirname(os.path.abspath(__file__))
+    snipets_path = os.path.join(current_folder, '../../Docs/python_api_snipets.md')
+    snipets = open(snipets_path, 'r')
+    if class_key+'.'+full_method_name+'-snipet' in snipets.read():
+        snipet_link = snipet(full_method_name, class_key)
+
+    return join([method_name, parentheses(param),snipet_link])
 
 def gen_doc_dunder_def(dunder, is_indx=False, with_self=True):
     """Return python def as it should be written in docs"""
@@ -274,7 +334,7 @@ def gen_doc_dunder_def(dunder, is_indx=False, with_self=True):
     if valid_dic_val(dunder, 'static'):
         with_self = False
 
-    # to correclty render methods like __init__ in md
+    # to correctly render methods like __init__ in md
     if dunder_name[0] == '_':
         dunder_name = '\\' + dunder_name
     if is_indx:
@@ -316,7 +376,7 @@ def gen_inst_var_indx(inst_var, class_key):
 def gen_method_indx(method, class_key):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
-    method_def = gen_doc_method_def(method, True)
+    method_def = gen_doc_method_def(method, class_key, True)
     return join([
         brackets(method_def),
         parentheses(method_key), ' ',
@@ -348,7 +408,7 @@ def add_doc_method_param(md, param):
 def add_doc_method(md, method, class_key):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
-    method_def = gen_doc_method_def(method, False)
+    method_def = gen_doc_method_def(method, class_key, False)
     md.list_pushn(join([html_key(method_key), method_def]))
 
     # Method doc
@@ -399,10 +459,10 @@ def add_doc_method(md, method, class_key):
 
     md.list_pop()
 
-def add_doc_getter_setter(md, method,class_key,is_getter,other_list):
+def add_doc_getter_setter(md, method, class_key, is_getter, other_list):
     method_name = method['def_name']
     method_key = join([class_key, method_name], '.')
-    method_def = gen_doc_method_def(method, False)
+    method_def = gen_doc_method_def(method, class_key, False)
     md.list_pushn(join([html_key(method_key), method_def]))
 
     # Method doc
@@ -531,7 +591,6 @@ def add_doc_inst_var(md, inst_var, class_key):
 
     md.list_pop()
 
-
 class Documentation:
     """Main documentation class"""
 
@@ -582,7 +641,7 @@ class Documentation:
                             md.list_popn()
                     # Generate class methods overview (if any)
                     if 'methods' in cl and cl['methods']:
-                        for method in cl['methods']:
+                        for method in sorted(cl['methods'], key = lambda i: i['def_name']):
                             md.list_push(gen_method_indx(method, class_key))
                             md.list_popn()
                     md.list_pop()
@@ -615,7 +674,7 @@ class Documentation:
                         md.textn(create_hyperlinks(md.prettify_doc(cl['doc'])))
                     # Generate instance variable doc (if any)
                     if valid_dic_val(cl, 'instance_variables'):
-                        md.title_html(3, 'Instance Variables')
+                        md.title(3, 'Instance Variables')
                         for inst_var in cl['instance_variables']:
                             add_doc_inst_var(md, inst_var, class_key)
                     # Generate method doc (if any)
@@ -624,7 +683,7 @@ class Documentation:
                         dunder_list = list()
                         get_list = list()
                         set_list = list()
-                        for method in cl['methods']:
+                        for method in sorted(cl['methods'], key = lambda i: i['def_name']):
                             method_name = method['def_name']
                             if method_name[0] == '_' and method_name != '__init__':
                                 dunder_list.append(method)
@@ -634,22 +693,24 @@ class Documentation:
                                 set_list.append(method)
                             else:
                                 method_list.append(method)
-                        md.title_html(3, 'Methods')
+                        md.title(3, 'Methods')
                         for method in method_list:
                             add_doc_method(md, method, class_key)
                         if len(get_list)>0:
-                            md.title_html(5, 'Getters')
+                            md.title(5, 'Getters')
                         for method in get_list:
-                            add_doc_getter_setter(md, method,class_key,True,set_list)
+                            add_doc_getter_setter(md, method, class_key, True, set_list)
                         if len(set_list)>0:
-                            md.title_html(5, 'Setters')
+                            md.title(5, 'Setters')
                         for method in set_list:
-                            add_doc_getter_setter(md, method,class_key,False,get_list)
+                            add_doc_getter_setter(md, method, class_key, False, get_list)
                         if len(dunder_list)>0:
-                            md.title_html(5, 'Dunder methods')
+                            md.title(5, 'Dunder methods')
                         for method in dunder_list:
                             add_doc_dunder(md, method, class_key)
                     md.separator()
+        append_code_snipets(md)
+        append_snipet_button_script(md)
         return md.data().strip()
 
     def gen_markdown(self):
@@ -661,6 +722,7 @@ def main():
     """Main function"""
     print("Generating PythonAPI documentation...")
     script_path = os.path.dirname(os.path.abspath(__file__))
+    doc_gen_snipets.main()
     docs = Documentation(script_path)
     with open(os.path.join(script_path, '../../Docs/python_api.md'), 'w') as md_file:
         md_file.write(docs.gen_markdown())

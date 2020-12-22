@@ -4,7 +4,7 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-source $(dirname "$0")/Environment.sh
+
 
 REPLACE_LATEST=false
 DOCKER_PUSH=false
@@ -23,11 +23,9 @@ USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-ru
 
 OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run -n 'parse-options' -- "$@"`
 
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
-
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --replace-latest )
       REPLACE_LATEST=true;
@@ -46,9 +44,11 @@ while true; do
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
 
 REPOSITORY_TAG=$(get_git_repository_version)
 

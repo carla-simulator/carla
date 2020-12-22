@@ -20,6 +20,13 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   RootComponent = Mesh;
 }
 
+void ASensor::BeginPlay()
+{
+  Super::BeginPlay();
+  OnPostTickDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(
+      this, &ASensor::PostPhysTick);
+}
+
 void ASensor::Set(const FActorDescription &Description)
 {
   // set the tick interval of the sensor
@@ -29,6 +36,12 @@ void ASensor::Set(const FActorDescription &Description)
         UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
         0.0f));
   }
+}
+
+void ASensor::Tick(const float DeltaTime)
+{
+  Super::Tick(DeltaTime);
+  PrePhysTick(DeltaTime);
 }
 
 void ASensor::SetSeed(const int32 InSeed)
@@ -61,4 +74,6 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
   Stream = FDataStream();
+
+  FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickDelegate);
 }

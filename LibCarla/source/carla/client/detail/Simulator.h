@@ -23,6 +23,7 @@
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/LabelledPoint.h"
 
 #include <boost/optional.hpp>
 
@@ -63,15 +64,24 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    EpisodeProxy ReloadEpisode() {
-      return LoadEpisode("");
+    EpisodeProxy ReloadEpisode(bool reset_settings = true) {
+      return LoadEpisode("", reset_settings);
     }
 
-    EpisodeProxy LoadEpisode(std::string map_name);
+    EpisodeProxy LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layers = rpc::MapLayer::All);
+
+    void LoadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.LoadLevelLayer(map_layers);
+    }
+
+    void UnloadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.UnloadLevelLayer(map_layers);
+    }
 
     EpisodeProxy LoadOpenDriveEpisode(
         std::string opendrive,
-        const rpc::OpendriveGenerationParameters & params);
+        const rpc::OpendriveGenerationParameters & params,
+        bool reset_settings = true);
 
     /// @}
     // =========================================================================
@@ -229,6 +239,26 @@ namespace detail {
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const {
       return _client.GetLevelBBs(queried_tag);
+    }
+
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const {
+      return _client.GetEnvironmentObjects(queried_tag);
+    }
+
+    void EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+      _client.EnableEnvironmentObjects(env_objects_ids, enable);
+    }
+
+    std::pair<bool,rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance) const {
+      return _client.ProjectPoint(location, direction, search_distance);
+    }
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const {
+      return _client.CastRay(start_location, end_location);
     }
 
     /// @}
@@ -414,6 +444,14 @@ namespace detail {
 
     void SetLightStateToVehicle(Vehicle &vehicle, const rpc::VehicleLightState light_state) {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
+    }
+
+    void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
+      _client.EnableCarSim(vehicle.GetId(), simfile_path);
+    }
+
+    void UseCarSimRoad(Vehicle &vehicle, bool enabled) {
+      _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
     /// @}

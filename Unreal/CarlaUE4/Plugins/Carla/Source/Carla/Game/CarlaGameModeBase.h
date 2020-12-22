@@ -6,23 +6,24 @@
 
 #pragma once
 
-#include "Carla/Actor/CarlaActorFactory.h"
-#include "Carla/Game/CarlaEpisode.h"
-#include "Carla/Game/CarlaGameInstance.h"
-#include "Carla/Recorder/CarlaRecorder.h"
-#include "Carla/Game/TaggerDelegate.h"
-#include "Carla/OpenDrive/OpenDrive.h"
-#include "Carla/Sensor/SceneCaptureSensor.h"
-#include "Carla/Settings/CarlaSettingsDelegate.h"
-#include "Carla/Weather/Weather.h"
-#include "Carla/Traffic/TrafficLightManager.h"
-
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
 #include <compiler/enable-ue4-macros.h>
+
+#include "Carla/Actor/CarlaActorFactory.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/Game/TaggerDelegate.h"
+#include "Carla/OpenDrive/OpenDrive.h"
+#include "Carla/Recorder/CarlaRecorder.h"
+#include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Settings/CarlaSettingsDelegate.h"
+#include "Carla/Traffic/TrafficLightManager.h"
+#include "Carla/Util/ObjectRegister.h"
+#include "Carla/Weather/Weather.h"
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -53,7 +54,30 @@ public:
   ATrafficLightManager* GetTrafficLightManager();
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
+  TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0xFF) const;
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  TArray<FEnvironmentObject> GetEnvironmentObjects(uint8 QueriedTag = 0xFF) const
+  {
+    return ObjectRegister->GetEnvironmentObjects(QueriedTag);
+  }
+
+  void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  void LoadMapLayer(int32 MapLayers);
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
+  void UnLoadMapLayer(int32 MapLayers);
+
+  UFUNCTION(Category = "Carla Game Mode")
+  ULevel* GetULevelFromName(FString LevelName);
+
+  UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
+  void OnLoadStreamLevel();
+
+  UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
+  void OnUnloadStreamLevel();
 
 protected:
 
@@ -73,6 +97,12 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
+  void RegisterEnvironmentObjects();
+
+  void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
+
+  void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
+
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
 
@@ -86,7 +116,10 @@ private:
   UCarlaEpisode *Episode = nullptr;
 
   UPROPERTY()
-  ACarlaRecorder *Recorder = nullptr; 
+  ACarlaRecorder *Recorder = nullptr;
+
+  UPROPERTY()
+  UObjectRegister* ObjectRegister = nullptr;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
@@ -103,6 +136,13 @@ private:
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
 
+  FDelegateHandle OnEpisodeSettingsChangeHandle;
+
   boost::optional<carla::road::Map> Map;
+
+  int PendingLevelsToLoad = 0;
+  int PendingLevelsToUnLoad = 0;
+
+  bool ReadyToRegisterObjects = false;
 
 };

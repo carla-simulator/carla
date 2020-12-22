@@ -43,7 +43,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make setup ARGS="--python-version=3.7"'
+                                sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
+                                sh 'make setup ARGS="--python-version=3.7,2"'
                             }
                         }
                         stage('ubuntu build')
@@ -51,9 +52,9 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI ARGS="--python-version=3.7"'
-                                sh 'make PythonAPI ARGS="--python-version=2"'
-                                sh 'make CarlaUE4Editor'
+                                sh 'make PythonAPI ARGS="--python-version=3.7,2"'
+                                sh 'make CarlaUE4Editor ARGS="--carsim"'
+                                sh 'make plugins'
                                 sh 'make examples'
                             }
                             post
@@ -69,7 +70,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make check ARGS="--all --xml --python-version=3.7"'
+                                sh 'make check ARGS="--all --xml --python-version=3.7,2"'
                             }
                             post
                             {
@@ -91,8 +92,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7"'
-                                sh 'make package ARGS="--packages=AdditionalMaps --clean-intermediate --python-version=3.7"'
+                                sh 'make package ARGS="--python-version=3.7,2 --carsim"'
+                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -111,7 +112,7 @@ pipeline
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
                                             jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                            
+
                                             jenkinsLib.CreateUbuntuTestNode(JOB_ID)
                                         }
                                     }
@@ -128,7 +129,7 @@ pipeline
                                 unstash name: 'ubuntu_examples'
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
                                 sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                                sh 'make smoke_tests ARGS="--xml --python-version=3.7"'
+                                sh 'make smoke_tests ARGS="--xml --python-version=3.7,2"'
                                 sh 'make run-examples ARGS="localhost 3654"'
                             }
                             post
@@ -144,11 +145,11 @@ pipeline
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
                                             jenkinsLib = load("/home/jenkins/jenkins.groovy")
-                                            
+
                                             jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
                                         }
                                     }
-                                }                               
+                                }
                             }
                         }
                         stage('ubuntu deploy dev')
@@ -233,6 +234,10 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
+                                    git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject
+                                """
+                                bat """
+                                    call ../setEnv64.bat
                                     make setup
                                 """
                             }
@@ -251,7 +256,11 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make CarlaUE4Editor
+                                    make CarlaUE4Editor ARGS="--carsim"
+                                """
+                                bat """
+                                    call ../setEnv64.bat
+                                    make plugins
                                 """
                             }
                             post
@@ -279,11 +288,11 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
-                                    make package
+                                    make package ARGS="--carsim"
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps --clean-intermediate"
+                                    make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate"
                                 """
                             }
                             post {

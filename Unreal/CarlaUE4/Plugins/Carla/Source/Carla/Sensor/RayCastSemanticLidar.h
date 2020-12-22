@@ -40,7 +40,7 @@ public:
   virtual void Set(const FLidarDescription &LidarDescription);
 
 protected:
-  virtual void Tick(float DeltaTime) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   /// Creates a Laser for each channel.
   void CreateLasers();
@@ -51,12 +51,8 @@ protected:
   /// Shoot a laser ray-trace, return whether the laser hit something.
   bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &HitResult) const;
 
-  /// Method that allow to preprocess the ray before shoot it
-  virtual bool PreprocessRay() const {
-    // This method allows to introduce noise or drop points if needed
-    // A true return value will make the proposed ray to be actually computed.
-    return true;
-  }
+  /// Method that allow to preprocess if the rays will be traced.
+  virtual void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel);
 
   /// Compute all raw detection information
   void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FSemanticDetection &Detection) const;
@@ -77,6 +73,7 @@ protected:
   TArray<float> LaserAngles;
 
   std::vector<std::vector<FHitResult>> RecordedHits;
+  std::vector<std::vector<bool>> RayPreprocessCondition;
   std::vector<uint32_t> PointsPerChannel;
 
 private:

@@ -36,7 +36,7 @@
   - class_name: ColorConverter
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines conversion patterns that can be applied to a carla.Image in order to show information provided by carla.Sensor. Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look a this [recipe](ref_code_recipes.md#converted-image-recipe) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.
+      Class that defines conversion patterns that can be applied to a carla.Image in order to show information provided by carla.Sensor. Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look at the snipet in carla.Sensor.listen to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: CityScapesPalette
@@ -55,7 +55,7 @@
   - class_name: CityObjectLabel
     # - DESCRIPTION ------------------------
     doc: >
-      Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the [semantic tag](../../ref_sensors/#semantic-segmentation-camera) that the elements in the scene have. 
+      Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the [semantic tag](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.
 
     # - PROPERTIES -------------------------
     instance_variables:
@@ -82,6 +82,7 @@
     - var_name: Dynamic
     - var_name: Water
     - var_name: Terrain
+    - var_name: Any
 
   - class_name: Image
     parent: carla.SensorData
@@ -134,6 +135,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.Color that form the image. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -189,6 +192,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.LidarDetection retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -265,6 +270,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.SemanticLidarDetection retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -452,6 +459,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.RadarDetection retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
@@ -515,12 +524,12 @@
         States if the response is valid. It is __False__ if calculations failed or an exception occured.
     # --------------------------------------
     - var_name: proper_response
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">libad_rss_python.ProperResponse</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">ad.rss.state.ProperResponse</a>
       doc: >
         The proper response that the RSS calculated for the vehicle.
     # --------------------------------------
     - var_name: rss_state_snapshot
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">libad_rss_python.RssStateSnapshot</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html">ad.rss.state.RssStateSnapshot</a>
       doc: >
         Detailed RSS states at the current moment in time.
     # --------------------------------------
@@ -530,12 +539,12 @@
         Current ego vehicle dynamics regarding the route.
     # --------------------------------------
     - var_name: world_model
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">libad_rss_python.WorldModel</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html">ad.rss.world.WorldModel</a>
       doc: >
         World model used for calculations.
     # --------------------------------------
     - var_name: situation_snapshot
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">libad_rss_python.SituationSnapshot</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html">ad.rss.situation.SituationSnapshot</a>
       doc: >
         Detailed RSS situations extracted from the world model.
     # - METHODS ----------------------------
@@ -550,22 +559,22 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: ego_speed
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">ad.physics.Speed</a>
       doc: >
         The ego vehicle's speed.
     # --------------------------------------
     - var_name: min_stopping_distance
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Distance.html">libad_physics_python.Distance</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Distance.html">ad.physics.Distance</a>
       doc: >
         The current minimum stopping distance.
     # --------------------------------------
     - var_name: ego_center
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">ad.map.point.ENUPoint</a>
       doc: >
         The considered enu position of the ego vehicle.
     # --------------------------------------
     - var_name: ego_heading
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">ad.map.point.ENUHeading</a>
       doc: >
         The considered heading of the ego vehicle.
     # --------------------------------------
@@ -580,47 +589,47 @@
         States if the vehicle is already crossing one of the lane borders.
     # --------------------------------------
     - var_name: route_heading
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">ad.map.point.ENUHeading</a>
       doc: >
         The considered heading of the route.
     # --------------------------------------
     - var_name: route_nominal_center
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">libad_map_access_python.ENUPoint</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1point_1_1ENUPoint.html">ad.map.point.ENUPoint</a>
       doc: >
         The considered nominal center of the current route.
     # --------------------------------------
     - var_name: heading_diff
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">libad_map_access_python.ENUHeading</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/classad_1_1map_1_1point_1_1ENUHeading.html">ad.map.point.ENUHeading</a>
       doc: >
         The considered heading diff towards the route.
     # --------------------------------------
     - var_name: route_speed_lat
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">ad.physics.Speed</a>
       doc: >
         The ego vehicle's speed component _lat_ regarding the route.
     # --------------------------------------
     - var_name: route_speed_lon
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">libad_physics_python.Speed</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Speed.html">ad.physics.Speed</a>
       doc: >
         The ego vehicle's speed component _lon_ regarding the route.
     # --------------------------------------
     - var_name: route_accel_lat
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>
       doc: >
         The ego vehicle's acceleration component _lat_ regarding the route.
     # --------------------------------------
     - var_name: route_accel_lon
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>
       doc: >
         The ego vehicle's acceleration component _lon_ regarding the route.
     # --------------------------------------
     - var_name: avg_route_accel_lat
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>
       doc: >
         The ego vehicle's acceleration component _lat_ regarding the route smoothened by an average filter.
     # --------------------------------------
     - var_name: avg_route_accel_lon
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">libad_physics_python.Acceleration</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_physics/apidoc/html/classad_1_1physics_1_1Acceleration.html">ad.physics.Acceleration</a>
       doc: >
         The ego acceleration component _lon_ regarding the route smoothened by an average filter.
     # - METHODS ----------------------------
@@ -635,12 +644,12 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: ego_match_object
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">ad.map.match.Object</a>
       doc: >
         The ego map matched information.
     # --------------------------------------
     - var_name: ego_route
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1route_1_1FullRoute.html">libad_map_access_python.FullRoute</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1route_1_1FullRoute.html">ad.map.route.FullRoute</a>
       doc: >
         The ego route.
     # --------------------------------------
@@ -650,14 +659,14 @@
         Current ego vehicle dynamics regarding the route.
     # --------------------------------------
     - var_name: other_match_object
-      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">libad_map_access_python.Object</a>
+      type: <a href="https://ad-map-access.readthedocs.io/en/latest/ad_map_access/apidoc/html/structad_1_1map_1_1match_1_1Object.html">ad.map.match.Object</a>
       doc: >
         The other object's map matched information. This is only valid if 'other_actor' is not 'None'.
     # --------------------------------------
     - var_name: other_actor
       type: carla.Actor
       doc: >
-        The other actor. This is 'None' in case of query of default parameters or articial objects of kind <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">libad_rss_python.ObjectType.ArtificialObject</a>
+        The other actor. This is 'None' in case of query of default parameters or articial objects of kind <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">ad.rss.world.ObjectType.ArtificialObject</a>
         with no dedicated 'carla.Actor' (as e.g. for the [road boundaries](ref_sensors.md#rss-sensor) at the moment)
     # - METHODS ----------------------------
     methods:
@@ -671,27 +680,27 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: rss_calculation_mode
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/namespacead_1_1rss_1_1map.html#adcb01232986ed83a0c540cd5d03ef495">libad_rss_map_integration_python.RssMode</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/namespacead_1_1rss_1_1map.html#adcb01232986ed83a0c540cd5d03ef495">ad.rss.map.RssMode</a>
       doc: >
         The calculation mode to be applied with the actor.
     # --------------------------------------
     - var_name: restrict_speed_limit_mode
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/classad_1_1rss_1_1map_1_1RssSceneCreation.html#a403aae6dce3c77a8aec01dd9808dd964">libad_rss_map_integration_python.RestrictSpeedLimitMode</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss_map_integration/classad_1_1rss_1_1map_1_1RssSceneCreation.html#a403aae6dce3c77a8aec01dd9808dd964">ad.rss.map.RestrictSpeedLimitMode</a>
       doc: >
         The mode for restricting speed limit.
     # --------------------------------------
     - var_name: ego_vehicle_dynamics
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>
       doc: >
          The RSS dynamics to be applied for the ego vehicle.
     # --------------------------------------
     - var_name: actor_object_type
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">libad_rss_python.ObjectType</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/namespacead_1_1rss_1_1world.html#a6432f1ef8d0657b4f21ed5966aca1625">ad.rss.world.ObjectType</a>
       doc: >
         The RSS object type to be used for the actor.
     # --------------------------------------
     - var_name: actor_dynamics
-      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">libad_rss_python.RssDynamics</a>
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>
       doc: >
         The RSS dynamics to be applied for the actor.
     # - METHODS ----------------------------
@@ -785,6 +794,8 @@
         type: int
     # --------------------------------------
     - def_name: __iter__
+      doc: >
+        Iterate over the carla.DVSEvent retrieved as data. 
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------
