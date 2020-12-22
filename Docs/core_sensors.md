@@ -158,16 +158,8 @@ That is a wrap on sensors and how do these retrieve simulation data.
 
 Thus concludes the introduction to CARLA. However there is yet a lot to learn.
 
-* __Gain some practise.__ It may be a good idea to try some of the code recipes provided in this documentation. Combine them with the example scripts, test new ideas. 
-
-<div class="build-buttons">
-<p>
-<a href="../ref_code_recipes" target="_blank" class="btn btn-neutral" title="Code recipes">
-Code recipes</a>
-</p>
-</div>
-
-* __Continue learning.__ There are some advanced features in CARLA: rendering options, traffic manager, the recorder, and some more. This is a great moment to learn on them. 
+* __Continue learning.__ There are some advanced features in CARLA: rendering options, traffic 
+  manager, the recorder, and some more. This is a great moment to learn more about them. 
  
 <div class="build-buttons">
 <p>
@@ -176,7 +168,9 @@ Synchrony and time-step</a>
 </p>
 </div>
 
-* __Experiment freely.__ Take a look at the __References__ section of this documentation. It contains detailed information on the classes in the Python API, sensors, and much more. 
+* __Experiment freely.__ Take a look at the __References__ section of this documentation. It 
+  contains detailed information on the classes in the Python API, sensors, code snippets and much 
+  more. 
 
 <div class="build-buttons">
 <p>

@@ -644,7 +644,7 @@ Draws a box, ussually to act for object colliders.
         - `thickness` (_float<small> – meters</small>_) – Density of the lines that define the box.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_line"></a>**<font color="#7fb800">draw_line</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)<button class="SnipetButton" id="carla.DebugHelper.draw_line-snipet_button">snipet &rarr;</button>  
+- <a name="carla.DebugHelper.draw_line"></a>**<font color="#7fb800">draw_line</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**begin**</font>, <font color="#00a6ed">**end**</font>, <font color="#00a6ed">**thickness**=0.1</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
 Draws a line in between `begin` and `end`.  
     - **Parameters:**
         - `begin` (_[carla.Location](#carla.Location)<small> – meters</small>_) – Point in the coordinate system where the line starts.  
@@ -659,7 +659,7 @@ Draws a point `location`.
         - `size` (_float<small> – meters</small>_) – Density of the point.  
         - `color` (_[carla.Color](#carla.Color)_) – RGB code to color the object. Red by default.  
         - `life_time` (_float<small> – seconds</small>_) – Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
-- <a name="carla.DebugHelper.draw_string"></a>**<font color="#7fb800">draw_string</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**text**</font>, <font color="#00a6ed">**draw_shadow**=False</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)  
+- <a name="carla.DebugHelper.draw_string"></a>**<font color="#7fb800">draw_string</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**text**</font>, <font color="#00a6ed">**draw_shadow**=False</font>, <font color="#00a6ed">**color**=(255,0,0)</font>, <font color="#00a6ed">**life_time**=-1.0</font>)<button class="SnipetButton" id="carla.DebugHelper.draw_string-snipet_button">snipet &rarr;</button>  
 Draws a string in a given location of the simulation which can only be seen server-side.  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)<small> – meters</small>_) – Spot in the simulation where the text will be centered.  
@@ -3598,11 +3598,11 @@ camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, 
   
 </div>
   
-<div id ="carla.DebugHelper.draw_line-snipet" style="display: none;">
+<div id ="carla.DebugHelper.draw_string-snipet" style="display: none;">
 <p class="SnipetFont">
-Snipet for carla.DebugHelper.draw_line
+Snipet for carla.DebugHelper.draw_string
 </p>
-<div id="carla.DebugHelper.draw_line-code" class="SnipetContent">
+<div id="carla.DebugHelper.draw_string-code" class="SnipetContent">
 
 ```py
   
@@ -3633,10 +3633,7 @@ while True:
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_line-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_line.jpg">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_string-code')">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snipet</button><br><br>
   
 </div>
   
