@@ -122,7 +122,8 @@ git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git
 * __5.__ Once the solution is compiled you can open the engine to check that everything was correct launching the executable `Engine\Binaries\Win64\UE4Editor.exe`.
 
 !!! Note
-    If the installation was successful, this should be recognoized by the Unreal Engine's version selector and when you use __Switch Unreal Engine version__ when right-clicking on __.uproject__ files, it should appear as __Source Build at PATH__ where PATH is the installation path that you have chosen. If you can not see this selector or the __Generate Visual Studio project files__ when you right-click on __.uproject__ files, something went wrong with the UE4 installation and probably you need to reinstall it correctly.
+    If the installation was successful, this should be recognised by the Unreal Engine's version 
+selector and when you use __Switch Unreal Engine version__ when right-clicking on __.uproject__ files, it should appear as __Source Build at PATH__ where PATH is the installation path that you have chosen. If you can not see this selector or the __Generate Visual Studio project files__ when you right-click on __.uproject__ files, something went wrong with the UE4 installation and probably you need to reinstall it correctly.
 
 ---
 ## CARLA build
