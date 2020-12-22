@@ -7,7 +7,6 @@
   * Added the new core pipeline for the simulator
   * Added parameter to carla settings to control culling
   * Added fully deterministic option for Traffic Manager, sorting vehicles by ID and avoiding race conditions
-  * Added smoke test for raycast sensor determinism and collision determinism
   * Added the option to sweep the wheel shape for collision. This requires to patch the engine
   * Added the possibility of changing physics substepping options from client
   * Added 'noise_seed' to sensors to initialize the random generators
