@@ -1,3 +1,7 @@
+## Latest
+
+* Added a new sensor - fisheye camera
+
 ## CARLA 0.9.11
 
   * Improved the documentation for use with pandoc tool by converting html tags to their markdown equivalent
