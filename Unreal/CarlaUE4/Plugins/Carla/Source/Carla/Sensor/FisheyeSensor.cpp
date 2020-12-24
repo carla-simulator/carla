@@ -261,15 +261,23 @@ void AFisheyeSensor::BeginPlay()
   Super::BeginPlay();
 }
 
-void AFisheyeSensor::Tick(float DeltaTime)
+void AFisheyeSensor::PrePhysTick(float DeltaTime)
 {
-  Super::Tick(DeltaTime);
+  Super::PrePhysTick(DeltaTime);
   IStreamingManager::Get().AddViewInformation(
       Fisheye->GetComponentLocation(),
       XSize,
       YSize);
   Fisheye->UpdateContent();
   SendPixelsInRenderThread(*this, MaxAngle, XSize, YSize, Fx, Fy, Cx, Cy, D1, D2, D3, D4);
+
+  ReadyToCapture = true;
+}
+
+void AFisheyeSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+{
+  Super::PostPhysTick(World, TickType, DeltaTime);
+  ReadyToCapture = true;
 }
 
 void AFisheyeSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
