@@ -1,3 +1,7 @@
+## Latest
+
+  * Added `manual_control_openworld.py` example having open-world type on-foot and in-vehicle player navigation
+
 ## CARLA 0.9.11
 
   * Improved the documentation for use with pandoc tool by converting html tags to their markdown equivalent
