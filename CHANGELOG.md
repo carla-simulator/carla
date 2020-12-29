@@ -1,6 +1,6 @@
 ## Latest
 
-  * Added `manual_control_openworld.py` example having open-world type on-foot and in-vehicle player navigation
+  * Added `manual_control_openworld.py` example having transitionable on-foot and in-vehicle player navigation
 
 ## CARLA 0.9.11
 
