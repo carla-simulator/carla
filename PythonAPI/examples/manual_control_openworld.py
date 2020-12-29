@@ -18,6 +18,8 @@ Use ARROWS or WASD keys for control.
     S            : brake
     A/D          : steer left/right
     Q            : toggle reverse
+    E            : Use/get in or out of car
+    F            : Nudge vehicle (when on foot)
     Space        : hand-brake
     P            : toggle autopilot
     M            : toggle manual transmission
@@ -113,6 +115,8 @@ try:
     from pygame.locals import K_b
     from pygame.locals import K_c
     from pygame.locals import K_d
+    from pygame.locals import K_e
+    from pygame.locals import K_f
     from pygame.locals import K_g
     from pygame.locals import K_h
     from pygame.locals import K_i
@@ -155,6 +159,11 @@ def get_actor_display_name(actor, truncate=250):
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
 
+def get_actor_distance(x, y):
+  l = x.get_location()
+  t = y.get_location()
+  return math.sqrt((l.x - t.x)**2 + (l.y - t.y)**2 + (l.z - t.z)**2)
+
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
 # ==============================================================================
@@ -173,6 +182,7 @@ class World(object):
             sys.exit(1)
         self.hud = hud
         self.player = None
+        self.player_walker_blueprint = None
         self.collision_sensor = None
         self.lane_invasion_sensor = None
         self.gnss_sensor = None
@@ -202,19 +212,70 @@ class World(object):
             carla.MapLayer.Walls,
             carla.MapLayer.All
         ]
+        
+    def spawn_out_of_vehicle(self):
+        curr_trans = self.player.get_transform() 
+        curr_bbox = self.player.bounding_box
+        future_trans = self.player.get_transform()
+        future_trans.location -= curr_trans.get_right_vector()*curr_bbox.extent.y*1.5
+        vehicle_blueprint = self.world.get_blueprint_library().find(self.player.type_id)
+        if 'color' in self.player.attributes:
+            vehicle_blueprint.set_attribute('color', self.player.attributes['color'])
+        curr_trans.location.z += .1
+        self.restart(self.player_walker_blueprint, future_trans)
+        self.world.try_spawn_actor(vehicle_blueprint, curr_trans)
+    
+    def spawn_into_vehicle(self):
+        player  = self.player
+        vehicle = self.player.vehicle_candidate
+        vehicle_trans = vehicle.get_transform()
+        vehicle_blueprint = self.world.get_blueprint_library().find(vehicle.type_id)
+        if 'color' in vehicle.attributes:
+            print("Color " + vehicle.attributes['color'])
+            vehicle_blueprint.set_attribute('color', vehicle.attributes['color'])
+        vehicle.destroy()
+        self.restart(vehicle_blueprint, vehicle_trans)
+        
+        
+    def player_push(self, push_distance = 7, push_force = 50000, push_display_time = .2):
+        player = self.player
+        vector3d_to_location = lambda x: carla.Location(x.x, x.y, x.z)
+        push_direction =  player.get_transform().get_forward_vector()
+        push_begin = vector3d_to_location(player.get_location() + push_direction)
+        push_max_end = vector3d_to_location(push_begin + push_direction*push_distance)
+        # Get collision and any hit actors
+        push_point = self.world.project_point(push_begin, push_direction, push_distance)
+        if push_point is not None:
+          push_end = vector3d_to_location(push_point.location + push_direction*.01) # move inside bounding box
+          hit_actors = [x for x in self.world.get_actors() if x.bounding_box.contains(push_end, x.get_transform())]
+        else:
+          push_end = push_max_end
+          hit_actors = []
+        # Visualize push vector
+        self.world.debug.draw_arrow(push_begin, push_end, life_time = push_display_time)
+        # Apply force
+        for hit_actor in hit_actors:
+            hit_actor.add_impulse(push_direction*push_force)
 
-    def restart(self):
+    def restart(self, custom_blueprint = None, custom_spawn_point = None):
         self.player_max_speed = 1.589
         self.player_max_speed_fast = 3.713
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
-        # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
+        # Toggle actor filter
+        if custom_blueprint is not None:
+            if custom_blueprint.has_tag('walker'):
+              self._actor_filter = 'walker'
+            elif custom_blueprint.has_tag('vehicle'):
+              self._actor_filter = 'vehicle'
+            blueprint = custom_blueprint
+        else:
+            blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
         blueprint.set_attribute('role_name', self.actor_role_name)
-        if blueprint.has_attribute('color'):
-            color = random.choice(blueprint.get_attribute('color').recommended_values)
-            blueprint.set_attribute('color', color)
+        #if blueprint.has_attribute('color'):
+        #    color = random.choice(blueprint.get_attribute('color').recommended_values)
+        #    blueprint.set_attribute('color', color)
         if blueprint.has_attribute('driver_id'):
             driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
             blueprint.set_attribute('driver_id', driver_id)
@@ -226,9 +287,18 @@ class World(object):
             self.player_max_speed_fast = float(blueprint.get_attribute('speed').recommended_values[2])
         else:
             print("No recommended values for 'speed' attribute")
+        # Handle walker blueprint initialization
+        if blueprint.has_tag('walker'):
+            self.player_walker_blueprint = blueprint
+        if self.player_walker_blueprint is None:
+            walker_blueprint = random.choice(self.world.get_blueprint_library().filter('walker'))#.id
+            self.player_walker_blueprint = walker_blueprint
         # Spawn the player.
         if self.player is not None:
-            spawn_point = self.player.get_transform()
+            if custom_spawn_point is None:
+              spawn_point = self.player.get_transform()
+            else:
+              spawn_point = custom_spawn_point
             spawn_point.location.z += 2.0
             spawn_point.rotation.roll = 0.0
             spawn_point.rotation.pitch = 0.0
@@ -285,6 +355,8 @@ class World(object):
             self.radar_sensor = None
 
     def modify_vehicle_physics(self, vehicle):
+        if isinstance(vehicle, carla.Walker):
+            return
         physics_control = vehicle.get_physics_control()
         physics_control.use_sweep_wheel_collision = True
         vehicle.apply_physics_control(physics_control)
@@ -344,6 +416,8 @@ class KeyboardControl(object):
     def parse_events(self, client, world, clock):
         if isinstance(self._control, carla.VehicleControl):
             current_lights = self._lights
+        else:
+            current_lights = carla.VehicleLightState.NONE
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return True
@@ -381,6 +455,24 @@ class KeyboardControl(object):
                     world.camera_manager.next_sensor()
                 elif event.key == K_n:
                     world.camera_manager.next_sensor()
+                elif event.key == K_e:
+                    if isinstance(world.player, carla.Vehicle):
+                      world.spawn_out_of_vehicle()
+                      # reset controls for walker
+                      self._control = carla.WalkerControl()
+                      self._autopilot_enabled = False
+                      self._rotation = world.player.get_transform().rotation
+                    elif isinstance(world.player, carla.Walker):
+                      if hasattr(world.player, 'vehicle_candidate'):
+                        dist_to_vehicle = get_actor_distance(world.player, world.player.vehicle_candidate)
+                        if dist_to_vehicle <= 2:
+                          # reset controls for vehicle
+                          self._lights = carla.VehicleLightState.NONE
+                          world.spawn_into_vehicle()
+                          world.player.set_light_state(self._lights)
+                          self._control = carla.VehicleControl()
+                elif event.key == K_f and isinstance(world.player, carla.Walker):
+                    world.player_push()
                 elif event.key == K_w and (pygame.key.get_mods() & KMOD_CTRL):
                     if world.constant_velocity_enabled:
                         world.player.disable_constant_velocity()
@@ -595,6 +687,7 @@ class HUD(object):
             'Client:  % 16.0f FPS' % clock.get_fps(),
             '',
             'Vehicle: % 20s' % get_actor_display_name(world.player, truncate=20),
+            'PlayerID:% 20s' % str(world.player.id),
             'Map:     % 20s' % world.map.name,
             'Simulation time: % 12s' % datetime.timedelta(seconds=int(self.simulation_time)),
             '',
@@ -772,8 +865,13 @@ class CollisionSensor(object):
         self = weak_self()
         if not self:
             return
+        notification_stub = 'Collision with %r'  
+        # If player is walker colliding with car, display get in prompt
+        if isinstance(self._parent, carla.Walker) and isinstance(event.other_actor, carla.Vehicle):
+          self._parent.vehicle_candidate = event.other_actor
+          notification_stub = "Press 'E' to get into %r"
         actor_type = get_actor_display_name(event.other_actor)
-        self.hud.notification('Collision with %r' % actor_type)
+        self.hud.notification(notification_stub % actor_type)
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x**2 + impulse.y**2 + impulse.z**2)
         self.history.append((event.frame, intensity))
@@ -1171,11 +1269,14 @@ def main():
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     logging.info('listening to server %s:%s', args.host, args.port)
+    
+    log = open("manual_control_logger.log", "a")
+    sys.stdout = log
+    sys.stderr = log
 
     print(__doc__)
 
     try:
-
         game_loop(args)
 
     except KeyboardInterrupt:
