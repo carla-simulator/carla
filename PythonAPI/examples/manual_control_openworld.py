@@ -1270,13 +1270,10 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
     
-    log = open("manual_control_logger.log", "a")
-    sys.stdout = log
-    sys.stderr = log
-
     print(__doc__)
 
     try:
+        
         game_loop(args)
 
     except KeyboardInterrupt:
