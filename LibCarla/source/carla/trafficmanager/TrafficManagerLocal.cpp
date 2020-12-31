@@ -202,13 +202,15 @@ void TrafficManagerLocal::Run() {
 
     registration_lock.unlock();
 
+    // If TCP and RPC preserve the call order then ApplyBatchSync is overkill here.
+    // We do not need the response and only require the control_frame to be executed
+    // before any other client commands
+    episode_proxy.Lock()->ApplyBatch(control_frame, false);
+
     // Sending the current cycle's batch command to the simulator.
     if (synchronous_mode) {
-      episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
       step_end.store(true);
       step_end_trigger.notify_one();
-    } else {
-      episode_proxy.Lock()->ApplyBatch(control_frame, false);
     }
   }
 }

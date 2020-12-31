@@ -9,6 +9,8 @@
 #include <chrono>
 #include <string>
 #include <unordered_map>
+#include <sstream>
+#include <mutex>
 
 namespace carla {
 namespace traffic_manager {
@@ -78,3 +80,60 @@ public:
 
 } // namespace traffic_manager
 } // namespace carla
+
+
+class TicToc {
+
+private:
+  std::chrono::high_resolution_clock::time_point t0_, last_print_;
+  size_t cnt_;
+  std::unordered_map<std::string, double> time_;
+  std::string name_;
+  
+public:
+  TicToc(const std::string & name=""):t0_(std::chrono::high_resolution_clock::now()), last_print_(std::chrono::high_resolution_clock::now()), cnt_(0), name_(name){};
+  void tic() {
+    t0_ = std::chrono::high_resolution_clock::now();
+  }
+  void toc(const std::string & name) {
+    using namespace std::chrono;
+    auto current_time = high_resolution_clock::now();
+    if (!time_.count(name))
+      time_[name] = 0.;
+    time_[name] += duration_cast<duration<double>>(current_time - t0_).count();
+    t0_ = current_time;
+  }
+  void finish(double print_interval=5, double merge_below_percent=0.5) {
+    using namespace std::chrono;
+    cnt_ += 1;
+    auto current_time = high_resolution_clock::now();
+    if (duration_cast<duration<double>>(current_time-last_print_).count() > print_interval)
+    {
+      std::ostringstream ss;
+      ss << "-----" << name_ << "-----" << std::endl;
+      double total = 0;
+      for(auto & v: time_)
+        total += v.second;
+      double merged = 0;
+      for(auto & v: time_) {
+        if (v.second < total * merge_below_percent / 100.)
+          merged += v.second;
+        else
+          ss << std::setw (30) << v.first << "    " << v.second / cnt_ << std::endl;
+      }
+      if (merged > 0)
+        ss << std::setw (30) << "<merged>" << "    " << merged / cnt_ << std::endl;
+      ss << std::setw (30) << "total" << "    " << total / cnt_ << std::endl;
+      ss << "------------" << std::endl;
+      {
+//         static std::mutex mutex;
+//         const std::lock_guard<std::mutex> lock(mutex);
+        std::cout << ss.str();
+        std::cout.flush();
+      }
+      cnt_ = 0;
+      last_print_ = current_time;
+      time_.clear();
+    }
+  }
+};
