@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+future = "*"
+numpy = "==1.18.4"
+pygame = "*"
+matplotlib = "*"
+open3d = "*"
+
+[requires]
+python_version = "3.7"
+
+[dev-packages]

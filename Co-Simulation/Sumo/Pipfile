@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+lxml = "==4.5.0"
+psutil = "*"
+fastapi = "*"
+importlib-metadata = "<3"
+
+[requires]
+python_version = "3.6"
+
+[dev-packages]
