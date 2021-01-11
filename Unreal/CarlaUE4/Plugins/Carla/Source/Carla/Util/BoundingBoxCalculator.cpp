@@ -374,10 +374,6 @@ void UBoundingBoxCalculator::GetBBsOfStaticMeshComponents(
       OutBB.Emplace(BoundingBox);
       OutTag.Emplace(static_cast<uint8>(Tag));
     }
-    else
-    {
-      // UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned"), *Comp->GetOwner()->GetName());
-    }
   }
 }
 
