@@ -32,7 +32,7 @@ This page shows you how to generate a `.sim` file, explains how vehicle dimensio
 
 3. If you have built CARLA from source then you will need to compile the server with the `--carsim` flag. This step can be skipped if you are using the packaged version of CARLA. The packaged version has already been compiled using this flag. 
 
-    To compile the server with the `--carsim` flag in the source version of CARLA, run the following command:
+    To compile the server with the `--carsim` flag in the source build version of CARLA, run the following command in the root folder of CARLA:
 
 ```sh
     make launch ARGS="--carsim"
@@ -88,11 +88,10 @@ END
 
 There is no way to create the `.sim` file via GUI on Ubuntu. In order to proceed you will need to follow these steps:
 
-1. Generate the `.sim` file in Windows
-2. Move the related `.par`, `.txt` and `.vs` files to Ubuntu. 
-3. Modify the `.sim` file so the variables `INPUT`, `INPUTARCHIVE`, `LOGFILE` and so on point towards the corresponding files in your Ubuntu 
+1. Generate the `.sim` file in Windows or use the file template below.
+2. Modify the `.sim` file so the variables `INPUT`, `INPUTARCHIVE`, `LOGFILE` and so on point towards the corresponding files in your Ubuntu 
 system.
-4. Replace the `DLLFILE` line to point towards the CarSim solver which, in the default installation, will be `SOFILE /opt/carsim_2020.0/lib64/libcarsim.so.2020.0`. 
+3. Replace the `DLLFILE` line to point towards the CarSim solver which, in the default installation, will be `SOFILE /opt/carsim_2020.0/lib64/libcarsim.so.2020.0`. 
 
 The resulting file should be similar to this:
 
