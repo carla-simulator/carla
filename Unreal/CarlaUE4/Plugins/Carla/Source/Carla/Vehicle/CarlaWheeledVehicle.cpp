@@ -635,6 +635,34 @@ void ACarlaWheeledVehicle::EnableCarSim(FString SimfilePath)
   #endif
 }
 
+void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
+  UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
+      GetVehicleMovement());
+  check(Vehicle4W != nullptr);
+
+  if(bPhysicsEnabled == enabled)
+    return;
+
+  SetActorEnableCollision(true);
+  #ifdef WITH_CARSIM
+  if(!IsCarSimEnabled())
+  #endif
+  {
+    auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
+    RootComponent->SetSimulatePhysics(enabled);
+    RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+    GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();
+    if(enabled)
+      Vehicle4W->RecreatePhysicsState();
+    else
+      Vehicle4W->DestroyPhysicsState();
+    GetWorld()->GetPhysicsScene()->GetPxScene()->unlockWrite();
+  }
+
+  bPhysicsEnabled = enabled;
+}
+
 void ACarlaWheeledVehicle::UseCarSimRoad(bool bEnabled)
 {
   #ifdef WITH_CARSIM
