@@ -915,10 +915,15 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor simulate physics: actor not found");
     }
 
-    auto Character = Cast<ACharacter>(ActorView.GetActor());
-    // The physics in the walkers works in a different way so to disable them,
+    auto* Character = Cast<ACharacter>(ActorView.GetActor());
+    auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    // The physics in the vehicles works in a different way so to disable them.
+    if (CarlaVehicle != nullptr){
+      CarlaVehicle->SetSimulatePhysics(bEnabled);
+    }
+    // The physics in the walkers also works in a different way so to disable them,
     // we need to do it in the UCharacterMovementComponent.
-    if (Character != nullptr)
+    else if (Character != nullptr)
     {
       auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
 
@@ -938,23 +943,9 @@ void FCarlaServer::FPimpl::BindActions()
       {
         RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
       }
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
-      if(Vehicle)
-      {
-        Vehicle->SetActorEnableCollision(true);
-        #ifdef WITH_CARSIM
-        if(!Vehicle->IsCarSimEnabled())
-        #endif
-        {
-          RootComponent->SetSimulatePhysics(bEnabled);
-          RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        }
-      }
-      else
-      {
-        RootComponent->SetSimulatePhysics(bEnabled);
-        RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-      }
+
+      RootComponent->SetSimulatePhysics(bEnabled);
+      RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     }
 
     return R<void>::Success();

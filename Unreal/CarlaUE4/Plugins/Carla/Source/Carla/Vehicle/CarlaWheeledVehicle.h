@@ -124,6 +124,8 @@ public:
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
+  void SetSimulatePhysics(bool enabled);
+
   void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
@@ -294,6 +296,9 @@ private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
   float CarSimOriginOffset = 150.f;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
+  bool bPhysicsEnabled = true;
 
   // Small workarround to allow optional CarSim plugin usage
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
