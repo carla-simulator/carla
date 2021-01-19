@@ -52,7 +52,12 @@ nav:
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
   - 'CarSim Integration (Beta)': "tuto_G_carsim_integration.md"
 - Tutorials (assets):
-  - 'Add a new map': 'tuto_A_add_map.md'
+  - 'Add a new map':
+    - 'Overview': 'tuto_A_add_map/add_map_overview.md'
+    - 'Generate map in Roadrunner': 'tuto_A_add_map/generate_map_roadrunner.md'
+    - 'Add a map in CARLA built from source': 'tuto_A_add_map/add_map_source.md'
+    - 'Add a map in packaged version of CARLA': 'tuto_A_add_map/add_map_package.md'
+    - 'Deprecated methods of adding maps': 'tuto_A_add_map/add_map_deprecated.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
   - 'Add new props': 'tuto_A_add_props.md'
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
