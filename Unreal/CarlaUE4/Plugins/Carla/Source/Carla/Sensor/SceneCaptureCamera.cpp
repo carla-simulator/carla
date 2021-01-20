@@ -26,9 +26,5 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
 
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  if(ReadyToCapture)
-  {
-    ReadyToCapture = false;
-    FPixelReader::SendPixelsInRenderThread(*this);
-  }
+  FPixelReader::SendPixelsInRenderThread(*this);
 }

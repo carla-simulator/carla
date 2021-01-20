@@ -511,15 +511,11 @@ void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
       CaptureComponent2D->GetComponentLocation(),
       ImageWidth,
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
-
-  // Allows the sensor to tick with the tick rate from UE4.
-  ReadyToCapture = true;
 }
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   Super::PostPhysTick(World, TickType, DeltaTime);
-  ReadyToCapture = true;
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
