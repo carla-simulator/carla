@@ -920,11 +920,7 @@ void FCarlaServer::FPimpl::BindActions()
     auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
     // The physics in the vehicles works in a different way so to disable them.
     if (CarlaVehicle != nullptr){
-      // Ignore the call for carsim
-      if (!CarlaVehicle->GetCarlaMovementComponent<UCarSimManagerComponent>())
-      {
-        CarlaVehicle->SetSimulatePhysics(bEnabled);
-      }
+      CarlaVehicle->SetSimulatePhysics(bEnabled);
     }
     // The physics in the walkers also works in a different way so to disable them,
     // we need to do it in the UCharacterMovementComponent.

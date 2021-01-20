@@ -454,6 +454,11 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
+  if(!GetCarlaMovementComponent<UDefaultMovementComponent>())
+  {
+    return;
+  }
+
   UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
       GetVehicleMovement());
   check(Vehicle4W != nullptr);
@@ -462,19 +467,16 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
     return;
 
   SetActorEnableCollision(true);
-  if(!GetCarlaMovementComponent<UCarSimManagerComponent>())
-  {
-    auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
-    RootComponent->SetSimulatePhysics(enabled);
-    RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+  auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
+  RootComponent->SetSimulatePhysics(enabled);
+  RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-    GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();
-    if(enabled)
-      Vehicle4W->RecreatePhysicsState();
-    else
-      Vehicle4W->DestroyPhysicsState();
-    GetWorld()->GetPhysicsScene()->GetPxScene()->unlockWrite();
-  }
+  GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();
+  if(enabled)
+    Vehicle4W->RecreatePhysicsState();
+  else
+    Vehicle4W->DestroyPhysicsState();
+  GetWorld()->GetPhysicsScene()->GetPxScene()->unlockWrite();
 
   bPhysicsEnabled = enabled;
 }
