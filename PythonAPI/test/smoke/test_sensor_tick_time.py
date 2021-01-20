@@ -8,6 +8,7 @@ from . import SyncSmokeTest
 
 import carla
 import time
+import math
 
 class Sensor():
   def __init__(self, world, bp_sensor, sensor_tick):
@@ -44,19 +45,16 @@ class TestSensorTickTime(SyncSmokeTest):
       if bp_sensor.has_attribute("sensor_tick"):
         spawned_sensors.append(Sensor(self.world, bp_sensor, sensor_tick))
 
-    num_ticks = 10
+    num_ticks = 50
     for _ in range(0, num_ticks):
       self.world.tick()
     time.sleep(1.0)
 
-    dt = 0.05 # self.settings.fixed_delta_seconds
+    dt = self.settings.fixed_delta_seconds
     total_time = num_ticks * dt
-    num_sensor_ticks = total_time/sensor_tick
+    num_sensor_ticks = int(math.ceil(total_time/sensor_tick))
 
-    print("Total time: {} = {} x {}".format(total_time, num_ticks, self.settings.fixed_delta_seconds))
-    print("Expected sensor ticks: {}".format(num_sensor_ticks))
     for sensor in spawned_sensors:
-      print("{} ticks {} _".format(sensor.bp_sensor.id, sensor.num_ticks))
       self.assertEqual(sensor.num_ticks, num_sensor_ticks,
         "\n\n {} does not match tick count".format(sensor.bp_sensor.id))
       sensor.destroy()
