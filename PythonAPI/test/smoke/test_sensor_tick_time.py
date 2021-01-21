@@ -50,7 +50,7 @@ class TestSensorTickTime(SyncSmokeTest):
       self.world.tick()
     time.sleep(1.0)
 
-    dt = self.settings.fixed_delta_seconds
+    dt = self.world.get_settings().fixed_delta_seconds
     total_time = num_ticks * dt
     num_sensor_ticks = int(math.ceil(total_time/sensor_tick))
 
