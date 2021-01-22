@@ -32,11 +32,13 @@ class CARLA_API UCarSimManagerComponent : public UBaseCarlaMovementComponent
 public:
 
   static void CreateCarsimComponent(
-      ACarlaWheeledVehicle* Vehicle, FString Simfile);
+      ACarlaWheeledVehicle* Vehicle, FString Simfile, int ForceFrames = 1);
 
   FString SimfilePath = "";
 
   virtual void BeginPlay() override;
+
+  virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
   void ProcessControl(FVehicleControl &Control) override;
 
@@ -50,7 +52,12 @@ public:
 
   float GetVehicleForwardSpeed() const override;
 
+  // UCarSimMovementComponent *GetCarsimMovementComponent();
+
 private:
+
+  uint64_t ResetForces { 0 };
+  int FramesApplyingForce { 1 };
 
   // On car mesh hit, only works when carsim is enabled
   UFUNCTION()
@@ -69,4 +76,11 @@ private:
       bool bFromSweep,
       const FHitResult & SweepResult);
 
+  // On car mesh overlap end, only works when carsim is enabled
+  // (this event triggers when overlapping with static environment)
+  UFUNCTION()
+  void OnCarSimEndOverlap(UPrimitiveComponent* OverlappedComponent,
+      AActor* OtherActor,
+      UPrimitiveComponent* OtherComp,
+      int32 OtherBodyIndex);
 };
