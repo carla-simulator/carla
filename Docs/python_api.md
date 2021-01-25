@@ -553,7 +553,7 @@ Initializes a color, black by default.
 ---
 
 ## carla.ColorConverter<a name="carla.ColorConverter"></a>
-Class that defines conversion patterns that can be applied to a [carla.Image](#carla.Image) in order to show information provided by [carla.Sensor](#carla.Sensor). Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look at the snipet in [carla.Sensor.listen](#carla.Sensor.listen) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.  
+Class that defines conversion patterns that can be applied to a [carla.Image](#carla.Image) ([carla.ImageCube](#carla.ImageCube) for fisheye sensor) in order to show information provided by [carla.Sensor](#carla.Sensor). Depth conversions cause a loss of accuracy, as sensors detect depth as <b>float</b> that is then converted to a grayscale value between 0 and 255. Take a look at the snipet in [carla.Sensor.listen](#carla.Sensor.listen) to see an example of how to create and save image data for <b>sensor.camera.semantic_segmentation</b>.  
 
 ### Instance Variables
 - <a name="carla.ColorConverter.CityScapesPalette"></a>**<font color="#f8805a">CityScapesPalette</font>**  
@@ -1907,7 +1907,8 @@ Iterate over the [carla.SemanticLidarDetection](#carla.SemanticLidarDetection) r
   <br><b>Only receive data when triggered.</b>
   - [Collision detector](ref_sensors.md#collision-detector).
   - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
-  - [Obstacle detector](ref_sensors.md#obstacle-detector).  
+  - [Obstacle detector](ref_sensors.md#obstacle-detector).
+  - [Fisheye camera](ref_sensors.md#fisheye-camera).  
 
 ### Instance Variables
 - <a name="carla.Sensor.is_listening"></a>**<font color="#f8805a">is_listening</font>** (_boolean_)  

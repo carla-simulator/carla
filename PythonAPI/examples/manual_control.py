@@ -11,9 +11,7 @@
 
 """
 Welcome to CARLA manual control.
-
 Use ARROWS or WASD keys for control.
-
     W            : throttle
     S            : brake
     A/D          : steer left/right
@@ -23,29 +21,23 @@ Use ARROWS or WASD keys for control.
     M            : toggle manual transmission
     ,/.          : gear up/down
     CTRL + W     : toggle constant velocity mode at 60 km/h
-
     L            : toggle next light type
     SHIFT + L    : toggle high beam
     Z/X          : toggle right/left blinker
     I            : toggle interior light
-
     TAB          : change sensor position
     ` or N       : next sensor
     [1-9]        : change to sensor [1-9]
     G            : toggle radar visualization
     C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
-
     V            : Select next map layer (Shift+V reverse)
     B            : Load current selected map layer (Shift+B to unload)
-
     R            : toggle recording images to disk
-
     CTRL + R     : toggle recording of simulation (replacing any previous)
     CTRL + P     : start replaying last recorded simulation
     CTRL + +     : increments the start time of the replay by 1 second (+SHIFT = 10 seconds)
     CTRL + -     : decrements the start time of the replay by 1 second (+SHIFT = 10 seconds)
-
     F1           : toggle HUD
     H/?          : toggle help
     ESC          : quit
@@ -974,12 +966,25 @@ class CameraManager(object):
                 {'lens_circle_multiplier': '3.0',
                 'lens_circle_falloff': '3.0',
                 'chromatic_aberration_intensity': '0.5',
-                'chromatic_aberration_offset': '0'}]]
+                'chromatic_aberration_offset': '0'}],
+            ['sensor.camera.fisheye', cc.Raw, 'Camera Fisheye', {}]]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
             bp = bp_library.find(item[0])
-            if item[0].startswith('sensor.camera'):
+            if item[0] == 'sensor.camera.fisheye':
+                bp.set_attribute('x_size', str(hud.dim[0]))
+                bp.set_attribute('y_size', str(hud.dim[1]))
+                bp.set_attribute('max_angle', str(210))
+                bp.set_attribute('d_1', str(0.08309221636708493))
+                bp.set_attribute('d_2', str(0.01112126630599195))
+                bp.set_attribute('d_3', str(-0.008587261043925865))
+                bp.set_attribute('d_4', str(0.0008542188930970716))
+                bp.set_attribute('f_x', str(320))
+                bp.set_attribute('f_y', str(320))
+                bp.set_attribute('c_x', str(640))
+                bp.set_attribute('c_y', str(480))
+            elif item[0].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', str(hud.dim[0]))
                 bp.set_attribute('image_size_y', str(hud.dim[1]))
                 if bp.has_attribute('gamma'):

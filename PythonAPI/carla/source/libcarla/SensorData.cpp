@@ -6,14 +6,17 @@
 
 #include <carla/PythonUtil.h>
 #include <carla/image/ImageConverter.h>
+#include <carla/image/ImageConverterCube.h>
 #include <carla/image/ImageIO.h>
 #include <carla/image/ImageView.h>
+#include <carla/image/ImageViewCube.h>
 #include <carla/pointcloud/PointCloudIO.h>
 #include <carla/sensor/SensorData.h>
 #include <carla/sensor/data/CollisionEvent.h>
 #include <carla/sensor/data/IMUMeasurement.h>
 #include <carla/sensor/data/ObstacleDetectionEvent.h>
 #include <carla/sensor/data/Image.h>
+#include <carla/sensor/data/ImageCube.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
 #include <carla/sensor/data/SemanticLidarMeasurement.h>
@@ -200,6 +203,28 @@ static void ConvertImage(T &self, EColorConverter cc) {
 }
 
 template <typename T>
+static void ConvertImageCube(T &self, EColorConverter cc) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  using namespace carla::image;
+  auto view = ImageViewCube::MakeViewCube(self);
+  switch (cc) {
+    case EColorConverter::Depth:
+      ImageConverterCube::ConvertInPlace(view, ColorConverter::Depth());
+      break;
+    case EColorConverter::LogarithmicDepth:
+      ImageConverterCube::ConvertInPlace(view, ColorConverter::LogarithmicDepth());
+      break;
+    case EColorConverter::CityScapesPalette:
+      ImageConverterCube::ConvertInPlace(view, ColorConverter::CityScapesPalette());
+      break;
+    case EColorConverter::Raw:
+      break; // ignore.
+    default:
+      throw std::invalid_argument("invalid color converter!");
+  }
+}
+
+template <typename T>
 static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc) {
   carla::PythonUtil::ReleaseGIL unlock;
   using namespace carla::image;
@@ -221,6 +246,33 @@ static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc
       return ImageIO::WriteView(
           std::move(path),
           ImageView::MakeColorConvertedView(view, ColorConverter::CityScapesPalette()));
+    default:
+      throw std::invalid_argument("invalid color converter!");
+  }
+}
+
+template <typename T>
+static std::string SaveImageToDiskCube(T &self, std::string path, EColorConverter cc) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  using namespace carla::image;
+  auto view = ImageViewCube::MakeViewCube(self);
+  switch (cc) {
+    case EColorConverter::Raw:
+      return ImageIO::WriteView(
+          std::move(path),
+          view);
+    case EColorConverter::Depth:
+      return ImageIO::WriteView(
+          std::move(path),
+          ImageViewCube::MakeColorConvertedView(view, ColorConverter::Depth()));
+    case EColorConverter::LogarithmicDepth:
+      return ImageIO::WriteView(
+          std::move(path),
+          ImageViewCube::MakeColorConvertedView(view, ColorConverter::LogarithmicDepth()));
+    case EColorConverter::CityScapesPalette:
+      return ImageIO::WriteView(
+          std::move(path),
+          ImageViewCube::MakeColorConvertedView(view, ColorConverter::CityScapesPalette()));
     default:
       throw std::invalid_argument("invalid color converter!");
   }
@@ -270,6 +322,24 @@ void export_sensor_data() {
       self.at(pos) = color;
     })
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::ImageCube, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::ImageCube>>("ImageCube", no_init)
+    .add_property("width", &csd::ImageCube::GetWidth)
+    .add_property("height", &csd::ImageCube::GetHeight)
+    .add_property("fov", &csd::ImageCube::GetFOVAngle)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::ImageCube>)
+    .def("convert", &ConvertImageCube<csd::ImageCube>, (arg("color_converter")))
+    .def("save_to_disk", &SaveImageToDiskCube<csd::ImageCube>, (arg("path"), arg("color_converter")=EColorConverter::Raw))
+    .def("__len__", &csd::ImageCube::size)
+    .def("__iter__", iterator<csd::ImageCube>())
+    .def("__getitem__", +[](const csd::ImageCube &self, size_t pos) -> csd::Color {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::ImageCube &self, size_t pos, csd::Color color) {
+      self.at(pos) = color;
+    })
+    //.def(self_ns::str(self_ns::self))
   ;
 
   class_<csd::LidarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LidarMeasurement>>("LidarMeasurement", no_init)

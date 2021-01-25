@@ -13,6 +13,8 @@
 *   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 *   [__Semantic segmentation camera__](#semantic-segmentation-camera)
 *   [__DVS camera__](#dvs-camera)
+*   [__Fisheye camera__](#fisheye-camera)
+
 
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
@@ -838,3 +840,48 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 | `log_eps`            | float   | 0\.001  | Epsilon value used to convert images to log: `L = log(eps + I / 255.0)`.<br>  Where `I` is the grayscale value of the RGB image: <br>`I = 0.2989*R + 0.5870*G + 0.1140*B`. |
 
 <br>
+
+---
+
+## Fisheye camera
+
+* __Blueprint:__ sensor.camera.fisheye
+* __Output:__ [carla.ImageCube](python_api.md#carla.ImageCube) per step (unless `sensor_tick` says otherwise).
+
+
+The Fisheye camera acts as a regular fisheye camera capturing images from the scene.
+[carla.colorConverter](python_api.md#carla.ColorConverter)
+
+The `sensor_tick` tells how fast we want the sensor to capture the data.
+A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
+
+![FisheyeImage](img/ref_sensors_fisheye.png)
+
+#### Basic camera attributes
+
+<br>
+
+| Blueprint attribute  | Type     | Default  | Description          |
+| ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| `max_angle`    | float    | 200\.0    | Maximum angle in degrees.   |
+| `x_size`       | float      | 1000\.0    | Image width in pixels.           |
+| `y_size`       | float      | 600\.0    | Image height in pixels.          |
+
+
+
+#### Camera lens distortion attributes
+
+
+<br>
+
+| Blueprint attribute      | Type         | Default      | Description  |
+| ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
+| `f_x`    | float    | 300\.0   | Focal x-length in pixels.   |
+| `f_y`    | float    | 300\.0   | Focal y-length in pixels.    |
+| `c_x`    | float    | 600\.0   | Optical center x-coordinate (the principal point), in pixels.   |
+| `c_y`    | float    | 400\.0   | Optical center y-coordinate (the principal point), in pixels.   |
+| `d_1`    | float    | 0\.0   | Distortion coefficient.   |
+| `d_2`    | float    | 0\.0   | Distortion coefficient.  |
+| `d_3`    | float    | 0\.0   | Distortion coefficient.   |
+| `d_4`    | float    | 0\.0   | Distortion coefficient.   |
+
