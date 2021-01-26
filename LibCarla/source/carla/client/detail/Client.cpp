@@ -338,6 +338,10 @@ namespace detail {
     _pimpl->AsyncCall("use_carsim_road", vehicle, enabled);
   }
 
+  void Client::EnableChronoPhysics(rpc::ActorId vehicle) {
+    _pimpl->AsyncCall("enable_chrono_physics", vehicle);
+  }
+
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }

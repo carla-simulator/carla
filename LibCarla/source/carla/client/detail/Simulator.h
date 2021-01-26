@@ -454,6 +454,10 @@ namespace detail {
       _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
+    void EnableChronoPhysics(Vehicle &vehicle) {
+      _client.EnableChronoPhysics(vehicle.GetId());
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder

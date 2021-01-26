@@ -93,6 +93,8 @@ namespace client {
     /// Enables the use of CarSim internal road definition instead of unreal's
     void UseCarSimRoad(bool enabled);
 
+    void EnableChronoPhysics();
+
   private:
 
     const bool _is_control_sticky;

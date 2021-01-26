@@ -219,6 +219,9 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    void EnableChronoPhysics(
+        rpc::ActorId vehicle);
+
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
