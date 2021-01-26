@@ -17,6 +17,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
+#include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -1129,6 +1130,24 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("UCarSimManagerComponent plugin is not activated");
     }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(enable_chrono_physics) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set chrono physics: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set chrono physics: not actor is not a vehicle");
+    }
+    UChronoMovementComponent::CreateChronoMovementComponent(Vehicle);
     return R<void>::Success();
   };
 

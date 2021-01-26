@@ -55,3 +55,6 @@
 
 #pragma push_macro("check")
 #undef check
+
+#pragma push_macro("PI")
+#undef PI

@@ -96,5 +96,9 @@ namespace client {
     GetEpisode().Lock()->UseCarSimRoad(*this, enabled);
   }
 
+  void Vehicle::EnableChronoPhysics() {
+    GetEpisode().Lock()->EnableChronoPhysics(*this);
+  }
+
 } // namespace client
 } // namespace carla

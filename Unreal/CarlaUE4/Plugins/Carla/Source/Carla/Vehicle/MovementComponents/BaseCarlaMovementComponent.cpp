@@ -45,3 +45,20 @@ float UBaseCarlaMovementComponent::GetVehicleForwardSpeed() const
 {
   return 0.f;
 }
+
+void UBaseCarlaMovementComponent::DisableUE4VehiclePhysics()
+{
+  if(!CarlaVehicle)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Error: Owner is not properly set for UCarSimManagerComponent") );
+    return;
+  }
+  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(false);
+  CarlaVehicle->GetVehicleMovementComponent()->Deactivate();
+  CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
+  auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(false);
+  }
+}
