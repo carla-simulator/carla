@@ -139,7 +139,7 @@ void export_world() {
     .def_readwrite("platform_timestamp", &cc::Timestamp::platform_timestamp)
     .def("__eq__", &cc::Timestamp::operator==)
     .def("__ne__", &cc::Timestamp::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::ActorList, boost::shared_ptr<cc::ActorList>>("ActorList", no_init)
@@ -148,7 +148,7 @@ void export_world() {
     .def("__getitem__", &cc::ActorList::at)
     .def("__len__", &cc::ActorList::size)
     .def("__iter__", range(&cc::ActorList::begin, &cc::ActorList::end))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
@@ -178,7 +178,7 @@ void export_world() {
         })
     .def("__eq__", &cr::EpisodeSettings::operator==)
     .def("__ne__", &cr::EpisodeSettings::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cr::EnvironmentObject>("EnvironmentObject", no_init)
@@ -187,7 +187,7 @@ void export_world() {
     .def_readwrite("id", &cr::EnvironmentObject::id)
     .def_readwrite("name", &cr::EnvironmentObject::name)
     .def_readwrite("type", &cr::EnvironmentObject::type)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   enum_<cr::AttachmentType>("AttachmentType")
@@ -293,7 +293,7 @@ void export_world() {
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
 
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
 #undef SPAWN_ACTOR_WITHOUT_GIL

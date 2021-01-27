@@ -138,7 +138,7 @@ void export_ad_rss() {
       .def_readwrite("route_accel_lon", &carla::rss::EgoDynamicsOnRoute::route_accel_lon)
       .def_readwrite("avg_route_accel_lat", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lat)
       .def_readwrite("avg_route_accel_lon", &carla::rss::EgoDynamicsOnRoute::avg_route_accel_lon)
-      .def(self_ns::str(self_ns::self));
+      .def(self_ns::repr(self_ns::self));
 
   class_<carla::rss::ActorConstellationResult>("RssActorConstellationResult")
       .def_readwrite("rss_calculation_mode", &carla::rss::ActorConstellationResult::rss_calculation_mode)
@@ -146,7 +146,7 @@ void export_ad_rss() {
       .def_readwrite("ego_vehicle_dynamics", &carla::rss::ActorConstellationResult::ego_vehicle_dynamics)
       .def_readwrite("actor_object_type", &carla::rss::ActorConstellationResult::actor_object_type)
       .def_readwrite("actor_dynamics", &carla::rss::ActorConstellationResult::actor_dynamics)
-      .def(self_ns::str(self_ns::self));
+      .def(self_ns::repr(self_ns::self));
 
   class_<carla::rss::ActorConstellationData, boost::noncopyable, boost::shared_ptr<carla::rss::ActorConstellationData>>(
       "RssActorConstellationData", no_init)
@@ -155,7 +155,7 @@ void export_ad_rss() {
       .def_readonly("ego_dynamics_on_route", &carla::rss::ActorConstellationData::ego_dynamics_on_route)
       .def_readonly("other_match_object", &carla::rss::ActorConstellationData::other_match_object)
       .def_readonly("other_actor", &carla::rss::ActorConstellationData::other_actor)
-      .def(self_ns::str(self_ns::self));
+      .def(self_ns::repr(self_ns::self));
 
   enum_<spdlog::level::level_enum>("RssLogLevel")
       .value("trace", spdlog::level::trace)
@@ -178,7 +178,7 @@ void export_ad_rss() {
       .add_property("situation_snapshot", CALL_RETURNING_COPY(csd::RssResponse, GetSituationSnapshot))
       .add_property("world_model", CALL_RETURNING_COPY(csd::RssResponse, GetWorldModel))
       .add_property("ego_dynamics_on_route", CALL_RETURNING_COPY(csd::RssResponse, GetEgoDynamicsOnRoute))
-      .def(self_ns::str(self_ns::self));
+      .def(self_ns::repr(self_ns::self));
 
   class_<cc::RssSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::RssSensor>>("RssSensor", no_init)
       .add_property("ego_vehicle_dynamics", &GetEgoVehicleDynamics, &cc::RssSensor::SetEgoVehicleDynamics)
@@ -192,12 +192,12 @@ void export_ad_rss() {
       .def("drop_route", &cc::RssSensor::DropRoute)
       .def("set_log_level", &cc::RssSensor::SetLogLevel, (arg("log_level")))
       .def("set_map_log_level", &cc::RssSensor::SetMapLogLevel, (arg("map_log_level")))
-      .def(self_ns::str(self_ns::self));
+      .def(self_ns::repr(self_ns::self));
 
   class_<carla::rss::RssRestrictor, boost::noncopyable, boost::shared_ptr<carla::rss::RssRestrictor>>("RssRestrictor",
                                                                                                       no_init)
       .def(init<>())
       .def("restrict_vehicle_control", &carla::rss::RssRestrictor::RestrictVehicleControl,
            (arg("vehicle_control"), arg("proper_response"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
-      .def(self_ns::str(self_ns::self));
+      .def(self_ns::repr(self_ns::self));
 }

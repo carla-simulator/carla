@@ -94,7 +94,7 @@ void export_blueprint() {
     .def_readwrite("a", &csd::Color::a)
     .def("__eq__", &csd::Color::operator==)
     .def("__ne__", &csd::Color::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::ActorAttribute>("ActorAttribute", no_init)
@@ -124,7 +124,7 @@ void export_blueprint() {
     .def("__int__", &cc::ActorAttribute::As<int>)
     .def("__float__", &cc::ActorAttribute::As<float>)
     .def("__str__", &cc::ActorAttribute::As<std::string>)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::ActorBlueprint>("ActorBlueprint", no_init)
@@ -137,7 +137,7 @@ void export_blueprint() {
     .def("set_attribute", &cc::ActorBlueprint::SetAttribute)
     .def("__len__", &cc::ActorBlueprint::size)
     .def("__iter__", range(&cc::ActorBlueprint::begin, &cc::ActorBlueprint::end))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::BlueprintLibrary, boost::noncopyable, boost::shared_ptr<cc::BlueprintLibrary>>("BlueprintLibrary", no_init)
@@ -150,6 +150,6 @@ void export_blueprint() {
     })
     .def("__len__", &cc::BlueprintLibrary::size)
     .def("__iter__", range(&cc::BlueprintLibrary::begin, &cc::BlueprintLibrary::end))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 }

@@ -269,7 +269,7 @@ void export_sensor_data() {
     .def("__setitem__", +[](csd::Image &self, size_t pos, csd::Color color) {
       self.at(pos) = color;
     })
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::LidarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LidarMeasurement>>("LidarMeasurement", no_init)
@@ -286,7 +286,7 @@ void export_sensor_data() {
     .def("__setitem__", +[](csd::LidarMeasurement &self, size_t pos, const csd::LidarDetection &detection) {
       self.at(pos) = detection;
     })
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::SemanticLidarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::SemanticLidarMeasurement>>("SemanticLidarMeasurement", no_init)
@@ -303,41 +303,41 @@ void export_sensor_data() {
     .def("__setitem__", +[](csd::SemanticLidarMeasurement &self, size_t pos, const csd::SemanticLidarDetection &detection) {
       self.at(pos) = detection;
     })
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::CollisionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::CollisionEvent>>("CollisionEvent", no_init)
     .add_property("actor", &csd::CollisionEvent::GetActor)
     .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
     .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
     class_<csd::ObstacleDetectionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::ObstacleDetectionEvent>>("ObstacleDetectionEvent", no_init)
     .add_property("actor", &csd::ObstacleDetectionEvent::GetActor)
     .add_property("other_actor", &csd::ObstacleDetectionEvent::GetOtherActor)
     .add_property("distance", CALL_RETURNING_COPY(csd::ObstacleDetectionEvent, GetDistance))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::LaneInvasionEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::LaneInvasionEvent>>("LaneInvasionEvent", no_init)
     .add_property("actor", &csd::LaneInvasionEvent::GetActor)
     .add_property("crossed_lane_markings", CALL_RETURNING_LIST(csd::LaneInvasionEvent, GetCrossedLaneMarkings))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::GnssMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::GnssMeasurement>>("GnssMeasurement", no_init)
     .add_property("latitude", &csd::GnssMeasurement::GetLatitude)
     .add_property("longitude", &csd::GnssMeasurement::GetLongitude)
     .add_property("altitude", &csd::GnssMeasurement::GetAltitude)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::IMUMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::IMUMeasurement>>("IMUMeasurement", no_init)
     .add_property("accelerometer", &csd::IMUMeasurement::GetAccelerometer)
     .add_property("gyroscope", &csd::IMUMeasurement::GetGyroscope)
     .add_property("compass", &csd::IMUMeasurement::GetCompass)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::RadarMeasurement, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::RadarMeasurement>>("RadarMeasurement", no_init)
@@ -351,7 +351,7 @@ void export_sensor_data() {
     .def("__setitem__", +[](csd::RadarMeasurement &self, size_t pos, const csd::RadarDetection &detection) {
       self.at(pos) = detection;
     })
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::RadarDetection>("RadarDetection")
@@ -359,13 +359,13 @@ void export_sensor_data() {
     .def_readwrite("azimuth", &csd::RadarDetection::azimuth)
     .def_readwrite("altitude", &csd::RadarDetection::altitude)
     .def_readwrite("depth", &csd::RadarDetection::depth)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::LidarDetection>("LidarDetection")
     .def_readwrite("point", &csd::LidarDetection::point)
     .def_readwrite("intensity", &csd::LidarDetection::intensity)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::SemanticLidarDetection>("SemanticLidarDetection")
@@ -373,7 +373,7 @@ void export_sensor_data() {
     .def_readwrite("cos_inc_angle", &csd::SemanticLidarDetection::cos_inc_angle)
     .def_readwrite("object_idx", &csd::SemanticLidarDetection::object_idx)
     .def_readwrite("object_tag", &csd::SemanticLidarDetection::object_tag)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::DVSEvent>("DVSEvent")
@@ -381,7 +381,7 @@ void export_sensor_data() {
     .add_property("y", &csd::DVSEvent::y)
     .add_property("t", &csd::DVSEvent::t)
     .add_property("pol", &csd::DVSEvent::pol)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<csd::DVSEventArray, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::DVSEventArray>>("DVSEventArray", no_init)
@@ -403,6 +403,6 @@ void export_sensor_data() {
     .def("to_array_y", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayY))
     .def("to_array_t", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayT))
     .def("to_array_pol", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayPol))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 }

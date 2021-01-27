@@ -29,7 +29,7 @@ void export_osm2odr() {
     .add_property("offset_y", &OSM2ODRSettings::offset_y, &OSM2ODRSettings::offset_y)
     .add_property("default_lane_width", &OSM2ODRSettings::default_lane_width, &OSM2ODRSettings::default_lane_width)
     .add_property("elevation_layer_height", &OSM2ODRSettings::elevation_layer_height, &OSM2ODRSettings::elevation_layer_height)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<OSM2ODR>("Osm2Odr", no_init)

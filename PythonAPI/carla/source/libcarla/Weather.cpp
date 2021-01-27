@@ -57,7 +57,7 @@ void export_weather() {
     .def_readwrite("wetness", &cr::WeatherParameters::wetness)
     .def("__eq__", &cr::WeatherParameters::operator==)
     .def("__ne__", &cr::WeatherParameters::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   cls.attr("Default") = cr::WeatherParameters::Default;

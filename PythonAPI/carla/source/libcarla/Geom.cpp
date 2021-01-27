@@ -108,7 +108,7 @@ void export_geom() {
   namespace cg = carla::geom;
   class_<std::vector<cg::Vector2D>>("vector_of_vector2D")
       .def(boost::python::vector_indexing_suite<std::vector<cg::Vector2D>>())
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cg::Vector2D>("Vector2D")
@@ -127,7 +127,7 @@ void export_geom() {
     .def(self /= double())
     .def(self / double())
     .def(double() / self)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   implicitly_convertible<cg::Vector3D, cg::Location>();
@@ -151,7 +151,7 @@ void export_geom() {
     .def(self /= double())
     .def(self / double())
     .def(double() / self)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cg::Location, bases<cg::Vector3D>>("Location")
@@ -163,7 +163,7 @@ void export_geom() {
     .def("distance", &cg::Location::Distance, (arg("location")))
     .def("__eq__", &cg::Location::operator==)
     .def("__ne__", &cg::Location::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cg::Rotation>("Rotation")
@@ -176,7 +176,7 @@ void export_geom() {
     .def("get_up_vector", &cg::Rotation::GetUpVector)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cg::Transform>("Transform")
@@ -196,12 +196,12 @@ void export_geom() {
     .def("get_inverse_matrix", &GetInverseTransformMatrix)
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<std::vector<cg::Transform>>("vector_of_transform")
       .def(boost::python::vector_indexing_suite<std::vector<cg::Transform>>())
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cg::BoundingBox>("BoundingBox")
@@ -215,7 +215,7 @@ void export_geom() {
     .def("get_world_vertices", CALL_RETURNING_LIST_1(cg::BoundingBox, GetWorldVertices, const cg::Transform&), arg("bbox_transform"))
     .def("__eq__", &cg::BoundingBox::operator==)
     .def("__ne__", &cg::BoundingBox::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cg::GeoLocation>("GeoLocation")
@@ -225,6 +225,6 @@ void export_geom() {
     .def_readwrite("altitude", &cg::GeoLocation::altitude)
     .def("__eq__", &cg::GeoLocation::operator==)
     .def("__ne__", &cg::GeoLocation::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 }

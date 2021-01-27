@@ -72,7 +72,7 @@ void export_actor() {
 
   class_<std::vector<int>>("vector_of_ints")
       .def(vector_indexing_suite<std::vector<int>>())
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::Actor, boost::noncopyable, boost::shared_ptr<cc::Actor>>("Actor", no_init)
@@ -109,7 +109,7 @@ void export_actor() {
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
       .def("set_enable_gravity", &cc::Actor::SetEnableGravity, (arg("enabled") = true))
       .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 
   enum_<cr::VehicleLightState::LightState>("VehicleLightState")
@@ -143,14 +143,14 @@ void export_actor() {
       .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
       .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
       .def("apply_control", &ApplyControl<cr::WalkerControl>, (arg("control")))
       .def("apply_control", &ApplyControl<cr::WalkerBoneControl>, (arg("control")))
       .def("get_control", &cc::Walker::GetWalkerControl)
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::WalkerAIController, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::WalkerAIController>>("WalkerAIController", no_init)
@@ -158,7 +158,7 @@ void export_actor() {
     .def("stop", &cc::WalkerAIController::Stop)
     .def("go_to_location", &cc::WalkerAIController::GoToLocation, (arg("destination")))
     .def("set_max_speed", &cc::WalkerAIController::SetMaxSpeed, (arg("speed")))
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::TrafficSign, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::TrafficSign>>(
@@ -193,6 +193,6 @@ void export_actor() {
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
       .def("reset_group", &cc::TrafficLight::ResetGroup)
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 }

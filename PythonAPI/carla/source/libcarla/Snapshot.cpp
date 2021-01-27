@@ -37,7 +37,7 @@ void export_snapshot() {
     .def("get_velocity", +[](const cc::ActorSnapshot &self) { return self.velocity; })
     .def("get_angular_velocity", +[](const cc::ActorSnapshot &self) { return self.angular_velocity; })
     .def("get_acceleration", +[](const cc::ActorSnapshot &self) { return self.acceleration; })
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cc::WorldSnapshot>("WorldSnapshot", no_init)
@@ -56,6 +56,6 @@ void export_snapshot() {
     .def("__iter__", range(&cc::WorldSnapshot::begin, &cc::WorldSnapshot::end))
     .def("__eq__", &cc::WorldSnapshot::operator==)
     .def("__ne__", &cc::WorldSnapshot::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 }

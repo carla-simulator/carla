@@ -285,7 +285,7 @@ void export_control() {
     .def_readwrite("gear", &cr::VehicleControl::gear)
     .def("__eq__", &cr::VehicleControl::operator==)
     .def("__ne__", &cr::VehicleControl::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cr::WalkerControl>("WalkerControl")
@@ -298,19 +298,19 @@ void export_control() {
     .def_readwrite("jump", &cr::WalkerControl::jump)
     .def("__eq__", &cr::WalkerControl::operator==)
     .def("__ne__", &cr::WalkerControl::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cr::WalkerBoneControl>("WalkerBoneControl")
     .def("__init__", raw_function(WalkerBoneControl_init))
     .def(init<>())
     .add_property("bone_transforms", &GetBonesTransform, &SetBonesTransform)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<std::vector<cr::GearPhysicsControl>>("vector_of_gears")
       .def(boost::python::vector_indexing_suite<std::vector<cr::GearPhysicsControl>>())
-      .def(self_ns::str(self_ns::self))
+      .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cr::GearPhysicsControl>("GearPhysicsControl")
@@ -323,12 +323,12 @@ void export_control() {
     .def_readwrite("up_ratio", &cr::GearPhysicsControl::up_ratio)
     .def("__eq__", &cr::GearPhysicsControl::operator==)
     .def("__ne__", &cr::GearPhysicsControl::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
     .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
@@ -349,7 +349,7 @@ void export_control() {
     .def_readwrite("position", &cr::WheelPhysicsControl::position)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 
   class_<cr::VehiclePhysicsControl>("VehiclePhysicsControl", no_init)
@@ -377,6 +377,6 @@ void export_control() {
     .def_readwrite("use_sweep_wheel_collision", &cr::VehiclePhysicsControl::use_sweep_wheel_collision)
     .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
-    .def(self_ns::str(self_ns::self))
+    .def(self_ns::repr(self_ns::self))
   ;
 }
