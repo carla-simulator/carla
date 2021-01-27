@@ -17,6 +17,7 @@
     - Added `enable_environment_objects`call to enable/disable objects of the level
     - Added `horizontal_fov` parameter to lidar sensor to allow for restriction of its field of view
     - Added `WorldSettings.deterministic_ragdolls` to enable deterministic or physically based ragdolls
+    - Added `__repr__` method for all classes that had the `__str__` method available.
   * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation
   * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
   * Fixed random dead-lock on synchronous mode at high frame rate
