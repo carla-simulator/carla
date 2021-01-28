@@ -8,12 +8,13 @@ After discussing about the world and its actors, it is time to put everything in
 	*   [Lanes](#lanes)  
 	*   [Junctions](#junctions)  
 	*   [Waypoints](#waypoints)  
+	*   [Environment Objects](#environment-objects)
 *   [__Navigation in CARLA__](#navigation-in-carla)  
 	*   [Navigating through waypoints](#navigating-through-waypoints)  
 	*   [Generating a map navigation](#generating-a-map-navigation)  
 *   [__CARLA maps__](#carla-maps)  
-	* [Non-layered maps](#non-layered-maps)
-	* [Layered maps](#layered-maps)
+	*   [Non-layered maps](#non-layered-maps)
+	*   [Layered maps](#layered-maps)
 
 ---
 ## The map
