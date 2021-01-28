@@ -104,6 +104,35 @@ width = waypoint.lane_width
 right_lm_color = waypoint.right_lane_marking.color
 ```
 
+### Environment Objects
+
+Every object on a CARLA map has a set of associated variables which can be found [here][env_obj]. Included in these variables is a [unique ID][env_obj_id] that can be used to [toggle][toggle_env_obj] that object's visibility on the map. You can use the Python API to [fetch][fetch_env_obj] the IDs of each environment object based on their [semantic tag][semantic_tag]:
+
+		# Get the buildings in the world
+	    world = client.get_world()
+		env_objs = world.get_environment_objects(carla.CityObjectLabel.Buildings)
+
+		# Access individual building IDs and save in a set
+		building_01 = env_objs[0]
+		building_02 = env_objs[1]
+		objects_to_toggle = {building_01.id, building_02.id}
+
+		# Toggle buildings off
+		world.enable_environment_objects(objects_to_toggle, False)
+		# Toggle buildings on
+		world.enable_environment_objects(objects_to_toggle, True)
+
+See an example of distinct objects being toggled:
+
+![toggle_objects_gif](/img/objects_small.gif)
+
+[env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject
+[env_obj_id]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject.id
+[toggle_env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.enable_environment_objects
+[fetch_env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.get_environment_objects
+[semantic_tag]: https://carla.readthedocs.io/en/latest/python_api/#carla.CityObjectLabel
+
+
 ---
 ## Navigation in CARLA
 
