@@ -7,6 +7,7 @@ using UnrealBuildTool;
 public class Carla : ModuleRules
 {
   bool UsingCarSim = false;
+  bool UsingChrono = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -24,19 +25,23 @@ public class Carla : ModuleRules
     // Read config about carsim
     string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
     string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
-    string CarSimConfigFile = Path.Combine(ConfigDir, "CarSimConfig.ini");
-    string[] text = System.IO.File.ReadAllLines(CarSimConfigFile);
-    Console.WriteLine("----------------------------------------------");
+    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
+    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
     foreach (string line in text)
     {
-      Console.WriteLine(line);
       if (line.Contains("CarSim ON"))
       {
-        Console.WriteLine("Enabling carsim-----------");
+        Console.WriteLine("Enabling carsim");
         UsingCarSim = true;
         PublicDefinitions.Add("WITH_CARSIM");
         PrivateDefinitions.Add("WITH_CARSIM");
-        Definitions.Add("WITH_CARSIM");
+      }
+      if (line.Contains("Chrono ON"))
+      {
+        Console.WriteLine("Enabling chrono");
+        UsingChrono = true;
+        PublicDefinitions.Add("WITH_CHRONO");
+        PrivateDefinitions.Add("WITH_CHRONO");
       }
     }
 
@@ -173,14 +178,16 @@ public class Carla : ModuleRules
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
       }
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
-      PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
-      RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
-      RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
-      RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
-      bUseRTTI = true;
-
+      if (UsingChrono)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
+        bUseRTTI = true;
+      }
     }
 
     // Include path.

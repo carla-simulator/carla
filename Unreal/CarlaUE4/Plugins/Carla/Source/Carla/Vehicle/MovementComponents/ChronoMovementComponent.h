@@ -10,6 +10,7 @@
 #include "BaseCarlaMovementComponent.h"
 #include "Carla/Vehicle/VehicleControl.h"
 
+#ifdef WITH_CHRONO
 #include "compiler/disable-ue4-macros.h"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wall"
@@ -22,6 +23,7 @@
 
 #pragma clang diagnostic pop
 #include "compiler/enable-ue4-macros.h"
+#endif
 
 #include "ChronoMovementComponent.generated.h"
 
@@ -30,15 +32,18 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
 {
   GENERATED_BODY()
 
+#ifdef WITH_CHRONO
   chrono::ChSystemNSC sys;
   chrono::vehicle::hmmwv::HMMWV_Full my_hmmwv;
   std::shared_ptr<chrono::vehicle::RigidTerrain> terrain;
+#endif
 
 public:
 
 
   static void CreateChronoMovementComponent(ACarlaWheeledVehicle* Vehicle);
 
+  #ifdef WITH_CHRONO
   virtual void BeginPlay() override;
 
   void ProcessControl(FVehicleControl &Control) override;
@@ -47,4 +52,6 @@ public:
       ELevelTick TickType,
       FActorComponentTickFunction* ThisTickFunction) override;
 
+  void AdvanceChronoSimulation(float StepSize);
+  #endif
 };
