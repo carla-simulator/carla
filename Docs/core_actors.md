@@ -212,7 +212,7 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
 
 ### Vehicles
 
-[__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor due to the fact that it has better physics than other actors. This is achieved by applying four types of different controls:  
+[__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor. It incorporates special internal components that simulate the physics of wheeled vehicles. This is achieved by applying four types of different controls:  
 
 * __[carla.VehicleControl](python_api.md#carla.VehicleControl)__ provides input for driving commands such as throttle, steering, brake, etc. 
 ```py
@@ -235,7 +235,7 @@ Vehicles have a [carla.BoundingBox](python_api.md#carla.BoundingBox) encapsulati
     print(box.extent)           # XYZ half-box extents in meters.
 ```
 
-The physics of vehicle wheels can be improved by enabling [sweep wheel collision control][enable_sweep]. The default wheel physics uses single ray casting from the axis to the floor for each wheel but when sweep wheel collision control is enabled, the full volume of the wheel is checked against collisions. It can be enabled as such:
+The physics of vehicle wheels can be improved by enabling the [sweep wheel collision parameter][enable_sweep]. The default wheel physics uses single ray casting from the axis to the floor for each wheel but when sweep wheel collision is enabled, the full volume of the wheel is checked against collisions. It can be enabled as such:
 
 ```py
     physics_control = vehicle.get_physics_control()
