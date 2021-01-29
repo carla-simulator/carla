@@ -12,8 +12,6 @@
 
 #ifdef WITH_CHRONO
 #include "compiler/disable-ue4-macros.h"
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wall"
 
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
@@ -21,7 +19,6 @@
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 
-#pragma clang diagnostic pop
 #include "compiler/enable-ue4-macros.h"
 #endif
 

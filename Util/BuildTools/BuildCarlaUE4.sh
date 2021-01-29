@@ -121,20 +121,20 @@ fi
 
 if ${BUILD_CARLAUE4} ; then
 
-  FILE_TEXT=""
+  OPTIONAL_MODULES_TEXT=""
   if ${USE_CARSIM} ; then
     python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
-    FILE_TEXT="CarSim ON"$'\n'"${FILE_TEXT}"
+    OPTIONAL_MODULES_TEXT="CarSim ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
     python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
-    FILE_TEXT="CarSim OFF"$'\n'"${FILE_TEXT}"
+    OPTIONAL_MODULES_TEXT="CarSim OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   if ${USE_CHRONO} ; then
-    FILE_TEXT="Chrono ON"$'\n'"${FILE_TEXT}"
+    OPTIONAL_MODULES_TEXT="Chrono ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
-    FILE_TEXT="Chrono OFF"$'\n'"${FILE_TEXT}"
+    OPTIONAL_MODULES_TEXT="Chrono OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
-  echo ${FILE_TEXT} > ${PWD}/Config/OptionalModules.ini
+  echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 
   if [ ! -f Makefile ]; then
 

@@ -20,6 +20,7 @@ public class Carla : ModuleRules
     if (IsWindows(Target))
     {
       bEnableExceptions = true;
+      bUseRTTI = true;
     }
 
     // Read config about carsim
@@ -42,9 +43,9 @@ public class Carla : ModuleRules
         UsingChrono = true;
         PublicDefinitions.Add("WITH_CHRONO");
         PrivateDefinitions.Add("WITH_CHRONO");
-      }
+      } 
     }
-
+ 
     PublicIncludePaths.AddRange(
       new string[] {
         // ... add public include paths required here ...
@@ -165,6 +166,15 @@ public class Carla : ModuleRules
       else
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+      }
+      if (UsingChrono)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll/ChronoEngine.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll/ChronoEngine_vehicle.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll/ChronoModels_vehicle.dll"));
       }
     }
     else
