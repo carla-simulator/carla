@@ -1,0 +1,28 @@
+/* XPM */
+static const char * colour_lane_xpm[] = {
+"16 16 8 1",
+" 	c None",
+".	c Black",
+"X	c Gray50",
+"o	c #13c0ff",
+"O	c #ff13f5",
+"+	c #ff1313",
+"@	c #ffe94d",
+"#	c #29de00",
+" ...            ",
+".XXX.           ",
+".XXX.           ",
+".XXX..          ",
+" ...oo.         ",
+"   .ooO.        ",
+"    .OOO.       ",
+"     .O++.      ",
+"      .++@.     ",
+"       .@@@.    ",
+"        .@##.   ",
+"         .##... ",
+"          ..XXX.",
+"           .XXX.",
+"           .XXX.",
+"            ... "};
+

@@ -1,0 +1,17 @@
+build/package/sumo.*sh etc/profile.d
+data/ usr/share/sumo
+build/package/sumo.png usr/share/pixmaps
+build/package/sumo.desktop usr/share/applications
+build/package/sumo.xml usr/share/mime/application
+usr/bin/activitygen
+usr/bin/dfrouter
+usr/bin/duarouter
+usr/bin/jtrrouter
+usr/bin/netconvert
+usr/bin/netgenerate
+usr/bin/od2trips
+usr/bin/polyconvert
+usr/bin/sumo
+usr/bin/sumo-gui
+usr/bin/marouter
+usr/bin/netedit

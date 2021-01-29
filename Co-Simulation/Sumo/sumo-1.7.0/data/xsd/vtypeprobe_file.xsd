@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="vehicle-type-probes">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="timestep"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="timestep">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element minOccurs="0" maxOccurs="unbounded" ref="vehicle"/>
+            </xsd:sequence>
+            <xsd:attribute name="time" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="vType" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="vehicle">
+        <xsd:complexType>
+            <xsd:attribute name="id" use="required" type="xsd:string"/>
+            <xsd:attribute name="x" type="xsd:float" use="required"/>
+            <xsd:attribute name="y" type="xsd:float" use="required"/>
+            <xsd:attribute name="z" type="xsd:float" use="optional"/>
+            <xsd:attribute name="lon" type="xsd:float" use="optional"/>
+            <xsd:attribute name="lat" type="xsd:float" use="optional"/>
+            <xsd:attribute name="speed" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="pos" use="required" type="nonNegativeFloatType"/>
+            <xsd:attribute name="lane" use="optional" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+</xsd:schema>

@@ -1,0 +1,58 @@
+Warning: The option 'sloppy-insert' is deprecated, because it is now activated by default, see the new option 'eager-insert'.
+Loading net-file from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_joined\joined_buslanes.net.xml'...  done (76ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_joined\joined_bus_stops.add.xml'...  done (1ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_joined\joined_detectors.add.xml'...  done (3ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_joined\joined_vtypes.add.xml'...  done (1ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_joined\joined_tls.add.xml'...  done (4ms).
+Loading done.
+Simulation started with time: 0.00
+Warning: Teleporting vehicle 'Gandhi_40_29'; waited too long, lane='b1[1]_1', time=446.00.
+Warning: Vehicle 'Gandhi_40_29' ends teleporting on edge 'b38[0]', simulation time 446.00.
+Warning: Teleporting vehicle 'Gandhi_60_33'; waited too long, lane='b1[1]_1', time=454.00.
+Warning: Vehicle 'Gandhi_60_33' ends teleporting on edge 'a72[0]', simulation time 454.00.
+Warning: Teleporting vehicle 'bus_10_90'; waited too long, lane='b8_1', time=835.00.
+Warning: Vehicle 'bus_10_90' ends teleporting on edge 'b3[1]', simulation time 835.00.
+Warning: Teleporting vehicle 'Nigrisoli_10_65'; waited too long, lane='b8_1', time=893.00.
+Warning: Vehicle 'Nigrisoli_10_65' ends teleporting on edge 'b10', simulation time 893.00.
+Warning: Teleporting vehicle 'Nigrisoli_10_67'; waited too long, lane='b8_1', time=894.00.
+Warning: Vehicle 'Nigrisoli_10_67' ends teleporting on edge 'b10', simulation time 894.00.
+Warning: Teleporting vehicle 'Pepoli_2_450'; waited too long, lane='a19_0', time=1412.00.
+Warning: Vehicle 'Pepoli_2_450' ends teleporting on edge 'a59', simulation time 1495.00.
+Warning: Teleporting vehicle 'Silvani_1_346'; waited too long, lane='a19_0', time=1759.00.
+Warning: Vehicle 'Silvani_1_346' ends teleporting on edge 'a59', simulation time 1842.00.
+Warning: Teleporting vehicle 'Silvani_1_493'; waited too long, lane='a50_0', time=2076.00.
+Warning: Vehicle 'Silvani_1_493' ends teleporting on edge 'a19', simulation time 2076.00.
+Warning: Teleporting vehicle 'Silvani_1_356'; waited too long, lane='a19_0', time=2078.00.
+Warning: Vehicle 'Silvani_1_356' ends teleporting on edge 'a59', simulation time 2161.00.
+Warning: Teleporting vehicle 'Audinot_2_66'; waited too long, lane='a50_0', time=2381.00.
+Warning: Vehicle 'Audinot_2_66' ends teleporting on edge 'a19', simulation time 2381.00.
+Warning: Teleporting vehicle 'Audinot_2_52'; waited too long, lane='a19_0', time=2422.00.
+Warning: Vehicle 'Audinot_2_52' ends teleporting on edge 'a59', simulation time 2505.00.
+Warning: Teleporting vehicle 'Silvani_1_553'; waited too long, lane='a50_0', time=2687.00.
+Warning: Vehicle 'Silvani_1_553' ends teleporting on edge 'a19', simulation time 2687.00.
+Warning: Teleporting vehicle 'Pepoli_2_496'; waited too long, lane='a19_0', time=2731.00.
+Warning: Vehicle 'Pepoli_2_496' ends teleporting on edge 'a59', simulation time 2801.00.
+Warning: Teleporting vehicle 'Silvani_1_569'; waited too long, lane='a50_0', time=2993.00.
+Warning: Vehicle 'Silvani_1_569' ends teleporting on edge 'a19', simulation time 2993.00.
+Warning: Teleporting vehicle 'Pepoli_1_506'; waited too long, lane='a19_0', time=3053.00.
+Warning: Teleporting vehicle 'Audinot_2_118'; waited too long, lane='a39_0', time=3060.00.
+Warning: Vehicle 'Audinot_2_118' ends teleporting on edge 'a35', simulation time 3060.00.
+Warning: Vehicle 'Pepoli_1_506' ends teleporting on edge 'a59', simulation time 3136.00.
+Warning: Teleporting vehicle 'Audinot_2_59'; waited too long, lane='a19_0', time=3658.00.
+Warning: Teleporting vehicle 'Silvani_1_592'; waited too long, lane='a50_0', time=3664.00.
+Warning: Vehicle 'Silvani_1_592' ends teleporting on edge 'a19', simulation time 3664.00.
+Warning: Vehicle 'Audinot_2_59' ends teleporting on edge 'a59', simulation time 3716.00.
+Warning: Teleporting vehicle 'Silvani_3_1352'; waited too long, lane='a57[1]_0', time=3817.00.
+Warning: Vehicle 'Silvani_3_1352' ends teleporting on edge 'a62', simulation time 3817.00.
+Simulation ended at time: 6624.00
+Reason: All vehicles have left the simulation.
+Performance: 
+ Duration: 46601 ms
+ Real time factor: 142.143
+ UPS: 114265.573700
+Vehicles: 
+ Emitted: 11255
+ Running: 0
+ Waiting: 0
+Teleports: 19
+

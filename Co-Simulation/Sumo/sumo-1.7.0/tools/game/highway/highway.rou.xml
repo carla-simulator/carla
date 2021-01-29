@@ -1,0 +1,13 @@
+<routes>
+
+    <vTypeDistribution id="DEFAULT_VEHTYPE">
+        <vType id="passenger" length="5.0" minGap="2.5" probability="1" /> 
+    </vTypeDistribution>
+    
+    <route id="ramp" edges="153180751 201283198 189604289 191842213"/>
+    <flow id="ramp" route="ramp" begin="0" end="90000" vehsPerHour="1000" departSpeed="33.33"/>
+    
+    <route id="highway" edges="145354574 189597495 189604289 191842213"/>
+    <flow id="highway" route="highway" begin="0" end="90000" vehsPerHour="2000" departSpeed="33.33"/>
+    
+</routes>

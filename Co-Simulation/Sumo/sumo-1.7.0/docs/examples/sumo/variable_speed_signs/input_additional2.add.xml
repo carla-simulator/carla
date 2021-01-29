@@ -1,0 +1,3 @@
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <edgeData id="dump_25" freq="25" file="aggregated_25.xml" excludeEmpty="true"/>
+</additional>

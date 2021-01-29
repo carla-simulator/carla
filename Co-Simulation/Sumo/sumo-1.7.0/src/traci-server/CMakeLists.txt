@@ -1,0 +1,54 @@
+SET(traciserver_STAT_SRCS
+   TraCIServer.h
+   TraCIServer.cpp
+   TraCIServerAPI_Edge.h
+   TraCIServerAPI_Edge.cpp
+   TraCIServerAPI_InductionLoop.h
+   TraCIServerAPI_InductionLoop.cpp
+   TraCIServerAPI_Junction.h
+   TraCIServerAPI_Junction.cpp
+   TraCIServerAPI_Lane.h
+   TraCIServerAPI_Lane.cpp
+   TraCIServerAPI_MultiEntryExit.h
+   TraCIServerAPI_MultiEntryExit.cpp
+   TraCIServerAPI_LaneArea.h
+   TraCIServerAPI_LaneArea.cpp
+   TraCIServerAPI_Person.h
+   TraCIServerAPI_Person.cpp
+   TraCIServerAPI_POI.h
+   TraCIServerAPI_POI.cpp
+   TraCIServerAPI_Polygon.h
+   TraCIServerAPI_Polygon.cpp
+   TraCIServerAPI_Route.h
+   TraCIServerAPI_Route.cpp
+   TraCIServerAPI_Calibrator.h
+   TraCIServerAPI_Calibrator.cpp
+   TraCIServerAPI_BusStop.h
+   TraCIServerAPI_BusStop.cpp
+   TraCIServerAPI_ParkingArea.h
+   TraCIServerAPI_ParkingArea.cpp
+   TraCIServerAPI_ChargingStation.h
+   TraCIServerAPI_ChargingStation.cpp
+   TraCIServerAPI_RouteProbe.h
+   TraCIServerAPI_RouteProbe.cpp
+   TraCIServerAPI_Rerouter.h
+   TraCIServerAPI_Rerouter.cpp
+   TraCIServerAPI_VariableSpeedSign.h
+   TraCIServerAPI_VariableSpeedSign.cpp
+   TraCIServerAPI_MeanData.h
+   TraCIServerAPI_MeanData.cpp
+   TraCIServerAPI_OverheadWire.h
+   TraCIServerAPI_OverheadWire.cpp
+   TraCIServerAPI_Simulation.h
+   TraCIServerAPI_Simulation.cpp
+   TraCIServerAPI_TrafficLight.h
+   TraCIServerAPI_TrafficLight.cpp
+   TraCIServerAPI_Vehicle.h
+   TraCIServerAPI_Vehicle.cpp
+   TraCIServerAPI_VehicleType.h
+   TraCIServerAPI_VehicleType.cpp
+)
+
+add_library(traciserver STATIC ${traciserver_STAT_SRCS})
+set_property(TARGET traciserver PROPERTY PROJECT_LABEL "z_traciserver")
+add_dependencies(traciserver generate-version-h)

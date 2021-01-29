@@ -1,0 +1,43 @@
+<additional>
+  <tlLogic id="1/1" type="static" programID="adapted" offset="0">
+    <phase state="rrrGGgrrrGGg" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="2/1_to_1/1.-100_0 2/1_to_1/1.-100_1 0/1_to_1/1.-100_0 0/1_to_1/1.-100_1"/>
+    <phase state="rrryyyrrryyy" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+    <phase state="GGgrrrGGgrrr" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="1/2_to_1/1.-100_0 1/2_to_1/1.-100_1 1/0_to_1/1.-100_0 1/0_to_1/1.-100_1"/>
+    <phase state="yyyrrryyyrrr" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+  </tlLogic>
+  <tlLogic id="2/1" type="static" programID="adapted" offset="0">
+    <phase state="rrrGGgrrrGGg" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="3/1_to_2/1.-100_0 3/1_to_2/1.-100_1 1/1_to_2/1.-100_0 1/1_to_2/1.-100_1"/>
+    <phase state="rrryyyrrryyy" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+    <phase state="GGgrrrGGgrrr" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="2/2_to_2/1.-100_0 2/2_to_2/1.-100_1 2/0_to_2/1.-100_0 2/0_to_2/1.-100_1"/>
+    <phase state="yyyrrryyyrrr" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+  </tlLogic>
+  <tlLogic id="3/1" type="static" programID="adapted" offset="0">
+    <phase state="rrrGGgrrrGGg" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="4/1_to_3/1.-100_0 4/1_to_3/1.-100_1 2/1_to_3/1.-100_0 2/1_to_3/1.-100_1"/>
+    <phase state="rrryyyrrryyy" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+    <phase state="GGgrrrGGgrrr" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="3/2_to_3/1.-100_0 3/2_to_3/1.-100_1 3/0_to_3/1.-100_0 3/0_to_3/1.-100_1"/>
+    <phase state="yyyrrryyyrrr" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+  </tlLogic>
+  <tlLogic id="4/1" type="static" programID="adapted" offset="0">
+    <phase state="rrrGGgrrrGGg" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="5/1_to_4/1.-100_0 5/1_to_4/1.-100_1 3/1_to_4/1.-100_0 3/1_to_4/1.-100_1"/>
+    <phase state="rrryyyrrryyy" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+    <phase state="GGgrrrGGgrrr" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="4/2_to_4/1.-100_0 4/2_to_4/1.-100_1 4/0_to_4/1.-100_0 4/0_to_4/1.-100_1"/>
+    <phase state="yyyrrryyyrrr" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+  </tlLogic>
+  <tlLogic id="5/1" type="static" programID="adapted" offset="0">
+    <phase state="rrrGGgrrrGGg" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="6/1_to_5/1.-100_0 6/1_to_5/1.-100_1 4/1_to_5/1.-100_0 4/1_to_5/1.-100_1"/>
+    <phase state="rrryyyrrryyy" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+    <phase state="GGgrrrGGgrrr" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="5/2_to_5/1.-100_0 5/2_to_5/1.-100_1 5/0_to_5/1.-100_0 5/0_to_5/1.-100_1"/>
+    <phase state="yyyrrryyyrrr" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+  </tlLogic>
+    
+</additional>

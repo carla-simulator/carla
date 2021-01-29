@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Sat 01 Jul 2017 01:01:24 PM CEST by Netedit Version dev-SVN-r22662
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="cross.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="cross.net.xml"/>
+        <plain-output-prefix value="/home/kobo/dlr/sumo/tools/game/cross/cross"/>
+    </output>
+
+    <processing>
+        <no-turnarounds value="true"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+        <junctions.corner-detail value="5"/>
+        <rectangular-lane-cut value="false"/>
+        <walkingareas value="false"/>
+    </processing>
+
+    <visualisation>
+        <gui-settings-file value="netedit.viewsettings.xml"/>
+    </visualisation>
+
+</configuration>
+-->
+
+<edges version="0.27" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
+    <edge id="1fi" from="1" to="m1" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="1fo" from="m1" to="1" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="1o" from="0" to="m1" priority="46" numLanes="1" speed="13.89" shape="183.42,202.98 41.58,191.77"/>
+    <edge id="1si" from="m1" to="0" priority="74" numLanes="3" speed="13.89" shape="47.12,190.71 183.89,200.29"/>
+    <edge id="2fi" from="2" to="m2" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="2fo" from="m2" to="2" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="2o" from="0" to="m2" priority="46" numLanes="1" speed="13.89" shape="216.65,197.65 345.85,206.98"/>
+    <edge id="2si" from="m2" to="0" priority="74" numLanes="3" speed="13.89" shape="344.34,209.27 215.81,199.93"/>
+    <edge id="3fi" from="3" to="m3" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="3fo" from="m3" to="3" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="3o" from="0" to="m3" priority="46" numLanes="1" speed="13.89" shape="198.21,181.97 207.31,54.12"/>
+    <edge id="3si" from="m3" to="0" priority="74" numLanes="2" speed="13.89" shape="210.65,50.00 201.58,182.14"/>
+    <edge id="4fi" from="4" to="m4" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="4fo" from="m4" to="4" priority="46" numLanes="1" speed="13.89"/>
+    <edge id="4o" from="0" to="m4" priority="46" numLanes="1" speed="13.89" shape="200.50,219.61 192.44,344.37"/>
+    <edge id="4si" from="m4" to="0" priority="74" numLanes="2" speed="13.89" shape="189.35,350.00 197.34,218.57"/>
+</edges>

@@ -1,0 +1,30 @@
+/* XPM */
+static const char *savedataelements_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"14 14 10 1 ",
+"  c black",
+". c #040404",
+"X c #007F0E",
+"o c red",
+"O c #808304",
+"+ c #FFD800",
+"@ c #0026FF",
+"# c #BFC2BF",
+"$ c white",
+"% c None",
+/* pixels */
+"..............",
+".OOOOOOOOOOOO.",
+".O          O.",
+".O $$@@$$$$ O.",
+".O oo@@$$$$ O.",
+".O oo@@XX$$ O.",
+".O oo@@XX++ O.",
+".O          O.",
+".OOOOOOOOOOOO.",
+".OO.........O.",
+".OO......##.O.",
+".OO......##.O.",
+".OO......##.O.",
+"%............."
+};

@@ -1,0 +1,14 @@
+/**
+ @file _netgen.dox
+ @defgoup netgen Network Generating Module
+ @brief generates abstract networks and stores them in netbuild classes
+ 
+ @addtogroup netgen
+ @{
+ netgen holds classes and methods generating abstract networks. The generated networks
+  are stored in according classes from the @ref netbuild module.
+
+ 
+ 
+ @}
+*/

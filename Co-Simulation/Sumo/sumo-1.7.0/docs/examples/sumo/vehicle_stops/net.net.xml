@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Tue Nov  4 23:07:09 2014 by SUMO netconvert Version dev-SVN-r17257
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="./sumo/extended/stops/hello.nod.xml"/>
+        <edge-files value="./sumo/extended/stops/hello.edg.xml"/>
+    </input>
+
+    <output>
+        <output-file value="./sumo/extended/stops/net.net.xml"/>
+    </output>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<net version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="0.00,0.00" convBoundary="0.00,0.00,6.00,0.00" origBoundary="0.00,0.00,6.00,0.00" projParameter="!"/>
+
+    <edge id=":2_0" function="internal">
+        <lane id=":2_0_0" index="0" speed="13.90" length="0.10" shape="5.00,-1.65 5.00,-1.65"/>
+    </edge>
+
+    <edge id="1to2" from="1" to="2" priority="-1">
+        <lane id="1to2_0" index="0" speed="13.90" length="5.00" shape="0.00,-1.65 5.00,-1.65"/>
+    </edge>
+    <edge id="out" from="2" to="3" priority="-1">
+        <lane id="out_0" index="0" speed="13.90" length="1.00" shape="5.00,-1.65 6.00,-1.65"/>
+    </edge>
+
+    <junction id="1" type="unregulated" x="0.00" y="0.00" incLanes="" intLanes="" shape="-0.00,-0.05 -0.00,-3.25"/>
+    <junction id="2" type="priority" x="5.00" y="0.00" incLanes="1to2_0" intLanes=":2_0_0" shape="5.00,-0.05 5.00,-3.25 5.00,-0.05">
+        <request index="0" response="0" foes="0" cont="0"/>
+    </junction>
+    <junction id="3" type="unregulated" x="6.00" y="0.00" incLanes="out_0" intLanes="" shape="6.00,-3.25 6.00,-0.05"/>
+
+    <connection from="1to2" to="out" fromLane="0" toLane="0" via=":2_0_0" dir="s" state="M"/>
+
+    <connection from=":2_0" to="out" fromLane="0" toLane="0" dir="s" state="M"/>
+
+</net>

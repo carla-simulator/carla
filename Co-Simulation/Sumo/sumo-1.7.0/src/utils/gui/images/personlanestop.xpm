@@ -1,0 +1,28 @@
+/* XPM */
+static const char *personlanestop_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 6 1 ",
+"  c None",
+". c black",
+"X c red",
+"o c #0026FF",
+"O c #808080",
+"+ c white",
+/* pixels */
+"  ....     XXX  ",
+"  ....    XXXXX ",
+"  ....   XXXXXXX",
+"  ....   XX+++XX",
+"         XXXXXXX",
+"........  XXXXX ",
+"........   XXX  ",
+"........        ",
+"........        ",
+"O......O ooooooo",
+"........ ooooooo",
+" ......  ooooooo",
+" ......  ++.++.+",
+" ..  ..  .......",
+" ..  ..  .......",
+" ..  ..  ......."
+};

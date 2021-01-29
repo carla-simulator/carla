@@ -1,0 +1,73 @@
+#!/usr/bin/env python2
+
+#
+# Copyright (C) 2013-2019 Christoph Sommer <sommer@ccs-labs.org>
+#
+# Documentation for these modules is at http://veins.car2x.org/
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+"""
+Creates Makefile(s) for building this project.
+"""
+
+import os
+import sys
+import subprocess
+from logging import info, warning, error
+from optparse import OptionParser
+
+
+if sys.version_info[0] == 3:
+    warning("Warning: running configure with python3 might result in subtle errors.")
+
+# Option handling
+parser = OptionParser()
+parser.add_option("--with-inet", dest="inet", help='Option discontinued in favor of a subproject in subprojects/veins_inet/')
+(options, args) = parser.parse_args()
+
+if args:
+    warning("Superfluous command line arguments: \"%s\"" % " ".join(args))
+
+
+# Start with default flags
+makemake_flags = ['-f', '--deep', '--no-deep-includes', '--make-so', '-I', '.', '-o', 'veins', '-O', 'out', '-p', 'VEINS']
+run_libs = [os.path.join('src', 'veins')]
+run_neds = [os.path.join('src', 'veins')]
+run_imgs = [os.path.join('images')]
+
+
+# --with-inet has been discontinued
+if options.inet:
+        error('--with-inet has been discontinued in favor of a subproject in subprojects/veins_inet/')
+        sys.exit(1)
+
+
+# Start creating files
+if not os.path.isdir('out'):
+    os.mkdir('out')
+
+f = open(os.path.join('out', 'config.py'), 'w')
+f.write('run_libs = %s\n' % repr(run_libs))
+f.write('run_neds = %s\n' % repr(run_neds))
+f.write('run_imgs = %s\n' % repr(run_imgs))
+f.close()
+
+subprocess.check_call(['env', 'opp_makemake'] + makemake_flags, cwd='src')
+
+info('Configure done. You can now run "make".')

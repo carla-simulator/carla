@@ -1,0 +1,13 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="t" sigma="0" speedDev="0.1"/>
+	<trip id="0" type="t" depart="0" from="beg" to="rend"/>
+	<trip id="1" type="t" depart="10" from="beg" to="rend"/>
+	<trip id="2" type="t" depart="20" from="beg" to="rend"/>
+	<trip id="3" type="t" depart="30" from="beg" to="rend"/>
+	<trip id="4" type="t" depart="40" from="beg" to="rend"/>
+	<trip id="5" type="t" depart="50" from="beg" to="rend"/>
+	<trip id="6" type="t" depart="60" from="beg" to="rend"/>
+	<trip id="7" type="t" depart="70" from="beg" to="rend"/>
+	<trip id="8" type="t" depart="80" from="beg" to="rend"/>
+	<trip id="9" type="t" depart="90" from="beg" to="rend"/>
+</routes>

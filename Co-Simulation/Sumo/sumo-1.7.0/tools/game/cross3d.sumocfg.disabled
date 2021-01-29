@@ -1,0 +1,16 @@
+<configuration>
+
+    <input>
+        <net-file value="cross/cross.net.xml"/>
+        <gui-settings-file value="cross/cross3d.settings.xml"/>
+        <route-files value="cross/cross.rou.xml"/>
+        <additional-files value="input_additional.add.xml"/>
+    </input>
+
+    <time>
+        <begin value="0"/>
+        <end value="180"/>
+        <step-length value=".2"/>
+    </time>
+<osg-view value="true"/>
+</configuration>

@@ -1,0 +1,29 @@
+/* XPM */
+static const char *personbusstop_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1 ",
+"  c None",
+". c black",
+"X c red",
+"o c #4CAA32",
+"O c #FFEB00",
+"+ c #808080",
+"@ c white",
+/* pixels */
+"  ....     XXX  ",
+"  ....    XXXXX ",
+"  ....   XXXXXXX",
+"  ....   XX@@@XX",
+"         XXXXXXX",
+"........  XXXXX ",
+"........   XXX  ",
+"........        ",
+"........        ",
+"+......+   ooo  ",
+"........  oOOOo ",
+" ......  oOoOoOo",
+" ......  oOoooOo",
+" ..  ..  oOoOoOo",
+" ..  ..   oOOOo ",
+" ..  ..    ooo  "
+};

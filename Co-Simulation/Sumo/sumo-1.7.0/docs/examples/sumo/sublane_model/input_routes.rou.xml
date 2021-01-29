@@ -1,0 +1,9 @@
+<routes>
+    <vTypeDistribution id="mixed">
+        <vType id="car" vClass="passenger" speedDev="0.2" latAlignment="compact" probability="0.3"/>
+        <vType id="moped" vClass="moped" speedDev="0.4" latAlignment="compact" probability="0.7"/>
+    </vTypeDistribution>
+
+    <route id="r0" edges="beg end"/>
+    <flow id="mixed" begin="0" end="100" number="100" route="r0" type="mixed" departLane="random" departPosLat="random"/>
+</routes>

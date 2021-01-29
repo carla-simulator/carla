@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_traction_wire.a  CMakeFiles/utils_traction_wire.dir/Circuit.cpp.o CMakeFiles/utils_traction_wire.dir/Element.cpp.o CMakeFiles/utils_traction_wire.dir/Node.cpp.o
+/usr/bin/ranlib libutils_traction_wire.a

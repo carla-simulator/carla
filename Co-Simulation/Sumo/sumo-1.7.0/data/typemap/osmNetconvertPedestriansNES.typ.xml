@@ -1,0 +1,11 @@
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/types_file.xsd">
+    <!-- typemap for pedestrians with (N)o (E)xtra (S)idewalks -->
+    <type id="highway.primary"        disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+    <type id="highway.primary_link"   disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+    <type id="highway.secondary"      disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+    <type id="highway.secondary_link" disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+    <type id="highway.tertiary"       disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+    <type id="highway.tertiary_link"  disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+    <type id="highway.unclassified"   disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+    <type id="highway.residential"    disallow="pedestrian rail rail_urban rail_electric rail_fast tram ship"/>
+</types>

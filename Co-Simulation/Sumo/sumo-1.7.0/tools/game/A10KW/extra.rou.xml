@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="passenger" speedFactor="normc(1.00,0.10,0.20,2.00)" sigma="0.8" vClass="passenger"/>
+
+    <flow id="rampEast" begin="0" end="1800" period="8" from="360414561" to="264308376" type="passenger" departSpeed="max" departPos="last"/>
+    <flow id="rampWest" begin="0" end="1800" period="8" from="26216780#0" to="264308373" type="passenger" departSpeed="max" departPos="last"/>
+
+</routes>

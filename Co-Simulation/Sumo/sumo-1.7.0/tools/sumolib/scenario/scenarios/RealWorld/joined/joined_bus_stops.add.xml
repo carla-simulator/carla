@@ -1,0 +1,63 @@
+<add>
+    <busStop id="busStop#a2" lane="a190_0" startPos="175.018" endPos="195.018" lines="--"/>
+    <busStop id="busStop#a3" lane="a187_0" startPos="19.682" endPos="39.682" lines="--"/>
+    <busStop id="busStop#a6" lane="a90_0" startPos="28.099" endPos="48.748" lines="--"/>
+    <busStop id="busStop#a9" lane="a115_0" startPos="127.192" endPos="147.192" lines="--"/>
+    <busStop id="busStop#a10" lane="a22_0" startPos="56" endPos="76" lines="--"/>
+    <busStop id="busStop#a11" lane="a103_0" startPos="41.16" endPos="61.16" lines="--"/>
+    <busStop id="busStop#a12" lane="a15_0" startPos="20.5" endPos="40.5" lines="--"/>
+    <busStop id="busStop#a13" lane="a37_0" startPos="36.243" endPos="56.243" lines="--"/>
+    <busStop id="busStop#a14" lane="a42_0" startPos="7.461" endPos="27.461" lines="--"/>
+    <busStop id="busStop#a15" lane="a160_0" startPos="26.763" endPos="46.763" lines="--"/>
+    <busStop id="busStop#a16" lane="a62_0" startPos="175.913" endPos="195.913" lines="--"/>
+    <busStop id="busStop#a17" lane="a61_0" startPos="90.077" endPos="110.077" lines="--"/>
+    <busStop id="busStop#a18" lane="a58[1]_0" startPos="40" endPos="60" lines="--"/>
+    <busStop id="busStop#a19" lane="a57[0]_0" startPos="142" endPos="162" lines="--"/>
+    <busStop id="busStop#a20" lane="a65_0" startPos="36.324" endPos="56.324" lines="--"/>
+    <busStop id="busStop#a21" lane="a134b_0" startPos="10.053" endPos="30.053" lines="--"/>
+    <busStop id="busStop#a22" lane="a133_0" startPos="103.418" endPos="123.418" lines="--"/>
+    <busStop id="busStop#a23" lane="a203[1]_0" startPos="150" endPos="170" lines="--"/>
+    <busStop id="busStop#a24" lane="a202_0" startPos="146.275" endPos="166.276" lines="--"/>
+    <busStop id="busStop#a25" lane="a209_0" startPos="45.522" endPos="65.522" lines="--"/>
+    <busStop id="busStop#a26" lane="a209_0" startPos="233.851" endPos="253.851" lines="--"/>
+    <busStop id="busStop#a27" lane="a210_0" startPos="213.588" endPos="233.588" lines="--"/>
+    <busStop id="busStop#a28" lane="a201_0" startPos="38.164" endPos="58.164" lines="--"/>
+    <busStop id="busStop#a29" lane="a79_0" startPos="109.125" endPos="130.483" lines="--"/>
+    <busStop id="busStop#a30" lane="a67_0" startPos="56.029" endPos="77.975" lines="--"/>
+    <busStop id="busStop#a31" lane="a189[1][0]+20000_0" startPos="10.895" endPos="22.895" lines="--"/>
+    <busStop id="busStop#a32" lane="a20001+87[1][0]_0" startPos="6.353" endPos="21.353" lines="--"/>
+    <busStop id="busStop#a33" lane="a20002+89[1][0]_0" startPos="0.1" endPos="26.983" lines="--"/>
+    <busStop id="busStop#a34" lane="a109[1][0]+20003_0" startPos="0.1" endPos="30.331" lines="--"/>
+    <busStop id="busStop#a35" lane="a55_0" startPos="224.432" endPos="256.174" lines="--"/>
+<!--    <busStop id="busStop#a36" lane="a114_0" startPos="158.413" endPos="198.413" lines="-"/> -->
+<!--    <busStop id="busStop#a37" lane="a121_0" startPos="242.644" endPos="283.622" lines="-"/> -->
+<!--    <busStop id="busStop#a38" lane="a121_0" startPos="495.462" endPos="533.11" lines="-"/> -->
+<!--    <busStop id="busStop#a39" lane="a114_0" startPos="496.947" endPos="536.637" lines="-"/> -->
+    <busStop id="busStop#a40" lane="a54_0" startPos="40.093" endPos="71.646" lines="-"/>
+
+    <busStop id="busStop#b1" lane="b2[1][1][1]b_0" startPos="35" endPos="55" lines="--"/>
+    <busStop id="busStop#b2" lane="b1[0]_0" startPos="250" endPos="270" lines="--"/>
+    <busStop id="busStop#b3" lane="b14_0" startPos="78.128" endPos="98.128" lines="--"/>
+    <busStop id="busStop#b4" lane="b26_0" startPos="170.149" endPos="190.149" lines="--"/>
+    <busStop id="busStop#b5" lane="b27_0" startPos="40.733" endPos="60.733" lines="--"/>
+    <busStop id="busStop#b6" lane="b17[0]_0" startPos="110.157" endPos="130.157" lines="--"/>
+    <busStop id="busStop#b7" lane="b16[1]_0" startPos="122.242" endPos="142.242" lines="--"/>
+    <busStop id="busStop#b8" lane="b36_0" startPos="59.891" endPos="79.891" lines="--"/>
+    <busStop id="busStop#b9" lane="b37_0" startPos="60.773" endPos="80.773" lines="--"/>
+    <busStop id="busStop#b10" lane="b46_0" startPos="156.875" endPos="176.875" lines="--"/>
+    <busStop id="busStop#b11" lane="b47_0" startPos="40.966" endPos="60.966" lines="--"/>
+    <busStop id="busStop#b12" lane="b49[0]_0" startPos="130" endPos="150" lines="--"/>
+    <busStop id="busStop#b13" lane="b50[1]a_0" startPos="30" endPos="50" lines="--"/>
+    <busStop id="busStop#b15" lane="b56[0]_0" startPos="110" endPos="130" lines="--"/>
+    <busStop id="busStop#b16" lane="b35[0]_0" startPos="95" endPos="115" lines="--"/>
+    <busStop id="busStop#b17" lane="b56[1][0]_0" startPos="140" endPos="160" lines="--"/>
+    <busStop id="busStop#b18" lane="b5[1][0]+66_0" startPos="15" endPos="35" lines="--"/>
+    <busStop id="busStop#b19" lane="bm66a_0" startPos="20" endPos="40" lines="--"/>
+    <busStop id="busStop#b20" lane="b5[1][1][1]_0" startPos="27" endPos="57" lines="--"/>
+    <busStop id="busStop#b21" lane="b11[0]_0" startPos="39" endPos="69" lines="--"/>
+    <busStop id="busStop#b22" lane="b9_0" startPos="90" endPos="110" lines="--"/>
+    <busStop id="busStop#b23" lane="b8_0" startPos="257.717" endPos="277.717" lines="--"/>
+    <busStop id="busStop#b24" lane="b3[1]b_0" startPos="100" endPos="120" lines="--"/>
+    <busStop id="busStop#b25" lane="b4[0]_0" startPos="50" endPos="70" lines="--"/>
+    <busStop id="busStop#b26" lane="b20000+35[1][1][1][0]_0" startPos="1" endPos="31" lines="--"/>
+</add>

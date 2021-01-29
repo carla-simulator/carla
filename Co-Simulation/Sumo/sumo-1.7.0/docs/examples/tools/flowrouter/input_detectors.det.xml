@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<detectors>
+   <detectorDefinition id="1" lane="1_0" pos="10.00"/>
+   <detectorDefinition id="2" lane="45_2_1" pos="10.00"/>
+   <detectorDefinition id="4" lane="4_0" pos="10.00"/>
+   <detectorDefinition id="6" lane="6_0" pos="10.00"/>
+   <detectorDefinition id="9" lane="9_0" pos="10.00"/>
+   <detectorDefinition id="13" lane="46_13_1" pos="10.00"/>
+   <detectorDefinition id="15" lane="15_0" pos="10.00"/>
+   <detectorDefinition id="17" lane="17_0" pos="10.00"/>
+   <detectorDefinition id="19" lane="19_48_0" pos="10.00"/>
+   <detectorDefinition id="21" lane="21_49_0" pos="10.00"/>
+   <detectorDefinition id="23" lane="23_54_0" pos="10.00"/>
+   <detectorDefinition id="25" lane="25_56_0" pos="10.00"/>
+   <detectorDefinition id="28" lane="28_57_0" pos="10.00"/>
+   <detectorDefinition id="32" lane="32_63_0" pos="10.00"/>
+   <detectorDefinition id="33" lane="33_60_61_0" pos="10.00"/>
+   <detectorDefinition id="34" lane="34_66_0" pos="10.00"/>
+   <detectorDefinition id="35" lane="35_65_0" pos="10.00"/>
+   <detectorDefinition id="36" lane="36_62_0" pos="10.00"/>
+   <detectorDefinition id="39" lane="39_0" pos="10.00"/>
+   <detectorDefinition id="46" lane="46_13_0" pos="10.00"/>
+   <detectorDefinition id="47" lane="11_47_1" pos="10.00"/>
+   <detectorDefinition id="48" lane="19_48_1" pos="10.00"/>
+   <detectorDefinition id="49" lane="21_49_1" pos="10.00"/>
+   <detectorDefinition id="50" lane="51_50_1" pos="10.00"/>
+   <detectorDefinition id="51" lane="51_50_0" pos="10.00"/>
+   <detectorDefinition id="53" lane="53_52_0" pos="10.00"/>
+   <detectorDefinition id="54" lane="23_54_1" pos="10.00"/>
+   <detectorDefinition id="57" lane="28_57_1" pos="10.00"/>
+   <detectorDefinition id="60" lane="33_60_61_1" pos="10.00"/>
+   <detectorDefinition id="61" lane="33_60_61_2" pos="10.00"/>
+   <detectorDefinition id="62" lane="36_62_1" pos="10.00"/>
+   <detectorDefinition id="63" lane="32_63_1" pos="10.00"/>
+   <detectorDefinition id="64" lane="22_64_1" pos="10.00"/>
+   <detectorDefinition id="65" lane="35_65_1" pos="10.00"/>
+   <detectorDefinition id="66" lane="34_66_1" pos="10.00"/>
+</detectors>

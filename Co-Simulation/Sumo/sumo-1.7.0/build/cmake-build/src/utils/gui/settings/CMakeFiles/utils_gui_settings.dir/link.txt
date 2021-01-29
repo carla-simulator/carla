@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_gui_settings.a  CMakeFiles/utils_gui_settings.dir/GUICompleteSchemeStorage.cpp.o CMakeFiles/utils_gui_settings.dir/GUISettingsHandler.cpp.o CMakeFiles/utils_gui_settings.dir/GUIVisualizationSettings.cpp.o
+/usr/bin/ranlib libutils_gui_settings.a

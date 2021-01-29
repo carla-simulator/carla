@@ -1,0 +1,17 @@
+<routes>
+    <vType id="DEFAULT_VEHTYPE" speedDev="0.1"/>
+    <flow id="leftRight" from="left_in" to="right_out" begin="0" end="90000" probability="0.125" departSpeed="max" departLane="best"/>
+    <flow id="rightLeft" from="right_in" to="left_out" begin="0" end="90000" probability="0.125" departSpeed="max" departLane="best"/>
+    <flow id="topBottom" from="top_in" to="bottom_out" begin="0" end="90000" probability="0.125" departSpeed="max" departLane="best"/>
+    <flow id="bottomTop" from="bottom_in" to="top_out" begin="0" end="90000" probability="0.125" departSpeed="max" departLane="best"/>
+
+    <flow id="leftRight2" from="left_in" to="right_out" begin="60" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+    <flow id="rightLeft2" from="right_in" to="left_out" begin="60" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+    <flow id="topBottom2" from="top_in" to="bottom_out" begin="60" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+    <flow id="bottomTop2" from="bottom_in" to="top_out" begin="60" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+
+    <flow id="leftRight3" from="left_in" to="right_out" begin="160" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+    <flow id="rightLeft3" from="right_in" to="left_out" begin="160" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+    <flow id="topBottom3" from="top_in" to="bottom_out" begin="160" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+    <flow id="bottomTop3" from="bottom_in" to="top_out" begin="160" end="90000" probability="0.2" departSpeed="max" departLane="best"/>
+</routes>

@@ -1,0 +1,83 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="truck" sigma="0" vClass="truck"/>
+    <vType id="truck_long" sigma="0" vClass="truck" containerCapacity="2" length="16" loadingDuration="10"/>
+    <vType id="semi" sigma="0" vClass="trailer" guiShape="truck/semitrailer" loadingDuration="10"/>
+    <vType id="trailer" sigma="0" vClass="trailer" guiShape="truck/trailer" loadingDuration="10"/>
+    <vType id="bus" sigma="0" vClass="bus"/>
+    <vType id="train" sigma="0" vClass="rail" containerCapacity="6" loadingDuration="10" length="70"/>
+    <vType id="ship" sigma="0" vClass="ship" containerCapacity="4" loadingDuration="10" width="5.5"/>
+
+    <vType id="container" length="6.1" width="2.4"/>
+
+    <route id="r" edges="beg end">
+        <stop lane="beg_0" endPos="200" duration="10"/>
+        <stop lane="end_0" endPos="400" duration="10"/>
+    </route>
+
+    <container id="c0" depart="0" departPos="0" type="container">
+        <transport from="beg" to="end" lines="v0"/>
+    </container>
+
+    <container id="c1" depart="0" departPos="0" type="container">
+        <transport from="beg" to="end" lines="v1"/>
+    </container>
+
+    <container id="c2" depart="0" departPos="0" type="container">
+        <transport from="beg" to="end" lines="v2"/>
+    </container>
+
+    <container id="c3" depart="0" departPos="0" type="container">
+        <transport from="beg" to="end" lines="v3"/>
+    </container>
+
+    <container id="c4" depart="0" departPos="0" type="container">
+        <transport from="beg" to="end" lines="v4"/>
+    </container>
+
+    <container id="c5" depart="0" departPos="0" type="container">
+        <transport from="beg" to="end" lines="v5"/>
+    </container>
+
+    <container id="c6" depart="0" departPos="0" type="container">
+        <transport from="beg" to="end" lines="v6"/>
+    </container>
+
+    <vehicle id="v0" route="r" depart="containerTriggered" departPos="180"  line="dummy" type="truck"     />
+    <vehicle id="v1" route="r" depart="containerTriggered" departPos="last" line="dummy" type="semi"      />
+    <vehicle id="v2" route="r" depart="containerTriggered" departPos="last" line="dummy" type="trailer"   />
+    <vehicle id="v3" route="r" depart="containerTriggered" departPos="last" line="dummy" type="truck_long"/>
+    <vehicle id="v4" route="r" depart="containerTriggered" departPos="last" line="dummy" type="ship"      />
+    <vehicle id="v5" route="r" depart="containerTriggered" departPos="last" line="dummy" type="bus"       />
+    <vehicle id="v6" route="r" depart="containerTriggered" departPos="last" line="dummy" type="train"     />
+
+    <container id="c10" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c11" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c12" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c13" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c14" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c15" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c16" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c17" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c18" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+    <container id="c19" depart="00" departPos="200" type="container">
+        <transport from="beg" to="end" lines="ANY"/>
+    </container>
+</routes>

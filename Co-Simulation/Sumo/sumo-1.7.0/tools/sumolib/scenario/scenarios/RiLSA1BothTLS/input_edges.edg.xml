@@ -1,0 +1,90 @@
+<edges>
+   <edge id="me" from="0" to="ea" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="me2" from="ea" to="ep" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="em" from="e" to="0" numLanes="3" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+      <lane index="2" disallow="pedestrian"/>
+   </edge>
+   <edge id="emp1" from="ep" to="ea" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="emp2" from="ea" to="e" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   
+   <edge id="mw" from="0" to="wa" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="mw2" from="wa" to="wp" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="wm" from="w" to="0" numLanes="3" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+      <lane index="2" disallow="pedestrian"/>
+   </edge>
+   <edge id="wmp1" from="wp" to="wa" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="wmp2" from="wa" to="w" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   
+   <edge id="mn" from="0" to="na" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="mn2" from="na" to="np" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="nm" from="n" to="0" numLanes="3" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+      <lane index="2" disallow="pedestrian"/>
+   </edge>
+   <edge id="nmp1" from="np" to="na" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="nmp2" from="na" to="n" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   
+   <edge id="ms" from="0" to="sa" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="ms2" from="sa" to="sp" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="sm" from="s" to="0" numLanes="3" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+      <lane index="2" disallow="pedestrian"/>
+   </edge>
+   <edge id="smp1" from="sp" to="sa" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   <edge id="smp2" from="sa" to="s" numLanes="2" maxSpeed="13.89">
+      <lane index="0" allow="pedestrian"/>
+      <lane index="1" disallow="pedestrian"/>
+   </edge>
+   
+</edges>

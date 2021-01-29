@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Tue 20 Oct 2015 02:21:35 PM CEST by Netedit Version dev-SVN-r19105I
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netedit.exeConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="net.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="net.net.xml"/>
+    </output>
+
+    <processing>
+        <no-internal-links value="true"/>
+        <no-turnarounds value="true"/>
+        <offset.disable-normalization value="true"/>
+    </processing>
+
+</configuration>
+-->
+
+<net version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="0.00,0.00" convBoundary="0.00,0.00,500.00,0.00" origBoundary="-10000000000.00,-10000000000.00,10000000000.00,10000000000.00" projParameter="!"/>
+
+    <edge id="beg" from="gneJ0" to="gneJ1" priority="1">
+        <lane id="beg_0" index="0" speed="13.89" length="300.00" shape="0.00,-4.95 300.00,-4.95"/>
+        <lane id="beg_1" index="1" speed="13.89" length="300.00" shape="0.00,-1.65 300.00,-1.65"/>
+    </edge>
+    <edge id="end" from="gneJ1" to="gneJ2" priority="1">
+        <lane id="end_0" index="0" speed="13.89" length="200.00" shape="300.00,-4.95 500.00,-4.95"/>
+        <lane id="end_1" index="1" speed="13.89" length="200.00" shape="300.00,-1.65 500.00,-1.65"/>
+    </edge>
+
+    <tlLogic id="gneJ1" type="static" programID="0" offset="0">
+        <phase duration="200" state="rr"/>
+        <phase duration="200" state="GG"/>
+        <phase duration="3" state="yy"/>
+    </tlLogic>
+
+    <junction id="gneJ0" type="unregulated" x="0.00" y="0.00" incLanes="" intLanes="" shape="-0.00,-0.05 -0.00,-6.55"/>
+    <junction id="gneJ1" type="traffic_light" x="300.00" y="0.00" incLanes="beg_0 beg_1" intLanes="" shape="300.00,-0.05 300.00,-6.55 300.00,-0.05">
+        <request index="0" response="00" foes="00"/>
+        <request index="1" response="00" foes="00"/>
+    </junction>
+    <junction id="gneJ2" type="unregulated" x="500.00" y="0.00" incLanes="end_0 end_1" intLanes="" shape="500.00,-6.55 500.00,-0.05"/>
+
+    <connection from="beg" to="end" fromLane="0" toLane="0" tl="gneJ1" linkIndex="0" dir="s" state="o"/>
+    <connection from="beg" to="end" fromLane="1" toLane="1" tl="gneJ1" linkIndex="1" dir="s" state="o"/>
+
+</net>

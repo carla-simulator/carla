@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    SUMO Activity-Based Mobility Generator
+
+    Author: Lara CODECA
+
+    This program and the accompanying materials are made available under the
+    terms of the Eclipse Public License 2.0 which is available at
+    http://www.eclipse.org/legal/epl-2.0.
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="MoSTScenario/tools/out/most.net.xml"/>
+        <route-files value="most/rou/most.example.buses.flows.xml,most/rou/most.example.trains.flows.xml,most/rou/most.example.3to1.rou.xml,most/rou/most.example.2to1.rou.xml,most/rou/most.example.1to2.rou.xml,most/rou/most.example.1to1.rou.xml"/>
+        <additional-files value="MoSTScenario/tools/out/most.busstops.add.xml,MoSTScenario/tools/out/most.trainstops.add.xml,MoSTScenario/tools/out/most.parking.add.xml,MoSTScenario/tools/out/most.rerouters.add.xml,MoSTScenario/scenario/in/add/basic.vType.xml"/>
+    </input>
+
+    <time>
+        <begin value="0.0"/>
+        <step-length value="0.5"/>
+        <end value="86400.0"/>
+    </time>
+
+    <output>
+        <output-prefix value="most/sim/example."/>
+        <summary-output value="summary.xml"/>
+        <tripinfo-output value="tripinfo.xml"/>
+        <tripinfo-output.write-unfinished value="true"/>
+        <vehroute-output value="vehroute.xml"/>
+        <vehroute-output.route-length value="true"/>
+        <vehroute-output.write-unfinished value="true"/>
+        <vehroute-output.skip-ptlines value="true"/>
+        <!-- <vehroute-output.exit-times value="true"/> -->
+        <stop-output value="stop.out.xml"/>
+        <lanechange-output value="lanechanges.out.xml"/>
+        <lanechange-output.started value="true"/>
+        <lanechange-output.ended value="true"/>
+    </output>
+
+    <processing>
+        <ignore-route-errors value="true"/>
+        <!-- <lateral-resolution value="0.8"/> -->
+        <lateral-resolution value="0.3"/>
+        <ignore-junction-blocker value="10"/>
+        <collision.action value="none"/> <!-- teleport -->
+        <time-to-teleport value="300"/> <!-- -1 -->
+        <!-- <max-depart-delay value="900"/> -->
+        <time-to-impatience value="120"/>
+        <pedestrian.model value="striping"/>
+        <pedestrian.striping.stripe-width value="0.55"/>
+        <pedestrian.striping.jamtime value="60"/>
+        <default.emergencydecel value="decel"/>
+    </processing>
+
+    <routing>
+        <persontrip.transfer.car-walk value="parkingAreas,ptStops"/>
+        <device.rerouting.probability value="1"/>
+        <device.rerouting.period value="300"/>
+        <device.rerouting.pre-period value="300"/>
+        <device.rerouting.threads value="4"/>
+    </routing>
+
+    <report>
+        <verbose value="true"/>
+        <log value="sumo.debug.log"/>
+        <duration-log.statistics value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <random_number>
+        <seed value="42"/>
+    </random_number>
+
+</configuration>

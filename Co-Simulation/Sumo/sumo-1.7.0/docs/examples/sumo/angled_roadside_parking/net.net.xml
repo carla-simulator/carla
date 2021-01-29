@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Wed 21 Dec 2016 09:03:45 AM CET by Netedit Version dev-SVN-r22342
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netedit.exeConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="/scr1/sumoI/sumo/tests/sumo/extended/rerouter/parking/net.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="/scr1/sumoI/sumo/tests/sumo/extended/rerouter/parking/net.net.xml"/>
+        <output.street-names value="true"/>
+    </output>
+
+    <processing>
+        <no-internal-links value="true"/>
+        <no-turnarounds value="true"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+        <junctions.corner-detail value="0"/>
+    </processing>
+
+</configuration>
+-->
+
+<net version="0.27" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="-362563.54,-4832311.19" convBoundary="567.01,92.53,1054.57,730.36" origBoundary="13.296064,43.631354,13.321826,43.642858" projParameter="+proj=utm +zone=33 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>
+
+    <edge id="-a" from="14" to="12" name="Via Montespirello" priority="60" type="strada.doppiosenso.50" shape="748.05,382.54,51.00 743.23,364.63,57.00 739.84,352.37,57.00 736.02,337.67,59.00 730.13,319.06,60.00 723.90,301.62,60.00 718.08,283.21,60.00 712.12,265.58,60.00 707.39,250.92,60.00 701.82,233.39,60.00 697.18,218.39,60.00 691.51,201.88,60.00 685.35,184.02,60.00 679.10,165.58,60.00 673.54,147.89,60.00 668.01,132.28,60.00 662.11,114.52,58.00 656.09,97.05,57.00 654.41,92.53,57.00">
+        <lane id="-a_0" index="0" speed="13.89" length="306.40" shape="745.18,378.23,51.00 741.64,365.06,57.00 738.25,352.80,57.00 734.43,338.13,59.00 728.57,319.59,60.00 722.34,302.15,60.00 716.51,283.72,60.00 710.55,266.10,60.00 705.82,251.42,60.00 700.25,233.88,60.00 695.61,218.90,60.00 689.95,202.42,60.00 683.79,184.55,60.00 677.53,166.09,60.00 671.97,148.41,60.00 666.45,132.82,60.00 660.55,115.05,58.00 654.54,97.61,57.00 652.86,93.10,57.00"/>
+    </edge>
+    <edge id="-b" from="18" to="14" name="Via Montespirello" priority="60" type="strada.doppiosenso.50" shape="843.87,672.62,65.00 837.96,653.81,63.00 831.40,635.06,61.00 825.20,616.75,61.00 818.95,597.77,60.00 814.59,582.72,57.00 808.73,565.84,57.00 803.27,548.49,56.00 797.52,530.51,55.00 791.79,512.24,54.00 786.55,493.85,54.00 781.20,476.49,52.00 776.77,463.78,51.00 772.61,449.60,51.00 765.98,432.05,50.00 759.89,414.88,51.00 754.47,400.16,51.00 748.05,382.54,51.00">
+        <lane id="-b_0" index="0" speed="13.89" length="306.41" shape="840.81,668.39,65.00 836.39,654.33,63.00 829.84,635.60,61.00 823.63,617.27,61.00 817.37,598.26,60.00 813.02,583.22,57.00 807.16,566.36,57.00 801.70,548.99,56.00 795.95,531.01,55.00 790.21,512.71,54.00 784.97,494.32,54.00 779.63,477.00,52.00 775.20,464.28,51.00 771.04,450.12,51.00 764.43,432.62,50.00 758.34,415.44,51.00 752.92,400.73,51.00 747.99,387.18,51.00"/>
+    </edge>
+    <edge id="-c" from="gneJ0" to="18" name="Viale Italia" priority="100" type="strada.doppiosenso.50">
+        <lane id="-c_0" index="0" speed="13.89" length="234.85" shape="1055.16,593.91 849.08,672.40,65.00"/>
+    </edge>
+    <edge id="-d" from="18" to="gneJ2" name="Viale Italia" priority="1" type="strada.doppiosenso.50">
+        <lane id="-d_0" index="0" speed="13.89" length="176.50" shape="840.18,675.78,65.00 694.18,730.89"/>
+    </edge>
+    <edge id="-e" from="14" to="9" name="Via della Fonte Bella" priority="6" type="strada.doppiosenso.50" shape="748.05,382.54,51.00 736.42,385.08,54.00 717.19,395.70,52.00 660.26,435.06,57.00 586.50,483.96,60.00 567.01,493.22,60.00">
+        <lane id="-e_0" index="0" speed="13.89" length="213.18" shape="743.61,385.20,51.00 737.01,386.64,54.00 718.06,397.10,52.00 661.19,436.43,57.00 587.31,485.40,60.00 570.77,493.26,60.00"/>
+    </edge>
+    <edge id="-f" from="9" to="gneJ2" priority="1">
+        <lane id="-f_0" index="0" speed="13.89" length="273.44" shape="570.04,495.45,60.00 691.03,727.04"/>
+    </edge>
+    <edge id="a" from="12" to="14" name="Via Montespirello" priority="60" type="strada.doppiosenso.50" shape="654.41,92.53,57.00 656.09,97.05,57.00 662.11,114.52,58.00 668.01,132.28,60.00 673.54,147.89,60.00 679.10,165.58,60.00 685.35,184.02,60.00 691.51,201.88,60.00 697.18,218.39,60.00 701.82,233.39,60.00 707.39,250.92,60.00 712.12,265.58,60.00 718.08,283.21,60.00 723.90,301.62,60.00 730.13,319.06,60.00 736.02,337.67,59.00 739.84,352.37,57.00 743.23,364.63,57.00 748.05,382.54,51.00">
+        <lane id="a_0" index="0" speed="13.89" length="306.40" shape="655.96,91.96,57.00 657.64,96.49,57.00 663.67,113.99,58.00 669.57,131.74,60.00 675.11,147.37,60.00 680.67,165.07,60.00 686.91,183.49,60.00 693.07,201.34,60.00 698.75,217.88,60.00 703.39,232.90,60.00 708.96,250.42,60.00 713.69,265.06,60.00 719.65,282.70,60.00 725.46,301.09,60.00 731.69,318.53,60.00 737.61,337.21,59.00 741.43,351.94,57.00 744.82,364.20,57.00 748.37,377.37,51.00"/>
+    </edge>
+    <edge id="b" from="14" to="18" name="Via Montespirello" priority="60" type="strada.doppiosenso.50" shape="748.05,382.54,51.00 754.47,400.16,51.00 759.89,414.88,51.00 765.98,432.05,50.00 772.61,449.60,51.00 776.77,463.78,51.00 781.20,476.49,52.00 786.55,493.85,54.00 791.79,512.24,54.00 797.52,530.51,55.00 803.27,548.49,56.00 808.73,565.84,57.00 814.59,582.72,57.00 818.95,597.77,60.00 825.20,616.75,61.00 831.40,635.06,61.00 837.96,653.81,63.00 843.87,672.62,65.00">
+        <lane id="b_0" index="0" speed="13.89" length="306.41" shape="751.09,386.05,51.00 756.02,399.59,51.00 761.44,414.32,51.00 767.53,431.48,50.00 774.18,449.08,51.00 778.34,463.28,51.00 782.77,475.98,52.00 788.13,493.38,54.00 793.37,511.77,54.00 799.09,530.01,55.00 804.84,547.99,56.00 810.30,565.32,57.00 816.16,582.22,57.00 820.53,597.28,60.00 826.77,616.23,61.00 832.96,634.52,61.00 839.53,653.29,63.00 843.96,667.40,65.00"/>
+    </edge>
+    <edge id="c" from="18" to="gneJ0" name="Viale Italia" priority="100">
+        <lane id="c_0" index="0" speed="13.89" length="234.85" shape="847.91,669.32,65.00 1053.98,590.83"/>
+    </edge>
+    <edge id="d" from="gneJ2" to="18" name="Viale Italia" priority="100" type="strada.doppiosenso.50">
+        <lane id="d_0" index="0" speed="13.89" length="176.50" shape="693.01,727.80 839.01,672.69,65.00"/>
+    </edge>
+    <edge id="e" from="9" to="14" name="Via della Fonte Bella" priority="6" type="strada.doppiosenso.50" shape="567.01,493.22,60.00 586.50,483.96,60.00 660.26,435.06,57.00 717.19,395.70,52.00 736.42,385.08,54.00 748.05,382.54,51.00">
+        <lane id="e_0" index="0" speed="13.89" length="213.18" shape="569.35,490.28,60.00 585.69,482.52,60.00 659.33,433.69,57.00 716.32,394.30,52.00 735.83,383.52,54.00 742.90,381.98,51.00"/>
+    </edge>
+    <edge id="f" from="gneJ2" to="9" priority="1">
+        <lane id="f_0" index="0" speed="13.89" length="273.44" shape="688.10,728.57 567.11,496.98,60.00"/>
+    </edge>
+
+    <junction id="12" type="priority" x="654.41" y="92.53" z="57.00" incLanes="-a_0" intLanes="" shape="654.46,92.51,57.00 651.36,93.66,57.00 654.36,92.55,57.00">
+        <request index="0" response="0" foes="0"/>
+    </junction>
+    <junction id="14" type="priority_stop" x="748.05" y="382.54" z="51.00" incLanes="-b_0 a_0 e_0" intLanes="" shape="746.48,387.73,51.00 752.59,385.51,51.00 749.91,376.95,51.00 743.64,378.64,51.00 742.56,380.41,51.00 743.95,386.76,51.00">
+        <request index="0" response="000000" foes="001000"/>
+        <request index="1" response="000000" foes="111000"/>
+        <request index="2" response="000000" foes="100000"/>
+        <request index="3" response="000011" foes="100011"/>
+        <request index="4" response="000010" foes="000010"/>
+        <request index="5" response="001110" foes="001110"/>
+    </junction>
+    <junction id="18" type="priority" x="843.87" y="672.62" z="65.00" incLanes="-c_0 b_0 d_0" intLanes="" shape="849.65,673.90,65.00 847.34,667.82,65.00 845.49,666.92,65.00 839.29,668.87,65.00 838.45,671.19,65.00 840.74,677.27,65.00">
+        <request index="0" response="000000" foes="001000"/>
+        <request index="1" response="110000" foes="111000"/>
+        <request index="2" response="100000" foes="100000"/>
+        <request index="3" response="100011" foes="100011"/>
+        <request index="4" response="000000" foes="000010"/>
+        <request index="5" response="000000" foes="001110"/>
+    </junction>
+    <junction id="9" type="priority" x="567.01" y="493.22" z="60.00" incLanes="f_0 -e_0" intLanes="" shape="565.69,497.72,60.00 571.45,494.71,60.00 568.66,488.84,60.00">
+        <request index="0" response="00" foes="00"/>
+        <request index="1" response="00" foes="00"/>
+    </junction>
+    <junction id="gneJ0" type="dead_end" x="1054.57" y="592.37" incLanes="c_0" intLanes="" shape="1054.59,592.42 1053.41,589.33 1054.55,592.32"/>
+    <junction id="gneJ2" type="priority" x="690.90" y="730.36" incLanes="-d_0 -f_0" intLanes="" shape="694.74,732.38 692.45,726.30 686.69,729.31">
+        <request index="0" response="00" foes="00"/>
+        <request index="1" response="00" foes="00"/>
+    </junction>
+
+    <connection from="-a" to="a" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="-b" to="-e" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="-b" to="-a" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="-c" to="-d" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="-c" to="-b" fromLane="0" toLane="0" dir="l" state="m"/>
+    <connection from="-d" to="f" fromLane="0" toLane="0" dir="l" state="M"/>
+    <connection from="-e" to="-f" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="-f" to="d" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="a" to="b" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="a" to="-e" fromLane="0" toLane="0" dir="l" state="s"/>
+    <connection from="b" to="c" fromLane="0" toLane="0" dir="r" state="m"/>
+    <connection from="b" to="-d" fromLane="0" toLane="0" dir="l" state="m"/>
+    <connection from="d" to="-b" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="d" to="c" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="e" to="-a" fromLane="0" toLane="0" dir="r" state="s"/>
+    <connection from="e" to="b" fromLane="0" toLane="0" dir="l" state="s"/>
+    <connection from="f" to="e" fromLane="0" toLane="0" dir="l" state="M"/>
+
+</net>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Sat 01 Jul 2017 01:01:24 PM CEST by Netedit Version dev-SVN-r22662
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="cross.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="cross.net.xml"/>
+        <plain-output-prefix value="/home/kobo/dlr/sumo/tools/game/cross/cross"/>
+    </output>
+
+    <processing>
+        <no-turnarounds value="true"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+        <junctions.corner-detail value="5"/>
+        <rectangular-lane-cut value="false"/>
+        <walkingareas value="false"/>
+    </processing>
+
+    <visualisation>
+        <gui-settings-file value="netedit.viewsettings.xml"/>
+    </visualisation>
+
+</configuration>
+-->
+
+<nodes version="0.27" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <location netOffset="200.00,200.00" convBoundary="0.00,0.00,400.00,400.00" origBoundary="-200.00,-200.00,200.00,200.00" projParameter="!"/>
+
+    <node id="0" x="200.00" y="200.00" type="traffic_light" tl="0"/>
+    <node id="1" x="0.00" y="185.80" type="dead_end"/>
+    <node id="2" x="400.00" y="214.20" type="dead_end"/>
+    <node id="3" x="214.20" y="0.00" type="dead_end"/>
+    <node id="4" x="185.80" y="400.00" type="dead_end"/>
+    <node id="m1" x="41.58" y="191.77" type="priority"/>
+    <node id="m2" x="350.00" y="210.65" type="priority"/>
+    <node id="m3" x="210.65" y="50.00" type="priority"/>
+    <node id="m4" x="189.35" y="350.00" type="priority"/>
+</nodes>

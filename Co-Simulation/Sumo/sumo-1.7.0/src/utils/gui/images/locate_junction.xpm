@@ -1,0 +1,23 @@
+/* XPM */
+static const char * locate_junction_xpm[] = {
+"16 16 4 1",
+" 	c None",
+".	c Black",
+"X	c Gray50",
+"o	c Red",
+"           ...  ",
+"      ... .   . ",
+"      .X.     . ",
+"      .X.    .  ",
+"      .X.   .   ",
+"      .X.       ",
+"      .X.   .   ",
+"      ...       ",
+"     .ooo.      ",
+".....ooooo......",
+".XXX.ooooo.XXXX.",
+".....ooooo......",
+"     .ooo.      ",
+"      ...       ",
+"      .X.       ",
+"      ...       "};

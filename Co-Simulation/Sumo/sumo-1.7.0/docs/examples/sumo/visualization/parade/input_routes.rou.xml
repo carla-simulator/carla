@@ -1,0 +1,83 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+   <route id="always_right" edges="1i 4o 4i 2o 2i 3o 3i 1o 1i"/>
+
+   <vType sigma="0" id="pedestrian" length=".25" minGap="0" guiShape="pedestrian" width=".25"/>
+   <vehicle id="pedestrian" route="always_right" depart="0" type="pedestrian">
+        <stop lane="4o_0" endPos="50" duration="1000"/>
+   </vehicle>
+
+   <vType sigma="0" id="bicycle" length="1.5" minGap=".5" guiShape="bicycle" width=".25"/>
+   <vehicle id="bicycle" route="always_right" depart="0" type="bicycle">
+        <stop lane="4o_0" endPos="50" duration="1000"/>
+   </vehicle>
+
+   <vType sigma="0" id="motorcycle" length="2" minGap=".5" guiShape="motorcycle" width=".25"/>
+   <vehicle id="motorcycle" route="always_right" depart="0" type="motorcycle">
+        <stop lane="4o_0" endPos="50" duration="1000"/>
+   </vehicle>
+
+
+
+   <vType sigma="0" id="passenger" length="5" minGap="2.5" guiShape="passenger"/>
+   <vehicle id="passenger" route="always_right" depart="0" type="passenger"/>
+
+   <vType sigma="0" id="passenger/sedan" length="5" minGap="2.5" guiShape="passenger/sedan"/>
+   <vehicle id="passenger/sedan" route="always_right" depart="0" type="passenger/sedan"/>
+
+   <vType sigma="0" id="passenger/hatchback" length="5" minGap="2.5" guiShape="passenger/hatchback"/>
+   <vehicle id="passenger/hatchback" route="always_right" depart="0" type="passenger/hatchback"/>
+
+   <vType sigma="0" id="passenger/wagon" length="5" minGap="2.5" guiShape="passenger/wagon"/>
+   <vehicle id="passenger/wagon" route="always_right" depart="0" type="passenger/wagon"/>
+
+   <vType sigma="0" id="passenger/van" length="5" minGap="2.5" guiShape="passenger/van"/>
+   <vehicle id="passenger/van" route="always_right" depart="0" type="passenger/van"/>
+
+
+
+
+   <vType sigma="0" id="delivery" length="5" minGap="2.5" guiShape="delivery"/>
+   <vehicle id="delivery" route="always_right" depart="0" type="delivery"/>
+
+
+
+
+   <vType sigma="0" id="truck" length="8" minGap="2" guiShape="truck" width="2.5"/>
+   <vehicle id="truck" route="always_right" depart="0" type="truck"/>
+
+   <vType sigma="0" id="truck/semitrailer" length="16.25" minGap="2.5" guiShape="truck/semitrailer" width="2.6"/>
+   <vehicle id="truck/semitrailer" route="always_right" depart="0" type="truck/semitrailer"/>
+
+   <vType sigma="0" id="truck/trailer" length="16.25" minGap="2.5" guiShape="truck/trailer" width="2.6"/>
+   <vehicle id="truck/trailer" route="always_right" depart="0" type="truck/trailer"/>
+
+
+
+
+   <vType sigma="0" id="bus" length="13" minGap="2" guiShape="bus" width="2.4"/>
+   <vehicle id="bus" route="always_right" depart="0" type="bus"/>
+
+   <vType sigma="0" id="bus/trolley" length="13" minGap="2" guiShape="bus/trolley" width="2.4"/>
+   <vehicle id="bus/trolley" route="always_right" depart="0" type="bus/trolley"/>
+
+   <vType sigma="0" id="bus/flexible" length="15" minGap="2" guiShape="bus/flexible" width="2.4"/>
+   <vehicle id="bus/flexible" route="always_right" depart="0" type="bus/flexible"/>
+
+   <vType sigma="0" id="bus/coach" length="15" minGap="2" guiShape="bus/coach" width="2.6"/>
+   <vehicle id="bus/coach" route="always_right" depart="0" type="bus/coach"/>
+
+
+
+   <vType sigma="0" id="rail" length="15" minGap="0.4" guiShape="rail"/>
+   <vehicle id="rail" route="always_right" depart="0" type="rail"/>
+
+   <vType sigma="0" id="rail/railcar" length="12" minGap="0.4" guiShape="rail/railcar"/>
+   <vehicle id="rail/railcar" route="always_right" depart="0" type="rail/railcar"/>
+
+
+
+   <vType sigma="0" id="evehicle" length="5" minGap="2.5" guiShape="evehicle"/>
+   <vehicle id="evehicle" route="always_right" depart="0" type="evehicle"/>
+
+
+</routes>

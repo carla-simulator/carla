@@ -1,0 +1,97 @@
+#!/usr/bin/env python2
+
+#
+# Copyright (C) 2013-2019 Christoph Sommer <sommer@ccs-labs.org>
+#
+# Documentation for these modules is at http://veins.car2x.org/
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+"""
+Creates Makefile(s) for building this project.
+"""
+
+import os
+import sys
+import subprocess
+from logging import info, warning, error
+from optparse import OptionParser
+
+
+if sys.version_info[0] == 3:
+    warning("Warning: running configure with python3 might result in subtle errors.")
+
+# Option handling
+parser = OptionParser()
+parser.add_option("--with-veins", dest="veins", help="link with a version of Veins installed in PATH [default: ../..]", metavar="PATH", default="../..")
+(options, args) = parser.parse_args()
+
+if args:
+    warning("Superfluous command line arguments: \"%s\"" % " ".join(args))
+
+
+# Start with default flags
+makemake_flags = ['-f', '--deep', '--no-deep-includes', '--make-so', '-I', '.', '-o', 'veins_testsims', '-O', 'out']
+run_libs = [os.path.join('src', 'veins_testsims')]
+run_neds = [os.path.join('src', 'veins_testsims'), os.path.join('sim', 'veins_testsims')]
+run_imgs = [os.path.join('images')]
+
+
+# Add flags for Veins
+if options.veins:
+    fname = os.path.join(options.veins, 'print-veins-version')
+    expect_version = ['5.0']
+    try:
+        print 'Running "%s" to determine Veins version.' % fname
+        version = subprocess.check_output(['env', fname]).strip()
+        if not version in expect_version:
+            print ''
+            print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+            warning('Unsupported Veins Version. Expecting %s, found "%s"' % (' or '.join(expect_version), version))
+            print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+            print ''
+        else:
+            print 'Found Veins version "%s". Okay.' % version
+    except subprocess.CalledProcessError as e:
+        error('Could not determine Veins Version (by running %s): %s. Check the path to Veins (--with-veins=... option) and the Veins version (should be version %s)' % (fname, e, ' or '.join(expect_version)))
+        sys.exit(1)
+
+    veins_header_dirs = [os.path.join(os.path.relpath(options.veins, 'src'), 'src')]
+    veins_includes = ['-I' + s for s in veins_header_dirs]
+    veins_link = ["-L" + os.path.join(os.path.relpath(options.veins, 'src'), 'src'), "-lveins$(D)"]
+    veins_defs = []
+
+    makemake_flags += veins_includes + veins_link + veins_defs
+    run_libs = [os.path.relpath(os.path.join(options.veins, 'src', 'veins'))] + run_libs
+    run_neds = [os.path.relpath(os.path.join(options.veins, 'src', 'veins'))] + run_neds
+    run_imgs = [os.path.relpath(os.path.join(options.veins, 'images'))] + run_imgs
+
+
+# Start creating files
+if not os.path.isdir('out'):
+    os.mkdir('out')
+
+f = open(os.path.join('out', 'config.py'), 'w')
+f.write('run_libs = %s\n' % repr(run_libs))
+f.write('run_neds = %s\n' % repr(run_neds))
+f.write('run_imgs = %s\n' % repr(run_imgs))
+f.close()
+
+subprocess.check_call(['env', 'opp_makemake'] + makemake_flags, cwd='src')
+
+info('Configure done. You can now run "make".')

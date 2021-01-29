@@ -1,0 +1,2 @@
+/usr/bin/ar qc libforeign_tcpip.a  CMakeFiles/foreign_tcpip.dir/socket.cpp.o CMakeFiles/foreign_tcpip.dir/storage.cpp.o
+/usr/bin/ranlib libforeign_tcpip.a

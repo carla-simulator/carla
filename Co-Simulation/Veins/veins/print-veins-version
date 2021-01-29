@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2019 Christoph Sommer <sommer@ccs-labs.org>
+#
+# Documentation for these modules is at http://veins.car2x.org/
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+import argparse
+import os
+import sys
+
+parser = argparse.ArgumentParser(description='Print version number of Veins (e.g., "5.0") or a component thereof.', epilog='Not all combinations of switches are supported.')
+parser.add_argument('-M', '--major', action='store_true', help='print only the major version')
+parser.add_argument('-m', '--minor', action='store_true', help='print only the minor version')
+parser.add_argument('-p', '--patch', action='store_true', help='print only the patch level')
+parser.add_argument('-a', '--alpha', action='store_true', help='print only the alpha stage')
+args = parser.parse_args()
+
+header_file_name = os.path.join(os.path.dirname(__file__), 'src', 'veins', 'veins.h')
+
+major = None
+minor = None
+patch = None
+alpha = None
+
+with open(header_file_name) as f:
+    for line in f:
+        line = line.strip()
+        if line.startswith('#define VEINS_VERSION_MAJOR '):
+            major = int(line[28:])
+        if line.startswith('#define VEINS_VERSION_MINOR '):
+            minor = int(line[28:])
+        if line.startswith('#define VEINS_VERSION_PATCH '):
+            patch = int(line[28:])
+        if line.startswith('#define VEINS_VERSION_ALPHA '):
+            alpha = int(line[28:])
+
+if None in (major, minor, patch, alpha):
+    print('Could not parse "{}". Aborting.'.format(header_file_name), file=sys.stderr)
+    sys.exit(1)
+
+version_string = ''
+if (args.major, args.minor, args.patch, args.alpha) == (True, False, False, False):
+    version_string = "{}".format(major)
+elif (args.major, args.minor, args.patch, args.alpha) == (True, True, False, False):
+    version_string = "{}.{}".format(major, minor)
+elif (args.major, args.minor, args.patch, args.alpha) == (False, True, False, False):
+    version_string = "{}".format(minor)
+elif (args.major, args.minor, args.patch, args.alpha) == (False, False, True, False):
+    version_string = "{}".format(patch)
+elif (args.major, args.minor, args.patch, args.alpha) == (False, False, False, True):
+    version_string = "{}".format(alpha)
+elif (args.major, args.minor, args.patch, args.alpha) == (False, False, False, False):
+    version_string = "{}.{}".format(major, minor)
+    if patch > 0:
+        version_string += ".{}".format(patch)
+    if alpha > 0:
+        version_string += "-alpha{}".format(alpha)
+else:
+    print('Invalid version format requested', file=sys.stderr)
+    sys.exit(1)
+
+print(version_string)

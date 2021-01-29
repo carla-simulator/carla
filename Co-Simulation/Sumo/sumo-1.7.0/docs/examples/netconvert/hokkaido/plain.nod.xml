@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:39 2019 by Eclipse SUMO netconvert Version v1_2_0+0017-2a947141e5
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="input_nodes.nod.xml"/>
+        <edge-files value="input_edges.edg.xml"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <output-file value="net.net.xml"/>
+        <plain-output-prefix value="plain"/>
+    </output>
+
+    <processing>
+        <plain.extend-edge-shape value="true"/>
+    </processing>
+
+</configuration>
+-->
+
+<nodes version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <location netOffset="95.49,0.00" convBoundary="0.00,0.00,1390.99,190.99" origBoundary="-95.49,0.00,1295.49,190.99" projParameter="!"/>
+
+    <node id="dl" x="95.49" y="0.00" type="priority"/>
+    <node id="dr" x="1295.49" y="0.00" type="priority"/>
+    <node id="tl" x="95.49" y="190.99" type="priority"/>
+    <node id="tr" x="1295.49" y="190.99" type="priority"/>
+</nodes>

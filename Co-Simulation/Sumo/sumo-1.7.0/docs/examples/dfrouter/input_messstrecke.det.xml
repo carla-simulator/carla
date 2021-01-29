@@ -1,0 +1,72 @@
+<a>
+   <detectorDefinition id="MQ11Fs1" lane="ErnstRuska2O_0" pos="5"/>
+   <detectorDefinition id="MQ11Fs2" lane="ErnstRuska2O_1" pos="5"/>
+   <detectorDefinition id="MQ12Fs1" lane="ErnstRuska2W_0" pos="-5"/>
+   <detectorDefinition id="MQ12Fs2" lane="ErnstRuska2W_1" pos="-5"/>
+
+   <detectorDefinition id="MQ13Fs1N" lane="EinsteinN_0" pos="5"/>
+   <detectorDefinition id="MQ13Fs1S" lane="EinsteinS_0" pos="-5"/>
+
+
+
+
+   <detectorDefinition id="MQ21Fs1" lane="ErnstRuska231O_0" pos="-5"/>
+   <detectorDefinition id="MQ21Fs2" lane="ErnstRuska231O_1" pos="-5"/>
+   <detectorDefinition id="MQ21Fs3" lane="ErnstRuska231O_2" pos="-5"/>
+   <detectorDefinition id="MQ25Fs1" lane="ErnstRuska231W_0" pos="5"/>
+   <detectorDefinition id="MQ25Fs2" lane="ErnstRuska231W_1" pos="5"/>
+
+   <detectorDefinition id="MQ22Fs1" lane="ErnstRuska232O_0" pos="-5"/>
+   <detectorDefinition id="MQ22Fs2" lane="ErnstRuska232O_1" pos="-5"/>
+   <detectorDefinition id="MQ24Fs1" lane="ErnstRuska232W_0" pos="5"/>
+   <detectorDefinition id="MQ24Fs2" lane="ErnstRuska232W_1" pos="5"/>
+
+   <detectorDefinition id="MQ23Fs1" lane="ErnstRuska3W_0" pos="-5"/>
+   <detectorDefinition id="MQ23Fs2" lane="ErnstRuska3W_1" pos="-5"/>
+
+
+   <detectorDefinition id="MQ26Fs1N" lane="HavestadtN_0" pos="5"/>
+   <detectorDefinition id="MQ26Fs2N" lane="HavestadtN_1" pos="5"/>
+   <detectorDefinition id="MQ28Fs1S" lane="HavestadtS_0" pos="-5"/>
+   <detectorDefinition id="MQ28Fs2S" lane="HavestadtS_1" pos="-5"/>
+
+
+
+
+
+   <detectorDefinition id="MQ31Fs1" lane="ErnstRuska3O_0" pos="-5"/>
+   <detectorDefinition id="MQ31Fs2" lane="ErnstRuska3O_1" pos="-5"/>
+   <detectorDefinition id="MQ34Fs1" lane="ErnstRuska3W_0" pos="5"/>
+   <detectorDefinition id="MQ34Fs2" lane="ErnstRuska3W_1" pos="5"/>
+
+   <detectorDefinition id="MQ32Fs1" lane="ErnstRuska4O_0" pos="5"/>
+   <detectorDefinition id="MQ32Fs2" lane="ErnstRuska4O_1" pos="5"/>
+   <detectorDefinition id="MQ33Fs1" lane="ErnstRuska4W_0" pos="-5"/>
+   <detectorDefinition id="MQ33Fs2" lane="ErnstRuska4W_1" pos="-5"/>
+
+
+   <detectorDefinition id="MQ35Fs1N" lane="VolmerN_0" pos="5"/>
+   <detectorDefinition id="MQ35Fs1S" lane="VolmerS_0" pos="-5"/>
+
+
+
+
+   <detectorDefinition id="MQ41Fs1" lane="ErnstRuska4O_0" pos="-5"/>
+   <detectorDefinition id="MQ41Fs2" lane="ErnstRuska4O_1" pos="-5"/>
+   <detectorDefinition id="MQ44Fs1" lane="ErnstRuska4W_0" pos="5"/>
+   <detectorDefinition id="MQ44Fs2" lane="ErnstRuska4W_1" pos="5"/>
+
+   <detectorDefinition id="MQ42Fs1" lane="ErnstRuska5O_0" pos="5"/>
+   <detectorDefinition id="MQ42Fs2" lane="ErnstRuska5O_1" pos="5"/>
+   <detectorDefinition id="MQ43Fs1" lane="ErnstRuska5W_0" pos="-5"/>
+   <detectorDefinition id="MQ43Fs2" lane="ErnstRuska5W_1" pos="-5"/>
+   <detectorDefinition id="MQ43Fs3" lane="ErnstRuska5W_2" pos="-5"/>
+
+
+   <detectorDefinition id="MQ45Fs1N" lane="AltglienickerBreitN_0" pos="-5"/>
+   <detectorDefinition id="MQ45Fs2N" lane="AltglienickerBreitN_1" pos="-5"/>
+   <detectorDefinition id="MQ45Fs1S" lane="AltglienickerBreitS_0" pos="5"/>
+
+
+
+</a>

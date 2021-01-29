@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Mar 26 16:23:57 2015 by SUMO netconvert Version dev-SVN-r18156I
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="./jtrrouter/tri.nod.xml"/>
+        <edge-files value="./jtrrouter/tri.edg.xml"/>
+    </input>
+
+    <output>
+        <output-file value="./jtrrouter/input_net.net.xml"/>
+    </output>
+
+    <processing>
+        <no-internal-links value="true"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<net version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="50.00,400.00" convBoundary="0.00,0.00,100.00,800.00" origBoundary="-50.00,-400.00,50.00,400.00" projParameter="!"/>
+
+    <edge id="-beg" from="beg" to="absBeg" priority="-1">
+        <lane id="-beg_0" index="0" speed="36.00" length="200.00" shape="48.35,195.25 48.35,0.00"/>
+    </edge>
+    <edge id="-beg2left" from="begleft" to="beg" priority="-1">
+        <lane id="-beg2left_0" index="0" speed="36.00" length="50.00" shape="3.25,198.35 45.25,198.35"/>
+    </edge>
+    <edge id="-beg2right" from="begright" to="beg" priority="-1">
+        <lane id="-beg2right_0" index="0" speed="36.00" length="50.00" shape="96.75,201.65 54.75,201.65"/>
+    </edge>
+    <edge id="-end" from="absEnd" to="end" priority="-1">
+        <lane id="-end_0" index="0" speed="36.00" length="200.00" shape="48.35,800.00 48.35,604.75"/>
+    </edge>
+    <edge id="-left" from="endleft" to="begleft" priority="-1">
+        <lane id="-left_0" index="0" speed="36.00" length="400.00" shape="-1.65,596.75 -1.65,203.25"/>
+    </edge>
+    <edge id="-left2end" from="end" to="endleft" priority="-1">
+        <lane id="-left2end_0" index="0" speed="36.00" length="50.00" shape="45.25,601.65 3.25,601.65"/>
+    </edge>
+    <edge id="-middle" from="end" to="beg" priority="-1">
+        <lane id="-middle_0" index="0" speed="36.00" length="400.00" shape="48.35,595.25 48.35,204.75"/>
+    </edge>
+    <edge id="-right" from="endright" to="begright" priority="-1">
+        <lane id="-right_0" index="0" speed="36.00" length="400.00" shape="98.35,596.75 98.35,203.25"/>
+    </edge>
+    <edge id="-right2end" from="end" to="endright" priority="-1">
+        <lane id="-right2end_0" index="0" speed="36.00" length="50.00" shape="54.75,598.35 96.75,598.35"/>
+    </edge>
+    <edge id="beg" from="absBeg" to="beg" priority="-1">
+        <lane id="beg_0" index="0" speed="36.00" length="200.00" shape="51.65,0.00 51.65,195.25"/>
+    </edge>
+    <edge id="beg2left" from="beg" to="begleft" priority="-1">
+        <lane id="beg2left_0" index="0" speed="36.00" length="50.00" shape="45.25,201.65 3.25,201.65"/>
+    </edge>
+    <edge id="beg2right" from="beg" to="begright" priority="-1">
+        <lane id="beg2right_0" index="0" speed="36.00" length="50.00" shape="54.75,198.35 96.75,198.35"/>
+    </edge>
+    <edge id="end" from="end" to="absEnd" priority="-1">
+        <lane id="end_0" index="0" speed="36.00" length="200.00" shape="51.65,604.75 51.65,800.00"/>
+    </edge>
+    <edge id="left" from="begleft" to="endleft" priority="-1">
+        <lane id="left_0" index="0" speed="36.00" length="400.00" shape="1.65,203.25 1.65,596.75"/>
+    </edge>
+    <edge id="left2end" from="endleft" to="end" priority="-1">
+        <lane id="left2end_0" index="0" speed="36.00" length="50.00" shape="3.25,598.35 45.25,598.35"/>
+    </edge>
+    <edge id="middle" from="beg" to="end" priority="-1">
+        <lane id="middle_0" index="0" speed="36.00" length="400.00" shape="51.65,204.75 51.65,595.25"/>
+    </edge>
+    <edge id="right" from="begright" to="endright" priority="-1">
+        <lane id="right_0" index="0" speed="36.00" length="400.00" shape="101.65,203.25 101.65,596.75"/>
+    </edge>
+    <edge id="right2end" from="endright" to="end" priority="-1">
+        <lane id="right2end_0" index="0" speed="36.00" length="50.00" shape="96.75,601.65 54.75,601.65"/>
+    </edge>
+
+    <tlLogic id="end" type="static" programID="0" offset="0">
+        <phase duration="31" state="GGggrrrrGGggrrrr"/>
+        <phase duration="12" state="yyggrrrryyggrrrr"/>
+        <phase duration="6" state="rrGGrrrrrrGGrrrr"/>
+        <phase duration="12" state="rryyrrrrrryyrrrr"/>
+        <phase duration="31" state="rrrrGGggrrrrGGgg"/>
+        <phase duration="12" state="rrrryyggrrrryygg"/>
+        <phase duration="6" state="rrrrrrGGrrrrrrGG"/>
+        <phase duration="12" state="rrrrrryyrrrrrryy"/>
+    </tlLogic>
+
+    <junction id="absBeg" type="priority" x="50.00" y="0.00" incLanes="-beg_0" intLanes="" shape="50.05,-0.00 53.25,-0.00 46.75,0.00 49.95,0.00">
+        <request index="0" response="0" foes="0"/>
+    </junction>
+    <junction id="absEnd" type="priority" x="50.00" y="800.00" incLanes="end_0" intLanes="" shape="49.95,800.00 46.75,800.00 53.25,800.00 50.05,800.00">
+        <request index="0" response="0" foes="0"/>
+    </junction>
+    <junction id="beg" type="priority" x="50.00" y="200.00" incLanes="-middle_0 -beg2right_0 beg_0 -beg2left_0" intLanes="" shape="46.75,204.75 53.25,204.75 54.75,203.25 54.75,196.75 53.25,195.25 46.75,195.25 45.25,196.75 45.25,203.25">
+        <request index="0" response="0000000000000000" foes="1000010000100000"/>
+        <request index="1" response="0000000000000000" foes="0111110001100000"/>
+        <request index="2" response="0000001100000000" foes="0110001111100000"/>
+        <request index="3" response="0100001000010000" foes="0100001000010000"/>
+        <request index="4" response="0000001000000000" foes="0100001000001000"/>
+        <request index="5" response="0000011000000111" foes="1100011000000111"/>
+        <request index="6" response="0011011000000110" foes="0011111000000110"/>
+        <request index="7" response="0010000100000100" foes="0010000100000100"/>
+        <request index="8" response="0000000000000000" foes="0010000010000100"/>
+        <request index="9" response="0000000000000000" foes="0110000001111100"/>
+        <request index="10" response="0000000000000011" foes="1110000001100011"/>
+        <request index="11" response="0001000001000010" foes="0001000001000010"/>
+        <request index="12" response="0000000000000010" foes="0000100001000010"/>
+        <request index="13" response="0000011100000110" foes="0000011111000110"/>
+        <request index="14" response="0000011000110110" foes="0000011000111110"/>
+        <request index="15" response="0000010000100001" foes="0000010000100001"/>
+    </junction>
+    <junction id="begleft" type="priority" x="0.00" y="200.00" incLanes="-left_0 beg2left_0" intLanes="" shape="-3.25,203.25 3.25,203.25 3.25,196.75">
+        <request index="0" response="0000" foes="1000"/>
+        <request index="1" response="0100" foes="0100"/>
+        <request index="2" response="0000" foes="0010"/>
+        <request index="3" response="0001" foes="0001"/>
+    </junction>
+    <junction id="begright" type="priority" x="100.00" y="200.00" incLanes="-right_0 beg2right_0" intLanes="" shape="96.75,203.25 103.25,203.25 96.75,196.75 96.75,203.25">
+        <request index="0" response="0000" foes="1000"/>
+        <request index="1" response="0100" foes="0100"/>
+        <request index="2" response="0000" foes="0010"/>
+        <request index="3" response="0001" foes="0001"/>
+    </junction>
+    <junction id="end" type="traffic_light" x="50.00" y="600.00" incLanes="-end_0 right2end_0 middle_0 left2end_0" intLanes="" shape="46.75,604.75 53.25,604.75 54.75,603.25 54.75,596.75 53.25,595.25 46.75,595.25 45.25,596.75 45.25,603.25">
+        <request index="0" response="0000000000000000" foes="1000010000100000"/>
+        <request index="1" response="0000000000000000" foes="0111110001100000"/>
+        <request index="2" response="0000001100000000" foes="0110001111100000"/>
+        <request index="3" response="0100001000010000" foes="0100001000010000"/>
+        <request index="4" response="0000001000000000" foes="0100001000001000"/>
+        <request index="5" response="0000011000000111" foes="1100011000000111"/>
+        <request index="6" response="0011011000000110" foes="0011111000000110"/>
+        <request index="7" response="0010000100000100" foes="0010000100000100"/>
+        <request index="8" response="0000000000000000" foes="0010000010000100"/>
+        <request index="9" response="0000000000000000" foes="0110000001111100"/>
+        <request index="10" response="0000000000000011" foes="1110000001100011"/>
+        <request index="11" response="0001000001000010" foes="0001000001000010"/>
+        <request index="12" response="0000000000000010" foes="0000100001000010"/>
+        <request index="13" response="0000011100000110" foes="0000011111000110"/>
+        <request index="14" response="0000011000110110" foes="0000011000111110"/>
+        <request index="15" response="0000010000100001" foes="0000010000100001"/>
+    </junction>
+    <junction id="endleft" type="priority" x="0.00" y="600.00" incLanes="-left2end_0 left_0" intLanes="" shape="3.25,603.25 3.25,596.75 -3.25,596.75">
+        <request index="0" response="0000" foes="1000"/>
+        <request index="1" response="0100" foes="0100"/>
+        <request index="2" response="0000" foes="0010"/>
+        <request index="3" response="0001" foes="0001"/>
+    </junction>
+    <junction id="endright" type="priority" x="100.00" y="600.00" incLanes="right_0 -right2end_0" intLanes="" shape="103.25,596.75 96.75,596.75 96.75,603.25">
+        <request index="0" response="0000" foes="1000"/>
+        <request index="1" response="0100" foes="0100"/>
+        <request index="2" response="0000" foes="0010"/>
+        <request index="3" response="0001" foes="0001"/>
+    </junction>
+
+    <connection from="-beg" to="beg" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="-beg2left" to="-beg" fromLane="0" toLane="0" dir="r" state="m"/>
+    <connection from="-beg2left" to="beg2right" fromLane="0" toLane="0" dir="s" state="m"/>
+    <connection from="-beg2left" to="middle" fromLane="0" toLane="0" dir="l" state="m"/>
+    <connection from="-beg2left" to="beg2left" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="-beg2right" to="middle" fromLane="0" toLane="0" dir="r" state="m"/>
+    <connection from="-beg2right" to="beg2left" fromLane="0" toLane="0" dir="s" state="m"/>
+    <connection from="-beg2right" to="-beg" fromLane="0" toLane="0" dir="l" state="m"/>
+    <connection from="-beg2right" to="beg2right" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="-end" to="-left2end" fromLane="0" toLane="0" tl="end" linkIndex="0" dir="r" state="o"/>
+    <connection from="-end" to="-middle" fromLane="0" toLane="0" tl="end" linkIndex="1" dir="s" state="o"/>
+    <connection from="-end" to="-right2end" fromLane="0" toLane="0" tl="end" linkIndex="2" dir="l" state="o"/>
+    <connection from="-end" to="end" fromLane="0" toLane="0" tl="end" linkIndex="3" dir="t" state="o"/>
+    <connection from="-left" to="-beg2left" fromLane="0" toLane="0" dir="l" state="M"/>
+    <connection from="-left" to="left" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="-left2end" to="-left" fromLane="0" toLane="0" dir="l" state="M"/>
+    <connection from="-left2end" to="left2end" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="-middle" to="beg2left" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="-middle" to="-beg" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="-middle" to="beg2right" fromLane="0" toLane="0" dir="l" state="m"/>
+    <connection from="-middle" to="middle" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="-right" to="-beg2right" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="-right" to="right" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="-right2end" to="-right" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="-right2end" to="right2end" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="beg" to="beg2right" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="beg" to="middle" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="beg" to="beg2left" fromLane="0" toLane="0" dir="l" state="m"/>
+    <connection from="beg" to="-beg" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="beg2left" to="left" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="beg2left" to="-beg2left" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="beg2right" to="right" fromLane="0" toLane="0" dir="l" state="M"/>
+    <connection from="beg2right" to="-beg2right" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="end" to="-end" fromLane="0" toLane="0" dir="t" state="M"/>
+    <connection from="left" to="left2end" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="left" to="-left" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="left2end" to="-middle" fromLane="0" toLane="0" tl="end" linkIndex="12" dir="r" state="o"/>
+    <connection from="left2end" to="-right2end" fromLane="0" toLane="0" tl="end" linkIndex="13" dir="s" state="o"/>
+    <connection from="left2end" to="end" fromLane="0" toLane="0" tl="end" linkIndex="14" dir="l" state="o"/>
+    <connection from="left2end" to="-left2end" fromLane="0" toLane="0" tl="end" linkIndex="15" dir="t" state="o"/>
+    <connection from="middle" to="-right2end" fromLane="0" toLane="0" tl="end" linkIndex="8" dir="r" state="o"/>
+    <connection from="middle" to="end" fromLane="0" toLane="0" tl="end" linkIndex="9" dir="s" state="o"/>
+    <connection from="middle" to="-left2end" fromLane="0" toLane="0" tl="end" linkIndex="10" dir="l" state="o"/>
+    <connection from="middle" to="-middle" fromLane="0" toLane="0" tl="end" linkIndex="11" dir="t" state="o"/>
+    <connection from="right" to="right2end" fromLane="0" toLane="0" dir="l" state="M"/>
+    <connection from="right" to="-right" fromLane="0" toLane="0" dir="t" state="m"/>
+    <connection from="right2end" to="end" fromLane="0" toLane="0" tl="end" linkIndex="4" dir="r" state="o"/>
+    <connection from="right2end" to="-left2end" fromLane="0" toLane="0" tl="end" linkIndex="5" dir="s" state="o"/>
+    <connection from="right2end" to="-middle" fromLane="0" toLane="0" tl="end" linkIndex="6" dir="l" state="o"/>
+    <connection from="right2end" to="-right2end" fromLane="0" toLane="0" tl="end" linkIndex="7" dir="t" state="o"/>
+
+</net>

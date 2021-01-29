@@ -1,0 +1,25 @@
+<sumo-detectors>
+
+   <e1Detector id="1si_0" lane="1si_0" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="1si_1" lane="1si_1" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="1si_2" lane="1si_2" pos="200" freq="1" file="detector.xml"/>
+
+   <e1Detector id="2si_0" lane="2si_0" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="2si_1" lane="2si_1" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="2si_2" lane="2si_2" pos="200" freq="1" file="detector.xml"/>
+
+   <e1Detector id="3si_0" lane="3si_0" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="3si_1" lane="3si_1" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="3si_2" lane="3si_2" pos="200" freq="1" file="detector.xml"/>
+
+   <e1Detector id="4si_0" lane="4si_0" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="4si_1" lane="4si_1" pos="200" freq="1" file="detector.xml"/>
+   <e1Detector id="4si_2" lane="4si_2" pos="200" freq="1" file="detector.xml"/>
+
+
+   <e1Detector id="1o_0" lane="1o_0" pos="20" freq="1" file="detector.xml"/>
+   <e1Detector id="2o_0" lane="2o_0" pos="20" freq="1" file="detector.xml"/>
+   <e1Detector id="3o_0" lane="3o_0" pos="20" freq="1" file="detector.xml"/>
+   <e1Detector id="4o_0" lane="4o_0" pos="20" freq="1" file="detector.xml"/>
+
+</sumo-detectors>

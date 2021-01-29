@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmicrosim_actions.a  CMakeFiles/microsim_actions.dir/Command_SaveTLSState.cpp.o CMakeFiles/microsim_actions.dir/Command_SaveTLSSwitches.cpp.o CMakeFiles/microsim_actions.dir/Command_SaveTLSSwitchStates.cpp.o CMakeFiles/microsim_actions.dir/Command_SaveTLSProgram.cpp.o CMakeFiles/microsim_actions.dir/Command_SaveTLCoupledLaneDet.cpp.o CMakeFiles/microsim_actions.dir/Command_SaveTLCoupledDet.cpp.o
+/usr/bin/ranlib libmicrosim_actions.a

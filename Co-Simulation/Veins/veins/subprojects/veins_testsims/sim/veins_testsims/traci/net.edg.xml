@@ -1,0 +1,102 @@
+<!--
+// Copyright (C) 2011-2018 Christoph Sommer <sommer@ccs-labs.org>
+//
+// Documentation for these modules is at http://veins.car2x.org/
+//
+// SPDX-License-Identifier: (GPL-2.0-or-later OR CC-BY-SA-4.0)
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// -
+//
+// At your option, you can also redistribute and/or modify this file
+// under a
+// Creative Commons Attribution-ShareAlike 4.0 International License.
+//
+// You should have received a copy of the license along with this
+// work.  If not, see <http://creativecommons.org/licenses/by-sa/4.0/>.
+-->
+
+<edges>
+   <edge id="10" from="16" to="15" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="498.35,45.25 498.35,1.45"/>
+   <edge id="11" from="16" to="17" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="501.65,51.45 501.65,95.25"/>
+   <edge id="12" from="19" to="18" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="598.35,45.25 598.35,1.45"/>
+   <edge id="13" from="19" to="20" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="601.65,51.45 601.65,95.25"/>
+   <edge id="14" from="22" to="21" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="698.35,45.25 698.35,1.45"/>
+   <edge id="15" from="22" to="23" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="701.65,51.45 701.65,95.25"/>
+   <edge id="16" from="25" to="24" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="798.35,45.25 798.35,1.45"/>
+   <edge id="17" from="25" to="26" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="801.65,51.45 801.65,95.25"/>
+   <edge id="18" from="28" to="27" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="898.35,45.25 898.35,1.45"/>
+   <edge id="19" from="28" to="29" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="901.65,51.45 901.65,95.25"/>
+   <edge id="2" from="4" to="3" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="98.35,45.25 98.35,1.45"/>
+   <edge id="20" from="31" to="30" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="998.35,45.25 998.35,1.45"/>
+   <edge id="21" from="31" to="32" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="1001.65,51.45 1001.65,95.25"/>
+   <edge id="25" from="1" to="4" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="0.0,48.35 95.25,48.35"/>
+   <edge id="27" from="3" to="6" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="104.75,-1.65 195.25,-1.65"/>
+   <edge id="28" from="4" to="7" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="104.75,48.35 195.25,48.35"/>
+   <edge id="29" from="5" to="8" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="104.75,98.35 195.25,98.35"/>
+   <edge id="3" from="4" to="5" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="101.65,51.45 101.65,95.25"/>
+   <edge id="30" from="6" to="9" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="204.75,-1.65 295.25,-1.65"/>
+   <edge id="31" from="7" to="10" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="204.75,48.35 295.25,48.35"/>
+   <edge id="32" from="8" to="11" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="204.75,98.35 295.25,98.35"/>
+   <edge id="33" from="9" to="12" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="304.75,-1.65 395.25,-1.65"/>
+   <edge id="34" from="10" to="13" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="304.75,48.35 395.25,48.35"/>
+   <edge id="35" from="11" to="14" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="304.75,98.35 395.25,98.35"/>
+   <edge id="36" from="12" to="15" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="404.75,-1.65 495.25,-1.65"/>
+   <edge id="37" from="13" to="16" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="404.75,48.35 495.25,48.35"/>
+   <edge id="38" from="14" to="17" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="404.75,98.35 495.25,98.35"/>
+   <edge id="39" from="15" to="18" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="504.75,-1.65 595.25,-1.65"/>
+   <edge id="4" from="7" to="6" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="198.35,45.25 198.35,1.45"/>
+   <edge id="40" from="16" to="19" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="504.75,48.35 595.25,48.35"/>
+   <edge id="41" from="17" to="20" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="504.75,98.35 595.25,98.35"/>
+   <edge id="42" from="18" to="21" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="604.75,-1.65 695.25,-1.65"/>
+   <edge id="43" from="19" to="22" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="604.75,48.35 695.25,48.35"/>
+   <edge id="44" from="20" to="23" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="604.75,98.35 695.25,98.35"/>
+   <edge id="45" from="21" to="24" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="704.75,-1.65 795.25,-1.65"/>
+   <edge id="46" from="22" to="25" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="704.75,48.35 795.25,48.35"/>
+   <edge id="47" from="23" to="26" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="704.75,98.35 795.25,98.35"/>
+   <edge id="48" from="24" to="27" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="804.75,-1.65 895.25,-1.65"/>
+   <edge id="49" from="25" to="28" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="804.75,48.35 895.25,48.35"/>
+   <edge id="5" from="7" to="8" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="201.65,51.45 201.65,95.25"/>
+   <edge id="50" from="26" to="29" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="804.75,98.35 895.25,98.35"/>
+   <edge id="51" from="27" to="30" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="904.75,-1.65 995.25,-1.65"/>
+   <edge id="52" from="28" to="31" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="904.75,48.35 995.25,48.35"/>
+   <edge id="53" from="29" to="32" speed="22.22" priority="-1" spreadType="center" numLanes="1" shape="904.75,98.35 995.25,98.35"/>
+   <edge id="55" from="31" to="34" speed="27.78" priority="-1" spreadType="center" numLanes="1" shape="1004.75,48.35 1100.0,48.35"/>
+   <edge id="6" from="10" to="9" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="298.35,45.25 298.35,1.45"/>
+   <edge id="62" from="3" to="4" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="101.65,1.45 101.65,45.25"/>
+   <edge id="63" from="5" to="4" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="98.35,95.25 98.35,51.45"/>
+   <edge id="64" from="6" to="7" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="201.65,1.45 201.65,45.25"/>
+   <edge id="65" from="8" to="7" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="198.35,95.25 198.35,51.45"/>
+   <edge id="66" from="9" to="10" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="301.65,1.45 301.65,45.25"/>
+   <edge id="67" from="11" to="10" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="298.35,95.25 298.35,51.45"/>
+   <edge id="68" from="12" to="13" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="401.65,1.45 401.65,45.25"/>
+   <edge id="69" from="14" to="13" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="398.35,95.25 398.35,51.45"/>
+   <edge id="7" from="10" to="11" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="301.65,51.45 301.65,95.25"/>
+   <edge id="70" from="15" to="16" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="501.65,1.45 501.65,45.25"/>
+   <edge id="71" from="17" to="16" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="498.35,95.25 498.35,51.45"/>
+   <edge id="72" from="18" to="19" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="601.65,1.45 601.65,45.25"/>
+   <edge id="73" from="20" to="19" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="598.35,95.25 598.35,51.45"/>
+   <edge id="74" from="21" to="22" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="701.65,1.45 701.65,45.25"/>
+   <edge id="75" from="23" to="22" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="698.35,95.25 698.35,51.45"/>
+   <edge id="76" from="24" to="25" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="801.65,1.45 801.65,45.25"/>
+   <edge id="77" from="26" to="25" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="798.35,95.25 798.35,51.45"/>
+   <edge id="78" from="27" to="28" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="901.65,1.45 901.65,45.25"/>
+   <edge id="79" from="29" to="28" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="898.35,95.25 898.35,51.45"/>
+   <edge id="8" from="13" to="12" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="398.35,45.25 398.35,1.45"/>
+   <edge id="80" from="30" to="31" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="1001.65,1.45 1001.65,45.25"/>
+   <edge id="81" from="32" to="31" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="998.35,95.25 998.35,51.45"/>
+   <edge id="9" from="13" to="14" speed="21.72" priority="-1" spreadType="center" numLanes="1" shape="401.65,51.45 401.65,95.25"/>
+</edges>

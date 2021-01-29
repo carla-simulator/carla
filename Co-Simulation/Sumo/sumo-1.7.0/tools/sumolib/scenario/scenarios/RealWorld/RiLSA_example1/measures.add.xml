@@ -1,0 +1,62 @@
+<additional>
+<!--
+    <e1Detector id="north_right_begin__l0" lane=":0_0_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="north_right_end__l0" lane=":0_0_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="north_straight_begin__l0" lane=":0_1_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="north_straight_end__l0" lane=":0_1_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="north_left_begin__l0" lane=":0_2_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="north_left_end__l0" lane=":0_12_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+
+    <e1Detector id="east_right_begin__l0" lane=":0_3_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="east_right_end__l0" lane=":0_3_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="east_straight_begin__l0" lane=":0_4_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="east_straight_end__l0" lane=":0_4_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="east_left_begin__l0" lane=":0_5_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="east_left_end__l0" lane=":0_13_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+
+    <e1Detector id="south_right_begin__l0" lane=":0_6_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="south_right_end__l0" lane=":0_6_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="south_straight_begin__l0" lane=":0_7_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="south_straight_end__l0" lane=":0_7_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="south_left_begin__l0" lane=":0_8_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="south_left_end__l0" lane=":0_14_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+
+    <e1Detector id="west_right_begin__l0" lane=":0_9_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="west_right_end__l0" lane=":0_9_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="west_straight_begin__l0" lane=":0_10_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="west_straight_end__l0" lane=":0_10_0" pos="-.01" freq="1" file="e1_output.xml"/>
+
+    <e1Detector id="west_left_begin__l0" lane=":0_11_0" pos="0" freq="1" file="e1_output.xml"/>
+    <e1Detector id="west_left_end__l0" lane=":0_15_0" pos="-.01" freq="1" file="e1_output.xml"/>
+-->
+
+    <e2Detector id="em__l0" lane="em_0" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+    <e2Detector id="em__l1" lane="em_1" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+    <e2Detector id="sm__l0" lane="sm_0" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+    <e2Detector id="sm__l1" lane="sm_1" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+    <e2Detector id="wm__l0" lane="wm_0" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+    <e2Detector id="wm__l1" lane="wm_1" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+    <e2Detector id="nm__l0" lane="nm_0" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+    <e2Detector id="nm__l1" lane="nm_1" pos="-200" length="200" freq="60" file="e2_output.xml" friendlyPos="true"/>
+
+    <e2Detector id="em_tl0__l0" lane="em_0" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+    <e2Detector id="em_tl0__l1" lane="em_1" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+    <e2Detector id="sm_tl0__l0" lane="sm_0" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+    <e2Detector id="sm_tl0__l1" lane="sm_1" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+    <e2Detector id="wm_tl0__l0" lane="wm_0" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+    <e2Detector id="wm_tl0__l1" lane="wm_1" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+    <e2Detector id="nm_tl0__l0" lane="nm_0" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+    <e2Detector id="nm_tl0__l1" lane="nm_1" tl="0" pos="-200" length="200" freq="60" file="e2_tl0_output.xml" friendlyPos="true"/>
+
+
+</additional>

@@ -1,0 +1,37 @@
+<connections>
+
+    <connection from="emp2" to="em" fromLane="0" toLane="0"/>
+    <connection from="emp2" to="em" fromLane="1" toLane="1"/>
+    <connection from="emp2" to="em" fromLane="1" toLane="2"/>
+    <connection from="em" to="mw" fromLane="1" toLane="1"/>
+    <connection from="em" to="ms" fromLane="2" toLane="1"/>
+    <connection from="em" to="mn" fromLane="1" toLane="1"/>
+
+    <connection from="wmp2" to="wm" fromLane="0" toLane="0"/>
+    <connection from="wmp2" to="wm" fromLane="1" toLane="1"/>
+    <connection from="wmp2" to="wm" fromLane="1" toLane="2"/>
+    <connection from="wm" to="me" fromLane="1" toLane="1"/>
+    <connection from="wm" to="mn" fromLane="2" toLane="1"/>
+    <connection from="wm" to="ms" fromLane="1" toLane="1"/>
+
+    <connection from="smp2" to="sm" fromLane="0" toLane="0"/>
+    <connection from="smp2" to="sm" fromLane="1" toLane="1"/>
+    <connection from="smp2" to="sm" fromLane="1" toLane="2"/>
+    <connection from="sm" to="mn" fromLane="1" toLane="1"/>
+    <connection from="sm" to="mw" fromLane="2" toLane="1"/>
+    <connection from="sm" to="me" fromLane="1" toLane="1"/>
+
+    <connection from="nmp2" to="nm" fromLane="0" toLane="0"/>
+    <connection from="nmp2" to="nm" fromLane="1" toLane="1"/>
+    <connection from="nmp2" to="nm" fromLane="1" toLane="2"/>
+    <connection from="nm" to="ms" fromLane="1" toLane="1"/>
+    <connection from="nm" to="me" fromLane="2" toLane="1"/>
+    <connection from="nm" to="mw" fromLane="1" toLane="1"/>
+    
+    
+    <crossing node="0" edges="mw wm"/>
+    <crossing node="0" edges="nm mn"/>
+    <crossing node="0" edges="em me"/>
+    <crossing node="0" edges="sm ms"/>
+
+</connections>

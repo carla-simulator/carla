@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<buildspec version="4.0">
+    <dir path="." type="custom"/>
+    <dir makemake-options="--make-so --deep -o veins_testsims -O out -I. --meta:export-include-path --meta:use-exported-include-paths --meta:export-library --meta:use-exported-libs --meta:feature-cflags --meta:feature-ldflags" path="src" type="makemake"/>
+</buildspec>

@@ -1,0 +1,4 @@
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <inductionLoop id="loop0" lane="gneE0_0" pos="300" freq="300" file="loops.out.xml"/>
+    <inductionLoop id="loop1" lane="gneE0_1" pos="300" freq="300" file="loops.out.xml"/>
+</additional>

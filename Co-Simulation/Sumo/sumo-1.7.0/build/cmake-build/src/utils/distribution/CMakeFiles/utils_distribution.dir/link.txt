@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_distribution.a  CMakeFiles/utils_distribution.dir/Distribution_Parameterized.cpp.o CMakeFiles/utils_distribution.dir/Distribution_Points.cpp.o CMakeFiles/utils_distribution.dir/DistributionCont.cpp.o
+/usr/bin/ranlib libutils_distribution.a

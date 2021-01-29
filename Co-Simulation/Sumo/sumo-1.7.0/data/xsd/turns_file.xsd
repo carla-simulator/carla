@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd" />
+
+    <xsd:element name="turns" type="turnsType"></xsd:element>
+
+    <xsd:complexType name="turnsType">
+        <xsd:choice maxOccurs="unbounded">
+            <xsd:element name="source" type="sourceType" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+            <xsd:element name="sink" type="sinkType" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+            <xsd:element name="interval" type="intervalType" minOccurs="0" maxOccurs="unbounded"></xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+
+    <xsd:complexType name="sourceType">
+        <xsd:attribute name="id" type="xsd:string" use="optional"/>
+        <xsd:attribute name="edges" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="sinkType">
+        <xsd:attribute name="id" type="xsd:string" use="optional"/>
+        <xsd:attribute name="edges" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="intervalType">
+        <xsd:sequence>
+            <xsd:element name="fromEdge" type="fromEdgeType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="begin" type="nonNegativeFloatType" use="required"/>
+        <xsd:attribute name="end" type="positiveFloatType" use="required"/>
+        <xsd:attribute name="id" type="xsd:string" use="optional" />
+    </xsd:complexType>
+
+    <xsd:complexType name="fromEdgeType">
+        <xsd:sequence>
+            <xsd:element name="toEdge" type="toEdgeType" minOccurs="1" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="toEdgeType">
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+        <xsd:attribute name="probability" type="nonNegativeFloatType" use="required"/>
+    </xsd:complexType>
+
+</xsd:schema>

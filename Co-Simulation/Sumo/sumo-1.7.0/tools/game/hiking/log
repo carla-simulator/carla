@@ -1,0 +1,40 @@
+***Starting server on port 47845 ***
+Loading net-file from 'hiking/hiking.net.xml' ... done (9ms).
+Loading done.
+Simulation started with time: 0.00
+Warning: No connection between edge ':W_w0-1.00' and edge 'WC_arrival_connector' found.
+Warning: Person 'ego' could not find route across junction 'W' from walkingArea ':W_w0' to edge 'WC', time=0.10.
+Warning: Person 'ego' is jammed on edge ':W_w0', time=259.70.
+Warning: Could not map position 114.00,88.15 onto lane ':C_w2_0'
+Warning: Could not map position 114.00,88.15 onto lane ':C_w2_0'
+Warning: Could not map position 115.00,88.15 onto lane ':C_w2_0'
+Warning: Could not map position 115.00,88.15 onto lane ':C_w2_0'
+Warning: Could not map position 115.00,88.15 onto lane ':C_w2_0'
+Warning: Could not map position 115.00,88.15 onto lane ':C_w2_0'
+Warning: No connection between edge ':C_w2-1.00' and edge ':C_c1_arrival_connector' found.
+Warning: Person 'ego' could not find route across junction 'C' from walkingArea ':C_w2' to edge ':C_c1', time=299.60.
+Warning: No connection between edge ':C_w3-1.00' and edge ':C_c1_arrival_connector' found.
+Warning: Person 'ego' could not find route across junction 'C' from walkingArea ':C_w3' to edge ':C_c1', time=305.80.
+Warning: No connection between edge ':C_w2-1.00' and edge ':C_c1_arrival_connector' found.
+Warning: Person 'ego' could not find route across junction 'C' from walkingArea ':C_w2' to edge ':C_c1', time=320.50.
+Warning: No connection between edge ':C_w3-1.00' and edge ':C_c2_arrival_connector' found.
+Warning: Person 'ego' could not find route across junction 'C' from walkingArea ':C_w3' to edge ':C_c2', time=363.00.
+Warning: No connection between edge ':C_w0-1.00' and edge ':C_c2_arrival_connector' found.
+Warning: Person 'ego' could not find route across junction 'C' from walkingArea ':C_w0' to edge ':C_c2', time=369.60.
+Simulation ended at time: 542.30
+Performance: 
+ Duration: 54.79s
+ Real time factor: 9.89851
+ UPS: 0.000000
+ UPS-Persons: 98.985142
+Vehicles: 
+ Inserted: 0
+ Running: 0
+ Waiting: 0
+Persons: 
+ Inserted: 1
+ Running: 1
+ Jammed: 1
+
+DijkstraRouter answered 6 queries and explored 1.00 edges on average.
+DijkstraRouter spent 0.00s answering queries (0.00ms on average).

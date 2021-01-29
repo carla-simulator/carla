@@ -1,0 +1,23 @@
+/* XPM */
+static const char * view2_xpm[] = {
+"15 16 4 1",
+" 	c None",
+".	c Black",
+"X	c #bd0bb3",
+"o	c Gray100",
+"   .........   ",
+"  .XXXXXXXXX.  ",
+" .XXX......XX. ",
+".XXX..oooo..XX.",
+".XX..oooooo.XX.",
+".XX.oo...oo.XX.",
+".XX.oo...oo.XX.",
+".XX.....oo..XX.",
+".XXXX..oo..XXX.",
+".XXX..oo..XXXX.",
+".XX..oo.....XX.",
+".XX.ooooooo.XX.",
+".XX.ooooooo.XX.",
+" .X.........X. ",
+"  .XXXXXXXXX.  ",
+"   .........   "};

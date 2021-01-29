@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 07/01/15 16:47:54 by SUMO duarouter Version dev-SVN-r18493
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/duarouterConfiguration.xsd">
+
+    <input>
+        <net-file value="inter_palmas_notls.net.xml"/>
+        <additional-files value="inter_palmas_bus_stops.add.xml"/>
+        <flow-files value="inter_palmas_buses.trips.xml"/>
+    </input>
+
+    <output>
+        <output-file value="inter_palmas_buses.rou.xml"/>
+    </output>
+
+    <processing>
+        <ignore-errors value="true"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="bus" vClass="bus" guiShape="bus" color="green"/>
+    <vehicle id="buses_EW.0" type="bus" depart="50400.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.0" type="bus" depart="50400.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_EW.1" type="bus" depart="50850.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.1" type="bus" depart="50850.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_EW.2" type="bus" depart="51300.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.2" type="bus" depart="51300.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_EW.3" type="bus" depart="51750.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.3" type="bus" depart="51750.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_EW.4" type="bus" depart="52200.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.4" type="bus" depart="52200.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_EW.5" type="bus" depart="52650.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.5" type="bus" depart="52650.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_EW.6" type="bus" depart="53100.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.6" type="bus" depart="53100.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_EW.7" type="bus" depart="53550.00">
+        <route edges="-380 -465 -436#0 -436#1"/>
+        <stop busStop="sanDiegoE" duration="120.00"/>
+    </vehicle>
+    <vehicle id="buses_WE.7" type="bus" depart="53550.00">
+        <route edges="33463249#0 33463249#1 -447 -461#0 -461#1"/>
+        <stop busStop="sanDiegoW" duration="120.00"/>
+    </vehicle>
+</routes>

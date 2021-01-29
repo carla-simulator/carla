@@ -1,0 +1,22 @@
+/* XPM */
+static const char *locate_route_xpm[] = {
+"16 16 3 1",
+" 	c None",
+".	c Black",
+"o	c Red",
+"           ...  ",
+"          .   . ",
+"              . ",
+"...          .  ",
+".o.         .   ",
+".o.             ",
+".o.         .   ",
+".o.       ..    ",
+".o.       .o.   ",
+".o.       .oo.  ",
+".oo........ooo. ",
+" .ooooooooooooo.",
+"  .........ooo. ",
+"          .oo.  ",
+"          .o.   ",
+"          ..    "};

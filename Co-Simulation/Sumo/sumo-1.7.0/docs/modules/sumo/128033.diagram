@@ -1,0 +1,10 @@
+format 55
+
+classcanvas 128033 class_ref 128033 // user
+  class_drawing_mode default show_context_mode default
+  xyz 51 82 2000
+usecasecanvas 128161 usecase_ref 128033 // PC01: import shapes for an imported network
+  xyzwh 243 99 3005 64 32 label_xy 166 131
+line 128289 ----
+  from ref 128033 z 1999 to ref 128161
+end

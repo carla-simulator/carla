@@ -1,0 +1,25 @@
+Warning: The option 'sloppy-insert' is deprecated, because it is now activated by default, see the new option 'eager-insert'.
+Loading net-file from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_pasubio\pasubio_buslanes.net.xml'...  done (31ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_pasubio\pasubio_vtypes.add.xml'...  done (4ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_pasubio\pasubio_bus_stops.add.xml'...  done (2ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_pasubio\pasubio_busses.rou.xml'...  done (18ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_pasubio\pasubio_detectors.add.xml'...  done (6ms).
+Loading additional-files from 'C:\Users\biek_la\Desktop\Colombo\svn\trunk\scenarios\iTETRIS_pasubio\pasubio_tls_2.add.xml'...  done (5ms).
+Loading done.
+Simulation started with time: 0.00
+Warning: Teleporting vehicle '12_3600'; waited too long, lane='101_0', time=4162.00.
+Warning: Vehicle '12_3600' ends teleporting on edge '35[0]', simulation time 4162.00.
+Warning: Teleporting vehicle 'Pertini_44_1355'; waited too long, lane='101_1', time=4172.00.
+Warning: Vehicle 'Pertini_44_1355' ends teleporting on edge '35[0]', simulation time 4172.00.
+Simulation ended at time: 4940.00
+Reason: All vehicles have left the simulation.
+Performance: 
+ Duration: 26669 ms
+ Real time factor: 185.234
+ UPS: 112928.081293
+Vehicles: 
+ Emitted: 8793
+ Running: 0
+ Waiting: 0
+Teleports: 2
+

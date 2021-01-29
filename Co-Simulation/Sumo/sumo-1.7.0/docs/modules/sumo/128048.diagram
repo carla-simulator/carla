@@ -1,0 +1,18 @@
+format 55
+
+classcanvas 128048 class_ref 128048 // user
+  class_drawing_mode default show_context_mode default
+  xyz 93 112 2000
+usecasecanvas 128176 usecase_ref 128176 // NG01: generate a grid network
+  xyzwh 286 45 3005 64 32 label_xy 244 77
+usecasecanvas 128304 usecase_ref 128304 // NG03: generate a random network
+  xyzwh 286 208 3005 64 32 label_xy 235 240
+usecasecanvas 128432 usecase_ref 128432 // NG02: generate a spider-net network
+  xyzwh 286 123 3005 64 32 label_xy 229 155
+line 128816 ----
+  from ref 128048 z 1999 to ref 128176
+line 129200 ----
+  from ref 128048 z 1999 to ref 128432
+line 129328 ----
+  from ref 128048 z 1999 to ref 128304
+end

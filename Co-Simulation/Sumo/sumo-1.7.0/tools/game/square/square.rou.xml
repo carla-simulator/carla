@@ -1,0 +1,39 @@
+<routes>
+    <routeDistribution id="horizontal">
+        <route edges="left0to0/0 0/0to1/0 1/0toright0"/>
+        <route edges="left1to0/1 0/1to1/1 1/1toright1"/>
+        <route edges="right0to1/0 1/0to0/0 0/0toleft0"/>
+        <route edges="right1to1/1 1/1to0/1 0/1toleft1"/>
+    </routeDistribution>
+    <flow id="horiz" route="horizontal" begin="0" end="90000" period="2" arrivalPos="-10" departSpeed="13.89"/>
+    <routeDistribution id="vertical">
+        <route edges="bottom0to0/0 0/0to0/1 0/1totop0"/>
+        <route edges="bottom1to1/0 1/0to1/1 1/1totop1"/>
+        <route edges="top0to0/1 0/1to0/0 0/0tobottom0"/>
+        <route edges="top1to1/1 1/1to1/0 1/0tobottom1"/>
+    </routeDistribution>
+    
+    <flow id="vertic" route="vertical" begin="0" end="90000" period="4" arrivalPos="-10" departSpeed="13.89"/>
+    
+    <routeDistribution id="random">
+        <route edges="bottom0to0/0 0/0to0/1 0/1totop0"/>
+        <route edges="bottom1to1/0 1/0to1/1 1/1totop1"/>
+        <route edges="top0to0/1 0/1to0/0 0/0tobottom0"/>
+        <route edges="top1to1/1 1/1to1/0 1/0tobottom1"/>
+        <route edges="left0to0/0 0/0to1/0 1/0toright0"/>
+        <route edges="left1to0/1 0/1to1/1 1/1toright1"/>
+        <route edges="right0to1/0 1/0to0/0 0/0toleft0"/>
+        <route edges="right1to1/1 1/1to0/1 0/1toleft1"/>
+        <route edges="right0to1/0 1/0to1/1 1/1to0/1 0/1totop0"/>
+        <route edges="bottom0to0/0 0/0to0/1 0/1to1/1 1/1totop1"/>
+        <route edges="bottom1to1/0 1/0to1/1 1/1to0/1 0/1totop0"/>
+        <route edges="left0to0/0 0/0to0/1 0/1to1/1 1/1totop1"/>
+    </routeDistribution>
+
+    <vType id="ev1" guiShape="emergency" vClass="emergency"/>
+    <vType id="ev2" guiShape="firebrigade" vClass="emergency"/>
+    <vType id="ev3" guiShape="police" vClass="emergency"/>
+    <flow id="emergency1" type="ev1" route="random" begin="0" end="900" period="90"/>
+    <flow id="emergency2" type="ev2" route="random" begin="0" end="900" period="85"/>
+    <flow id="emergency3" type="ev3" route="random" begin="0" end="900" period="105"/>
+</routes>

@@ -1,0 +1,9 @@
+<routes>
+    <vType id="drt_small" vClass="bus" length="6" personCapacity="5" color="gray"/>
+    <vType id="drt_large" vClass="bus" length="8" personCapacity="9" color="gray"/>
+
+    <trip id="DRT2" type="drt_large" depart="0" line="LNDW_DRT" color="128,255,128">
+        <stop busStop="bs12" duration="60"/>
+        <stop busStop="bs12" duration="2000000"/>
+    </trip>
+</routes>

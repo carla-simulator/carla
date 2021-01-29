@@ -1,0 +1,5 @@
+<add>
+    <timedEvent type="SaveTLSSwitchStates" dest="tlsstate.xml"/>
+    <edgeData id="dump" file="netstate.xml" excludeEmpty="true"/>
+    <edgeData id="hbefa" type="emissions" file="netstate.xml" excludeEmpty="true"/>
+</add>

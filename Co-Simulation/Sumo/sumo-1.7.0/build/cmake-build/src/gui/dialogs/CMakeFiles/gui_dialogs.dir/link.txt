@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgui_dialogs.a  CMakeFiles/gui_dialogs.dir/GUIDialog_AboutSUMO.cpp.o CMakeFiles/gui_dialogs.dir/GUIDialog_AppSettings.cpp.o CMakeFiles/gui_dialogs.dir/GUIDialog_Breakpoints.cpp.o
+/usr/bin/ranlib libgui_dialogs.a

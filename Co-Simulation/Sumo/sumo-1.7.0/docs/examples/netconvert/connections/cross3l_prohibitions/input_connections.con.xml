@@ -1,0 +1,23 @@
+<connections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/connections_file.xsd">
+
+	<connection from="1si" to="3o"/>
+	<connection from="1si" to="2o"/>
+
+	<connection from="2si" to="4o"/>
+	<connection from="2si" to="1o"/>
+
+	<!-- prohibit moving right from top to left by straight from right to left -->
+	<prohibition prohibitor="2si->1o" prohibited="4si->1o"/>
+	<!-- prohibit moving straight from top to bottom by straight from right to left -->
+	<prohibition prohibitor="2si->1o" prohibited="4si->3o"/>
+	<!-- prohibit moving left from top to right by straight from right to left -->
+	<prohibition prohibitor="2si->1o" prohibited="4si->2o"/>
+
+	<!-- prohibit moving right from bottom to right by straight from left to right -->
+	<prohibition prohibitor="1si->2o" prohibited="3si->2o"/>
+	<!-- prohibit moving straight from bottom to top by straight from left to right -->
+	<prohibition prohibitor="1si->2o" prohibited="3si->4o"/>
+	<!-- prohibit moving left from bottom to right by straight from left to right -->
+	<prohibition prohibitor="1si->2o" prohibited="3si->1o"/>
+
+</connections>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:40 2019 by Eclipse SUMO Version v1_2_0+0017-2a947141e5
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="input_net.net.xml"/>
+        <route-files value="input_trips_003.rou.xml"/>
+        <additional-files value="dua_dump_003.add.xml"/>
+    </input>
+
+    <output>
+        <summary-output value="summary_003.xml"/>
+        <tripinfo-output value="tripinfo_003.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+    </time>
+
+    <processing>
+        <route-steps value="200"/>
+        <no-internal-links value="false"/>
+        <time-to-teleport value="300"/>
+        <time-to-teleport.highways value="0"/>
+        <eager-insert value="false"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+        <no-warnings value="false"/>
+        <log value="iteration_003.sumo.log"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <random_number>
+        <random value="false"/>
+    </random_number>
+
+</configuration>

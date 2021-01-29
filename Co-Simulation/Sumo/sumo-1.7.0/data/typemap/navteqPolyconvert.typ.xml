@@ -1,0 +1,9 @@
+<polygonTypes>
+	<polygonType id="Stadtgrenze" name="city" color="0,0,0" fill="false" layer="1"/>
+	<polygonType id="Waldgebiet" name="forest" color=".3,1,0" layer="-2"/>
+	<polygonType id="Park" name="park" color=".2,1,.3" layer="-2"/>
+	<polygonType id="Flughafen" name="airport" color=".5,.5,.5" layer="-1"/>
+	<polygonType id="Bahn" name="train" color="1,0.3,0.3" fill="false" layer="1"/>
+	<polygonType id="Oro8" name="unknown" fill="false" color="1,1,0" layer="-1"/>
+	<polygonType id="Island" name="island" fill="true" color=".2,1,.3" layer="1"/>
+</polygonTypes>

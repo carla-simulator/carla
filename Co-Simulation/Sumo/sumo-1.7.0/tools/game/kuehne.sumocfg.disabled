@@ -1,0 +1,16 @@
+<configuration>
+
+    <input>
+        <net-file value="kuehne/kuehne.net.xml"/>
+        <gui-settings-file value="kuehne/settings.xml"/>
+        <route-files value="kuehne/kuehne.rou.xml"/>
+        <additional-files value="input_additional.add.xml"/>
+    </input>
+
+    <time>
+        <begin value="0"/>
+        <end value="90000"/>
+        <step-length value=".1"/>
+    </time>
+
+</configuration>

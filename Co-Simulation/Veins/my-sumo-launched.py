@@ -64,6 +64,9 @@ _LAUNCHD_VERSION = 'sumo-launchd.py 1.00'
 _CMD_GET_VERSION = 0x00
 _CMD_FILE_SEND = 0x75
 
+_SUMO_HOST = '127.0.0.1'
+_SUMO_PORT = 10002
+
 class UnusedPortLock:
     lock = thread.allocate_lock()
 
@@ -208,12 +211,14 @@ def run_sumo(runpath, sumo_command, shlex, config_file_name, remote_port, seed, 
             try:
                 logging.debug("Connecting to SUMO (%s) on port %d (try %d)" % (" ".join(cmd), remote_port, tries))
                 sumo_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                # ----- DEFAULT: default code. -----
                 # sumo_socket.connect(('127.0.0.1', remote_port))
-                sumo_socket.connect(('192.168.20.141', 10002))
+                # ----- START: my code. ----- 
+                global _SUMO_PORT
+                global _SUMO_HOST
+                sumo_socket.connect((_SUMO_HOST, _SUMO_PORT))
+                # ----- END: my code. ----- 
                 handle_set_order(sumo_socket, 1)
-                # for i in range(0, 20):
-                #     print("time: {:}".format(i))
-                #     time.sleep(1)
                 break
             except socket.error, e:
                 logging.debug("Error (%s)" % e)
@@ -694,6 +699,8 @@ def main():
     parser.add_option("-s", "--shlex", dest="shlex", default=False, action="store_true", help="treat command as shell string to execute, replace {} with command line parameters [default: no]")
     parser.add_option("-p", "--port", dest="port", type="int", default=9999, action="store", help="listen for connections on PORT [default: %default]", metavar="PORT")
     parser.add_option("-b", "--bind", dest="bind", default="127.0.0.1", help="bind to ADDRESS [default: %default]", metavar="ADDRESS")
+    parser.add_option("--sp", "--sumo-port", dest="sumo_port", type="int", default=10002, action="store", help="listen for connections on SUMO PORT [default: %default]", metavar="PORT")
+    parser.add_option("--sh", "--sumo-host", dest="sumo_host", default="127.0.0.1", help="bind to SUMO HOST [default: %default]", metavar="ADDRESS")
     parser.add_option("-L", "--logfile", dest="logfile", default=os.path.join(tempfile.gettempdir(), "sumo-launchd.log"), help="log messages to LOGFILE [default: %default]", metavar="LOGFILE")
     parser.add_option("-v", "--verbose", dest="count_verbose", default=0, action="count", help="increase verbosity [default: don't log infos, debug]")
     parser.add_option("-q", "--quiet", dest="count_quiet", default=0, action="count", help="decrease verbosity [default: log warnings, errors]")
@@ -716,6 +723,15 @@ def main():
 
     if args:
         logging.warning("Superfluous command line arguments: \"%s\"" % " ".join(args))
+
+    # ----- START: my code: read sumo host -----
+    global _SUMO_PORT
+    global _SUMO_HOST
+    _SUMO_PORT = options.sumo_port
+    _SUMO_HOST = options.sumo_host
+    print(_SUMO_PORT)
+    print(_SUMO_HOST)
+    # ----- END: my code: read sumo host -----
 
     # this is where we'll spend our time
     wait_for_connections(options.command, options.shlex, options.port, options.bind, options.daemonize, options.kill, options.pidfile, options.keep_temp)

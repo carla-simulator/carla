@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 07.07.2014 13:54:18 by SUMO gui Version dev-SVN-r16537
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo-sim.org/xsd/sumo-gui.exeConfiguration.xsd">
+
+    <input>
+        <net-file value="W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\acosta_buslanes.net.xml"/>
+        <route-files value="W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\acosta.rou.xml,W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\acosta_busses.rou.xml"/>
+        <additional-files value="W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\acosta_vtypes.add.xml,W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\acosta_detectors.add.xml,W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\acosta_bus_stops.add.xml,W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\acosta_tls.add.xml"/>
+    </input>
+
+    <output>
+        <save-state.prefix value="W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\state"/>
+    </output>
+
+    <processing>
+        <sloppy-insert value="true"/>
+    </processing>
+
+    <report>
+        <log value="W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\sumo_log.txt"/>
+    </report>
+
+    <emissions>
+        <phemlight-path value="W:\projects\x_EU_COLOMBO_318622\svn\trunk\scenarios\iTETRIS_acosta\./PHEMlight/"/>
+    </emissions>
+
+</configuration>
+-->
+
+<detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo-sim.org/xsd/det_e1_file.xsd">
+</detector>
