@@ -1,0 +1,22 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo.sf.net/xsd/routes_file.xsd">
+    <vTypeDistribution id="vtdist">
+        <vType id="trolley" accel="5.0" decel="6.0" length="12.0" maxSpeed="30.0" sigma="0.5" 
+            guiShape="bus/trolley" color="1.0,1.0,0.0" probability="0.2"/>
+        <vType id="ant" accel="3.0" decel="6.0" length="6.0" maxSpeed="15.0" sigma="0.5" 
+            guiShape="ant" color="0.8,0.5,0.0" probability="0.8"/>
+    </vTypeDistribution>
+    <routeDistribution id="horizontal">
+        <route edges="left0to0/0 0/0to1/0 1/0toright0"/>
+        <route edges="left1to0/1 0/1to1/1 1/1toright1"/>
+        <route edges="right0to1/0 1/0to0/0 0/0toleft0"/>
+        <route edges="right1to1/1 1/1to0/1 0/1toleft1"/>
+    </routeDistribution>
+    <routeDistribution id="vertical">
+        <route edges="bottom0to0/0 0/0to0/1 0/1totop0"/>
+        <route edges="bottom1to1/0 1/0to1/1 1/1totop1"/>
+        <route edges="top0to0/1 0/1to0/0 0/0tobottom0"/>
+        <route edges="top1to1/1 1/1to1/0 1/0tobottom1"/>
+    </routeDistribution>
+    <flow id="horiz" route="horizontal" begin="0" end="90000" period="2" arrivalPos="-10" type="vtdist"/>
+    <flow id="vertic" route="vertical" begin="0" end="90000" period="4" arrivalPos="-10" type="vtdist"/>
+</routes>

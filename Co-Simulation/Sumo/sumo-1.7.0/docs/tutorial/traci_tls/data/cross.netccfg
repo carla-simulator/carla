@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Sep  6 09:32:11 2018 by Eclipse SUMO netconvert Version v1_0_0+0032-77a1026
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="cross.nod.xml"/>
+        <edge-files value="cross.edg.xml"/>
+        <connection-files value="cross.con.xml"/>
+    </input>
+
+    <output>
+        <output-file value="cross.net.xml"/>
+    </output>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>

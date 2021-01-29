@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Mar 26 16:23:52 2015 by SUMO netconvert Version dev-SVN-r18156I
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="./tools/assign/input_dua2s.nod.xml"/>
+        <edge-files value="./tools/assign/input_dua2s.edg.xml"/>
+    </input>
+
+    <output>
+        <output-file value="./tools/assign/input_net.net.xml"/>
+    </output>
+
+    <processing>
+        <no-internal-links value="true"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<net version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="500.00,0.00" convBoundary="0.00,0.00,2500.00,500.00" origBoundary="-500.00,0.00,2000.00,500.00" projParameter="!"/>
+
+    <edge id="beg" from="absBeg" to="beg" priority="-1">
+        <lane id="beg_0" index="0" speed="27.80" length="500.00" shape="0.00,-4.95 498.55,-4.95"/>
+        <lane id="beg_1" index="1" speed="27.80" length="500.00" shape="0.00,-1.65 498.55,-1.65"/>
+    </edge>
+    <edge id="beg2left" from="beg" to="begleft" priority="-1">
+        <lane id="beg2left_0" index="0" speed="27.80" length="503.09" shape="501.65,1.45 501.65,496.75"/>
+    </edge>
+    <edge id="end" from="end" to="absEnd" priority="-1">
+        <lane id="end_0" index="0" speed="27.80" length="500.00" shape="1501.45,-4.95 2000.00,-4.95"/>
+        <lane id="end_1" index="1" speed="27.80" length="500.00" shape="1501.45,-1.65 2000.00,-1.65"/>
+    </edge>
+    <edge id="left" from="begleft" to="endleft" priority="-1">
+        <lane id="left_0" index="0" speed="27.80" length="1006.18" shape="503.25,498.35 1496.75,498.35"/>
+    </edge>
+    <edge id="left2end" from="endleft" to="end" priority="-1">
+        <lane id="left2end_0" index="0" speed="27.80" length="503.09" shape="1498.35,496.75 1498.35,1.45"/>
+    </edge>
+    <edge id="middle" from="beg" to="end" priority="-1">
+        <lane id="middle_0" index="0" speed="13.90" length="1000.00" shape="504.75,-1.65 1495.25,-1.65"/>
+    </edge>
+    <edge id="rend" from="absEnd" to="rabsEnd" priority="-1">
+        <lane id="rend_0" index="0" speed="27.80" length="500.00" shape="2000.00,-4.95 2500.00,-4.95"/>
+        <lane id="rend_1" index="1" speed="27.80" length="500.00" shape="2000.00,-1.65 2500.00,-1.65"/>
+    </edge>
+
+    <junction id="absBeg" type="unregulated" x="0.00" y="0.00" incLanes="" intLanes="" shape="-0.00,-0.05 -0.00,-6.55"/>
+    <junction id="absEnd" type="priority" x="2000.00" y="0.00" incLanes="end_0 end_1" intLanes="" shape="2000.00,-0.05 2000.00,-6.55 2000.00,-0.05">
+        <request index="0" response="00" foes="00"/>
+        <request index="1" response="00" foes="00"/>
+    </junction>
+    <junction id="beg" type="priority" x="500.00" y="0.00" incLanes="beg_0 beg_1" intLanes="" shape="500.05,1.45 503.25,1.45 504.75,-0.05 504.75,-3.25 498.55,-6.55 498.55,-0.05">
+        <request index="0" response="00" foes="00"/>
+        <request index="1" response="00" foes="00"/>
+    </junction>
+    <junction id="begleft" type="priority" x="500.00" y="500.00" incLanes="beg2left_0" intLanes="" shape="503.25,499.95 503.25,496.75 500.05,496.75">
+        <request index="0" response="0" foes="0"/>
+    </junction>
+    <junction id="end" type="priority" x="1500.00" y="0.00" incLanes="left2end_0 middle_0" intLanes="" shape="1496.75,1.45 1499.95,1.45 1501.45,-0.05 1501.45,-6.55 1495.25,-3.25 1495.25,-0.05">
+        <request index="0" response="00" foes="00"/>
+        <request index="1" response="00" foes="00"/>
+    </junction>
+    <junction id="endleft" type="priority" x="1500.00" y="500.00" incLanes="left_0" intLanes="" shape="1499.95,496.75 1496.75,496.75 1496.75,499.95">
+        <request index="0" response="0" foes="0"/>
+    </junction>
+    <junction id="rabsEnd" type="unregulated" x="2500.00" y="0.00" incLanes="rend_0 rend_1" intLanes="" shape="2500.00,-6.55 2500.00,-0.05"/>
+
+    <connection from="beg" to="middle" fromLane="0" toLane="0" pass="1" dir="s" state="M"/>
+    <connection from="beg" to="beg2left" fromLane="1" toLane="0" pass="1" dir="l" state="M"/>
+    <connection from="beg2left" to="left" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="end" to="rend" fromLane="0" toLane="0" dir="s" state="M"/>
+    <connection from="end" to="rend" fromLane="1" toLane="1" dir="s" state="M"/>
+    <connection from="left" to="left2end" fromLane="0" toLane="0" dir="r" state="M"/>
+    <connection from="left2end" to="end" fromLane="0" toLane="1" pass="1" dir="l" state="M"/>
+    <connection from="middle" to="end" fromLane="0" toLane="0" pass="1" dir="s" state="M"/>
+
+</net>

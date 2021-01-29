@@ -1,0 +1,12 @@
+key;0
+subkey;own
+offset;0
+link;1;wm;;0
+link;2;nm;;0
+link;3;em;;0
+link;4;sm;;0
+1;r;g;y;r;r;r;r;r
+2;r;r;r;r;r;g;y;r
+3;r;g;y;r;r;r;r;r
+4;r;r;r;r;r;g;y;r
+time;5;40;3;2;5;12;3;2

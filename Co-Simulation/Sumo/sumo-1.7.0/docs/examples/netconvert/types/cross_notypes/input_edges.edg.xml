@@ -1,0 +1,18 @@
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
+   <edge id="1fi" from="1" to="m1" priority="2" numLanes="2" speed="11.111" />
+   <edge id="1si" from="m1" to="0" priority="3" numLanes="3" speed="13.889" />
+   <edge id="1o" from="0" to="1" priority="1" numLanes="1" speed="11.111" />
+
+   <edge id="2fi" from="2" to="m2" priority="2" numLanes="2" speed="11.111" />
+   <edge id="2si" from="m2" to="0" priority="3" numLanes="3" speed="13.889" />
+   <edge id="2o" from="0" to="2" priority="1" numLanes="1" speed="11.111" />
+
+   <edge id="3fi" from="3" to="m3" priority="2" numLanes="2" speed="11.111" />
+   <edge id="3si" from="m3" to="0" priority="3" numLanes="3" speed="13.889" />
+   <edge id="3o" from="0" to="3" priority="1" numLanes="1" speed="11.111" />
+
+   <edge id="4fi" from="4" to="m4" priority="2" numLanes="2" speed="11.111" />
+   <edge id="4si" from="m4" to="0" priority="3" numLanes="3" speed="13.889" />
+   <edge id="4o" from="0" to="4" priority="1" numLanes="1" speed="11.111" />
+
+</edges>

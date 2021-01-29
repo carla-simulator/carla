@@ -1,0 +1,43 @@
+<routes>
+    <vTypeDistribution id="DEFAULT_VEHTYPE">
+        <vType id="passenger" length="5.0" guiShape="passenger" osgFile="car-normal-citrus.obj" probability="20" /> 
+        <vType id="bus" length="12.5" height="2.5" guiShape="bus" osgFile="car-minibus-citrus.obj" width="2.4" probability="2"/> 
+        <vType id="truck/trailer" length="16.25" height="2.5" guiShape="truck/trailer" osgFile="car-microcargo-citrus.obj" width="2.6" probability="1"/> 
+    </vTypeDistribution>
+
+    <route id="WE" edges="166445412 23207363#0"/>
+    <route id="NS" edges="4314834#2 4314834#3 29136063#0"/>
+    <route id="EW" edges="61734682#3 166445407 30425847#0"/>
+    <route id="SN" edges="166445406 166445405 23204862"/>
+    <route id="SE" edges="166445406 166445405 23207363#0"/>
+    <route id="NE" edges="4314834#2 4314834#3 23207363#0"/>
+    <route id="SW" edges="166445406 166445405 30425847#0"/>
+    <route id="NW" edges="4314834#2 4314834#3 30425847#0"/>
+    <route id="WN" edges="166445412 23204862"/>
+    <route id="EN" edges="61734682#3 166445407 23204862"/>
+    <route id="WS" edges="166445412 29136063#0"/>
+    <route id="ES" edges="61734682#3 166445407 29136063#0"/>
+
+    <flow id="1_right" route="WS" begin="20" end="90000" period="30" departSpeed="13.89"/>
+    <flow id="2_right" route="EN" begin="20" end="90000" period="30" departSpeed="13.89"/>
+
+    <flow id="1_left" route="WN" begin="20" end="90000" period="45" departSpeed="13.89"/>
+    <flow id="2_left" route="ES" begin="20" end="90000" period="55" departSpeed="13.89"/>
+
+    <flow id="1_horizontal" route="WE" begin="20" end="90000" period="15" departSpeed="13.89"/>
+    <flow id="2_horizontal" route="EW" begin="20" end="90000" period="15" departSpeed="13.89"/>
+
+    <flow id="3_right" route="NW" begin="20" end="90000" period="30" departSpeed="13.89"/>
+    <flow id="4_right" route="SE" begin="20" end="90000" period="40" departSpeed="13.89"/>
+    <flow id="3_left" route="NE" begin="20" end="90000" period="45" departSpeed="13.89"/>
+    <flow id="4_left" route="SW" begin="20" end="90000" period="45" departSpeed="13.89"/>
+
+    <flow id="3_vertical" route="NS" begin="40" end="90000" period="25" departSpeed="13.89"/>
+    <flow id="4_vertical" route="SN" begin="40" end="90000" period="25" departSpeed="13.89"/>
+
+    <flow id="1_horizontal0" route="WE" begin="50" end="90000" period="20" departSpeed="13.89"/>
+    <flow id="3_vertical0" route="NS" begin="60" end="90000" period="20" departSpeed="13.89"/>
+    <flow id="4_right0" route="SE" begin="70" end="90000" period="40" departSpeed="13.89"/>
+    <flow id="2_left0" route="ES" begin="80" end="90000" period="60" departSpeed="13.89"/>
+
+</routes>

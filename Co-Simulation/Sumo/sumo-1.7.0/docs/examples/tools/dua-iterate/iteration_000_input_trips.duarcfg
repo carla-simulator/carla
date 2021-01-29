@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:40 2019 by Eclipse SUMO duarouter Version v1_2_0+0017-2a947141e5
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/duarouterConfiguration.xsd">
+
+    <input>
+        <net-file value="input_net.net.xml"/>
+        <route-files value="input_trips.trips.xml"/>
+    </input>
+
+    <output>
+        <output-file value="input_trips_000.rou.xml"/>
+        <exit-times value="false"/>
+    </output>
+
+    <processing>
+        <max-alternatives value="5"/>
+        <with-taz value="false"/>
+        <weights.expand value="true"/>
+        <routing-algorithm value="dijkstra"/>
+        <gawron.beta value="0.9"/>
+        <gawron.a value="0.5"/>
+        <keep-all-routes value="false"/>
+        <logit value="false"/>
+        <logit.beta value="0.15"/>
+        <logit.gamma value="1"/>
+    </processing>
+
+    <time>
+        <begin value="0"/>
+    </time>
+
+    <report>
+        <verbose value="false"/>
+        <no-warnings value="false"/>
+        <ignore-errors value="false"/>
+        <no-step-log value="true"/>
+    </report>
+
+    <random_number>
+        <random value="false"/>
+    </random_number>
+
+</configuration>

@@ -1,0 +1,5 @@
+<routes>
+    <person id="ego" depart="0">
+        <stop lane="WC_0" duration="100"/>
+    </person>
+</routes>

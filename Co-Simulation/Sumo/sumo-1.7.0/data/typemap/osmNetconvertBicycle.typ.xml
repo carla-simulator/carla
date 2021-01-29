@@ -1,0 +1,6 @@
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/types_file.xsd">
+    <type id="cycleway.lane"           bikeLaneWidth="1.0" allow="bicycle"/>
+    <type id="cycleway.opposite_lane"  bikeLaneWidth="1.0" allow="bicycle"/>
+    <type id="cycleway.track"          bikeLaneWidth="1.5" allow="bicycle"/>
+    <type id="cycleway.opposite_track" bikeLaneWidth="1.5" allow="bicycle"/>
+</types>

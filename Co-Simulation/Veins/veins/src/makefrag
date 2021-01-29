@@ -1,0 +1,33 @@
+
+#
+# Copyright (C) 2017 Rudolf Hornig <rudi@omnetpp.org>
+#
+# Documentation for these modules is at http://veins.car2x.org/
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+#
+# on windows we have to link with the ws2_32 (winsock2) library as it is no longer added to the omnetpp system libraries by default (as of OMNeT++ 5.1)
+# copied from INET Framework (inet-3.6.0) makefrag
+#
+ifeq ($(PLATFORM),win32.x86_64)
+  LIBS += -lws2_32
+  DEFINES += -DVEINS_EXPORT
+  ENABLE_AUTO_IMPORT=-Wl,--enable-auto-import
+  LDFLAGS := $(filter-out $(ENABLE_AUTO_IMPORT), $(LDFLAGS))
+endif

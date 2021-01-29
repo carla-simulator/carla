@@ -1,0 +1,14 @@
+<add>
+    <rerouter id="repeat1" edges="172927073#0">
+        <interval begin="0" end="36000">
+            <destProbReroute id="172927073#5"/>
+        </interval>
+    </rerouter>
+
+    <rerouter id="repeat2" edges="172927073#5">
+        <interval begin="0" end="36000">
+            <destProbReroute id="172927073#0"/>
+        </interval>
+    </rerouter>
+
+</add>

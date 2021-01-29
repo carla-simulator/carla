@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnetedit_frames_demand.a  CMakeFiles/netedit_frames_demand.dir/GNERouteFrame.cpp.o CMakeFiles/netedit_frames_demand.dir/GNEStopFrame.cpp.o CMakeFiles/netedit_frames_demand.dir/GNEPersonFrame.cpp.o CMakeFiles/netedit_frames_demand.dir/GNEPersonPlanFrame.cpp.o CMakeFiles/netedit_frames_demand.dir/GNEVehicleFrame.cpp.o CMakeFiles/netedit_frames_demand.dir/GNEVehicleTypeFrame.cpp.o CMakeFiles/netedit_frames_demand.dir/GNEPersonTypeFrame.cpp.o
+/usr/bin/ranlib libnetedit_frames_demand.a

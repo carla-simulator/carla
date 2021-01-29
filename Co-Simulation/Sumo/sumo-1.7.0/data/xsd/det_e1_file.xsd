@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xsd:element name="detector">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element maxOccurs="unbounded" ref="interval"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="interval">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element minOccurs="0" maxOccurs="unbounded" ref="typedInterval"/>
+      </xsd:sequence>
+      <xsd:attribute name="begin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="end" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="id" use="required" type="xsd:string"/>
+      <xsd:attribute name="nVehContrib" use="required" type="xsd:integer"/>
+      <xsd:attribute name="flow" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="occupancy" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="speed" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="harmonicMeanSpeed" use="optional" type="xsd:decimal"/>
+      <xsd:attribute name="length" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="nVehEntered" use="required" type="xsd:integer"/>
+    </xsd:complexType>
+  </xsd:element>
+  <xsd:element name="typedInterval">
+    <xsd:complexType>
+      <xsd:attribute name="type" use="required" type="xsd:string"/>
+      <xsd:attribute name="begin" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="end" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="id" use="required" type="xsd:string"/>
+      <xsd:attribute name="nVehContrib" use="required" type="xsd:integer"/>
+      <xsd:attribute name="flow" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="occupancy" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="speed" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="harmonicMeanSpeed" use="optional" type="xsd:decimal"/>
+      <xsd:attribute name="length" use="required" type="xsd:decimal"/>
+      <xsd:attribute name="nVehEntered" use="required" type="xsd:integer"/>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>

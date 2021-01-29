@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/yoshida/carla/Co-Simulation/Sumo/sumo-1.7.0/src/foreign/eulerspiral/odrSpiral.cpp
+stdio.h
+-
+math.h
+-
+

@@ -1,0 +1,43 @@
+<polygonTypes>
+
+    <polygonType id="waterway"                name="water"       color=".71,.82,.82" layer="-4" discard="true"/>
+    <polygonType id="natural"                 name="natural"     color=".55,.77,.42" layer="-4" discard="true"/>
+    <polygonType id="landuse"                 name="landuse"     color=".76,.76,.51" layer="-3" discard="true"/>
+
+    <polygonType id="tourism"                 name="tourism"     color=".81,.96,.79" layer="-2" discard="true"/>
+    <polygonType id="military"                name="military"    color=".60,.60,.36" layer="-2" discard="true"/>
+    <polygonType id="sport"                   name="sport"       color=".31,.90,.49" layer="-2" discard="true"/>
+    <polygonType id="leisure"                 name="leisure"     color=".81,.96,.79" layer="-2" discard="true"/>
+    <polygonType id="aeroway"                 name="aeroway"     color=".50,.50,.50" layer="-2" discard="true"/>
+    <polygonType id="aerialway"               name="aerialway"   color=".20,.20,.20" layer="-2" discard="true"/>
+    <polygonType id="shop"                    name="shop"        color=".93,.78,1.0" layer="-1" discard="true"/>
+    <polygonType id="historic"                name="historic"    color=".50,1.0,.50" layer="-1" discard="true"/>
+    <polygonType id="man_made"                name="man_made"    color="1.0,.90,.90" layer="-1" discard="true"/>
+    <polygonType id="man_made.pipeline"       name="pipeline"    color="1.0,.90,.90" layer="-1" discard="true"/>
+    <polygonType id="building"                name="building"    color="1.0,.90,.90" layer="-1" discard="true"/>
+    <polygonType id="amenity"                 name="amenity"     color=".93,.78,.78" layer="-1" discard="true"/>
+    <polygonType id="power"                   name="power"       color=".10,.10,.30" layer="-1" discard="true"/>
+    <polygonType id="highway"                 name="highway"     color=".10,.10,.10" layer="-1" discard="true"/>
+
+    <polygonType id="boundary"                name="boundary"    color="1.0,.33,.33" layer="0" fill="false" discard="true"/>
+    <polygonType id="admin_level"             name="admin_level" color="1.0,.33,.33" layer="0" fill="false" discard="true"/>
+    <polygonType id="place"                   name="admin_level" color="1.0,.9,.0" layer="0" fill="false" discard="true"/>
+
+    <polygonType id="railway"                     name="railway"                     color=".10,.10,.10" layer="-1" discard="false"/>
+    <polygonType id="railway.switch"              name="railway.switch"              color="red"         layer="1" discard="false"/>
+    <polygonType id="railway.railway_crossing"    name="railway.railway_crossing"    color="1.0,0.5,0.5" layer="1" discard="false"/>
+    <polygonType id="railway.signal"              name="railway.signal"              color="orange"      layer="1" discard="false"/>
+    <polygonType id="railway.crossing"            name="railway.crossing"            color="0.5,0,0.5"   layer="1" discard="false"/>
+    <polygonType id="railway.station"             name="railway.station"             color="0.0,1.0,0.0" layer="1" discard="false"/>
+    <polygonType id="railway.halt"                name="railway.stop"                color="0.5,1.0,0.5" layer="1" discard="false"/>
+    <polygonType id="railway.stop"                name="railway.stop"                color="0.0,0.5,0.0" layer="1" discard="false"/>
+    <polygonType id="railway.tram_stop"           name="railway.tram_stop"           color="0.0,0.5,0.0" layer="1" discard="false"/>
+    <polygonType id="railway.subway_entrance"     name="railway.subway_entrance"     color="0.0,0.0,0.5" layer="1" discard="false"/>
+    <polygonType id="railway.light_rail_entrance" name="railway.light_rail_entrance" color="0.0,0.0,0.5" layer="1" discard="false"/>
+    <polygonType id="railway.site"                name="railway.site"                color="0.5,0.5,0.5" layer="1" discard="false"/>
+    <polygonType id="railway.buffer_stop"         name="railway.buffer_stop"         color="0.3,0.3,0.3" layer="1" discard="false"/>
+    <polygonType id="railway.construction"        name="railway.construction"        color="yellow"      layer="1" discard="false"/>
+    <polygonType id="railway:position"            name="railway.position"            color="blue"        layer="1" discard="false"/>
+    <polygonType id="railway:position:exact"      name="railway.position.exact"      color="0.5,0.5,1"   layer="2" discard="false"/>
+
+</polygonTypes>

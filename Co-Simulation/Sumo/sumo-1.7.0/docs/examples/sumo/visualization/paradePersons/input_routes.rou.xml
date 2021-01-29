@@ -1,0 +1,35 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="truck" sigma="0" vClass="truck"/>
+    <vType id="truck_long" sigma="0" vClass="truck" containerCapacity="2" length="16"/>
+    <vType id="semi" sigma="0" vClass="trailer" guiShape="truck/semitrailer"/>
+    <vType id="trailer" sigma="0" vClass="trailer" guiShape="truck/trailer"/>
+    <vType id="bus" sigma="0" vClass="bus"/>
+    <vType id="train" sigma="0" vClass="rail" boardingDuration="0.1"/>
+    <vType id="ship" sigma="0" vClass="ship"/>
+
+    <vType id="container" length="6.1" width="2.4"/>
+
+    <route id="r" edges="beg end">
+        <stop lane="beg_0" endPos="200" duration="10"/>
+        <stop lane="end_0" endPos="400" duration="10"/>
+    </route>
+
+    <vehicle id="v0" route="r" depart="0" departPos="180"  line="dummy" type="truck"     />
+    <vehicle id="v1" route="r" depart="0" departPos="last" line="dummy" type="semi"      />
+    <vehicle id="v2" route="r" depart="0" departPos="last" line="dummy" type="trailer"   />
+    <vehicle id="v3" route="r" depart="0" departPos="last" line="dummy" type="truck_long"/>
+    <vehicle id="v4" route="r" depart="0" departPos="last" line="dummy" type="ship"      />
+    <vehicle id="v5" route="r" depart="0" departPos="last" line="dummy" type="bus"       />
+    <vehicle id="v6" route="r" depart="0" departPos="last" line="dummy" type="train"     />
+
+    <personFlow id="p" begin="0" end="50" number="600" departPos="200">
+        <ride from="beg" to="end" lines="ANY"/>
+    </personFlow>
+
+    <personFlow id="forward" begin="0" end="1" number="10" departPos="0">
+        <walk edges="footpath" arrivalPos="-1"/>
+    </personFlow>
+    <personFlow id="backward" begin="0" end="1" number="10" departPos="-1">
+        <walk edges="footpath" arrivalPos="0"/>
+    </personFlow>
+</routes>

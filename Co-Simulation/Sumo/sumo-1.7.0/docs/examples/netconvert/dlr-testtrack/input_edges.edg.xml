@@ -1,0 +1,53 @@
+<edges xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
+
+	<edge id="ErnstRuskaSink1O" from="ErnstRuskaSink1" to="ErnstRuskaEnd1" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska1O" from="ErnstRuskaEnd1" to="ErnstRuskaEinstein" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska2O" from="ErnstRuskaEinstein" to="ErnstRuskaHavestadtDiv1" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska231O" from="ErnstRuskaHavestadtDiv1" to="ErnstRuskaHavestadt" speed="19." numLanes="3" priority="1"/>
+	<edge id="ErnstRuska232O" from="ErnstRuskaHavestadt" to="ErnstRuskaHavestadtDiv2" speed="19." numLanes="3" priority="1"/>
+	<edge id="ErnstRuska3O" from="ErnstRuskaHavestadtDiv2" to="ErnstRuskaVolmer" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska4O" from="ErnstRuskaVolmer" to="ErnstRuskaAltglienicker" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska5O" from="ErnstRuskaAltglienicker" to="ErnstRuskaEnd2" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuskaSink5O" from="ErnstRuskaEnd2" to="ErnstRuskaSink2" speed="19." numLanes="2" priority="1"/>
+
+	<edge id="ErnstRuskaSink5W" from="ErnstRuskaSink2" to="ErnstRuskaEnd2" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska5W" from="ErnstRuskaEnd2" to="ErnstRuskaAltglienicker" speed="19." numLanes="3" priority="1"/>
+	<edge id="ErnstRuska4W" from="ErnstRuskaAltglienicker" to="ErnstRuskaVolmer" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska3W" from="ErnstRuskaVolmer" to="ErnstRuskaHavestadtDiv2" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska232W" from="ErnstRuskaHavestadtDiv2" to="ErnstRuskaHavestadt" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska231W" from="ErnstRuskaHavestadt" to="ErnstRuskaHavestadtDiv1" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska2W" from="ErnstRuskaHavestadtDiv1" to="ErnstRuskaEinstein" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuska1W" from="ErnstRuskaEinstein" to="ErnstRuskaEnd1" speed="19." numLanes="2" priority="1"/>
+	<edge id="ErnstRuskaSink1W" from="ErnstRuskaEnd1" to="ErnstRuskaSink1" speed="19." numLanes="2" priority="1"/>
+
+
+	<edge id="EinsteinN" from="ErnstRuskaEinstein" to="EinsteinEnd" speed="14." numLanes="1"/>
+	<edge id="EinsteinSinkN" from="EinsteinEnd" to="EinsteinSinkEnd" speed="14." numLanes="1"/>
+
+	<edge id="EinsteinSinkS" from="EinsteinSinkEnd" to="EinsteinEnd" speed="14." numLanes="1"/>
+	<edge id="EinsteinS" from="EinsteinEnd" to="ErnstRuskaEinstein" speed="14." numLanes="1"/>
+
+
+	<edge id="HavestadtN" from="ErnstRuskaHavestadt" to="HavestadtEnd" speed="14." numLanes="2"/>
+	<edge id="HavestadtSinkN" from="HavestadtEnd" to="HavestadtSinkEnd" speed="14." numLanes="2"/>
+
+	<edge id="HavestadtSinkS" from="HavestadtSinkEnd" to="HavestadtEnd" speed="14." numLanes="2"/>
+	<edge id="HavestadtS" from="HavestadtEnd" to="ErnstRuskaHavestadt" speed="14." numLanes="2"/>
+
+
+	<edge id="VolmerN" from="ErnstRuskaVolmer" to="VolmerEnd" speed="14." numLanes="1"/>
+	<edge id="VolmerSinkN" from="VolmerEnd" to="VolmerSinkEnd" speed="14." numLanes="1"/>
+
+	<edge id="VolmerSinkS" from="VolmerSinkEnd" to="VolmerEnd" speed="14." numLanes="1"/>
+	<edge id="VolmerS" from="VolmerEnd" to="ErnstRuskaVolmer" speed="14." numLanes="1"/>
+
+
+	<edge id="AltglienickerBreitS" from="ErnstRuskaAltglienicker" to="AltglienickerBreit" speed="14." numLanes="1"/>
+	<edge id="AltglienickerS" from="AltglienickerBreit" to="AltglienickerEnd" speed="14." numLanes="1"/>
+	<edge id="AltglienickerSinkS" from="AltglienickerEnd" to="AltglienickerSinkEnd" speed="14." numLanes="1"/>
+
+	<edge id="AltglienickerSinkN" from="AltglienickerSinkEnd" to="AltglienickerEnd" speed="14." numLanes="1"/>
+	<edge id="AltglienickerN" from="AltglienickerEnd" to="AltglienickerBreit" speed="14." numLanes="1"/>
+	<edge id="AltglienickerBreitN" from="AltglienickerBreit" to="ErnstRuskaAltglienicker" speed="14." numLanes="2"/>
+
+</edges>

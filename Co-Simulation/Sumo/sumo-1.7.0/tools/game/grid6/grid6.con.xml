@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Wed May 27 15:37:58 2015 by SUMO netconvert Version dev-SVN-r18449I
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="grid6.net.xml"/>
+    </input>
+
+    <output>
+        <plain-output-prefix value="grid6"/>
+    </output>
+
+    <processing>
+        <no-turnarounds value="true"/>
+        <offset.disable-normalization value="true"/>
+    </processing>
+
+</configuration>
+-->
+
+<connections version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/connections_file.xsd">
+    <connection from="0/0to0/1" to="0/1to1/1" fromLane="0" toLane="0"/>
+    <connection from="0/0to0/1" to="0/1totop0" fromLane="0" toLane="0"/>
+
+    <connection from="0/0to1/0" to="1/0tobottom1" fromLane="0" toLane="0"/>
+    <connection from="0/0to1/0" to="1/0to2/0" fromLane="0" toLane="0"/>
+
+    <connection from="0/0tobottom0" to="gneE26" fromLane="0" toLane="0"/>
+
+    <connection from="0/0toleft0" to="gneE17" fromLane="0" toLane="0"/>
+
+    <connection from="0/1to0/0" to="0/0toleft0" fromLane="0" toLane="0"/>
+    <connection from="0/1to0/0" to="0/0tobottom0" fromLane="0" toLane="0"/>
+
+    <connection from="0/1to1/1" to="1/1to1/0" fromLane="0" toLane="0"/>
+    <connection from="0/1to1/1" to="1/1to2/1" fromLane="0" toLane="0"/>
+
+    <connection from="0/1toleft1" to="gneE13" fromLane="0" toLane="0"/>
+
+    <connection from="0/1totop0" to="gneE34" fromLane="0" toLane="0"/>
+
+    <connection from="1/0to0/0" to="0/0to0/1" fromLane="0" toLane="0"/>
+    <connection from="1/0to0/0" to="0/0toleft0" fromLane="0" toLane="0"/>
+
+    <connection from="1/0to1/1" to="1/1to2/1" fromLane="0" toLane="0"/>
+    <connection from="1/0to1/1" to="1/1totop1" fromLane="0" toLane="0"/>
+
+    <connection from="1/0to2/0" to="2/0tobottom2" fromLane="0" toLane="0"/>
+    <connection from="1/0to2/0" to="2/0toright0" fromLane="0" toLane="0"/>
+
+    <connection from="1/0tobottom1" to="gneE29" fromLane="0" toLane="0"/>
+
+    <connection from="1/1to0/1" to="0/1totop0" fromLane="0" toLane="0"/>
+    <connection from="1/1to0/1" to="0/1toleft1" fromLane="0" toLane="0"/>
+
+    <connection from="1/1to1/0" to="1/0to0/0" fromLane="0" toLane="0"/>
+    <connection from="1/1to1/0" to="1/0tobottom1" fromLane="0" toLane="0"/>
+
+    <connection from="1/1to2/1" to="2/1to2/0" fromLane="0" toLane="0"/>
+    <connection from="1/1to2/1" to="2/1toright1" fromLane="0" toLane="0"/>
+
+    <connection from="1/1totop1" to="gneE37" fromLane="0" toLane="0"/>
+
+    <connection from="2/0to1/0" to="1/0to1/1" fromLane="0" toLane="0"/>
+    <connection from="2/0to1/0" to="1/0to0/0" fromLane="0" toLane="0"/>
+
+    <connection from="2/0to2/1" to="2/1toright1" fromLane="0" toLane="0"/>
+    <connection from="2/0to2/1" to="2/1totop2" fromLane="0" toLane="0"/>
+
+    <connection from="2/0tobottom2" to="gneE30" fromLane="0" toLane="0"/>
+
+    <connection from="2/0toright0" to="gneE24" fromLane="0" toLane="0"/>
+
+    <connection from="2/1to1/1" to="1/1totop1" fromLane="0" toLane="0"/>
+    <connection from="2/1to1/1" to="1/1to0/1" fromLane="0" toLane="0"/>
+
+    <connection from="2/1to2/0" to="2/0to1/0" fromLane="0" toLane="0"/>
+    <connection from="2/1to2/0" to="2/0tobottom2" fromLane="0" toLane="0"/>
+
+    <connection from="2/1toright1" to="gneE20" fromLane="0" toLane="0"/>
+
+    <connection from="2/1totop2" to="gneE40" fromLane="0" toLane="0"/>
+
+    <connection from="bottom0to0/0" to="0/0to1/0" fromLane="0" toLane="0"/>
+    <connection from="bottom0to0/0" to="0/0to0/1" fromLane="0" toLane="0"/>
+
+    <connection from="bottom1to1/0" to="1/0to2/0" fromLane="0" toLane="0"/>
+    <connection from="bottom1to1/0" to="1/0to1/1" fromLane="0" toLane="0"/>
+
+    <connection from="bottom2to2/0" to="2/0toright0" fromLane="0" toLane="0"/>
+    <connection from="bottom2to2/0" to="2/0to2/1" fromLane="0" toLane="0"/>
+
+    <connection from="bottom_in" to="gneE31" fromLane="0" toLane="0"/>
+    <connection from="bottom_in" to="gneE28" fromLane="1" toLane="0"/>
+    <connection from="bottom_in" to="gneE27" fromLane="2" toLane="0"/>
+
+    <connection from="gneE12" to="left1to0/1" fromLane="0" toLane="0"/>
+
+    <connection from="gneE13" to="left_out" fromLane="0" toLane="0"/>
+
+    <connection from="gneE16" to="left0to0/0" fromLane="0" toLane="0"/>
+
+    <connection from="gneE17" to="left_out" fromLane="0" toLane="1"/>
+
+    <connection from="gneE20" to="right_out" fromLane="0" toLane="1"/>
+
+    <connection from="gneE21" to="right1to2/1" fromLane="0" toLane="0"/>
+
+    <connection from="gneE24" to="right_out" fromLane="0" toLane="0"/>
+
+    <connection from="gneE25" to="right0to2/0" fromLane="0" toLane="0"/>
+
+    <connection from="gneE26" to="bottom_out" fromLane="0" toLane="0"/>
+
+    <connection from="gneE27" to="bottom0to0/0" fromLane="0" toLane="0"/>
+
+    <connection from="gneE28" to="bottom1to1/0" fromLane="0" toLane="0"/>
+
+    <connection from="gneE29" to="bottom_out" fromLane="0" toLane="1"/>
+
+    <connection from="gneE30" to="bottom_out" fromLane="0" toLane="2"/>
+
+    <connection from="gneE31" to="bottom2to2/0" fromLane="0" toLane="0"/>
+
+    <connection from="gneE34" to="top_out" fromLane="0" toLane="2"/>
+
+    <connection from="gneE35" to="top0to0/1" fromLane="0" toLane="0"/>
+
+    <connection from="gneE36" to="top1to1/1" fromLane="0" toLane="0"/>
+
+    <connection from="gneE37" to="top_out" fromLane="0" toLane="1"/>
+
+    <connection from="gneE40" to="top_out" fromLane="0" toLane="0"/>
+
+    <connection from="gneE41" to="top2to2/1" fromLane="0" toLane="0"/>
+
+    <connection from="left0to0/0" to="0/0tobottom0" fromLane="0" toLane="0"/>
+    <connection from="left0to0/0" to="0/0to1/0" fromLane="0" toLane="0"/>
+
+    <connection from="left1to0/1" to="0/1to0/0" fromLane="0" toLane="0"/>
+    <connection from="left1to0/1" to="0/1to1/1" fromLane="0" toLane="0"/>
+
+    <connection from="left_in" to="gneE16" fromLane="0" toLane="0"/>
+    <connection from="left_in" to="gneE12" fromLane="1" toLane="0"/>
+
+    <connection from="right0to2/0" to="2/0to2/1" fromLane="0" toLane="0"/>
+    <connection from="right0to2/0" to="2/0to1/0" fromLane="0" toLane="0"/>
+
+    <connection from="right1to2/1" to="2/1totop2" fromLane="0" toLane="0"/>
+    <connection from="right1to2/1" to="2/1to1/1" fromLane="0" toLane="0"/>
+
+    <connection from="right_in" to="gneE21" fromLane="0" toLane="0"/>
+    <connection from="right_in" to="gneE25" fromLane="1" toLane="0"/>
+
+    <connection from="top0to0/1" to="0/1toleft1" fromLane="0" toLane="0"/>
+    <connection from="top0to0/1" to="0/1to0/0" fromLane="0" toLane="0"/>
+
+    <connection from="top1to1/1" to="1/1to0/1" fromLane="0" toLane="0"/>
+    <connection from="top1to1/1" to="1/1to1/0" fromLane="0" toLane="0"/>
+
+    <connection from="top2to2/1" to="2/1to1/1" fromLane="0" toLane="0"/>
+    <connection from="top2to2/1" to="2/1to2/0" fromLane="0" toLane="0"/>
+
+    <connection from="top_in" to="gneE35" fromLane="0" toLane="0"/>
+    <connection from="top_in" to="gneE36" fromLane="1" toLane="0"/>
+    <connection from="top_in" to="gneE41" fromLane="2" toLane="0"/>
+
+</connections>

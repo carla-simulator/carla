@@ -1,0 +1,11 @@
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/types_file.xsd">
+
+    <!-- no extra permissions shall be added -->
+    <type id="usage.main"       oneway="true" disallow="all"/>
+    <type id="usage.branch"     oneway="true" disallow="all"/>
+    <type id="usage.industrial" oneway="true" disallow="all"/>
+    <type id="usage.military"   oneway="true" disallow="all"/>
+    <type id="usage.tourism"    oneway="true" disallow="all"/>
+    <type id="usage.test"       oneway="true" disallow="all"/>
+
+</types>

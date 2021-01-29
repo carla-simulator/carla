@@ -1,0 +1,13 @@
+Source: sumo
+Section: unknown
+Priority: optional
+Maintainer: Michael Behrisch <behrisch@users.sourceforge.net>
+Build-Depends: debhelper (>= 4.1.16), g++, libxerces-c-dev | libxerces-c2-dev, libgdal1-1.3.2-dev | libgdal1-dev, libproj-dev | proj, libfox-1.6-dev, libxrandr-dev, libbz2-dev, libcupsys2-dev
+
+Package: sumo
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Simulation of Urban MObility (SUMO)
+ SUMO is an open source,
+ highly portable, microscopic road traffic simulation package
+ designed to handle large road networks.

@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+
+BUILDDIR = $(CURDIR)/cmake-build
+
+%:
+	dh $@ --buildsystem=cmake --parallel --builddirectory=$(BUILDDIR)
+
+no_hardening_all_archs = mips mipsel
+
+ifeq (,$(filter $(DEB_HOST_ARCH),$(no_hardening_all_archs)))
+  export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+endif
+
+DPKG_EXPORT_BUILDFLAGS = 1
+
+export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
+
+export LIBS := -lgl2ps -lGL -lGLU -lglut
+
+include /usr/share/dpkg/buildflags.mk
+
+override_dh_auto_build-indep:
+#	pip3 install mkdocs mkdocs-macros-plugin==0.2.4 mdx_gh_links pymdown-extensions mkdocs-git-revision-date-plugin mdx_truly_sane_lists
+#	$(MAKE) --directory=$(BUILDDIR) userdoc
+#	$(MAKE) --directory=$(BUILDDIR) traas
+	./tools/build/buildPyDoc.py -p docs/pydoc -c
+	#Clean some unneeded files and fix permissions
+	find ./tools -name '*.pyc' -print0 | xargs -0 rm -f
+	rm -rf ./tools/contributed/traas/license.txt
+	rm -rf ./tools/contributed/traci4matlab/license.txt
+	rm -rf ./tools/game/sounds/license.txt
+
+override_dh_auto_test:
+	sed -i '/traas/d' ./docs/examples/runAll.py
+	dh_auto_test
+
+override_dh_auto_build-arch:
+	dh_auto_build -a
+	$(MAKE) --directory=$(BUILDDIR) man
+
+override_dh_auto_install:
+	dh_auto_install
+	find . -type d -name "__pycache__" -delete

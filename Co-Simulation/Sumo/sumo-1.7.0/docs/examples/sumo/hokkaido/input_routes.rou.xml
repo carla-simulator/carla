@@ -1,0 +1,5 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+   <vType id="SUMO_DEFAULT_TYPE" accel="0.8" decel="4.5" sigma="0" length="3" minGap="2" maxSpeed="70"/>
+   <route id="def" edges="source 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4 1 2 3 4"/>
+   <flow id="def" type="SUMO_DEFAULT_TYPE" route="def" begin="1" period="1" end="11"/>
+</routes>

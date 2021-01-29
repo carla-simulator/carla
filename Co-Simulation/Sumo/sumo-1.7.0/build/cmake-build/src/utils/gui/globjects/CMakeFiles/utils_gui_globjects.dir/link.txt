@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_gui_globjects.a  CMakeFiles/utils_gui_globjects.dir/GUIGLObjectPopupMenu.cpp.o CMakeFiles/utils_gui_globjects.dir/GUIGlObject.cpp.o CMakeFiles/utils_gui_globjects.dir/GUIGlObjectStorage.cpp.o CMakeFiles/utils_gui_globjects.dir/GUIGlObject_AbstractAdd.cpp.o CMakeFiles/utils_gui_globjects.dir/GUIShapeContainer.cpp.o CMakeFiles/utils_gui_globjects.dir/GUIPointOfInterest.cpp.o CMakeFiles/utils_gui_globjects.dir/GUIPolygon.cpp.o
+/usr/bin/ranlib libutils_gui_globjects.a

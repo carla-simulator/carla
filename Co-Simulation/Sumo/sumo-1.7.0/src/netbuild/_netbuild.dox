@@ -1,0 +1,19 @@
+/**
+ @file _netbuild.dox
+ @defgoup netbuild Network Building Module
+ @brief builds SUMO-networks froman internal representation
+
+ @addtogroup netbuild
+ @{
+ 
+ netbuild stores a representation of the road graph (edges/nodes/...) and offers classes and methods
+  for transferring this representation into loadable sumo networks.
+
+ The internal representation is meant to be filled by classes from the @ref netimport or @ref netgen modules. 
+
+ The process of building networks is encapsulated in NBNetBuilder::compute(). Here, the following steps are performed:
+
+
+ 
+ @}
+*/

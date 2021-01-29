@@ -1,0 +1,5 @@
+<routes>
+    <vType id="racecar" vClass="vip" speedDev="0.3" latAlignment="arbitrary" emergencyDecel="9" minGap="0"/>
+    <trip id="ego" type="racecar" depart="0"  departPos="last" departSpeed="0" from="172927499#1" to="172927073#5" color="green" departPosLat="center"/>
+    <flow id="cars" type="racecar" begin="0" end="1.2" period="0.1" departPos="last" departSpeed="0" from="172927499#1" to="172927073#5" departPosLat="random"/>
+</routes>

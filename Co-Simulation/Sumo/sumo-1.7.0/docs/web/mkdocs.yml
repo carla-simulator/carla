@@ -1,0 +1,82 @@
+site_name: SUMO Documentation
+site_url: https://sumo.dlr.de/docs/
+site_favicon: favicon.ico
+repo_url: https://github.com/eclipse/sumo/
+edit_uri: edit/master/docs/web/docs/
+site_description: SUMO Documentation
+use_directory_urls: false
+dev_addr: 127.0.0.1:8000
+#docs_dir: docs
+#site_dir: site
+copyright: "Copyright &copy; 2001 - 2020 German Aerospace Center (DLR) and others."
+
+nav:
+  - Documentation: index.md
+  - Tutorials: Tutorials.md
+  - FAQ: FAQ.md
+  - Downloads: Downloads.md
+  - Publications: Publications.md
+  - Developer: Developer/Main.md
+  - ChangeLog: ChangeLog.md
+  - Recent Changes: https://github.com/eclipse/sumo/commits/master/docs/web
+  - Contact: https://eclipse.org/sumo/contact/
+
+theme:
+  name: mkdocs
+  custom_dir: theme/
+  shortcuts:
+    help: 191     # ?
+    search: 83    # s
+    edit: 69      # e
+
+plugins:
+  - git-revision-date:
+      as_datetime: true
+  - macros
+
+markdown_extensions:
+  - admonition
+  - pymdownx.tilde
+  - meta
+  - pymdownx.keys
+  - footnotes
+  - mdx_truly_sane_lists:
+      nested_indent: 2
+      truly_sane: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: "#"
+      separator: "_"
+      baselevel: 1
+  - pymdownx.magiclink:
+      provider: github
+  - mdx_gh_links:
+      user: eclipse
+      repo: sumo
+  - plantuml_markdown
+
+extra:
+    Version: 1.7.0
+    ReleaseDate: 09.09.2020
+
+    AdditionalFile: '[*additional-file*](/docs/sumo.html#format_of_additional_files)'
+    AdditionalFiles: '[*additional-files*](/docs/sumo.html#format_of_additional_files)'
+    DT_2DBoundingBox: '[*&lt;2D-BOUNDING_BOX&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_2DPosition: '[*&lt;2D-POSITION&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_BOOL: '[*&lt;BOOL&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_Color: '[*&lt;COLOR&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_FILE: '[*&lt;FILE&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_FLOAT: '[*&lt;FLOAT&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_IDList: '[*&lt;ID&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_INT: '[*&lt;INT&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_NET: '[*&lt;NETWORK_FILE&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_PATH: '[*&lt;PATH&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_PROJ_DEF: '[*&lt;PROJ_DEFINITION&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_Routes: '[*&lt;ROUTES_FILE&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_STR: '[*&lt;STRING&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    DT_TIME: '[*&lt;TIME&gt;*](/docs/Basics/Notation.html#referenced_data_types)'
+    Outdated: '<div style="background: #801010; padding: .5em; border: 1px dashed #ffcc44; margin-right:10px; margin-left:10px; color: #ffffff">This information is outdated.</div>'
+    Source: 'https://github.com/eclipse/sumo/blob/master/'
+    SUMO: '***&lt;SUMO_HOME&gt;***'
+    SUMOUSERConference: '[SUMO User Conference](https://eclipse.org/sumo/conference)'

@@ -1,0 +1,23 @@
+/* XPM */
+static const char * yellow_edge_xpm[] = {
+"16 16 4 1",
+" 	c None",
+".	c Black",
+"X	c Gray50",
+"o	c Yellow",
+" ...            ",
+".XXX.           ",
+".XXX.           ",
+".XXX..          ",
+" ...oo.         ",
+"   .ooo.        ",
+"    .ooo.       ",
+"     .ooo.      ",
+"      .ooo.     ",
+"       .ooo.    ",
+"        .ooo.   ",
+"         .oo... ",
+"          ..XXX.",
+"           .XXX.",
+"           .XXX.",
+"            ... "};

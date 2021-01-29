@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:39 2019 by Eclipse SUMO Version v1_2_0+0017-2a947141e5
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="net.net.xml"/>
+        <additional-files value="input_additional.add.xml"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <vehroute-output value="vehroutes.xml"/>
+    </output>
+
+    <processing>
+        <default.speeddev value="0"/>
+    </processing>
+
+    <report>
+        <duration-log.disable value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vehicle id="0" type="BUS" depart="0.00" color="yellow" arrival="295.00">
+        <route edges="2/0to2/1 2/1to1/1 1/1to1/2 1/2to0/2 0/2to0/1 0/1to0/0 0/0to1/0 1/0to2/0 2/0to2/1"/>
+        <stop busStop="busstop1" duration="20.00"/>
+        <stop busStop="busstop2" duration="20.00"/>
+        <stop busStop="busstop3" duration="20.00"/>
+        <stop busStop="busstop4" duration="20.00"/>
+    </vehicle>
+
+    <vehicle id="1" type="BUS" depart="3.00" color="yellow" arrival="375.00">
+        <route edges="2/0to2/1 2/1to1/1 1/1to1/2 1/2to0/2 0/2to0/1 0/1to0/0 0/0to1/0 1/0to2/0 2/0to2/1"/>
+        <stop busStop="busstop1" duration="20.00"/>
+        <stop busStop="busstop2" duration="20.00"/>
+        <stop busStop="busstop3" duration="20.00"/>
+        <stop busStop="busstop4" duration="20.00"/>
+    </vehicle>
+
+    <vehicle id="2" type="BUS" depart="6.00" color="yellow" arrival="401.00">
+        <route edges="2/0to2/1 2/1to1/1 1/1to1/2 1/2to0/2 0/2to0/1 0/1to0/0 0/0to1/0 1/0to2/0 2/0to2/1"/>
+        <stop busStop="busstop1" duration="20.00"/>
+        <stop busStop="busstop2" duration="20.00"/>
+        <stop busStop="busstop3" duration="20.00"/>
+        <stop busStop="busstop4" duration="20.00"/>
+    </vehicle>
+
+</routes>

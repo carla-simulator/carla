@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<tlLogics version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo-sim.org/xsd/tllogic_file.xsd">
+    <tlLogic id="cluster_104171179_28142770_28298581_28298587" type="static" programID="0" offset="0">
+        <phase duration="4"    state="rrryyuuuuurrryyuuuuu"/>
+        <phase duration="2"    state="rrrrruuuuurrrrruuuuu"/>
+        <phase duration="1000" state="rrrrrGGGggrrrrrGGGgg"/>
+    </tlLogic>
+    <tlLogic id="cluster_104171179_28142770_28298581_28298587" type="static" programID="1" offset="0">
+        <phase duration="4"    state="rrrrryyyuurrrrryyyuu"/>
+        <phase duration="2"    state="rrrrrrrrrrrrrrrrrrrr"/>
+        <phase duration="1000" state="rrrrrrrrGGrrrrrrrrGG"/>
+    </tlLogic>
+    <tlLogic id="cluster_104171179_28142770_28298581_28298587" type="static" programID="2" offset="0">
+        <phase duration="4"    state="uuuuurrryyuuuuurrryy"/>
+        <phase duration="2"    state="uuuuurrrrruuuuurrrrr"/>
+        <phase duration="1000" state="GGGggrrrrrGGGggrrrrr"/>
+    </tlLogic>
+    <tlLogic id="cluster_104171179_28142770_28298581_28298587" type="static" programID="3" offset="0">
+        <phase duration="4"    state="yyyuurrrrryyyuurrrrr"/>
+        <phase duration="2"    state="rrruurrrrrrrruurrrrr"/>
+        <phase duration="1000" state="rrrGGrrrrrrrrGGrrrrr"/>
+    </tlLogic>
+</tlLogics>

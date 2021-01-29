@@ -1,0 +1,19 @@
+<routes>
+    <vTypeDistribution id="private">
+        <vType vClass="passenger" id="passenger1"  color=".8,.2,.2" accel="2.6" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="70" probability=".4" guiShape="passenger/sedan" emissionClass="P_7_7"/>
+        <vType vClass="passenger" id="passenger2a" color=".8,.8,.8" accel="3.0" decel="4.5" sigma="0.5" length="4.5" minGap="1.5" maxSpeed="70" probability=".2" guiShape="passenger/hatchback" emissionClass="P_7_7"/>
+        <vType vClass="passenger" id="passenger2b" color=".2,.2,.8" accel="2.8" decel="4.5" sigma="0.5" length="4.5" minGap="1" maxSpeed="70" probability=".2" guiShape="passenger/hatchback" emissionClass="P_7_7"/>
+        <vType vClass="passenger" id="passenger3"  color=".3,.3,.3" accel="2.7" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="70" probability=".2" guiShape="passenger/wagon" emissionClass="P_7_7"/>
+        <vType vClass="passenger" id="passenger4"  color=".9,.9,.9" accel="2.4" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="30" probability=".1" guiShape="passenger/van" emissionClass="P_7_7"/>
+        <vType vClass="passenger" id="passenger5"  color=".8,.8,.0" accel="2.3" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="30" probability=".05" guiShape="delivery" emissionClass="P_7_7"/>
+    </vTypeDistribution>
+    <vTypeDistribution id="ignoring">
+        <vType vClass="ignoring" id="ignoring1"  color=".8,.2,.2" accel="2.6" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="70" probability=".4" guiShape="passenger/sedan" emissionClass="P_7_7"/>
+        <vType vClass="ignoring" id="ignoring2a" color=".8,.8,.8" accel="3.0" decel="4.5" sigma="0.5" length="4.5" minGap="1.5" maxSpeed="70" probability=".2" guiShape="passenger/hatchback" emissionClass="P_7_7"/>
+        <vType vClass="ignoring" id="ignoring2b" color=".2,.2,.8" accel="2.8" decel="4.5" sigma="0.5" length="4.5" minGap="1" maxSpeed="70" probability=".2" guiShape="passenger/hatchback" emissionClass="P_7_7"/>
+        <vType vClass="ignoring" id="ignoring3"  color=".3,.3,.3" accel="2.7" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="70" probability=".2" guiShape="passenger/wagon" emissionClass="P_7_7"/>
+        <vType vClass="ignoring" id="ignoring4"  color=".9,.9,.9" accel="2.4" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="30" probability=".1" guiShape="passenger/van" emissionClass="P_7_7"/>
+        <vType vClass="ignoring" id="ignoring5"  color=".8,.8,.0" accel="2.3" decel="4.5" sigma="0.5" length="5" minGap="1.5" maxSpeed="30" probability=".05" guiShape="delivery" emissionClass="P_7_7"/>
+    </vTypeDistribution>
+	<vType id="bus" accel="2.6" decel="4.5" sigma="0.5" length="12" minGap="3" maxSpeed="70" emissionClass="HDV_6_2" guiShape="bus/city" vClass="bus"/>
+</routes>

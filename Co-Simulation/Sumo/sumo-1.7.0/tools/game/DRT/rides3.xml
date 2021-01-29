@@ -1,0 +1,42 @@
+<routes>
+    <person id="b0" depart="600.0" color="142,31,181">
+        <stop busStop="bs1" duration="3"/>
+        <ride busStop="bs15" lines="ANY"/>
+    </person>
+    <person id="b1" depart="700.0" color="240,50,232">
+        <stop busStop="bs15" duration="3"/>
+        <ride busStop="bs6" lines="ANY"/>
+    </person>
+    <person id="b2" depart="800.0" color="0,127,199">
+        <stop busStop="bs0" duration="3"/>
+        <ride busStop="bs11" lines="ANY"/>
+    </person>
+    <person id="b3" depart="900.0" color="60,181,72">
+        <stop busStop="bs0" duration="3"/>
+        <ride busStop="bs1" lines="ANY"/>
+    </person>
+    <person id="b4" depart="1000.0" color="255,25,25">
+        <stop busStop="bs12" duration="3"/>
+        <ride busStop="bs0" lines="ANY"/>
+    </person>
+    <person id="b5" depart="1100.0" color="142,31,181">
+        <stop busStop="bs1" duration="3"/>
+        <ride busStop="bs15" lines="ANY"/>
+    </person>
+    <person id="b6" depart="1200.0" color="60,181,72">
+        <stop busStop="bs12" duration="3"/>
+        <ride busStop="bs1" lines="ANY"/>
+    </person>
+    <person id="b7" depart="1300.0" color="70,240,240">
+        <stop busStop="bs12" duration="3"/>
+        <ride busStop="bs20" lines="ANY"/>
+    </person>
+    <person id="b8" depart="1400.0" color="70,240,240">
+        <stop busStop="bs0" duration="3"/>
+        <ride busStop="bs20" lines="ANY"/>
+    </person>
+    <person id="b9" depart="1500.0" color="255,218,25">
+        <stop busStop="bs15" duration="3"/>
+        <ride busStop="bs8" lines="ANY"/>
+    </person>
+</routes>

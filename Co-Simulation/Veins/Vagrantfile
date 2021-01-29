@@ -106,5 +106,9 @@ Vagrant.configure("2") do |config|
     sudo timedatectl set-timezone Asia/Tokyo
     # デフォルトのエディタを nano から vim に変更
     sudo update-alternatives --set editor $(update-alternatives --list editor | grep 'vim.basic')
+    # resolution の変更 
+    sudo apt install -y libosgearth-dev
+    sudo apt update -y
+    sudo apt-get upgrade -y
  EOS
 end

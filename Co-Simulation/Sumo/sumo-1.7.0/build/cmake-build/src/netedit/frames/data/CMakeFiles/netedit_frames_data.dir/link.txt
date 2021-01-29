@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnetedit_frames_data.a  CMakeFiles/netedit_frames_data.dir/GNEGenericDataFrame.cpp.o CMakeFiles/netedit_frames_data.dir/GNEEdgeDataFrame.cpp.o CMakeFiles/netedit_frames_data.dir/GNEEdgeRelDataFrame.cpp.o CMakeFiles/netedit_frames_data.dir/GNETAZRelDataFrame.cpp.o
+/usr/bin/ranlib libnetedit_frames_data.a

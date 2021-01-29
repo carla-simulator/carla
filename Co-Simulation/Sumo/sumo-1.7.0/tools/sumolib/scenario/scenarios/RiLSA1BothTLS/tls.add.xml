@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<add>
+    <tlLogic id="0" type="static" programID="own" offset="0">
+        <phase duration="5"  state="rrrrrrrrrrrrrrrr" type="transient;commit"/>
+        <phase duration="40" state="rrrGGgrrrGGgGrGr" minDur="12" maxDur="52" type="target;decisional" targetLanes="em_1 em_2 wm_1 wm_2"/>
+        <phase duration="3"  state="rrryyyrrryyyrrrr" type="transient"/>
+        <phase duration="2"  state="rrrrrrrrrrrrrrrr" type="transient"/>
+        <phase duration="5"  state="rrrrrrrrrrrrrrrr" type="transient;commit"/>
+        <phase duration="12" state="GGgrrrGGgrrrrGrG" minDur="12" maxDur="52" type="target;decisional" targetLanes="nm_1 nm_2 sm_1 sm_2"/>
+        <phase duration="3"  state="yyyrrryyyrrrrrrr" type="transient"/>
+        <phase duration="2"  state="rrrrrrrrrrrrrrrr" type="transient"/>
+    </tlLogic>
+
+    <tlLogic id="ea" type="actuated" programID="own" offset="0">
+        <phase duration="31" state="GG" minDur="10" maxDur="65"/>
+        <phase duration="4" state="yy"/>
+        <phase duration="39" state="rr" minDur="10" maxDur="65"/>
+    </tlLogic>
+    <tlLogic id="wa" type="actuated" programID="own" offset="0">
+        <phase duration="31" state="GG" minDur="10" maxDur="65"/>
+        <phase duration="4" state="yy"/>
+        <phase duration="39" state="rr" minDur="10" maxDur="65"/>
+    </tlLogic>
+    <tlLogic id="na" type="actuated" programID="own" offset="0">
+        <phase duration="39" state="rr" minDur="10" maxDur="65"/>
+        <phase duration="31" state="GG" minDur="10" maxDur="65"/>
+        <phase duration="4" state="yy"/>
+    </tlLogic>
+    <tlLogic id="sa" type="actuated" programID="own" offset="0">
+        <phase duration="39" state="rr" minDur="10" maxDur="65"/>
+        <phase duration="31" state="GG" minDur="10" maxDur="65"/>
+        <phase duration="4" state="yy"/>
+    </tlLogic>
+
+</add>
+

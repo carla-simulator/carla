@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnetwrite.a  CMakeFiles/netwrite.dir/NWFrame.cpp.o CMakeFiles/netwrite.dir/NWWriter_Amitran.cpp.o CMakeFiles/netwrite.dir/NWWriter_MATSim.cpp.o CMakeFiles/netwrite.dir/NWWriter_OpenDrive.cpp.o CMakeFiles/netwrite.dir/NWWriter_DlrNavteq.cpp.o CMakeFiles/netwrite.dir/NWWriter_SUMO.cpp.o CMakeFiles/netwrite.dir/NWWriter_XML.cpp.o
+/usr/bin/ranlib libnetwrite.a

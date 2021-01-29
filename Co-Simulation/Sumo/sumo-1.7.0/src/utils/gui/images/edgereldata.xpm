@@ -1,0 +1,38 @@
+/* XPM */
+static const char *edgereldata_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 16 1 ",
+"  c black",
+". c #007F0E",
+"X c #0026FF",
+"o c red",
+"O c #FFD800",
+"+ c white",
+"@ c black",
+"# c black",
+"$ c black",
+"% c black",
+"& c black",
+"* c black",
+"= c black",
+"- c black",
+"; c black",
+": c black",
+/* pixels */
+"          .     ",
+"         ...    ",
+"        .....   ",
+"          .  o  ",
+"...........  oo ",
+"oooooooooooooooo",
+"XXXXXO       oo ",
+"    XO       o  ",
+"  X XO ++++++++ ",
+" XX XO ++XX++++ ",
+"XXXXXO ooXX++++ ",
+" XX  O ooXX..++ ",
+"  X  O ooXX..OO ",
+"   OOOOooXX..OO ",
+"    OOOooXX..OO ",
+"     O          "
+};

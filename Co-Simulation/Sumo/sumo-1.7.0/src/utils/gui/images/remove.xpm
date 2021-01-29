@@ -1,0 +1,29 @@
+/* XPM */
+static const char *remove_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"20 20 3 1 ",
+"  c #7F0000",
+". c red",
+"X c None",
+/* pixels */
+"XXXXXXXXXXXXXXXXXXXX",
+"XXXX  XXXXXXXX  XXXX",
+"XXX .. XXXXXX .. XXX",
+"XX .... XXXX .... XX",
+"X ...... XX ...... X",
+"X .......  ....... X",
+"XX .............. XX",
+"XXX ............ XXX",
+"XXXX .......... XXXX",
+"XXXXX ........ XXXXX",
+"XXXXX ........ XXXXX",
+"XXXX .......... XXXX",
+"XXX ............ XXX",
+"XX .............. XX",
+"X .......  ....... X",
+"X ...... XX ...... X",
+"XX .... XXXX .... XX",
+"XXX .. XXXXXX .. XXX",
+"XXXX  XXXXXXXX  XXXX",
+"XXXXXXXXXXXXXXXXXXXX"
+};

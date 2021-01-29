@@ -1,0 +1,9 @@
+<flows>
+    <vType id="bus" color="0,1,0" vClass="bus" guiShape="bus"/>
+	<flow id="buses_EW" begin="50400" end="54000" from="-380" to="-436#1" period="450" type="bus">
+		<stop busStop="sanDiegoE" duration="120"/>
+	</flow>
+	<flow id="buses_WE" begin="50400" end="54000" from="33463249#0" to="-461#1" period="450" type="bus">
+		<stop busStop="sanDiegoW" duration="120"/>
+	</flow>
+</flows>

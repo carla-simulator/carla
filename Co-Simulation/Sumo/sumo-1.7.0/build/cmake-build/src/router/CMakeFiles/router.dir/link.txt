@@ -1,0 +1,2 @@
+/usr/bin/ar qc librouter.a  CMakeFiles/router.dir/ROEdge.cpp.o CMakeFiles/router.dir/ROFrame.cpp.o CMakeFiles/router.dir/ROHelper.cpp.o CMakeFiles/router.dir/ROLoader.cpp.o CMakeFiles/router.dir/RONet.cpp.o CMakeFiles/router.dir/RONetHandler.cpp.o CMakeFiles/router.dir/RONode.cpp.o CMakeFiles/router.dir/ROPerson.cpp.o CMakeFiles/router.dir/RORoute.cpp.o CMakeFiles/router.dir/RORouteDef.cpp.o CMakeFiles/router.dir/RORouteHandler.cpp.o CMakeFiles/router.dir/ROVehicle.cpp.o
+/usr/bin/ranlib librouter.a

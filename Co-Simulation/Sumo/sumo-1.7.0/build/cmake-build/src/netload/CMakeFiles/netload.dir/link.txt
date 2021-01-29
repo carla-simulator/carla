@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnetload.a  CMakeFiles/netload.dir/NLDetectorBuilder.cpp.o CMakeFiles/netload.dir/NLDiscreteEventBuilder.cpp.o CMakeFiles/netload.dir/NLEdgeControlBuilder.cpp.o CMakeFiles/netload.dir/NLJunctionControlBuilder.cpp.o CMakeFiles/netload.dir/NLBuilder.cpp.o CMakeFiles/netload.dir/NLHandler.cpp.o CMakeFiles/netload.dir/NLTriggerBuilder.cpp.o
+/usr/bin/ranlib libnetload.a

@@ -1,0 +1,23 @@
+/* XPM */
+static const char * locate_poi_xpm[] = {
+"16 16 4 1",
+" 	c None",
+".	c Black",
+"X	c Gray50",
+"o	c Red",
+"  ...           ",
+" .ooo.     ...  ",
+" .ooo.    .   . ",
+" .ooo.        . ",
+"  ...        .  ",
+"            .   ",
+"                ",
+"   .     .. .   ",
+"  .X.   .XX.    ",
+"  .XX.  .XXX.   ",
+" .XXX.  .XXX.   ",
+" .XXXX...XX..   ",
+" .XXXXXXXX.     ",
+" .XXXXXXX.      ",
+"  .......       ",
+"                "};

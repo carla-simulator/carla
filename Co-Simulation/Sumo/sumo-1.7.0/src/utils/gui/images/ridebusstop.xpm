@@ -1,0 +1,32 @@
+/* XPM */
+static const char *ridebusstop_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 10 1 ",
+"  c blue",
+". c black",
+"X c #007F46",
+"o c #0A7F4A",
+"O c red",
+"+ c #4CAA32",
+"@ c #FFD800",
+"# c #FFEB00",
+"$ c cyan",
+"% c white",
+/* pixels */
+"                ",
+" XXXX           ",
+" X$$X  .......  ",
+"X@XX@X .%.%.%.  ",
+"XXXXoX .......  ",
+".    . .%. .%.  ",
+".......... ...  ",
+"..O.%.%.%. .%.  ",
+".......... ...  ",
+"           .%.  ",
+"   +++     ...  ",
+"   +#+     .%.  ",
+"+++++++++.....  ",
+"++++++O+%.%.%.  ",
+"+++++++++.....  ",
+"                "
+};

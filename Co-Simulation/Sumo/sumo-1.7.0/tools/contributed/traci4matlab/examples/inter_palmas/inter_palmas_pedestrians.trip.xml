@@ -1,0 +1,366 @@
+<?xml version="1.0"?>
+<!-- generated on 2015-06-22 14:59:00.669000 by $Id: randomTrips.py 18450 2015-05-27 12:43:14Z namdre $
+  options: -n inter_palmas_notls.net.xml -o inter_palmas_pedestrians.trip.xml <doubleminus>pedestrians -b 50400 -e 54000 -p 30 <doubleminus>trip-attributes=departPos="random" arrivalPos="random"
+-->
+<trips>
+    <person id="0" depart="50400.00" >
+        <walk from="-461#0" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="1" depart="50430.00" >
+        <walk from="-447" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="2" depart="50460.00" >
+        <walk from="33463249#0" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="3" depart="50490.00" >
+        <walk from="-447" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="4" depart="50520.00" >
+        <walk from="33463249#1" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="5" depart="50550.00" >
+        <walk from="33463249#1" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="6" depart="50580.00" >
+        <walk from="-436#0" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="7" depart="50610.00" >
+        <walk from="-436#1" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="8" depart="50640.00" >
+        <walk from="-447" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="9" depart="50670.00" >
+        <walk from="33463249#0" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="10" depart="50700.00" >
+        <walk from="-436#1" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="11" depart="50730.00" >
+        <walk from="-461#0" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="12" depart="50760.00" >
+        <walk from="-380" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="13" depart="50790.00" >
+        <walk from="33463249#0" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="14" depart="50820.00" >
+        <walk from="33463249#1" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="15" depart="50850.00" >
+        <walk from="-447" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="16" depart="50880.00" >
+        <walk from="-447" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="17" depart="50910.00" >
+        <walk from="-436#1" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="18" depart="50940.00" >
+        <walk from="-447" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="19" depart="50970.00" >
+        <walk from="-447" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="20" depart="51000.00" >
+        <walk from="33463249#1" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="21" depart="51030.00" >
+        <walk from="-461#0" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="22" depart="51060.00" >
+        <walk from="-461#1" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="23" depart="51090.00" >
+        <walk from="-436#1" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="24" depart="51120.00" >
+        <walk from="-436#1" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="25" depart="51150.00" >
+        <walk from="-436#1" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="26" depart="51180.00" >
+        <walk from="-436#1" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="27" depart="51210.00" >
+        <walk from="-465" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="28" depart="51240.00" >
+        <walk from="-447" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="29" depart="51270.00" >
+        <walk from="33463249#1" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="30" depart="51300.00" >
+        <walk from="-447" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="31" depart="51330.00" >
+        <walk from="-447" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="32" depart="51360.00" >
+        <walk from="-461#0" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="33" depart="51390.00" >
+        <walk from="-465" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="34" depart="51420.00" >
+        <walk from="-461#0" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="35" depart="51450.00" >
+        <walk from="-461#1" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="36" depart="51480.00" >
+        <walk from="33463249#1" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="37" depart="51510.00" >
+        <walk from="-436#0" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="38" depart="51540.00" >
+        <walk from="-461#0" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="39" depart="51570.00" >
+        <walk from="33463249#1" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="40" depart="51600.00" >
+        <walk from="33463249#1" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="41" depart="51630.00" >
+        <walk from="-436#1" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="42" depart="51660.00" >
+        <walk from="-447" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="43" depart="51690.00" >
+        <walk from="-461#0" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="44" depart="51720.00" >
+        <walk from="-380" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="45" depart="51750.00" >
+        <walk from="-380" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="46" depart="51780.00" >
+        <walk from="-461#1" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="47" depart="51810.00" >
+        <walk from="-465" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="48" depart="51840.00" >
+        <walk from="-465" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="49" depart="51870.00" >
+        <walk from="33463249#0" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="50" depart="51900.00" >
+        <walk from="-461#0" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="51" depart="51930.00" >
+        <walk from="-447" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="52" depart="51960.00" >
+        <walk from="33463249#0" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="53" depart="51990.00" >
+        <walk from="-465" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="54" depart="52020.00" >
+        <walk from="-436#0" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="55" depart="52050.00" >
+        <walk from="-436#1" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="56" depart="52080.00" >
+        <walk from="-461#1" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="57" depart="52110.00" >
+        <walk from="-465" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="58" depart="52140.00" >
+        <walk from="33463249#0" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="59" depart="52170.00" >
+        <walk from="-461#1" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="60" depart="52200.00" >
+        <walk from="-461#1" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="61" depart="52230.00" >
+        <walk from="-436#1" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="62" depart="52260.00" >
+        <walk from="-465" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="63" depart="52290.00" >
+        <walk from="33463249#1" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="64" depart="52320.00" >
+        <walk from="-380" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="65" depart="52350.00" >
+        <walk from="-465" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="66" depart="52380.00" >
+        <walk from="-447" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="67" depart="52410.00" >
+        <walk from="-447" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="68" depart="52440.00" >
+        <walk from="33463249#0" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="69" depart="52470.00" >
+        <walk from="-465" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="70" depart="52500.00" >
+        <walk from="-380" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="71" depart="52530.00" >
+        <walk from="-447" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="72" depart="52560.00" >
+        <walk from="-461#0" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="73" depart="52590.00" >
+        <walk from="-461#0" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="74" depart="52620.00" >
+        <walk from="-380" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="75" depart="52650.00" >
+        <walk from="-436#1" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="76" depart="52680.00" >
+        <walk from="-447" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="77" depart="52710.00" >
+        <walk from="33463249#0" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="78" depart="52740.00" >
+        <walk from="-436#1" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="79" depart="52770.00" >
+        <walk from="-461#0" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="80" depart="52800.00" >
+        <walk from="-447" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="81" depart="52830.00" >
+        <walk from="-461#0" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="82" depart="52860.00" >
+        <walk from="-461#1" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="83" depart="52890.00" >
+        <walk from="-436#1" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="84" depart="52920.00" >
+        <walk from="-461#0" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="85" depart="52950.00" >
+        <walk from="33463249#0" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="86" depart="52980.00" >
+        <walk from="33463249#0" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="87" depart="53010.00" >
+        <walk from="-461#1" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="88" depart="53040.00" >
+        <walk from="33463249#0" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="89" depart="53070.00" >
+        <walk from="-461#1" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="90" depart="53100.00" >
+        <walk from="-465" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="91" depart="53130.00" >
+        <walk from="-461#1" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="92" depart="53160.00" >
+        <walk from="-447" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="93" depart="53190.00" >
+        <walk from="33463249#0" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="94" depart="53220.00" >
+        <walk from="-461#0" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="95" depart="53250.00" >
+        <walk from="-380" to="33463249#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="96" depart="53280.00" >
+        <walk from="-465" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="97" depart="53310.00" >
+        <walk from="-436#1" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="98" depart="53340.00" >
+        <walk from="-447" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="99" depart="53370.00" >
+        <walk from="-436#1" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="100" depart="53400.00" >
+        <walk from="-465" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="101" depart="53430.00" >
+        <walk from="-447" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="102" depart="53460.00" >
+        <walk from="-436#1" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="103" depart="53490.00" >
+        <walk from="-461#0" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="104" depart="53520.00" >
+        <walk from="-380" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="105" depart="53550.00" >
+        <walk from="-436#1" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="106" depart="53580.00" >
+        <walk from="-380" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="107" depart="53610.00" >
+        <walk from="33463249#0" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="108" depart="53640.00" >
+        <walk from="33463249#0" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="109" depart="53670.00" >
+        <walk from="-436#0" to="-461#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="110" depart="53700.00" >
+        <walk from="-461#0" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="111" depart="53730.00" >
+        <walk from="-436#1" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="112" depart="53760.00" >
+        <walk from="-436#1" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="113" depart="53790.00" >
+        <walk from="-461#0" to="-465" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="114" depart="53820.00" >
+        <walk from="-447" to="33463249#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="115" depart="53850.00" >
+        <walk from="-380" to="-380" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="116" depart="53880.00" >
+        <walk from="-380" to="-436#1" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="117" depart="53910.00" >
+        <walk from="-461#0" to="-436#0" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="118" depart="53940.00" >
+        <walk from="-461#0" to="-447" departPos="random" arrivalPos="random"/>
+    </person>
+    <person id="119" depart="53970.00" >
+        <walk from="-436#0" to="-461#0" departPos="random" arrivalPos="random"/>
+    </person>
+</trips>

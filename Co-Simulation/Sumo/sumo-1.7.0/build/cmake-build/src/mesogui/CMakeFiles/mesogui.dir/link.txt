@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmesogui.a  CMakeFiles/mesogui.dir/GUIMEInductLoop.cpp.o CMakeFiles/mesogui.dir/GUIMEVehicle.cpp.o CMakeFiles/mesogui.dir/GUIMEVehicleControl.cpp.o
+/usr/bin/ranlib libmesogui.a

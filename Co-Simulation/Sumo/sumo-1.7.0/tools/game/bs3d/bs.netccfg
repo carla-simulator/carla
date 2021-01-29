@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Sep  6 09:28:02 2018 by Eclipse SUMO netconvert Version v1_0_0+0032-77a1026
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="bsplain.nod.xml"/>
+        <edge-files value="bsplain.edg.xml"/>
+        <connection-files value="bsplain.con.xml"/>
+        <tllogic-files value="bsplain.tll.xml"/>
+    </input>
+
+    <output>
+        <output-file value="bs.net.xml"/>
+    </output>
+
+    <report>
+        <ignore-errors.edge-type value="true"/>
+    </report>
+
+</configuration>

@@ -1,0 +1,4 @@
+version=3
+opts=repacksuffix=+dfsg1,uversionmangle=s/(\d)[_\.\-\+]?((RC|rc|pre|dev|beta|alpha|b|a)\d*)$/$1~$2/,dversionmangle=s/\+(debian|dfsg|ds|deb|-dfsg)\d*$// \
+http://sf.net/sumo/sumo-src-([\d.]+)\.tar\.gz debian uupdate
+

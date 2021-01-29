@@ -1,0 +1,69 @@
+<!--
+// Copyright (C) 2011 Christoph Sommer <sommer@ccs-labs.org>
+//
+// Documentation for these modules is at http://veins.car2x.org/
+//
+// SPDX-License-Identifier: (GPL-2.0-or-later OR CC-BY-SA-4.0)
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// -
+//
+// At your option, you can also redistribute and/or modify this file
+// under a
+// Creative Commons Attribution-ShareAlike 4.0 International License.
+//
+// You should have received a copy of the license along with this
+// work.  If not, see <http://creativecommons.org/licenses/by-sa/4.0/>.
+-->
+
+<nodes>
+   <node id="0" x="0.0" y="0.0"/>
+   <node id="10" x="300.0" y="50.0"/>
+   <node id="11" x="300.0" y="100.0"/>
+   <node id="12" x="400.0" y="0.0"/>
+   <node id="13" x="400.0" y="50.0"/>
+   <node id="14" x="400.0" y="100.0"/>
+   <node id="15" x="500.0" y="0.0"/>
+   <node id="16" x="500.0" y="50.0"/>
+   <node id="17" x="500.0" y="100.0"/>
+   <node id="18" x="600.0" y="0.0"/>
+   <node id="19" x="600.0" y="50.0"/>
+   <node id="1" x="0.0" y="50.0"/>
+   <node id="20" x="600.0" y="100.0"/>
+   <node id="21" x="700.0" y="0.0"/>
+   <node id="22" x="700.0" y="50.0"/>
+   <node id="23" x="700.0" y="100.0"/>
+   <node id="24" x="800.0" y="0.0"/>
+   <node id="25" x="800.0" y="50.0"/>
+   <node id="26" x="800.0" y="100.0"/>
+   <node id="27" x="900.0" y="0.0"/>
+   <node id="28" x="900.0" y="50.0"/>
+   <node id="29" x="900.0" y="100.0"/>
+   <node id="2" x="0.0" y="100.0"/>
+   <node id="30" x="1000.0" y="0.0"/>
+   <node id="31" x="1000.0" y="50.0"/>
+   <node id="32" x="1000.0" y="100.0"/>
+   <node id="33" x="1100.0" y="0.0"/>
+   <node id="34" x="1100.0" y="50.0"/>
+   <node id="35" x="1100.0" y="100.0"/>
+   <node id="3" x="100.0" y="0.0"/>
+   <node id="4" x="100.0" y="50.0"/>
+   <node id="5" x="100.0" y="100.0"/>
+   <node id="6" x="200.0" y="0.0"/>
+   <node id="7" x="200.0" y="50.0"/>
+   <node id="8" x="200.0" y="100.0"/>
+   <node id="9" x="300.0" y="0.0"/>
+</nodes>

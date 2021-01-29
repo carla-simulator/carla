@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+	
+	<vType id="DEFAULT_VEHTYPE" sigma="0">
+	    <param key="parking.distance.weight" value="1"/>
+    </vType>
+	
+    <route id="route1" edges="a b">
+		<stop index="0" parkingArea="ParkAreaA" duration="2" parking="true"/>
+		<stop index="1" parkingArea="ParkAreaB" duration="2" parking="true"/>
+    </route>
+
+    <vehicle id="v0" depart="0" route="route1" departPos="190"/>
+	
+	
+</routes>

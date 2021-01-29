@@ -1,0 +1,47 @@
+digraph complete {
+	graph [rankdir = "TB"];
+
+
+	node [shape=box fontname="Arial" fillcolor="olivedrab3" style="filled"]; NETCONVERT;
+	node [shape=box fontname="Arial" fillcolor="olivedrab" style="filled"]; NETGEN;
+
+	subgraph cluster_0 {
+		graph [rankdir = "LR"];
+		style=filled;
+		color=lightgrey;
+		label = "(Additional)\nuser descriptions"
+		shape = ellipse
+
+		node [shape=record fontname="Arial" fillcolor="olivedrab3" style="filled" label="{<f0> XML edges files | XML nodes files | XML connections files}"]; "XML Descriptions";
+
+	}
+
+
+	subgraph cluster_2 {
+		graph [rankdir = "LR"];
+		style=filled;
+		color=lightgrey;
+		label = "Foreign formats"
+		shape = ellipse
+
+		node [shape=record fontname="Arial" fillcolor="olivedrab3" style="filled" label="{<f0> VISUM network | Vissim network | Cell network | ArcView/ArcGIS database | Tiger map | ARTEMIS network | Elmar map}"]; "Foreign formats";
+
+	}
+
+	graph [rankdir = "TB"];
+
+
+	"XML Descriptions" -> NETCONVERT [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+	"Foreign formats" -> NETCONVERT [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+
+
+	node [shape=ellipse fontname="Arial" fillcolor="olivedrab2" style="filled"]; network;
+
+	NETCONVERT -> network [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+	NETGEN -> network [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+
+
+	node [shape=box fontname="Arial" fillcolor="lightskyblue" style="filled"]; "SUMO/GUISIM";
+	network -> "SUMO/GUISIM" [arrowhead="normal" label="--net-file" fontname="Arial" fontsize="10"];
+
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Wed Jan  3 09:21:06 2018 by SUMO Version v0_32_0+0043-24523c2
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="net.net.xml"/>
+        <additional-files value="input_routes.rou.xml,input_additional2.add.xml"/>
+    </input>
+
+    <output>
+        <tripinfo-output value="tripinfos.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+        <end value="1000"/>
+    </time>
+
+    <report>
+        <xml-validation value="never"/>
+        <duration-log.disable value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<tripinfos xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tripinfo_file.xsd">
+    <tripinfo id="0" depart="0.00" departLane="4/1to3/1_0" departPos="100.00" departSpeed="10.00" departDelay="0.00" arrival="150.00" arrivalLane="1/1to0/1_0" arrivalPos="400.00" arrivalSpeed="10.00" duration="150.00" routeLength="1500.00" waitingTime="0.00" stopTime="0.00" timeLoss="0.00" rerouteNo="0" devices="tripinfo_0" vType="DEFAULT_VEHTYPE" speedFactor="1.00" vaporized=""/>
+</tripinfos>

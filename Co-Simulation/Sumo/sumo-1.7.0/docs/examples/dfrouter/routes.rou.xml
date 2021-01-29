@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:39 2019 by Eclipse SUMO dfrouter Version v1_2_0+0017-2a947141e5
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/dfrouterConfiguration.xsd">
+
+    <input>
+        <net-file value="input_tri.net.xml"/>
+        <detector-files value="input_tri.det.xml"/>
+        <measure-files value="input_tri_flows.txt"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <routes-output value="routes.rou.xml"/>
+        <emitters-output value="emitters.add.xml"/>
+    </output>
+
+    <processing>
+        <keep-longer-routes value="true"/>
+        <include-unused-routes value="true"/>
+    </processing>
+
+    <time>
+        <end value="60"/>
+    </time>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+
+    <route id="beg_to_end" edges="beg middle end"/>
+    <route id="beg_to_end_1" edges="beg 1toR R Rto2 end"/>
+    <route id="beg_to_end_2" edges="beg 1toL L Lto2 end"/>
+
+</routes>

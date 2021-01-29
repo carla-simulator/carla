@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:include schemaLocation="baseTypes.xsd" />
+
+    <xsd:element name="edgeRelations">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="interval" minOccurs="0" maxOccurs="unbounded" type="intervalType"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="intervalType">
+        <xsd:sequence>
+            <xsd:element name="edgeRelation" type="edgeRelationType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="begin" type="nonNegativeFloatType" use="required"/>
+        <xsd:attribute name="end" type="positiveFloatType" use="required"/>
+        <xsd:attribute name="id" type="xsd:string" use="optional" />
+    </xsd:complexType>
+
+    <xsd:complexType name="edgeRelationType">
+        <xsd:attribute name="from" type="xsd:string" use="required"/>
+        <xsd:attribute name="to" type="xsd:string" use="required"/>
+        <xsd:attribute name="probability" type="nonNegativeFloatType" use="optional"/>
+        <xsd:attribute name="count" type="xsd:float" use="optional"/>
+        <xsd:anyAttribute/>
+    </xsd:complexType>
+
+</xsd:schema>

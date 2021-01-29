@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="11.3">
+  <zoom_level>10</zoom_level>
+  <element>
+    <type>com.umlet.element.custom.InitialState</type>
+    <coordinates>
+      <x>410</x>
+      <y>750</y>
+      <w>20</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.custom.FinalState</type>
+    <coordinates>
+      <x>410</x>
+      <y>120</y>
+      <w>20</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.custom.State</type>
+    <coordinates>
+      <x>640</x>
+      <y>260</y>
+      <w>190</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>teleporting
+--
+For any reason, the vehicle
+was temporarily removed
+from the network.
+-.
+isOnNet()==false
+held in MSVehicleTransfer</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.custom.State</type>
+    <coordinates>
+      <x>320</x>
+      <y>190</y>
+      <w>190</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>loaded
+--
+The vehicle is loaded, but
+not inserted into the network,
+yet.
+-.
+isOnNet()==false
+held in MSInsertionControl</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.custom.State</type>
+    <coordinates>
+      <x>320</x>
+      <y>380</y>
+      <w>190</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>running
+--
+The vehicle was inserted 
+into the network.
+-.
+isOnNet()==true
+held in his MSLane</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.custom.State</type>
+    <coordinates>
+      <x>320</x>
+      <y>570</y>
+      <w>190</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>arrived
+--
+The vehicle has reached its
+destination and was removed
+from the network.
+-.
+isOnNet()==false
+removed</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.custom.State</type>
+    <coordinates>
+      <x>640</x>
+      <y>420</y>
+      <w>190</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>parking
+--
+The vehicle halts besides
+the road network.
+-.
+isOnNet()==false
+held in MSVehicleTransfer
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>390</x>
+      <y>110</y>
+      <w>50</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>30;80;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>390</x>
+      <y>290</y>
+      <w>50</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>30;90;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>390</x>
+      <y>480</y>
+      <w>50</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>30;90;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>480</x>
+      <y>270</y>
+      <w>180</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>160;30;30;130</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>480</x>
+      <y>290</y>
+      <w>180</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>30;130;160;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>480</x>
+      <y>410</y>
+      <w>180</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>160;50;30;30</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>480</x>
+      <y>430</y>
+      <w>180</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>30;30;160;50</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>390</x>
+      <y>670</y>
+      <w>50</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>30;80;30;30</additional_attributes>
+  </element>
+</diagram>

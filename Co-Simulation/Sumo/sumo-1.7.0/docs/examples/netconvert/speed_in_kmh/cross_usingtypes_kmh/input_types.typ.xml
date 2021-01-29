@@ -1,0 +1,5 @@
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/types_file.xsd">
+	<type id="a" priority="3" numLanes="3" speed="50"/>
+	<type id="b" priority="2" numLanes="2" speed="40"/>
+	<type id="c" priority="1" numLanes="1" speed="40"/>
+</types>

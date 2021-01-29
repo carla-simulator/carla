@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Wed 18 Dec 2019 01:59:25 PM CET by Eclipse SUMO netedit Version v1_4_0+0175-decf788
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="net.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="net.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.min-radius.fix.railways value="false"/>
+        <geometry.max-grade.fix value="false"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+    </processing>
+
+    <junctions>
+        <no-internal-links value="true"/>
+        <no-turnarounds value="true"/>
+        <junctions.corner-detail value="0"/>
+        <junctions.limit-turn-speed value="-1"/>
+        <rectangular-lane-cut value="false"/>
+    </junctions>
+
+    <pedestrian>
+        <walkingareas value="false"/>
+    </pedestrian>
+
+    <visualisation>
+        <registry-viewport value="true"/>
+    </visualisation>
+
+    <report>
+        <aggregate-warnings value="5"/>
+    </report>
+
+</configuration>
+-->
+
+<net version="1.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+
+    <location netOffset="0.00,500.00" convBoundary="320.00,420.00,660.00,580.00" origBoundary="0.00,-500.00,2500.00,500.00" projParameter="!"/>
+
+    <edge id="beg" from="absBeg" to="beg" priority="-1" shape="480.00,500.00 460.09,438.74 400.00,420.00 340.00,440.00 320.00,500.00 340.00,560.00 400.00,580.00 460.00,560.00 500.00,500.00">
+        <lane id="beg_0" index="0" speed="13.89" length="515.70" shape="478.48,500.49 458.82,440.02 400.02,421.68 341.26,441.26 321.69,500.00 341.26,558.74 400.00,578.31 458.97,558.66 498.43,499.47"/>
+    </edge>
+    <edge id="end" from="beg" to="absBeg" priority="-1" shape="500.00,500.00 520.00,440.00 580.00,420.00 640.00,440.00 660.00,500.00 640.00,560.00 580.00,580.00 520.00,560.00 480.00,500.00">
+        <lane id="end_0" index="0" speed="13.89" length="514.83" shape="498.62,499.09 518.74,438.74 580.00,418.31 641.26,438.74 661.69,500.00 641.26,561.26 580.00,581.69 518.97,561.34 478.67,500.89"/>
+    </edge>
+    <edge id="footpath" from="gneJ2" to="gneJ3" priority="-1" shape="410.00,530.00 390.00,530.00 370.00,510.00 370.00,490.00 390.00,470.00 410.00,470.00 430.00,490.00 430.00,510.00 410.00,520.00 390.00,520.00">
+        <lane id="footpath_0" index="0" allow="pedestrian" speed="13.89" length="207.21" width="5.00" shape="410.00,532.50 388.96,532.50 367.50,511.04 367.50,488.96 388.96,467.50 411.04,467.50 432.50,488.96 432.50,511.55 410.59,522.50 390.00,522.50"/>
+    </edge>
+
+    <junction id="absBeg" type="dead_end" x="480.00" y="500.00" incLanes="end_0" intLanes="" shape="477.34,501.78 480.00,500.00 476.96,500.99"/>
+    <junction id="beg" type="priority" x="500.00" y="500.00" incLanes="beg_0" intLanes="" shape="500.14,499.59 497.10,498.58 499.76,500.36">
+        <request index="0" response="0" foes="0"/>
+    </junction>
+    <junction id="gneJ2" type="dead_end" x="410.00" y="530.00" incLanes="" intLanes="" shape="410.00,530.00 410.00,535.00"/>
+    <junction id="gneJ3" type="dead_end" x="390.00" y="520.00" incLanes="footpath_0" intLanes="" shape="390.00,525.00 390.00,520.00"/>
+
+    <connection from="beg" to="end" fromLane="0" toLane="0" dir="s" state="M"/>
+
+</net>

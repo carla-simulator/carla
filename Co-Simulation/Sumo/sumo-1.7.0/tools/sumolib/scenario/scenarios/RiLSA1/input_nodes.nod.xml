@@ -1,0 +1,14 @@
+<nodes>
+    <node id="0" x="0" y="0" type="traffic_light"/>
+    
+    <node id="w" x="-100" y="0"/>
+    <node id="e" x="100" y="0"/>
+    <node id="n" x="0" y="100"/>
+    <node id="s" x="0" y="-100"/>
+
+    <node id="wp" x="-500" y="0"/>
+    <node id="ep" x="500" y="0"/>
+    <node id="np" x="0" y="500"/>
+    <node id="sp" x="0" y="-500"/>
+
+</nodes>

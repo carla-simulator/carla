@@ -1,0 +1,2 @@
+/usr/bin/ar qc libod.a  CMakeFiles/od.dir/ODDistrict.cpp.o CMakeFiles/od.dir/ODDistrictCont.cpp.o CMakeFiles/od.dir/ODAmitranHandler.cpp.o CMakeFiles/od.dir/ODDistrictHandler.cpp.o CMakeFiles/od.dir/ODMatrix.cpp.o
+/usr/bin/ranlib libod.a

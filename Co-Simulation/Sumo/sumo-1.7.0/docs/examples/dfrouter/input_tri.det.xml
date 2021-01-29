@@ -1,0 +1,17 @@
+<a>
+
+   <detectorDefinition id="MQ_beg"  lane="beg_0" pos="5"/>
+
+   <detectorDefinition id="MQ_middle" lane="middle_0" pos="500"/>
+
+   <detectorDefinition id="MQ_1toR" lane="1toR_0" pos="100"/>
+   <detectorDefinition id="MQ_R" lane="R_0" pos="500"/>
+   <detectorDefinition id="MQ_Rto2" lane="Rto2_0" pos="100"/>
+
+   <detectorDefinition id="MQ_1toL" lane="1toL_0" pos="100"/>
+   <detectorDefinition id="MQ_L" lane="L_0" pos="500"/>
+   <detectorDefinition id="MQ_Lto2" lane="Lto2_0" pos="100"/>
+
+   <detectorDefinition id="MQ_end" lane="end_0" pos="50"/>
+
+</a>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu 21 Nov 2019 10:29:23 PM CET by Eclipse SUMO netedit Version v1_3_1+0985-d8cef81c9e
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="net.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="/home/kobo/dlr/debug/model_railroad/net2.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.max-grade.fix value="false"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+    </processing>
+
+    <junctions>
+        <no-turnarounds value="true"/>
+        <junctions.corner-detail value="5"/>
+        <junctions.limit-turn-speed value="5.5"/>
+        <rectangular-lane-cut value="false"/>
+    </junctions>
+
+    <pedestrian>
+        <walkingareas value="false"/>
+    </pedestrian>
+
+    <formats>
+        <opendrive.curve-resolution value="20"/>
+    </formats>
+
+    <netedit>
+        <route-files value="/home/kobo/dlr/debug/model_railroad/train.rou.xml"/>
+    </netedit>
+
+    <visualisation>
+        <registry-viewport value="true"/>
+    </visualisation>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vType id="train" vClass="rail" length="250" speedFactor="0.6" decel="1" accel="1"/>
+    <vType id="train2" vClass="rail" length="150" speedFactor="0.9" decel="1" accel="1"/>
+    <!--
+    <trip id="trip_0" type="train" depart="0.00" from="B0C0" to="C1B1" arrivalSpeed="0"/>
+    -->
+    <trip id="trip_1" type="train2" depart="0.00" from="B0C0" to="C1B1" arrivalSpeed="0"/>
+</routes>

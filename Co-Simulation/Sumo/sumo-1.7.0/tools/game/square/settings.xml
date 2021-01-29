@@ -1,0 +1,24 @@
+<viewsettings>
+    <delay value="500"/>
+    <viewport zoom="300" x="250" y="250"/>
+    <decal filename="dlr.gif" centerX="160" centerY="240" width="50" height="50" rotation="0.00"/>
+    <scheme name="game_square">
+        <opengl antialiase="0" dither="0"/>
+        <background backgroundColor="0.20,0.50,0.20"
+                    showGrid="0" gridXSize="100.00" gridYSize="100.00"/>
+        <vehicles vehicleMode="10" vehicleQuality="2" minVehicleSize="1.00" vehicleExaggeration="1.00" showBlinker="1"
+                  vehicleName_show="0" vehicleName_size="50.00" vehicleName_color="0.80,0.60,0.00" >
+            <colorScheme name="by waiting time" interpolated="1">
+                <entry color="green" threshold="0.00"/>
+                <entry color="yellow" threshold="20.00"/>
+                <entry color="red" threshold="40.00"/>
+            </colorScheme>
+        </vehicles>
+        <legend showSizeLegend="1"/>
+    </scheme>
+
+    <event id="jam" commandPosix="play sounds/car_horn1.wav &#x26;"  commandWindows="start /min vlc.exe -Idummy --play-and-exit sounds/car_horn1.wav" probability="0.001"/>
+    <event id="jam" commandPosix="play sounds/car_horn2.wav &#x26;"  commandWindows="start /min vlc.exe -Idummy --play-and-exit sounds/car_horn2.wav" probability="0.001"/>
+    <event id="jam" commandPosix="play sounds/car_horn3.wav &#x26;"  commandWindows="start /min vlc.exe -Idummy --play-and-exit sounds/car_horn3.wav" probability="0.001"/>
+    <jamTime value="40"/>
+</viewsettings>

@@ -1,0 +1,4 @@
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/types_file.xsd">
+    <type id="highway.raceway"        numLanes="2" speed="27.78" priority="14" oneway="false" allow="vip" width="9.6"/>
+
+</types>

@@ -1,0 +1,174 @@
+body {
+    font-size: 18px;
+    font-family: Futura, Verdena, Arial, sans-serif;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#side {
+    position: absolute;
+    top: 0;
+    right: -250px;
+    width: 250px;
+    height: 100%;
+    transition: 0.2s right;
+    background: #5F5FD3;
+    color: #FFF;
+}
+
+#side.open {
+    right: 0;
+}
+
+.tab {
+    width: 40px;
+    height: 40px;
+    margin: 25px 0 25px -40px;
+    font-size: 32px;
+    line-height: 40px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px 0 0 4px;
+    background: #5F5FD3;
+}
+
+.tab img {
+    width: 32px;
+    margin: 4px;
+}
+
+.tab.open {
+    border-left: 4px solid #2C2CA0;
+}
+
+.controls {
+    width: 0;
+    height: calc(100% - 55px);
+    position: absolute;
+    top: 55px;
+    right: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: 0.2s width;
+    visibility: hidden;
+}
+
+.controls.open {
+    width: 250px;
+    visibility: visible;
+}
+
+.controls img {
+    float: left;
+    height: 1.25em;
+    margin-right: 0.5em;
+}
+
+.controls a {
+    color: #FFF;
+}
+
+.images {
+    overflow: hidden;
+}
+
+.container, button, #status {
+    background: #2C2CA0;
+    border-radius: 4px;
+    font-size: 0.8em;
+    margin: 5px;
+    padding: 5px;
+}
+
+button {
+    color: #FFF;
+    border: 1.2px solid #2C2CA0;
+    cursor: pointer;
+    display: block;
+    background-color: #28A745;
+    background-image: linear-gradient(-180deg,#34D058,#228C3B 90%);
+    -webkit-appearance: none;
+    font-weight: 600;
+    padding: 6px 12px;
+    background-repeat: repeat-x;
+}
+
+button:hover {
+    background-image: linear-gradient(-180deg,#34D058,#28A745 40%);
+}
+
+.container h4 {
+    margin: 0;
+    text-align: center;
+    font-size: 1.25em;
+    display: inline;
+}
+
+
+.container input[type=checkbox] {
+    float: right;
+}
+
+.options {
+    max-height: 0;
+    overflow: hidden;
+    transition: 0.2s max-height;
+}
+
+.container > :checked + .options, .options.open {
+    max-height: 200px;
+}
+
+.container > :checked + .options, h4 + .options.open {
+    margin-top: 5px;
+}
+
+.options label {
+    display: block;
+    overflow: hidden;
+    height: 20px;
+    line-height: 20px;
+}
+
+.options input {
+    float: left;
+    border-radius: 2px;
+    border: none;
+	margin: 5px;
+}
+
+input[type=number] {
+    width: 60px;
+}
+
+#fixed {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+}
+
+#status {
+    display: none;
+}
+
+#status > div {
+    width: 0;
+    height: 20px;
+    background: #5F5FD3;
+    border-radius: 2px;
+    transition: 0.5s width;
+}

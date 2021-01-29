@@ -40,3 +40,9 @@ unzip veins-5.0.zip
 
 # ----- for carla-veins syncher -----
 sudo apt install -y git nlohmann-json-dev
+
+# ----- set env to .bashrc -----
+echo "export SUMO_HOME=/usr/local/share/sumo" >> ~/.bashrc
+echo "cd ~/Downloads/omnetpp-5.6.2/" >> ~/.bashrc
+echo "source setenv" >> ~/.bashrc
+echo "cd ~/" >> ~/.bashrc

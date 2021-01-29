@@ -1,0 +1,34 @@
+/* XPM */
+static const char *moderoute_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 12 1 ",
+"  c black",
+". c #090809",
+"X c #1E1D1F",
+"o c red",
+"O c #4BB3FA",
+"+ c #AAAAAA",
+"@ c #D0FCAC",
+"# c #FDFDA6",
+"$ c #D5D5D5",
+"% c #E8DAEA",
+"& c gray100",
+"* c None",
+/* pixels */
+"****************",
+"****************",
+".XXXXXXXXXXXXXX.",
+"X%OO%%%##%%%@@@X",
+"X%%%%%%##%%%%%%X",
+"X##############X",
+"X#o# # # # # ##X",
+"X##############X",
+"X%%%%%%##%%# #%X",
+"X@@@%%%##%%###%X",
+" @@@%%%##%%# #% ",
+" +++$++++++$+++ ",
+" +&+$++&&++$+&+ ",
+" XXXXXXXXXXXXXX.",
+"****************",
+"****************"
+};

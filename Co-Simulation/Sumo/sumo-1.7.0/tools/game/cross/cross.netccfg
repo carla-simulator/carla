@@ -1,0 +1,7 @@
+<configuration>
+    <node-files value="cross.nod.xml"/>
+    <edge-files value="cross.edg.xml"/>
+    <connection-files value="cross.con.xml"/>
+    <output value="cross.net.xml"/>
+    <no-turnarounds value="true"/>
+</configuration>

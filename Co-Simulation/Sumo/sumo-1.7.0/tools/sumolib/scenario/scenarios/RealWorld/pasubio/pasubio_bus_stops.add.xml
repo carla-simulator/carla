@@ -1,0 +1,27 @@
+<add>
+    <busStop id="busStop#1" lane="2[1][1][1]b_0" startPos="35" endPos="55" lines="--"/>
+    <busStop id="busStop#2" lane="1[0]_0" startPos="250" endPos="270" lines="--"/>
+    <busStop id="busStop#3" lane="14_0" startPos="78.128" endPos="98.128" lines="--"/>
+    <busStop id="busStop#4" lane="26.-170_0" startPos="80.00" endPos="100.00" lines="--"/>
+    <busStop id="busStop#5" lane="27_0" startPos="40.733" endPos="60.733" lines="--"/>
+    <busStop id="busStop#6" lane="17[0]_0" startPos="110.157" endPos="130.157" lines="--"/>
+    <busStop id="busStop#7" lane="16[1]_0" startPos="122.242" endPos="142.242" lines="--"/>
+    <busStop id="busStop#8" lane="36_0" startPos="59.891" endPos="79.891" lines="--"/>
+    <busStop id="busStop#9" lane="37_0" startPos="60.773" endPos="80.773" lines="--"/>
+    <busStop id="busStop#10" lane="46_0" startPos="156.875" endPos="176.875" lines="--"/>
+    <busStop id="busStop#11" lane="47_0" startPos="40.966" endPos="60.966" lines="--"/>
+    <busStop id="busStop#12" lane="49[0]_0" startPos="130" endPos="150" lines="--"/>
+    <busStop id="busStop#13" lane="50[1]a_0" startPos="30" endPos="50" lines="--"/>
+    <busStop id="busStop#15" lane="56[0]_0" startPos="110" endPos="130" lines="--"/>
+    <busStop id="busStop#16" lane="35[0]_0" startPos="95" endPos="115" lines="--"/>
+    <busStop id="busStop#17" lane="56[1][0]_0" startPos="140" endPos="160" lines="--"/>
+    <busStop id="busStop#18" lane="5[1][0]+66_0" startPos="15" endPos="35" lines="--"/>
+    <busStop id="busStop#19" lane="m66a_0" startPos="20" endPos="40" lines="--"/>
+    <busStop id="busStop#20" lane="5[1][1][1]_0" startPos="27" endPos="57" lines="--"/>
+    <busStop id="busStop#21" lane="11[0]_0" startPos="39" endPos="69" lines="--"/>
+    <busStop id="busStop#22" lane="9_0" startPos="90" endPos="110" lines="--"/>
+    <busStop id="busStop#23" lane="8_0" startPos="257.717" endPos="277.717" lines="--"/>
+    <busStop id="busStop#24" lane="3[1]b_0" startPos="100" endPos="120" lines="--"/>
+    <busStop id="busStop#25" lane="4[0]_0" startPos="50" endPos="70" lines="--"/>
+    <busStop id="busStop#26" lane="20000+35[1][1][1][0]_0" startPos="1" endPos="31" lines="--"/>
+</add>

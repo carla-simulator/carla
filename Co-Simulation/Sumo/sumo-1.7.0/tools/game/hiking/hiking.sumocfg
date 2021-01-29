@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="hiking.net.xml"/>
+        <route-files value="hiking.rou.xml"/>
+    </input>
+
+    <report>
+        <no-step-log value="true"/>
+        <log value="log"/>
+    </report>
+
+    <gui_only>
+        <gui-settings-file value="view.xml"/>
+        <start value="true"/>
+        <!--
+        <quit-on-end value="true"/>
+        -->
+    </gui_only>
+
+</configuration>

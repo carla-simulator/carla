@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:39 2019 by Eclipse SUMO netconvert Version v1_2_0+0017-2a947141e5
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <osm-files value="osm.xml"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <output-file value="net.net.xml"/>
+        <plain-output-prefix value="plain"/>
+        <output.street-names value="true"/>
+    </output>
+
+    <projection>
+        <proj.utm value="true"/>
+        <proj.plain-geo value="true"/>
+    </projection>
+
+    <tls_building>
+        <tls.red.time value="10"/>
+    </tls_building>
+
+    <junctions>
+        <no-internal-links value="true"/>
+    </junctions>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<tlLogics version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/tllogic_file.xsd">
+    <tlLogic id="261599791" type="static" programID="0" offset="0">
+        <phase duration="74" state="GGGG"/>
+        <phase duration="6"  state="yyyy"/>
+        <phase duration="10" state="rrrr"/>
+    </tlLogic>
+    <tlLogic id="32266935" type="static" programID="0" offset="0">
+        <phase duration="39" state="rrrrGGGggrrrrGGGgg"/>
+        <phase duration="6"  state="rrrryyyyyrrrryyyyy"/>
+        <phase duration="39" state="GGggrrrrrGGggrrrrr"/>
+        <phase duration="6"  state="yyyyrrrrryyyyrrrrr"/>
+    </tlLogic>
+    <tlLogic id="94487954" type="static" programID="0" offset="0">
+        <phase duration="74" state="G"/>
+        <phase duration="6"  state="y"/>
+        <phase duration="10" state="r"/>
+    </tlLogic>
+
+    <connection from="-24214693#0" to="24214694" fromLane="0" toLane="0" tl="32266935" linkIndex="13"/>
+    <connection from="-24214693#0" to="-7216737#3" fromLane="0" toLane="0" tl="32266935" linkIndex="14"/>
+    <connection from="-24214693#0" to="-7216737#3" fromLane="1" toLane="1" tl="32266935" linkIndex="15"/>
+    <connection from="-24214693#0" to="-7727483#3" fromLane="1" toLane="0" tl="32266935" linkIndex="16"/>
+    <connection from="-24214693#0" to="24214693#0" fromLane="1" toLane="1" tl="32266935" linkIndex="17"/>
+    <connection from="-24214693#1" to="-24214693#0" fromLane="0" toLane="0" tl="261599791" linkIndex="2"/>
+    <connection from="-24214693#1" to="-24214693#0" fromLane="1" toLane="1" tl="261599791" linkIndex="3"/>
+    <connection from="-24214694" to="-7216737#3" fromLane="0" toLane="0" tl="32266935" linkIndex="9"/>
+    <connection from="-24214694" to="-7727483#3" fromLane="0" toLane="0" tl="32266935" linkIndex="10"/>
+    <connection from="-24214694" to="24214693#0" fromLane="0" toLane="1" tl="32266935" linkIndex="11"/>
+    <connection from="-24214694" to="24214694" fromLane="0" toLane="0" tl="32266935" linkIndex="12"/>
+    <connection from="-7216737#0" to="7216737#0" fromLane="1" toLane="1" tl="94487954" linkIndex="0"/>
+    <connection from="24214693#0" to="24214693#1" fromLane="0" toLane="0" tl="261599791" linkIndex="0"/>
+    <connection from="24214693#0" to="24214693#1" fromLane="1" toLane="1" tl="261599791" linkIndex="1"/>
+    <connection from="7216737#3" to="-7727483#3" fromLane="0" toLane="0" tl="32266935" linkIndex="4"/>
+    <connection from="7216737#3" to="24214693#0" fromLane="0" toLane="0" tl="32266935" linkIndex="5"/>
+    <connection from="7216737#3" to="24214693#0" fromLane="1" toLane="1" tl="32266935" linkIndex="6"/>
+    <connection from="7216737#3" to="24214694" fromLane="1" toLane="0" tl="32266935" linkIndex="7"/>
+    <connection from="7216737#3" to="-7216737#3" fromLane="1" toLane="1" tl="32266935" linkIndex="8"/>
+    <connection from="7727483#3" to="24214693#0" fromLane="0" toLane="0" tl="32266935" linkIndex="0"/>
+    <connection from="7727483#3" to="24214694" fromLane="0" toLane="0" tl="32266935" linkIndex="1"/>
+    <connection from="7727483#3" to="-7216737#3" fromLane="0" toLane="1" tl="32266935" linkIndex="2"/>
+    <connection from="7727483#3" to="-7727483#3" fromLane="0" toLane="0" tl="32266935" linkIndex="3"/>
+</tlLogics>

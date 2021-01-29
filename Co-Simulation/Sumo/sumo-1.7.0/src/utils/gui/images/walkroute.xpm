@@ -1,0 +1,27 @@
+/* XPM */
+static const char *walkroute_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 5 1 ",
+"  c black",
+". c red",
+"X c green",
+"o c #0026FF",
+"O c white",
+/* pixels */
+"XXoXXXXXXXXXXXXX",
+"XXoXXXXXXXXXXXXX",
+"XXoXXXX       XX",
+"oooooXX O O O XX",
+"XoooXXX       XX",
+"XXoXXXX O X O XX",
+"          X   XX",
+"  . O O O X O XX",
+"          X   XX",
+"XXXXXXXXXXX O XX",
+"XXXXXXXXXXX   XX",
+"XXoXXXXXXXX O XX",
+"  oo          XX",
+"ooooo . O O O XX",
+"  oo          XX",
+"XXoXXXXXXXXXXXXX"
+};

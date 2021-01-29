@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<add>
+    <tlLogic id="218"  offset="0" type="sotl_platoon">
+    <!-- lanes: 
+             0  20+19a_0
+             1  20+19a_1
+             2  20+19a_1
+              
+             3  2[1][1][0]_0
+             4  2[1][1][0]_1
+             5  2[1][1][0]_2
+             6  2[1][1][0]_2
+              
+             7  22[1]_0
+             8  22[1]_0
+             9  22[1]_1
+            10  22[1]_1
+              
+            11  1[0]_0
+            12  1[0]_0
+            13  1[0]_1
+            14  1[0]_2
+            15  1[0]_2
+              
+            16  20+19b_0
+            17  20+19b_1
+      -->
+        
+        <phase duration="44" state="rrrGGGgrrrrGGGGgrr" type="target,decisional"
+        targetLanes="2[1][1][0]_0 2[1][1][0]_1 2[1][1][0]_2 1[0]_0 1[0]_1 1[0]_2" minDur="22" maxDur="85"/>
+        <phase duration="3" state="rrrGGGgrrrryyyyyrr" type="transient"/>
+        <phase duration="2" state="rrrGGGGrrrrrrrrrrr" type="transient"/>
+        <phase duration="3" state="rrryyyyrrrrrrrrrrr" type="transient"/>
+        <phase duration="2" state="rrrrrrrrrrrrrrrrrr" type="transient,commit"/>
+
+
+      <phase duration="21" state="gggrrrrGGGGrrrrrGG" type="target,decisional"
+      targetLanes="20+19a_0 20+19a_1 22[1]_0 22[1]_1 20+19b_0 20+19b_1" minDur="15" maxDur="42"/>
+      <phase duration="5" state="gggrrrrGGGGrrrrrGG" type="transient"/>
+      <phase duration="3" state="yyyrrrryyyyrrrrryy" type="transient" />
+      <phase duration="2" state="rrrrrrrrrrrrrrrrrr" type="transient,commit"/>
+
+      <phase duration="21" state="rrrrrrrrrrrGGGGGGG" type="target,decisional"
+      targetLanes="1[0]_0 1[0]_1 1[0]_2 20+19b_0 20+19b_1" minDur="15" maxDur="42"/>
+      <phase duration="3"  state="rrrrrrrrrrryyyyyyy" type="transient"/>
+      <phase duration="2"  state="rrrrrrrrrrrrrrrrrr" type="transient,commit"/>
+
+
+    </tlLogic>
+    <tlLogic id="219" type="static"  offset="0">
+    <!-- Lanes
+        45_0
+        45_1
+        45_2
+        45_2
+        42_0
+        42_1
+        42_2
+        81_0
+        81_0
+        81_1
+        81_2
+        1[1]_0
+        1[1]_0
+        1[1]_1
+        1[1]_2
+        39[1][1][0]_0
+        39[1][1][0]_0
+        39[1][1][0]_0
+        39[1][1][0]_0
+        47_0
+        47_0
+        47_0
+        38[0]a_0
+        38[0]a_0
+        38[0]a_0
+        36_0
+        36_0
+        36_0
+    -->
+        <phase duration="36" state="GrrrrrrrrrrGGGGGGggrrrGGgrrr"/>
+        <phase duration="6" state="GrrrrrrrrrrGGGGGGggrrrGGgrrr"/>
+        <phase duration="3" state="yrrrrrrrrrrGGGyyyyyrrryyyrrr"/>
+        <phase duration="3" state="rrrrrrrrrrrGGGrrrrrrrrrrrrrr"/>
+        <phase duration="9" state="rrrrGGrrrrrGGGrrrrrGGgrrrGGg"/>
+        <phase duration="3" state="rrrrGGgrrrryyyrrrrrGGgrrrGGg"/>
+        <phase duration="3" state="rrrrGGGrrrrrrrrrrrrGGgrrrGGg"/>
+        <phase duration="3" state="rrrrGGGrrrrrrrrrrrrGGgrrrGGg"/>
+        <phase duration="3" state="rrrrGGGrrrrrrrrrrrryyyrrryyy"/>
+        <phase duration="3" state="rrrrGGGrrrrrrrrrrrrrrrrrrrrr"/>
+        <phase duration="3" state="rrrryyyrrrrrrrrGGggrrrGGgrrr"/>
+        <phase duration="3" state="rrrrrrrrrrrrrrrGGggrrrGGgrrr"/>
+        <phase duration="9" state="GGGgrrrGGrrrrrrGGggrrrGGgrrr"/>
+        <phase duration="6" state="GGGgrrrGGrrrrrrGGggrrrGGgrrr"/>
+        <phase duration="3" state="yyyyrrrGGrrrrrryyyyrrryyyrrr"/>
+        <phase duration="3" state="rrrrrrrGGrrrrrrrrrrrrrrrrrrr"/>
+        <phase duration="6" state="rrrrrrrGGGGrrrrrrrrGGgrrrGGg"/>
+        <phase duration="6" state="rrrrrrrGGGGrrrrrrrrGGgrrrGGg"/>
+        <phase duration="6" state="rrrrrrrGGGGrrrrrrrrGGgrrrGGg"/>
+        <phase duration="3" state="rrrrrrryyyyrrrrrrrryyyrrryyy"/>
+        <phase duration="3" state="rrrrrrrrrrrrrrrrrrrrrrrrrrrr" type="transient,commit" />
+    </tlLogic>
+    <tlLogic id="220" type="sotl_platoon"  offset="0">
+    <!-- Lanes 
+        48_0
+        48_1
+        48_2
+        40[0]_0
+        40[0]_1
+    -->
+        <phase duration="9" state="rrrGG" minDur="9" maxDur="9"       type="target,decisional"
+                targetLanes="40[0]_0 40[0]_1"
+        />
+        <phase duration="3" state="rrrGG" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="2" state="rrrGG" minDur="2" maxDur="2"       type="transient"/>
+        <phase duration="3" state="rrrGG" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="2" state="rrrGG" minDur="2" maxDur="2"       type="transient"/>
+        <phase duration="3" state="rrrGG" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="23" state="rrrGG" minDur="3" maxDur="69"     type="transient"/>
+        <phase duration="3" state="rrrGG" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="3" state="rrryy" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="2" state="rrrrr" minDur="2" maxDur="2"       type="transient,commit" />
+        <phase duration="5" state="GGGrr" minDur="5" maxDur="5"       type="target,decisional"
+              targetLanes="48_0 48_1 48_2"
+        />
+        <phase duration="3" state="GGGrr" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="2" state="GGGrr" minDur="2" maxDur="2"       type="transient"/>
+        <phase duration="3" state="GGGrr" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="2" state="GGGrr" minDur="2" maxDur="2"       type="transient"/>
+        <phase duration="12" state="GGGrr" minDur="12" maxDur="12"    type="transient"/>
+        <phase duration="5" state="GGGrr" minDur="5" maxDur="5"       type="transient"/>
+        <phase duration="3" state="yyyrr" minDur="3" maxDur="3"       type="transient"/>
+        <phase duration="2" state="rrrrr" minDur="2" maxDur="2"       type="transient,commit" />
+    </tlLogic>
+    <tlLogic id="230" type="static" offset="0">
+    <!-- Lanes 
+        100_0
+        100_1
+        100_1
+        
+        3[0]_0
+        3[0]_0
+        3[0]_1
+        3[0]_1
+        
+        8_0
+        8_1
+        8_2
+        8_3
+        
+        4[1][1][0]_0
+        4[1][1][0]_0
+        4[1][1][0]_1
+        4[1][1][0]_1
+        4[1][1][0]_1
+        7_0
+        7_1
+        7_2
+    -->
+        <phase duration="18" state="GGGrrrrrrrrrrrrrGGG" minDur="15" maxDur="36"  type="target,decisional"
+              targetLanes="100_0 100_1 100_2"
+        />
+        <phase duration="3" state="GGGrrrrrrrrrrrrrGGG" minDur="3" maxDur="3"     type="transient"/>
+        <phase duration="3" state="yyyrrrrrrrrrrrrrGGG" minDur="3" maxDur="3"     type="transient"/>
+        <phase duration="3" state="rrrrrrrrrrrrrrrryyy" minDur="3" maxDur="3"     type="transient"/>
+        <phase duration="2" state="rrrrrrrrrrrrrrrrrrr" minDur="2" maxDur="2"     type="transient,commit" />
+        <phase duration="18" state="rrrrrrrGGGGrrrrrrrr" minDur="9" maxDur="60"   type="target,decisional"
+              targetLanes="8_0 8_1 8_2 8_3"
+        />
+        <phase duration="6" state="rrrrrrrGGGGrrrrrrrr" minDur="6" maxDur="6"     type="transient"/>
+        <phase duration="3" state="rrrrrrryyyyrrrrrrrr" minDur="3" maxDur="3"     type="transient"/>
+        <phase duration="3" state="rrrrrrrrrrrrrrrrrrr" minDur="3" maxDur="3"     type="transient;commit" />
+        <phase duration="50" state="rrrGGGgrrrrGGGggrrr" minDur="14" maxDur="77"  type="target,decisional"
+          targetLanes="3[0]_0 3[0]_1 4[1][1][0]_0 4[1][1][0]_1"
+        />
+        <phase duration="3" state="rrryyyyrrrrGGGggrrr" minDur="3" maxDur="3"     type="transient"/>
+        <phase duration="5" state="rrrrrrrrrrrGGGGGrrr" minDur="5" maxDur="5"     type="transient"/>
+        <phase duration="1" state="rrrrrrrrrrrGGGGGrrr" minDur="1" maxDur="1"     type="transient"/>
+        <phase duration="3" state="rrrrrrrrrrryyyyyrrr" minDur="3" maxDur="3"     type="transient"/>
+        <phase duration="2" state="GGGrrrrrrrrrrrrrrrr" minDur="2" maxDur="2"     /> <!-- *** -->
+    </tlLogic>
+    <tlLogic id="231" type="static" offset="0">
+    <!-- Lanes 
+m66b_0
+m66b_1
+m66b_1
+5[1][0]+66_0
+5[1][0]+66_1
+5[1][0]+66_1
+5[1][0]+66_1
+31_0
+31_0
+31_0
+11[0]_0
+11[0]_0
+11[0]_1
+11[0]_1
+17[1]_0
+17[1]_0
+9_0
+9_0
+71_0
+71_0
+71_0
+71_0
+71_0
+71_0
+65_0
+65_0
+65_0
+56[1][1]_0
+56[1][1]_0
+56[1][1]_0
+56[1][1]_0
+56[1][1]_1
+56[1][1]_1
+11[1][1]_0
+11[1][1]_0
+11[1][1]_1
+11[1][1]_1
+11[1][1]_1
+11[1][1]_1
+    -->
+        <phase duration="45" state="rrrGGggrrrGGGgrrGGrrrrrrrrrGGGGGgGGGggg" minDur="12" maxDur="82"/>
+        <phase duration="5" state="rrrGGggrrrGGGgrrGGrrrrrrrrrGGGGGgGGGggg" minDur="5" maxDur="5"/>
+        <phase duration="3" state="rrrGGggrrryyyyrrGGrrrrrrrrryyyyyyGGGggg" minDur="3" maxDur="3"/>
+        <phase duration="2" state="rrrGGGGrrrrrrrrrGGrrrrrrrrrrrrrrrGGGGGG" minDur="2" maxDur="2"/>
+        <phase duration="3" state="rrryyyyrrrrrrrrryyrrrrrrrrrrrrrrryyyyyy" minDur="3" maxDur="3"/>
+        <phase duration="2" state="rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" minDur="2" maxDur="2"   type="transient,commit" />
+        <phase duration="4" state="GGgrrrrGggrrrrrrrrGGGGGggggrrrrrrrrrrrr" minDur="4" maxDur="4"/>
+        <phase duration="3" state="GGgrrrrGggrrrrrrrrGGGGGggggrrrrrrrrrrrr" minDur="3" maxDur="3"/>
+        <phase duration="2" state="GGgrrrrGggrrrrrrrrGGGGGggggrrrrrrrrrrrr" minDur="2" maxDur="2"/>
+        <phase duration="9" state="GGgrrrrGggrrrrGGrrGGGGGggggrrrrrrrrrrrr" minDur="9" maxDur="23"/>
+        <phase duration="3" state="yyyrrrrGggrrrrGGrrGGGGGggggrrrrrrrrrrrr" minDur="3" maxDur="3"/>
+        <phase duration="2" state="rrrrrrrGGGrrrrGGrrGGGGGggggrrrrrrrrrrrr" minDur="2" maxDur="2"/>
+        <phase duration="3" state="rrrrrrryyyrrrrGGrryyyyyyyyyrrrrrrrrrrrr" minDur="3" maxDur="3"/>
+        <phase duration="2" state="rrrrrrrrrrrrrrGGrrrrrrrrrrrrrrrrrrrrrrr" minDur="2" maxDur="2"/>
+        <phase duration="3" state="rrrGGggrrrGGGgyyrrrrrrrrrrrrrrrrrrrrrrr" minDur="3" maxDur="3"/>
+        <phase duration="3" state="rrrGGggrrrGGGgrrrrrrrrrrrrrGGGGGgGGGggg" minDur="3" maxDur="3"/>
+        <phase duration="2" state="rrrGGggrrrGGGgrrGGrrrrrrrrrGGGGGgGGGggg" minDur="2" maxDur="2"/>
+    </tlLogic>
+    <tlLogic id="232" type="static" offset="0">
+    <!-- Lanes 
+56[1][0]_0
+56[1][0]_1
+56[1][0]_2
+101_0
+101_1
+56[0]_0
+56[0]_1
+56[0]_1
+38[1][1]a_0
+38[1][1]a_0
+35[0]_0
+35[0]_0
+    -->
+        <phase duration="41" state="GGgGGGGgrrGG" minDur="21" maxDur="81"/>
+        <phase duration="5" state="GGgGGGGgrrGG" minDur="5" maxDur="5"/>
+        <phase duration="3" state="GGgGGyyyrryy" minDur="3" maxDur="3"/>
+        <phase duration="2" state="GGgGGrrrrrrr" minDur="2" maxDur="2"/>
+        <phase duration="9" state="GGgGGrrrGGrr" minDur="7" maxDur="22"/>
+        <phase duration="3" state="yyyyyrrrGGrr" minDur="3" maxDur="3"/>
+        <phase duration="2" state="rrrrrrrrGGrr" minDur="2" maxDur="2"/>
+        <phase duration="7" state="rrrrrrrrGGrr" minDur="2" maxDur="19"/>
+        <phase duration="3" state="rrrrrrrrGGrr" minDur="3" maxDur="3"/>
+        <phase duration="2" state="rrrrrrrrGGrr" minDur="2" maxDur="2"/>
+        <phase duration="1" state="rrrrrrrrGGrr" minDur="1" maxDur="1"/>
+        <phase duration="2" state="rrrrrrrrrrrr" minDur="2" maxDur="2"     type="transient,commit" />
+        <phase duration="2" state="rrrrrGGgrrGG" minDur="2" maxDur="2"/>
+        <phase duration="5" state="rrrrrGGgrrGG" minDur="5" maxDur="5"/>
+        <phase duration="3" state="rrrrrGGgrrGG" minDur="3" maxDur="3"/>
+    </tlLogic>
+    <tlLogic id="233" type="sotl_platoon" offset="0">
+    <!-- Lanes 
+51_0
+51_1
+
+12_0
+12_0
+12_1
+12_2
+
+55_0
+55_0
+
+35[1][0]_0
+35[1][0]_0
+    -->
+        <phase duration="49" state="rrGGGgrrGG" minDur="24" maxDur="69"       type="target,decisional"
+              targetLanes="12_0 12_1 12_2 35[1][0]_0"
+        />
+        <phase duration="6" state="rrGGGgrrGG" minDur="6" maxDur="6"          type="transient"/>
+        <phase duration="4" state="rryyyyrryy" minDur="4" maxDur="4"          type="transient"/>
+        <phase duration="2" state="rrrrrrrrrr" minDur="2" maxDur="2"          type="transient,commit" />
+        <phase duration="35" state="GGrrrrGGrr" minDur="3" maxDur="60"        type="target,decisional"
+              targetLanes="51_0 51_1 55_0"
+        />
+        <phase duration="9" state="GGrrrrGGrr" minDur="9" maxDur="9"          type="transient"/>
+        <phase duration="4" state="yyrrrryyrr" minDur="4" maxDur="4"          type="transient"/>
+        <phase duration="2" state="rrrrrrrrrr" minDur="2" maxDur="2"          type="transient,commit" />
+    </tlLogic>
+    <tlLogic id="282" type="sotl_platoon" offset="0">
+    <!-- Lanes 
+16[1]_0
+16[1]_0
+16[1]_0
+
+26_0
+26_1
+26_1
+
+23_0
+23_0
+23_1
+
+14_0
+14_0
+14_0
+    -->
+        <phase duration="21" state="gggrrrGGGrrr" minDur="6" maxDur="75"      type="target,decisional"
+              targetLanes="16[1]_0 23_0 23_1"
+        />
+        <phase duration="6" state="gggrrrGGGrrr" minDur="6" maxDur="6"        type="transient"/>
+        <phase duration="3" state="yyyrrryyyrrr" minDur="3" maxDur="3"        type="transient"/>
+        <phase duration="3" state="rrrrrrrrrrrr" minDur="3" maxDur="3"        type="transient,commit" />
+        <phase duration="15" state="rrrGGGrrrggg" minDur="9" maxDur="48"      type="target,decisional"
+              targetLanes="26_0 26_1 14_0"
+        />
+        <phase duration="9" state="rrrGGGrrrggg" minDur="9" maxDur="9"        type="transient"/>
+        <phase duration="3" state="rrryyyrrryyy" minDur="3" maxDur="3"        type="transient"/>
+        <phase duration="3" state="rrrrrrrrrrrr" minDur="3" maxDur="3"        type="transient,commit" />
+    </tlLogic>
+</add>
+

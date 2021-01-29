@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import psutil
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -26,6 +27,18 @@ SECONDS_OF_ONE_DAY = 24 * 60 * 60
 def check_port_listens(checked_port):
     return (checked_port in [conn.laddr.port for conn in psutil.net_connections() if conn.status == 'LISTEN'])
 
+def host_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
 def kill_processes(procs):
     try:
         if 0 < len(procs):
@@ -46,11 +59,11 @@ def main(args):
     try:
         # ----- start sumo servers -----
         logging.info(f"For Carla, Sumo reads {args.sumocfg_path} and starts on {args.carla_sumo_port} port.")
-        carla_sumo_proc = Popen(f"sumo-gui -c {args.sumocfg_path} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.carla_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
+        carla_sumo_proc = Popen(f"{args.sumocmd} -c {args.sumocfg_path} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.carla_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
         procs.append(carla_sumo_proc)
 
         logging.info(f"For Veins, Sumo reads {args.sumocfg_path} and starts on {args.veins_sumo_port} port.")
-        veins_sumo_proc = Popen(f"sumo-gui -c {args.sumocfg_path} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.veins_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
+        veins_sumo_proc = Popen(f"{args.sumocmd} -c {args.sumocfg_path} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.veins_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
         procs.append(veins_sumo_proc)
 
         logging.info(f"Waiting until Sumo servers start on {args.carla_sumo_port} and {args.veins_sumo_port} ports.")
@@ -73,7 +86,7 @@ def main(args):
 
         # ----- start veins-sumo synchronizer -----
         logging.info("Running Veins-Sumo synchronizer.")
-        veins_sumo_synchronizer_proc = Popen("vagrant ssh -c \"python /vagrant/my-sumo-launched.py\"", cwd=args.veins_vagrant_path, shell=True)
+        veins_sumo_synchronizer_proc = Popen(f"vagrant ssh -c \"python /vagrant/my-sumo-launched.py --sh {host_ip()} --sp {args.veins_sumo_port}\"", cwd=args.veins_vagrant_path, shell=True)
         procs.append(veins_sumo_synchronizer_proc)
 
         # ----- start carla-veins data synchronizer -----
@@ -114,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--python_api_util_path', default="./../../PythonAPI/util/")
     parser.add_argument('--carla_map_name', default="Town04")
 
+    parser.add_argument('--sumocmd', default="sumo")
     parser.add_argument('--sumocfg_path', default="./examples/Town04.sumocfg")
     parser.add_argument('--sumo_host', default="localhost")
     parser.add_argument('--sumo_begin_time', default=0)

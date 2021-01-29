@@ -1,0 +1,66 @@
+set(netbuild_STAT_SRCS
+   NBAlgorithms.cpp
+   NBAlgorithms.h
+   NBAlgorithms_Ramps.cpp
+   NBAlgorithms_Ramps.h
+   NBAlgorithms_Railway.cpp
+   NBAlgorithms_Railway.h
+   NBCapacity2Lanes.h
+   NBConnection.cpp
+   NBConnection.h
+   NBConnectionDefs.h
+   NBCont.h
+   NBContHelper.cpp
+   NBContHelper.h
+   NBDistrict.cpp
+   NBDistrict.h
+   NBDistrictCont.cpp
+   NBDistrictCont.h
+   NBEdge.cpp
+   NBEdge.h
+   NBEdgeCont.cpp
+   NBEdgeCont.h
+   NBFrame.cpp
+   NBFrame.h
+   NBHeightMapper.cpp
+   NBHeightMapper.h
+   NBHelpers.cpp
+   NBHelpers.h
+   NBLinkPossibilityMatrix.h
+   NBNode.cpp
+   NBNode.h
+   NBNodeCont.cpp
+   NBNodeCont.h
+   NBNodeShapeComputer.cpp
+   NBNodeShapeComputer.h
+   NBParking.cpp
+   NBParking.h
+   NBPTStop.cpp
+   NBPTStop.h
+   NBPTStopCont.cpp
+   NBPTStopCont.h
+   NBRequest.cpp
+   NBRequest.h
+   NBTrafficLightDefinition.cpp
+   NBTrafficLightDefinition.h
+   NBTrafficLightLogic.cpp
+   NBTrafficLightLogic.h
+   NBTrafficLightLogicCont.cpp
+   NBTrafficLightLogicCont.h
+   NBTypeCont.cpp
+   NBTypeCont.h
+   NBSign.cpp
+   NBSign.h
+   NBOwnTLDef.cpp
+   NBOwnTLDef.h
+   NBLoadedTLDef.cpp
+   NBLoadedTLDef.h
+   NBLoadedSUMOTLDef.cpp
+   NBLoadedSUMOTLDef.h
+   NBVehicle.h
+   NBNetBuilder.cpp
+   NBNetBuilder.h
+        NBPTLine.cpp NBPTLine.h NBPTLineCont.cpp NBPTLineCont.h NBPTPlatform.cpp NBPTPlatform.h)
+
+add_library(netbuild STATIC ${netbuild_STAT_SRCS})
+set_property(TARGET netbuild PROPERTY PROJECT_LABEL "z_netbuild")

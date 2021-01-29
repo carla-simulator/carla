@@ -1,0 +1,59 @@
+digraph complete {
+	node [shape=ellipse fontname="Arial" fillcolor="olivedrab2" style="filled"]; network;
+	node [shape=ellipse fontname="Arial" fillcolor="goldenrod1" style="filled"]; routes;
+
+	subgraph cluster_0 {
+		style=filled;
+		color=lightgrey;
+		label = "network generation"
+
+		node [shape=octagon fontname="Arial" fillcolor="olivedrab2" style="filled"]; "network description";
+
+		node [shape=box fontname="Arial" fillcolor="olivedrab3" style="filled"]; NETCONVERT;
+		node [shape=box fontname="Arial" fillcolor="olivedrab" style="filled"]; NETGEN;
+
+		"network description" -> NETCONVERT [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+
+		NETCONVERT -> network [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+		NETGEN -> network [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+	}
+
+
+	subgraph cluster_1 {
+
+		graph [ rankdir="TB" rank=same];
+		style=filled;
+		color=lightgrey;
+		label = "demand generation"
+
+
+		node [shape=box fontname="Arial" fillcolor="goldenrod" style="filled"]; DUAROUTER;
+		node [shape=box fontname="Arial" fillcolor="goldenrod1" style="filled"]; DFROUTER;
+		node [shape=box fontname="Arial" fillcolor="goldenrod2" style="filled"]; JTRROUTER;
+		node [shape=octagon fontname="Arial" fillcolor="goldenrod" style="filled"]; "demand description";
+		node [shape=box fontname="Arial" fillcolor="indianred1" style="filled"]; OD2TRIPS;
+
+		"demand description" -> DFROUTER [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+		"demand description" -> JTRROUTER [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+		"demand description" -> DUAROUTER [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+		OD2TRIPS -> "demand description" [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+		"demand description" -> OD2TRIPS [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+
+		DUAROUTER -> routes [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+		JTRROUTER -> routes [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+
+	}
+
+	node [shape=Mcircle fontname="Arial" fillcolor="yellow1" style="filled"]; USER;
+	node [shape=box fontname="Arial" fillcolor="lightskyblue" style="filled"]; "SUMO/GUISIM";
+
+	node [shape=ellipse fontname="Arial" fillcolor="lightblue1" style="filled"]; "simulation output";
+	node [shape=octagon fontname="Arial" fillcolor="lightcyan" style="filled"]; "additional definitions";
+
+	USER -> "additional definitions" [arrowhead="normal" fontname="Arial" fontsize="10"];
+	network -> "SUMO/GUISIM" [arrowhead="normal" label="--net-file" fontname="Arial" fontsize="10"];
+	routes -> "SUMO/GUISIM" [arrowhead="normal" label="--route-files" fontname="Arial" fontsize="10"];
+	"additional definitions" -> "SUMO/GUISIM" [arrowhead="normal" label="--additional-files" fontname="Arial" fontsize="10"];
+	"SUMO/GUISIM" -> "simulation output" [arrowhead="normal" label="<...>" fontname="Arial" fontsize="10"];
+
+}

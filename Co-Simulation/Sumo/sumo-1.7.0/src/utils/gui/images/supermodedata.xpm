@@ -1,0 +1,28 @@
+/* XPM */
+static const char *supermodedata_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 6 1 ",
+"  c black",
+". c #007F0E",
+"X c red",
+"o c #FFD800",
+"O c #0026FF",
+"+ c white",
+/* pixels */
+" +++++++++++++++",
+" +++++++++++++++",
+" ++++OOOO+++++++",
+" ++++OOOO+++++++",
+" XXXXOOOO+++++++",
+" XXXXOOOO+++++++",
+" XXXXOOOO....+++",
+" XXXXOOOO....+++",
+" XXXXOOOO....ooo",
+" XXXXOOOO....ooo",
+" XXXXOOOO....ooo",
+" XXXXOOOO....ooo",
+" XXXXOOOO....ooo",
+" XXXXOOOO....ooo",
+" XXXXOOOO....ooo",
+"                "
+};

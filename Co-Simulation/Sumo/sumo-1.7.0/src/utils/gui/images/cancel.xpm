@@ -1,0 +1,31 @@
+/* XPM */
+static const char *cancel_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 9 1 ",
+"  c #D75A4A",
+". c #D75B4B",
+"X c #D85A4B",
+"o c #DB6A5B",
+"O c #F1C6C1",
+"+ c #F2CBC6",
+"@ c #F3D0CB",
+"# c #F4D0CC",
+"$ c None",
+/* pixels */
+"$$$$$      $$$$$",
+"$$$$        $$$$",
+"$$X          X$$",
+"$$            $$",
+"$         .    $",
+"    .Oo  oO.   $",
+"     o+oo+o     ",
+"      o#@o      ",
+"      o@#o      ",
+"     o+oo+o     ",
+"    .Oo  oO.   $",
+"$    .    .    $",
+"$$            $$",
+"$$X          X$$",
+"$$$$        $$$$",
+"$$$$$      $$$$$"
+};

@@ -1,0 +1,29 @@
+/* XPM */
+static const char *walkbusstop_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1 ",
+"  c green",
+". c black",
+"X c red",
+"o c #4CAA32",
+"O c #FFEB00",
+"+ c #0026FF",
+"@ c white",
+/* pixels */
+"  +             ",
+"  +             ",
+"  +    .......  ",
+"+++++  .@.@.@.  ",
+" +++   .......  ",
+"  +    .@. .@.  ",
+".......... ...  ",
+"..X.@.@.@. .@.  ",
+".......... ...  ",
+"           .@.  ",
+"   ooo     ...  ",
+"   oOo     .@.  ",
+"ooooooooo.....  ",
+"ooooooXo@.@.@.  ",
+"ooooooooo.....  ",
+"                "
+};

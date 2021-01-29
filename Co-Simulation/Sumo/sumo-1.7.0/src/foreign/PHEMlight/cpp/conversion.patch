@@ -1,0 +1,573 @@
+diff --git b/src/foreign/PHEMlight/cpp/CEP.cpp a/src/foreign/PHEMlight/cpp/CEP.cpp
+index eafe2e787f..5a0aef688e 100644
+--- b/src/foreign/PHEMlight/cpp/CEP.cpp
++++ a/src/foreign/PHEMlight/cpp/CEP.cpp
+@@ -1,4 +1,25 @@
+-﻿#include "CEP.h"
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright (C) 2016-2017 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    CEP.cpp
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#include "CEP.h"
+ #include "Constants.h"
+ #include "Helpers.h"
+ 
+@@ -6,6 +27,7 @@
+ namespace PHEMlightdll {
+ 
+     CEP::CEP(bool heavyVehicle, double vehicleMass, double vehicleLoading, double vehicleMassRot, double crossArea, double cWValue, double f0, double f1, double f2, double f3, double f4, double axleRatio, std::vector<double>& transmissionGearRatios, double auxPower, double ratedPower, double engineIdlingSpeed, double engineRatedSpeed, double effictiveWheelDiameter, double pNormV0, double pNormP0, double pNormV1, double pNormP1, const std::string& vehicelFuelType, std::vector<std::vector<double> >& matrixFC, std::vector<std::string>& headerLinePollutants, std::vector<std::vector<double> >& matrixPollutants, std::vector<std::vector<double> >& matrixSpeedRotational, std::vector<std::vector<double> >& normedDragTable, double idlingFC, std::vector<double>& idlingPollutants) {
++        (void)transmissionGearRatios; // just to make the compiler happy about the unused parameter
+         InitializeInstanceFields();
+         _resistanceF0 = f0;
+         _resistanceF1 = f1;
+@@ -36,12 +58,12 @@ namespace PHEMlightdll {
+         std::vector<std::vector<double> > normalizedPollutantMeasures;
+ 
+         // init pollutant identifiers
+-        for (int i = 0; i < headerLinePollutants.size(); i++) {
++        for (int i = 0; i < (int)headerLinePollutants.size(); i++) {
+             pollutantIdentifier.push_back(headerLinePollutants[i]);
+         }
+ 
+         // initialize measures
+-        for (int i = 0; i < headerLinePollutants.size(); i++) {
++        for (int i = 0; i < (int)headerLinePollutants.size(); i++) {
+             pollutantMeasures.push_back(std::vector<double>());
+             normalizedPollutantMeasures.push_back(std::vector<double>());
+         }
+@@ -50,7 +72,7 @@ namespace PHEMlightdll {
+         _speedCurveRotational = std::vector<double>();
+         _speedPatternRotational = std::vector<double>();
+         _gearTransmissionCurve = std::vector<double>();
+-        for (int i = 0; i < matrixSpeedRotational.size(); i++) {
++        for (int i = 0; i < (int)matrixSpeedRotational.size(); i++) {
+             if (matrixSpeedRotational[i].size() != 3) {
+                 return;
+             }
+@@ -63,7 +85,7 @@ namespace PHEMlightdll {
+         // looping through matrix and assigning values for drag table
+         _nNormTable = std::vector<double>();
+         _dragNormTable = std::vector<double>();
+-        for (int i = 0; i < normedDragTable.size(); i++) {
++        for (int i = 0; i < (int)normedDragTable.size(); i++) {
+             if (normedDragTable[i].size() != 2) {
+                 return;
+             }
+@@ -77,7 +99,7 @@ namespace PHEMlightdll {
+         _normedCepCurveFC = std::vector<double>();
+         _powerPatternFC = std::vector<double>();
+         _normalizedPowerPatternFC = std::vector<double>();
+-        for (int i = 0; i < matrixFC.size(); i++) {
++        for (int i = 0; i < (int)matrixFC.size(); i++) {
+             if (matrixFC[i].size() != 2) {
+                 return;
+             }
+@@ -110,10 +132,10 @@ namespace PHEMlightdll {
+ 
+         _cepNormalizedCurvePollutants = std::map<std::string, std::vector<double> >();
+ 
+-        int headerCount = headerLinePollutants.size();
+-        for (int i = 0; i < matrixPollutants.size(); i++) {
+-            for (int j = 0; j < matrixPollutants[i].size(); j++) {
+-                if (matrixPollutants[i].size() != headerCount + 1) {
++        int headerCount = (int)headerLinePollutants.size();
++        for (int i = 0; i < (int)matrixPollutants.size(); i++) {
++            for (int j = 0; j < (int)matrixPollutants[i].size(); j++) {
++                if ((int)matrixPollutants[i].size() != headerCount + 1) {
+                     return;
+                 }
+ 
+@@ -131,7 +153,7 @@ namespace PHEMlightdll {
+         _cepCurvePollutants = std::map<std::string, std::vector<double> >();
+         _idlingValuesPollutants = std::map<std::string, double>();
+ 
+-        for (int i = 0; i < headerLinePollutants.size(); i++) {
++        for (int i = 0; i < (int)headerLinePollutants.size(); i++) {
+             _cepCurvePollutants.insert(std::make_pair(pollutantIdentifier[i], pollutantMeasures[i]));
+             _cepNormalizedCurvePollutants.insert(std::make_pair(pollutantIdentifier[i], normalizedPollutantMeasures[i]));
+             _idlingValuesPollutants.insert(std::make_pair(pollutantIdentifier[i], idlingPollutants[i] * pollutantMultiplyer));
+@@ -211,7 +233,7 @@ namespace PHEMlightdll {
+         int upperIndex;
+         int lowerIndex;
+ 
+-        if (VehicleClass->gettClass() != Constants::strBEV) {
++        if (_fuelType != Constants::strBEV) {
+             if (std::abs(speed) <= Constants::ZERO_SPEED_ACCURACY) {
+                 if (pollutant == "FC") {
+                     return _idlingValueFC;
+@@ -353,14 +375,14 @@ namespace PHEMlightdll {
+         }
+ 
+         if (value >= pattern.back()) {
+-            lowerIndex = pattern.size() - 1;
+-            upperIndex = pattern.size() - 1;
++            lowerIndex = (int)pattern.size() - 1;
++            upperIndex = (int)pattern.size() - 1;
+             return;
+         }
+ 
+         // bisection search to find correct position in power pattern	
+-        int middleIndex = (pattern.size() - 1) / 2;
+-        upperIndex = pattern.size() - 1;
++        int middleIndex = ((int)pattern.size() - 1) / 2;
++        upperIndex = (int)pattern.size() - 1;
+         lowerIndex = 0;
+ 
+         while (upperIndex - lowerIndex > 1) {
+diff --git b/src/foreign/PHEMlight/cpp/CEP.h a/src/foreign/PHEMlight/cpp/CEP.h
+index f24983953b..84aa342689 100644
+--- b/src/foreign/PHEMlight/cpp/CEP.h
++++ a/src/foreign/PHEMlight/cpp/CEP.h
+@@ -1,4 +1,25 @@
+-﻿#ifndef PHEMlightCEP
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright (C) 2016-2017 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    CEP.h
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#ifndef PHEMlightCEP
+ #define PHEMlightCEP
+ 
+ #define _USE_MATH_DEFINES
+@@ -11,7 +32,6 @@
+ //C# TO C++ CONVERTER NOTE: Forward class declarations:
+ namespace PHEMlightdll { class Helpers; }
+ 
+-#define FLEET
+ 
+ namespace PHEMlightdll {
+     class CEP {
+diff --git b/src/foreign/PHEMlight/cpp/CEPHandler.cpp a/src/foreign/PHEMlight/cpp/CEPHandler.cpp
+index 53a739894b..fa5ee8e2ae 100644
+--- b/src/foreign/PHEMlight/cpp/CEPHandler.cpp
++++ a/src/foreign/PHEMlight/cpp/CEPHandler.cpp
+@@ -1,4 +1,27 @@
+-﻿#include "CEPHandler.h"
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright 2016 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    CEPHandler.cpp
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#include <fstream>
++#include <sstream>
++#include "CEPHandler.h"
+ #include "CEP.h"
+ #include "Helpers.h"
+ #include "Constants.h"
+@@ -10,11 +33,11 @@ namespace PHEMlightdll {
+         _ceps = std::map<std::string, CEP*>();
+     }
+ 
+-    std::map<std::string, CEP*> CEPHandler::getCEPS() const {
++    const std::map<std::string, CEP*>& CEPHandler::getCEPS() const {
+         return _ceps;
+     }
+ 
+-    bool CEPHandler::GetCEP(const std::string& DataPath, Helpers* Helper) {
++    bool CEPHandler::GetCEP(const std::vector<std::string>& DataPath, Helpers* Helper) {
+         if (getCEPS().find(Helper->getgClass()) == getCEPS().end()) {
+             if (!Load(DataPath, Helper)) {
+                 return false;
+@@ -23,11 +46,11 @@ namespace PHEMlightdll {
+         return true;
+     }
+ 
+-    bool CEPHandler::Load(const std::string& DataPath, Helpers* Helper) {
++    bool CEPHandler::Load(const std::vector<std::string>& DataPath, Helpers* Helper) {
+         //Deklaration
+         // get string identifier for PHEM emission class
+ //C# TO C++ CONVERTER TODO TASK: There is no native C++ equivalent to 'ToString':
+-        std::string emissionRep = Helper->getgClass().ToString();
++        std::string emissionRep = Helper->getgClass();
+ 
+         // to hold everything.
+         std::vector<std::vector<double> > matrixSpeedInertiaTable;
+@@ -80,7 +103,7 @@ namespace PHEMlightdll {
+         return true;
+     }
+ 
+-    bool CEPHandler::ReadVehicleFile(const std::string& DataPath, const std::string& emissionClass, Helpers* Helper, double& vehicleMass, double& vehicleLoading, double& vehicleMassRot, double& crossArea, double& cWValue, double& f0, double& f1, double& f2, double& f3, double& f4, double& axleRatio, double& auxPower, double& ratedPower, double& engineIdlingSpeed, double& engineRatedSpeed, double& effectiveWheelDiameter, std::vector<double>& transmissionGearRatios, std::string& vehicleMassType, std::string& vehicleFuelType, double& pNormV0, double& pNormP0, double& pNormV1, double& pNormP1, std::vector<std::vector<double> >& matrixSpeedInertiaTable, std::vector<std::vector<double> >& normedDragTable) {
++    bool CEPHandler::ReadVehicleFile(const std::vector<std::string>& DataPath, const std::string& emissionClass, Helpers* Helper, double& vehicleMass, double& vehicleLoading, double& vehicleMassRot, double& crossArea, double& cWValue, double& f0, double& f1, double& f2, double& f3, double& f4, double& axleRatio, double& auxPower, double& ratedPower, double& engineIdlingSpeed, double& engineRatedSpeed, double& effectiveWheelDiameter, std::vector<double>& transmissionGearRatios, std::string& vehicleMassType, std::string& vehicleFuelType, double& pNormV0, double& pNormP0, double& pNormV1, double& pNormP1, std::vector<std::vector<double> >& matrixSpeedInertiaTable, std::vector<std::vector<double> >& normedDragTable) {
+         vehicleMass = 0;
+         vehicleLoading = 0;
+         vehicleMassRot = 0;
+@@ -111,12 +134,17 @@ namespace PHEMlightdll {
+         int dataCount = 0;
+ 
+         //Open file
+-        std::string path = DataPath + std::string("\\") + emissionClass + std::string(".PHEMLight.veh");
+-        if (!File::Exists(path)) {
+-            Helper->setErrMsg(std::string("File do not exist! (") + path + std::string(")"));
++        std::ifstream vehicleReader;
++        for (std::vector<std::string>::const_iterator i = DataPath.begin(); i != DataPath.end(); i++) {
++            vehicleReader.open(((*i) + emissionClass + ".PHEMLight.veh").c_str());
++            if (vehicleReader.good()) {
++                break;
++            }
++        }
++        if (!vehicleReader.good()) {
++            Helper->setErrMsg("File does not exist! (" + emissionClass + ".PHEMLight.veh)");
+             return false;
+         }
+-        StreamReader* vehicleReader = File::OpenText(path);
+ 
+         // skip header
+         ReadLine(vehicleReader);
+@@ -262,11 +290,10 @@ namespace PHEMlightdll {
+             normedDragTable.push_back(todoubleList(split(line, ',')));
+         }
+ 
+-        vehicleReader->Close();
+         return true;
+     }
+ 
+-    bool CEPHandler::ReadEmissionData(bool readFC, const std::string& DataPath, const std::string& emissionClass, Helpers* Helper, std::vector<std::string>& header, std::vector<std::vector<double> >& matrix, std::vector<double>& idlingValues) {
++    bool CEPHandler::ReadEmissionData(bool readFC, const std::vector<std::string>& DataPath, const std::string& emissionClass, Helpers* Helper, std::vector<std::string>& header, std::vector<std::vector<double> >& matrix, std::vector<double>& idlingValues) {
+         // declare file stream
+         std::string line;
+         header = std::vector<std::string>();
+@@ -278,18 +305,23 @@ namespace PHEMlightdll {
+             pollutantExtension += std::string("_FC");
+         }
+ 
+-        std::string path = DataPath + std::string("\\") + emissionClass + pollutantExtension + std::string(".csv");
+-        if (!File::Exists(path)) {
+-            Helper->setErrMsg(std::string("File do not exist! (") + path + std::string(")"));
++        std::ifstream fileReader;
++        for (std::vector<std::string>::const_iterator i = DataPath.begin(); i != DataPath.end(); i++) {
++            fileReader.open(((*i) + emissionClass + pollutantExtension + ".csv").c_str());
++            if (fileReader.good()) {
++                break;
++            }
++        }
++        if (!fileReader.good()) {
++            Helper->setErrMsg("File does not exist! (" + emissionClass + pollutantExtension + ".csv)");
+             return false;
+         }
+-        StreamReader* fileReader = File::OpenText(path);
+ 
+         // read header line for pollutant identifiers
+         if ((line = ReadLine(fileReader)) != "") {
+-            std::vector<std::string>& entries = split(line, ',');
++            std::vector<std::string> entries = split(line, ',');
+             // skip first entry "Pe"
+-            for (int i = 1; i < entries.size(); i++) {
++            for (int i = 1; i < (int)entries.size(); i++) {
+                 header.push_back(entries[i]);
+             }
+         }
+@@ -303,7 +335,7 @@ namespace PHEMlightdll {
+         //readIdlingValues
+         line = ReadLine(fileReader);
+ 
+-        std::vector<std::string> stringIdlings = split(line, ',').ToList();
++        std::vector<std::string> stringIdlings = split(line, ',');
+         stringIdlings.erase(stringIdlings.begin());
+ 
+         idlingValues = todoubleList(stringIdlings);
+@@ -311,26 +343,38 @@ namespace PHEMlightdll {
+         while ((line = ReadLine(fileReader)) != "") {
+             matrix.push_back(todoubleList(split(line, ',')));
+         }
+-        fileReader->Close();
+         return true;
+     }
+ 
+     std::vector<std::string> CEPHandler::split(const std::string& s, char delim) {
+-//C# TO C++ CONVERTER TODO TASK: There is no direct native C++ equivalent to this .NET String method:
+-        return s.Split(delim).ToList();
++        std::vector<std::string> elems;
++        std::stringstream ss(s);
++        std::string item;
++        while (std::getline(ss, item, delim)) {
++            elems.push_back(item);
++        }
++        return elems;
+     }
+ 
+     double CEPHandler::todouble(const std::string& s) {
+-        return static_cast<double>(s, CultureInfo::InvariantCulture);
++        std::stringstream ss(s);
++        double item;
++        ss >> item;
++        return item;
+     }
+ 
+-    std::vector<double> CEPHandler::todoubleList(std::vector<std::string>& s) {
+-        return s.Select([&] (void* p) {
+-            todouble(p);
+-        }).Cast<double>().ToList();
++    std::vector<double> CEPHandler::todoubleList(const std::vector<std::string>& s) {
++        std::vector<double> result;
++        for (std::vector<std::string>::const_iterator i = s.begin(); i != s.end(); ++i) {
++            result.push_back(todouble(*i));
++        }
++        return result;
+     }
+ 
+-    std::string CEPHandler::ReadLine(StreamReader* s) {
+-        return s->ReadLine();
++    std::string CEPHandler::ReadLine(std::ifstream& s) {
++        std::string line;
++        std::getline(s, line);
++        line.erase(line.find_last_not_of(" \n\r\t") + 1);
++        return line;
+     }
+ }
+diff --git b/src/foreign/PHEMlight/cpp/CEPHandler.h a/src/foreign/PHEMlight/cpp/CEPHandler.h
+index bd46d8d9b9..d2e0fd3fb6 100644
+--- b/src/foreign/PHEMlight/cpp/CEPHandler.h
++++ a/src/foreign/PHEMlight/cpp/CEPHandler.h
+@@ -1,4 +1,25 @@
+-﻿#ifndef PHEMlightCEPHANDLER
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright 2016 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    CEPHandler.h
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#ifndef PHEMlightCEPHANDLER
+ #define PHEMlightCEPHANDLER
+ 
+ #include <string>
+@@ -10,7 +31,6 @@
+ namespace PHEMlightdll { class CEP; }
+ namespace PHEMlightdll { class Helpers; }
+ 
+-#define FLEET
+ 
+ namespace PHEMlightdll {
+     class CEPHandler {
+@@ -28,14 +48,14 @@ namespace PHEMlightdll {
+     private:
+         std::map<std::string, CEP*> _ceps;
+     public:
+-        std::map<std::string, CEP*> getCEPS() const;
++        const std::map<std::string, CEP*>& getCEPS() const;
+ 
+ 
+         //--------------------------------------------------------------------------------------------------
+         // Methods 
+         //--------------------------------------------------------------------------------------------------
+ 
+-        bool GetCEP(const std::string& DataPath, Helpers* Helper);
++        bool GetCEP(const std::vector<std::string>& DataPath, Helpers* Helper);
+ 
+ 
+         //--------------------------------------------------------------------------------------------------
+@@ -43,11 +63,11 @@ namespace PHEMlightdll {
+         //--------------------------------------------------------------------------------------------------
+ 
+     private:
+-        bool Load(const std::string& DataPath, Helpers* Helper);
++        bool Load(const std::vector<std::string>& DataPath, Helpers* Helper);
+ 
+-        bool ReadVehicleFile(const std::string& DataPath, const std::string& emissionClass, Helpers* Helper, double& vehicleMass, double& vehicleLoading, double& vehicleMassRot, double& crossArea, double& cWValue, double& f0, double& f1, double& f2, double& f3, double& f4, double& axleRatio, double& auxPower, double& ratedPower, double& engineIdlingSpeed, double& engineRatedSpeed, double& effectiveWheelDiameter, std::vector<double>& transmissionGearRatios, std::string& vehicleMassType, std::string& vehicleFuelType, double& pNormV0, double& pNormP0, double& pNormV1, double& pNormP1, std::vector<std::vector<double> >& matrixSpeedInertiaTable, std::vector<std::vector<double> >& normedDragTable);
++        bool ReadVehicleFile(const std::vector<std::string>& DataPath, const std::string& emissionClass, Helpers* Helper, double& vehicleMass, double& vehicleLoading, double& vehicleMassRot, double& crossArea, double& cWValue, double& f0, double& f1, double& f2, double& f3, double& f4, double& axleRatio, double& auxPower, double& ratedPower, double& engineIdlingSpeed, double& engineRatedSpeed, double& effectiveWheelDiameter, std::vector<double>& transmissionGearRatios, std::string& vehicleMassType, std::string& vehicleFuelType, double& pNormV0, double& pNormP0, double& pNormV1, double& pNormP1, std::vector<std::vector<double> >& matrixSpeedInertiaTable, std::vector<std::vector<double> >& normedDragTable);
+ 
+-        bool ReadEmissionData(bool readFC, const std::string& DataPath, const std::string& emissionClass, Helpers* Helper, std::vector<std::string>& header, std::vector<std::vector<double> >& matrix, std::vector<double>& idlingValues);
++        bool ReadEmissionData(bool readFC, const std::vector<std::string>& DataPath, const std::string& emissionClass, Helpers* Helper, std::vector<std::string>& header, std::vector<std::vector<double> >& matrix, std::vector<double>& idlingValues);
+ 
+ 
+         //--------------------------------------------------------------------------------------------------
+@@ -61,10 +81,10 @@ namespace PHEMlightdll {
+         double todouble(const std::string& s);
+ 
+         //Convert string to double list
+-        std::vector<double> todoubleList(std::vector<std::string>& s);
++        std::vector<double> todoubleList(const std::vector<std::string>& s);
+ 
+         //Read a line from file
+-        std::string ReadLine(StreamReader* s);
++        std::string ReadLine(std::ifstream& s);
+     };
+ }
+ 
+diff --git b/src/foreign/PHEMlight/cpp/Constants.cpp a/src/foreign/PHEMlight/cpp/Constants.cpp
+index e534017678..936416fe08 100644
+--- b/src/foreign/PHEMlight/cpp/Constants.cpp
++++ a/src/foreign/PHEMlight/cpp/Constants.cpp
+@@ -1,4 +1,25 @@
+-﻿#include "Constants.h"
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright (C) 2016-2017 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    Constants.cpp
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#include "Constants.h"
+ 
+ 
+ namespace PHEMlightdll {
+diff --git b/src/foreign/PHEMlight/cpp/Constants.h a/src/foreign/PHEMlight/cpp/Constants.h
+index bd3387c15b..113c4247c7 100644
+--- b/src/foreign/PHEMlight/cpp/Constants.h
++++ a/src/foreign/PHEMlight/cpp/Constants.h
+@@ -1,4 +1,25 @@
+-﻿#ifndef PHEMlightCONSTANTS
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright (C) 2016-2017 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    Constants.h
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#ifndef PHEMlightCONSTANTS
+ #define PHEMlightCONSTANTS
+ 
+ #include <string>
+diff --git b/src/foreign/PHEMlight/cpp/Helpers.cpp a/src/foreign/PHEMlight/cpp/Helpers.cpp
+index b3872222ff..c3e6912ce8 100644
+--- b/src/foreign/PHEMlight/cpp/Helpers.cpp
++++ a/src/foreign/PHEMlight/cpp/Helpers.cpp
+@@ -1,4 +1,25 @@
+-﻿#include "Helpers.h"
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright 2016 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    Helpers.cpp
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#include "Helpers.h"
+ #include "Constants.h"
+ 
+ 
+diff --git b/src/foreign/PHEMlight/cpp/Helpers.h a/src/foreign/PHEMlight/cpp/Helpers.h
+index 0f6ad8eefb..23b41471a2 100644
+--- b/src/foreign/PHEMlight/cpp/Helpers.h
++++ a/src/foreign/PHEMlight/cpp/Helpers.h
+@@ -1,4 +1,25 @@
+-﻿#ifndef PHEMlightHELPERS
++/****************************************************************************/
++// Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
++// Copyright (C) 2016-2018 German Aerospace Center (DLR) and others.
++// PHEMlight module
++// Copyright 2016 Technische Universitaet Graz, https://www.tugraz.at/
++// This program and the accompanying materials
++// are made available under the terms of the Eclipse Public License v2.0
++// which accompanies this distribution, and is available at
++// http://www.eclipse.org/legal/epl-v20.html
++// SPDX-License-Identifier: EPL-2.0
++/****************************************************************************/
++/// @file    Helpers.h
++/// @author  Martin Dippold
++/// @author  Michael Behrisch
++/// @date    July 2016
++/// @version $Id$
++///
++//
++/****************************************************************************/
++
++
++#ifndef PHEMlightHELPERS
+ #define PHEMlightHELPERS
+ 
+ #include <string>
