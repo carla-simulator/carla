@@ -9,6 +9,8 @@
   * Added 'check_lidar_bb' util script
   * Improved manual_control: now cameras are set in relation with car size
   * Added performance benchmarking section to documentation
+  * CARLA is compatible with the last RoadRunner nomenclature for road assets
+  * Fixed a bug when importing a FBX map with some **_** in the FBX name
 
 ## CARLA 0.9.11
 
