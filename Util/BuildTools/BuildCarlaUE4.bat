@@ -18,6 +18,9 @@ set BUILD_UE4_EDITOR=false
 set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
 set USE_CARSIM=false
+set USE_CHRONO=false
+set CARSIM_STATE="CarSim OFF"
+set CHRONO_STATE="Chrono OFF"
 
 :arg-parse
 echo %1
@@ -33,6 +36,9 @@ if not "%1"=="" (
     )
     if "%1"=="--carsim" (
         set USE_CARSIM=true
+    )
+    if "%1"=="--chrono" (
+        set USE_CHRONO=true
     )
     if "%1"=="-h" (
         goto help
@@ -102,16 +108,24 @@ if %REMOVE_INTERMEDIATE% == true (
 
 rem Build Carla Editor
 rem
+
+if %USE_CARSIM% == true (
+    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
+    set CARSIM_STATE="CarSim ON"
+) else (
+    py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+    set CARSIM_STATE="CarSim OFF"
+)
+if %USE_CHRONO% == true (
+    set CHRONO_STATE="Chrono ON"
+) else (
+    set CHRONO_STATE="Chrono OFF"
+)
+set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE%
+echo %OPTIONAL_MODULES_TEXT% > "%ROOT_PATH%Unreal/CarlaUE4/Config/OptionalModules.ini"
+
 if %BUILD_UE4_EDITOR% == true (
     echo %FILE_N% Building Unreal Editor...
-
-    if %USE_CARSIM% == true (
-        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
-        echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
-    ) else (
-        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
-        echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
-    )
 
     call "%UE4_ROOT%Engine\Build\BatchFiles\Build.bat"^
         CarlaUE4Editor^
