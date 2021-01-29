@@ -207,7 +207,7 @@ info_map = map.to_opendrive()
 ---
 ## CARLA maps
 
-There are seven towns in the CARLA ecosystem and each of those towns have two kinds of map, non-layered and layered. [Layers][layer_api] refer to the grouped objects within a map and consist of the following:
+There are eight towns in the CARLA ecosystem and each of those towns have two kinds of map, non-layered and layered. [Layers][layer_api] refer to the grouped objects within a map and consist of the following:
 
 - NONE
 - Buildings
