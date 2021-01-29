@@ -43,6 +43,14 @@ void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOri
 
 void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
 {
+  CurrentOrigin = InDstOrigin;
+
+  GEngine->AddOnScreenDebugMessage(66, 30.0f, FColor::Yellow,
+    FString::Printf(TEXT("Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString())
+    );
+
+
+  // This is just to update the color of the msg with the same as the closest map
   UWorld* World = GetWorld();
   const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
   FColor LevelColor = FColor::White;
@@ -66,8 +74,28 @@ void ALargeMapManager::Tick(float DeltaTime)
   Super::Tick(DeltaTime);
 
 #if WITH_EDITOR
-  PrintMapInfo();
+  if(bPrintMapInfo) PrintMapInfo();
 #endif // WITH_EDITOR
+
+}
+
+void ALargeMapManager::GenerateMap(FString AssetsPath)
+{
+  FString Output = "";
+
+  /* Retrive all the assets in the path */
+  FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+  TArray<FAssetData> AssetsData;
+  const UClass* Class = UStaticMesh::StaticClass();
+  AssetRegistryModule.Get().GetAssetsByPath(*AssetsPath, AssetsData, true);
+
+  Output += FString::Printf(TEXT("AssetsData (%d): \n"), AssetsData.Num());
+  for(const FAssetData& AssetData : AssetsData)
+  {
+    Output += AssetData.ObjectPath.ToString() + "\n";
+  }
+
+  GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::White, Output);
 
 }
 
@@ -152,7 +180,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTileInternal(FString TileName, F
 
 #if WITH_EDITOR
 
-void ALargeMapManager::PrintMapInfo() const
+void ALargeMapManager::PrintMapInfo()
 {
   UWorld* World = GetWorld();
 
@@ -200,7 +228,15 @@ void ALargeMapManager::PrintMapInfo() const
       FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance));
   }
 
-  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, PositonMsgColor, ViewLocation.ToString());
+  FIntVector IntViewLocation(ViewLocation * 100.0f);
+  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, PositonMsgColor, IntViewLocation.ToString());
+
+  CurrentPlayerPosition = (CurrentOrigin + FIntVector(ViewLocation));
+
+  FString StrCurrentPlayerPosition = CurrentPlayerPosition.ToString();
+
+  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, PositonMsgColor,
+    FString::Printf(TEXT("Origin: %s \nClient Loc: %s"), *CurrentOrigin.ToString(), *StrCurrentPlayerPosition));
 }
 
 #endif // WITH_EDITOR
