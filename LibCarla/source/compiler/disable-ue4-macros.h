@@ -48,6 +48,7 @@
 #  pragma clang diagnostic ignored "-Wmissing-braces"
 #  pragma clang diagnostic ignored "-Wunusable-partial-specialization"
 #  pragma clang diagnostic ignored "-Wundef"
+#  pragma clang diagnostic ignored "-Wall"
 #endif
 
 #pragma push_macro("TEXT")
