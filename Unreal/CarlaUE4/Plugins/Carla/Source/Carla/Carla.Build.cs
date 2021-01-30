@@ -20,7 +20,6 @@ public class Carla : ModuleRules
     if (IsWindows(Target))
     {
       bEnableExceptions = true;
-      bUseRTTI = true;
     }
 
     // Read config about carsim
@@ -168,13 +167,16 @@ public class Carla : ModuleRules
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
       }
       if (UsingChrono)
-      {
+      { 
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll/ChronoEngine.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll/ChronoEngine_vehicle.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll/ChronoModels_vehicle.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
+        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
+        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
+        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
       }
     }
     else
@@ -210,5 +212,6 @@ public class Carla : ModuleRules
     PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
     PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
     PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
   }
 }

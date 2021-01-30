@@ -14,6 +14,33 @@ DEFINE_LOG_CATEGORY(LogCarlaServer);
 void FCarlaModule::StartupModule()
 {
 	RegisterSettings();
+	LoadChronoDll();
+}
+
+void FCarlaModule::LoadChronoDll()
+{
+	#if defined(WITH_CHRONO) && PLATFORM_WINDOWS
+	const FString BaseDir = IPluginManager::Get().FindPlugin("Carla")->GetBaseDir();
+	const FString PluginDir = FPaths::Combine(*BaseDir, TEXT("CarlaDependencies/dll"));
+	FString ChronoEngineDll = FPaths::Combine(*PluginDir, TEXT("ChronoEngine.dll"));
+	FString ChronoVehicleDll = FPaths::Combine(*PluginDir, TEXT("ChronoEngine_vehicle.dll"));
+	FString ChronoModelsDll = FPaths::Combine(*PluginDir, TEXT("ChronoModels_vehicle.dll"));
+	auto ChronoEngineHandle = FPlatformProcess::GetDllHandle(*ChronoEngineDll);
+	if (ChronoEngineHandle)
+	{
+		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoEngine.dll could not be loaded"));
+	}
+	auto ChronoVehicleHandle = FPlatformProcess::GetDllHandle(*ChronoVehicleDll);
+	if (ChronoVehicleHandle)
+	{
+		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoEngine_vehicle.dll could not be loaded"));
+	}
+	auto ChronoModelsHandle = FPlatformProcess::GetDllHandle(*ChronoModelsDll);
+	if (ChronoModelsHandle)
+	{
+		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoModels_vehicle.dll could not be loaded"));
+	}
+	#endif
 }
 
 void FCarlaModule::ShutdownModule()
