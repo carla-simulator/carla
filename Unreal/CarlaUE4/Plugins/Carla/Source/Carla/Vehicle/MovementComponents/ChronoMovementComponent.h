@@ -15,7 +15,7 @@
 
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
-#include "chrono_vehicle/terrain/RigidTerrain.h"
+#include "chrono_vehicle/ChTerrain.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_models/vehicle/hmmwv/HMMWV.h"
 
@@ -23,6 +23,20 @@
 #endif
 
 #include "ChronoMovementComponent.generated.h"
+
+#ifdef WITH_CHRONO
+class UERayCastTerrain : public chrono::vehicle::ChTerrain
+{
+  UWorld* UEWorld;
+  chrono::vehicle::ChVehicle* ChronoVehicle;
+public:
+  UERayCastTerrain(UWorld* World, chrono::vehicle::ChVehicle* Vehicle);
+
+  double GetHeight(double x, double y) const override;
+  chrono::ChVector<> GetNormal(double x, double y) const override;
+  float GetCoefficientFriction(double x, double y) const;
+};
+#endif
 
 UCLASS(Blueprintable, meta=(BlueprintSpawnableComponent) )
 class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
@@ -32,13 +46,16 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
 #ifdef WITH_CHRONO
   chrono::ChSystemNSC sys;
   chrono::vehicle::hmmwv::HMMWV_Full my_hmmwv;
-  std::shared_ptr<chrono::vehicle::RigidTerrain> terrain;
+  std::shared_ptr<UERayCastTerrain> terrain;
 #endif
+
+  uint64_t MaxSubsteps = 10;
+  float MaxSubstepDeltaTime = 0.01;
 
 public:
 
 
-  static void CreateChronoMovementComponent(ACarlaWheeledVehicle* Vehicle);
+  static void CreateChronoMovementComponent(ACarlaWheeledVehicle* Vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime);
 
   #ifdef WITH_CHRONO
   virtual void BeginPlay() override;
