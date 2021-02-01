@@ -338,8 +338,8 @@ namespace detail {
     _pimpl->AsyncCall("use_carsim_road", vehicle, enabled);
   }
 
-  void Client::EnableChronoPhysics(rpc::ActorId vehicle) {
-    _pimpl->AsyncCall("enable_chrono_physics", vehicle);
+  void Client::EnableChronoPhysics(rpc::ActorId vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
+    _pimpl->AsyncCall("enable_chrono_physics", vehicle, MaxSubsteps, MaxSubstepDeltaTime);
   }
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {

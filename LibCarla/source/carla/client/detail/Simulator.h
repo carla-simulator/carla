@@ -454,8 +454,8 @@ namespace detail {
       _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
-    void EnableChronoPhysics(Vehicle &vehicle) {
-      _client.EnableChronoPhysics(vehicle.GetId());
+    void EnableChronoPhysics(Vehicle &vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
+      _client.EnableChronoPhysics(vehicle.GetId(), MaxSubsteps, MaxSubstepDeltaTime);
     }
 
     /// @}
