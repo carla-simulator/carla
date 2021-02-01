@@ -1,4 +1,6 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 
 #include "LargeMapManager.h"
@@ -6,11 +8,12 @@
 #include "Engine/LocalPlayer.h"
 #include "Engine/WorldComposition.h"
 
+#include "UncenteredPivotPointMesh.h"
+
 
 // Sets default values
 ALargeMapManager::ALargeMapManager()
 {
-   // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
   PrimaryActorTick.bCanEverTick = true;
 
 }
@@ -81,38 +84,105 @@ void ALargeMapManager::Tick(float DeltaTime)
 
 void ALargeMapManager::GenerateMap(FString AssetsPath)
 {
-  FString Output = "";
-
   /* Retrive all the assets in the path */
-  FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
   TArray<FAssetData> AssetsData;
-  const UClass* Class = UStaticMesh::StaticClass();
-  AssetRegistryModule.Get().GetAssetsByPath(*AssetsPath, AssetsData, true);
+  UObjectLibrary* ObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), true, GIsEditor);
+  ObjectLibrary->LoadAssetDataFromPath(AssetsPath);
+  ObjectLibrary->GetAssetDataList(AssetsData);
 
-  Output += FString::Printf(TEXT("AssetsData (%d): \n"), AssetsData.Num());
+  /* Generate tiles based on mesh positions */
+  UWorld* World = GetWorld();
   for(const FAssetData& AssetData : AssetsData)
   {
-    Output += AssetData.ObjectPath.ToString() + "\n";
+    UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
+    FBox BoundingBox = Mesh->GetBoundingBox();
+    FVector CenterBB = BoundingBox.GetCenter();
+    //GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::White,
+    //  FString::Printf(TEXT("  %s - %s "), *CenterBB.ToString(), *BoundingBox.ToString() ));
+
+    // Get map tile: create one if it does not exists
+    FCarlaMapTile& MapTile = GetCarlaMapTile(CenterBB);
+
+    // Recalculate asset location based on tile position
+    FTransform Transform(
+        FRotator(),
+        CenterBB - MapTile.Location,
+        FVector(1.0f));
+
+    // Create intermediate actor (AUncenteredPivotPointMesh) to paliate not centered pivot point of the mesh
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.OverrideLevel = MapTile.StreamingLevel->GetLoadedLevel();
+    AUncenteredPivotPointMesh* SMActor =
+        World->SpawnActor<AUncenteredPivotPointMesh>(
+          AUncenteredPivotPointMesh::StaticClass(),
+          Transform,
+          SpawnParams);
+
+    UStaticMeshComponent* SMComp = SMActor->GetMeshComp();
+    SMComp->SetStaticMesh(Mesh);
+    SMComp->SetRelativeLocation(CenterBB * -1.0f); // The pivot point does not get affected by Tile location
+
   }
 
-  GEngine->AddOnScreenDebugMessage(-1, 30.0f, FColor::White, Output);
+}
 
+FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation)
+{
+  return FIntVector(TileLocation / kTileSide);
+}
+
+FIntVector ALargeMapManager::GetTileVectorID(uint32 TileID)
+{
+  return FIntVector{
+    (int32)((TileID >> 16) & 0xFFFF),
+    (int32)(TileID & 0xFFFF),
+    0
+  };
+}
+
+uint32 ALargeMapManager::GetTileID(FVector TileLocation)
+{
+  FIntVector TileID = GetTileVectorID(TileLocation);
+  return ( ((TileID.X & 0xFFFF) << 16) | (TileID.Y & 0xFFFF) );
+}
+
+FString ALargeMapManager::GenerateTileName(uint32 TileID)
+{
+  int32 X = (int32)((TileID >> 16) & 0xFFFF);
+  int32 Y = (int32)(TileID & 0xFFFF);
+  return FString::Printf(TEXT("Tile_%d_%d"), X, Y);
+}
+
+FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
+{
+  // Asset Location -> TileID
+  uint32 TileID = GetTileID(Location);
+
+  UE_LOG(LogCarla, Warning, TEXT("GetCarlaMapTile %s -> %x"), *Location.ToString(), TileID);
+
+  FCarlaMapTile* Tile = MapTiles.Find(TileID);
+  if(Tile) return *Tile; // Tile founded
+
+  // Need to generate a new Tile
+  FCarlaMapTile NewTile;
+  // 1 - Calculate the Tile position
+  FIntVector VTileID = GetTileVectorID(TileID);
+  NewTile.Location = FVector(VTileID) * kTileSide;
+  UE_LOG(LogCarla, Warning, TEXT("                NewTile.Location %s"), *NewTile.Location.ToString());
+  // 2 - Generate Tile name
+  NewTile.Name = GenerateTileName(TileID);
+  // 3 - Generate the StreamLevel
+  NewTile.StreamingLevel = AddNewTile(NewTile.Name, NewTile.Location);
+  // 4 - Add it to the map
+  return MapTiles.Add(TileID, NewTile);
 }
 
 ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector TileLocation)
 {
-  ULevelStreamingDynamic* CreatedLevel = AddNewTileInternal(*TileName, TileLocation);
-  TilesCreated.Add(TileName, CreatedLevel);
-  return CreatedLevel;
-}
-
-ULevelStreamingDynamic* ALargeMapManager::AddNewTileInternal(FString TileName, FVector Location)
-{
   UWorld* World = GetWorld();
   UWorldComposition* WorldComposition = World->WorldComposition;
 
-  FString FullName = "/Game/Carla/Maps/Sublevels/Town03_Opt/T03_Layout";
-  FName LevelFName = FName(*FullName);
+  FString FullName = "/Game/Carla/Maps/LargeMap/EmptyTileBase";
   FString PackageFileName = FullName;
   FString LongLevelPackageName = FPackageName::FilenameToLongPackageName(PackageFileName);
   FString UniqueLevelPackageName = LongLevelPackageName + TileName;
@@ -137,17 +207,17 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTileInternal(FString TileName, F
   StreamingLevel->bShouldBlockOnLoad = ShouldTilesBlockOnLoad;
   StreamingLevel->bInitiallyLoaded = true;
   StreamingLevel->bInitiallyVisible = true;
-  StreamingLevel->LevelTransform = FTransform(Location);
+  StreamingLevel->LevelTransform = FTransform(TileLocation);
   StreamingLevel->PackageNameToLoad = *FullName;
 
   if (!FPackageName::DoesPackageExist(FullName, NULL, &PackageFileName))
   {
-    GEngine->AddOnScreenDebugMessage(-1, 50.0f, FColor::Red, FString::Printf(TEXT("Level does not exist in package with FullName variable -> %s"), *FullName));
+    UE_LOG(LogCarla, Error, TEXT("Level does not exist in package with FullName variable -> %s"), *FullName);
   }
 
   if (!FPackageName::DoesPackageExist(LongLevelPackageName, NULL, &PackageFileName))
   {
-    GEngine->AddOnScreenDebugMessage(-1, 50.0f, FColor::Red, FString::Printf(TEXT("Level does not exist in package with LongLevelPackageName variable -> %s"), *LongLevelPackageName));
+    UE_LOG(LogCarla, Error, TEXT("Level does not exist in package with LongLevelPackageName variable -> %s"), *LongLevelPackageName);
   }
 
   //Actual map package to load
@@ -159,7 +229,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTileInternal(FString TileName, F
 
 
   FWorldTileInfo Info;
-  Info.AbsolutePosition = FIntVector(Location);
+  Info.AbsolutePosition = FIntVector(TileLocation);
   FVector MinBound(-20000.0f);
   FVector MaxBound(20000.0f);
   //Info.Bounds = FBox(MinBound, MaxBound);
@@ -170,10 +240,9 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTileInternal(FString TileName, F
   Info.Layer = WorldTileLayer;
 
   FWorldCompositionTile NewTile;
-  NewTile.PackageName = LevelFName;
+  NewTile.PackageName = *FullName;
   NewTile.Info = Info;
   WorldComposition->GetTilesList().Add(NewTile);
-
 
   return StreamingLevel;
 }
