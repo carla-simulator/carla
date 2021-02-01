@@ -1,4 +1,6 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
@@ -12,6 +14,17 @@
 #include "LargeMapManager.generated.h"
 
 
+USTRUCT()
+struct FCarlaMapTile
+{
+  GENERATED_BODY()
+
+  FString Name; // Tile_{TileID_X}_{TileID_Y}
+
+  ULevelStreamingDynamic* StreamingLevel = nullptr;
+
+  FVector Location{0.0f};
+};
 
 UCLASS()
 class CARLA_API ALargeMapManager : public AActor
@@ -39,9 +52,6 @@ public:
   void GenerateMap(FString AssetsPath);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  ULevelStreamingDynamic* AddNewTile(FString TileName, FVector Location);
-
-  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void AddNewClientPosition(AActor* InActor)
   {
     // TODO: This should be able to adapt to a multiactor environment
@@ -52,9 +62,21 @@ public:
 
 protected:
 
-  ULevelStreamingDynamic* AddNewTileInternal(FString TileName, FVector Location);
+  FIntVector GetTileVectorID(FVector TileLocation);
 
-  TMap<FString, ULevelStreamingDynamic*> TilesCreated;
+  FIntVector GetTileVectorID(uint32 TileID);
+
+  /// From a given location it retrieves the TileID that covers that area
+  uint32 GetTileID(FVector TileLocation);
+
+  FString GenerateTileName(uint32 TileID);
+
+  FCarlaMapTile& GetCarlaMapTile(FVector Location);
+
+  ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
+
+
+  TMap<uint32, FCarlaMapTile> MapTiles;
 
   AActor* ActorToConsider = nullptr;
 
@@ -67,6 +89,9 @@ protected:
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
+
+  //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  const float kTileSide = 2.0f * 1000.0f * 100.0f; // 2km
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
