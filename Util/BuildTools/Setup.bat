@@ -29,6 +29,7 @@ set INSTALLERS_DIR=%ROOT_PATH:/=\%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
 set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
+set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Binaries\Win64
 set USE_CHRONO=false
 
 :arg-parse
@@ -212,11 +213,17 @@ if %USE_CHRONO% == true (
     if not exist "%CARLA_DEPENDENCIES_FOLDER%dll" (
         mkdir "%CARLA_DEPENDENCIES_FOLDER%dll"
     )
+    if not exist "%CARLA_BINARIES_FOLDER%" (
+        mkdir %CARLA_BINARIES_FOLDER%
+    )
     echo "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
     copy "%INSTALLATION_DIR%chrono-install\lib\*.lib" "%CARLA_DEPENDENCIES_FOLDER%lib\*.lib" > NUL
     copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_DEPENDENCIES_FOLDER%dll\*.dll" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
+    rem Workaround for unreal not finding the .dll files
+    copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_BINARIES_FOLDER%\*.dll" > NUL
+    
 )
 
 rem ============================================================================

@@ -19,30 +19,31 @@ void FCarlaModule::StartupModule()
 
 void FCarlaModule::LoadChronoDll()
 {
-	#if defined(WITH_CHRONO) && PLATFORM_WINDOWS
+	#if defined(WITH_CHRONO) && defined(PLATFORM_WINDOWS)
 	const FString BaseDir = FPaths::Combine(*FPaths::ProjectPluginsDir(), TEXT("Carla"));
-	const FString PluginDir = FPaths::Combine(*BaseDir, TEXT("CarlaDependencies/dll"));
-	FString ChronoEngineDll = FPaths::Combine(*PluginDir, TEXT("ChronoEngine.dll"));
-	FString ChronoVehicleDll = FPaths::Combine(*PluginDir, TEXT("ChronoEngine_vehicle.dll"));
-	FString ChronoModelsDll = FPaths::Combine(*PluginDir, TEXT("ChronoModels_vehicle.dll"));
-	FString ChronoRobotDll = FPaths::Combine(*PluginDir, TEXT("ChronoModels_robot.dll"));
+	const FString DllDir = FPaths::Combine(*BaseDir, TEXT("CarlaDependencies"), TEXT("dll"));
+	FString ChronoEngineDll = FPaths::Combine(*DllDir, TEXT("ChronoEngine.dll"));
+	FString ChronoVehicleDll = FPaths::Combine(*DllDir, TEXT("ChronoEngine_vehicle.dll"));
+	FString ChronoModelsDll = FPaths::Combine(*DllDir, TEXT("ChronoModels_vehicle.dll"));
+	FString ChronoRobotDll = FPaths::Combine(*DllDir, TEXT("ChronoModels_robot.dll"));
+	UE_LOG(LogCarla, Log, TEXT("Loading Dlls from: %s"), *DllDir);
 	auto ChronoEngineHandle = FPlatformProcess::GetDllHandle(*ChronoEngineDll);
-	if (ChronoEngineHandle)
+	if (!ChronoEngineHandle)
 	{
 		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoEngine.dll could not be loaded"));
 	}
 	auto ChronoVehicleHandle = FPlatformProcess::GetDllHandle(*ChronoVehicleDll);
-	if (ChronoVehicleHandle)
+	if (!ChronoVehicleHandle)
 	{
 		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoEngine_vehicle.dll could not be loaded"));
 	}
 	auto ChronoModelsHandle = FPlatformProcess::GetDllHandle(*ChronoModelsDll);
-	if (ChronoModelsHandle)
+	if (!ChronoModelsHandle)
 	{
 		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoModels_vehicle.dll could not be loaded"));
 	}
 	auto ChronoRobotHandle = FPlatformProcess::GetDllHandle(*ChronoRobotDll);
-	if (ChronoRobotHandle)
+	if (!ChronoRobotHandle)
 	{
 		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoModels_robot.dll could not be loaded"));
 	}
