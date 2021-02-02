@@ -504,7 +504,8 @@ if ${USE_CHRONO} ; then
   # -- Get Chrono and compile it with libc++ -------------------------------------
   # ==============================================================================
 
-  CHRONO_TAG=5.0.1
+  # CHRONO_TAG=5.0.1
+  CHRONO_TAG=develop
   CHRONO_REPO=https://github.com/projectchrono/chrono.git
 
   CHRONO_SRC_DIR=chrono-source
@@ -524,6 +525,7 @@ if ${USE_CHRONO} ; then
         -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
         -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
         -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
+        -DCMAKE_BUILD_TYPE=Release \
         -DENABLE_MODULE_VEHICLE=ON \
         ..
     ninja

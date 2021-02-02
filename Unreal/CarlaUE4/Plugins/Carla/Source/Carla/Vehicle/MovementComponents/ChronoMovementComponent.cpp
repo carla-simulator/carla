@@ -6,6 +6,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "ChronoMovementComponent.h"
+#include "Carla/Util/RayTracer.h"
 
 #ifdef WITH_CHRONO
 using namespace chrono;
@@ -32,29 +33,65 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
 constexpr double CMTOM = 0.01;
 ChVector<> UE4LocationToChrono(const FVector& Location)
 {
-  return CMTOM*ChVector<>(Location.Y, Location.Z, -Location.X);
+  return CMTOM*ChVector<>(Location.Y, Location.X, Location.Z);
 }
 constexpr double MTOCM = 100;
 FVector ChronoToUE4Location(const ChVector<>& position)
 {
-  return MTOCM*FVector(-position.z(), position.x(), position.y());
+  return MTOCM*FVector(position.y(), position.x(), position.z());
 }
 
-UERayCastTerrain::UERayCastTerrain(UWorld* World, ChVehicle* Vehicle)
-    : UEWorld(World), ChronoVehicle(Vehicle) {}
+UERayCastTerrain::UERayCastTerrain(
+    ACarlaWheeledVehicle* UEVehicle,
+    chrono::vehicle::ChVehicle* ChrVehicle)
+    : CarlaVehicle(UEVehicle), ChronoVehicle(ChrVehicle) {}
 
-double UERayCastTerrain::GetHeight(double x, double y) const
+std::pair<bool, FHitResult>
+    UERayCastTerrain::GetTerrainProperties(const FVector &Location) const
 {
-  double z = ChronoVehicle->GetVehiclePos().z();
-  FVector Location = ChronoToUE4Location({x, y, z});
-  carla::log_warning("GetHeight:", x, y, z);
-  return 0;
+  const double MaxDistance = 1000000;
+  FVector StartLocation = Location;
+  FVector EndLocation = Location + FVector(0,0,-1)*MaxDistance; // search downwards
+  FHitResult Hit;
+  FCollisionQueryParams CollisionQueryParams;
+  CollisionQueryParams.AddIgnoredActor(CarlaVehicle);
+  bool bDidHit = CarlaVehicle->GetWorld()->LineTraceSingleByChannel(
+      Hit,
+      StartLocation,
+      EndLocation,
+      ECC_GameTraceChannel2, // camera (any collision)
+      CollisionQueryParams,
+      FCollisionResponseParams()
+  );
+  return std::make_pair(bDidHit, Hit);
 }
-ChVector<> UERayCastTerrain::GetNormal(double x, double y) const
+
+double UERayCastTerrain::GetHeight(const ChVector<>& loc) const
 {
-  return ChVector<>(0,1,0);
+  FVector Location = ChronoToUE4Location(loc);
+  carla::log_warning("Get Height at", Location.X, Location.Y, Location.Z);
+  auto point_pair = GetTerrainProperties(Location);
+  if (point_pair.first)
+  {
+    double Height = CMTOM*point_pair.second.Location.Z;
+    carla::log_warning("(",loc.x(),loc.y(),loc.z(),") Height:",Height);
+    return Height;
+  }
+  return -1000000.0;
 }
-float UERayCastTerrain::GetCoefficientFriction(double x, double y) const
+ChVector<> UERayCastTerrain::GetNormal(const ChVector<>& loc) const
+{
+  FVector Location = ChronoToUE4Location(loc);
+  auto point_pair = GetTerrainProperties(Location);
+  if (point_pair.first)
+  {
+    FVector Normal = point_pair.second.Normal;
+    carla::log_warning("(",loc.x(),loc.y(),loc.z(),") Normal:",Normal.X,Normal.Y, Normal.Z);
+    return UE4LocationToChrono(Normal);
+  }
+  return UE4LocationToChrono(FVector(0,1,0));
+}
+float UERayCastTerrain::GetCoefficientFriction(const ChVector<>& loc) const
 {
   return 1;
 }
@@ -66,7 +103,7 @@ void UChronoMovementComponent::BeginPlay()
   DisableUE4VehiclePhysics();
 
   // // // Chrono system
-  sys.Set_G_acc(ChVector<>(0, -9.8, 0));
+  // sys.Set_G_acc(ChVector<>(0, 0, -9.81));
   sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
   sys.SetSolverMaxIterations(150);
   sys.SetMaxPenetrationRecoverySpeed(4.0);
@@ -74,7 +111,7 @@ void UChronoMovementComponent::BeginPlay()
   // // Create the HMMWV vehicle, set parameters, and initialize.
   // // Typical aerodynamic drag for HMMWV: Cd = 0.5 and area ~5 m2
   my_hmmwv = HMMWV_Full(&sys);
-  my_hmmwv.SetContactMethod(ChMaterialSurface::NSC);
+  my_hmmwv.SetContactMethod(ChContactMethod::NSC);
   my_hmmwv.SetChassisFixed(false);
   // Missing axis transformations to UE coordinate system
   FVector VehicleLocation = CarlaVehicle->GetActorLocation();
@@ -82,12 +119,12 @@ void UChronoMovementComponent::BeginPlay()
   my_hmmwv.SetPowertrainType(PowertrainModelType::SHAFTS);
   my_hmmwv.SetDriveType(DrivelineType::FWD);
   my_hmmwv.SetTireType(TireModelType::PAC02);
-  my_hmmwv.SetTireStepSize(0.001);
+  my_hmmwv.SetTireStepSize(MaxSubstepDeltaTime);
   my_hmmwv.SetAerodynamicDrag(0.5, 5.0, 1.2);
   my_hmmwv.Initialize();
 
   // Create the terrain
-  terrain = chrono_types::make_shared<UERayCastTerrain>(GetWorld(), &my_hmmwv.GetVehicle());
+  terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, &my_hmmwv.GetVehicle());
 
   carla::log_warning("ChronoBeginPlay");
 }
