@@ -321,6 +321,4 @@ protected:
 
   FRenderCommandFence RenderFence;
 
-  bool ReadyToCapture = false;
-
 };

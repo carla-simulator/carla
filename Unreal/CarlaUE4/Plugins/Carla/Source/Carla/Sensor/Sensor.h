@@ -101,9 +101,14 @@ protected:
 
 private:
 
+  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+
   FDataStream Stream;
 
   FDelegateHandle OnPostTickDelegate;
 
   const UCarlaEpisode *Episode = nullptr;
+
+  /// Allows the sensor to tick with the tick rate from UE4.
+  bool ReadyToTick = false;
 };

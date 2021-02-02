@@ -24,7 +24,7 @@ void ASensor::BeginPlay()
 {
   Super::BeginPlay();
   OnPostTickDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(
-      this, &ASensor::PostPhysTick);
+      this, &ASensor::PostPhysTickInternal);
 }
 
 void ASensor::Set(const FActorDescription &Description)
@@ -41,6 +41,7 @@ void ASensor::Set(const FActorDescription &Description)
 void ASensor::Tick(const float DeltaTime)
 {
   Super::Tick(DeltaTime);
+  ReadyToTick = true;
   PrePhysTick(DeltaTime);
 }
 
@@ -76,4 +77,13 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
   Stream = FDataStream();
 
   FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickDelegate);
+}
+
+void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds)
+{
+  if(ReadyToTick)
+  {
+    PostPhysTick(World, TickType, DeltaSeconds);
+    ReadyToTick = false;
+  }
 }
