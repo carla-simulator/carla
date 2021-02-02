@@ -1,14 +1,17 @@
 # Benchmarking Performance
 
-We provide a benchmarking script to enable users to analyze the performance of CARLA in different scenarios and conditions for both sensors and traffic. 
+We provide a benchmarking script to enable users to analyze the performance of CARLA in their own environment. The script can be configured to run a number of scenarios that combine different maps, sensors and weather conditions. It reports the average and standard deviation of FPS under the requested scenarios. 
 
-In this section we detail the requirements to run the benchmark, where to find the script, the flags available to customize the scenarios that are run, examples on how to run the commands and an example output.
+In this section we detail the requirements to run the benchmark, where to find the script, the flags available to customize the scenarios that are run and examples on how to run the commands.
+
+We have also included our results of a separate benchmark which measures performance in CARLA in a specific environment when using different combinations of number of vehicles, enabling physics and/or enabling Traffic Manager. The results are presented alongside the CARLA version used and the environment the test was performed in.
 
 - [__Before you begin__](#before-you-begin)
 - [__The benchmark script__](#the-benchmark-script)
     - [__Synopsis__](#synopsis)
-        - [Flags](#flags)
-    - [__What to expect__](#what-to-expect)
+        - [__Flags__](#flags)
+- [__CARLA performance report__](#carla-performance-report)
+
 
 ## Before you begin
 
@@ -164,6 +167,35 @@ python3 performance_benchmark.py --sensors 2 5 --maps Town03 Town05 --weather 0 
 python3 performance_benchmark.py --async --render_mode
 ```
 
+---
+## CARLA performance report
 
-## What to expect
 
+The following table details the performance effect on average FPS when running CARLA with increasing numbers of vehicles and different combinations of enabling and/or disabling physics and Traffic Manager.
+
+* CARLA Version: Dev branch on 29/01/21 (commit 198fa38c9b1317c114ac15dff130766253c02832)
+* Environment Specs: Intel(R) Xeon(R) CPU E5-1620 v3 @ 3.50GHz / 32 GB / NVIDIA GeForce GTX 1080 Ti
+
+
+|Num Vehicles|Phy: Off TM: Off|Phy: On TM: Off|Phy: Off TM: On|Phy: On TM: On|
+|------------|----------------|---------------|---------------|--------------|
+|0           |1220            |1102           |702            |729           |
+|1           |805             |579            |564            |422           |
+|10          |473             |223            |119            |98            |
+|50          |179             |64             |37             |26            |
+|100         |92              |34             |22             |15            |
+|150         |62              |21             |17             |10            |
+|200         |47              |15             |14             |7             |
+|250         |37              |11             |12             |6             |
+
+---
+
+If you have any questions regarding the performance benchmarks then don't hesitate to post in the forum.
+
+<div class="build-buttons">
+<!-- Latest release button -->
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+CARLA forum</a>
+</p>
+</div>
