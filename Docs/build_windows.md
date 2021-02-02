@@ -40,7 +40,7 @@ In this section you will find details of system requirements, minor and major so
 
 * [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files.  
 * [__Git__](https://git-scm.com/downloads) is a version control system to manage CARLA repositories.  
-* [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables.  
+* [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables. It is necessary to use __Make version 3.81__, otherwise the build may fail. If you have multiple versions of Make installed, check that you are using version 3.81 in your PATH when building CARLA. You can check your default version of Make by running `make --version`.
 * [__Python3 x64__](https://www.python.org/downloads/) is the main scripting language in CARLA. Having a x32 version installed may cause conflict, so it is highly advisable to have it uninstalled.
 
 !!! Important
