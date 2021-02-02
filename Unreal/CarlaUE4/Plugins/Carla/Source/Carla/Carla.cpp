@@ -25,6 +25,7 @@ void FCarlaModule::LoadChronoDll()
 	FString ChronoEngineDll = FPaths::Combine(*PluginDir, TEXT("ChronoEngine.dll"));
 	FString ChronoVehicleDll = FPaths::Combine(*PluginDir, TEXT("ChronoEngine_vehicle.dll"));
 	FString ChronoModelsDll = FPaths::Combine(*PluginDir, TEXT("ChronoModels_vehicle.dll"));
+	FString ChronoRobotDll = FPaths::Combine(*PluginDir, TEXT("ChronoModels_robot.dll"));
 	auto ChronoEngineHandle = FPlatformProcess::GetDllHandle(*ChronoEngineDll);
 	if (ChronoEngineHandle)
 	{
@@ -39,6 +40,11 @@ void FCarlaModule::LoadChronoDll()
 	if (ChronoModelsHandle)
 	{
 		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoModels_vehicle.dll could not be loaded"));
+	}
+	auto ChronoRobotHandle = FPlatformProcess::GetDllHandle(*ChronoRobotDll);
+	if (ChronoRobotHandle)
+	{
+		UE_LOG(LogCarla, Warning, TEXT("Error: ChronoModels_robot.dll could not be loaded"));
 	}
 	#endif
 }

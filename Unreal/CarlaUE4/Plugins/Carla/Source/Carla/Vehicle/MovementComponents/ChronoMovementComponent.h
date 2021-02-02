@@ -27,14 +27,15 @@
 #ifdef WITH_CHRONO
 class UERayCastTerrain : public chrono::vehicle::ChTerrain
 {
-  UWorld* UEWorld;
+  ACarlaWheeledVehicle* CarlaVehicle;
   chrono::vehicle::ChVehicle* ChronoVehicle;
 public:
-  UERayCastTerrain(UWorld* World, chrono::vehicle::ChVehicle* Vehicle);
+  UERayCastTerrain(ACarlaWheeledVehicle* UEVehicle, chrono::vehicle::ChVehicle* ChrVehicle);
 
-  double GetHeight(double x, double y) const override;
-  chrono::ChVector<> GetNormal(double x, double y) const override;
-  float GetCoefficientFriction(double x, double y) const;
+  std::pair<bool, FHitResult> GetTerrainProperties(const FVector &Location) const;
+  double GetHeight(const chrono::ChVector<>& loc) const override;
+  chrono::ChVector<> GetNormal(const chrono::ChVector<>& loc) const override;
+  float GetCoefficientFriction(const chrono::ChVector<>& loc) const;
 };
 #endif
 
