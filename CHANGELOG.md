@@ -19,6 +19,7 @@
   * Fixed bug in the actor's id returned by the semantic lidar
   * Fixed dependency of library **Xerces-c** on package
   * Fixed the `config.py` to read the `.osm ` files in proper `utf-8` encoding
+  * Created `mayavi_lidar.py` PythonAPI example to display lidar point clouds in real time as an alternative to Open3D.
 
 ## CARLA 0.9.10
 
