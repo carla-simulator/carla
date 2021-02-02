@@ -64,10 +64,8 @@ void ARayCastSemanticLidar::CreateLasers()
   }
 }
 
-void ARayCastSemanticLidar::Tick(const float DeltaTime)
+void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
@@ -95,7 +93,8 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 
   const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
       SemanticLidarData.GetHorizontalAngle());
-  const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
+  const float AngleDistanceOfTick = Description.RotationFrequency * Description.HorizontalFov 
+      * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
@@ -106,7 +105,8 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
     for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
       FHitResult HitResult;
       const float VertAngle = LaserAngles[idxChannel];
-      const float HorizAngle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
+      const float HorizAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfLaserMeasure
+          * idxPtsOneLaser, Description.HorizontalFov) - Description.HorizontalFov / 2;
       const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
 
       if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
@@ -120,7 +120,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   ComputeAndSaveDetections(ActorTransf);
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
-      std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
+      std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, Description.HorizontalFov));
   SemanticLidarData.SetHorizontalAngle(HorizontalAngle);
 }
 

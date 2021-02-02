@@ -19,7 +19,6 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
 {
@@ -55,10 +54,8 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
-void ARayCastLidar::Tick(const float DeltaTime)
+void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  ASensor::Tick(DeltaTime);
-
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);

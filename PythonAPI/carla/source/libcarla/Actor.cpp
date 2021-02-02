@@ -89,6 +89,7 @@ void export_actor() {
         }
         return attribute_dict;
       })
+      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Actor, GetBoundingBox))
       .def("get_world", CALL_RETURNING_COPY(cc::Actor, GetWorld))
       .def("get_location", &cc::Actor::GetLocation)
       .def("get_transform", &cc::Actor::GetTransform)
@@ -129,7 +130,6 @@ void export_actor() {
 
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
-      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Vehicle, GetBoundingBox))
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
       .def("get_control", &cc::Vehicle::GetControl)
       .def("set_light_state", &cc::Vehicle::SetLightState, (arg("light_state")))
@@ -141,11 +141,12 @@ void export_actor() {
       .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
       .def("is_at_traffic_light", &cc::Vehicle::IsAtTrafficLight)
       .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
+      .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
+      .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
       .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
-      .add_property("bounding_box", CALL_RETURNING_COPY(cc::Walker, GetBoundingBox))
       .def("apply_control", &ApplyControl<cr::WalkerControl>, (arg("control")))
       .def("apply_control", &ApplyControl<cr::WalkerBoneControl>, (arg("control")))
       .def("get_control", &cc::Walker::GetWalkerControl)

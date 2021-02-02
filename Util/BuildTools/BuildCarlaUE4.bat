@@ -17,6 +17,7 @@ rem ============================================================================
 set BUILD_UE4_EDITOR=false
 set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
+set USE_CARSIM=false
 
 :arg-parse
 echo %1
@@ -29,6 +30,9 @@ if not "%1"=="" (
     )
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
+    )
+    if "%1"=="--carsim" (
+        set USE_CARSIM=true
     )
     if "%1"=="-h" (
         goto help
@@ -101,6 +105,14 @@ rem
 if %BUILD_UE4_EDITOR% == true (
     echo %FILE_N% Building Unreal Editor...
 
+    if %USE_CARSIM% == true (
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
+        echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    ) else (
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+        echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    )
+
     call "%UE4_ROOT%Engine\Build\BatchFiles\Build.bat"^
         CarlaUE4Editor^
         Win64^
@@ -124,7 +136,8 @@ rem Launch Carla Editor
 rem
 if %LAUNCH_UE4_EDITOR% == true (
     echo %FILE_N% Launching Unreal Editor...
-    call "%UE4_PROJECT_FOLDER%CarlaUE4.uproject"
+    call "%UE4_ROOT%\Engine\Binaries\Win64\UE4Editor.exe"^
+        "%UE4_PROJECT_FOLDER%CarlaUE4.uproject"
     if %errorlevel% neq 0 goto error_build
 )
 

@@ -121,7 +121,29 @@
     - var_name: fixed_delta_seconds
       type: float
       doc: >
-        Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.  
+        Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.
+    - var_name: substepping
+      type: bool
+      doc: >
+        Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of carla.WorldSettings.max_substep and carla.WorldSettings.max_substep_delta_time. These last two parameters need to be compatible with carla.WorldSettings.fixed_delta_seconds. Enabled by default.
+    - var_name: max_substep_delta_time
+      type: float
+      doc: >
+       Maximum delta time of the substeps. If the carla.WorldSettingsmax_substep is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01.
+    - var_name: max_substeps
+      type: int
+      doc: >
+        The maximum number of physics substepping that are allowed. By default, the value is set to 10.
+    - var_name: max_culling_distance
+      type: float
+      doc: >
+        Configure the max draw distance for each mesh of the level.  
+    - var_name: deterministic_ragdolls
+      type: bool
+      doc: >
+        Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation. 
+        When enabled, pedestrians have less realistic death animation but ensures determinism. 
+        When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -171,6 +193,40 @@
         Parses the established settings to a string and shows them in command line. 
     # --------------------------------------
 
+  - class_name: EnvironmentObject
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents a geometry in the level, this geometry could be part of an actor formed with other EnvironmentObjects (ie: buildings).  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Contains the location and orientation of the EnvironmentObject in world space. 
+    - var_name: bounding_box
+      type: carla.BoundingBox
+      doc: >
+        Object containing a location, rotation and the length of a box for every axis in world space. 
+    - var_name: id
+      type: int
+      doc: >
+        Unique ID to identify the object in the level. 
+    - var_name: name
+      type: string
+      doc: >
+        Name of the EnvironmentObject.
+    - var_name: type
+      type: carla.CityObjectLabel
+      doc: >
+        Semantic tag. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      return: str
+      doc: > 
+        Parses the EnvironmentObject to a string and shows them in command line. 
+    # --------------------------------------
+
   - class_name: AttachmentType
     # - DESCRIPTION ------------------------
     doc: >
@@ -198,6 +254,30 @@
     - var_name: label
       doc: >
         Semantic tag of the point.
+    # --------------------------------------
+  
+  - class_name: MapLayer
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents each manageable layer of the map. Can be used as flags.
+      __WARNING: Only "Opt" maps are able to work with map layers.__
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+        No layers selected
+    - var_name: Buildings
+    - var_name: Decals
+    - var_name: Foliage
+    - var_name: Ground
+    - var_name: ParkedVehicles
+    - var_name: Particles
+    - var_name: Props
+    - var_name: StreetLights
+    - var_name: Walls
+    - var_name: All
+      doc: >
+        All layers selected
     # --------------------------------------
 
   - class_name: World
@@ -352,12 +432,37 @@
       params:
       - param_name: actor_type
         type: carla.CityObjectLabel
-        default: None
+        default: Any
         doc: > 
           Semantic tag of the elements contained in the bounding boxes that are returned. 
       return: array(carla.BoundingBox)
       doc: >
         Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`. 
+    # --------------------------------------
+    - def_name: get_environment_objects
+      params:
+      - param_name: object_type
+        type: carla.CityObjectLabel
+        default: Any
+        doc: > 
+          Semantic tag of the EnvironmentObjects that are returned. 
+      return: array(carla.EnvironmentObject)
+      doc: >
+        Returns a list of EnvironmentObject with the requested semantic tag. 
+        The method returns all the EnvironmentObjects in the level by default, but the query can be filtered by semantic tags with the argument `object_type`. 
+    # --------------------------------------
+    - def_name: enable_environment_objects
+      params:
+      - param_name: env_objects_ids
+        type: set(int)
+        doc: > 
+          Set of EnvironmentObject ids to change.
+      - param_name: enable
+        type: bool
+        doc: > 
+          State to be applied to all the EnvironmentObject of the set.
+      doc: >
+        Enable or disable a set of EnvironmentObject identified by their id. These objects will appear or disappear from the level.
     # --------------------------------------
     - def_name: get_lightmanager
       return: carla.LightManager
@@ -481,6 +586,28 @@
           The maximum distance to perform the projection
       doc: >
         Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.Labelled object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
+    # --------------------------------------
+    - def_name: load_map_layer
+      params: 
+      - param_name: map_layers
+        type: carla.MapLayer
+        doc: > 
+          Mask of level layers to be loaded. 
+      doc: >
+        Loads the selected layers to the level.
+        If the layer is already loaded the call has no effect.
+      warning: This only affects "Opt" maps.
+    # --------------------------------------
+    - def_name: unload_map_layer
+      params: 
+      - param_name: map_layers
+        type: carla.MapLayer
+        doc: > 
+          Mask of level layers to be unloaded. 
+      doc: >
+        Unloads the selected layers to the level.
+        If the layer is already unloaded the call has no effect.
+      warning: This only affects "Opt" maps.
     # --------------------------------------
     - def_name: __str__
       return:

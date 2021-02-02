@@ -51,6 +51,7 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
 #define CONST_CALL_WITHOUT_GIL(cls, fn) CALL_WITHOUT_GIL(const cls, fn)
 #define CONST_CALL_WITHOUT_GIL_1(cls, fn, T1_) CALL_WITHOUT_GIL_1(const cls, fn, T1_)
 #define CONST_CALL_WITHOUT_GIL_2(cls, fn, T1_, T2_) CALL_WITHOUT_GIL_2(const cls, fn, T1_, T2_)
+#define CONST_CALL_WITHOUT_GIL_3(cls, fn, T1_, T2_, T3_) CALL_WITHOUT_GIL_3(const cls, fn, T1_, T2_, T3_)
 #define CONST_CALL_WITHOUT_GIL_4(cls, fn, T1_, T2_, T3_, T4_) CALL_WITHOUT_GIL_4(const cls, fn, T1_, T2_, T3_, T4_)
 
 // Convenient for const requests that need to make a copy of the returned value.
@@ -216,7 +217,9 @@ static auto MakeCallback(boost::python::object callback) {
 
 BOOST_PYTHON_MODULE(libcarla) {
   using namespace boost::python;
+#if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 7
   PyEval_InitThreads();
+#endif
   scope().attr("__path__") = "libcarla";
   export_geom();
   export_control();

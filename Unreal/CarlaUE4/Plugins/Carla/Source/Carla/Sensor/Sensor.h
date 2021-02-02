@@ -26,15 +26,14 @@ public:
 
   ASensor(const FObjectInitializer &ObjectInitializer);
 
-  /// TODO: delete once the new tick pipeline is done
-  virtual const FTransform &GetSyncActorTransform() const;
-
   void SetEpisode(const UCarlaEpisode &InEpisode)
   {
     Episode = &InEpisode;
   }
 
   virtual void Set(const FActorDescription &Description);
+
+  virtual void BeginPlay();
 
   /// Replace the FDataStream associated with this sensor.
   ///
@@ -49,6 +48,11 @@ public:
   {
     return Stream.GetToken();
   }
+
+  void Tick(const float DeltaTime) final;
+
+  virtual void PrePhysTick(float DeltaSeconds) {}
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
@@ -97,7 +101,14 @@ protected:
 
 private:
 
+  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+
   FDataStream Stream;
 
+  FDelegateHandle OnPostTickDelegate;
+
   const UCarlaEpisode *Episode = nullptr;
+
+  /// Allows the sensor to tick with the tick rate from UE4.
+  bool ReadyToTick = false;
 };

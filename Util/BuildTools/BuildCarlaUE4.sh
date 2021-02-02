@@ -1,18 +1,6 @@
 #! /bin/bash
 
 # ==============================================================================
-# -- Set up environment --------------------------------------------------------
-# ==============================================================================
-
-source $(dirname "$0")/Environment.sh
-
-if [ ! -d "${UE4_ROOT}" ]; then
-  fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
-else
-  log "Using Unreal Engine at '$UE4_ROOT'"
-fi
-
-# ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
@@ -24,11 +12,12 @@ REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
+USE_CARSIM=false
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -57,6 +46,9 @@ while [[ $# -gt 0 ]]; do
     --opengl )
       RHI="-opengl";
       shift ;;
+    --carsim )
+      USE_CARSIM=true;
+      shift ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -66,6 +58,18 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+# ==============================================================================
+# -- Set up environment --------------------------------------------------------
+# ==============================================================================
+
+source $(dirname "$0")/Environment.sh
+
+if [ ! -d "${UE4_ROOT}" ]; then
+  fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
+else
+  log "Using Unreal Engine at '$UE4_ROOT'"
+fi
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_CARLAUE4} || ${LAUNCH_UE4_EDITOR}; }; then
   fatal_error "Nothing selected to be done."
@@ -112,6 +116,14 @@ fi
 # ==============================================================================
 
 if ${BUILD_CARLAUE4} ; then
+
+  if ${USE_CARSIM} ; then
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+    echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
+  else
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+    echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
+  fi
 
   if [ ! -f Makefile ]; then
 

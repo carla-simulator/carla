@@ -15,8 +15,15 @@
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
+#include "MovementComponents/BaseCarlaMovementComponent.h"
 
 #include "CoreMinimal.h"
+
+//-----CARSIM--------------------------------
+#ifdef WITH_CARSIM
+#include "CarSimMovementComponent.h"
+#endif
+//-------------------------------------------
 
 #include "CarlaWheeledVehicle.generated.h"
 
@@ -118,7 +125,17 @@ public:
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
+  void SetSimulatePhysics(bool enabled);
+
+  void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
+
   void SetVehicleLightState(const FVehicleLightState &LightState);
+
+  UFUNCTION(BlueprintNativeEvent)
+  bool IsTwoWheeledVehicle();
+  virtual bool IsTwoWheeledVehicle_Implementation() {
+    return false;
+  }
 
   /// @}
   // ===========================================================================
@@ -190,6 +207,14 @@ public:
 
   void SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale);
 
+  void SetCarlaMovementComponent(UBaseCarlaMovementComponent* MoementComponent);
+
+  template<typename T = UBaseCarlaMovementComponent>
+  T* GetCarlaMovementComponent() const
+  {
+    return Cast<T>(BaseMovementComponent);
+  }
+
   /// @}
   // ===========================================================================
   /// @name Overriden from AActor
@@ -227,4 +252,23 @@ private:
   InputControl;
 
   FVehicleControl LastAppliedControl;
+
+public:
+
+  virtual FVector GetVelocity() const override;
+
+//-----CARSIM--------------------------------
+  UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
+  float CarSimOriginOffset = 150.f;
+//-------------------------------------------
+private:
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
+  bool bPhysicsEnabled = true;
+
+  // Small workarround to allow optional CarSim plugin usage
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  UBaseCarlaMovementComponent * BaseMovementComponent = nullptr;
+
+
 };

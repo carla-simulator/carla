@@ -91,7 +91,7 @@ namespace detail {
 
     std::string GetServerVersion();
 
-    void LoadEpisode(std::string map_name, rpc::MapLayer map_layer = rpc::MapLayer::All);
+    void LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layer = rpc::MapLayer::All);
 
     void LoadLevelLayer(rpc::MapLayer map_layer) const;
 
@@ -211,6 +211,14 @@ namespace detail {
         rpc::ActorId vehicle,
         const rpc::VehicleControl &control);
 
+    void EnableCarSim(
+        rpc::ActorId vehicle,
+        std::string simfile_path);
+
+    void UseCarSimRoad(
+        rpc::ActorId vehicle,
+        bool enabled);
+
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
@@ -298,7 +306,7 @@ namespace detail {
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
 
-    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects() const;
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const;
 
     void EnableEnvironmentObjects(
       std::vector<uint64_t> env_objects_ids,

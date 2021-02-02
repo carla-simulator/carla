@@ -88,5 +88,13 @@ namespace client {
     return boost::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
   }
 
+  void Vehicle::EnableCarSim(std::string simfile_path) {
+    GetEpisode().Lock()->EnableCarSim(*this, simfile_path);
+  }
+
+  void Vehicle::UseCarSimRoad(bool enabled) {
+    GetEpisode().Lock()->UseCarSimRoad(*this, enabled);
+  }
+
 } // namespace client
 } // namespace carla

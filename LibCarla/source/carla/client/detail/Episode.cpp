@@ -54,7 +54,6 @@ using namespace std::chrono_literals;
     std::weak_ptr<Episode> weak = shared_from_this();
     _client.SubscribeToStream(_token, [weak](auto buffer) {
       auto self = weak.lock();
-
       if (self != nullptr) {
 
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
@@ -81,7 +80,7 @@ using namespace std::chrono_literals;
           bool episode_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
 
           do {
-            if (prev->GetFrame() >= next->GetFrame()) {
+            if (prev->GetFrame() >= next->GetFrame() && !episode_changed) {
               self->_on_tick_callbacks.Call(next);
               return;
             }

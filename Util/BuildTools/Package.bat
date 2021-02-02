@@ -1,6 +1,10 @@
 @echo off
 setlocal enabledelayedexpansion
 
+rem don't remove next two empty lines after next
+set LF=^
+
+
 rem Bat script that compiles and exports the carla project (carla.org)
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 rem https://wiki.unrealengine.com/How_to_package_your_game_with_commands
@@ -16,14 +20,15 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean] [--target-archive]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
 set DO_TARBALL=true
 set DO_CLEAN=false
 set PACKAGES=Carla
-
+set USE_CARSIM=false
+set SINGLE_PACKAGE=false
 
 :arg-parse
 if not "%1"=="" (
@@ -46,8 +51,18 @@ if not "%1"=="" (
     if "%1"=="--packages" (
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
-        set PACKAGES=%~2
+        set PACKAGES=%*
         shift
+    )
+
+    if "%1"=="--target-archive" (
+        set SINGLE_PACKAGE=true
+        set TARGET_ARCHIVE=%2
+        shift
+    )
+
+    if "%1"=="--carsim" (
+        set USE_CARSIM=true
     )
 
     if "%1"=="-h" (
@@ -93,6 +108,15 @@ rem -- Create Carla package ----------------------------------------------------
 rem ============================================================================
 
 if %DO_PACKAGE%==true (
+
+    if %USE_CARSIM% == true (
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
+        echo CarSim ON > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    ) else (
+        py -3 %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
+        echo CarSim OFF > "%ROOT_PATH%Unreal/CarlaUE4/Config/CarSimConfig.ini"
+    )
+
     if not exist "!BUILD_FOLDER!" mkdir "!BUILD_FOLDER!"
 
     call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
@@ -149,7 +173,7 @@ if %DO_COPY_FILES%==true (
     echo f | xcopy /y "!XCOPY_FROM!Docs\release_readme.md"                          "!XCOPY_TO!README"
     echo f | xcopy /y "!XCOPY_FROM!Util\Docker\Release.Dockerfile"                  "!XCOPY_TO!Dockerfile"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\dist\*.egg"                      "!XCOPY_TO!PythonAPI\carla\dist\"
-    echo f | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\data\*"                          "!XCOPY_TO!PythonAPI\carla\data\"
+    echo f | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\data\*"                       "!XCOPY_TO!PythonAPI\carla\data\"
     echo d | xcopy /y /s "!XCOPY_FROM!Co-Simulation"                                "!XCOPY_TO!Co-Simulation"
     echo d | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\agents"                       "!XCOPY_TO!PythonAPI\carla\agents"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\scene_layout.py"                 "!XCOPY_TO!PythonAPI\carla\"
@@ -161,13 +185,16 @@ if %DO_COPY_FILES%==true (
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\util\requirements.txt"                 "!XCOPY_TO!PythonAPI\util\"
     echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\*.pcd"      "!XCOPY_TO!HDMaps\"
     echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\Readme.md"  "!XCOPY_TO!HDMaps\README"
+    if exist "!XCOPY_FROM!Plugins" (
+        echo d | xcopy /y /s "!XCOPY_FROM!Plugins"                                  "!XCOPY_TO!Plugins"
+    )
 )
 
 rem ==============================================================================
 rem -- Zip the project -----------------------------------------------------------
 rem ==============================================================================
 
-if %DO_TARBALL%==true (
+if %DO_PACKAGE%==true if %DO_TARBALL%==true (
     set SRC_PATH=%SOURCE:/=\%
 
     echo %FILE_N% Building package...
@@ -207,8 +234,27 @@ set CARLAUE4_ROOT_FOLDER=%ROOT_PATH%Unreal/CarlaUE4
 set PACKAGE_PATH_FILE=%CARLAUE4_ROOT_FOLDER%/Content/PackagePath.txt
 set MAP_LIST_FILE=%CARLAUE4_ROOT_FOLDER%/Content/MapPaths.txt
 
+rem get the packages to cook from the arguments whole string
+rem (to support multiple packages)
+echo Parsing packages...
+if not "%PACKAGES%" == "Carla" (
+    set ARGUMENTS=%PACKAGES:--=!LF!%
+    for /f "tokens=*" %%i in ("!ARGUMENTS!") do (
+        set a=%%i
+        if "!a:~0,9!" == "packages=" (
+            set RESULT=!a:~9!
+        ) else (
+            if "!a:~0,9!" == "packages " (
+                set RESULT=!a:~9!
+            )
+        )
+    )
+) else (
+    set RESULT=%PACKAGES%
+)
 rem through all maps to cook (parameter)
-for %%i in (%PACKAGES%) do (
+set PACKAGES=%RESULT:,=!LF!%
+for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
     set PACKAGE_NAME=%%i
 
@@ -303,9 +349,14 @@ for %%i in (%PACKAGES%) do (
 
         if %DO_TARBALL%==true (
 
-            echo Packaging '!PACKAGE_NAME!'...
+            if %SINGLE_PACKAGE%==true (
+                echo Packaging '%TARGET_ARCHIVE%'...
+                set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/%TARGET_ARCHIVE%_%CARLA_VERSION%.zip
+            ) else (
+                echo Packaging '!PACKAGE_NAME!'...
+                set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%.zip
+            )
 
-            set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%.zip
             set SOURCE=!BUILD_FOLDER:/=\!\
             set DST_ZIP=!DESTINATION_ZIP:/=\!
 
@@ -315,7 +366,7 @@ for %%i in (%PACKAGES%) do (
                 "%ProgramW6432%/7-Zip/7z.exe" a "!DST_ZIP!" . -tzip -mmt -mx5
             ) else (
                 rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
-                powershell -command "& { Compress-Archive -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
+                powershell -command "& { Compress-Archive -Update -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
             )
 
             popd

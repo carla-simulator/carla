@@ -277,6 +277,23 @@
         The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator.
         If no traffic light is currently affecting the vehicle, returns <b>green</b>.
     # --------------------------------------
+    - def_name: enable_carsim
+      params:
+      - param_name: simfile_path
+        type: str
+        doc: >
+          Path to the `.simfile` file with the parameters of the simulation.
+      doc: >
+        Enables the CarSim physics solver for this particular vehicle. In order for this function to work, there needs to be a valid license manager running on the server side.
+        The control inputs are redirected to CarSim which will provide the position and orientation of the vehicle for every frame.
+    # --------------------------------------
+    - def_name: use_carsim_road
+      params:
+      - param_name: enabled
+        type: bool
+      doc: >
+        Enables or disables the usage of CarSim vs terrain file specified in the `.simfile`. By default this option is disabled and CarSim uses unreal engine methods to process the geometry of the scene.
+    # --------------------------------------
     - def_name: set_autopilot
       params:
       - param_name: enabled

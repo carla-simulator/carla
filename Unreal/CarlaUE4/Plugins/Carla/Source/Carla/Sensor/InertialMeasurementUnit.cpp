@@ -32,16 +32,11 @@ AInertialMeasurementUnit::AInertialMeasurementUnit(
   // Initialized to something hight to minimize the artifacts
   // when the initial values are unknown
   PrevDeltaTime = std::numeric_limits<float>::max();
-  OldTransform = GetActorTransform();
 }
 
 FActorDefinition AInertialMeasurementUnit::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeIMUDefinition();
-}
-
-const FTransform &AInertialMeasurementUnit::GetSyncActorTransform() const {
-  return OldTransform;
 }
 
 void AInertialMeasurementUnit::Set(const FActorDescription &ActorDescription)
@@ -150,6 +145,7 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
 
 carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscope()
 {
+  check(GetOwner() != nullptr);
   const FVector AngularVelocity =
       FIMU_GetActorAngularVelocityInRadians(*GetOwner());
 
@@ -182,19 +178,14 @@ float AInertialMeasurementUnit::ComputeCompass()
   return Compass;
 }
 
-void AInertialMeasurementUnit::Tick(float DeltaTime)
+void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
   auto Stream = GetDataStream(*this);
   Stream.Send(
       *this,
       ComputeAccelerometer(DeltaTime),
       ComputeGyroscope(),
       ComputeCompass());
-
-  // TODO: delete once the new tick pipeline is done
-  OldTransform = GetActorTransform();
 }
 
 void AInertialMeasurementUnit::SetAccelerationStandardDeviation(const FVector &Vec)

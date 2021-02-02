@@ -20,7 +20,8 @@ class VehiclePIDController():
     """
 
 
-    def __init__(self, vehicle, args_lateral, args_longitudinal, max_throttle=0.75, max_brake=0.3, max_steering=0.8):
+    def __init__(self, vehicle, args_lateral, args_longitudinal, offset=0, max_throttle=0.75, max_brake=0.3,
+                 max_steering=0.8):
         """
         Constructor method.
 
@@ -35,6 +36,9 @@ class VehiclePIDController():
             K_P -- Proportional term
             K_D -- Differential term
             K_I -- Integral term
+        :param offset: If different than zero, the vehicle will drive displaced from the center line.
+        Positive values imply a right offset while negative ones mean a left one. Numbers high enough
+        to cause the vehicle to drive through other lanes might break the controller.
         """
 
         self.max_brake = max_brake
@@ -45,7 +49,7 @@ class VehiclePIDController():
         self._world = self._vehicle.get_world()
         self.past_steering = self._vehicle.get_control().steer
         self._lon_controller = PIDLongitudinalController(self._vehicle, **args_longitudinal)
-        self._lat_controller = PIDLateralController(self._vehicle, **args_lateral)
+        self._lat_controller = PIDLateralController(self._vehicle, offset, **args_lateral)
 
     def run_step(self, target_speed, waypoint):
         """
@@ -152,11 +156,13 @@ class PIDLateralController():
     PIDLateralController implements lateral control using a PID.
     """
 
-    def __init__(self, vehicle, K_P=1.0, K_D=0.0, K_I=0.0, dt=0.03):
+    def __init__(self, vehicle, offset=0, K_P=1.0, K_D=0.0, K_I=0.0, dt=0.03):
         """
         Constructor method.
 
             :param vehicle: actor to apply to local planner logic onto
+            :param offset: distance to the center line. If might cause issues if the value
+                is large enough to make the vehicle invade other lanes.
             :param K_P: Proportional term
             :param K_D: Differential term
             :param K_I: Integral term
@@ -167,6 +173,7 @@ class PIDLateralController():
         self._k_d = K_D
         self._k_i = K_I
         self._dt = dt
+        self._offset = offset
         self._e_buffer = deque(maxlen=10)
 
     def run_step(self, waypoint):
@@ -189,19 +196,28 @@ class PIDLateralController():
             :param vehicle_transform: current transform of the vehicle
             :return: steering control in the range [-1, 1]
         """
-        v_begin = vehicle_transform.location
-        v_end = v_begin + carla.Location(x=math.cos(math.radians(vehicle_transform.rotation.yaw)),
-                                         y=math.sin(math.radians(vehicle_transform.rotation.yaw)))
+        # Get the ego's location and forward vector
+        ego_loc = vehicle_transform.location
+        v_vec = vehicle_transform.get_forward_vector()
+        v_vec = np.array([v_vec.x, v_vec.y, 0.0])
 
-        v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, 0.0])
-        w_vec = np.array([waypoint.transform.location.x -
-                          v_begin.x, waypoint.transform.location.y -
-                          v_begin.y, 0.0])
+        # Get the vector vehicle-target_wp
+        if self._offset != 0:
+            # Displace the wp to the side
+            w_tran = waypoint.transform
+            r_vec = w_tran.get_right_vector()
+            w_loc = w_tran.location + carla.Location(x=self._offset*r_vec.x,
+                                                         y=self._offset*r_vec.y)
+        else:
+            w_loc = waypoint.transform.location
+
+        w_vec = np.array([w_loc.x - ego_loc.x,
+                          w_loc.y - ego_loc.y,
+                          0.0])
+
         _dot = math.acos(np.clip(np.dot(w_vec, v_vec) /
                                  (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
-
         _cross = np.cross(v_vec, w_vec)
-
         if _cross[2] < 0:
             _dot *= -1.0
 

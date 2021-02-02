@@ -53,7 +53,7 @@ public:
   ///
   /// If @a MapString is empty, the current map is reloaded.
   UFUNCTION(BlueprintCallable)
-  bool LoadNewEpisode(const FString &MapString);
+  bool LoadNewEpisode(const FString &MapString, bool reset_settings = true);
 
   /// Load a new map generating the mesh from OpenDRIVE data and
   /// start a new episode.

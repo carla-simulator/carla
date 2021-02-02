@@ -62,27 +62,15 @@ A playback can be started at any point during a simulation. Besides the path to 
 client.replay_file("recording01.log", start, duration, camera)
 ```
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-<th>Notes</th>
-</thead>
-<tbody>
-<td><code>start</code> </td>
-<td>Recording time in seconds to start the simulation at.</td>
-<td>If positive, time will be considered from the beginning of the recording. <br>If negative, it will be considered from the end.</td>
-<tr>
-<td><code>duration</code></td>
-<td>Seconds to playback. 0 is all the recording.</td>
-<td>By the end of the playback, vehicles will be set to autopilot and pedestrians will stop.</td>
-<tr>
-<td><code>camera</code></td>
-<td>ID of the actor that the camera will focus on. </td>
-<td>Set it to <code>0</code> to let the spectator move freely.</td>
-</tbody>
-</table>
+| Parameter                                                                                                                        | Description                                                                                                                      | Notes                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `start`                                                                                                                          | Recording time in seconds to start the simulation at.                                                                            | If positive, time will be considered from the beginning of the recording. <br> If negative, it will be considered from the end. |
+| `duration`                                                                                                                       | Seconds to playback. 0 is all the recording.                                                                                     | By the end of the playback, vehicles will be set to autopilot and pedestrians will stop.                                         |
+| `camera`                                                                                                                         | ID of the actor that the camera will focus on.                                                                                   | Set it to `0` to let the spectator move freely.                                                                                  |
+
 <br>
+
+
 
 ### Setting a time factor
 
@@ -92,21 +80,13 @@ The time factor will determine the playback speed. It can be changed any moment 
 client.set_replayer_time_factor(2.0)
 ```
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Default</th>
-<th>Fast motion</th>
-<th>Slow motion</th>
-</thead>
-<tbody>
-<td><code>time_factor</code> </td>
-<td><b>1.0</b></td>
-<td><b>>1.0</b></td>
-<td><b> <1.0 </b></td>
-</tbody>
-</table>
+| Parameter     | Default       | Fast motion   | Slow motion   |
+| ------------- | ------------- | ------------- | ------------- |
+| `time_factor` | **1\.0**      | **\>1.0**     | ** <1.0 **    |
+
 <br>
+
+
 
 !!! Important
     If `time_factor>2.0`, the actors' position interpolation is disabled and just updated. Pedestrians' animations are not affected by the time factor.  
@@ -221,23 +201,14 @@ Detects vehicles that where stucked during the recording. An actor is considered
 print(client.show_recorder_actors_blocked("recording01.log", min_time, min_distance))
 ```
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-<th>Default</th>
-</thead>
-<tbody>
-<td><code>min_time</code> </td>
-<td>Minimum seconds to move `min_distance`.</td>
-<td>30secs.</td>
-<tr>
-<td><code>min_distance</code> </td>
-<td>Minimum centimeters to move to not be considered blocked.</td>
-<td>10cm.</td>
-</tbody>
-</table>
-<br>
+| Parameter                                                 | Description                                               | Default                                                   |
+| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| `min_time`                                                | Minimum seconds to move \`min\_distance\`.                | 30secs.                                                   |
+| `min_distance`                                            | Minimum centimeters to move to not be considered blocked. | 10cm.                                                     |
+
+
+
+---
 
 !!! Note
     Sometimes vehicles are stopped at traffic lights for longer than expected.  
@@ -277,102 +248,63 @@ client.replay_file("col3.log", 34, 0, 173)
 
 Some of the provided scripts in `PythonAPI/examples` facilitate the use of the recorder.
 
+
+
 * __start_recording.py__ starts the recording. The duration of the recording can be set, and actors can be spawned at the beginning of it.  
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-</thead>
-<tbody>
-<td><code>-f</code> </td>
-<td>Filename.</td>
-<tr>
-<td><code>-n</code><small> (optional)</small></td>
-<td>Vehicles to spawn. Default is 10.</td>
-<tr>
-<td><code>-t</code><small> (optional)</small></td>
-<td>Duration of the recording.</td>
-</tbody>
-</table>
-<br>
+| Parameter                         | Description                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
+| `-f`                              | Filename.                         |
+| `-n`<small> (optional)</small>    | Vehicles to spawn. Default is 10. |
+| `-t`<small> (optional)</small>    | Duration of the recording.        |
+
+
 
 * __start_replaying.py__ starts the playback of a recording. Starting time, duration, and actor to follow can be set.
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-</thead>
-<tbody>
-<td><code>-f</code> </td>
-<td>Filename.</td>
-<tr>
-<td><code>-s</code><small> (optional)</small></td>
-<td>Starting time. Default is 10.</td>
-<tr>
-<td><code>-d</code><small> (optional)</small></td>
-<td>Duration. Default is all.</td>
-<tr>
-<td><code>-c</code><small> (optional)</small></td>
-<td>IDof the actor to follow.</td>
-</tbody>
-</table>
-<br>
+
+| Parameter                      | Description                    |
+| ----------------------------- | ----------------------------- |
+| `-f`                           | Filename.                      |
+| `-s`<small> (optional)</small> | Starting time. Default is 10.  |
+| `-d`<small> (optional)</small> | Duration. Default is all.      |
+| `-c`<small> (optional)</small> | IDof the actor to follow.      |
+
+
+
 
 * __show_recorder_file_info.py__ shows all the information in the recording file. By default, it only shows frames where an event is recorded. However, all of them can be shown.  
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-</thead>
-<tbody>
-<td><code>-f</code> </td>
-<td>Filename.</td>
-<tr>
-<td><code>-s</code><small> (optional)</small></td>
-<td>Flag to show all details.</td>
-</tbody>
-</table>
-<br>
+
+| Parameter                      | Description                    |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
+| `-f`                           | Filename.                      |
+| `-s`<small> (optional)</small> | Flag to show all details.      |
+
+
 
 * __show_recorder_collisions.py__ shows recorded collisions between two flags of actors of types __A__ and __B__. `-t = vv` would show all collisions between vehicles. 
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-</thead>
-<tbody>
-<td><code>-f</code> </td>
-<td>Filename.</td>
-<tr>
-<td><code>-t</code></td>
-<td>Flags of the actors involved. <br> <code>h</code> = hero <br> <code>v</code> = vehicle <br> <code>w</code> = walker <br> <code>t</code> = traffic light <br> <code>o</code> = other <br> <code>a</code> = any</td>
-</tbody>
-</table>
-<br>
+
+| Parameter                                                                                                                                         | Description                                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-f`                                                                                                                                              | Filename.                                                                                                                                         |
+| `-t`                                                                                                                                              | Flags of the actors involved. <br>`h` = hero <br> `v` = vehicle <br> `w` = walker <br> `t` = traffic light <br>`o` = other <br>`a` = any |
+
+
 
 * __show_recorder_actors_blocked.py__ lists vehicles considered blocked. Actors are considered blocked when not moving a minimum distance in a certain time.  
 
-<table class ="defTable">
-<thead>
-<th>Parameter</th>
-<th>Description</th>
-</thead>
-<tbody>
-<td><code>-f</code> </td>
-<td>Filename.</td>
-<tr>
-<td><code>-t</code><small> (optional)</small></td>
-<td>Time to move <code>-d</code> before being considered blocked.</td>
-<tr>
-<td><code>-d</code><small> (optional)</small></td>
-<td>Distance to move to not be considered blocked.</td>
-</tbody>
-</table>
-<br>
+
+| Parameter                                          | Description                                        |
+| -------------------------------------------------- | -------------------------------------------------- |
+| `-f`                                               | Filename.                                          |
+| `-t`<small> (optional)</small>                     | Time to move `-d` before being considered blocked. |
+| `-d`<small> (optional)</small>                     | Distance to move to not be considered blocked.     |
+
+
+
+
 
 ---
 Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to say your word in the CARLA forum about this matter.  

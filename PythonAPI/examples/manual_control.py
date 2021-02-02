@@ -234,6 +234,7 @@ class World(object):
             spawn_point.rotation.pitch = 0.0
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.modify_vehicle_physics(self.player)
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
@@ -242,6 +243,7 @@ class World(object):
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.modify_vehicle_physics(self.player)
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
@@ -281,6 +283,11 @@ class World(object):
         elif self.radar_sensor.sensor is not None:
             self.radar_sensor.sensor.destroy()
             self.radar_sensor = None
+
+    def modify_vehicle_physics(self, vehicle):
+        physics_control = vehicle.get_physics_control()
+        physics_control.use_sweep_wheel_collision = True
+        vehicle.apply_physics_control(physics_control)
 
     def tick(self, clock):
         self.hud.tick(self, clock)
@@ -1081,6 +1088,8 @@ def game_loop(args):
         display = pygame.display.set_mode(
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
+        display.fill((0,0,0))
+        pygame.display.flip()
 
         hud = HUD(args.width, args.height)
         world = World(client.get_world(), hud, args)

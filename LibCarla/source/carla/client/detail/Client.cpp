@@ -140,9 +140,9 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("version");
   }
 
-  void Client::LoadEpisode(std::string map_name, rpc::MapLayer map_layer) {
+  void Client::LoadEpisode(std::string map_name, bool reset_settings, rpc::MapLayer map_layer) {
     // Await response, we need to be sure in this one.
-    _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name), map_layer);
+    _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name), reset_settings, map_layer);
   }
 
   void Client::LoadLevelLayer(rpc::MapLayer map_layer) const {
@@ -330,6 +330,14 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
   }
 
+  void Client::EnableCarSim(rpc::ActorId vehicle, std::string simfile_path) {
+    _pimpl->AsyncCall("enable_carsim", vehicle, simfile_path);
+  }
+
+  void Client::UseCarSimRoad(rpc::ActorId vehicle, bool enabled) {
+    _pimpl->AsyncCall("use_carsim_road", vehicle, enabled);
+  }
+
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
@@ -460,9 +468,9 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);
   }
 
-  std::vector<rpc::EnvironmentObject> Client::GetEnvironmentObjects() const {
+  std::vector<rpc::EnvironmentObject> Client::GetEnvironmentObjects(uint8_t queried_tag) const {
     using return_t = std::vector<rpc::EnvironmentObject>;
-    return _pimpl->CallAndWait<return_t>("get_environment_objects");
+    return _pimpl->CallAndWait<return_t>("get_environment_objects", queried_tag);
   }
 
   void Client::EnableEnvironmentObjects(

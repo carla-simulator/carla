@@ -35,8 +35,6 @@ namespace client {
 
     explicit Vehicle(ActorInitializer init);
 
-    using ActorState::GetBoundingBox;
-
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true, uint16_t tm_port = TM_DEFAULT_PORT);
 
@@ -88,6 +86,12 @@ namespace client {
 
     /// Retrieve the traffic light actor currently affecting this vehicle.
     SharedPtr<TrafficLight> GetTrafficLight() const;
+
+    /// Enables CarSim simulation if it is availiable
+    void EnableCarSim(std::string simfile_path);
+
+    /// Enables the use of CarSim internal road definition instead of unreal's
+    void UseCarSimRoad(bool enabled);
 
   private:
 

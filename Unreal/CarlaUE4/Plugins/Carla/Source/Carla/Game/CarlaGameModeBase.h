@@ -22,7 +22,7 @@
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Traffic/TrafficLightManager.h"
-#include "Carla/Util/EnvironmentObject.h"
+#include "Carla/Util/ObjectRegister.h"
 #include "Carla/Weather/Weather.h"
 
 #include "CarlaGameModeBase.generated.h"
@@ -54,12 +54,12 @@ public:
   ATrafficLightManager* GetTrafficLightManager();
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0);
+  TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0xFF) const;
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
-  TArray<FEnvironmentObject> GetEnvironmentObjects() const
+  TArray<FEnvironmentObject> GetEnvironmentObjects(uint8 QueriedTag = 0xFF) const
   {
-    return EnvironmentObjects;
+    return ObjectRegister->GetEnvironmentObjects(QueriedTag);
   }
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
@@ -72,6 +72,12 @@ public:
 
   UFUNCTION(Category = "Carla Game Mode")
   ULevel* GetULevelFromName(FString LevelName);
+
+  UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
+  void OnLoadStreamLevel();
+
+  UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
+  void OnUnloadStreamLevel();
 
 protected:
 
@@ -91,9 +97,11 @@ private:
 
   void ParseOpenDrive(const FString &MapName);
 
-  void RegisterEnvironmentObject();
+  void RegisterEnvironmentObjects();
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
+
+  void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
@@ -110,7 +118,8 @@ private:
   UPROPERTY()
   ACarlaRecorder *Recorder = nullptr;
 
-  TArray<FEnvironmentObject> EnvironmentObjects;
+  UPROPERTY()
+  UObjectRegister* ObjectRegister = nullptr;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
@@ -127,6 +136,13 @@ private:
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
 
+  FDelegateHandle OnEpisodeSettingsChangeHandle;
+
   boost::optional<carla::road::Map> Map;
+
+  int PendingLevelsToLoad = 0;
+  int PendingLevelsToUnLoad = 0;
+
+  bool ReadyToRegisterObjects = false;
 
 };

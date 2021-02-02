@@ -8,10 +8,13 @@ After discussing about the world and its actors, it is time to put everything in
 	*   [Lanes](#lanes)  
 	*   [Junctions](#junctions)  
 	*   [Waypoints](#waypoints)  
+	*   [Environment Objects](#environment-objects)
 *   [__Navigation in CARLA__](#navigation-in-carla)  
 	*   [Navigating through waypoints](#navigating-through-waypoints)  
 	*   [Generating a map navigation](#generating-a-map-navigation)  
 *   [__CARLA maps__](#carla-maps)  
+	*   [Non-layered maps](#non-layered-maps)
+	*   [Layered maps](#layered-maps)
 
 ---
 ## The map
@@ -102,6 +105,35 @@ width = waypoint.lane_width
 right_lm_color = waypoint.right_lane_marking.color
 ```
 
+### Environment Objects
+
+Every object on a CARLA map has a set of associated variables which can be found [here][env_obj]. Included in these variables is a [unique ID][env_obj_id] that can be used to [toggle][toggle_env_obj] that object's visibility on the map. You can use the Python API to [fetch][fetch_env_obj] the IDs of each environment object based on their [semantic tag][semantic_tag]:
+
+		# Get the buildings in the world
+	    world = client.get_world()
+		env_objs = world.get_environment_objects(carla.CityObjectLabel.Buildings)
+
+		# Access individual building IDs and save in a set
+		building_01 = env_objs[0]
+		building_02 = env_objs[1]
+		objects_to_toggle = {building_01.id, building_02.id}
+
+		# Toggle buildings off
+		world.enable_environment_objects(objects_to_toggle, False)
+		# Toggle buildings on
+		world.enable_environment_objects(objects_to_toggle, True)
+
+See an example of distinct objects being toggled:
+
+![toggle_objects_gif](/img/objects_small.gif)
+
+[env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject
+[env_obj_id]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject.id
+[toggle_env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.enable_environment_objects
+[fetch_env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.get_environment_objects
+[semantic_tag]: https://carla.readthedocs.io/en/latest/python_api/#carla.CityObjectLabel
+
+
 ---
 ## Navigation in CARLA
 
@@ -175,138 +207,59 @@ info_map = map.to_opendrive()
 ---
 ## CARLA maps
 
-So far there are seven different maps available. Each one has unique features and is useful for different purposes. Hereunder is a brief sum up on them.  
+There are eight towns in the CARLA ecosystem and each of those towns have two kinds of map, non-layered and layered. [Layers][layer_api] refer to the grouped objects within a map and consist of the following:
+
+- NONE
+- Buildings
+- Decals
+- Foliage
+- Ground
+- ParkedVehicles
+- Particles
+- Props
+- StreetLights
+- Walls
+- All
+
+[layer_api]: https://carla.readthedocs.io/en/latest/python_api/#carlamaplayer
+
+### Non-layered maps
+
+Non-layered maps are shown in the table below (click the town name to see an overhead image of the layout). All of the layers are present at all times and cannot be toggled on or off in these maps. Up until CARLA 0.9.11, these were the only kinds of map available.
 
 !!! Note
     Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_add_map.md) to be used in CARLA.  
 
-<table class ="defTable">
-<thead>
-<th>Town</th>
-<th>Summary</th>
-</thead>
-<tbody>
-<td><b>Town01</b></td>
-<td>A basic town layout with all "T junctions".</td>
-</tr>
-<tr>
-<td><b>Town02</b></td>
-<td>Similar to <b>Town01</b>, but smaller.</td>
-</tr>
-<tr>
-<td><b>Town03</b></td>
-<td>The most complex town, with a 5-lane junction, a roundabout, unevenness, a tunnel, and much more. Essentially a medley.</td>
-</tr>
-<tr>
-<td><b>Town04</b></td>
-<td>An infinite loop with a highway and a small town.</td>
-</tr>
-<tr>
-<td><b>Town05</b></td>
-<td>Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.</td>
-</tr>
-<tr>
-<td><b>Town06</b></td>
-<td>Long highways with many highway entrances and exits. It also has a <a href="https://en.wikipedia.org/wiki/Michigan_left"><b>Michigan left</b></a>.</td>
-<tr>
-<td><b>Town07</b></td>
-<td>A rural environment with narrow roads, barely non traffic lights and barns.</td>
-<tr>
-<td><b>Town10</b></td>
-<td>A city environment with with different environments such as an avenue or a promenade, and more realistic textures.</td>
-</tbody>
-</table>
-<br>
+| Town       | Summary |
+| -----------| ------  |
+| **[Town01](img/Town01.jpg)** | A basic town layout consisting of "T junctions".|
+| **[Town02](img/Town02.jpg)** | Similar to **Town01**, but smaller.|
+| **[Town03](img/Town03.jpg)** | The most complex town, with a 5-lane junction, a roundabout, unevenness, a tunnel, and more.|
+| **[Town04](img/Town04.jpg)** | An infinite loop with a highway and a small town.|
+| **[Town05](img/Town05.jpg)** | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.  |
+| **[Town06](img/Town06.jpg)** | Long highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
+| **[Town07](img/Town07.jpg)** | A rural environment with narrow roads, barns and hardly any traffic lights. |
+| **[Town10](img/Town10.jpg)** | A city environment with different environments such as an avenue or promenade, and more realistic textures.|
 
- <!--container -->
-<div class="townslider-container">
-  <!-- Town slide images -->
-  <div class="townslide fade">
-  <img src="../img/Town01.jpg">
-    <div class="text">Town01</div>
-  </div>
+### Layered maps
 
-  <div class="townslide fade">
-  <img src="../img/Town02.jpg">
-    <div class="text">Town02</div>
-  </div>
+The layout of layered maps is the same as non-layered maps but it is possible to toggle off and on the layers of the map. Layered maps can be idenitified by the suffix `_Opt`, for example, `Town01_Opt`. With these maps it is possible to [load][load_layer] and [unload][unload_layer] layers via the Python API:
 
-  <div class="townslide fade">
-    <img src="../img/Town03.jpg">
-    <div class="text">Town03</div>
-  </div>
+		# Load layered map for Town 01
+		world = client.load_world('Town01_Opt')
 
-  <div class="townslide fade">
-    <img src="../img/Town04.jpg">
-    <div class="text">Town04</div>
-  </div>
+		# Toggle all buildings off
+		world.unload_map_layer(carla.MapLayer.Buildings)
 
-  <div class="townslide fade">
-    <img src="../img/Town05.jpg">
-    <div class="text">Town05</div>
-  </div>
+		# Toggle all buildings on	
+		world.load_map_layer(carla.MapLayer.Buildings)
 
-  <div class="townslide fade">
-    <img src="../img/Town06.jpg">
-    <div class="text">Town06</div>
-  </div>
+[load_layer]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.load_map_layer
+[unload_layer]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.unload_map_layer
 
-  <div class="townslide fade">
-    <img src="../img/Town07.jpg">
-    <div class="text">Town07</div>
-  </div>
+See an example of all layers being loaded and unloaded in sequence:
 
-  <div class="townslide fade">
-    <img src="../img/Town10.jpg">
-    <div class="text">Town10</div>
-  </div>
-
-
-  <!-- Next and previous buttons -->
-  <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
-  <a class="next" onclick="plusSlides(1)">&#10095;</a>
-</div>
-
-<!-- The dots -->
-<div style="text-align:center">
-  <span class="dot" onclick="currentSlide(1)"></span>
-  <span class="dot" onclick="currentSlide(2)"></span>
-  <span class="dot" onclick="currentSlide(3)"></span>
-  <span class="dot" onclick="currentSlide(4)"></span>
-  <span class="dot" onclick="currentSlide(5)"></span>
-  <span class="dot" onclick="currentSlide(6)"></span>
-  <span class="dot" onclick="currentSlide(7)"></span>
-  <span class="dot" onclick="currentSlide(8)"></span>
-</div> 
-
-<script>
-var slideIndex = 1;
-showSlides(slideIndex);
-
-function plusSlides(n) {
-  showSlides(slideIndex += n);
-}
-
-function currentSlide(n) {
-  showSlides(slideIndex = n);
-}
-
-function showSlides(n) {
-  var i;
-  var slides = document.getElementsByClassName("townslide");
-  var dots = document.getElementsByClassName("dot");
-  if (n > slides.length) {slideIndex = 1}    
-  if (n < 1) {slideIndex = slides.length}
-  for (i = 0; i < slides.length; i++) {
-      slides[i].style.display = "none";  
-  }
-  for (i = 0; i < dots.length; i++) {
-      dots[i].className = dots[i].className.replace(" active", "");
-  }
-  slides[slideIndex-1].style.display = "block";  
-  dots[slideIndex-1].className += " active";
-}
-</script>
+![map-layers](img/sublevels.gif)
 
 <br>
 

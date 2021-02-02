@@ -1,10 +1,5 @@
 #! /bin/bash
 
-source $(dirname "$0")/Environment.sh
-
-export CC=clang-8
-export CXX=clang++-8
-
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
@@ -17,7 +12,7 @@ REMOVE_INTERMEDIATE=false
 BUILD_RSS_VARIANT=false
 BUILD_PYTHONAPI=true
 
-OPTS=`getopt -o h --long help,rebuild,clean,rss,python-version:,packages:,clean-intermediate,all,xml, -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,rebuild,clean,rss,carsim,python-version:,packages:,clean-intermediate,all,xml,target-archive:, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -48,6 +43,11 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+source $(dirname "$0")/Environment.sh
+
+export CC=clang-8
+export CXX=clang++-8
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_PYTHONAPI} ; }; then
   fatal_error "Nothing selected to be done."

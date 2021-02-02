@@ -30,12 +30,9 @@ void AGnssSensor::Set(const FActorDescription &ActorDescription)
   UActorBlueprintFunctionLibrary::SetGnss(ActorDescription, this);
 }
 
-void AGnssSensor::Tick(float DeltaSeconds)
+void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  Super::Tick(DeltaSeconds);
-
   carla::geom::Location Location = GetActorLocation();
-
   carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
 
   // Compute the noise for the sensor

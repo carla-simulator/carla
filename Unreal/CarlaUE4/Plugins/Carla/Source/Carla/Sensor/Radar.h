@@ -48,7 +48,8 @@ protected:
 
   void BeginPlay() override;
 
-  virtual void Tick(float DeltaTime) override;
+  // virtual void PrePhysTick(float DeltaTime) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Detection")
   float Range;
@@ -78,8 +79,6 @@ private:
 
   /// Used to compute the velocity of the radar
   FVector PrevLocation;
-
-  UWorld* World;
 
   struct RayData {
     float Radius;

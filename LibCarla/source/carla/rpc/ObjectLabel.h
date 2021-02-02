@@ -37,6 +37,7 @@ namespace rpc {
     Dynamic      =  20u,
     Water        =  21u,
     Terrain      =  22u,
+    Any          =  0xFF
   };
 
 } // namespace rpc

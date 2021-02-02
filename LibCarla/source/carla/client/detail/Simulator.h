@@ -64,11 +64,11 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    EpisodeProxy ReloadEpisode() {
-      return LoadEpisode("");
+    EpisodeProxy ReloadEpisode(bool reset_settings = true) {
+      return LoadEpisode("", reset_settings);
     }
 
-    EpisodeProxy LoadEpisode(std::string map_name, rpc::MapLayer map_layers = rpc::MapLayer::All);
+    EpisodeProxy LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layers = rpc::MapLayer::All);
 
     void LoadLevelLayer(rpc::MapLayer map_layers) const {
       _client.LoadLevelLayer(map_layers);
@@ -80,7 +80,8 @@ namespace detail {
 
     EpisodeProxy LoadOpenDriveEpisode(
         std::string opendrive,
-        const rpc::OpendriveGenerationParameters & params);
+        const rpc::OpendriveGenerationParameters & params,
+        bool reset_settings = true);
 
     /// @}
     // =========================================================================
@@ -240,8 +241,8 @@ namespace detail {
       return _client.GetLevelBBs(queried_tag);
     }
 
-    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects() const {
-      return _client.GetEnvironmentObjects();
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const {
+      return _client.GetEnvironmentObjects(queried_tag);
     }
 
     void EnableEnvironmentObjects(
@@ -443,6 +444,14 @@ namespace detail {
 
     void SetLightStateToVehicle(Vehicle &vehicle, const rpc::VehicleLightState light_state) {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
+    }
+
+    void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
+      _client.EnableCarSim(vehicle.GetId(), simfile_path);
+    }
+
+    void UseCarSimRoad(Vehicle &vehicle, bool enabled) {
+      _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
     /// @}

@@ -39,6 +39,8 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
 
+  ObjectRegister = CreateDefaultSubobject<UObjectRegister>(TEXT("ObjectRegister"));
+
   // HUD
   HUDClass = ACarlaHUD::StaticClass();
 
@@ -101,6 +103,10 @@ void ACarlaGameModeBase::InitGame(
 
   GameInstance->NotifyInitGame();
 
+  OnEpisodeSettingsChangeHandle = FCarlaStaticDelegates::OnEpisodeSettingsChange.AddUObject(
+        this,
+        &ACarlaGameModeBase::OnEpisodeSettingsChanged);
+
   SpawnActorFactories();
 
   // make connection between Episode and Recorder
@@ -125,7 +131,7 @@ void ACarlaGameModeBase::BeginPlay()
   Super::BeginPlay();
 
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
-
+  ReadyToRegisterObjects = true;
 
   if (true) { /// @todo If semantic segmentation enabled.
     check(GetWorld() != nullptr);
@@ -161,8 +167,10 @@ void ACarlaGameModeBase::BeginPlay()
     Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
   }
 
-  RegisterEnvironmentObject();
-
+  if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
+  {
+    RegisterEnvironmentObjects();
+  }
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -178,6 +186,8 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+  FCarlaStaticDelegates::OnEpisodeSettingsChange.Remove(OnEpisodeSettingsChangeHandle);
+
   Episode->EndPlay();
   GameInstance->NotifyEndEpisode();
 
@@ -345,7 +355,7 @@ void ACarlaGameModeBase::DebugShowSignals(bool enable)
 
 }
 
-TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
+TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried) const
 {
   UWorld* World = GetWorld();
 
@@ -359,53 +369,19 @@ TArray<FBoundingBox> ACarlaGameModeBase::GetAllBBsOfLevel(uint8 TagQueried)
   return BoundingBoxes;
 }
 
-void ACarlaGameModeBase::RegisterEnvironmentObject()
+void ACarlaGameModeBase::RegisterEnvironmentObjects()
 {
-  UWorld* World = GetWorld();
-
   // Get all actors of the level
   TArray<AActor*> FoundActors;
-  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
-
-  // Empties the array but doesn't change memory allocations
-  EnvironmentObjects.Reset();
-
-  for(AActor* Actor : FoundActors)
-  {
-    FString ActorName = Actor->GetName();
-    const char* ActorNameChar = TCHAR_TO_ANSI(*ActorName);
-
-    FEnvironmentObject EnvironmentObject;
-    EnvironmentObject.Transform = Actor->GetActorTransform();
-    EnvironmentObject.Id = CityHash64(ActorNameChar, ActorName.Len());
-    EnvironmentObject.Name = ActorName;
-    EnvironmentObject.Actor = Actor;
-    EnvironmentObject.CanTick = Actor->IsActorTickEnabled();
-
-    EnvironmentObjects.Emplace(EnvironmentObject);
-  }
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+  ObjectRegister->RegisterObjects(FoundActors);
 }
 
 void ACarlaGameModeBase::EnableEnvironmentObjects(
   const TSet<uint64>& EnvObjectIds,
   bool Enable)
 {
-
-  for(FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
-  {
-    if(EnvObjectIds.Contains(EnvironmentObject.Id))
-    {
-      AActor* Actor = EnvironmentObject.Actor;
-
-      Actor->SetActorHiddenInGame(!Enable);
-      Actor->SetActorEnableCollision(Enable);
-      if(EnvironmentObject.CanTick)
-      {
-        Actor->SetActorTickEnabled(Enable);
-      }
-    }
-  }
-
+  ObjectRegister->EnableEnvironmentObjects(EnvObjectIds, Enable);
 }
 
 void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
@@ -416,16 +392,18 @@ void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
   ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
 
   FLatentActionInfo LatentInfo;
+  LatentInfo.CallbackTarget = this;
+  LatentInfo.ExecutionFunction = "OnLoadStreamLevel";
+  LatentInfo.Linkage = 0;
   LatentInfo.UUID = 1;
+
+  PendingLevelsToLoad = LevelsToLoad.Num();
+
   for(FName& LevelName : LevelsToLoad)
   {
     UGameplayStatics::LoadStreamLevel(World, LevelName, true, true, LatentInfo);
     LatentInfo.UUID++;
   }
-
-  // Register new actors and tag them
-  RegisterEnvironmentObject();
-  ATagger::TagActorsInLevel(*GetWorld(), true);
 
 }
 
@@ -433,19 +411,23 @@ void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
 {
   const UWorld* World = GetWorld();
 
-  TArray<FName> LevelsToLoad;
-  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
+  TArray<FName> LevelsToUnLoad;
+  ConvertMapLayerMaskToMapNames(MapLayers, LevelsToUnLoad);
 
   FLatentActionInfo LatentInfo;
+  LatentInfo.CallbackTarget = this;
+  LatentInfo.ExecutionFunction = "OnUnloadStreamLevel";
   LatentInfo.UUID = 1;
-  for(FName& LevelName : LevelsToLoad)
+  LatentInfo.Linkage = 0;
+
+  PendingLevelsToUnLoad = LevelsToUnLoad.Num();
+
+  for(FName& LevelName : LevelsToUnLoad)
   {
-    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, true);
+    UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, false);
     LatentInfo.UUID++;
   }
 
-  // Update stored registered objects (discarding the deleted objects)
-  RegisterEnvironmentObject();
 }
 
 void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames)
@@ -474,7 +456,7 @@ void ACarlaGameModeBase::ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FN
   for(ULevelStreaming* Level : Levels)
   {
     TArray<FString> StringArray;
-    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    FString FullSubMapName = Level->GetWorldAssetPackageFName().ToString();
     // Discard full path, we just need the umap name
     FullSubMapName.ParseIntoArray(StringArray, TEXT("/"), false);
     FString SubMapName = StringArray[StringArray.Num() - 1];
@@ -498,7 +480,7 @@ ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
 
   for(ULevelStreaming* Level : Levels)
   {
-    FString FullSubMapName = Level->PackageNameToLoad.ToString();
+    FString FullSubMapName = Level->GetWorldAssetPackageFName().ToString();
     if(FullSubMapName.Contains(LevelName))
     {
       OutLevel = Level->GetLoadedLevel();
@@ -511,4 +493,31 @@ ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
   }
 
   return OutLevel;
+}
+
+void ACarlaGameModeBase::OnLoadStreamLevel()
+{
+  PendingLevelsToLoad--;
+
+  // Register new actors and tag them
+  if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
+  {
+    RegisterEnvironmentObjects();
+    ATagger::TagActorsInLevel(*GetWorld(), true);
+  }
+}
+
+void ACarlaGameModeBase::OnUnloadStreamLevel()
+{
+  PendingLevelsToUnLoad--;
+  // Update stored registered objects (discarding the deleted objects)
+  if(ReadyToRegisterObjects && PendingLevelsToUnLoad == 0)
+  {
+    RegisterEnvironmentObjects();
+  }
+}
+
+void ACarlaGameModeBase::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
+{
+  CarlaSettingsDelegate->SetAllActorsDrawDistance(GetWorld(), Settings.MaxCullingDistance);
 }
