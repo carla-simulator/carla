@@ -33,12 +33,12 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
 constexpr double CMTOM = 0.01;
 ChVector<> UE4LocationToChrono(const FVector& Location)
 {
-  return CMTOM*ChVector<>(Location.Y, Location.X, Location.Z);
+  return CMTOM*ChVector<>(Location.X, -Location.Y, Location.Z);
 }
 constexpr double MTOCM = 100;
 FVector ChronoToUE4Location(const ChVector<>& position)
 {
-  return MTOCM*FVector(position.y(), position.x(), position.z());
+  return MTOCM*FVector(position.x(), -position.y(), position.z());
 }
 
 UERayCastTerrain::UERayCastTerrain(
