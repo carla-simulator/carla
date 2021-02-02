@@ -13,6 +13,11 @@
 #include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
+// undef this API to avoid conflict with UE 4.26
+// (see UE_4.26\Engine\Source\Runtime\Core\Public\Windows\HideWindowsPlatformAtomics.h)
+#undef InterlockedCompareExchange
+#undef _InterlockedCompareExchange
+
 /// Struct containing Package with @a Name and @a bOnlyPrepareMaps flag used to
 /// separate the cooking of maps and props across the different stages (Maps
 /// will be imported during make import command and Props will be imported
