@@ -125,7 +125,7 @@ The button above will take you to the official repository of the project. Either
         git clone https://github.com/carla-simulator/carla
 
 !!! Note
-    The `master` branch contains the latest fixes and features. Stable code is in the `stable` branch and previous CARLA versions have their own branch. Always remember to check the current branch in git with the command `git branch`. 
+    The `master` branch contains the current release of CARLA with the latest fixes and features. Previous CARLA versions have their own branch. Always remember to check the current branch in git with the command `git branch`. 
 
 ### Get assets
 
