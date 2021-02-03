@@ -129,7 +129,15 @@ The button above will take you to the official repository of the project. Either
 
 ### Get assets
 
-Download the __latest__ assets to work with the current version of CARLA:
+Download the __latest__ assets to work with the current version of CARLA by running the following command in the CARLA root folder:
+
+```shell
+Update.bat
+```
+
+The assets will be downloaded and extracted to the appropriate location.
+
+To download the assets for a __specific version__ of CARLA:
 
 1. From the root CARLA directory, navigate to `\Util\ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
 2. Extract the assets in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
