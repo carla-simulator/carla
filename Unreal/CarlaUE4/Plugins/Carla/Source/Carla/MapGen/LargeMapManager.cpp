@@ -63,7 +63,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
   UWorld* World = GetWorld();
   const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
   FColor LevelColor = FColor::White;
-  float MinDistance = 1000000.0f;
+  float MinDistance = 10000000.0f;
   for (int i = 0; i < StreamingLevels.Num(); i++)
   {
     ULevelStreaming* Level = StreamingLevels[i];
@@ -114,7 +114,7 @@ void ALargeMapManager::GenerateMap(FString AssetsPath)
   UWorld* World = GetWorld();
   for(const FAssetData& AssetData : AssetsData)
   {
-    UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.FastGetAsset());
+    UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
     FBox BoundingBox = Mesh->GetBoundingBox();
     FVector CenterBB = BoundingBox.GetCenter();
 
@@ -280,10 +280,11 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
 {
   FString Output = "";
   Output += FString::Printf(TEXT("SpawnAssetsInTile %s %d\n"), *Tile.Name, Tile.PendingAssetsInTile.Num());
-  Output += FString::Printf(TEXT("  Tile.Loc = %s\n"), *Tile.Location.ToString());
 
+  FVector CurrentWorldOrigin(CurrentOriginInt);
+  FVector TileLocation = Tile.Location - CurrentWorldOrigin;
+  Output += FString::Printf(TEXT("  Tile.Loc = %s -> %s\n"), *Tile.Location.ToString(), *TileLocation.ToString());
 
-  FVector TileLocation = Tile.Location;
   ULevel* LoadedLevel = Tile.StreamingLevel->GetLoadedLevel();
   UWorld* World = GetWorld();
 
@@ -294,7 +295,7 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
     FVector CenterBB = BoundingBox.GetCenter();
 
     // Recalculate asset location based on tile position
-    FTransform Transform(FRotator(0.0f), CenterBB - TileLocation, FVector(1.0f));
+    FTransform Transform(FRotator(0.0f), CenterBB - TileLocation - CurrentWorldOrigin, FVector(1.0f));
 
     // Create intermediate actor (AUncenteredPivotPointMesh) to paliate not centered pivot point of the mesh
     FActorSpawnParameters SpawnParams;
@@ -374,12 +375,14 @@ void ALargeMapManager::PrintMapInfo()
   {
     ULevelStreaming* Level = StreamingLevels[i];
     FVector LevelLocation = Level->LevelTransform.GetLocation();
-    float Distance = FVector::Dist(LevelLocation, ViewLocation) * 100.0f * 100.0f;
+    float Distance = FDVector::Dist(LevelLocation, CurrentActorPosition);
 
     FColor MsgColor = (Levels.Contains(Level->GetLoadedLevel())) ? FColor::Green : FColor::Red;
-
-    GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, MsgColor,
-      FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance));
+    if(Distance < (TileSide * 2.0f))
+    {
+      GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, MsgColor,
+        FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance / (100.0f * 100.0f) ));
+    }
   }
 
 
