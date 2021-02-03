@@ -127,13 +127,48 @@ void ALargeMapManager::GenerateMap(FString AssetsPath)
 
 }
 
-FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation)
+FIntVector ALargeMapManager::GetNumTilesInXY() const
+{
+  int32 MinX = 0;
+  int32 MaxX = 0;
+  int32 MinY = 0;
+  int32 MaxY = 0;
+  for(auto& It : MapTiles)
+  {
+    FIntVector TileID = GetTileVectorID(It.Key);
+
+    MinX = (TileID.X < MinX) ? TileID.X : MinX;
+    MaxX = (TileID.X > MaxX) ? TileID.X : MaxX;
+
+    MinY = (TileID.Y < MinY) ? TileID.Y : MinY;
+    MaxY = (TileID.Y > MaxY) ? TileID.Y : MaxY;
+  }
+  return {MaxX - MinX + 1, MaxY - MinY + 1, 0};
+}
+
+bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
+{
+  uint64 TileID = GetTileID(InTileID);
+
+  const FCarlaMapTile* Tile = MapTiles.Find(TileID);
+  if(!Tile)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("IsLevelOfTileLoaded Tile %s does not exist"), *InTileID.ToString());
+    return false;
+  }
+
+  const ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
+
+  return (StreamingLevel && StreamingLevel->GetLoadedLevel());
+}
+
+FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
 {
   UE_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *FIntVector(TileLocation / TileSide).ToString());
   return FIntVector(TileLocation / TileSide);
 }
 
-FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID)
+FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID) const
 {
   UE_LOG(LogCarla, Warning, TEXT("                GetTileVectorID %ld --> %d %d"), TileID, (TileID >> 32), (TileID & (int32)(~0)) );
   return FIntVector{
@@ -143,13 +178,17 @@ FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID)
   };
 }
 
-uint64 ALargeMapManager::GetTileID(FVector TileLocation)
+uint64 ALargeMapManager::GetTileID(FIntVector TileID) const
 {
-  FIntVector TileID = GetTileVectorID(TileLocation);
   int64 X = ((int64)(TileID.X) << 32);
   int64 Y = (int64)(TileID.Y) & 0x00000000FFFFFFFF;
-  UE_LOG(LogCarla, Warning, TEXT("                GetTileID %s --> %x %x --> %lx"), *TileID.ToString(), (int64)(TileID.X), TileID.Y, ( X | Y ) );
   return ( X | Y );
+}
+
+uint64 ALargeMapManager::GetTileID(FVector TileLocation) const
+{
+  FIntVector TileID = GetTileVectorID(TileLocation);
+  return GetTileID(TileID);
 }
 
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
@@ -270,6 +309,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 
 void ALargeMapManager::UpdateActorsToConsiderPosition()
 {
+  if(!ActorToConsider) return;
   // Relative location to the current origin
   FDVector ActorLocation(ActorToConsider->GetActorLocation());
   // Absolute location of the actor

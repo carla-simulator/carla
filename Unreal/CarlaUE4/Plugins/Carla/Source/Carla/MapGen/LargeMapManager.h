@@ -20,15 +20,19 @@ struct FCarlaMapTile
   GENERATED_BODY()
 
 #if WITH_EDITOR
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   FString Name; // Tile_{TileID_X}_{TileID_Y}
 #endif // WITH_EDITOR
 
   // Absolute location, does not depend on rebasing
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   FVector Location{0.0f};
 
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   ULevelStreamingDynamic* StreamingLevel = nullptr;
 
   // Assets in tile waiting to be spawned
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   TArray<FAssetData> PendingAssetsInTile;
 };
 
@@ -69,14 +73,22 @@ public:
     ActorToConsider = InActor;
   }
 
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
+  FIntVector GetNumTilesInXY() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
+  bool IsLevelOfTileLoaded(FIntVector InTileID) const;
+
 protected:
 
-  FIntVector GetTileVectorID(FVector TileLocation);
+  FIntVector GetTileVectorID(FVector TileLocation) const;
 
-  FIntVector GetTileVectorID(uint64 TileID);
+  FIntVector GetTileVectorID(uint64 TileID) const;
 
   /// From a given location it retrieves the TileID that covers that area
-  uint64 GetTileID(FVector TileLocation);
+  uint64 GetTileID(FVector TileLocation) const;
+
+  uint64 GetTileID(FIntVector TileID) const;
 
   FCarlaMapTile& GetCarlaMapTile(FVector Location);
 
