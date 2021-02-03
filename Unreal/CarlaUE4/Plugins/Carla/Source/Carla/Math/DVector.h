@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cmath>
+
 struct FDVector
 {
 
@@ -20,6 +22,16 @@ struct FDVector
   FDVector(const FVector& V) : X(V.X), Y(V.Y), Z(V.Z) {}
 
   FDVector(const FIntVector& V) : X(V.X), Y(V.Y), Z(V.Z) {}
+
+  static double Dist(const FDVector &V1, const FDVector &V2)
+  {
+    return std::sqrt(FDVector::DistSquared(V1, V2));
+  }
+
+  static double DistSquared(const FDVector &V1, const FDVector &V2)
+  {
+    return FMath::Square(V2.X-V1.X) + FMath::Square(V2.Y-V1.Y) + FMath::Square(V2.Z-V1.Z);
+  }
 
   FString ToString() const
   {
