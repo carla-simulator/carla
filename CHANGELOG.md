@@ -1,3 +1,8 @@
+## Latest
+
+  * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
+
+
 ## CARLA 0.9.11
 
   * Improved the documentation for use with pandoc tool by converting html tags to their markdown equivalent
