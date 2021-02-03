@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
@@ -19,11 +19,17 @@ struct FCarlaMapTile
 {
   GENERATED_BODY()
 
+#if WITH_EDITOR
   FString Name; // Tile_{TileID_X}_{TileID_Y}
+#endif // WITH_EDITOR
+
+  // Absolute location, does not depend on rebasing
+  FVector Location{0.0f};
 
   ULevelStreamingDynamic* StreamingLevel = nullptr;
 
-  FVector Location{0.0f};
+  // Assets in tile waiting to be spawned
+  TArray<FAssetData> PendingAssetsInTile;
 };
 
 UCLASS()
@@ -43,6 +49,9 @@ protected:
 
   void PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin);
   void PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin);
+
+  void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+  void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
 public:
   // Called every frame
@@ -64,25 +73,29 @@ protected:
 
   FIntVector GetTileVectorID(FVector TileLocation);
 
-  FIntVector GetTileVectorID(uint32 TileID);
+  FIntVector GetTileVectorID(uint64 TileID);
 
   /// From a given location it retrieves the TileID that covers that area
-  uint32 GetTileID(FVector TileLocation);
-
-  FString GenerateTileName(uint32 TileID);
+  uint64 GetTileID(FVector TileLocation);
 
   FCarlaMapTile& GetCarlaMapTile(FVector Location);
 
+  FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
+
   ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
 
+  void UpdateActorsToConsiderPosition();
 
-  TMap<uint32, FCarlaMapTile> MapTiles;
+  void SpawnAssetsInTile(FCarlaMapTile& Tile);
+
+  TMap<uint64, FCarlaMapTile> MapTiles;
 
   AActor* ActorToConsider = nullptr;
-
-  FIntVector CurrentOrigin{0};
-
-  FDVector CurrentPlayerPosition;
+  // Current Origin after rebase
+  FIntVector CurrentOriginInt{0};
+  FDVector CurrentOriginD;
+  // Current actor position with rebase in double precision
+  FDVector CurrentActorPosition;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float LayerStreamingDistance = 2.0f * 1000.0f * 100.0f;
@@ -90,13 +103,15 @@ protected:
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
 
-  //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
-  const float kTileSide = 2.0f * 1000.0f * 100.0f; // 2km
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  float TileSide = 2.0f * 1000.0f * 100.0f; // 2km
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
 
 #if WITH_EDITOR
+
+  FString GenerateTileName(uint64 TileID);
 
   void PrintMapInfo();
 
