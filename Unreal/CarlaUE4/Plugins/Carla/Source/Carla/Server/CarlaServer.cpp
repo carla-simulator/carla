@@ -16,6 +16,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -915,10 +916,15 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to set actor simulate physics: actor not found");
     }
 
-    auto Character = Cast<ACharacter>(ActorView.GetActor());
-    // The physics in the walkers works in a different way so to disable them,
+    auto* Character = Cast<ACharacter>(ActorView.GetActor());
+    auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    // The physics in the vehicles works in a different way so to disable them.
+    if (CarlaVehicle != nullptr){
+      CarlaVehicle->SetSimulatePhysics(bEnabled);
+    }
+    // The physics in the walkers also works in a different way so to disable them,
     // we need to do it in the UCharacterMovementComponent.
-    if (Character != nullptr)
+    else if (Character != nullptr)
     {
       auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
 
@@ -938,23 +944,9 @@ void FCarlaServer::FPimpl::BindActions()
       {
         RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
       }
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
-      if(Vehicle)
-      {
-        Vehicle->SetActorEnableCollision(true);
-        #ifdef WITH_CARSIM
-        if(!Vehicle->IsCarSimEnabled())
-        #endif
-        {
-          RootComponent->SetSimulatePhysics(bEnabled);
-          RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-        }
-      }
-      else
-      {
-        RootComponent->SetSimulatePhysics(bEnabled);
-        RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-      }
+
+      RootComponent->SetSimulatePhysics(bEnabled);
+      RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     }
 
     return R<void>::Success();
@@ -1094,12 +1086,10 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-//-----CARSIM--------------------------------
   BIND_SYNC(enable_carsim) << [this](
       cr::ActorId ActorId,
       std::string SimfilePath) -> R<void>
   {
-    #ifdef WITH_CARSIM
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
@@ -1111,22 +1101,14 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set carsim: not actor is not a vehicle");
     }
-    if (Vehicle->IsCarSimEnabled())
-    {
-      RESPOND_ERROR("unable to set carsim: carsim is already enabled");
-    }
-    Vehicle->EnableCarSim(carla::rpc::ToFString(SimfilePath));
+    UCarSimManagerComponent::CreateCarsimComponent(Vehicle, carla::rpc::ToFString(SimfilePath));
     return R<void>::Success();
-    #else
-      RESPOND_ERROR("CarSim plugin is not enabled");
-    #endif
   };
 
   BIND_SYNC(use_carsim_road) << [this](
       cr::ActorId ActorId,
       bool bEnabled) -> R<void>
   {
-    #ifdef WITH_CARSIM
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
     if (!ActorView.IsValid())
@@ -1138,13 +1120,18 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set carsim road: not actor is not a vehicle");
     }
-    Vehicle->UseCarSimRoad(bEnabled);
+    auto* CarSimComponent = Vehicle->GetCarlaMovementComponent<UCarSimManagerComponent>();
+    if(CarSimComponent)
+    {
+      CarSimComponent->UseCarSimRoad(bEnabled);
+    }
+    else
+    {
+      RESPOND_ERROR("UCarSimManagerComponent plugin is not activated");
+    }
     return R<void>::Success();
-    #else
-    RESPOND_ERROR("CarSim plugin is not enabled");
-    #endif
   };
-//-----CARSIM--------------------------------
+
   // ~~ Traffic lights ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(set_traffic_light_state) << [this](
