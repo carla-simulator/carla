@@ -33,9 +33,9 @@ public:
   UERayCastTerrain(ACarlaWheeledVehicle* UEVehicle, chrono::vehicle::ChVehicle* ChrVehicle);
 
   std::pair<bool, FHitResult> GetTerrainProperties(const FVector &Location) const;
-  double GetHeight(const chrono::ChVector<>& loc) const override;
-  chrono::ChVector<> GetNormal(const chrono::ChVector<>& loc) const override;
-  float GetCoefficientFriction(const chrono::ChVector<>& loc) const;
+  virtual double GetHeight(const chrono::ChVector<>& loc) const override;
+  virtual chrono::ChVector<> GetNormal(const chrono::ChVector<>& loc) const override;
+  virtual float GetCoefficientFriction(const chrono::ChVector<>& loc) const override;
 };
 #endif
 
@@ -52,6 +52,7 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
 
   uint64_t MaxSubsteps = 10;
   float MaxSubstepDeltaTime = 0.01;
+  FVehicleControl VehicleControl;
 
 public:
 
