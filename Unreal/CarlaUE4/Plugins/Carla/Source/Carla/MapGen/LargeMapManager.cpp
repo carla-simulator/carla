@@ -96,6 +96,8 @@ void ALargeMapManager::Tick(float DeltaTime)
 
   UpdateActorsToConsiderPosition();
 
+  UpdateTilesState();
+
 #if WITH_EDITOR
   if(bPrintMapInfo) PrintMapInfo();
 #endif // WITH_EDITOR
@@ -153,7 +155,10 @@ bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
   const FCarlaMapTile* Tile = MapTiles.Find(TileID);
   if(!Tile)
   {
-    UE_LOG(LogCarla, Warning, TEXT("IsLevelOfTileLoaded Tile %s does not exist"), *InTileID.ToString());
+    if(bPrintErrors)
+    {
+      UE_LOG(LogCarla, Warning, TEXT("IsLevelOfTileLoaded Tile %s does not exist"), *InTileID.ToString());
+    }
     return false;
   }
 
@@ -168,6 +173,12 @@ FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
   return FIntVector(TileLocation / TileSide);
 }
 
+FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
+{
+  // UE_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *(TileLocation / TileSide).ToFIntVector().ToString());
+  return (TileLocation / TileSide).ToFIntVector();
+}
+
 FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID) const
 {
   UE_LOG(LogCarla, Warning, TEXT("                GetTileVectorID %ld --> %d %d"), TileID, (TileID >> 32), (TileID & (int32)(~0)) );
@@ -178,10 +189,10 @@ FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID) const
   };
 }
 
-uint64 ALargeMapManager::GetTileID(FIntVector TileID) const
+uint64 ALargeMapManager::GetTileID(FIntVector TileVectorID) const
 {
-  int64 X = ((int64)(TileID.X) << 32);
-  int64 Y = (int64)(TileID.Y) & 0x00000000FFFFFFFF;
+  int64 X = ((int64)(TileVectorID.X) << 32);
+  int64 Y = (int64)(TileVectorID.Y) & 0x00000000FFFFFFFF;
   return ( X | Y );
 }
 
@@ -206,7 +217,8 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
   FCarlaMapTile NewTile;
   // 1 - Calculate the Tile position
   FIntVector VTileID = GetTileVectorID(TileID);
-  NewTile.Location = FVector(VTileID) * TileSide * 1.5f;
+  FVector OriginOffset = FVector(FMath::Sign(VTileID.X), FMath::Sign(VTileID.Y), FMath::Sign(VTileID.Z)) * 0.5f;
+  NewTile.Location = (FVector(VTileID) + OriginOffset )* TileSide;
   UE_LOG(LogCarla, Warning, TEXT("                NewTile.Location %s"), *NewTile.Location.ToString());
 #if WITH_EDITOR
   // 2 - Generate Tile name
@@ -233,6 +245,13 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
   }
   check(Tile);
   return *Tile;
+}
+
+const FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID) const
+{
+  uint64 TileID = GetTileID(TileVectorID);
+  const FCarlaMapTile* Tile = MapTiles.Find(TileID);
+  return Tile;
 }
 
 ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector TileLocation)
@@ -314,6 +333,45 @@ void ALargeMapManager::UpdateActorsToConsiderPosition()
   FDVector ActorLocation(ActorToConsider->GetActorLocation());
   // Absolute location of the actor
   CurrentActorPosition = CurrentOriginD + ActorLocation;
+}
+
+void ALargeMapManager::UpdateTilesState()
+{
+  // Calculate Current Tile
+  FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
+
+  // Calculate tiles in range based on LayerStreamingDistance
+  int32 TilesToConsider = (int32)(LayerStreamingDistance / TileSide) + 1;
+  for(int Y = -TilesToConsider; Y < TilesToConsider; Y++)
+  {
+    for(int X = -TilesToConsider; X < TilesToConsider; X++)
+    {
+      FIntVector TileToCheck = CurrentTile + FIntVector(X, Y, 0);
+
+      const FCarlaMapTile* Tile = GetCarlaMapTile(TileToCheck);
+      if(!Tile) continue;
+
+      // Calculate distance between player and tile
+      float Distance = FDVector::Dist(Tile->Location, CurrentActorPosition);
+
+      // Load level if we are in range
+      if(Distance < LayerStreamingDistance)
+      {
+        // Check that the level is not already loaded
+        ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
+        if(!StreamingLevel->IsLevelLoaded())
+        {
+          UE_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\n    %d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
+          // StreamingLevel->SetShouldBeLoaded(true);
+          // ULevelStreamingDynamic::
+        }
+      }
+
+    }
+  }
+
+  // Load tiles
+
 }
 
 void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
@@ -405,7 +463,7 @@ void ALargeMapManager::PrintMapInfo()
   GEngine->AddOnScreenDebugMessage(0, 30.0f, FColor::Cyan, Output);
 
   int LastMsgIndex = 0;
-  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, FColor::White, TEXT("Current tiles - Distance:"));
+  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, FColor::White, TEXT("Closest tiles - Distance:"));
 
   ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
   FVector ViewLocation;
@@ -421,18 +479,17 @@ void ALargeMapManager::PrintMapInfo()
     if(Distance < (TileSide * 2.0f))
     {
       GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, MsgColor,
-        FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance / (100.0f * 100.0f) ));
+        FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance / (1000.0f * 100.0f) ));
     }
   }
 
 
-  FIntVector IntViewLocation(ViewLocation * 100.0f);
-  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, PositonMsgColor, IntViewLocation.ToString());
+  FIntVector IntViewLocation(ViewLocation / (1000.0f * 100.0f)); // km
+  GEngine->AddOnScreenDebugMessage(50000, 30.0f, PositonMsgColor, IntViewLocation.ToString());
 
-  CurrentActorPosition = (CurrentOriginInt + FIntVector(ViewLocation));
-  FString StrCurrentActorPosition = CurrentActorPosition.ToString();
-  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, PositonMsgColor,
-    FString::Printf(TEXT("Origin: %s \nClient Loc: %s"), *CurrentOriginInt.ToString(), *StrCurrentActorPosition));
+  FString StrCurrentActorPosition = (CurrentActorPosition / (1000.0f * 100.0f)).ToString();
+  GEngine->AddOnScreenDebugMessage(50001, 30.0f, PositonMsgColor,
+    FString::Printf(TEXT("Origin: %s \nClient Loc: %s"), *(CurrentOriginInt/ (1000.0f * 100.0f)).ToString(), *StrCurrentActorPosition));
 }
 
 #endif // WITH_EDITOR

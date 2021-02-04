@@ -83,20 +83,26 @@ protected:
 
   FIntVector GetTileVectorID(FVector TileLocation) const;
 
+  FIntVector GetTileVectorID(FDVector TileLocation) const;
+
   FIntVector GetTileVectorID(uint64 TileID) const;
 
   /// From a given location it retrieves the TileID that covers that area
   uint64 GetTileID(FVector TileLocation) const;
 
-  uint64 GetTileID(FIntVector TileID) const;
+  uint64 GetTileID(FIntVector TileVectorID) const;
 
   FCarlaMapTile& GetCarlaMapTile(FVector Location);
 
   FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
 
+  const FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID) const;
+
   ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
 
   void UpdateActorsToConsiderPosition();
+
+  void UpdateTilesState();
 
   void SpawnAssetsInTile(FCarlaMapTile& Tile);
 
@@ -131,6 +137,9 @@ protected:
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool bPrintMapInfo = true;
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  bool bPrintErrors = false;
 
 #endif // WITH_EDITOR
 
