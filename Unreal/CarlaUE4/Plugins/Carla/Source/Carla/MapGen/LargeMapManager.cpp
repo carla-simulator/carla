@@ -138,12 +138,12 @@ FIntVector ALargeMapManager::GetNumTilesInXY() const
   for(auto& It : MapTiles)
   {
     FIntVector TileID = GetTileVectorID(It.Key);
-
     MinX = (TileID.X < MinX) ? TileID.X : MinX;
     MaxX = (TileID.X > MaxX) ? TileID.X : MaxX;
 
     MinY = (TileID.Y < MinY) ? TileID.Y : MinY;
     MaxY = (TileID.Y > MaxY) ? TileID.Y : MaxY;
+    // UE_LOG(LogCarla, Warning, TEXT("GetNumTilesInXY %s -- X: %d %d -- Y: %d %d"), *TileID.ToString(), MinX, MaxX, MinY, MaxY);
   }
   return {MaxX - MinX + 1, MaxY - MinY + 1, 0};
 }
@@ -247,10 +247,10 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
   return *Tile;
 }
 
-const FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID) const
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
 {
   uint64 TileID = GetTileID(TileVectorID);
-  const FCarlaMapTile* Tile = MapTiles.Find(TileID);
+  FCarlaMapTile* Tile = MapTiles.Find(TileID);
   return Tile;
 }
 
@@ -337,6 +337,8 @@ void ALargeMapManager::UpdateActorsToConsiderPosition()
 
 void ALargeMapManager::UpdateTilesState()
 {
+  UWorld* World = GetWorld();
+
   // Calculate Current Tile
   FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
 
@@ -348,7 +350,7 @@ void ALargeMapManager::UpdateTilesState()
     {
       FIntVector TileToCheck = CurrentTile + FIntVector(X, Y, 0);
 
-      const FCarlaMapTile* Tile = GetCarlaMapTile(TileToCheck);
+      FCarlaMapTile* Tile = GetCarlaMapTile(TileToCheck);
       if(!Tile) continue;
 
       // Calculate distance between player and tile
@@ -363,7 +365,15 @@ void ALargeMapManager::UpdateTilesState()
         {
           UE_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\n    %d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
           // StreamingLevel->SetShouldBeLoaded(true);
-          // ULevelStreamingDynamic::
+          bool Success = false;
+          /*Tile->StreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
+            World,
+            "EmptyTileBase",
+            Tile->Location,
+            FRotator(0.0f),
+            Success
+          );
+          */
         }
       }
 
@@ -405,14 +415,19 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
           Transform,
           SpawnParams);
 
-    UStaticMeshComponent* SMComp = SMActor->GetMeshComp();
-    SMComp->SetStaticMesh(Mesh);
-    SMComp->SetRelativeLocation(CenterBB * -1.0f); // The pivot point does not get affected by Tile location
-
-    Output += FString::Printf(TEXT("    MeshName = %s -> %s\n"), *Mesh->GetName(), *SMActor->GetName());
-    Output += FString::Printf(TEXT("      CenterBB = %s\n"), *CenterBB.ToString());
-    Output += FString::Printf(TEXT("      ActorLoc = %s\n"), *(CenterBB - TileLocation).ToString());
-    Output += FString::Printf(TEXT("      SMRelLoc = %s\n"), *SMComp->GetRelativeLocation().ToString());
+    if(SMActor)
+    {
+      UStaticMeshComponent* SMComp = SMActor->GetMeshComp();
+      if(SMComp)
+      {
+        SMComp->SetStaticMesh(Mesh);
+        SMComp->SetRelativeLocation(CenterBB * -1.0f); // The pivot point does not get affected by Tile location
+      }
+      Output += FString::Printf(TEXT("    MeshName = %s -> %s\n"), *Mesh->GetName(), *SMActor->GetName());
+      Output += FString::Printf(TEXT("      CenterBB = %s\n"), *CenterBB.ToString());
+      Output += FString::Printf(TEXT("      ActorLoc = %s\n"), *(CenterBB - TileLocation).ToString());
+      Output += FString::Printf(TEXT("      SMRelLoc = %s\n"), *SMComp->GetRelativeLocation().ToString());
+    }
   }
   UE_LOG(LogCarla, Warning, TEXT("%s"), *Output);
   // Tile.PendingAssetsInTile.Reset();
@@ -484,12 +499,13 @@ void ALargeMapManager::PrintMapInfo()
   }
 
 
-  FIntVector IntViewLocation(ViewLocation / (1000.0f * 100.0f)); // km
-  GEngine->AddOnScreenDebugMessage(50000, 30.0f, PositonMsgColor, IntViewLocation.ToString());
+  FIntVector IntViewLocation(ViewLocation); // km
+  GEngine->AddOnScreenDebugMessage(50000, 30.0f, PositonMsgColor,
+    FString::Printf(TEXT("Local Loc: %s meters"), *IntViewLocation.ToString()));
 
   FString StrCurrentActorPosition = (CurrentActorPosition / (1000.0f * 100.0f)).ToString();
   GEngine->AddOnScreenDebugMessage(50001, 30.0f, PositonMsgColor,
-    FString::Printf(TEXT("Origin: %s \nClient Loc: %s"), *(CurrentOriginInt/ (1000.0f * 100.0f)).ToString(), *StrCurrentActorPosition));
+    FString::Printf(TEXT("Origin: %s km\nClient Loc: %s km"), *(CurrentOriginInt/ (1000.0f * 100.0f)).ToString(), *StrCurrentActorPosition));
 }
 
 #endif // WITH_EDITOR
