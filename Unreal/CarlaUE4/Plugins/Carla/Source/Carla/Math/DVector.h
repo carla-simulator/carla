@@ -38,6 +38,11 @@ struct FDVector
     return FString::Printf(TEXT("X=%.2lf Y=%.2lf Z=%.2lf"), X, Y, Z);
   }
 
+  FIntVector ToFIntVector() const
+  {
+    return FIntVector((int32)X, (int32)Y, (int32)Z);
+  }
+
   FDVector& operator=(const FDVector& Other)
   {
     this->X = Other.X;
@@ -49,6 +54,12 @@ struct FDVector
   FDVector operator+(const FDVector& V) const
   {
     return FDVector(X + V.X, Y + V.Y, Z + V.Z);
+  }
+
+  FDVector operator/(float Scale) const
+  {
+    const float RScale = 1.f/Scale;
+    return FDVector(X * RScale, Y * RScale, Z * RScale);
   }
 
 
