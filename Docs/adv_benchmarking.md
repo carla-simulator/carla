@@ -1,19 +1,25 @@
 # Benchmarking Performance
 
-We provide a benchmarking script to enable users to analyze the performance of CARLA in their own environment. The script can be configured to run a number of scenarios that combine different maps, sensors and weather conditions. It reports the average and standard deviation of FPS under the requested scenarios. 
+We provide a benchmarking script to enable users to easily analyze the performance of CARLA in their own environment. The script can be configured to run a number of scenarios that combine different maps, sensors and weather conditions. It reports the average and standard deviation of FPS under the requested scenarios. 
 
 In this section we detail the requirements to run the benchmark, where to find the script, the flags available to customize the scenarios that are run and examples on how to run the commands.
 
 We have also included our results of a separate benchmark which measures performance in CARLA in a specific environment when using different combinations of number of vehicles, enabling physics and/or enabling Traffic Manager. The results are presented alongside the CARLA version used and the environment the test was performed in.
 
-- [__Before you begin__](#before-you-begin)
 - [__The benchmark script__](#the-benchmark-script)
+    - [__Before you begin__](#before-you-begin)
     - [__Synopsis__](#synopsis)
         - [__Flags__](#flags)
 - [__CARLA performance report__](#carla-performance-report)
 
 
-## Before you begin
+---
+## The benchmark script
+
+The benchmark script can be found in `PythonAPI/util`. It has several flags available to customize the scenarios to be tested which are detailed in the synopsis below.
+
+
+### Before you begin
 
 The benchmarking script requires some dependencies to be installed before you can run it:
 
@@ -25,13 +31,9 @@ python -m pip install gpuinfo
 python -m pip install GPUtil
 ```
 
-## The benchmark script
-
-The benchmark script can be found in `PythonAPI/util`. It has several flags available to customize the scenarios you would like to test which can be found in the following section.
-
 ### Synopsis
 
-`python3` `performance_benchmark.py` [`[--host HOST]`](#-host-ip_address) [`[--port PORT]`](#-port-port) [`[--file FILE]`](#-file-filenamemd) [`[--tm]`](#-tm)
+`python3` [`performance_benchmark.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/performance_benchmark.py) [`[--host HOST]`](#-host-ip_address) [`[--port PORT]`](#-port-port) [`[--file FILE]`](#-file-filenamemd) [`[--tm]`](#-tm)
 [`[--ticks TICKS]`](#-ticks) [`[--sync]`](#-sync) [`[--async]`](#-async))
 [`[--fixed_dt FIXED_DT]`](#-fixed_dt) [`[--render_mode]`](#-render_mode))
 [`[--no_render_mode]`](#-no_render_mode) [`[--show_scenarios]`](#-show_scenarios))
@@ -152,7 +154,7 @@ The benchmark script can be found in `PythonAPI/util`. It has several flags avai
 python3 performance_benchmark.py --show_scenarios
 ```
 
->> * Show what scenarios will run with some options without actually executing them:
+>> * Show what scenarios will run when configurations are applied without actually executing them:
 ```shell
 python3 performance_benchmark.py --sensors 2 5 --maps Town03 Town05 --weather 0 1 --show_scenarios`
 ```
