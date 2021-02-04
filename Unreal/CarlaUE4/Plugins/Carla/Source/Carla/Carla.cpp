@@ -19,7 +19,7 @@ void FCarlaModule::StartupModule()
 
 void FCarlaModule::LoadChronoDll()
 {
-	#if defined(WITH_CHRONO) && defined(PLATFORM_WINDOWS)
+	#if defined(WITH_CHRONO) && PLATFORM_WINDOWS
 	const FString BaseDir = FPaths::Combine(*FPaths::ProjectPluginsDir(), TEXT("Carla"));
 	const FString DllDir = FPaths::Combine(*BaseDir, TEXT("CarlaDependencies"), TEXT("dll"));
 	FString ChronoEngineDll = FPaths::Combine(*DllDir, TEXT("ChronoEngine.dll"));
