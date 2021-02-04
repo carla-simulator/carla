@@ -96,7 +96,7 @@ protected:
 
   FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
 
-  const FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID) const;
+  FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
 
   ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
 
