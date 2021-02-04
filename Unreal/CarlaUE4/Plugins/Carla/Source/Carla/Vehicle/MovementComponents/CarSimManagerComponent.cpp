@@ -90,31 +90,6 @@ void UCarSimManagerComponent::BeginPlay()
 
 void UCarSimManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-  #ifdef WITH_CARSIM
-
-  // get current vehicle position
-  const auto Trans = CarlaVehicle->GetActorTransform().GetTranslation();
-  // get current velocity
-  auto Root = Cast<UPrimitiveComponent>(CarlaVehicle->GetRootComponent());
-  if (Root == nullptr) return;
-  FVector Vel = Root->GetPhysicsLinearVelocity("None");
-  FVector Dir = Trans + (Vel.GetSafeNormal() * 200.0f);
-  DrawDebugLine(GetWorld(), Trans, Dir, FColor(255, 255, 255), true, 1);
-
-  if (ResetForces != 0 && ResetForces <= FCarlaEngine::FrameCounter)
-  {
-    #undef GetObject
-    TScriptInterface<IVsVar> FX, FY, FZ;
-    FX = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FX_RP_1", "", EVsVarDirection::Input);
-    FY = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FY_RP_1", "", EVsVarDirection::Input);
-    FZ = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FZ_RP_1", "", EVsVarDirection::Input);
-    IVsVar::Execute_SetFloatValue(FX.GetObject(), 0.0f);
-    IVsVar::Execute_SetFloatValue(FY.GetObject(), 0.0f);
-    IVsVar::Execute_SetFloatValue(FZ.GetObject(), 0.0f);
-    ResetForces = 0;
-    UE_LOG(LogCarla, Warning, TEXT("Carsim: Reset forces") );
-  }
-  #endif
 }
 
 void UCarSimManagerComponent::ProcessControl(FVehicleControl &Control)
@@ -131,18 +106,30 @@ void UCarSimManagerComponent::ProcessControl(FVehicleControl &Control)
   #endif
 }
 
-// UCarSimMovementComponent *UCarSimManagerComponent::GetCarsimMovementComponent()
-// {
-//   return CarSimMovementComponent;
-// }
-
 void UCarSimManagerComponent::OnCarSimHit(AActor *Actor,
     AActor *OtherActor,
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
   #ifdef WITH_CARSIM
-  // handle collision forces here
+  // finish Carsim simulation
+  UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
+  CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
+  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+  CarlaVehicle->GetVehicleMovementComponent()->Activate();
+  CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+  auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(true);
+  }
+  else
+  {
+    carla::log_warning("No bone with name");
+  }
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");    
+  CarlaVehicle->RestoreVehiclePhysicsControl();
   #endif
 }
 
@@ -159,38 +146,24 @@ void UCarSimManagerComponent::OnCarSimOverlap(UPrimitiveComponent* OverlappedCom
       ECollisionResponse::ECR_Block)
   {
     #ifdef WITH_CARSIM
-    // get current vehicle position
-    const auto Trans = CarlaVehicle->GetActorTransform().GetTranslation();
-    // get current velocity
-    auto Root = Cast<UPrimitiveComponent>(CarlaVehicle->GetRootComponent());
-    if (Root == nullptr)
-      return;
-    FVector Vel = Root->GetPhysicsLinearVelocity("None");
-    // reflect the velocity vector with the normal vector
-    FVector NewVel = Vel - (2 * (FVector::DotProduct(Vel, SweepResult.ImpactNormal)) * SweepResult.ImpactNormal);
-    // get the mass of the vehicle
-    FVector Impulse = NewVel * Root->GetMass(); // / FramesApplyingForce;
-    // apply delta time
-    Impulse *= GetWorld()->GetDeltaSeconds();
-
-    // FVector Dir = Trans + (Impulse.GetSafeNormal() * 200.0f);
-    FVector Dir = SweepResult.ImpactPoint + (SweepResult.ImpactNormal * 200.0f);
-    DrawDebugLine(GetWorld(), SweepResult.ImpactPoint, Dir, FColor(255, 0, 0), true, 5, 255, 10);
-
-    // send the force to Carsim
-    #undef GetObject
-    TScriptInterface<IVsVar> FX, FY, FZ;
-    FX = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FX_RP_1", "", EVsVarDirection::Input);
-    FY = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FY_RP_1", "", EVsVarDirection::Input);
-    FZ = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FZ_RP_1", "", EVsVarDirection::Input);
-    IVsVar::Execute_SetFloatValue(FX.GetObject(), Impulse.X);
-    IVsVar::Execute_SetFloatValue(FY.GetObject(), Impulse.Y);
-    IVsVar::Execute_SetFloatValue(FZ.GetObject(), 0.0f);
-    // mark to reset this force next tick
-    ResetForces = FCarlaEngine::FrameCounter + FramesApplyingForce;
-    UE_LOG(LogCarla, Warning, TEXT("Carsim: Applied force: %f (%f, %f, %f) %f"), Root->GetMass(), Impulse.X, Impulse.Y, Impulse.Z, GetWorld()->GetDeltaSeconds());
-    UE_LOG(LogCarla, Warning, TEXT("Carsim:              : (%f, %f, %f)"), SweepResult.Normal.X, SweepResult.Normal.Y, SweepResult.Normal.Z);
-    UE_LOG(LogCarla, Warning, TEXT("Carsim:              : (%f, %f, %f)"), SweepResult.ImpactNormal.X, SweepResult.ImpactNormal.Y, SweepResult.ImpactNormal.Z);
+    // finish Carsim simulation
+    UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
+    CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
+    CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+    CarlaVehicle->GetVehicleMovementComponent()->Activate();
+    CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+    auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+    if (Bone)
+    {
+      Bone->SetInstanceSimulatePhysics(true);
+    }
+    else
+    {
+      carla::log_warning("No bone with name");
+    }
+    CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+    CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");    
+    CarlaVehicle->RestoreVehiclePhysicsControl();
     #endif
   }
 }
@@ -200,26 +173,6 @@ void UCarSimManagerComponent::OnCarSimEndOverlap(UPrimitiveComponent* Overlapped
     UPrimitiveComponent* OtherComp,
     int32 OtherBodyIndex)
 {
-  // if (OtherComp->GetCollisionResponseToChannel(
-  //     ECollisionChannel::ECC_WorldDynamic) ==
-  //     ECollisionResponse::ECR_Block)
-  // {
-  //   #ifdef WITH_CARSIM
-  //   // if (ResetForces != 0 && ResetForces <= FCarlaEngine::FrameCounter)
-  //   // {
-  //   #undef GetObject
-  //   TScriptInterface<IVsVar> FX, FY, FZ;
-  //   FX = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FX_RP_1", "", EVsVarDirection::Input);
-  //   FY = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FY_RP_1", "", EVsVarDirection::Input);
-  //   FZ = IVsConnectObject::Execute_GetVsVar(CarSimMovementComponent, "IMP_FZ_RP_1", "", EVsVarDirection::Input);
-  //   IVsVar::Execute_SetFloatValue(FX.GetObject(), 0.0f);
-  //   IVsVar::Execute_SetFloatValue(FY.GetObject(), 0.0f);
-  //   IVsVar::Execute_SetFloatValue(FZ.GetObject(), 0.0f);
-  //   // ResetForces = 0;
-  //   UE_LOG(LogCarla, Warning, TEXT("Carsim: Reset forces") );
-  //   // }
-  //   #endif
-  // }  
 }
 
 void UCarSimManagerComponent::UseCarSimRoad(bool bEnabled)
@@ -239,6 +192,18 @@ void UCarSimManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
   {
     OffsetActor->Destroy();
   }
+  
+  if(!CarlaVehicle)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Error: Owner is not properly set for UCarSimManagerComponent") );
+    return;
+  }
+
+  // reset callbacks to react to collisions
+  CarlaVehicle->OnActorHit.RemoveDynamic(this, &UCarSimManagerComponent::OnCarSimHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(this, &UCarSimManagerComponent::OnCarSimOverlap);
+  CarlaVehicle->GetMesh()->OnComponentEndOverlap.RemoveDynamic(this, &UCarSimManagerComponent::OnCarSimEndOverlap);
+
   #endif
 }
 

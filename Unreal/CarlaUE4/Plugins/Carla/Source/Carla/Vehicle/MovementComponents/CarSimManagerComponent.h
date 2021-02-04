@@ -52,8 +52,6 @@ public:
 
   float GetVehicleForwardSpeed() const override;
 
-  // UCarSimMovementComponent *GetCarsimMovementComponent();
-
 private:
 
   uint64_t ResetForces { 0 };
