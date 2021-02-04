@@ -192,7 +192,10 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
         AdvanceChronoSimulation(MaxSubstepDeltaTime);
       }
       float RemainingTime = DeltaTime - NumberSubSteps*MaxSubstepDeltaTime;
-      AdvanceChronoSimulation(RemainingTime);
+      if (RemainingTime > 0)
+      {
+        AdvanceChronoSimulation(RemainingTime);
+      }
       // carla::log_warning("NumberSubSteps:", NumberSubSteps);
     }
     else
