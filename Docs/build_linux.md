@@ -230,9 +230,8 @@ git clone https://github.com/carla-simulator/carla
 
 Now the latest state of the simulator, known as `master` branch in the repository, has been copied in local. Here is brief introduction to the most relevant branches of the repository.  Remember that you can change and check your branches with the command `git branch`.  
 
-*   __`master` branch__ — Latest fixes and features that have been tested. These will be featured in the next CARLA release.  
+*   __`master` branch__ — The most recent release of CARLA which contains the latest fixes and features. 
 *   __`dev` branch__ — Latest fixes and features still in development and testing. This branch will be merged with `master` when the time for a new release comes.  
-*   __`stable` branch__ — Latest version of CARLA tagged as stable. Previous CARLA versions also have their own branch.  
 
 
 ### Get assets
