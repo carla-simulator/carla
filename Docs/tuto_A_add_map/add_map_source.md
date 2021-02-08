@@ -23,16 +23,18 @@ This section describes the process of ingesting maps into __CARLA that has been 
 ---
 ## Map ingestion
 
-1. Place the map files to be imported in the `Import` folder found in the CARLA root directory.
+__1.__ Place the map files to be imported in the `Import` folder found in the CARLA root directory.
 
-2. Run the command below to ingest the files:
+__2.__ Run the command below to ingest the files:
 
-        make import ARGS="--package <package_name> --no-carla-materials"
+```sh
+    make import ARGS="--package <package_name> --no-carla-materials"
+```
 
-    __Note that there are two parameter flags that can be set__:
+__Note that there are two parameter flags that can be set__:
 
-    - `--package <package_name>` specifies the name of the package. By default, this is set to `map_package`. Two packages cannot have the same name, so using the default value will lead to errors on a subsequent ingestion. __It is highly recommended to change the name of the package__. 
-    - `--no-carla-materials` specifies that you do not want to use the default CARLA materials (road textures etc).
+- `--package <package_name>` specifies the name of the package. By default, this is set to `map_package`. Two packages cannot have the same name, so using the default value will lead to errors on a subsequent ingestion. __It is highly recommended to change the name of the package__. 
+- `--no-carla-materials` specifies that you do not want to use the default CARLA materials (road textures etc).
 
 ### Customize the map
 
@@ -84,4 +86,11 @@ __7.__ A `<mapName>.bin` file will be created. Move this file to the `Nav` folde
 
 ---
 
-Your map is now ready to run simulations in CARLA. 
+Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the forum.
+
+<div class="build-buttons">
+<p>
+<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>
