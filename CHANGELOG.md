@@ -1,7 +1,10 @@
 ## Latest
-
+	
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Added performance benchmarking section to documentation
+  * API extensions:
+    - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
+	- Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle wheel
 
 
 ## CARLA 0.9.11
