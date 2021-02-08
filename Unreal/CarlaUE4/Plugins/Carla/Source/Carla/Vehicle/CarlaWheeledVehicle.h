@@ -15,6 +15,7 @@
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
+#include "VehicleAnimInstance.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 
 #include "CoreMinimal.h"
@@ -28,6 +29,21 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
+
+///Enum for identifying the location of the wheel in vehicle
+///Works for bikes too
+UENUM()
+enum class VehicleWheelLocation : uint8 {
+
+  FL_Wheel = 0,
+  FR_Wheel = 1,
+  BL_Wheel = 2,
+  BR_Wheel = 3,
+  //Bike front wheel
+  Front_Wheel = 0,
+  //Bike back wheel
+  Back_Wheel = 1,
+};
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
@@ -254,6 +270,20 @@ private:
   FVehicleControl LastAppliedControl;
 
 public:
+
+  /// Set the rotation of the car wheels indicated by the user
+  /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
+  /// An enum could be used, but this is something situational. An uint8 does the trick just fine
+  ///NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelSteerDirection(VehicleWheelLocation WheelLocation, float AngleInDeg);
+  
+  ///Should the vehicle wheels use the rotations input by the user?
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void EnableWheelsCustomRotations(bool Enable = true);
+  
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelSteerAngle(VehicleWheelLocation WheelLocation);
 
   virtual FVector GetVelocity() const override;
 

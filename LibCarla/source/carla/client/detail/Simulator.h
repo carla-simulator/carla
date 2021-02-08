@@ -446,6 +446,16 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
+    void SetWheelSteerDirection(Vehicle &vehicle, uint8_t wheel_location, float angle_in_deg){
+      
+      _client.SetWheelSteerDirection(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelSteerAngle(Vehicle &vehicle, uint8_t wheel_location){
+
+      return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }

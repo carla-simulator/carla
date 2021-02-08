@@ -47,6 +47,13 @@ namespace client {
     /// Sets a @a LightState to this vehicle.
     void SetLightState(const LightState &light_state);
 
+    /// Sets a @a Rotation to a wheel of the vehicle (affects the bone of the car skeleton, not the physics)
+    ///0 = FL, 1 = FR, 2 = BL, 3 = BR
+    void SetWheelSteerDirection(uint8_t wheel_location, float angle_in_deg);
+
+    /// Gets a @a Rotation from a wheel (based on it's physics) of the vehicle
+    float GetWheelSteerAngle(uint8_t wheel_location);
+
     /// Return the control last applied to this vehicle.
     ///
     /// @note This function does not call the simulator, it returns the data

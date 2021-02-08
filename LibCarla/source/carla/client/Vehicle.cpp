@@ -59,6 +59,17 @@ namespace client {
     GetEpisode().Lock()->SetLightStateToVehicle(*this, rpc::VehicleLightState(light_state));
   }
 
+  void Vehicle::SetWheelSteerDirection(uint8_t wheel_location, float angle_in_deg){
+    
+    GetEpisode().Lock()->SetWheelSteerDirection(*this, wheel_location, angle_in_deg);
+  }
+
+  /// Gets a @a Rotation from a wheel (based on it's physics) of the vehicle
+  float Vehicle::GetWheelSteerAngle(uint8_t wheel_location){
+
+    return GetEpisode().Lock()->GetWheelSteerAngle(*this, wheel_location);
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
   }

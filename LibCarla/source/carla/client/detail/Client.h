@@ -219,6 +219,17 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    void SetWheelSteerDirection(
+        rpc::ActorId vehicle, 
+        uint8_t vehicle_wheel,
+        float angle_in_deg
+    );
+
+    float GetWheelSteerAngle(
+        rpc::ActorId vehicle,
+        uint8_t wheel_location
+    );
+
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
