@@ -4,14 +4,16 @@ This section explains methods that were used to import maps in previous versions
 
 
 !!! Warning
-    __These importing tutorials are deprecated.__ Click [here][ingest_overview] find the latest and recommended methods to ingest a map.  
+    __These importing methods are deprecated.__ Click [here][ingest_overview] find the latest and recommended methods to ingest a map.  
 
-[ingest_overview]: https://carla.readthedocs.io/en/latest/tuto_A_add_map/add_map_overview
+[ingest_overview]: ../tuto_A_add_map_overview.md
 
-- [Manual package preparation](#manual-package-preparation)
-- [RoadRunner plugin import](#roadrunner-plugin-import)
-- [Manual import](#manual-import)
-- [Set traffic and pedestrian behaviour](#set-traffic-and-pedestrian-behaviour)
+- [__Manual package preparation__](#manual-package-preparation)
+- [__RoadRunner plugin import__](#roadrunner-plugin-import)
+- [__Manual import__](#manual-import)
+- [__Set traffic and pedestrian behaviour__](#set-traffic-and-pedestrian-behaviour)
+
+---
 
 ## Manual package preparation
 
@@ -62,9 +64,9 @@ __Maps__ need the following parameters:
 * __use_carla_materials__. If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.  
 * __xodr__ Path to the `.xodr` file.  
 
-__Props__ are not part of this tutorial. The field will be left empty. There is another tutorial on how to [add new props](tuto_A_add_props.md).  
+__Props__ are not part of this tutorial. The field will be left empty. There is another tutorial on how to [add new props](../tuto_A_add_props.md).  
 
-the resulting `.json` file should resemble the following:
+The resulting `.json` file should resemble the following:
 
 ```json
 {
@@ -88,6 +90,8 @@ the resulting `.json` file should resemble the following:
 ```
 </details>
 <br>
+
+---
 
 ## RoadRunner plugin import
 
@@ -140,6 +144,7 @@ The new map should now appear next to the others in the Unreal Engine _Content B
 !!! Note
     The tags for semantic segmentation will be assigned by the name of the asset. And the asset moved to the corresponding folder in `Content/Carla/PackageName/Static`. To change these, move them manually after importing. 
 
+---
 
 ## Manual import 
 
@@ -235,6 +240,7 @@ __2. Open the Unreal level.__ Drag the _Open Drive Actor_ inside the level. It w
 </details>
 <br>
 
+---
 
 ## Set traffic and pedestrian behaviour
 
@@ -260,7 +266,7 @@ Traffic lights and signs must be placed all over the map.
 __1. Drag traffic light/sign actors__ into the level and place them.  
 __2. Adjust the [`trigger volume`][triggerlink]__ for each of them. This will determine their area of influence.  
 
-[triggerlink]: python_api.md#carla.TrafficSign.trigger_volume
+[triggerlink]: ../python_api.md#carla.TrafficSign.trigger_volume
 
 ![ue_trafficlight](../img/ue_trafficlight.jpg)
 

@@ -2,17 +2,24 @@
 
 This section describes the process of ingesting maps into __a package (binary) version of CARLA__. If you are using a version of CARLA that has been built from source to ingest maps then follow the guidelines [here][source_ingest] instead.
 
-It will run a Docker image of Unreal Engine to import the files, and export them as a standalone package. The Docker image takes around 4h and 600-700 GB to be built. However, this is only needed the first time.
+The import process involves running a Docker image of Unreal Engine to import the relevant files and then export them as a standalone package which can then be configured to be used in CARLA. The Docker image takes around 4h and 600-700 GB to be built. This is only needed the first time the image is built.
+
+- [__Before you begin__](#before-you-begin)
+- [__Map ingestion in a CARLA package__](#map-ingestion-in-a-carla-package)
+
+---
 
 ## Before you begin
 
+- You will need to fulfill the following system requirements:
+    - 64-bit version of [Docker](https://docs.docker.com/engine/install/) in Ubuntu 16.04+
+    - Minimum 8GB of RAM
+    - Minimum 600 GB available disk space for building container images
+    - [Git](https://git-scm.com/downloads) version control
 - Ensure you are using a package (binary) version of CARLA. If you are using a version of CARLA that has been built from source to ingest maps then follow the guidelines [here][source_ingest] instead.
 - You should have at least two files, `<mapName>.xodr` and `<mapName>.fbx` that have been [generated][rr_generate_map] from a map editor such as RoadRunner. 
 - These files should have the same value for `<mapName>` in order to be recognised as the same map.
-- You will need to fulfill the following system requirements:
-    - 64-bit version of Docker in Ubuntu 16.04+
-    - Minimum 8GB of RAM
-    - Minimum 600 GB available disk space for building container images
+
 
 [source_ingest]: add_map_source.md
 [import_map_package]: add_map_package.md
@@ -29,7 +36,7 @@ __1.__ CARLA provides all the utilities to build Unreal Engine in a Docker image
 
 __2.__ Build the Docker image of Unreal Engine by following [these instructions](https://github.com/carla-simulator/carla/tree/master/Util/Docker). 
 
-__3.__ Create an `input_folder`.  This is where you will put the files to be imported. If there is no `.json` file provided there, then Docker will create one. Change permissions on the `input_folder` for this to be successful:
+__3.__ Create an `input_folder`.  This is where you will put the files to be imported. Docker will automatically create a `.json` file describing the package folder structure. Change permissions on the `input_folder` for this to be created successfully:
 
 ```sh
     #Go to the parent folder, where the input folder is contained
@@ -37,9 +44,9 @@ __3.__ Create an `input_folder`.  This is where you will put the files to be imp
 ```
 
 > !!! Note
-    This is not necessary if the package is [prepared manually](add_map_deprecated.md#manual-package-preparation), and contains a `.json` file. 
+    This is not necessary if the package is [prepared manually](add_map_deprecated.md#manual-package-preparation), and contains a `.json` file already. 
 
-__4.__ Create an `output_folder`. this is where the Docker image will write the output files after it has cooked the map. 
+__4.__ Create an `output_folder`. This is where the Docker image will write the output files after it has cooked the map. 
 
 __5.__ Navigate to `~/carla/Util/Docker`. This is where the ingestion script is located. The script requires the path for the `input_folder` and `output_folder` and the name of the package to be ingested. If a `.json` file is provided, the name of that file is the package name, if no `.json` is provided, the name must be `map_package`:
 
@@ -54,7 +61,7 @@ __6.__ The package will be generated in the `output_folder` as `<map_package>.ta
 
 > *   __On Windows__ extract the package to the `WindowsNoEditor` folder. 
 
-> *   __On Linux__ move the package to the `Import` folder in the CARLA root directory (package/binary version), and run the script from the root directory to import it: 
+> *   __On Linux__ move the package to the `Import` folder in the CARLA root directory (of the package/binary version where you will be using the map), and run the following script from the root directory to import it: 
 
 ```sh
         ./ImportAssets.sh
@@ -68,14 +75,9 @@ __8.__ To run a simulation with the new map, run CARLA and then change the map u
     cd PythonAPI/util
     python3 config.py --map <mapName>
 ```
+<br>
 
 ---
 
-Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the forum.
 
-<div class="build-buttons">
-<p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
-</p>
-</div>
+Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the [forum](https://forum.carla.org/) or you can try running some of our [example scripts](https://github.com/carla-simulator/carla/tree/master/PythonAPI/examples) on your new map to test it out.
