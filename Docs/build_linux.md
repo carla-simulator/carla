@@ -179,10 +179,11 @@ __2.__ Get into the directory where UE4.24 has been cloned.
 cd ~/UnrealEngine_4.24
 ```
 
-__3.__ Download a patch for Unreal Engine. This patch fixes some Vulkan visualization issues that may occur when changing the map. Download and install it with the following commands.
+__3.__ Download the patches for Unreal Engine. The first patch fixes some Vulkan visualization issues that may occur when changing the map and the second improves the collision of the wheels with the terrain. Download and install them with the following commands.
 ```sh
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt 430667-13636743-patch.txt
-patch --strip=4 < 430667-13636743-patch.txt
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_vulkan.patch
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_wheels.patch
+git apply UE4_patch_vulkan.patch UE4_patch_wheels.patch
 ```
 
 !!! Warning
