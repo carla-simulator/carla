@@ -588,7 +588,7 @@ Polarity of the event. __True__ for positive and __False__ for negative.
 ---
 
 ## carla.DVSEventArray<a name="carla.DVSEventArray"></a>
-Class that defines a stream of events in [[carla.DVSEvent](#carla.DVSEvent)](#[carla.DVSEvent](#carla.DVSEvent)). Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).  
+Class that defines a stream of events in [carla.DVSEvent](#carla.DVSEvent). Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).  
 
 ### Instance Variables
 - <a name="carla.DVSEventArray.fov"></a>**<font color="#f8805a">fov</font>** (_float<small> – degrees</small>_)  
