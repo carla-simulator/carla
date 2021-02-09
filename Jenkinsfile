@@ -33,6 +33,10 @@ pipeline
                 stage('ubuntu')
                 {
                     agent { label "ubuntu && build && ${JOB_ID}" }
+                    environment
+                    {
+                        UE4_ROOT = '/home/jenkins/UnrealEngine_4.26'
+                    }
                     stages
                     {
                         stage('ubuntu setup')
@@ -218,6 +222,10 @@ pipeline
                 stage('windows')
                 {
                     agent { label "windows && build && ${JOB_ID}" }
+                    environment
+                    {
+                        UE4_ROOT = 'C:\\Program Files\\Epic Games\\UE_4.26'
+                    }
                     stages
                     {
                         stage('windows setup')
