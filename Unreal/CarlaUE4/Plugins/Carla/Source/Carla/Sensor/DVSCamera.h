@@ -8,7 +8,6 @@
 
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include <carla/sensor/data/DVSEvent.h>
-#include <carla/sensor/ShaderBasedSensor.h>
 
 #include "DVSCamera.generated.h"
 
