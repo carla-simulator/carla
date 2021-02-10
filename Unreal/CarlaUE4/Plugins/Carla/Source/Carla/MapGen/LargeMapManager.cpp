@@ -3,6 +3,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 
+
 #include "LargeMapManager.h"
 
 #include "Engine/LocalPlayer.h"
@@ -10,6 +11,13 @@
 
 #include "UncenteredPivotPointMesh.h"
 
+#define LARGEMAP_LOGS 0
+
+#if LARGEMAP_LOGS
+#define LM_LOG UE_LOG
+#else
+#define LM_LOG(...)
+#endif
 
 // Sets default values
 ALargeMapManager::ALargeMapManager()
@@ -57,7 +65,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 
   GEngine->AddOnScreenDebugMessage(66, 30.0f, FColor::Yellow,
     FString::Printf(TEXT("Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString()) );
-  UE_LOG(LogCarla, Warning, TEXT("PostWorldOriginOffset Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString());
+  LM_LOG(LogCarla, Warning, TEXT("PostWorldOriginOffset Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString());
 
   // This is just to update the color of the msg with the same as the closest map
   UWorld* World = GetWorld();
@@ -79,14 +87,14 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
-  UE_LOG(LogCarla, Warning, TEXT("OnLevelAddedToWorld"));
+  LM_LOG(LogCarla, Warning, TEXT("OnLevelAddedToWorld"));
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   SpawnAssetsInTile(Tile);
 }
 
 void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
-  UE_LOG(LogCarla, Warning, TEXT("OnLevelRemovedFromWorld"));
+  LM_LOG(LogCarla, Warning, TEXT("OnLevelRemovedFromWorld"));
 }
 
 // Called every frame
@@ -125,8 +133,11 @@ void ALargeMapManager::GenerateMap(FString AssetsPath)
 
     // Update tile assets list
     MapTile.PendingAssetsInTile.Add(AssetData);
-  }
 
+    //Mesh->ConditionalBeginDestroy();
+  }
+  ObjectLibrary->ConditionalBeginDestroy();
+  GEngine->ForceGarbageCollection(true);
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -143,7 +154,7 @@ FIntVector ALargeMapManager::GetNumTilesInXY() const
 
     MinY = (TileID.Y < MinY) ? TileID.Y : MinY;
     MaxY = (TileID.Y > MaxY) ? TileID.Y : MaxY;
-    // UE_LOG(LogCarla, Warning, TEXT("GetNumTilesInXY %s -- X: %d %d -- Y: %d %d"), *TileID.ToString(), MinX, MaxX, MinY, MaxY);
+    // LM_LOG(LogCarla, Warning, TEXT("GetNumTilesInXY %s -- X: %d %d -- Y: %d %d"), *TileID.ToString(), MinX, MaxX, MinY, MaxY);
   }
   return {MaxX - MinX + 1, MaxY - MinY + 1, 0};
 }
@@ -157,7 +168,7 @@ bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
   {
     if(bPrintErrors)
     {
-      UE_LOG(LogCarla, Warning, TEXT("IsLevelOfTileLoaded Tile %s does not exist"), *InTileID.ToString());
+      LM_LOG(LogCarla, Warning, TEXT("IsLevelOfTileLoaded Tile %s does not exist"), *InTileID.ToString());
     }
     return false;
   }
@@ -169,19 +180,19 @@ bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
 
 FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
 {
-  UE_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *FIntVector(TileLocation / TileSide).ToString());
+  LM_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *FIntVector(TileLocation / TileSide).ToString());
   return FIntVector(TileLocation / TileSide);
 }
 
 FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
 {
-  // UE_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *(TileLocation / TileSide).ToFIntVector().ToString());
+  // LM_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *(TileLocation / TileSide).ToFIntVector().ToString());
   return (TileLocation / TileSide).ToFIntVector();
 }
 
 FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID) const
 {
-  UE_LOG(LogCarla, Warning, TEXT("                GetTileVectorID %ld --> %d %d"), TileID, (TileID >> 32), (TileID & (int32)(~0)) );
+  LM_LOG(LogCarla, Warning, TEXT("                GetTileVectorID %ld --> %d %d"), TileID, (TileID >> 32), (TileID & (int32)(~0)) );
   return FIntVector{
     (int32)(TileID >> 32),
     (int32)(TileID & (int32)(~0)),
@@ -204,11 +215,11 @@ uint64 ALargeMapManager::GetTileID(FVector TileLocation) const
 
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
 {
-  UE_LOG(LogCarla, Error, TEXT("GetCarlaMapTile........"));
+  LM_LOG(LogCarla, Error, TEXT("GetCarlaMapTile........"));
   // Asset Location -> TileID
   uint64 TileID = GetTileID(Location);
 
-  UE_LOG(LogCarla, Warning, TEXT("GetCarlaMapTile %s -> %lx"), *Location.ToString(), TileID);
+  LM_LOG(LogCarla, Warning, TEXT("GetCarlaMapTile %s -> %lx"), *Location.ToString(), TileID);
 
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
   if(Tile) return *Tile; // Tile founded
@@ -219,7 +230,7 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
   FIntVector VTileID = GetTileVectorID(TileID);
   FVector OriginOffset = FVector(FMath::Sign(VTileID.X), FMath::Sign(VTileID.Y), FMath::Sign(VTileID.Z)) * 0.5f;
   NewTile.Location = (FVector(VTileID) + OriginOffset )* TileSide;
-  UE_LOG(LogCarla, Warning, TEXT("                NewTile.Location %s"), *NewTile.Location.ToString());
+  LM_LOG(LogCarla, Warning, TEXT("                NewTile.Location %s"), *NewTile.Location.ToString());
 #if WITH_EDITOR
   // 2 - Generate Tile name
   NewTile.Name = GenerateTileName(TileID);
@@ -267,7 +278,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
   ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName, RF_Transient);
   check(StreamingLevel);
 
-  UE_LOG(LogCarla, Error, TEXT("AddNewTile created new streaming level -> %s"), *TileName);
+  LM_LOG(LogCarla, Error, TEXT("AddNewTile created new streaming level -> %s"), *TileName);
 
   StreamingLevel->SetWorldAssetByPackageName(*UniqueLevelPackageName);
 
@@ -291,12 +302,12 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 
   if (!FPackageName::DoesPackageExist(FullName, NULL, &PackageFileName))
   {
-    UE_LOG(LogCarla, Error, TEXT("Level does not exist in package with FullName variable -> %s"), *FullName);
+    LM_LOG(LogCarla, Error, TEXT("Level does not exist in package with FullName variable -> %s"), *FullName);
   }
 
   if (!FPackageName::DoesPackageExist(LongLevelPackageName, NULL, &PackageFileName))
   {
-    UE_LOG(LogCarla, Error, TEXT("Level does not exist in package with LongLevelPackageName variable -> %s"), *LongLevelPackageName);
+    LM_LOG(LogCarla, Error, TEXT("Level does not exist in package with LongLevelPackageName variable -> %s"), *LongLevelPackageName);
   }
 
   //Actual map package to load
@@ -363,7 +374,7 @@ void ALargeMapManager::UpdateTilesState()
         ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
         if(!StreamingLevel->IsLevelLoaded())
         {
-          UE_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\n    %d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
+          LM_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\n    %d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
           // StreamingLevel->SetShouldBeLoaded(true);
           bool Success = false;
           /*Tile->StreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
@@ -399,6 +410,11 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
   for(const FAssetData& AssetData : Tile.PendingAssetsInTile)
   {
     UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
+    if(!Mesh)
+    {
+      LM_LOG(LogCarla, Error, TEXT("Mesh %s could not be loaded in %s"), *AssetData.ObjectPath.ToString(), *Tile.Name);
+      continue;
+    }
     FBox BoundingBox = Mesh->GetBoundingBox();
     FVector CenterBB = BoundingBox.GetCenter();
 
@@ -429,7 +445,7 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
       Output += FString::Printf(TEXT("      SMRelLoc = %s\n"), *SMComp->GetRelativeLocation().ToString());
     }
   }
-  UE_LOG(LogCarla, Warning, TEXT("%s"), *Output);
+  LM_LOG(LogCarla, Warning, TEXT("%s"), *Output);
   // Tile.PendingAssetsInTile.Reset();
 
   LoadedLevel->ApplyWorldOffset(TileLocation, false);
@@ -442,7 +458,7 @@ FString ALargeMapManager::GenerateTileName(uint64 TileID)
   int32 X = (int32)(TileID >> 32);
   int32 Y = (int32)(TileID);
 
-  UE_LOG(LogCarla, Warning, TEXT("                GenerateTileName %d %d"), X, Y);
+  LM_LOG(LogCarla, Warning, TEXT("                GenerateTileName %d %d"), X, Y);
 
   return FString::Printf(TEXT("Tile_%d_%d"), X, Y);
 }
