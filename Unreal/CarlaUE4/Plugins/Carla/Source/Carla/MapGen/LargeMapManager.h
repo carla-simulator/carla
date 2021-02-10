@@ -116,7 +116,7 @@ protected:
   FDVector CurrentActorPosition;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float LayerStreamingDistance = 2.0f * 1000.0f * 100.0f;
+  float LayerStreamingDistance = 3.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
