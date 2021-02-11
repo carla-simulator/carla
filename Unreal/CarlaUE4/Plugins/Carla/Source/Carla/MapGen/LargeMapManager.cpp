@@ -11,7 +11,12 @@
 
 #include "UncenteredPivotPointMesh.h"
 
-#define LARGEMAP_LOGS 0
+#if WITH_EDITOR
+#include "FileHelper.h"
+#include "Paths.h"
+#endif // WITH_EDITOR
+
+#define LARGEMAP_LOGS 1
 
 #if LARGEMAP_LOGS
 #define LM_LOG UE_LOG
@@ -112,16 +117,23 @@ void ALargeMapManager::Tick(float DeltaTime)
 
 }
 
-void ALargeMapManager::GenerateMap(FString AssetsPath)
+void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
+  LM_LOG(LogCarla, Warning, TEXT("Generating Map %s ..."), *InAssetsPath);
+
+#if WITH_EDITOR
+  AssetsPath = InAssetsPath;
+#endif // WITH_EDITOR
+
   /* Retrive all the assets in the path */
   TArray<FAssetData> AssetsData;
   UObjectLibrary* ObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), true, true);
-  ObjectLibrary->LoadAssetDataFromPath(AssetsPath);
+  ObjectLibrary->LoadAssetDataFromPath(InAssetsPath);
   ObjectLibrary->GetAssetDataList(AssetsData);
 
   /* Generate tiles based on mesh positions */
   UWorld* World = GetWorld();
+  MapTiles.Reset();
   for(const FAssetData& AssetData : AssetsData)
   {
     UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
@@ -138,6 +150,9 @@ void ALargeMapManager::GenerateMap(FString AssetsPath)
   }
   ObjectLibrary->ConditionalBeginDestroy();
   GEngine->ForceGarbageCollection(true);
+
+  LM_LOG(LogCarla, Warning, TEXT("GenerateMap num Tiles generated %d"), MapTiles.Num());
+  DumpTilesTable();
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -180,7 +195,7 @@ bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
 
 FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
 {
-  LM_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *FIntVector(TileLocation / TileSide).ToString());
+  // LM_LOG(LogCarla, Warning, TEXT("      GetTileVectorID %s --> %s"), *TileLocation.ToString(), *FIntVector(TileLocation / TileSide).ToString());
   return FIntVector(TileLocation / TileSide);
 }
 
@@ -192,7 +207,7 @@ FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
 
 FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID) const
 {
-  LM_LOG(LogCarla, Warning, TEXT("                GetTileVectorID %ld --> %d %d"), TileID, (TileID >> 32), (TileID & (int32)(~0)) );
+  // LM_LOG(LogCarla, Warning, TEXT("                GetTileVectorID %ld --> %d %d"), TileID, (TileID >> 32), (TileID & (int32)(~0)) );
   return FIntVector{
     (int32)(TileID >> 32),
     (int32)(TileID & (int32)(~0)),
@@ -215,11 +230,11 @@ uint64 ALargeMapManager::GetTileID(FVector TileLocation) const
 
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
 {
-  LM_LOG(LogCarla, Error, TEXT("GetCarlaMapTile........"));
+  // LM_LOG(LogCarla, Error, TEXT("GetCarlaMapTile........"));
   // Asset Location -> TileID
   uint64 TileID = GetTileID(Location);
 
-  LM_LOG(LogCarla, Warning, TEXT("GetCarlaMapTile %s -> %lx"), *Location.ToString(), TileID);
+  // LM_LOG(LogCarla, Warning, TEXT("GetCarlaMapTile %s -> %lx"), *Location.ToString(), TileID);
 
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
   if(Tile) return *Tile; // Tile founded
@@ -230,7 +245,7 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
   FIntVector VTileID = GetTileVectorID(TileID);
   FVector OriginOffset = FVector(FMath::Sign(VTileID.X), FMath::Sign(VTileID.Y), FMath::Sign(VTileID.Z)) * 0.5f;
   NewTile.Location = (FVector(VTileID) + OriginOffset )* TileSide;
-  LM_LOG(LogCarla, Warning, TEXT("                NewTile.Location %s"), *NewTile.Location.ToString());
+  // LM_LOG(LogCarla, Warning, TEXT("                NewTile.Location %s"), *NewTile.Location.ToString());
 #if WITH_EDITOR
   // 2 - Generate Tile name
   NewTile.Name = GenerateTileName(TileID);
@@ -278,7 +293,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
   ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName, RF_Transient);
   check(StreamingLevel);
 
-  LM_LOG(LogCarla, Error, TEXT("AddNewTile created new streaming level -> %s"), *TileName);
+  // LM_LOG(LogCarla, Error, TEXT("AddNewTile created new streaming level -> %s"), *TileName);
 
   StreamingLevel->SetWorldAssetByPackageName(*UniqueLevelPackageName);
 
@@ -339,7 +354,12 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 
 void ALargeMapManager::UpdateActorsToConsiderPosition()
 {
-  if(!ActorToConsider) return;
+  if(!ActorToConsider)
+  {
+    LM_LOG(LogCarla, Error, TEXT("No actors to consider"));
+    return;
+  }
+
   // Relative location to the current origin
   FDVector ActorLocation(ActorToConsider->GetActorLocation());
   // Absolute location of the actor
@@ -362,7 +382,11 @@ void ALargeMapManager::UpdateTilesState()
       FIntVector TileToCheck = CurrentTile + FIntVector(X, Y, 0);
 
       FCarlaMapTile* Tile = GetCarlaMapTile(TileToCheck);
-      if(!Tile) continue;
+      if(!Tile) {
+        LM_LOG(LogCarla, Error, TEXT("No Tile %s"), *TileToCheck.ToString());
+        continue;
+      }
+
 
       // Calculate distance between player and tile
       float Distance = FDVector::Dist(Tile->Location, CurrentActorPosition);
@@ -397,6 +421,8 @@ void ALargeMapManager::UpdateTilesState()
 
 void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
 {
+  LM_LOG(LogCarla, Warning, TEXT("SpawnAssetsInTile %s %d\n"), *Tile.Name, Tile.PendingAssetsInTile.Num());
+
   FString Output = "";
   Output += FString::Printf(TEXT("SpawnAssetsInTile %s %d\n"), *Tile.Name, Tile.PendingAssetsInTile.Num());
 
@@ -458,9 +484,36 @@ FString ALargeMapManager::GenerateTileName(uint64 TileID)
   int32 X = (int32)(TileID >> 32);
   int32 Y = (int32)(TileID);
 
-  LM_LOG(LogCarla, Warning, TEXT("                GenerateTileName %d %d"), X, Y);
+  // LM_LOG(LogCarla, Warning, TEXT("                GenerateTileName %d %d"), X, Y);
 
   return FString::Printf(TEXT("Tile_%d_%d"), X, Y);
+}
+
+void ALargeMapManager::DumpTilesTable() const
+{
+  FString FileContent = "";
+  FileContent += FString::Printf(TEXT("LargeMapManager state\n"));
+
+  FileContent += FString::Printf(TEXT("Tile:\n"));
+  FileContent += FString::Printf(TEXT("ID\tName\tLocation\tAssetsInTile\n"));
+  for(auto& It : MapTiles)
+  {
+    const FCarlaMapTile& Tile = It.Value;
+    FileContent += FString::Printf(TEXT("  %ld\t%s\t%s\t%d\n"), It.Key, *Tile.Name, *Tile.Location.ToString(), Tile.PendingAssetsInTile.Num());
+  }
+  FileContent += FString::Printf(TEXT("\nNum generated tiles: %d\n"), MapTiles.Num());
+
+  // Generate the map name with the assets folder name
+  TArray<FString> StringArray;
+  AssetsPath.ParseIntoArray(StringArray, TEXT("/"), false);
+
+  FString FilePath = FPaths::ProjectSavedDir() + StringArray[StringArray.Num() - 1] + ".txt";
+  FFileHelper::SaveStringToFile(
+    FileContent,
+    *FilePath,
+    FFileHelper::EEncodingOptions::AutoDetect,
+    &IFileManager::Get(),
+    EFileWrite::FILEWRITE_Silent);
 }
 
 void ALargeMapManager::PrintMapInfo()

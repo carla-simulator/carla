@@ -62,7 +62,15 @@ public:
   virtual void Tick(float DeltaTime) override;
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  void GenerateMap(FString AssetsPath);
+  void GenerateMap(FString InAssetsPath);
+
+#if WITH_EDITOR
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
+  void GenerateMap_Editor()
+  {
+    if(!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
+  }
+#endif // WITH_EDITOR
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void AddNewClientPosition(AActor* InActor)
@@ -116,13 +124,13 @@ protected:
   FDVector CurrentActorPosition;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float LayerStreamingDistance = 3.0f * 1000.0f * 100.0f;
+  float LayerStreamingDistance = 13.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float TileSide = 2.0f * 1000.0f * 100.0f; // 2km
+  float TileSide = 9.0f * 1000.0f * 100.0f; // 2km
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
@@ -131,7 +139,12 @@ protected:
 
   FString GenerateTileName(uint64 TileID);
 
+  void DumpTilesTable() const;
+
   void PrintMapInfo();
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  FString AssetsPath = "";
 
   FColor PositonMsgColor = FColor::Purple;
 
