@@ -9,6 +9,7 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
+#include "Engine/LocalPlayer.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -55,26 +56,38 @@ void ACarlaGameModeBase::InitGame(
 {
   Super::InitGame(MapName, Options, ErrorMessage);
 
+  UWorld* World = GetWorld();
+  check(World != nullptr);
+  FString InMapName(MapName);
+
   checkf(
       Episode != nullptr,
       TEXT("Missing episode, can't continue without an episode!"));
+
+  if(InMapName.Contains("LargeMap"))
+  {
+    LMManager = World->SpawnActor<ALargeMapManager>(
+        ALargeMapManager::StaticClass(),
+        FTransform());
+    check(LMManager);
+    // TODO: parameters
+    InMapName = "Map99x99";
+    LMManager->GenerateMap("/Game/Carla/Maps/Map99x99");
+  }
 
 #if WITH_EDITOR
     {
       // When playing in editor the map name gets an extra prefix, here we
       // remove it.
-      FString CorrectedMapName = MapName;
+      FString CorrectedMapName = InMapName;
       constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
       CorrectedMapName.RemoveFromStart(PIEPrefix);
-      UE_LOG(LogCarla, Log, TEXT("Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
+      UE_LOG(LogCarla, Log, TEXT("Corrected map name from %s to %s"), *InMapName, *CorrectedMapName);
       Episode->MapName = CorrectedMapName;
     }
 #else
-  Episode->MapName = MapName;
+  Episode->MapName = InMapName;
 #endif // WITH_EDITOR
-
-  auto World = GetWorld();
-  check(World != nullptr);
 
   GameInstance = Cast<UCarlaGameInstance>(GetGameInstance());
   checkf(
@@ -113,7 +126,7 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
-  ParseOpenDrive(MapName);
+  ParseOpenDrive(Episode->MapName);
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -130,12 +143,21 @@ void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
 
+  UWorld* World = GetWorld();
+  check(World != nullptr);
+
+  if(LMManager)
+  {
+    // TODO: match with vehicle
+    ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
+    LMManager->AddNewClientPosition(Player->GetPlayerController(World)->GetPawn());
+  }
+
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
   ReadyToRegisterObjects = true;
 
   if (true) { /// @todo If semantic segmentation enabled.
-    check(GetWorld() != nullptr);
-    ATagger::TagActorsInLevel(*GetWorld(), true);
+    ATagger::TagActorsInLevel(*World, true);
     TaggerDelegate->SetSemanticSegmentationEnabled();
   }
 
@@ -146,7 +168,7 @@ void ACarlaGameModeBase::BeginPlay()
   // and the custom depth set to 3 used for semantic segmentation
   // The solution: Spawn a Decal.
   // It just works!
-  GetWorld()->SpawnActor<ADecalActor>(
+  World->SpawnActor<ADecalActor>(
       FVector(0,0,-1000000), FRotator(0,0,0), FActorSpawnParameters());
 
   ATrafficLightManager* Manager = GetTrafficLightManager();
