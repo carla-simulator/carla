@@ -7,6 +7,9 @@
 
 #include "ChronoMovementComponent.h"
 #include "Carla/Util/RayTracer.h"
+#include "compiler/disable-ue4-macros.h"
+#include "carla/rpc/String.h"
+#include "compiler/enable-ue4-macros.h"
 
 #ifdef WITH_CHRONO
 using namespace chrono;
@@ -104,11 +107,12 @@ void DrawLine(UWorld* World, FVector Start, FVector End, FColor Color, float Thi
 
 double UERayCastTerrain::GetHeight(const ChVector<>& loc) const
 {
-  FVector Location = ChronoToUE4Location(loc + ChVector<>(0,0,0.5));
-  // DrawPoint(CarlaVehicle->GetWorld(), Location, FColor(0,255,0), 5, 0.1);
+  // DrawPoint(CarlaVehicle->GetWorld(), ChronoToUE4Location(loc), FColor(0,255,0), 5, 0.1);
+  FVector Location = ChronoToUE4Location(loc + ChVector<>(0,0,0.5)); // small offset to detect the ground properly
   auto point_pair = GetTerrainProperties(Location);
   if (point_pair.first)
   {
+    // DrawPoint(CarlaVehicle->GetWorld(), point_pair.second.Location, FColor(255,0,0), 5, 0.1);
     double Height = CMTOM*static_cast<double>(point_pair.second.Location.Z);
     return Height;
   }
@@ -144,25 +148,29 @@ void UChronoMovementComponent::BeginPlay()
   sys.SetSolverMaxIterations(150);
   sys.SetMaxPenetrationRecoverySpeed(4.0);
 
+  FVector VehicleLocation = CarlaVehicle->GetActorLocation();
+  FQuat VehicleRotation = CarlaVehicle->GetActorRotation().Quaternion();
+  auto ChronoLocation = UE4LocationToChrono(VehicleLocation);
+  auto ChronoRotation = UE4QuatToChrono(VehicleRotation);
   // // Create the HMMWV vehicle, set parameters, and initialize.
   // // Typical aerodynamic drag for HMMWV: Cd = 0.5 and area ~5 m2
   my_hmmwv = HMMWV_Full(&sys);
   my_hmmwv.SetContactMethod(ChContactMethod::NSC);
   my_hmmwv.SetChassisFixed(false);
   // Missing axis transformations to UE coordinate system
-  FVector VehicleLocation = CarlaVehicle->GetActorLocation();
-  FQuat VehicleRotation = CarlaVehicle->GetActorRotation().Quaternion();
-  auto ChronoLocation = UE4LocationToChrono(VehicleLocation);
-  auto ChronoRotation = UE4QuatToChrono(VehicleRotation);
   my_hmmwv.SetInitPosition(ChCoordsys<>(
       ChVector<>(ChronoLocation.x(), ChronoLocation.y(), ChronoLocation.z() + 0.5),
       ChronoRotation));
   my_hmmwv.SetPowertrainType(PowertrainModelType::SHAFTS);
-  my_hmmwv.SetDriveType(DrivelineType::FWD);
+  my_hmmwv.SetDriveType(DrivelineTypeWV::FWD);
   my_hmmwv.SetTireType(TireModelType::PAC02);
   my_hmmwv.SetTireStepSize(MaxSubstepDeltaTime);
   my_hmmwv.SetAerodynamicDrag(0.5, 5.0, 1.2);
   my_hmmwv.Initialize();
+  // vehicle = WheeledVehicle(vehicle::GetDataFile(carla::rpc::FromFString(VehicleFilePath)));
+  // vehicle.Initialize(ChCoordsys<>(ChronoLocation, ChronoRotation));
+  // vehicle.GetChassis()->SetFixed(false);
+
 
   // Create the terrain
   terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, &my_hmmwv.GetVehicle());
