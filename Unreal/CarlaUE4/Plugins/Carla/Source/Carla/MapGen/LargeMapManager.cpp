@@ -100,6 +100,8 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(LogCarla, Warning, TEXT("OnLevelRemovedFromWorld"));
+  FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
+  Tile.TilesSpawned = false;
 }
 
 // Called every frame
@@ -400,7 +402,7 @@ void ALargeMapManager::UpdateTilesState()
         {
           LM_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\n    %d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
           // StreamingLevel->SetShouldBeLoaded(true);
-          bool Success = false;
+          // bool Success = false;
           /*Tile->StreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
             World,
             "EmptyTileBase",
@@ -409,6 +411,10 @@ void ALargeMapManager::UpdateTilesState()
             Success
           );
           */
+        }
+        else
+        {
+          SpawnAssetsInTile(*Tile);
         }
       }
 
@@ -421,6 +427,8 @@ void ALargeMapManager::UpdateTilesState()
 
 void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
 {
+  if(Tile.TilesSpawned) return;
+
   LM_LOG(LogCarla, Warning, TEXT("SpawnAssetsInTile %s %d\n"), *Tile.Name, Tile.PendingAssetsInTile.Num());
 
   FString Output = "";
@@ -475,6 +483,8 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
   // Tile.PendingAssetsInTile.Reset();
 
   LoadedLevel->ApplyWorldOffset(TileLocation, false);
+
+  Tile.TilesSpawned = true;
 }
 
 #if WITH_EDITOR
