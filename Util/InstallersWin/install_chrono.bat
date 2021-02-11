@@ -77,8 +77,8 @@ rem ============================================================================
 rem -- Get Chrono -------------------------------------------
 rem ============================================================================
 
-@REM set CHRONO_VERSION=5.0.1
-set CHRONO_VERSION=develop
+set CHRONO_VERSION=6.0.0
+@REM set CHRONO_VERSION=develop
 set CHRONO_REPO=https://github.com/projectchrono/chrono.git
 set CHRONO_BASENAME=chrono
 
@@ -89,7 +89,7 @@ set CHRONO_BUILD_DIR=%CHRONO_SRC_DIR%\build
 if not exist %CHRONO_INSTALL_DIR% (
     echo %FILE_N% Retrieving Chrono.
     call git clone --depth 1 --branch %CHRONO_VERSION% %CHRONO_REPO% %CHRONO_SRC_DIR%
-    
+
     mkdir %CHRONO_BUILD_DIR%
     mkdir %CHRONO_INSTALL_DIR%
 
@@ -103,7 +103,7 @@ if not exist %CHRONO_INSTALL_DIR% (
         -DCMAKE_INSTALL_PREFIX="%CHRONO_INSTALL_DIR%"^
         -DENABLE_MODULE_VEHICLE=ON^
         %CHRONO_SRC_DIR%
-    
+
     echo %FILE_N% Building...
     cmake --build . --config Release --target install
 
