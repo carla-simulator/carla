@@ -34,6 +34,8 @@ struct FCarlaMapTile
   // Assets in tile waiting to be spawned
   UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   TArray<FAssetData> PendingAssetsInTile;
+
+  bool TilesSpawned = false;
 };
 
 UCLASS()
