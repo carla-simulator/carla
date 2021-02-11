@@ -24,6 +24,7 @@
 #include "Carla/Traffic/TrafficLightManager.h"
 #include "Carla/Util/ObjectRegister.h"
 #include "Carla/Weather/Weather.h"
+#include "MapGen/LargeMapManager.h"
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -135,6 +136,8 @@ private:
 
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
+
+  ALargeMapManager* LMManager = nullptr;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
