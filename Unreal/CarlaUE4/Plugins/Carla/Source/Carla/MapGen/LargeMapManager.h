@@ -14,6 +14,9 @@
 #include "LargeMapManager.generated.h"
 
 
+// World->RequestNewWorldOrigin - Force rebase ?
+// WorldComposition->UpdateStreamingState - Force stream levels ?
+
 USTRUCT()
 struct FCarlaMapTile
 {
@@ -32,10 +35,26 @@ struct FCarlaMapTile
   ULevelStreamingDynamic* StreamingLevel = nullptr;
 
   // Assets in tile waiting to be spawned
+  // TODO: categorize assets type and prioritize roads
   UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   TArray<FAssetData> PendingAssetsInTile;
 
   bool TilesSpawned = false;
+};
+
+USTRUCT()
+struct FActorToConsider
+{
+  GENERATED_BODY()
+
+  FActorToConsider() {}
+
+  FActorToConsider(AActor* InActor) : Actor(InActor) {}
+
+  AActor* Actor = nullptr;
+
+  // Absolute location = Current Origin + Relative Tile Location
+  FDVector Location;
 };
 
 UCLASS()
@@ -66,22 +85,8 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateMap(FString InAssetsPath);
 
-#if WITH_EDITOR
-  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
-  void GenerateMap_Editor()
-  {
-    if(!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
-  }
-#endif // WITH_EDITOR
-
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  void AddNewClientPosition(AActor* InActor)
-  {
-    // TODO: This should be able to adapt to a multiactor environment
-    // The problem is that the rebase will only be available for one
-    // unless we create more instances of the simulation
-    ActorToConsider = InActor;
-  }
+  void AddNewClientToConsider(AActor* InActor);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FIntVector GetNumTilesInXY() const;
@@ -114,16 +119,21 @@ protected:
 
   void UpdateTilesState();
 
+  void UpdateTilesState(const FActorToConsider& ActorToConsider);
+
   void SpawnAssetsInTile(FCarlaMapTile& Tile);
+
+  void OnActorSpawned(AActor *Actor);
 
   TMap<uint64, FCarlaMapTile> MapTiles;
 
-  AActor* ActorToConsider = nullptr;
+  TArray<FActorToConsider> ActorsToConsider;
+
+  FDelegateHandle ActorSpawnedDelegate;
+
   // Current Origin after rebase
   FIntVector CurrentOriginInt{0};
   FDVector CurrentOriginD;
-  // Current actor position with rebase in double precision
-  FDVector CurrentActorPosition;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float LayerStreamingDistance = 13.0f * 1000.0f * 100.0f;
@@ -138,6 +148,12 @@ protected:
   bool ShouldTilesBlockOnLoad = false;
 
 #if WITH_EDITOR
+
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
+  void GenerateMap_Editor()
+  {
+    if(!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
+  }
 
   FString GenerateTileName(uint64 TileID);
 
