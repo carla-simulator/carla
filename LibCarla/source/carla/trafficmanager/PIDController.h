@@ -77,7 +77,7 @@ ActuationSignal RunStep(StateEntry present_state,
       lateral_parameters[1] * present_state.deviation_integral +
       lateral_parameters[2] * (present_state.deviation - previous_state.deviation) * INV_DT;
 
-  steer = std::max(-0.8f, std::min(steer, 0.8f));
+  steer = std::max(-STEERING_LIMIT, std::min(steer, STEERING_LIMIT));
 
   return ActuationSignal{throttle, brake, steer};
 }
