@@ -7,6 +7,8 @@
 
 #include <limits>
 #include <stdint.h>
+#include <iostream>
+#include <vector>
 
 #define SQUARE(a) ((a) * (a))
 #define RATE(MaxY, MinY, DiffX) (((MaxY) - (MinY)) / (DiffX))
@@ -39,6 +41,7 @@ namespace SpeedThreshold {
 static const float HIGHWAY_SPEED = 50.0f / 3.6f;
 static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
 static const float AFTER_JUNCTION_MIN_SPEED = 5.0f / 3.6f;
+static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
 } // namespace SpeedThreshold
 
 namespace PathBufferUpdate {
@@ -51,12 +54,12 @@ static const float HORIZON_RATE = RATE(MAXIMUM_HORIZON_LENGTH,
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
-static const float TARGET_WAYPOINT_HORIZON_LENGTH = 2.5f;
-static const float JUNCTION_LOOK_AHEAD = 10.0f;
-static const float SAFE_DISTANCE_AFTER_JUNCTION = 10.0f;
-static const float MIN_JUNCTION_LENGTH = 5.0f;
-static const float MIN_SAFE_INTERVAL_LENGTH = 0.9f * SAFE_DISTANCE_AFTER_JUNCTION;
+static const float TARGET_WAYPOINT_TIME_HORIZON = 0.3f;
+static const float TARGET_WAYPOINT_HORIZON_LENGTH = 0.8f;
+static const float JUNCTION_LOOK_AHEAD = 6.0f;
+static const float SAFE_DISTANCE_AFTER_JUNCTION = 6.0f;
+static const float MIN_JUNCTION_LENGTH = 8.0f;
+static const float MIN_SAFE_INTERVAL_LENGTH = 1.5f * SAFE_DISTANCE_AFTER_JUNCTION;
 } // namespace WaypointSelection
 
 namespace LaneChange {
@@ -118,10 +121,15 @@ static const float MAX_JUNCTION_BLOCK_DISTANCE = 0.5f * WaypointSelection::SAFE_
 namespace PID {
 static const float MAX_THROTTLE = 0.7f;
 static const float MAX_BRAKE = 1.0f;
+static const float STEERING_LIMIT = 0.8f;
 static const float VELOCITY_INTEGRAL_MAX = 5.0f;
 static const float VELOCITY_INTEGRAL_MIN = -5.0f;
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
+static const std::vector<float> LONGITUDIAL_PARAM = {2.0f, 0.01f, 0.4f};
+static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {4.0f, 0.02f, 0.2f};
+static const std::vector<float> LATERAL_PARAM = {9.0f, 0.02f, 1.0f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {7.0f, 0.02f, 1.0f};
 } // namespace PID
 
 namespace TrackTraffic {
