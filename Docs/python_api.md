@@ -2800,7 +2800,7 @@ Projects the specified point downwards in the scene. The functions casts a ray f
 Loads the selected layers to the level. If the layer is already loaded the call has no effect.  
     - **Parameters:**
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) – Mask of level layers to be loaded.  
-    - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps._</font>  
+    - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
 This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
     - **Parameters:**
@@ -2846,7 +2846,7 @@ Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> o
 Unloads the selected layers to the level. If the layer is already unloaded the call has no effect.  
     - **Parameters:**
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) – Mask of level layers to be unloaded.  
-    - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps._</font>  
+    - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
 This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
     - **Parameters:**
@@ -3326,19 +3326,10 @@ Snippet for carla.World.load_map_layer
 
 ```py
   
-# This recipe toggles off and on several layers in our "_Opt" maps
+# This recipe toggles on several layers in our "_Opt" maps
 
-# Load layered map for Town 01
-world = client.load_world('Town01_Opt')
-
-# Toggle all buildings off
-world.unload_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all foliage off
-world.unload_map_layer(carla.MapLayer.Foliage)
-
-# Toggle all parked vehicles off
-world.unload_map_layer(carla.MapLayer.ParkedVehicles)
+# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
+world = client.load_world('Town01_Opt', carla.MapLayer.None)
 
 # Toggle all buildings on
 world.load_map_layer(carla.MapLayer.Buildings)
@@ -3347,7 +3338,8 @@ world.load_map_layer(carla.MapLayer.Buildings)
 world.load_map_layer(carla.MapLayer.Foliage)
 
 # Toggle all parked vehicles on
-world.load_map_layer(carla.MapLayer.ParkedVehicles)  
+world.load_map_layer(carla.MapLayer.ParkedVehicles)
+  
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
@@ -3362,28 +3354,18 @@ Snippet for carla.World.unload_map_layer
 
 ```py
   
-# This recipe toggles off and on several layers in our "_Opt" maps
+# This recipe toggles off several layers in our "_Opt" maps
 
-# Load layered map for Town 01
-world = client.load_world('Town01_Opt')
+# Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
+# as well as buildings and parked vehicles
+world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
 
 # Toggle all buildings off
 world.unload_map_layer(carla.MapLayer.Buildings)
 
-# Toggle all foliage off
-world.unload_map_layer(carla.MapLayer.Foliage)
-
 # Toggle all parked vehicles off
 world.unload_map_layer(carla.MapLayer.ParkedVehicles)
-
-# Toggle all buildings on
-world.load_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all foliage on
-world.load_map_layer(carla.MapLayer.Foliage)
-
-# Toggle all parked vehicles on
-world.load_map_layer(carla.MapLayer.ParkedVehicles)  
+  
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
@@ -3731,7 +3713,8 @@ objects_to_toggle = {building_01.id, building_02.id}
 # Toggle buildings off
 world.enable_environment_objects(objects_to_toggle, False)
 # Toggle buildings on
-world.enable_environment_objects(objects_to_toggle, True)  
+world.enable_environment_objects(objects_to_toggle, True)
+  
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.enable_environment_objects-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
