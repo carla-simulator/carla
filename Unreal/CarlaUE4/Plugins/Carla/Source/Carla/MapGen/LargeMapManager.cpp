@@ -11,6 +11,8 @@
 
 #include "UncenteredPivotPointMesh.h"
 
+#include "Walker/WalkerBase.h"
+
 #if WITH_EDITOR
 #include "FileHelper.h"
 #include "Paths.h"
@@ -33,12 +35,15 @@ ALargeMapManager::ALargeMapManager()
 
 ALargeMapManager::~ALargeMapManager()
 {
-  // Remove delegates
+  /* Remove delegates */
+  // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.RemoveAll(this);
   FCoreDelegates::PostWorldOriginOffset.RemoveAll(this);
-
+  // Level added/removed from world
   FWorldDelegates::LevelRemovedFromWorld.RemoveAll(this);
   FWorldDelegates::LevelAddedToWorld.RemoveAll(this);
+  // Actor spawned
+  GetWorld()->RemoveOnActorSpawnedHandler(ActorSpawnedDelegate);
 }
 
 // Called when the game starts or when spawned
@@ -46,12 +51,17 @@ void ALargeMapManager::BeginPlay()
 {
   Super::BeginPlay();
 
-  // Setup delegates
+  /* Setup delegates */
+  // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.AddUObject(this, &ALargeMapManager::PreWorldOriginOffset);
   FCoreDelegates::PostWorldOriginOffset.AddUObject(this, &ALargeMapManager::PostWorldOriginOffset);
-
+  // Level added/removed from world
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &ALargeMapManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &ALargeMapManager::OnLevelRemovedFromWorld);
+  // Actor spawned
+  FOnActorSpawned::FDelegate OnActorSpawnedDelegate =
+    FOnActorSpawned::FDelegate::CreateUObject(this, &ALargeMapManager::OnActorSpawned);
+  ActorSpawnedDelegate = GetWorld()->AddOnActorSpawnedHandler(OnActorSpawnedDelegate);
 
   UWorldComposition* WorldComposition = GetWorld()->WorldComposition;
   // Setup Origin rebase settings
@@ -153,8 +163,17 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   ObjectLibrary->ConditionalBeginDestroy();
   GEngine->ForceGarbageCollection(true);
 
+  ActorsToConsider.Reset();
+
+#if WITH_EDITOR
   LM_LOG(LogCarla, Warning, TEXT("GenerateMap num Tiles generated %d"), MapTiles.Num());
   DumpTilesTable();
+#endif // WITH_EDITOR
+}
+
+void ALargeMapManager::AddNewClientToConsider(AActor* InActor)
+{
+  ActorsToConsider.Add({InActor});
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -356,42 +375,60 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 
 void ALargeMapManager::UpdateActorsToConsiderPosition()
 {
-  if(!ActorToConsider)
+  if(!ActorsToConsider.Num())
   {
     LM_LOG(LogCarla, Error, TEXT("No actors to consider"));
     return;
   }
 
-  // Relative location to the current origin
-  FDVector ActorLocation(ActorToConsider->GetActorLocation());
-  // Absolute location of the actor
-  CurrentActorPosition = CurrentOriginD + ActorLocation;
+  for(FActorToConsider& ActorToConsider : ActorsToConsider)
+  {
+    AActor* Actor = ActorToConsider.Actor;
+    // Relative location to the current origin
+    FDVector ActorLocation(Actor->GetActorLocation());
+    // Absolute location of the actor
+    ActorToConsider.Location = CurrentOriginD + ActorLocation;
+  }
 }
 
 void ALargeMapManager::UpdateTilesState()
 {
+  for(FActorToConsider& ActorToConsider : ActorsToConsider)
+  {
+    UpdateTilesState(ActorToConsider);
+  }
+}
+
+void ALargeMapManager::UpdateTilesState(const FActorToConsider& ActorToConsider)
+{
   UWorld* World = GetWorld();
+  UWorldComposition* WorldComposition = World->WorldComposition;
+
+
+  FDVector ActorLocation = ActorToConsider.Location;
 
   // Calculate Current Tile
-  FIntVector CurrentTile = GetTileVectorID(CurrentActorPosition);
+  FIntVector CurrentTile = GetTileVectorID(ActorLocation);
 
   // Calculate tiles in range based on LayerStreamingDistance
+  TArray<FVector, TInlineAllocator<16>> TileLocationsToLoad;
   int32 TilesToConsider = (int32)(LayerStreamingDistance / TileSide) + 1;
   for(int Y = -TilesToConsider; Y < TilesToConsider; Y++)
   {
     for(int X = -TilesToConsider; X < TilesToConsider; X++)
     {
+      // I don't check the bounds of the Tile map, if the Tile does not exist
+      // I just simply discard it
       FIntVector TileToCheck = CurrentTile + FIntVector(X, Y, 0);
 
       FCarlaMapTile* Tile = GetCarlaMapTile(TileToCheck);
       if(!Tile) {
         LM_LOG(LogCarla, Error, TEXT("No Tile %s"), *TileToCheck.ToString());
-        continue;
+        continue; // Discard
       }
 
-
       // Calculate distance between player and tile
-      float Distance = FDVector::Dist(Tile->Location, CurrentActorPosition);
+      float Distance = FDVector::Dist(Tile->Location, ActorLocation);
 
       // Load level if we are in range
       if(Distance < LayerStreamingDistance)
@@ -401,27 +438,18 @@ void ALargeMapManager::UpdateTilesState()
         if(!StreamingLevel->IsLevelLoaded())
         {
           LM_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\n    %d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
-          // StreamingLevel->SetShouldBeLoaded(true);
-          // bool Success = false;
-          /*Tile->StreamingLevel = ULevelStreamingDynamic::LoadLevelInstance(
-            World,
-            "EmptyTileBase",
-            Tile->Location,
-            FRotator(0.0f),
-            Success
-          );
-          */
+          TileLocationsToLoad.Add(Tile->Location);
         }
         else
         {
           SpawnAssetsInTile(*Tile);
         }
       }
-
     }
   }
 
   // Load tiles
+  WorldComposition->UpdateStreamingState(TileLocationsToLoad.GetData(), TileLocationsToLoad.Num());
 
 }
 
@@ -480,11 +508,23 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
     }
   }
   LM_LOG(LogCarla, Warning, TEXT("%s"), *Output);
-  // Tile.PendingAssetsInTile.Reset();
 
   LoadedLevel->ApplyWorldOffset(TileLocation, false);
 
   Tile.TilesSpawned = true;
+}
+
+void ALargeMapManager::OnActorSpawned(AActor *Actor)
+{
+  ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  AWalkerBase* Walker = Cast<AWalkerBase>(Actor);
+
+  LM_LOG(LogCarla, Warning, TEXT("OnActorSpawned %s"), *Actor->GetName());
+  if(Vehicle || Walker)
+  {
+    AddNewClientToConsider(Actor);
+  }
+
 }
 
 #if WITH_EDITOR
@@ -529,6 +569,8 @@ void ALargeMapManager::DumpTilesTable() const
 void ALargeMapManager::PrintMapInfo()
 {
   UWorld* World = GetWorld();
+
+  FDVector CurrentActorPosition;
 
   const TArray<FLevelCollection>& WorldLevelCollections = World->GetLevelCollections();
   const FLevelCollection* LevelCollection = World->GetActiveLevelCollection();
