@@ -9,19 +9,42 @@
 #include "Carla/Util/RayTracer.h"
 #include "compiler/disable-ue4-macros.h"
 #include "carla/rpc/String.h"
+#include "chrono_vehicle/utils/ChUtilsJSON.h"
 #include "compiler/enable-ue4-macros.h"
 
 #ifdef WITH_CHRONO
 using namespace chrono;
 using namespace chrono::vehicle;
-using namespace chrono::vehicle::hmmwv;
 #endif
 
 void UChronoMovementComponent::CreateChronoMovementComponent(
-    ACarlaWheeledVehicle* Vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime)
+    ACarlaWheeledVehicle* Vehicle,
+    uint64_t MaxSubsteps,
+    float MaxSubstepDeltaTime,
+    FString VehicleJSON,
+    FString PowertrainJSON,
+    FString TireJSON,
+    FString BaseJSONPath)
 {
   #ifdef WITH_CHRONO
   UChronoMovementComponent* ChronoMovementComponent = NewObject<UChronoMovementComponent>(Vehicle);
+  carla::log_warning("JSONS:", carla::rpc::FromFString(BaseJSONPath), carla::rpc::FromFString(VehicleJSON), carla::rpc::FromFString(PowertrainJSON), carla::rpc::FromFString(TireJSON));
+  if (!VehicleJSON.IsEmpty())
+  {
+    ChronoMovementComponent->VehicleJSON = VehicleJSON;
+  }
+  if (!PowertrainJSON.IsEmpty())
+  {
+    ChronoMovementComponent->PowertrainJSON = PowertrainJSON;
+  }
+  if (!TireJSON.IsEmpty())
+  {
+    ChronoMovementComponent->TireJSON = TireJSON;
+  }
+  if (!BaseJSONPath.IsEmpty())
+  {
+    ChronoMovementComponent->BaseJSONPath = BaseJSONPath;
+  }
   ChronoMovementComponent->MaxSubsteps = MaxSubsteps;
   ChronoMovementComponent->MaxSubstepDeltaTime = MaxSubstepDeltaTime;
   ChronoMovementComponent->RegisterComponent();
@@ -142,34 +165,43 @@ void UChronoMovementComponent::BeginPlay()
 
   DisableUE4VehiclePhysics();
 
-  // // // Chrono system
-  sys.Set_G_acc(ChVector<>(0, 0, -9.81));
-  sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-  sys.SetSolverMaxIterations(150);
-  sys.SetMaxPenetrationRecoverySpeed(4.0);
+  // // // Chrono System
+  Sys.Set_G_acc(ChVector<>(0, 0, -9.81));
+  Sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
+  Sys.SetSolverMaxIterations(150);
+  Sys.SetMaxPenetrationRecoverySpeed(4.0);
 
-  FVector VehicleLocation = CarlaVehicle->GetActorLocation();
+  // Initial location with small offset to prevent falling through the ground
+  FVector VehicleLocation = CarlaVehicle->GetActorLocation() + FVector(0,0,25);
   FQuat VehicleRotation = CarlaVehicle->GetActorRotation().Quaternion();
   auto ChronoLocation = UE4LocationToChrono(VehicleLocation);
   auto ChronoRotation = UE4QuatToChrono(VehicleRotation);
-  // // Create the HMMWV vehicle, set parameters, and initialize.
-  // // Typical aerodynamic drag for HMMWV: Cd = 0.5 and area ~5 m2
-  my_hmmwv = HMMWV_Full(&sys);
-  my_hmmwv.SetContactMethod(ChContactMethod::NSC);
-  my_hmmwv.SetChassisFixed(false);
-  // Missing axis transformations to UE coordinate system
-  my_hmmwv.SetInitPosition(ChCoordsys<>(
-      ChVector<>(ChronoLocation.x(), ChronoLocation.y(), ChronoLocation.z() + 0.5),
-      ChronoRotation));
-  my_hmmwv.SetPowertrainType(PowertrainModelType::SHAFTS);
-  my_hmmwv.SetDriveType(DrivelineTypeWV::FWD);
-  my_hmmwv.SetTireType(TireModelType::PAC02);
-  my_hmmwv.SetTireStepSize(MaxSubstepDeltaTime);
-  my_hmmwv.SetAerodynamicDrag(0.5, 5.0, 1.2);
-  my_hmmwv.Initialize();
+
+  // Set base path for vehicle JSON files
+  vehicle::SetDataPath(carla::rpc::FromFString(BaseJSONPath));
+  // Create JSON vehicle
+  Vehicle = chrono_types::make_shared<WheeledVehicle>(
+      &Sys,
+      vehicle::GetDataFile(carla::rpc::FromFString(VehicleJSON)));
+  Vehicle->Initialize(ChCoordsys<>(ChronoLocation, ChronoRotation));
+  Vehicle->GetChassis()->SetFixed(false);
+  // Create and initialize the powertrain System
+  auto powertrain = ReadPowertrainJSON(
+      vehicle::GetDataFile(carla::rpc::FromFString(PowertrainJSON)));
+  Vehicle->InitializePowertrain(powertrain);
+  // Create and initialize the tires
+  for (auto& axle : Vehicle->GetAxles()) {
+      for (auto& wheel : axle->GetWheels()) {
+          auto tire = ReadTireJSON(
+              vehicle::GetDataFile(carla::rpc::FromFString(TireJSON)));
+          Vehicle->InitializeTire(tire, wheel, VisualizationType::MESH);
+      }
+  }
 
   // Create the terrain
-  terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, &my_hmmwv.GetVehicle());
+  Terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, Vehicle.get());
+
+  // carla::log_warning("ChronoBeginPlay");
 }
 
 void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)
@@ -183,7 +215,8 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
 {
   if (DeltaTime > MaxSubstepDeltaTime)
   {
-    uint64_t NumberSubSteps = FGenericPlatformMath::FloorToInt(DeltaTime/MaxSubstepDeltaTime);
+    uint64_t NumberSubSteps =
+        FGenericPlatformMath::FloorToInt(DeltaTime/MaxSubstepDeltaTime);
     if (NumberSubSteps < MaxSubsteps)
     {
       for (uint64_t i = 0; i < NumberSubSteps; ++i)
@@ -210,15 +243,18 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
     AdvanceChronoSimulation(DeltaTime);
   }
 
-  auto* vehicle = &my_hmmwv.GetVehicle();
-  auto VehiclePos = vehicle->GetVehiclePos() - ChVector<>(0,0,0.5);
-  auto VehicleRot = vehicle->GetVehicleRot();
-  double Time = my_hmmwv.GetSystem()->GetChTime();
+  auto VehiclePos = Vehicle->GetVehiclePos() - ChVector<>(0,0,0.5);
+  auto VehicleRot = Vehicle->GetVehicleRot();
+  double Time = Vehicle->GetSystem()->GetChTime();
+  // carla::log_warning("Time:", Time);
+  // carla::log_warning("vehicle pos (", VehiclePos.x(), VehiclePos.y(), VehiclePos.z(), ")");
+  // carla::log_warning("vehicle rot (", VehicleRot.e1(), VehicleRot.e2(), VehicleRot.e3(), VehicleRot.e0(), ")");
   FVector NewLocation = ChronoToUE4Location(VehiclePos);
   FQuat NewRotation = ChronoToUE4Quat(VehicleRot);
   if(NewLocation.ContainsNaN() || NewRotation.ContainsNaN())
   {
-    UE_LOG(LogCarla, Warning, TEXT("Error: Chrono vehicle position or rotation contains NaN. Disabling chrono physics..."));
+    UE_LOG(LogCarla, Warning, TEXT(
+        "Error: Chrono vehicle position or rotation contains NaN. Disabling chrono physics..."));
     UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
     return;
   }
@@ -228,12 +264,12 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
 
 void UChronoMovementComponent::AdvanceChronoSimulation(float StepSize)
 {
-  double Time = my_hmmwv.GetSystem()->GetChTime();
+  double Time = Vehicle->GetSystem()->GetChTime();
   double Throttle = VehicleControl.Throttle;
   double Steering = -VehicleControl.Steer; // RHF to LHF
   double Brake = VehicleControl.Brake + VehicleControl.bHandBrake;
-  my_hmmwv.Synchronize(Time, {Steering, Throttle, Brake}, *terrain.get());
-  my_hmmwv.Advance(StepSize);
-  sys.DoStepDynamics(StepSize);
+  Vehicle->Synchronize(Time, {Steering, Throttle, Brake}, *Terrain.get());
+  Vehicle->Advance(StepSize);
+  Sys.DoStepDynamics(StepSize);
 }
 #endif

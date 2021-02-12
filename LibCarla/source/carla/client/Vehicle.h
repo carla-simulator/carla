@@ -93,7 +93,13 @@ namespace client {
     /// Enables the use of CarSim internal road definition instead of unreal's
     void UseCarSimRoad(bool enabled);
 
-    void EnableChronoPhysics(uint64_t MaxSubsteps, float MaxSubstepDeltaTime);
+    void EnableChronoPhysics(
+        uint64_t MaxSubsteps,
+        float MaxSubstepDeltaTime,
+        std::string VehicleJSON = "",
+        std::string PowertrainJSON = "",
+        std::string TireJSON = "",
+        std::string BaseJSONPath = "");
 
   private:
 

@@ -17,7 +17,7 @@
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/ChTerrain.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
-#include "chrono_models/vehicle/hmmwv/HMMWV.h"
+#include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
 
 #include "compiler/enable-ue4-macros.h"
 #endif
@@ -45,19 +45,31 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
   GENERATED_BODY()
 
 #ifdef WITH_CHRONO
-  chrono::ChSystemNSC sys;
-  chrono::vehicle::hmmwv::HMMWV_Full my_hmmwv;
-  std::shared_ptr<UERayCastTerrain> terrain;
+  chrono::ChSystemNSC Sys;
+  // chrono::vehicle::hmmwv::HMMWV_Full my_hmmwv;
+  std::shared_ptr<chrono::vehicle::WheeledVehicle> Vehicle;
+  std::shared_ptr<UERayCastTerrain> Terrain;
 #endif
 
   uint64_t MaxSubsteps = 10;
   float MaxSubstepDeltaTime = 0.01;
   FVehicleControl VehicleControl;
+  FString VehicleJSON =    "hmmwv/vehicle/HMMWV_Vehicle.json";
+  FString PowertrainJSON = "hmmwv/powertrain/HMMWV_ShaftsPowertrain.json";
+  FString TireJSON =       "hmmwv/tire/HMMWV_Pac02Tire.json";
+  FString BaseJSONPath = "";
 
 public:
 
 
-  static void CreateChronoMovementComponent(ACarlaWheeledVehicle* Vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime);
+  static void CreateChronoMovementComponent(
+      ACarlaWheeledVehicle* Vehicle,
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime,
+      FString VehicleJSON = "",
+      FString PowertrainJSON = "",
+      FString TireJSON = "",
+      FString BaseJSONPath = "");
 
   #ifdef WITH_CHRONO
   virtual void BeginPlay() override;
