@@ -222,7 +222,11 @@ namespace detail {
     void EnableChronoPhysics(
         rpc::ActorId vehicle,
         uint64_t MaxSubsteps,
-        float MaxSubstepDeltaTime);
+        float MaxSubstepDeltaTime,
+        std::string VehicleJSON,
+        std::string PowertrainJSON,
+        std::string TireJSON,
+        std::string BaseJSONPath);
 
     void ApplyControlToWalker(
         rpc::ActorId walker,
