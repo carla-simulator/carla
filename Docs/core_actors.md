@@ -1,6 +1,6 @@
 # 2nd. Actors and blueprints
 
-Actors not only include vehicles and walkers, but also sensors, traffic signs, traffic lights, and the spectator. It is crucial to have fully understanding on how to operate on them.  
+Actors not only include vehicles and walkers, but also sensors, traffic signs, traffic lights, and the spectator. It is crucial to have full understanding on how to operate on them.  
 
 This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the __tutorials__ in this documentation and share doubts and ideas in the [CARLA forum](https://forum.carla.org/).  
 
