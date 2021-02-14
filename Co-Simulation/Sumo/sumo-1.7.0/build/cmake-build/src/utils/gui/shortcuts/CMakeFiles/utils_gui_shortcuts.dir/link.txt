@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutils_gui_shortcuts.a  CMakeFiles/utils_gui_shortcuts.dir/GUIShortcutsSubSys.cpp.o
-/usr/bin/ranlib libutils_gui_shortcuts.a

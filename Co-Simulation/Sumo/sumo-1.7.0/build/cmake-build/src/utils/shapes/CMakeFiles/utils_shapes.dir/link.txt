@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutils_shapes.a  CMakeFiles/utils_shapes.dir/Shape.cpp.o CMakeFiles/utils_shapes.dir/SUMOPolygon.cpp.o CMakeFiles/utils_shapes.dir/PolygonDynamics.cpp.o CMakeFiles/utils_shapes.dir/ShapeHandler.cpp.o CMakeFiles/utils_shapes.dir/ShapeContainer.cpp.o
-/usr/bin/ranlib libutils_shapes.a

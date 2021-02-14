@@ -1,0 +1,14 @@
+/* Simple fragment shader with static color, no lighting, no textures
+ */ 
+#version 130
+ 
+// corresponds with output from vertex shader, gets interpolated
+in vec4 Color;
+ 
+// output to buffer
+out vec4 FragColor;
+ 
+void main()
+{
+	FragColor = Color;
+} 

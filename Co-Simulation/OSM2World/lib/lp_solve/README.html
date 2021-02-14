@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<title>Using lp_solve 5.5 in Java programs</title>
+<style type="text/css">
+<!--
+body  { font-family: Verdana, Arial, Helvetica, sans-serif; }
+td,th	{ text-align:left; }
+li		{ margin-top: 3px; }
+pre		{ font-size: smaller; }
+-->
+</style>
+
+</head>
+
+<body>
+
+<h1>Using lp_solve 5.5 in Java programs</h1>
+
+<h2>Contents</h2>
+
+<a href="#intro">1. Introduction</a><br/>
+<a href="#install">2. Installation</a><br/>
+<a href="#usage">3. Usage</a><br/>
+<a href="#impl">4. Implementation notes</a><br/>
+<a href="#building">5. Building from source</a><br/>
+<a href="#jython">6. Calling lp_solve from Python/Jython</a><br/>
+
+
+<!--
+ * *******************************************************************
+ * PART 1
+ * *******************************************************************
+-->
+<h2><a name="intro">1. Introduction</a></h2>
+
+<p>lp_solve is a free (see <a href="LGPL">LGPL</a> for the GNU lesser general public license) linear
+(integer) programming solver based on the revised simplex method and the Branch-and-bound method
+for the integers. lp_solve has its own community via the Yahoo group
+<a href="http://groups.yahoo.com/group/lp_solve">http://groups.yahoo.com/group/lp_solve</a>.
+There you can find the latest sources, executables for the common platforms, examples, manuals
+and a message board where people can share their thoughts on lp_solve.</p>
+
+<p>lp_solve is written in ANSI C and can be compiled on many different platforms like Linux and Windows.
+Basically, lp_solve is a library, a set of routines, that can be called
+easily from programming languages like C, C++, C# and VB. Unfortunately, there is no simple and
+straightforward way to use native C libraries like lp_solve in Java programs.
+This library (also called <strong>&quot;Java wrapper&quot;</strong>) is designed to remedy this shortcoming. It
+consists of two main parts:</p>
+
+<ul>
+<li>A Java class library that is used by Java client programs. It gives access to all
+  lp_solve routines through the <code>LpSolve</code> class.</li>
+
+<li> A native library written in C++, also called 'stub' library, that uses the JNI
+  (Java Native Interface) API to translate Java method calls into calls to the
+  corresponding routines of the lp_solve library. Java client
+  programs do not interact directly with the stub library.
+  This library must be compiled for each target platform.
+  Precompiled binaries are included for Windows and Linux operating systems.
+  There is also a build script for compiling the stub library on Mac OS X.</li>
+</ul>
+
+<p>This document should help you getting started using the Java wrapper and lp_solve in your
+Java programs. Read it in addition to the documentation that comes with lp_solve.
+Always refer to the lp_solve docs as ultimate reference for
+using the routines of the optimization library.
+Bug reports, succes stories and requests for changes concerning the Java wrapper are welcome
+by email at <code>juergen.ebert@web.de</code> or in the lp_solve discussion group.</p>
+
+<p>The current wrapper version was written to work with lp_solve 5.5.0.9 and was tested
+ under Windows XP and Linux.  As long as the API stays the same, other versions of lp_solve
+ are likely to work as well. The wrapper requires a Java Runtime Environment 1.3 or later.</p>
+
+<p>The latest version of the Java wrapper can be found in the files section of the lp_solve group.
+The wrapper is released under the same LGPL license conditions as lp_solve. A copy of
+the LGPL text is contained in the distribution archive. </p>
+
+
+<!--
+ * *******************************************************************
+ * PART 2
+ * *******************************************************************
+-->
+<h2><a name="install">2. Installation</a></h2>
+
+<ul>
+<li>Copy the lp_solve dynamic libraries from the archives <code>lp_solve_5.5_dev.(zip or tar.gz)</code>
+  and <code>lp_solve_5.5_exe.(zip or tar.gz)</code> to a standard library directory for your target platform.
+  On Windows, a typical place would be <code>\WINDOWS</code> or <code>\WINDOWS\SYSTEM32</code>.
+  On Linux, a typical place would be the directory <code>/usr/local/lib</code>.
+</li>
+
+<li>Unzip the Java wrapper distribution file to new directory of your choice.</li>
+
+<li>On Windows, copy the wrapper stub library <code>lpsolve55j.dll</code>
+  to the directory that already contains <code>lpsolve55.dll</code>.
+</li>
+
+<li>On Linux, copy the wrapper stub library  <code>liblpsolve55j.so</code>
+  to the directory that already contains <code>liblpsolve55.so</code>. Run <code>ldconfig</code> to include
+  the library in the shared libray cache.
+</li>
+</ul>
+
+
+
+<!--
+ * *******************************************************************
+ * PART 3
+ * *******************************************************************
+-->
+<h2><a name="usage">3. Usage</a></h2>
+
+<p>To create a Java application that uses lp_solve routines, you must perform the
+following steps:</p>
+
+<ul>
+<li>Make sure you have a Java Runtime Environment 1.3 or later installed.</li>
+
+<li>Install lp_solve and the Java wrapper as described above.</li>
+
+<li>Copy the archive file <code>lpsolve55j.jar</code> from the Java wrapper distribution to a
+  directory that is included in the CLASSPATH of your java program.</li>
+
+<li>Add an import statement for the package <code>lpsolve.*</code> at the beginning of your
+  source file.</li>
+
+<li>Call <code>LpSolve.makeLp(...)</code> or one of the other static factory methods of the LpSolve
+  class to create a <code>LpSolve</code> instance. Each <code>LpSolve</code> instance represents an optimization
+  problem.</li>
+
+<li>Call the methods of the <code>LpSolve</code> instance to define the problem and obtain the solution.
+  Use the examples and implementation notes later in this documentation for further
+  information.</li>
+
+<li>When you run your Java file make sure to include <code>lpsolve55j.jar</code> in the CLASSPATH.
+  Also, on Windows, if you installed the  native stub library in a directory that is not included
+  in the PATH variable, you have to define the Java system variable <code>java.library.path</code>
+  which must point to the installation directory. On Linux, the equivalent of the Windows PATH
+  variable is called LD_LIBRARY_PATH.</li>
+</ul>
+
+
+<h3><a name="ex1">A simple example</a></h3>
+
+<p>The following program is a very simple example that shows how to program with lp_solve in Java.
+</p>
+
+<pre>
+import lpsolve.*;
+
+public class Demo {
+
+  public static void main(String[] args) {
+    try {
+      // Create a problem with 4 variables and 0 constraints
+      LpSolve solver = LpSolve.makeLp(0, 4);
+
+      // add constraints
+      solver.strAddConstraint("3 2 2 1", LpSolve.LE, 4);
+      solver.strAddConstraint("0 4 3 1", LpSolve.GE, 3);
+
+      // set objective function
+      solver.strSetObjFn("2 3 -2 3");
+
+      // solve the problem
+      solver.solve();
+
+      // print solution
+      System.out.println("Value of objective function: " + solver.getObjective());
+      double[] var = solver.getPtrVariables();
+      for (int i = 0; i < var.length; i++) {
+        System.out.println("Value of var[" + i + "] = " + var[i]);
+      }
+
+      // delete the problem and free memory
+      solver.deleteLp();
+    }
+    catch (LpSolveException e) {
+       e.printStackTrace();
+    }
+  }
+
+}
+</pre>
+
+<h3><a name="ex2">Using callbacks</a></h3>
+
+<p>The following code fragment shows you how to use callbacks in Java.
+The example defines an anonymous inner class that implements the <code>AbortListener</code>
+interface which is then passed to the <code>putAbortfunc</code> method.</p>
+
+<pre>
+    LpSolve solver = LpSolve.makeLp(0, 4);
+    AbortListener abortfunc = new AbortListener() {
+      public boolean abortfunc(LpSolve problem, Object handle) {
+        System.out.println("Java abortfunc called, handle = " + handle);
+        return false;
+      }
+    };
+    solver.putAbortfunc(abortfunc, new Integer(123));
+</pre>
+
+
+<h3><a name="ex3">Running the demo application</a></h3>
+
+<p>Follow these steps to run the demo application, which is a port of the C demo
+program that comes with lp_solve to the Java language. You will need a Java Runtime
+Environment (JRE) on your machine in order to run the demo. You can download the
+latest JRE from <a href="http://java.sun.com">http://java.sun.com</a></p>
+
+<ul>
+<li>Install lp_solve and the Java wrapper as described above.</li>
+<li>On Windows, go to the <code>demo</code> directory and
+start the batch script &quot;run_demo.bat&quot;.</li>
+<li>On Linux, go to the <code>demo</code> directory of the wrapper distribution and
+run &quot;sh run_demo&quot;.</li>
+</ul>
+
+<h3><a name="ex4">More example code</a></h3>
+
+<p>In the <code>demo</code> directory you will find
+the file <code>LpSolveTest.java</code> which contains more than 100
+JUnit test cases (see <a href="http://www.junit.org">http://www.junit.org</a> for
+details about this highly useful software)
+to strengthen the faith in the Java wrapper implementation. The test cases
+may also seve as examples of basic lp_solve usage in Java. You will need
+the library <code>junit.jar</code> in your <code>CLASSPATH</code> to run the test cases.
+<code>junit.jar</code> is included in the <code>lib</code> directory of the Java wrapper. You
+can run the test cases directly by starting the batch script &quot;run_unittests.bat&quot; on Windows
+or &quot;sh run_unittests&quot; on Linux.
+</p>
+
+<!--
+ * *******************************************************************
+ * PART 4
+ * *******************************************************************
+-->
+<h2><a name="impl">4. Implementation notes</a></h2>
+
+<ul>
+<li>In general, the Java API tries to follow the original C/C++ API of lp_solve as
+  closely as possible to make ist easier for programmers who have to write programs for
+  lp_solve in multiple different programming languages. However, because of fundamental
+  differences between the Java programming language and C/C++ this is not always strictly
+  possible. For example, it is not possible in Java to pass simple datatypes by reference.</li>
+
+<li>Method names have been kept, but changed to Java convention, i.e. underscores have been
+  removed, the following character is capitalized. For example <code>str_add_constraint</code>
+  becomes <code>strAddConstraint</code> in Java.</li>
+
+<li>The <code>lprec*</code> argument taken by almost all lp_solve API routines is hidden
+  completely inside the <code>LpSolve</code> class. All methods that create new <code>lprec
+  </code> structures were made static methods of the <code>LpSolve</code> class.</li>
+
+<li>Return values denoting fatal internal errors have been changed to Java Exceptions. For
+  example <code>set_row_name</code> returns FALSE if an error has occured. In Java, <code>
+  setRowName</code> is of type void and throws a <code>LpSolveException</code>.</li>
+
+<li>Routines that have arguments or return values of type unsigned char, but only allow for TRUE or
+  FALSE as legal values have been changed to type <code>boolean</code>. Example: <code>
+  set_debug(lprec *lp, unsigned char debug)</code> is <code>setDebug(boolean debug)</code> in Java.
+  </li>
+
+<li>Multiple problems may be solved concurrently by multiple threads, as long as a single
+  <code>LpSolve</code> object, which represents a problem, is only used by one thread at a
+  time.</li>
+
+<li>lp_solve does not require client programs to keep argument buffers allocated between calls
+  to different library routines, because all input arguments are copied to internal buffers.
+  Thus, it is easy to avoid memory leaks in the stub library. All objects returned by the
+  Java wrapper routines are allocated by the JVM and are subject to the standard garbage
+  collection process.</li>
+
+<li>The methods <code>get_ptr_sensitivity_rhs</code>, <code>get_ptr_reduced_costs</code>,
+  <code>get_ptr_sensitivity_obj</code>, and <code>get_ptr_sensitivity_objex</code> are not implemented,
+  because it is not possible in Java to pass pointers by reference to a method. Use the corresponding
+  methods without the <code>Ptr</code> part in the method name instead, which require allocation
+  of the resulting arrays by the caller.</li>
+
+<li>See the file <code>reference.html</code> for details on how the lp_solve API functions
+are mapped to the Java methods.</li>
+</ul>
+
+
+<!--
+ * *******************************************************************
+ * PART 5
+ * *******************************************************************
+-->
+<h2><a name="building">5. Building from source</a></h2>
+
+<p>The Java wrapper archive contains precompiled binary libraries for Windows and Linux.
+If you just want to use the wrapper there should be no need to build the libs from the sources.
+But if you absolutely have to, follow the guidelines in this chapter.</p>
+
+<h3><a name="build_win">On Windows OS</a></h3>
+
+The following prerequisites must be met in order to build the wrapper C library from source
+on Windows operating systems:
+
+<ul>
+<li>Microsoft Visual C++ compiler (I used V 7, others might work)</li>
+<li>Visual Studio envirement variables must be set.</li>
+<li>Sun Java Development Kit 1.4.x installed and JAVA_HOME environment variable set</li>
+<li>lp_solve Windows development archive <code>lp_solve_5.5_dev.zip</code> unpacked</li>
+</ul>
+
+Change to the <code>lib</code> directory and edit the file <code>build.bat</code>.
+Change the path to the directory where you unpacked the lp_solve Windows
+archive. Run the script to build <code>lpsolve55j.dll</code>.
+The dll will be created in directory win32 or win64 depending on the OS.
+
+
+<h3><a name="build_linux">On Linux</a></h3>
+
+The following prerequisites must be met in order to build the wrapper C library from source
+on Linux operating systems:
+
+<ul>
+<li>gcc and g++ compiler installed (I used gcc Version 3.3.1)</li>
+<li>Sun Java Development Kit 1.4.x installed</li>
+<li>lp_solve Linux development archive <code>lp_solve_5.5_dev.tar.gz</code> unpacked</li>
+</ul>
+
+Change to the <code>lib</code> directory and edit the file <code>build</code>.
+Change the paths to the directory where you unpacked the lp_solve linux archive
+and where the JDK is installed.
+Run <code>sh build</code> to build <code>liblpsolve55j.so</code>.
+The dll will be created in directory ux32 or ux64 depending on the OS.
+
+
+<h3><a name="build_mac">On Mac OS X</a></h3>
+
+<p>Change to the <code>lib/mac</code> directory and edit the file <code>build_osx</code>.
+Change the directory paths as indicated in the comments.
+Thanks to Sean P. Kane (spkane@genomatica.com) who provided this build script.</p>
+
+<!--
+ * *******************************************************************
+ * PART 6
+ * *******************************************************************
+-->
+<h2><a name="jython">6. Calling lp_solve from Python/Jython</a></h2>
+
+<p>
+Jython (<a href="http://www.jython.org">http://www.jython.org</a>) is a 100% Java implementation of
+the popular scripting language Python.
+One of the most remarkable features of Jython is the seamless interaction between Python and Java.
+Java programmers can add the Jython libraries to their system to allow end users to write scripts that add
+functionality to the application. On the other hand, Python/Jython programs can interact with Java packages
+or with running Java applications.
+</p>
+
+<p>lp_solve functions can be called via the Java wrapper from Python/Jython programs.
+See the file <code>demo.py</code> in the <code>demo</code> directory of the Java wrapper distribution
+for an example program.
+To run this program, you must install lp_solve, the Java wrapper, and Jython. Don't forget
+to include <code>lpsolve55j.jar</code> in the Java CLASSPATH when you run Jython.
+</p>
+
+
+</body>
+</html>

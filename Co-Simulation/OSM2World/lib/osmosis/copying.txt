@@ -1,0 +1,15 @@
+Osmosis consists of all files in this archive with the exception of the
+third party libraries in the lib and repo subdirectories.
+
+Osmosis is placed into the public domain and where this is not legally
+possible everybody is granted a perpetual, irrevocable license to use
+this work for any purpose whatsoever.
+
+DISCLAIMERS
+By making Osmosis publicly available, it is hoped that users will find the
+software useful.  However:
+* Osmosis comes without any warranty, to the extent permitted by applicable
+law.
+* Unless required by applicable law, no liability will be accepted by
+the authors and distributors of this software for any damages caused
+as a result of its use. 

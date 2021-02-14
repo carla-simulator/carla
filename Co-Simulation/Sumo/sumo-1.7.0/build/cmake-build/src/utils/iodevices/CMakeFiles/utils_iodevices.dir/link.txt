@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutils_iodevices.a  CMakeFiles/utils_iodevices.dir/OutputDevice.cpp.o CMakeFiles/utils_iodevices.dir/OutputDevice_CERR.cpp.o CMakeFiles/utils_iodevices.dir/OutputDevice_COUT.cpp.o CMakeFiles/utils_iodevices.dir/OutputDevice_File.cpp.o CMakeFiles/utils_iodevices.dir/OutputDevice_String.cpp.o CMakeFiles/utils_iodevices.dir/OutputDevice_Network.cpp.o CMakeFiles/utils_iodevices.dir/PlainXMLFormatter.cpp.o
-/usr/bin/ranlib libutils_iodevices.a

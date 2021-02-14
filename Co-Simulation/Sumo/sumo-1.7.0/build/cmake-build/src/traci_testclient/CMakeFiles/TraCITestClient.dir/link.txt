@@ -1,1 +1,0 @@
-/usr/bin/c++   -std=c++11 -pthread -Wall -pedantic -Wextra -O3 -DNDEBUG  -rdynamic CMakeFiles/TraCITestClient.dir/tracitestclient_main.cpp.o CMakeFiles/TraCITestClient.dir/TraCITestClient.cpp.o  -o ../../../../bin/TraCITestClient ../utils/traci/libutils_traci.a ../foreign/tcpip/libforeign_tcpip.a 

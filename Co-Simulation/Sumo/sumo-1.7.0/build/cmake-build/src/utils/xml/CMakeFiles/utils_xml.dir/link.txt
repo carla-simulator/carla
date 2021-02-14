@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutils_xml.a  CMakeFiles/utils_xml.dir/GenericSAXHandler.cpp.o CMakeFiles/utils_xml.dir/SUMOSAXAttributes.cpp.o CMakeFiles/utils_xml.dir/SUMOSAXAttributesImpl_Xerces.cpp.o CMakeFiles/utils_xml.dir/SUMOSAXAttributesImpl_Cached.cpp.o CMakeFiles/utils_xml.dir/SUMOSAXHandler.cpp.o CMakeFiles/utils_xml.dir/SUMOSAXReader.cpp.o CMakeFiles/utils_xml.dir/SUMOXMLDefinitions.cpp.o CMakeFiles/utils_xml.dir/SAXWeightsHandler.cpp.o CMakeFiles/utils_xml.dir/XMLSubSys.cpp.o
-/usr/bin/ranlib libutils_xml.a

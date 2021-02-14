@@ -1,5 +1,0 @@
-<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
-
-	<vTypeProbe id="test1" type="DEFAULT_VEHTYPE" freq="10" file="vtypeprobe.xml"/>
-
-</additional>

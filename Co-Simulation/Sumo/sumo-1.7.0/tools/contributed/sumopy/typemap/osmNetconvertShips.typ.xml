@@ -1,4 +1,0 @@
-<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/types_file.xsd">
-    <type id="waterway.river" width="7" numLanes="1" speed="10" priority="13" oneway="false" allow="ship"/>
-    <type id="waterway.canal" width="5" numLanes="1" speed="10" priority="13" oneway="false" allow="ship"/>
-</types>

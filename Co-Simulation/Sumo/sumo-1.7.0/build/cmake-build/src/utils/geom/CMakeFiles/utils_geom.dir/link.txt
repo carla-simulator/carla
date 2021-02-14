@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutils_geom.a  CMakeFiles/utils_geom.dir/Boundary.cpp.o CMakeFiles/utils_geom.dir/Bresenham.cpp.o CMakeFiles/utils_geom.dir/GeomConvHelper.cpp.o CMakeFiles/utils_geom.dir/GeoConvHelper.cpp.o CMakeFiles/utils_geom.dir/GeomHelper.cpp.o CMakeFiles/utils_geom.dir/Position.cpp.o CMakeFiles/utils_geom.dir/PositionVector.cpp.o
-/usr/bin/ranlib libutils_geom.a

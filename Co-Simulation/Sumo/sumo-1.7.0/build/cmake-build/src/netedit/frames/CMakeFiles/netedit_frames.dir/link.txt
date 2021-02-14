@@ -1,2 +1,0 @@
-/usr/bin/ar qc libnetedit_frames.a  CMakeFiles/netedit_frames.dir/GNEFrame.cpp.o CMakeFiles/netedit_frames.dir/GNEFrameModuls.cpp.o CMakeFiles/netedit_frames.dir/GNEFrameAttributesModuls.cpp.o
-/usr/bin/ranlib libnetedit_frames.a

@@ -46,3 +46,8 @@ echo "export SUMO_HOME=/usr/local/share/sumo" >> ~/.bashrc
 echo "cd ~/Downloads/omnetpp-5.6.2/" >> ~/.bashrc
 echo "source setenv" >> ~/.bashrc
 echo "cd ~/" >> ~/.bashrc
+
+# ----- set env to environment -----
+sudo cp /vagrant/sshd_config /etc/ssh/
+echo "SUMO_HOME=/usr/local/share/sumo" >> ~/.ssh/environment
+sudo /etc/init.d/ssh restart

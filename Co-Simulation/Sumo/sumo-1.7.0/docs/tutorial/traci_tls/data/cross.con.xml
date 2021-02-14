@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<connections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/connections_file.xsd">
-	<connection from="1i" to="2o"/>
-	<connection from="2i" to="1o"/>
-	<connection from="3i" to="4o"/>
-	<connection from="4i" to="3o"/>
-</connections>

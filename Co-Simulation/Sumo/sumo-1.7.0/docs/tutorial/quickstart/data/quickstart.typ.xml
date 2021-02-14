@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<types>
-   <type id="a" priority="3" numLanes="3" speed="13.889"/>
-   <type id="b" priority="3" numLanes="2" speed="13.889"/>
-   <type id="c" priority="2" numLanes="3" speed="13.889"/>
-</types>

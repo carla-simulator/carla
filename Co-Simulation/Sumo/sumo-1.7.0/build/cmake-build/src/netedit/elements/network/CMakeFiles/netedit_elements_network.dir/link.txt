@@ -1,2 +1,0 @@
-/usr/bin/ar qc libnetedit_elements_network.a  CMakeFiles/netedit_elements_network.dir/GNENetworkElement.cpp.o CMakeFiles/netedit_elements_network.dir/GNEEdge.cpp.o CMakeFiles/netedit_elements_network.dir/GNELane.cpp.o CMakeFiles/netedit_elements_network.dir/GNEInternalLane.cpp.o CMakeFiles/netedit_elements_network.dir/GNEConnection.cpp.o CMakeFiles/netedit_elements_network.dir/GNECrossing.cpp.o CMakeFiles/netedit_elements_network.dir/GNEJunction.cpp.o CMakeFiles/netedit_elements_network.dir/GNEProhibition.cpp.o
-/usr/bin/ranlib libnetedit_elements_network.a

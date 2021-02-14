@@ -1,0 +1,29 @@
+/* Simple vertex shader with vertex position texture layers computation
+ */
+#version 130
+
+// per vertex input
+in vec3 VertexPosition;
+in vec2 VertexTexCoord0;
+in vec2 VertexTexCoord1;
+in vec2 VertexTexCoord2;
+in vec2 VertexTexCoord3;
+
+// input for at least primitives
+uniform mat4 ModelViewProjectionMatrix;
+
+// output to fragment shader for interpolation
+out vec2 TexCoord0;
+out vec2 TexCoord1;
+out vec2 TexCoord2;
+out vec2 TexCoord3;
+
+void main()
+{
+	TexCoord0 = VertexTexCoord0;
+	TexCoord1 = VertexTexCoord1;
+	TexCoord2 = VertexTexCoord2;
+	TexCoord3 = VertexTexCoord3;
+	
+	gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);
+} 

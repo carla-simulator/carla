@@ -1,2 +1,0 @@
-/usr/bin/ar qc libutils_vehicle.a  CMakeFiles/utils_vehicle.dir/SUMORouteHandler.cpp.o CMakeFiles/utils_vehicle.dir/SUMORouteLoader.cpp.o CMakeFiles/utils_vehicle.dir/SUMORouteLoaderControl.cpp.o CMakeFiles/utils_vehicle.dir/SUMOVehicleParameter.cpp.o CMakeFiles/utils_vehicle.dir/SUMOVehicleParserHelper.cpp.o CMakeFiles/utils_vehicle.dir/SUMOVTypeParameter.cpp.o
-/usr/bin/ranlib libutils_vehicle.a

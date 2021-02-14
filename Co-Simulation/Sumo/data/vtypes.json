@@ -89,6 +89,9 @@
         },
         "vehicle.bh.crossbike": {
             "vClass": "bicycle"
+        },
+	"veh_passenger": {
+            "vClass": "passenger"
         }
     }
 }

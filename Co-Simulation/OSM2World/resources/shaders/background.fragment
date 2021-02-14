@@ -1,0 +1,19 @@
+/* Simple fragment shader for drawing a 2d geometry with texture to screen
+ */ 
+#version 130
+	
+uniform mat4 ModelViewMatrix;
+ 
+// corresponds with output from vertex shader, gets interpolated
+in vec2 TexCoord;
+ 
+// output to buffer
+out vec4 FragColor;
+
+uniform sampler2D Tex;
+
+
+void main()
+{
+	FragColor = texture2D(Tex, TexCoord); 
+} 

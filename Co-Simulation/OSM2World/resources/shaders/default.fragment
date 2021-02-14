@@ -1,0 +1,304 @@
+/* Fragment shader with a per fragment phong lighting model, bumpmaps/normalmaps, shadowmaps and SSAO.
+ */ 
+#version 130
+// TODO: set from java to match MAX_TEXTURE_LAYERS there
+#define MAX_TEXTURE_LAYERS 4
+#define SSAO_RANDOM_ROTATION
+	
+uniform bool isShadowed;
+uniform bool useLighting;
+struct LightInfo {
+	vec4 Position; // Light position in world coords.
+	vec3 La; // Ambient light intensity
+	vec3 Ld; // Diffuse light intensity
+	vec3 Ls; // Specular light intensity
+};
+uniform LightInfo Light;
+	
+struct MaterialInfo {
+	vec3 Color; // Material color
+	float Ka; // Ambient reflectivity
+	float Kd; // Diffuse reflectivity
+	float Ks; // Specular reflectivity
+	int Shininess; // Specular shininess factor
+};
+uniform MaterialInfo Material;
+
+uniform mat4 ModelViewMatrix;
+uniform mat4 ProjectionMatrix;
+ 
+// corresponds with output from vertex shader, gets interpolated
+in vec3 VertexEye;
+in vec3 NormalEye;
+in vec4 TangentEye;
+in vec2 BumpMapCoord;
+in vec4 ShadowCoord;
+in vec2 TexCoord0;
+in vec2 TexCoord1;
+in vec2 TexCoord2;
+in vec2 TexCoord3;
+
+uniform bool useTexture[MAX_TEXTURE_LAYERS];
+uniform sampler2D Tex[MAX_TEXTURE_LAYERS];
+uniform sampler2D BumpMap;
+uniform bool useShadowMap;
+uniform sampler2DShadow ShadowMap;
+
+uniform bool useSSAO;
+uniform sampler2D DepthMap;
+uniform sampler2D NoiseTex;
+uniform vec2 uNoiseScale;
+const int MAX_KERNEL_SIZE = 128;
+const float SSAO_SAMPLE_THRESHOLD = 0.15;
+uniform int uKernelSize;
+uniform vec3 uKernelOffsets[MAX_KERNEL_SIZE];
+uniform float uRadius = 1;
+
+uniform bool useAlphaTreshold;
+uniform float alphaTreshold;
+
+uniform bool useBumpMaps;
+ 
+// output to buffer
+out vec4 FragColor;
+
+/*
+ * shading with phong model (ambient, diffuse, specular)
+ * lightDir, viewDir and norm have to be in the same coordinate system (e.g. eye or tangent space)
+ */
+vec3 phongModel( vec3 lightDir, vec3 viewDir, vec3 norm, out vec3 ambient, out vec3 diffuse, out vec3 spec )
+{	
+	vec3 r = reflect( -lightDir, norm );
+	ambient = Light.La;
+	float sDotN = max( dot(lightDir,norm), 0.0 );
+	diffuse = Light.Ld * sDotN;
+	spec = vec3(0.0);
+	if( sDotN > 0.0 )
+		spec = Light.Ls *
+				pow( max( dot(r,viewDir), 0.0 ), Material.Shininess );
+	return ambient + diffuse + spec;
+}
+
+const int levels = 3;
+const float scaleFactor = 1.0 / levels;
+// toon shading (only ambient and diffuse)
+vec3 toonShade( vec3 lightDir, vec3 norm, out vec3 ambient, out vec3 diffuse )
+{
+	ambient = Light.La;
+	float cosine = max( dot(lightDir,norm) , 0.0 );
+	diffuse = Light.Ld * floor( cosine * levels ) * scaleFactor;
+	
+	return ambient + diffuse;
+}
+
+//float linearizeDepthPerspective(in float depth, in mat4 projMatrix) {
+//	return -projMatrix[3][2] / ((depth*2-1.0) + projMatrix[2][2]);
+//}
+
+float linearizeDepth(in float depth, in mat4 projMatrix) {
+	float zNDC = depth*2-1.0;
+	return -(zNDC * projMatrix[3][3] - projMatrix[3][2]) / (zNDC * projMatrix[2][3] - projMatrix[2][2]);
+}
+
+float ssao( vec3 origin, vec3 normal, out vec3 debug )
+{
+	/*
+	vec3 rvec = texture(uTexRandom, vTexcoord * uNoiseScale).xyz * 2.0 - 1.0;
+	vec3 tangent = normalize(rvec - normal * dot(rvec, normal));
+	vec3 bitangent = cross(normal, tangent);
+	mat3 tbn = mat3(tangent, bitangent, normal);
+	*/
+#ifdef SSAO_RANDOM_ROTATION
+	//vec3 rvec = texture(NoiseTex, gl_FragCoord.xy * uNoiseScale).xyz; 
+	vec3 rvec = texture(NoiseTex, gl_FragCoord.xy/4.0).xyz; 
+	//vec3 rvec = vec3(gl_FragCoord.xy, 0.0);
+#else 
+	vec3 rvec = vec3(1.0, 0.0, 0.0);
+#endif
+	vec3 tangent = normalize(rvec - normal * dot(rvec, normal));
+	//vec3 c1 = cross(normal, vec3(0.0, 0.0, 1.0));
+	//vec3 c2 = cross(normal, vec3(0.0, 1.0, 0.0)); 
+	//tangent = normalize(length(c1) > length(c2) ? c1 : c2);
+	vec3 bitangent = cross(normal, tangent);
+	mat3 tbn = mat3(tangent, bitangent, normal);
+	
+	float occlusion = 0.0;
+	int skipped = 0;
+	// performance improvement: loop could be unrolled with constant kernel size
+	for (int i = 0; i < uKernelSize; ++i)
+	{
+		// get sample position:
+		vec3 sample = tbn * (uKernelOffsets[i]);
+		//vec3 sample = uKernelOffsets[i];
+		/*if ( dot(sample, normal) < SSAO_SAMPLE_THRESHOLD )
+		{
+			skipped += 1;
+			continue;
+		}*/
+		sample = sample * uRadius + origin;
+		
+		// project sample position:
+		vec4 offset = vec4(sample, 1.0);
+		offset = ProjectionMatrix * offset;
+		offset.xy /= offset.w;
+		offset.xy = offset.xy * 0.5 + 0.5;
+		
+		// skip samples outside of depth map texture
+		if ( offset.x < 0 || offset.y < 0 || offset.x > 1 || offset.y > 1 )
+		{
+			skipped += 1;
+			continue;
+		}
+		
+		// get sample depth:
+		float sampleDepth = texture(DepthMap, offset.xy).r;
+		sampleDepth = linearizeDepth(sampleDepth, ProjectionMatrix);
+		  
+		// range check & accumulate:
+		//float rangeCheck= abs(origin.z - sampleDepth) < uRadius ? 1.0 : 0.0;
+		//occlusion += (sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck;
+		float rangeCheck = smoothstep(0.0, 1.0, uRadius / abs(origin.z - sampleDepth));
+		occlusion += rangeCheck * step(sample.z, sampleDepth);
+	}
+	
+	//debug = tbn * vec3(0.0, 0.0, 1.0);
+	//debug = vec3(skipped/float(255));
+	debug = rvec;
+	
+	/*vec4 test = ProjectionMatrix * vec4(origin, 1.0);
+	test.xy /= test.w;
+	test.xy = test.xy * 0.5 + 0.5;
+	float d = texture(DepthMap, test.xy).r;
+	d = linearizeDepth(d, ProjectionMatrix);
+	return abs(origin.z - d);
+	return origin.z - linearizeDepth(((test.z / test.w)*0.5 + 0.5), ProjectionMatrix);
+	//return 1.0 - abs(((test.z / test.w)*0.5 + 0.5) - d);
+	*/
+	
+	// normalize and invert
+	if ( uKernelSize > skipped )
+		occlusion = 1.0 - (occlusion / float(uKernelSize-skipped));
+	else
+		occlusion = 1.0;
+	//occlusion = occlusion / float(uKernelSize);
+	return occlusion;
+}
+ 
+void main()
+{
+	vec3 ambient, diff, spec=vec3(0.0);
+	vec4 texColor = vec4(1.0);
+
+	// apply textures
+	// TODO: autogenerate based on MAX_TEXTURE_LAYERS
+	if ( useTexture[0] ) {
+		texColor = texture( Tex[0], TexCoord0 );
+	}
+	texColor = texColor * vec4(Material.Color, 1.0); // color first layer only
+	if ( useTexture[1] ) {
+		vec4 layerColor = texture( Tex[1], TexCoord1 );
+		texColor = mix(texColor, vec4(layerColor.rgb,1), layerColor.a);
+	}
+	if ( useTexture[2] ) {
+		vec4 layerColor = texture( Tex[2], TexCoord2 );
+		texColor = mix(texColor, vec4(layerColor.rgb,1), layerColor.a);
+	}
+	if ( useTexture[3] ) {
+		vec4 layerColor = texture( Tex[3], TexCoord3 );
+		texColor = mix(texColor, vec4(layerColor.rgb,1), layerColor.a);
+	}
+	
+	if ( useLighting ) {
+		vec3 normalEye = normalize(NormalEye);
+		
+		float occlusionFactor = 1.0;
+		vec3 debug = vec3(0.0);
+		if ( useSSAO )
+			occlusionFactor = ssao( VertexEye, normalEye, debug );
+		
+		if ( isShadowed ) {
+			ambient = Light.La;
+			diff = vec3(0.0);
+		} else {
+			vec3 viewDirection, lightDirection;
+			vec4 lightPositionEye = ModelViewMatrix * Light.Position;
+			
+			// transform light and view direction to eye space
+			
+			if( ProjectionMatrix[3][3] == 0.0 )
+				viewDirection = normalize(-VertexEye); // perspective projection
+			else
+				viewDirection = vec3(0.0, 0.0, 1.0); // orthographic projection: camera is infinite far away, so vertex coordinates don't matter
+			
+			// directional light?
+			if( Light.Position.w == 0.0 )
+				lightDirection = normalize(vec3(lightPositionEye));
+			else
+				lightDirection = normalize(vec3(lightPositionEye) - VertexEye);
+			
+			vec3 normal = normalEye;
+			if ( useBumpMaps ) {
+				vec3 tangentEye = normalize(TangentEye.xyz);
+				// compute bitangent
+				vec3 bitangentEye = normalize( cross( normalEye, tangentEye ) ) * TangentEye.w;
+		
+				// transformation from eye to tangent space
+				mat3 tangentMatrix = mat3(
+					tangentEye.x, bitangentEye.x, normalEye.x,
+					tangentEye.y, bitangentEye.y, normalEye.y,
+					tangentEye.z, bitangentEye.z, normalEye.z );
+			
+				// transform light and view direction to tangent space
+				viewDirection = tangentMatrix * viewDirection;
+				lightDirection = tangentMatrix * lightDirection;
+				normal = normalize(texture( BumpMap, BumpMapCoord ).xyz * 2.0 - 1.0);
+			}
+			
+			phongModel( lightDirection, viewDirection, normal, ambient, diff, spec );
+			//toonShade( lightDirection, normal, ambient, diff );
+		}
+		
+		// shadow map lookup
+		float shadowFactor = 1.0;
+		if ( useShadowMap ) {
+			//vec3 shadowCoordCart = ShadowCoord.xyz / ShadowCoord.w; // from homogene coordiantes to carthesian
+			//float shadowDepthValue = texture(ShadowMap, shadowCoordCart.xy).r; // lookup of depth value in shadow map
+			//float fragmentDepthValue = shadowCoordCart.z; // fragment depth value to compare
+			//if (shadowDepthValue < fragmentDepthValue)
+			//	shadowFactor = 0.0; // in shadow
+			
+			// PCF (percentage closer filtering): blur with adjacent shadow map comparison results
+			float sum = 0 ;
+			// Sum contributions from texels around ShadowCoord
+			sum += textureProjOffset(ShadowMap, ShadowCoord, ivec2(-1,-1));
+			sum += textureProjOffset(ShadowMap, ShadowCoord, ivec2(-1,1));
+			sum += textureProjOffset(ShadowMap, ShadowCoord, ivec2(1,1));
+			sum += textureProjOffset(ShadowMap, ShadowCoord, ivec2(1,-1));
+			shadowFactor = sum * 0.25;
+		}
+		if ( isShadowed )
+			shadowFactor = 0.0;
+		
+		diff = diff * shadowFactor * occlusionFactor;
+		spec = spec * shadowFactor * occlusionFactor;
+		ambient = ambient * occlusionFactor;
+		
+		FragColor = vec4(ambient*Material.Ka + diff*Material.Kd, 1.0) * texColor + vec4(spec*Material.Ks, 0.0);
+		//FragColor = texColor;
+		//FragColor = vec4(occlusionFactor, occlusionFactor, occlusionFactor, FragColor.a);
+		//FragColor = vec4(normalEye, FragColor.a);
+		//FragColor = vec4(debug, FragColor.a);
+	} else {
+		FragColor = texColor;
+	}
+	
+	if ( useAlphaTreshold ) {
+		if ( FragColor.a < alphaTreshold )
+			FragColor.a = 0.0;
+		else
+			FragColor.a = 1.0;
+	}
+		
+	if( FragColor.a < 0.01 )
+		discard;
+} 

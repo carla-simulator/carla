@@ -1,2 +1,0 @@
-/usr/bin/ar qc libmicrosim_lcmodels.a  CMakeFiles/microsim_lcmodels.dir/MSAbstractLaneChangeModel.cpp.o CMakeFiles/microsim_lcmodels.dir/MSLCHelper.cpp.o CMakeFiles/microsim_lcmodels.dir/MSLCM_DK2008.cpp.o CMakeFiles/microsim_lcmodels.dir/MSLCM_LC2013.cpp.o CMakeFiles/microsim_lcmodels.dir/MSLCM_SL2015.cpp.o
-/usr/bin/ranlib libmicrosim_lcmodels.a
