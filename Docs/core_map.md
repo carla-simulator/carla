@@ -243,10 +243,10 @@ Non-layered maps are shown in the table below (click the town name to see an ove
 
 ### Layered maps
 
-The layout of layered maps is the same as non-layered maps but it is possible to toggle off and on the layers of the map. Layered maps can be idenitified by the suffix `_Opt`, for example, `Town01_Opt`. With these maps it is possible to [load][load_layer] and [unload][unload_layer] layers via the Python API:
+The layout of layered maps is the same as non-layered maps but it is possible to toggle off and on the layers of the map. There is a minimum layout that cannot be toggled off and consists of roads, sidewalks, traffic lights and traffic signs. Layered maps can be identified by the suffix `_Opt`, for example, `Town01_Opt`. With these maps it is possible to [load][load_layer] and [unload][unload_layer] layers via the Python API:
 
-		# Load layered map for Town 01
-		world = client.load_world('Town01_Opt')
+		# Load layered map for Town 01 with minimum layout plus buildings and parked vehicles
+		world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles)
 
 		# Toggle all buildings off
 		world.unload_map_layer(carla.MapLayer.Buildings)
