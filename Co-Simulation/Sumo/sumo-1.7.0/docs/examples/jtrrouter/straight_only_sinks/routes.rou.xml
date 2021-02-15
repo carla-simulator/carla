@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:39 2019 by Eclipse SUMO jtrrouter Version v1_2_0+0017-2a947141e5
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/jtrrouterConfiguration.xsd">
+
+    <input>
+        <net-file value="input_net.net.xml"/>
+        <route-files value="input_flows.flows.xml"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <output-file value="routes.rou.xml"/>
+    </output>
+
+    <processing>
+        <no-internal-links value="true"/>
+        <turn-defaults value="0,100,0,0"/>
+        <sink-edges value="end"/>
+    </processing>
+
+    <report>
+        <ignore-errors value="true"/>
+        <no-step-log value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+    <vehicle id="0.0" depart="0.00">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.1" depart="0.01">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.2" depart="0.02">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.3" depart="0.03">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.4" depart="0.04">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.5" depart="0.05">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.6" depart="0.06">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.7" depart="0.07">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.8" depart="0.08">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.9" depart="0.09">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.10" depart="0.10">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.11" depart="0.11">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.12" depart="0.12">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.13" depart="0.13">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.14" depart="0.14">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.15" depart="0.15">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.16" depart="0.16">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.17" depart="0.17">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.18" depart="0.18">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.19" depart="0.19">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.20" depart="0.20">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.21" depart="0.21">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.22" depart="0.22">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.23" depart="0.23">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.24" depart="0.24">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.25" depart="0.25">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.26" depart="0.26">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.27" depart="0.27">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.28" depart="0.28">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.29" depart="0.29">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.30" depart="0.30">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.31" depart="0.31">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.32" depart="0.32">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.33" depart="0.33">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.34" depart="0.34">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.35" depart="0.35">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.36" depart="0.36">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.37" depart="0.37">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.38" depart="0.38">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.39" depart="0.39">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.40" depart="0.40">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.41" depart="0.41">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.42" depart="0.42">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.43" depart="0.43">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.44" depart="0.44">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.45" depart="0.45">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.46" depart="0.46">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.47" depart="0.47">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.48" depart="0.48">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.49" depart="0.49">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.50" depart="0.50">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.51" depart="0.51">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.52" depart="0.52">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.53" depart="0.53">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.54" depart="0.54">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.55" depart="0.55">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.56" depart="0.56">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.57" depart="0.57">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.58" depart="0.58">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.59" depart="0.59">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.60" depart="0.60">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.61" depart="0.61">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.62" depart="0.62">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.63" depart="0.63">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.64" depart="0.64">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.65" depart="0.65">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.66" depart="0.66">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.67" depart="0.67">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.68" depart="0.68">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.69" depart="0.69">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.70" depart="0.70">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.71" depart="0.71">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.72" depart="0.72">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.73" depart="0.73">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.74" depart="0.74">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.75" depart="0.75">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.76" depart="0.76">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.77" depart="0.77">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.78" depart="0.78">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.79" depart="0.79">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.80" depart="0.80">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.81" depart="0.81">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.82" depart="0.82">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.83" depart="0.83">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.84" depart="0.84">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.85" depart="0.85">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.86" depart="0.86">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.87" depart="0.87">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.88" depart="0.88">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.89" depart="0.89">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.90" depart="0.90">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.91" depart="0.91">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.92" depart="0.92">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.93" depart="0.93">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.94" depart="0.94">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.95" depart="0.95">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.96" depart="0.96">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.97" depart="0.97">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.98" depart="0.98">
+        <route edges="beg middle end"/>
+    </vehicle>
+    <vehicle id="0.99" depart="0.99">
+        <route edges="beg middle end"/>
+    </vehicle>
+</routes>

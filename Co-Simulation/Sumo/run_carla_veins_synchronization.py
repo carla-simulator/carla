@@ -59,6 +59,7 @@ def main(args, env):
 
         logging.info("Running Carla-Sumo synchronizer.")
         carla_sumo_synchronizer_proc = Popen(f"python run_synchronization.py {sumo_files['sumocfg']} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host}", shell=True)
+
         procs.append(carla_sumo_synchronizer_proc)
 
         # ----- start veins-sumo synchronizer -----
@@ -76,6 +77,7 @@ def main(args, env):
         # ----- start carla-veins data synchronizer -----
         logging.info("Running Carla-Veins data synchronizer.")
         data_server_proc = Popen(f"python carla_veins_data_server --host {args.data_api_host} --port {args.data_api_port} > /dev/null 2>&1", shell=True)
+
         procs.append(data_server_proc)
 
         # ----- start two-traci synchronizer -----
@@ -128,6 +130,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_api_port', default=9998)
 
     parser.add_argument('--main_mobility_handler', default=env["mobility_handler_choices"][0], choices=env["mobility_handler_choices"])
+
     parser.add_argument('--log_file_path', default="./log/carla_veins_logger.log")
 
     args = parser.parse_args()

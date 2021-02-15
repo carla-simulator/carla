@@ -1,0 +1,27 @@
+/* XPM */
+static const char *walkfromto_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 5 1 ",
+"  c green",
+". c black",
+"X c red",
+"o c #0026FF",
+"O c white",
+/* pixels */
+"  o             ",
+"  o             ",
+"  o    .......  ",
+"ooooo  .O.O.O.  ",
+" ooo   .......  ",
+"  o    .O. .O.  ",
+".......... ...  ",
+"..X.O.O.O. .O.  ",
+".......... ...  ",
+"           .O.  ",
+"           ...  ",
+"  o        .O.  ",
+"..oo..........  ",
+"ooooo.X.O.O.O.  ",
+"..oo..........  ",
+"  o             "
+};

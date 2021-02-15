@@ -1,0 +1,5 @@
+<types xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/types_file.xsd">
+    <type id="railway.narrow_gauge" numLanes="1" speed="27.78" priority="15" oneway="true"  allow="rail"/>
+    <type id="railway.monorail"     numLanes="1" speed="27.78" priority="15" oneway="true"  allow="rail_urban"/>
+    <type id="railway.funicular"    numLanes="1" speed="27.78" priority="15" oneway="true"  allow="rail_urban"/>
+</types>

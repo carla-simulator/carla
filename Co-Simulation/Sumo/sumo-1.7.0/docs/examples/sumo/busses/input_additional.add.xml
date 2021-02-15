@@ -1,0 +1,31 @@
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <busStop id="busstop1" lane="2/1to1/1_0" startPos="10" endPos="50" lines="100 101 102"/>
+    <busStop id="busstop2" lane="1/2to0/2_0" startPos="20" endPos="40" lines="100 101"/>
+    <busStop id="busstop3" lane="0/1to0/0_0" startPos="20" endPos="40" lines="100 101 102"/>
+    <busStop id="busstop4" lane="1/0to2/0_0" startPos="20" endPos="40" lines="100 101"/>
+    <vType id="BUS" accel="2.6" decel="4.5" sigma="0" length="12" minGap="3" maxSpeed="70" color="1,1,0" guiShape="bus"/>
+
+    <vehicle id="0" type="BUS" depart="0" color="1,1,0">
+        <route edges="2/0to2/1 2/1to1/1 1/1to1/2 1/2to0/2 0/2to0/1 0/1to0/0 0/0to1/0 1/0to2/0 2/0to2/1"/>
+        <stop busStop="busstop1" duration="20"/>
+        <stop busStop="busstop2" duration="20"/>
+        <stop busStop="busstop3" duration="20"/>
+        <stop busStop="busstop4" duration="20"/>
+    </vehicle>
+
+    <vehicle id="1" type="BUS" depart="3" color="1,1,0">
+        <route edges="2/0to2/1 2/1to1/1 1/1to1/2 1/2to0/2 0/2to0/1 0/1to0/0 0/0to1/0 1/0to2/0 2/0to2/1"/>
+        <stop busStop="busstop1" duration="20"/>
+        <stop busStop="busstop2" duration="20"/>
+        <stop busStop="busstop3" duration="20"/>
+        <stop busStop="busstop4" duration="20"/>
+    </vehicle>
+
+    <vehicle id="2" type="BUS" depart="6" color="1,1,0">
+        <route edges="2/0to2/1 2/1to1/1 1/1to1/2 1/2to0/2 0/2to0/1 0/1to0/0 0/0to1/0 1/0to2/0 2/0to2/1"/>
+        <stop busStop="busstop1" duration="20"/>
+        <stop busStop="busstop2" duration="20"/>
+        <stop busStop="busstop3" duration="20"/>
+        <stop busStop="busstop4" duration="20"/>
+    </vehicle>
+</additional>

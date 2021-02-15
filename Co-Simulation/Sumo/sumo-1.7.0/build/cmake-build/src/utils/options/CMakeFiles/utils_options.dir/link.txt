@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_options.a  CMakeFiles/utils_options.dir/Option.cpp.o CMakeFiles/utils_options.dir/OptionsCont.cpp.o CMakeFiles/utils_options.dir/OptionsIO.cpp.o CMakeFiles/utils_options.dir/OptionsLoader.cpp.o CMakeFiles/utils_options.dir/OptionsParser.cpp.o
+/usr/bin/ranlib libutils_options.a

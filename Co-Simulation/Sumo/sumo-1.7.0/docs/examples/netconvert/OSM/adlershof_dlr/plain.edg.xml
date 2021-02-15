@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:39 2019 by Eclipse SUMO netconvert Version v1_2_0+0017-2a947141e5
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <osm-files value="osm.xml"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <output-file value="net.net.xml"/>
+        <plain-output-prefix value="plain"/>
+        <output.street-names value="true"/>
+    </output>
+
+    <projection>
+        <proj.utm value="true"/>
+        <proj.plain-geo value="true"/>
+    </projection>
+
+    <tls_building>
+        <tls.red.time value="10"/>
+    </tls_building>
+
+    <junctions>
+        <no-internal-links value="true"/>
+    </junctions>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<edges version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/edges_file.xsd">
+    <edge id="-22917251" from="32266936" to="32266938" name="Teltowkanalbrücke" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-24214693#0" from="261599791" to="32266935" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" shape="13.520153,52.426821 13.522632,52.426659 13.526713,52.426404" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-24214693#1" from="57343510" to="261599791" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-24214694" from="32266938" to="32266935" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-25951490" from="32266938" to="175648134" priority="1" type="highway.cycleway" numLanes="1" speed="8.33" width="1.00" allow="bicycle"/>
+    <edge id="-26816413#0" from="294168710" to="56231597" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26816413#1" from="294168098" to="294168710" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26816553" from="294168972" to="294168098" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.530151,52.427390 13.530020,52.427475 13.529661,52.427706 13.528957,52.427350 13.528011,52.428054 13.527902,52.428135 13.527938,52.428223" allow="delivery bicycle pedestrian"/>
+    <edge id="-26816590#0" from="294169338" to="294168098" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26816590#1" from="294169339" to="294169338" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26816590#2" from="294169342" to="294169339" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.526893,52.428083 13.527121,52.428072 13.527618,52.428046" allow="delivery bicycle pedestrian"/>
+    <edge id="-26816627" from="294169618" to="294169338" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26843019" from="294829798" to="294829385" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26843038#0" from="294830184" to="294829881" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26843038#1" from="294830188" to="294830184" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.533834,52.429685 13.533448,52.429460 13.533106,52.429692" allow="delivery bicycle pedestrian"/>
+    <edge id="-26843038#2" from="294830184" to="294830188" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.533106,52.429692 13.533465,52.429910 13.533834,52.429685" allow="delivery bicycle pedestrian"/>
+    <edge id="-26843133#0" from="294831560" to="294169339" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="-26843133#1" from="294831562" to="294831560" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.527010,52.427524 13.527568,52.427513 13.527610,52.427957" allow="delivery bicycle pedestrian"/>
+    <edge id="-26843133#2" from="294831560" to="294831562" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.527610,52.427957 13.527053,52.427974 13.527010,52.427524" allow="delivery bicycle pedestrian"/>
+    <edge id="-5198584" from="36268382" to="36268416" name="Justus-von-Liebig-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.540695,52.430366 13.538150,52.428794 13.535163,52.427083" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#0" from="294168972" to="36268369" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.530151,52.427390 13.529370,52.426957 13.529166,52.426785 13.529100,52.426299" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#1" from="36268375" to="294168972" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#2" from="36268376" to="36268375" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#3" from="294829798" to="36268376" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#4" from="36268431" to="294829798" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#5" from="36268378" to="36268431" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#6" from="283720461" to="36268378" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#7" from="283719736" to="283720461" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198585#8" from="36268381" to="283719736" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.538095,52.431910 13.536584,52.430968 13.535726,52.430471 13.535033,52.430102" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198586#0" from="36268406" to="36268415" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198586#1" from="36268376" to="36268406" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198586#2" from="36268417" to="36268376" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198586#3" from="36268416" to="36268417" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198586#4" from="261636677" to="36268416" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.536137,52.426459 13.535889,52.426577 13.535163,52.427083" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198587" from="36268392" to="36268431" name="Gustav-Kirchhoff-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198588#0" from="36268392" to="36268417" name="Max-Planck-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198588#1" from="36268391" to="36268392" name="Max-Planck-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198596#0" from="294829881" to="36268403" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198596#1" from="294829385" to="294829881" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198596#2" from="36268406" to="294829385" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198596#3" from="36268408" to="36268406" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198596#4" from="36268411" to="36268408" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198597#0" from="36268411" to="36268375" name="Rutherfordstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198597#1" from="56231597" to="36268411" name="Rutherfordstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.528908,52.428788 13.529569,52.428411 13.529808,52.428381" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5198597#2" from="56231598" to="56231597" name="Rutherfordstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.528631,52.429094 13.528709,52.429009 13.528908,52.428788" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5784968#0" from="283721348" to="36268378" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5784968#1" from="36268403" to="283721348" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5784968#2" from="283719904" to="36268403" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5784968#3" from="38920778" to="283719904" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5784968#4" from="306982585" to="38920778" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-5784968#5" from="36268398" to="306982585" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137233#0" from="38919880" to="38919927" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137233#1" from="283018845" to="38919880" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137233#2" from="283018932" to="283018845" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137233#3" from="283018933" to="283018932" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.527455,52.429901 13.526855,52.429753 13.525650,52.429554" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137233#4" from="38919712" to="283018933" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137239#0" from="38919854" to="38919880" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.525252,52.429832 13.524692,52.429590 13.524560,52.429479 13.524557,52.429373" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137239#1" from="38919841" to="38919854" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137239#2" from="38919808" to="38919841" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.528423,52.430401 13.527250,52.430411 13.527061,52.430390 13.526923,52.430362" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137239#3" from="38919652" to="38919808" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-6137239#4" from="38919605" to="38919652" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.531044,52.430547 13.530872,52.430437 13.530726,52.430390 13.530580,52.430375 13.528606,52.430390" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7216737#0" from="36268421" to="94487954" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" shape="13.536524,52.425891 13.541888,52.425601 13.543313,52.425528 13.543819,52.425528 13.544411,52.425559 13.544647,52.425591 13.544999,52.425643 13.545248,52.425722" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7216737#1" from="261636678" to="36268421" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7216737#2" from="36268369" to="261636678" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" shape="13.529100,52.426299 13.531039,52.426132 13.533400,52.426001 13.535048,52.425928 13.536086,52.425910" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7216737#3" from="32266935" to="36268369" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7727483#0" from="294169342" to="38920501" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7727483#1" from="261647692" to="294169342" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7727483#2" from="261647702" to="261647692" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.526758,52.426821 13.526777,52.426999 13.526822,52.427416 13.526868,52.427845" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7727483#3" from="32266935" to="261647702" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="-7730464" from="56231598" to="56242441" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="20430080" from="57343359" to="59993001" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.519602,52.428360 13.519671,52.428307 13.519791,52.428229 13.520091,52.428224 13.522400,52.428354 13.524082,52.428438 13.525298,52.428538 13.526752,52.428754" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="22917251" from="32266938" to="32266936" name="Teltowkanalbrücke" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="24152812#0" from="36268421" to="261636677" name="Havestadtplatz" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.536524,52.425891 13.536558,52.426449 13.536137,52.426459" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="24152812#1" from="261636677" to="261636678" name="Havestadtplatz" priority="3" type="highway.residential" numLanes="1" speed="13.89" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="24214693#0" from="32266935" to="261599791" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" shape="13.526713,52.426404 13.522632,52.426659 13.520153,52.426821" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="24214693#1" from="261599791" to="57343510" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="24214694" from="32266935" to="32266938" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="25944590#0" from="283018817" to="283018841" priority="1" type="highway.footway" numLanes="1" speed="2.78" shape="13.528563,52.430263 13.527651,52.430180 13.527333,52.430144 13.527196,52.430112" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944590#1" from="283018841" to="283018842" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944590#2" from="283018842" to="283018844" priority="1" type="highway.footway" numLanes="1" speed="2.78" shape="13.526621,52.430008 13.525737,52.429762 13.525479,52.429673" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944590#3" from="283018844" to="283018845" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944601#0" from="38919854" to="283018844" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944601#1" from="283018844" to="283018932" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944603#0" from="283018933" to="283018841" priority="1" type="highway.footway" numLanes="1" speed="2.78" shape="13.527455,52.429901 13.527367,52.430023 13.527196,52.430112" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944603#1" from="283018841" to="283018937" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944603#2" from="283018937" to="38919841" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25944605" from="283018937" to="283018842" priority="1" type="highway.footway" numLanes="1" speed="2.78" shape="13.526990,52.430269 13.526818,52.430144 13.526621,52.430008" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="25951490" from="175648134" to="32266938" priority="1" type="highway.cycleway" numLanes="1" speed="8.33" width="1.00" allow="bicycle"/>
+    <edge id="26004787#0" from="283719736" to="283721344" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004787#1" from="283721344" to="283722837" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004787#2" from="283722837" to="283719904" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004861#0" from="287944369" to="283721344" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004861#1" from="283721344" to="287944368" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004861#2" from="287944368" to="283721348" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004868#0" from="283719736" to="287944369" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004868#1" from="287944369" to="283721473" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004966#0" from="283722835" to="283721473" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004966#1" from="283721473" to="283722837" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004966#2" from="283722837" to="287944368" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26004966#3" from="287944368" to="283720461" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="26816413#0" from="56231597" to="294168710" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26816413#1" from="294168710" to="294168098" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26816541" from="294168098" to="294168710" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.527938,52.428223 13.527472,52.428271 13.527532,52.428533 13.527841,52.428606 13.528214,52.428384" spreadType="center" allow="delivery bicycle pedestrian"/>
+    <edge id="26816553" from="294168098" to="294168972" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.527938,52.428223 13.527902,52.428135 13.528011,52.428054 13.528957,52.427350 13.529661,52.427706 13.530020,52.427475 13.530151,52.427390" allow="delivery bicycle pedestrian"/>
+    <edge id="26816590#0" from="294168098" to="294169338" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26816590#1" from="294169338" to="294169339" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26816590#2" from="294169339" to="294169342" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.527618,52.428046 13.527121,52.428072 13.526893,52.428083" allow="delivery bicycle pedestrian"/>
+    <edge id="26816627" from="294169338" to="294169618" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26843019" from="294829385" to="294829798" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26843038#0" from="294829881" to="294830184" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26843038#1" from="294830184" to="294830188" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.533106,52.429692 13.533448,52.429460 13.533834,52.429685" allow="delivery bicycle pedestrian"/>
+    <edge id="26843038#2" from="294830188" to="294830184" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.533834,52.429685 13.533465,52.429910 13.533106,52.429692" allow="delivery bicycle pedestrian"/>
+    <edge id="26843133#0" from="294169339" to="294831560" priority="1" type="highway.service" numLanes="1" speed="5.56" allow="delivery bicycle pedestrian"/>
+    <edge id="26843133#1" from="294831560" to="294831562" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.527610,52.427957 13.527568,52.427513 13.527010,52.427524" allow="delivery bicycle pedestrian"/>
+    <edge id="26843133#2" from="294831562" to="294831560" priority="1" type="highway.service" numLanes="1" speed="5.56" shape="13.527010,52.427524 13.527053,52.427974 13.527610,52.427957" allow="delivery bicycle pedestrian"/>
+    <edge id="27437972#0" from="38918157" to="36268398" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.535191,52.432321 13.534800,52.432070 13.533972,52.431562 13.533590,52.431311 13.533333,52.431149 13.533144,52.431044 13.532886,52.430940 13.532637,52.430835" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27437972#1" from="36268398" to="38919668" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.532637,52.430835 13.531358,52.430338 13.530337,52.429869 13.529650,52.429542" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27437972#2" from="38919668" to="38919703" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27437972#3" from="38919703" to="56242441" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.529341,52.429401 13.529144,52.429333 13.528620,52.429186" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27437972#4" from="56242441" to="301292612" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27441168" from="59993001" to="56231397" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27441189" from="301292612" to="38919945" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27441289" from="59993001" to="38920501" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.526752,52.428754 13.526864,52.428430 13.526874,52.428122" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27445000" from="38919945" to="57343359" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.526710,52.428875 13.525289,52.428649 13.524066,52.428533 13.522392,52.428438 13.521568,52.428407 13.519602,52.428360" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27445003" from="56231397" to="301292612" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27445015#0" from="56231397" to="56231598" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27445015#1" from="56231598" to="56242425" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.528631,52.429094 13.529020,52.429184 13.529316,52.429265" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27445015#2" from="56242425" to="36268415" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.529316,52.429265 13.529616,52.429364 13.529913,52.429489 13.530423,52.429703 13.530998,52.429971" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27445015#3" from="36268415" to="38920778" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.530998,52.429971 13.531375,52.430165 13.531685,52.430306 13.531925,52.430406 13.532819,52.430717" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="27445015#4" from="38920778" to="57343487" name="Rudower Chaussee" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.532819,52.430717 13.533298,52.430908 13.533564,52.431049 13.533839,52.431206 13.534251,52.431468 13.535015,52.431960 13.535388,52.432190" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198584" from="36268416" to="36268382" name="Justus-von-Liebig-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.535163,52.427083 13.538150,52.428794 13.540695,52.430366" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#0" from="36268369" to="294168972" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.529100,52.426299 13.529166,52.426785 13.529370,52.426957 13.530151,52.427390" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#1" from="294168972" to="36268375" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#2" from="36268375" to="36268376" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#3" from="36268376" to="294829798" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#4" from="294829798" to="36268431" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#5" from="36268431" to="36268378" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#6" from="36268378" to="283720461" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#7" from="283720461" to="283719736" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198585#8" from="283719736" to="36268381" name="Albert-Einstein-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.535033,52.430102 13.535726,52.430471 13.536584,52.430968 13.538095,52.431910" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198586#0" from="36268415" to="36268406" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198586#1" from="36268406" to="36268376" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198586#2" from="36268376" to="36268417" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198586#3" from="36268417" to="36268416" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198586#4" from="36268416" to="261636677" name="Magnusstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.535163,52.427083 13.535889,52.426577 13.536137,52.426459" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198587" from="36268431" to="36268392" name="Gustav-Kirchhoff-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198588#0" from="36268417" to="36268392" name="Max-Planck-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198588#1" from="36268392" to="36268391" name="Max-Planck-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198596#0" from="36268403" to="294829881" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198596#1" from="294829881" to="294829385" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198596#2" from="294829385" to="36268406" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198596#3" from="36268406" to="36268408" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198596#4" from="36268408" to="36268411" name="Kekuléstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198597#0" from="36268375" to="36268411" name="Rutherfordstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198597#1" from="36268411" to="56231597" name="Rutherfordstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.529808,52.428381 13.529569,52.428411 13.528908,52.428788" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5198597#2" from="56231597" to="56231598" name="Rutherfordstraße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.528908,52.428788 13.528709,52.429009 13.528631,52.429094" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784947#0" from="38919668" to="38919652" name="Max-Born-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.529650,52.429542 13.529522,52.429553 13.529410,52.429579 13.529307,52.429642 13.528606,52.430390" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784947#1" from="38919652" to="38919797" name="Max-Born-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.528606,52.430390 13.528589,52.430427 13.528082,52.431018 13.527211,52.432059" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784950#0" from="38920557" to="38919808" name="Max-Born-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.527113,52.432016 13.527515,52.431516 13.528423,52.430401" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784950#1" from="38919808" to="283018817" name="Max-Born-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784950#2" from="283018817" to="38919712" name="Max-Born-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784950#3" from="38919712" to="38919703" name="Max-Born-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784968#0" from="36268378" to="283721348" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784968#1" from="283721348" to="36268403" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784968#2" from="36268403" to="283719904" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784968#3" from="283719904" to="38920778" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784968#4" from="38920778" to="306982585" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="5784968#5" from="306982585" to="36268398" name="Gottfried-Leibniz-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137233#0" from="38919927" to="38919880" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137233#1" from="38919880" to="283018845" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137233#2" from="283018845" to="283018932" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137233#3" from="283018932" to="283018933" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.525650,52.429554 13.526855,52.429753 13.527455,52.429901" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137233#4" from="283018933" to="38919712" name="Ludwig-Boltzmann-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137239#0" from="38919880" to="38919854" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.524557,52.429373 13.524560,52.429479 13.524692,52.429590 13.525252,52.429832" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137239#1" from="38919854" to="38919841" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137239#2" from="38919841" to="38919808" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.526923,52.430362 13.527061,52.430390 13.527250,52.430411 13.528423,52.430401" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137239#3" from="38919808" to="38919652" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137239#4" from="38919652" to="38919605" name="Carl-Scheele-Straße" priority="3" type="highway.residential" numLanes="1" speed="13.89" shape="13.528606,52.430390 13.530580,52.430375 13.530726,52.430390 13.530872,52.430437 13.531044,52.430547" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="6137245" from="38919945" to="59993001" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7216737#0" from="94487954" to="36268421" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" shape="13.545248,52.425722 13.544999,52.425643 13.544647,52.425591 13.544411,52.425559 13.543819,52.425528 13.543313,52.425528 13.541888,52.425601 13.536524,52.425891" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7216737#1" from="36268421" to="261636678" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7216737#2" from="261636678" to="36268369" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" shape="13.536086,52.425910 13.535048,52.425928 13.533400,52.426001 13.531039,52.426132 13.529100,52.426299" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7216737#3" from="36268369" to="32266935" name="Ernst-Ruska-Ufer" priority="12" type="highway.primary" numLanes="2" speed="27.78" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7727482" from="38920501" to="56231397" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.526921,52.428122 13.526935,52.428412 13.526948,52.428783" spreadType="center" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7727483#0" from="38920501" to="294169342" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7727483#1" from="294169342" to="261647692" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7727483#2" from="261647692" to="261647702" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" shape="13.526868,52.427845 13.526822,52.427416 13.526777,52.426999 13.526758,52.426821" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7727483#3" from="261647702" to="32266935" name="Wegedornstraße" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+    <edge id="7730463" from="56242425" to="36268408" priority="1" type="highway.footway" numLanes="1" speed="2.78" spreadType="center" width="2.00" allow="pedestrian"/>
+    <edge id="7730464" from="56242441" to="56231598" priority="10" type="highway.tertiary" numLanes="1" speed="22.22" disallow="tram rail_urban rail rail_electric ship"/>
+</edges>

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libmicrosim_engine.a  CMakeFiles/microsim_engine.dir/EngineParameters.cpp.o CMakeFiles/microsim_engine.dir/FirstOrderLagModel.cpp.o CMakeFiles/microsim_engine.dir/GenericEngineModel.cpp.o CMakeFiles/microsim_engine.dir/RealisticEngineModel.cpp.o CMakeFiles/microsim_engine.dir/VehicleEngineHandler.cpp.o
+/usr/bin/ranlib libmicrosim_engine.a

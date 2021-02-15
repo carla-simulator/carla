@@ -1,0 +1,26 @@
+/* XPM */
+static const char *modestop_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 4 1 ",
+"  c red",
+". c #FFA3A3",
+"X c gray100",
+"o c None",
+/* pixels */
+"ooooo......ooooo",
+"oooo.      .oooo",
+"ooo.        .ooo",
+"oo.          .oo",
+"o.            .o",
+".              .",
+".XX XXX XXX XXX.",
+".X   X  X X X X.",
+".XX  X  X X XXX.",
+". X  X  X X X  .",
+".XX  X  XXX X  .",
+"o.            .o",
+"oo.          .oo",
+"ooo.        .ooo",
+"oooo.      .oooo",
+"ooooo......ooooo"
+};

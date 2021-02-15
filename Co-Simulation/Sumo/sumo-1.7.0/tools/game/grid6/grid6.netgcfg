@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Sep  6 09:28:46 2018 by Eclipse SUMO netgenerate Version v1_0_0+0032-77a1026
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netgenerateConfiguration.xsd">
+
+    <grid_network>
+        <grid value="true"/>
+        <grid.length value="80"/>
+        <grid.x-number value="3"/>
+        <grid.y-number value="2"/>
+        <grid.attach-length value="100"/>
+    </grid_network>
+
+    <output>
+        <output-file value="grid6.tmp.net.xml"/>
+    </output>
+
+    <building_defaults>
+        <default-junction-type value="traffic_light"/>
+    </building_defaults>
+
+    <junctions>
+        <no-turnarounds value="true"/>
+        <no-left-connections value="true"/>
+    </junctions>
+
+</configuration>

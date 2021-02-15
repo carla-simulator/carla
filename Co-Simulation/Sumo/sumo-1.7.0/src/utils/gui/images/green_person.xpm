@@ -1,0 +1,23 @@
+/* XPM */
+static const char * green_person_xpm[] = {
+"16 16 4 1",
+" 	c None",
+".	c Black",
+"X	c Green",
+"o	c #851d1d",
+"                ",
+"     ..         ",
+"   ..XX..       ",
+"  .XXXXXX.      ",
+"   .XX.X.       ",
+"   .XXX.        ",
+"    .X..   ..   ",
+"   .XXXX...o.   ",
+"   . XXXXXX.    ",
+"   .XXX..   .   ",
+"   .XXXXX...X.  ",
+"  .XX...XXXX.   ",
+"  .XX.  .XX.    ",
+"  .XXX.  ..     ",
+"   ...          ",
+"                "};

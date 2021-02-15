@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_emissions.a  CMakeFiles/utils_emissions.dir/HelpersEnergy.cpp.o CMakeFiles/utils_emissions.dir/HelpersHarmonoise.cpp.o CMakeFiles/utils_emissions.dir/HelpersHBEFA.cpp.o CMakeFiles/utils_emissions.dir/HelpersHBEFA3.cpp.o CMakeFiles/utils_emissions.dir/HelpersPHEMlight.cpp.o CMakeFiles/utils_emissions.dir/PHEMCEP.cpp.o CMakeFiles/utils_emissions.dir/PHEMCEPHandler.cpp.o CMakeFiles/utils_emissions.dir/PollutantsInterface.cpp.o
+/usr/bin/ranlib libutils_emissions.a

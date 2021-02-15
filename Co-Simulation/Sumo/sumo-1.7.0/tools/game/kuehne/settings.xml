@@ -1,0 +1,84 @@
+<viewsettings>
+    <delay value="100"/>
+    <viewport zoom="200" x="150" y="150"/>
+    <decal filename="dlr.gif" centerX="150" centerY="150" width="50" height="50" rotation="0.00"/>
+    <scheme name="game_kuehne">
+        <opengl antialiase="0" dither="0"/>
+        <background backgroundColor="0.20,0.50,0.20"
+                    showGrid="0" gridXSize="100.00" gridYSize="100.00"/>
+        <vehicles vehicleMode="3" vehicleQuality="2" minVehicleSize="1.00" vehicleExaggeration="1.00" showBlinker="1"
+                  vehicleName_show="0" vehicleName_size="50.00" vehicleName_color="0.80,0.60,0.00" >
+            <colorScheme name="uniform">
+                <entry color="1.00,1.00,0.00"/>
+            </colorScheme>
+            <colorScheme name="given/assigned vehicle color">
+                <entry color="1.00,1.00,0.00"/>
+            </colorScheme>
+            <colorScheme name="given/assigned type color">
+                <entry color="1.00,1.00,0.00"/>
+            </colorScheme>
+            <colorScheme name="given/assigned route color">
+                <entry color="1.00,1.00,0.00"/>
+            </colorScheme>
+            <colorScheme name="depart position as HSV">
+                <entry color="1.00,1.00,0.00"/>
+            </colorScheme>
+            <colorScheme name="arrival position as HSV">
+                <entry color="1.00,1.00,0.00"/>
+            </colorScheme>
+            <colorScheme name="direction/distance as HSV">
+                <entry color="1.00,1.00,0.00"/>
+            </colorScheme>
+            <colorScheme name="by speed" interpolated="1">
+                <entry color="1.00,0.00,0.00" threshold="0.00"/>
+                <entry color="0.00,0.00,1.00" threshold="41.67"/>
+            </colorScheme>
+            <colorScheme name="by waiting time" interpolated="1">
+                <entry color="1.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="20.00"/>
+            </colorScheme>
+            <colorScheme name="by time since last lanechange" interpolated="1">
+                <entry color="1.00,1.00,1.00" threshold="0.00"/>
+                <entry color="0.50,0.50,0.50" threshold="300.00"/>
+            </colorScheme>
+            <colorScheme name="by max speed" interpolated="1">
+                <entry color="1.00,0.00,0.00" threshold="0.00"/>
+                <entry color="0.00,0.00,1.00" threshold="41.67"/>
+            </colorScheme>
+            <colorScheme name="by CO2 emissions (HBEFA)" interpolated="1">
+                <entry color="0.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="5.00"/>
+            </colorScheme>
+            <colorScheme name="by CO emissions (HBEFA)" interpolated="1">
+                <entry color="0.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="0.05"/>
+            </colorScheme>
+            <colorScheme name="by PMx emissions (HBEFA)" interpolated="1">
+                <entry color="0.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="0.01"/>
+            </colorScheme>
+            <colorScheme name="by NOx emissions (HBEFA)" interpolated="1">
+                <entry color="0.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="0.12"/>
+            </colorScheme>
+            <colorScheme name="by HC emissions (HBEFA)" interpolated="1">
+                <entry color="0.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="0.02"/>
+            </colorScheme>
+            <colorScheme name="by fuel consumption (HBEFA)" interpolated="1">
+                <entry color="0.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="0.01"/>
+            </colorScheme>
+            <colorScheme name="by noise emissions (Harmonoise)" interpolated="1">
+                <entry color="0.00,1.00,0.00" threshold="0.00"/>
+                <entry color="1.00,0.00,0.00" threshold="100.00"/>
+            </colorScheme>
+            <colorScheme name="by reroute number" interpolated="1">
+                <entry color="1.00,0.00,0.00" threshold="0.00"/>
+                <entry color="1.00,1.00,0.00" threshold="1.00"/>
+                <entry color="1.00,1.00,1.00" threshold="10.00"/>
+            </colorScheme>
+        </vehicles>
+        <legend showSizeLegend="1"/>
+    </scheme>
+</viewsettings>

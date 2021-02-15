@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Tue 26 Feb 2019 11:19:36 AM CET by Eclipse SUMO netedit Version v1_0_1+0645-93703db
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="osm.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="osm.net.xml"/>
+        <output.street-names value="true"/>
+    </output>
+
+    <processing>
+        <geometry.max-grade.fix value="false"/>
+        <offset.disable-normalization value="true"/>
+        <lefthand value="false"/>
+    </processing>
+
+    <junctions>
+        <no-internal-links value="false"/>
+        <no-turnarounds value="true"/>
+        <junctions.corner-detail value="5"/>
+        <junctions.limit-turn-speed value="5.5"/>
+        <rectangular-lane-cut value="false"/>
+    </junctions>
+
+    <pedestrian>
+        <walkingareas value="true"/>
+    </pedestrian>
+
+    <visualisation>
+        <registry-viewport value="true"/>
+    </visualisation>
+
+</configuration>
+-->
+
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <busStop id="bs0"  lane="52036180#4_1"  startPos="14.22" endPos="18.22" name="Bhf Adlershof" />
+    <busStop id="bs1"  lane="670062907#4_1" startPos="14.45" endPos="18.45" name="HU"            />
+    <busStop id="bs8"  lane="147859765#2_1" startPos="14.45" endPos="18.45" name="Bessy"         />
+    <busStop id="bs11" lane="114949101#1_0" startPos="11.16" endPos="15.16" name="BTB"           />
+    <busStop id="bs12" lane="81096582#0_0"  startPos="21.94" endPos="25.94" name="DLR"           />
+    <busStop id="bs15" lane="52081075#9_1"  startPos="32.83" endPos="36.83" name="KWB"           />
+    <busStop id="bs20" lane="143308562#2_1" startPos="14.36" endPos="18.36" name="ISAS"          />
+    <busStop id="bs6"  lane="-31344738#0_0" startPos="53.24" endPos="57.24" name="BAM"           />
+</additional>

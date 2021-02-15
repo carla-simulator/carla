@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<add>
+    <tlLogic id="0" type="static" programID="own" offset="0">
+missing value; setting to g
+        <phase duration="5" state="rrrrrGrrrrrr"/>
+missing value; setting to g
+        <phase duration="28" state="rrrrrgrrrGGG"/>
+missing value; setting to g
+        <phase duration="3" state="rrrGGgrrryyy"/>
+missing value; setting to g
+        <phase duration="2" state="rrrGGGrrrrrr"/>
+        <phase duration="2" state="rrrGGGrrrrrr"/>
+        <phase duration="2" state="rrrGGGrrrrrr"/>
+        <phase duration="9" state="rrrGGGrrrrrr"/>
+missing value; setting to g
+        <phase duration="3" state="rrryyGrrrrrr"/>
+missing value; setting to g
+        <phase duration="3" state="rrrrrGrrrrrr"/>
+missing value; setting to g
+        <phase duration="4" state="rrrrrGrrrrrr"/>
+missing value; setting to g
+        <phase duration="22" state="GGgrrgGGgrrr"/>
+missing value; setting to g
+        <phase duration="3" state="yyyrrgyyyrrr"/>
+missing value; setting to g
+        <phase duration="1" state="rrrrrGrrrrrr"/>
+    </tlLogic>
+</add>

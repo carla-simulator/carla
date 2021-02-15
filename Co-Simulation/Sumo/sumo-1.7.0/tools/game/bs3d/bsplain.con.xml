@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 06.05.2014 12:45:42 by Netedit Version dev-SVN-r16258
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo-sim.org/xsd/netedit.exeConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="bs.net.xml"/>
+    </input>
+
+    <output>
+        <output-file value="bs.net.xml"/>
+        <plain-output-prefix value="D:\behr_mi\Projekte\Vabene\trunk\SE\extern\sumoInternal\sumo\tools\game\bs3d\p"/>
+    </output>
+
+    <processing>
+        <no-turnarounds value="true"/>
+        <offset.disable-normalization value="true"/>
+    </processing>
+
+</configuration>
+-->
+
+<connections version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo-sim.org/xsd/connections_file.xsd">
+    <connection from="166445405" to="23207363#0" fromLane="0" toLane="0"/>
+    <connection from="166445405" to="23204862" fromLane="0" toLane="0"/>
+    <connection from="166445405" to="23204862" fromLane="1" toLane="1"/>
+    <connection from="166445405" to="30425847#0" fromLane="1" toLane="1"/>
+    <connection from="166445405" to="29136063#0" fromLane="1" toLane="1"/>
+
+    <connection from="166445407" to="23204862" fromLane="0" toLane="0"/>
+    <connection from="166445407" to="30425847#0" fromLane="0" toLane="0"/>
+    <connection from="166445407" to="30425847#0" fromLane="1" toLane="1"/>
+    <connection from="166445407" to="29136063#0" fromLane="1" toLane="1"/>
+    <connection from="166445407" to="23207363#0" fromLane="1" toLane="1"/>
+
+    <connection from="166445412" to="29136063#0" fromLane="0" toLane="0"/>
+    <connection from="166445412" to="23207363#0" fromLane="0" toLane="0"/>
+    <connection from="166445412" to="23207363#0" fromLane="1" toLane="1"/>
+    <connection from="166445412" to="23204862" fromLane="1" toLane="1"/>
+    <connection from="166445412" to="30425847#0" fromLane="1" toLane="1"/>
+
+    <connection from="4314834#3" to="30425847#0" fromLane="0" toLane="0"/>
+    <connection from="4314834#3" to="29136063#0" fromLane="0" toLane="0"/>
+    <connection from="4314834#3" to="29136063#0" fromLane="1" toLane="1"/>
+    <connection from="4314834#3" to="23207363#0" fromLane="1" toLane="1"/>
+    <connection from="4314834#3" to="23204862" fromLane="1" toLane="1"/>
+
+</connections>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nodes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+    <node id="1" x="-250.0" y="0.0" />
+    <node id="2" x="+250.0" y="0.0" />
+    <node id="3" x="+251.0" y="0.0" />
+</nodes>

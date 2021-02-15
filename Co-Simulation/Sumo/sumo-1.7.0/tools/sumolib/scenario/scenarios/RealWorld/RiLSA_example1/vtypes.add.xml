@@ -1,0 +1,4 @@
+<routes>
+    <vType id="PKW" minGap="1.5" accel="2.6" decel="4.5" sigma="0.5" length="5" maxSpeed="70" guiShape="passenger"/>
+    <vType id="LKW" minGap="0.5" accel="2.6" decel="4.5" sigma="0.5" length="15" maxSpeed="34" guiShape="transport"/>
+</routes>

@@ -1,0 +1,1045 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on 05/06/14 11:07:23 by SUMO netconvert Version dev-SVN-r16258
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo-sim.org/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <sumo-net-file value="bs.net.xml"/>
+    </input>
+
+    <output>
+        <plain-output-prefix value="bsplain"/>
+    </output>
+
+    <processing>
+        <no-turnarounds value="true"/>
+        <offset.disable-normalization value="true"/>
+    </processing>
+
+</configuration>
+-->
+
+<edges version="0.13" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo-sim.org/xsd/edges_file.xsd">
+    <edge id="-103268088#0" from="1356135515" to="1192507866" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-103268088#1" from="260700546" to="1356135515" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-108892340#0" from="564631546" to="53251264" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-108892340#1" from="26155586" to="564631546" type="highway.tertiary" numLanes="1" speed="13.89" shape="619.35,917.75 621.82,929.64 635.56,964.03"/>
+    <edge id="-121068757" from="1356130762" to="1356130757" type="highway.footway" numLanes="1" speed="8.33" shape="529.40,567.93 536.29,567.53 547.48,567.02">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-121068763" from="1356130769" to="1356130767" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-121068764" from="1356130749" to="1356130728" type="highway.service" numLanes="1" speed="5.56" shape="592.31,579.49 592.00,585.50 589.16,590.01 588.42,622.10">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-121068765" from="1356130726" to="1356130740" type="highway.footway" numLanes="1" speed="8.33" shape="653.35,489.29 659.51,490.01 663.60,490.45">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-121069898#0" from="1356135516" to="1356135515" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-121069898#1" from="1356135510" to="1356135516" type="highway.service" numLanes="1" speed="5.56" shape="483.92,787.73 476.65,828.48 493.30,830.83">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-121069900" from="1356135516" to="1356135514" type="highway.footway" numLanes="1" speed="8.33" shape="493.30,830.83 491.66,838.88 490.38,845.88">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-122351619" from="1367507446" to="1367507447" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-129013950" from="1424270250" to="1424270251" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-129014453" from="1424274808" to="1424274807" type="highway.service" numLanes="1" speed="5.56" shape="890.87,768.77 882.24,795.98 843.94,782.71">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-134220300" from="1476473561" to="1476473559" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-134220302" from="1476473555" to="1476473564" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-136492644" from="1497216949" to="1497216952" type="highway.service" numLanes="1" speed="5.56" shape="1017.74,461.14 1001.08,451.59 989.84,472.98 1010.00,485.23">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-159243113" from="63357043" to="34814866" type="highway.residential" numLanes="1" speed="8.33" shape="1137.58,0.00 1086.65,129.82 1061.04,197.70 1034.20,264.19 1002.99,329.05 979.73,400.06"/>
+    <edge id="-165574143" from="34814866" to="1771199559" type="highway.residential" numLanes="1" speed="8.33" shape="979.73,400.06 973.52,412.66 938.32,471.05"/>
+    <edge id="-177688392" from="979119480" to="260700116" type="highway.footway" numLanes="1" speed="8.33" shape="634.36,360.44 632.59,367.86 637.38,371.69">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-177688397" from="260700116" to="1881108785" type="highway.footway" numLanes="1" speed="8.33" shape="637.38,371.69 641.87,370.80 642.84,367.89 643.30,363.34 643.97,357.69 644.61,353.32 646.16,349.52 648.89,348.19 653.34,347.66 660.36,344.53 671.96,341.67">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-179093197" from="1894312954" to="363611097" type="highway.footway" numLanes="1" speed="8.33" shape="360.79,511.65 319.89,513.25 316.13,515.82">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-206498911#0" from="247378385" to="34677652" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-206498911#1" from="260700546" to="247378385" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-206498911#2" from="1356135514" to="260700546" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-206498911#3" from="26153898" to="1356135514" type="highway.residential" numLanes="1" speed="8.33" shape="170.34,794.19 173.56,794.71 490.38,845.88"/>
+    <edge id="-22959383" from="247378385" to="1757034233" type="highway.unclassified" numLanes="1" speed="22.22" shape="561.16,857.20 567.39,929.99 567.35,990.31 565.62,1030.67 575.24,1048.19"/>
+    <edge id="-24038475#0" from="260700116" to="34677711" type="highway.footway" numLanes="1" speed="8.33" shape="637.38,371.69 587.12,356.45 581.59,354.78 565.93,346.79 563.39,345.47 542.04,347.09 532.52,343.17">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-24038475#1" from="277310879" to="260700116" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-24038475#2" from="278878848" to="277310879" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-24038534#0" from="260700545" to="34677659" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-24038534#1" from="271359580" to="260700545" type="highway.service" numLanes="1" speed="5.56" shape="421.04,634.48 423.47,683.13 440.06,701.59 467.55,703.92 467.62,728.47 482.24,729.37 482.51,768.66 527.28,780.93">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-24396404" from="264778811" to="264778809" type="highway.service" numLanes="1" speed="5.56" shape="585.79,519.86 588.61,472.85 542.63,471.45">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-25068137" from="269964106" to="269964108" type="highway.residential" numLanes="1" speed="8.33" shape="787.33,952.59 783.77,964.37 767.81,1011.46 755.69,1050.44 741.94,1086.85"/>
+    <edge id="-25068700" from="445100348" to="247378375" type="highway.unclassified" numLanes="1" speed="8.33" shape="308.81,969.86 309.39,967.52 356.14,970.13 371.60,971.83 382.68,974.47 392.67,976.95 400.93,980.23 418.09,988.27 465.32,1014.37 492.03,1029.94 512.32,1041.88 521.34,1047.86 543.89,1067.37 550.29,1080.00 550.29,1085.68"/>
+    <edge id="-25363135#0" from="276419026" to="35651461" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-25363135#1" from="1356130757" to="276419026" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-25363135#2" from="cluster_26153656_34673725" to="1356130757" type="highway.residential" numLanes="1" speed="8.33" shape="548.79,621.17 547.48,567.02"/>
+    <edge id="-25363167" from="467106195" to="cluster_270703615_622360014" type="highway.footway" numLanes="1" speed="8.33" shape="430.82,461.27 415.49,461.38 382.26,461.50">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-25446022" from="277310886" to="277310879" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-25485133#0" from="277697625" to="277697623" type="highway.service" numLanes="1" speed="5.56" shape="339.00,452.73 343.53,450.48 347.85,450.38 352.25,452.22">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-25485133#1" from="277697630" to="277697625" type="highway.service" numLanes="1" speed="5.56" shape="355.65,465.81 352.29,469.77 346.86,471.77 341.07,470.64 337.05,467.17 335.16,461.82 335.87,457.07 339.00,452.73">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-25485133#2" from="277697623" to="277697630" type="highway.service" numLanes="1" speed="5.56" shape="352.25,452.22 355.27,455.51 356.75,460.26 355.65,465.81">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-25952467" from="296924344" to="1835408176" type="highway.footway" numLanes="1" speed="8.33" shape="624.56,763.06 604.45,783.79 590.81,801.77 564.69,802.34">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-26384237#0" from="289047549" to="289047459" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26384237#1" from="806390749" to="289047549" type="highway.service" numLanes="1" speed="5.56" shape="302.24,595.78 330.35,595.44 329.21,561.03 309.28,561.39 282.86,561.87 283.62,596.00">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26384237#2" from="289047549" to="806390749" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26384275#0" from="1894312954" to="289047648" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26384275#1" from="853135516" to="1894312954" type="highway.service" numLanes="1" speed="5.56" shape="364.29,531.80 364.11,526.39 360.79,511.65">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26384275#2" from="289047670" to="853135516" type="highway.service" numLanes="1" speed="5.56" shape="365.22,564.88 364.99,556.97 364.29,531.80">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26384298" from="1192507866" to="260700545" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562389#0" from="440765481" to="26189950" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562389#1" from="1424270251" to="440765481" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562389#2" from="291185195" to="1424270251" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562389#3" from="291185192" to="291185195" type="highway.service" numLanes="1" speed="5.56" shape="715.20,840.44 704.92,870.15 705.04,875.78 718.90,902.47">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562389#4" from="291185409" to="291185192" type="highway.service" numLanes="1" speed="5.56" shape="779.76,777.29 732.21,760.46 724.64,762.24 714.46,795.70 717.21,832.89 715.20,840.44">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562389#5" from="291185143" to="291185409" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562391#0" from="291185194" to="291185195" type="highway.service" numLanes="1" speed="5.56" shape="736.88,848.59 733.06,858.89 727.48,874.84 718.90,902.47">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562391#1" from="291185148" to="291185194" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562396" from="291185194" to="291185192" type="highway.service" numLanes="1" speed="5.56" shape="736.88,848.59 723.46,843.21 715.20,840.44">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562404#0" from="442839527" to="291185409" type="highway.service" numLanes="1" speed="5.56" shape="819.83,753.25 801.58,746.65 786.83,755.73 779.76,777.29">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562404#1" from="442839529" to="442839527" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26562404#2" from="291185412" to="442839529" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26775981#0" from="293696006" to="293695864" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26775981#1" from="429587899" to="293696006" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26775981#2" from="293696234" to="429587899" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26775981#3" from="293695883" to="293696234" type="highway.service" numLanes="1" speed="5.56" shape="1006.24,846.84 1000.94,845.06 958.04,830.64">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26775984" from="293696007" to="293696006" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776014#0" from="293696352" to="293696234" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776014#1" from="293696354" to="293696352" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776014#2" from="293696356" to="293696354" type="highway.service" numLanes="1" speed="5.56" shape="942.65,938.60 956.74,943.37 967.01,916.80">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776014#3" from="429587898" to="293696356" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776014#4" from="293696357" to="429587898" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776026#0" from="293696558" to="293696530" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776026#1" from="293696556" to="293696558" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-26776032" from="293696602" to="293696558" type="highway.service" numLanes="1" speed="5.56" shape="858.43,883.43 831.67,874.68 826.88,889.10">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-27059094" from="296893556" to="634580664" type="highway.service" numLanes="1" speed="5.56" shape="376.55,508.14 380.05,520.73 518.77,517.67 520.03,503.65">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-27059110#0" from="467106195" to="270703391" type="highway.service" numLanes="1" speed="5.56" shape="430.82,461.27 432.56,501.95 432.88,505.94">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-27059110#1" from="270703437" to="467106195" type="highway.service" numLanes="1" speed="5.56" shape="445.91,505.75 445.46,501.65 442.92,456.18 430.94,456.72 430.82,461.27">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-30738461" from="cluster_339975567_43242046" to="339975562" type="highway.service" numLanes="1" speed="5.56" shape="929.88,526.13 960.43,542.99 952.47,559.18 963.11,566.48">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-31281702#0" from="293695883" to="348042902" type="highway.footway" numLanes="1" speed="8.33" shape="1006.24,846.84 1010.09,854.79 992.30,900.74">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-31281702#1" from="381910193" to="293695883" type="highway.footway" numLanes="1" speed="8.33" shape="1080.28,859.93 1040.14,846.66 1027.90,843.63 1013.20,846.09 1006.24,846.84">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-31288488" from="293696354" to="348042902" type="highway.service" numLanes="1" speed="5.56" shape="967.01,916.80 974.49,895.50 992.30,900.74">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-33049407#0" from="378917495" to="27557127" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33049407#1" from="59824154" to="378917495" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33049407#2" from="1771199559" to="59824154" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33049407#3" from="269964113" to="1771199559" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33049407#4" from="480440288" to="269964113" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33049407#5" from="59824195" to="480440288" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33049407#6" from="266777507" to="59824195" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33049407#7" from="36745051" to="266777507" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="-33070760#0" from="34677711" to="26154191" type="highway.residential" numLanes="1" speed="8.33" shape="532.52,343.17 531.99,331.89 530.06,300.00 526.51,244.92 526.52,229.65 527.97,214.20 531.02,204.38 535.46,195.39 541.44,187.75"/>
+    <edge id="-33070760#1" from="43242031" to="34677711" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-33070760#2" from="264778809" to="43242031" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-33070760#3" from="35651461" to="264778809" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-36943288#0" from="667901703" to="429587898" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-36943288#1" from="429587900" to="667901703" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-36943289#0" from="429587902" to="429587901" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-36943289#1" from="436828486" to="429587902" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-36943289#2" from="429587903" to="436828486" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-36943289#3" from="293696556" to="429587903" type="highway.footway" numLanes="1" speed="8.33" shape="853.43,897.93 855.40,898.62 852.30,906.15">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-36943290" from="429587906" to="429587908" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-36943292#0" from="429587900" to="429587907" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-36943292#1" from="429587908" to="429587900" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-36943296#0" from="667901708" to="293696352" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-36943296#1" from="429587921" to="667901708" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-36943301" from="429587899" to="429587940" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-37399604#0" from="436828505" to="436828502" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37399604#1" from="437327480" to="436828505" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37399604#2" from="436828507" to="437327480" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37399605" from="436828507" to="436828486" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37399606" from="436828505" to="429587903" type="highway.footway" numLanes="1" speed="8.33" shape="823.22,901.64 824.97,896.81 852.30,906.15">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37415994" from="437327480" to="307961022" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37593790#0" from="633292230" to="440696682" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37593790#1" from="450519041" to="633292230" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37593791#0" from="442839521" to="440696683" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37593791#1" from="307961027" to="442839521" type="highway.footway" numLanes="1" speed="8.33" shape="816.96,728.68 822.18,730.80 822.53,729.77">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37601917" from="429587921" to="429587902" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37601918" from="440765482" to="440765481" type="highway.service" numLanes="1" speed="5.56" shape="771.12,935.39 746.50,930.47 739.07,933.57">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-37752125#0" from="442839558" to="442839529" type="highway.service" numLanes="1" speed="5.56" shape="827.59,732.85 830.68,725.70 845.08,731.17 839.06,746.92 834.51,759.09">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-37752125#1" from="442839527" to="442839558" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-37752126#0" from="442839558" to="442839576" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-37752126#1" from="442839521" to="442839558" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-38167738#0" from="1424270250" to="269964106" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#1" from="436828502" to="1424270250" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#2" from="293696530" to="436828502" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#3" from="440696682" to="293696530" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#4" from="291185143" to="440696682" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#5" from="293695864" to="291185143" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#6" from="1424274807" to="293695864" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#7" from="291185412" to="1424274807" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="-38167738#8" from="cluster_269964112_269964114" to="291185412" type="highway.residential" numLanes="1" speed="13.89" shape="866.03,718.60 849.80,764.58"/>
+    <edge id="-38167741#1" from="36854115" to="cluster_269964112_269964114" type="highway.residential" numLanes="1" speed="8.33" shape="879.39,677.58 869.52,707.34"/>
+    <edge id="-38167741#2" from="36854116" to="36854115" type="highway.residential" numLanes="1" speed="8.33" shape="903.77,602.61 887.71,653.23 879.39,677.58"/>
+    <edge id="-38167741#3" from="cluster_339975567_43242046" to="36854116" type="highway.residential" numLanes="1" speed="8.33" shape="929.03,529.38 916.61,566.13 903.77,602.61"/>
+    <edge id="-38167741#5" from="269964113" to="cluster_339975567_43242046" type="highway.residential" numLanes="1" speed="8.33" shape="949.87,481.16 929.88,526.13"/>
+    <edge id="-38227185" from="440696681" to="450519041" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-38306209" from="429587901" to="429587906" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-39085064" from="467011004" to="467011002" type="highway.footway" numLanes="1" speed="8.33" shape="652.81,670.46 606.60,664.03 550.07,661.50">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-4304448#1" from="34677652" to="cluster_26153648_34043448" type="highway.residential" numLanes="1" speed="8.33" shape="585.43,860.15 614.09,863.55"/>
+    <edge id="-44068783" from="560140375" to="560140373" type="highway.service" numLanes="1" speed="5.56" shape="419.49,766.11 380.90,759.16 385.19,635.53">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-44419041" from="564631547" to="564631546" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-47328513" from="602783338" to="36854120" type="highway.path" numLanes="1" speed="2.78">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042723#0" from="622336955" to="622336943" type="highway.footway" numLanes="1" speed="8.33" shape="341.09,430.37 332.53,430.84 326.09,437.13 334.24,449.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042723#1" from="622336960" to="622336955" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042724" from="622336943" to="277697625" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042726#0" from="622336972" to="622336968" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042726#1" from="622336980" to="622336972" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042726#2" from="622336990" to="622336980" type="highway.footway" numLanes="1" speed="8.33" shape="325.00,404.20 326.45,421.63 326.89,428.10 340.93,427.27">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042727" from="622336999" to="622336972" type="highway.footway" numLanes="1" speed="8.33" shape="342.03,402.83 343.23,421.37 343.48,427.11">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49042728" from="622336955" to="622336980" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49047248" from="277697630" to="cluster_270703615_622360014" type="highway.footway" numLanes="1" speed="8.33" shape="355.65,465.81 361.16,471.85 366.29,475.02 371.39,476.40 378.15,476.55 381.37,476.65">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-49844607" from="633292230" to="293696007" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-50005239#0" from="622336960" to="277697623" type="highway.service" numLanes="1" speed="5.56" shape="365.98,428.99 366.22,436.76 362.43,443.58 352.25,452.22">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-50005239#1" from="622336968" to="622336960" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-50005239#2" from="277697633" to="622336968" type="highway.service" numLanes="1" speed="5.56" shape="364.31,401.02 364.69,407.88 365.79,425.79">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-5088373#0" from="34677731" to="34677711" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5088373#1" from="277697633" to="34677731" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5088373#2" from="622336999" to="277697633" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5088373#3" from="622336990" to="622336999" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5088373#4" from="35510535" to="622336990" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5229164#0" from="34814866" to="34814874" type="highway.residential" numLanes="1" speed="8.33" shape="979.73,400.06 837.74,311.95 803.16,290.88"/>
+    <edge id="-5229164#1" from="27557122" to="34814866" type="highway.residential" numLanes="1" speed="8.33" shape="1593.78,748.25 1506.54,715.46 1455.13,690.58 1321.22,610.52 1266.64,577.07 1253.76,569.19 1184.74,526.90 1153.07,507.26 1033.98,433.60 979.73,400.06"/>
+    <edge id="-5237595" from="36854116" to="28142772" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5237597" from="36854120" to="36854115" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="-52572950#0" from="667901706" to="293696356" type="highway.path" numLanes="1" speed="2.78" shape="934.08,925.48 935.29,933.31 940.85,936.73 942.65,938.60">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-52572950#1" from="667901708" to="667901706" type="highway.path" numLanes="1" speed="2.78" shape="929.34,920.51 933.26,923.96 934.08,925.48">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-52572951#0" from="667901703" to="667901709" type="highway.footway" numLanes="1" speed="8.33" shape="924.94,962.46 924.72,963.77 919.42,980.64 914.71,992.68">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-52572951#1" from="667901706" to="667901703" type="highway.footway" numLanes="1" speed="8.33" shape="934.08,925.48 932.28,929.65 932.53,932.17 930.44,944.54 926.50,958.20 924.94,962.46">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-5563258#0" from="cluster_270703615_622360014" to="34677731" type="highway.footway" numLanes="1" speed="8.33" shape="382.26,461.50 384.82,423.05 387.11,417.04 382.85,398.35">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-5563258#2" from="634580663" to="cluster_270703615_622360014" type="highway.footway" numLanes="1" speed="8.33" shape="381.31,508.05 381.37,476.65">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-5724307" from="cluster_339975567_43242046" to="43242043" type="highway.residential" numLanes="1" speed="8.33" shape="929.03,529.38 744.14,465.54 737.34,463.36"/>
+    <edge id="-5724308#0" from="278878848" to="43242031" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5724308#1" from="70936994" to="278878848" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-5724308#2" from="43242035" to="70936994" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-58149866#0" from="721437426" to="445067630" type="highway.path" numLanes="1" speed="2.78" shape="267.44,892.82 222.22,889.10 172.06,892.73">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-58149866#1" from="765703090" to="721437426" type="highway.path" numLanes="1" speed="2.78" shape="546.88,998.44 513.42,966.58 492.14,955.35 414.53,933.99 379.59,930.04 318.03,914.75 267.44,892.82">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-61284122" from="721437426" to="765703090" type="highway.path" numLanes="1" speed="2.78" shape="267.44,892.82 287.63,888.11 318.30,893.45 355.32,900.70 385.60,903.53 415.12,903.72 447.78,908.66 492.02,915.18 497.44,926.89 512.07,929.25 524.40,925.10 539.59,926.31 555.35,929.73 560.64,985.30 546.88,998.44">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-66654719#0" from="853135513" to="806386164" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-66654719#1" from="513585702" to="853135513" type="highway.footway" numLanes="1" speed="8.33" shape="249.78,553.38 271.84,550.32 309.18,549.17 340.35,548.22 339.86,532.42">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-71763552" from="853135516" to="853135507" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-71763553" from="853135507" to="853135513" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="-7782975#0" from="293696357" to="26189946" type="highway.residential" numLanes="1" speed="8.33" shape="923.98,996.09 978.17,1018.85 1023.57,1035.41 1156.05,1079.29"/>
+    <edge id="-7782975#1" from="667901709" to="293696357" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-7782975#2" from="269964106" to="667901709" type="highway.residential" numLanes="1" speed="8.33" shape="787.33,952.59 796.17,953.16 914.71,992.68"/>
+    <edge id="-7782975#3" from="26189950" to="269964106" type="highway.residential" numLanes="1" speed="8.33" shape="754.24,953.73 760.19,952.68 768.89,951.39 777.83,951.73 787.33,952.59"/>
+    <edge id="-7782975#4" from="53251264" to="26189950" type="highway.residential" numLanes="1" speed="8.33" shape="648.59,997.37 740.22,958.18 747.06,955.54 754.24,953.73"/>
+    <edge id="-8013387" from="34677738" to="34677731" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-8034799#0" from="1476473564" to="34677652" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-8034799#1" from="1476473559" to="1476473564" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-8034799#2" from="1835408176" to="1476473559" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-8034799#3" from="34677659" to="1835408176" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-8034799#4" from="1367507447" to="34677659" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-8034799#5" from="467011002" to="1367507447" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="-8034799#6" from="cluster_26153656_34673725" to="467011002" type="highway.residential" numLanes="1" speed="8.33" shape="549.09,632.18 550.07,661.50"/>
+    <edge id="103268088#0" from="1192507866" to="1356135515" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="103268088#1" from="1356135515" to="260700546" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="108892340#0" from="53251264" to="564631546" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="108892340#1" from="564631546" to="26155586" type="highway.tertiary" numLanes="1" speed="13.89" shape="635.56,964.03 621.82,929.64 619.35,917.75"/>
+    <edge id="121068757" from="1356130757" to="1356130762" type="highway.footway" numLanes="1" speed="8.33" shape="547.48,567.02 536.29,567.53 529.40,567.93">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="121068763" from="1356130767" to="1356130769" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="121068764" from="1356130728" to="1356130749" type="highway.service" numLanes="1" speed="5.56" shape="588.42,622.10 589.16,590.01 592.00,585.50 592.31,579.49">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="121068765" from="1356130740" to="1356130726" type="highway.footway" numLanes="1" speed="8.33" shape="663.60,490.45 659.51,490.01 653.35,489.29">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="121069898#0" from="1356135515" to="1356135516" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="121069898#1" from="1356135516" to="1356135510" type="highway.service" numLanes="1" speed="5.56" shape="493.30,830.83 476.65,828.48 483.92,787.73">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="121069900" from="1356135514" to="1356135516" type="highway.footway" numLanes="1" speed="8.33" shape="490.38,845.88 491.66,838.88 493.30,830.83">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="122351619" from="1367507447" to="1367507446" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="129013950" from="1424270251" to="1424270250" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="129014453" from="1424274807" to="1424274808" type="highway.service" numLanes="1" speed="5.56" shape="843.94,782.71 882.24,795.98 890.87,768.77">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="134220300" from="1476473559" to="1476473561" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="134220302" from="1476473564" to="1476473555" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="136492644" from="1497216952" to="1497216949" type="highway.service" numLanes="1" speed="5.56" shape="1010.00,485.23 989.84,472.98 1001.08,451.59 1017.74,461.14">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="159243113" from="34814866" to="63357043" type="highway.residential" numLanes="1" speed="8.33" shape="979.73,400.06 1002.99,329.05 1034.20,264.19 1061.04,197.70 1086.65,129.82 1137.58,0.00"/>
+    <edge id="165574143" from="1771199559" to="34814866" type="highway.residential" numLanes="1" speed="8.33" shape="938.32,471.05 973.52,412.66 979.73,400.06"/>
+    <edge id="166445405" from="1778997184" to="cluster_104171179_28142770_28298581_28298587" type="highway.primary" numLanes="2" speed="13.89" shape="697.40,583.69 680.27,633.86" spreadType="center"/>
+    <edge id="166445406" from="28142772" to="1778997184" type="highway.primary" numLanes="2" speed="13.89" spreadType="center"/>
+    <edge id="166445407" from="1778997188" to="cluster_104171179_28142770_28298581_28298587" type="highway.secondary" numLanes="2" speed="13.89" shape="752.92,674.73 713.92,661.39 674.26,647.56" spreadType="center"/>
+    <edge id="166445412" from="1356130728" to="cluster_104171179_28142770_28298581_28298587" type="highway.primary" numLanes="2" speed="13.89" shape="588.42,622.10 609.49,623.60 628.17,626.33 667.56,630.86" spreadType="center"/>
+    <edge id="177688392" from="260700116" to="979119480" type="highway.footway" numLanes="1" speed="8.33" shape="637.38,371.69 632.59,367.86 634.36,360.44">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="177688397" from="1881108785" to="260700116" type="highway.footway" numLanes="1" speed="8.33" shape="671.96,341.67 660.36,344.53 653.34,347.66 648.89,348.19 646.16,349.52 644.61,353.32 643.97,357.69 643.30,363.34 642.84,367.89 641.87,370.80 637.38,371.69">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="179093197" from="363611097" to="1894312954" type="highway.footway" numLanes="1" speed="8.33" shape="316.13,515.82 319.89,513.25 360.79,511.65">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="206498903" from="cluster_26153648_34043448" to="26155586" type="highway.tertiary" numLanes="2" speed="13.89" shape="623.84,865.03 623.05,879.71 619.35,917.75" spreadType="center"/>
+    <edge id="206498911#0" from="34677652" to="247378385" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="206498911#1" from="247378385" to="260700546" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="206498911#2" from="260700546" to="1356135514" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="206498911#3" from="1356135514" to="26153898" type="highway.residential" numLanes="1" speed="8.33" shape="490.38,845.88 173.56,794.71 170.34,794.19"/>
+    <edge id="22959383" from="1757034233" to="247378385" type="highway.unclassified" numLanes="1" speed="22.22" shape="575.24,1048.19 565.62,1030.67 567.35,990.31 567.39,929.99 561.16,857.20"/>
+    <edge id="23204862" from="cluster_104171179_28142770_28298581_28298587" to="cluster_26153648_34043448" type="highway.tertiary" numLanes="2" speed="13.89" shape="674.26,647.56 662.72,675.46 651.89,705.60 641.50,738.62 634.88,764.84 629.77,793.01 626.81,816.32 623.84,865.03" spreadType="center"/>
+    <edge id="23207363#0" from="cluster_104171179_28142770_28298581_28298587" to="cluster_269964112_269964114" type="highway.secondary" numLanes="2" speed="13.89" shape="680.27,633.86 795.92,677.81 869.52,707.34" spreadType="center"/>
+    <edge id="23207363#1" from="cluster_269964112_269964114" to="293667015" type="highway.secondary" numLanes="2" speed="13.89" shape="869.52,707.34 907.78,723.70 947.31,741.58" spreadType="center"/>
+    <edge id="23207363#2" from="293667015" to="377939393" type="highway.secondary" numLanes="2" speed="13.89" shape="947.31,741.58 997.03,762.38 1047.46,780.95 1059.89,785.30" spreadType="center"/>
+    <edge id="23209601#0" from="1797730557" to="34673586" type="highway.primary" numLanes="2" speed="13.89" shape="66.88,612.94 124.50,618.15 154.52,620.80 186.50,623.41" spreadType="center"/>
+    <edge id="23209601#1" from="34673586" to="289047459" type="highway.primary" numLanes="2" speed="13.89" shape="186.50,623.41 206.39,625.18 226.16,627.05 230.92,627.21 257.43,628.97 283.05,629.49" spreadType="center"/>
+    <edge id="23209601#2" from="289047459" to="cluster_26153656_34673725" type="highway.primary" numLanes="2" speed="13.89" shape="283.05,629.49 415.34,626.76 482.62,624.52 548.79,621.17" spreadType="center"/>
+    <edge id="23209601#3" from="cluster_26153656_34673725" to="1356130728" type="highway.primary" numLanes="2" speed="13.89" shape="548.79,621.17 588.42,622.10" spreadType="center"/>
+    <edge id="23335805#0" from="48999821" to="765703076" type="railway.rail" numLanes="1" speed="83.33" shape="1467.14,2141.25 1470.42,2132.33 1472.62,2125.24 1474.47,2118.98 1476.16,2111.96 1480.62,2093.36 1486.72,2062.98 1489.17,2052.40 1491.00,2045.38 1502.46,2002.80 1506.33,1986.06 1509.87,1969.32 1516.07,1935.61 1521.80,1899.39 1524.51,1880.70 1526.75,1862.07 1527.27,1855.18 1527.58,1847.83 1527.53,1836.81 1527.34,1831.72 1526.92,1827.13 1524.91,1805.22 1521.92,1785.33 1519.31,1771.64 1518.10,1766.33 1515.09,1755.57 1511.22,1743.38 1506.69,1730.68 1500.52,1716.03 1493.38,1701.92 1485.91,1688.52 1477.68,1675.29 1471.82,1666.78 1456.08,1646.54 1449.83,1638.96 1439.03,1627.72 1429.58,1618.59 1420.35,1610.80 1409.94,1602.70 1398.22,1594.22 1388.46,1587.79 1376.14,1580.35 1367.27,1575.25 1355.66,1569.39 1343.65,1563.98 1330.26,1558.70 1316.59,1554.09 1303.71,1550.40 1288.23,1546.85 1275.73,1544.43 1262.54,1542.55 1240.17,1540.45 1231.34,1539.72 1226.29,1539.31 1223.33,1538.95 1101.60,1527.85 1079.81,1525.96 1058.13,1524.78 1042.00,1524.59 1002.05,1525.28 975.42,1525.64 956.79,1525.25 945.03,1524.49 933.15,1523.23 923.62,1521.69 908.56,1518.88 895.62,1515.98 883.80,1512.76 872.52,1509.06 859.02,1504.01 848.19,1499.24 837.20,1493.89 822.03,1485.80 808.31,1477.25 802.10,1472.91 795.67,1468.36 786.92,1461.92 780.07,1456.54 769.55,1447.39 760.52,1438.09 753.45,1430.14 746.76,1421.77 740.59,1413.03 731.91,1399.58" spreadType="center">
+        <lane index="0" allow="rail_electric"/>
+    </edge>
+    <edge id="23335805#1" from="765703076" to="48999923" type="railway.rail" numLanes="1" speed="83.33" shape="731.91,1399.58 724.99,1388.94 717.38,1378.54 708.87,1367.80 701.04,1356.93 693.78,1345.74 689.94,1339.15 686.35,1332.44 679.81,1319.33 673.41,1305.58 649.09,1252.71 606.22,1160.80 584.41,1113.84 573.56,1090.72 567.44,1079.78 561.07,1069.24 550.15,1054.37 544.58,1047.27 538.76,1040.54 530.50,1032.13 522.29,1024.10 507.81,1011.82 498.43,1004.78 488.75,998.19 474.70,989.74 461.45,982.95 447.96,977.25 424.90,968.32 412.27,963.92 386.72,955.40" spreadType="center">
+        <lane index="0" allow="rail_electric"/>
+    </edge>
+    <edge id="23335805#2" from="48999923" to="1881838954" type="railway.rail" numLanes="1" speed="83.33" shape="386.72,955.40 368.41,949.01 354.46,945.03 345.87,942.99 336.60,941.15 327.62,939.24 318.29,937.73 305.94,936.18" spreadType="center">
+        <lane index="0" allow="rail_electric"/>
+    </edge>
+    <edge id="23335805#3" from="1881838954" to="1881881963" type="railway.rail" numLanes="1" speed="83.33" shape="305.94,936.18 294.02,934.93 283.03,933.76 159.94,919.25 158.77,919.12 157.58,919.01 23.09,906.23 16.05,905.57" spreadType="center">
+        <lane index="0" allow="rail_electric"/>
+    </edge>
+    <edge id="24038475#0" from="34677711" to="260700116" type="highway.footway" numLanes="1" speed="8.33" shape="532.52,343.17 542.04,347.09 563.39,345.47 565.93,346.79 581.59,354.78 587.12,356.45 637.38,371.69">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="24038475#1" from="260700116" to="277310879" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="24038475#2" from="277310879" to="278878848" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="24038534#0" from="34677659" to="260700545" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="24038534#1" from="260700545" to="271359580" type="highway.service" numLanes="1" speed="5.56" shape="527.28,780.93 482.51,768.66 482.24,729.37 467.62,728.47 467.55,703.92 440.06,701.59 423.47,683.13 421.04,634.48">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="24396404" from="264778809" to="264778811" type="highway.service" numLanes="1" speed="5.56" shape="542.63,471.45 588.61,472.85 585.79,519.86">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="25068137" from="269964108" to="269964106" type="highway.residential" numLanes="1" speed="8.33" shape="741.94,1086.85 755.69,1050.44 767.81,1011.46 783.77,964.37 787.33,952.59"/>
+    <edge id="25068700" from="247378375" to="445100348" type="highway.unclassified" numLanes="1" speed="8.33" shape="550.29,1085.68 550.29,1080.00 543.89,1067.37 521.34,1047.86 512.32,1041.88 492.03,1029.94 465.32,1014.37 418.09,988.27 400.93,980.23 392.67,976.95 382.68,974.47 371.60,971.83 356.14,970.13 309.39,967.52 308.81,969.86"/>
+    <edge id="25363135#0" from="35651461" to="276419026" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="25363135#1" from="276419026" to="1356130757" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="25363135#2" from="1356130757" to="cluster_26153656_34673725" type="highway.residential" numLanes="1" speed="8.33" shape="547.48,567.02 548.79,621.17"/>
+    <edge id="25363167" from="cluster_270703615_622360014" to="467106195" type="highway.footway" numLanes="1" speed="8.33" shape="382.26,461.50 415.49,461.38 430.82,461.27">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="25446022" from="277310879" to="277310886" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="25485133#0" from="277697623" to="277697625" type="highway.service" numLanes="1" speed="5.56" shape="352.25,452.22 347.85,450.38 343.53,450.48 339.00,452.73">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="25485133#1" from="277697625" to="277697630" type="highway.service" numLanes="1" speed="5.56" shape="339.00,452.73 335.87,457.07 335.16,461.82 337.05,467.17 341.07,470.64 346.86,471.77 352.29,469.77 355.65,465.81">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="25485133#2" from="277697630" to="277697623" type="highway.service" numLanes="1" speed="5.56" shape="355.65,465.81 356.75,460.26 355.27,455.51 352.25,452.22">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="25952467" from="1835408176" to="296924344" type="highway.footway" numLanes="1" speed="8.33" shape="564.69,802.34 590.81,801.77 604.45,783.79 624.56,763.06">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="26384237#0" from="289047459" to="289047549" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26384237#1" from="289047549" to="806390749" type="highway.service" numLanes="1" speed="5.56" shape="283.62,596.00 282.86,561.87 309.28,561.39 329.21,561.03 330.35,595.44 302.24,595.78">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26384237#2" from="806390749" to="289047549" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26384275#0" from="289047648" to="1894312954" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26384275#1" from="1894312954" to="853135516" type="highway.service" numLanes="1" speed="5.56" shape="360.79,511.65 364.11,526.39 364.29,531.80">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26384275#2" from="853135516" to="289047670" type="highway.service" numLanes="1" speed="5.56" shape="364.29,531.80 364.99,556.97 365.22,564.88">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26384298" from="260700545" to="1192507866" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562389#0" from="26189950" to="440765481" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562389#1" from="440765481" to="1424270251" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562389#2" from="1424270251" to="291185195" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562389#3" from="291185195" to="291185192" type="highway.service" numLanes="1" speed="5.56" shape="718.90,902.47 705.04,875.78 704.92,870.15 715.20,840.44">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562389#4" from="291185192" to="291185409" type="highway.service" numLanes="1" speed="5.56" shape="715.20,840.44 717.21,832.89 714.46,795.70 724.64,762.24 732.21,760.46 779.76,777.29">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562389#5" from="291185409" to="291185143" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562391#0" from="291185195" to="291185194" type="highway.service" numLanes="1" speed="5.56" shape="718.90,902.47 727.48,874.84 733.06,858.89 736.88,848.59">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562391#1" from="291185194" to="291185148" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562396" from="291185192" to="291185194" type="highway.service" numLanes="1" speed="5.56" shape="715.20,840.44 723.46,843.21 736.88,848.59">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562404#0" from="291185409" to="442839527" type="highway.service" numLanes="1" speed="5.56" shape="779.76,777.29 786.83,755.73 801.58,746.65 819.83,753.25">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562404#1" from="442839527" to="442839529" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26562404#2" from="442839529" to="291185412" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26773163" from="293667015" to="293620408" type="highway.service" numLanes="1" speed="5.56" shape="947.31,741.58 968.78,680.67 996.66,691.78 1010.88,657.02 1085.52,688.07" spreadType="center">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26775981#0" from="293695864" to="293696006" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26775981#1" from="293696006" to="429587899" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26775981#2" from="429587899" to="293696234" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26775981#3" from="293696234" to="293695883" type="highway.service" numLanes="1" speed="5.56" shape="958.04,830.64 1000.94,845.06 1006.24,846.84">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26775984" from="293696006" to="293696007" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776014#0" from="293696234" to="293696352" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776014#1" from="293696352" to="293696354" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776014#2" from="293696354" to="293696356" type="highway.service" numLanes="1" speed="5.56" shape="967.01,916.80 956.74,943.37 942.65,938.60">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776014#3" from="293696356" to="429587898" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776014#4" from="429587898" to="293696357" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776026#0" from="293696530" to="293696558" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776026#1" from="293696558" to="293696556" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="26776032" from="293696558" to="293696602" type="highway.service" numLanes="1" speed="5.56" shape="826.88,889.10 831.67,874.68 858.43,883.43">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="27059094" from="634580664" to="296893556" type="highway.service" numLanes="1" speed="5.56" shape="520.03,503.65 518.77,517.67 380.05,520.73 376.55,508.14">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="27059110#0" from="270703391" to="467106195" type="highway.service" numLanes="1" speed="5.56" shape="432.88,505.94 432.56,501.95 430.82,461.27">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="27059110#1" from="467106195" to="270703437" type="highway.service" numLanes="1" speed="5.56" shape="430.82,461.27 430.94,456.72 442.92,456.18 445.46,501.65 445.91,505.75">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="29136063#0" from="cluster_104171179_28142770_28298581_28298587" to="1356130769" type="highway.primary" numLanes="2" speed="13.89" shape="667.56,630.86 688.47,573.89" spreadType="center"/>
+    <edge id="29136063#1" from="1356130769" to="26154200" type="highway.primary" numLanes="2" speed="13.89" shape="688.47,573.89 695.78,553.24 703.66,531.53" spreadType="center"/>
+    <edge id="29136063#2" from="26154200" to="43242035" type="highway.primary" numLanes="2" speed="13.89" spreadType="center"/>
+    <edge id="29136063#3" from="43242035" to="26193288" type="highway.primary" numLanes="2" speed="13.89" shape="728.68,460.99 769.62,341.84 770.90,338.15" spreadType="center"/>
+    <edge id="30425847#0" from="cluster_104171179_28142770_28298581_28298587" to="cluster_26153656_34673725" type="highway.primary" numLanes="2" speed="13.89" shape="661.98,644.53 632.34,639.49 603.95,635.34 576.06,633.15 549.09,632.18" spreadType="center"/>
+    <edge id="30425847#1" from="cluster_26153656_34673725" to="271359580" type="highway.primary" numLanes="2" speed="13.89" shape="549.09,632.18 525.25,632.43 421.04,634.48" spreadType="center"/>
+    <edge id="30425847#2" from="271359580" to="560140373" type="highway.primary" numLanes="2" speed="13.89" spreadType="center"/>
+    <edge id="30425847#3" from="560140373" to="21613360" type="highway.primary" numLanes="2" speed="13.89" shape="385.19,635.53 329.42,636.60 292.21,637.36 255.37,637.14 236.46,636.40 219.01,635.05 185.65,632.21" spreadType="center"/>
+    <edge id="30425847#4" from="21613360" to="41240318" type="highway.primary" numLanes="2" speed="13.89" shape="185.65,632.21 154.73,629.43 132.67,627.56 93.45,623.41 0.00,614.68" spreadType="center"/>
+    <edge id="30738461" from="339975562" to="cluster_339975567_43242046" type="highway.service" numLanes="1" speed="5.56" shape="963.11,566.48 952.47,559.18 960.43,542.99 929.88,526.13">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="31281702#0" from="348042902" to="293695883" type="highway.footway" numLanes="1" speed="8.33" shape="992.30,900.74 1010.09,854.79 1006.24,846.84">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="31281702#1" from="293695883" to="381910193" type="highway.footway" numLanes="1" speed="8.33" shape="1006.24,846.84 1013.20,846.09 1027.90,843.63 1040.14,846.66 1080.28,859.93">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="31288488" from="348042902" to="293696354" type="highway.service" numLanes="1" speed="5.56" shape="992.30,900.74 974.49,895.50 967.01,916.80">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="33049407#0" from="27557127" to="378917495" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049407#1" from="378917495" to="59824154" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049407#2" from="59824154" to="1771199559" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049407#3" from="1771199559" to="269964113" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049407#4" from="269964113" to="480440288" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049407#5" from="480440288" to="59824195" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049407#6" from="59824195" to="266777507" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049407#7" from="266777507" to="36745051" type="highway.tertiary" numLanes="1" speed="13.89"/>
+    <edge id="33049438#0" from="27557127" to="43242043" type="highway.primary" numLanes="2" speed="13.89" shape="781.80,345.91 780.62,348.97 768.28,381.51 737.34,463.36" spreadType="center"/>
+    <edge id="33049438#1" from="43242043" to="28142772" type="highway.primary" numLanes="2" speed="13.89" spreadType="center"/>
+    <edge id="33070760#0" from="26154191" to="34677711" type="highway.residential" numLanes="1" speed="8.33" shape="541.44,187.75 535.46,195.39 531.02,204.38 527.97,214.20 526.52,229.65 526.51,244.92 530.06,300.00 531.99,331.89 532.52,343.17"/>
+    <edge id="33070760#1" from="34677711" to="43242031" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="33070760#2" from="43242031" to="264778809" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="33070760#3" from="264778809" to="35651461" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="36943288#0" from="429587898" to="667901703" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="36943288#1" from="667901703" to="429587900" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="36943289#0" from="429587901" to="429587902" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="36943289#1" from="429587902" to="436828486" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="36943289#2" from="436828486" to="429587903" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="36943289#3" from="429587903" to="293696556" type="highway.footway" numLanes="1" speed="8.33" shape="852.30,906.15 855.40,898.62 853.43,897.93">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="36943290" from="429587908" to="429587906" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="36943292#0" from="429587907" to="429587900" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="36943292#1" from="429587900" to="429587908" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="36943296#0" from="293696352" to="667901708" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="36943296#1" from="667901708" to="429587921" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="36943301" from="429587940" to="429587899" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="37399604#0" from="436828502" to="436828505" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37399604#1" from="436828505" to="437327480" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37399604#2" from="437327480" to="436828507" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37399605" from="436828486" to="436828507" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37399606" from="429587903" to="436828505" type="highway.footway" numLanes="1" speed="8.33" shape="852.30,906.15 824.97,896.81 823.22,901.64">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37415994" from="307961022" to="437327480" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37593790#0" from="440696682" to="633292230" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37593790#1" from="633292230" to="450519041" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37593791#0" from="440696683" to="442839521" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37593791#1" from="442839521" to="307961027" type="highway.footway" numLanes="1" speed="8.33" shape="822.53,729.77 822.18,730.80 816.96,728.68">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37601917" from="429587902" to="429587921" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37601918" from="440765481" to="440765482" type="highway.service" numLanes="1" speed="5.56" shape="739.07,933.57 746.50,930.47 771.12,935.39">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="37752125#0" from="442839529" to="442839558" type="highway.service" numLanes="1" speed="5.56" shape="834.51,759.09 839.06,746.92 845.08,731.17 830.68,725.70 827.59,732.85">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="37752125#1" from="442839558" to="442839527" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="37752126#0" from="442839576" to="442839558" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="37752126#1" from="442839558" to="442839521" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="38167738#0" from="269964106" to="1424270250" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#1" from="1424270250" to="436828502" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#2" from="436828502" to="293696530" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#3" from="293696530" to="440696682" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#4" from="440696682" to="291185143" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#5" from="291185143" to="293695864" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#6" from="293695864" to="1424274807" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#7" from="1424274807" to="291185412" type="highway.residential" numLanes="1" speed="13.89"/>
+    <edge id="38167738#8" from="291185412" to="cluster_269964112_269964114" type="highway.residential" numLanes="1" speed="13.89" shape="849.80,764.58 866.03,718.60"/>
+    <edge id="38167741#1" from="cluster_269964112_269964114" to="36854115" type="highway.residential" numLanes="1" speed="8.33" shape="869.52,707.34 879.39,677.58"/>
+    <edge id="38167741#2" from="36854115" to="36854116" type="highway.residential" numLanes="1" speed="8.33" shape="879.39,677.58 887.71,653.23 903.77,602.61"/>
+    <edge id="38167741#3" from="36854116" to="cluster_339975567_43242046" type="highway.residential" numLanes="1" speed="8.33" shape="903.77,602.61 916.61,566.13 929.03,529.38"/>
+    <edge id="38167741#5" from="cluster_339975567_43242046" to="269964113" type="highway.residential" numLanes="1" speed="8.33" shape="929.88,526.13 949.87,481.16"/>
+    <edge id="38227185" from="450519041" to="440696681" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="38306209" from="429587906" to="429587901" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="39085064" from="467011002" to="467011004" type="highway.footway" numLanes="1" speed="8.33" shape="550.07,661.50 606.60,664.03 652.81,670.46">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="4304448#1" from="cluster_26153648_34043448" to="34677652" type="highway.residential" numLanes="1" speed="8.33" shape="614.09,863.55 585.43,860.15"/>
+    <edge id="4314834#0" from="26155586" to="cluster_26153648_34043448" type="highway.tertiary" numLanes="2" speed="13.89" shape="619.35,917.75 613.04,895.65 614.09,863.55" spreadType="center"/>
+    <edge id="4314834#1" from="cluster_26153648_34043448" to="296924344" type="highway.tertiary" numLanes="2" speed="13.89" shape="614.09,863.55 614.80,829.64 617.57,799.45 624.56,763.06" spreadType="center"/>
+    <edge id="4314834#2" from="296924344" to="467011004" type="highway.tertiary" numLanes="2" speed="13.89" shape="624.56,763.06 626.41,754.49 629.48,741.42 637.86,714.57 642.56,700.88 652.81,670.46" spreadType="center"/>
+    <edge id="4314834#3" from="467011004" to="cluster_104171179_28142770_28298581_28298587" type="highway.tertiary" numLanes="2" speed="13.89" shape="652.81,670.46 661.98,644.53" spreadType="center"/>
+    <edge id="44068783" from="560140373" to="560140375" type="highway.service" numLanes="1" speed="5.56" shape="385.19,635.53 380.90,759.16 419.49,766.11">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="44419041" from="564631546" to="564631547" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="47328513" from="36854120" to="602783338" type="highway.path" numLanes="1" speed="2.78">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042723#0" from="622336943" to="622336955" type="highway.footway" numLanes="1" speed="8.33" shape="334.24,449.39 326.09,437.13 332.53,430.84 341.09,430.37">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042723#1" from="622336955" to="622336960" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042724" from="277697625" to="622336943" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042726#0" from="622336968" to="622336972" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042726#1" from="622336972" to="622336980" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042726#2" from="622336980" to="622336990" type="highway.footway" numLanes="1" speed="8.33" shape="340.93,427.27 326.89,428.10 326.45,421.63 325.00,404.20">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042727" from="622336972" to="622336999" type="highway.footway" numLanes="1" speed="8.33" shape="343.48,427.11 343.23,421.37 342.03,402.83">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49042728" from="622336980" to="622336955" type="highway.steps" numLanes="1" speed="1.39">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49047248" from="cluster_270703615_622360014" to="277697630" type="highway.footway" numLanes="1" speed="8.33" shape="381.37,476.65 378.15,476.55 371.39,476.40 366.29,475.02 361.16,471.85 355.65,465.81">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="49844607" from="293696007" to="633292230" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="50005239#0" from="277697623" to="622336960" type="highway.service" numLanes="1" speed="5.56" shape="352.25,452.22 362.43,443.58 366.22,436.76 365.98,428.99">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="50005239#1" from="622336960" to="622336968" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="50005239#2" from="622336968" to="277697633" type="highway.service" numLanes="1" speed="5.56" shape="365.79,425.79 364.69,407.88 364.31,401.02">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="5088373#0" from="34677711" to="34677731" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5088373#1" from="34677731" to="277697633" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5088373#2" from="277697633" to="622336999" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5088373#3" from="622336999" to="622336990" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5088373#4" from="622336990" to="35510535" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5229164#0" from="34814874" to="34814866" type="highway.residential" numLanes="1" speed="8.33" shape="803.16,290.88 837.74,311.95 979.73,400.06"/>
+    <edge id="5229164#1" from="34814866" to="27557122" type="highway.residential" numLanes="1" speed="8.33" shape="979.73,400.06 1033.98,433.60 1153.07,507.26 1184.74,526.90 1253.76,569.19 1266.64,577.07 1321.22,610.52 1455.13,690.58 1506.54,715.46 1593.78,748.25"/>
+    <edge id="5237595" from="28142772" to="36854116" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5237597" from="36854115" to="36854120" type="highway.service" numLanes="1" speed="5.56">
+        <lane index="0" allow="delivery"/>
+    </edge>
+    <edge id="52572950#0" from="293696356" to="667901706" type="highway.path" numLanes="1" speed="2.78" shape="942.65,938.60 940.85,936.73 935.29,933.31 934.08,925.48">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="52572950#1" from="667901706" to="667901708" type="highway.path" numLanes="1" speed="2.78" shape="934.08,925.48 933.26,923.96 929.34,920.51">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="52572951#0" from="667901709" to="667901703" type="highway.footway" numLanes="1" speed="8.33" shape="914.71,992.68 919.42,980.64 924.72,963.77 924.94,962.46">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="52572951#1" from="667901703" to="667901706" type="highway.footway" numLanes="1" speed="8.33" shape="924.94,962.46 926.50,958.20 930.44,944.54 932.53,932.17 932.28,929.65 934.08,925.48">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="5563258#0" from="34677731" to="cluster_270703615_622360014" type="highway.footway" numLanes="1" speed="8.33" shape="382.85,398.35 387.11,417.04 384.82,423.05 382.26,461.50">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="5563258#2" from="cluster_270703615_622360014" to="634580663" type="highway.footway" numLanes="1" speed="8.33" shape="381.37,476.65 381.31,508.05">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="5724307" from="43242043" to="cluster_339975567_43242046" type="highway.residential" numLanes="1" speed="8.33" shape="737.34,463.36 744.14,465.54 929.03,529.38"/>
+    <edge id="5724308#0" from="43242031" to="278878848" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5724308#1" from="278878848" to="70936994" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="5724308#2" from="70936994" to="43242035" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="58149866#0" from="445067630" to="721437426" type="highway.path" numLanes="1" speed="2.78" shape="172.06,892.73 222.22,889.10 267.44,892.82">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="58149866#1" from="721437426" to="765703090" type="highway.path" numLanes="1" speed="2.78" shape="267.44,892.82 318.03,914.75 379.59,930.04 414.53,933.99 492.14,955.35 513.42,966.58 546.88,998.44">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="61284120" from="48999923" to="765703076" type="railway.rail" numLanes="1" speed="83.33" shape="386.72,955.40 394.77,957.72 402.98,959.90 415.95,962.73 424.86,964.99 432.90,967.29 440.21,969.65 449.23,973.00 462.73,978.75 476.25,985.47 483.95,989.88 491.65,994.58 502.97,1002.35 513.61,1010.35 525.49,1020.39 533.82,1028.63 542.22,1037.29 548.59,1044.73 554.64,1052.51 559.51,1059.13 564.79,1067.09 570.57,1076.59 577.38,1089.23 588.51,1112.94 607.74,1154.40 652.56,1250.56 666.88,1282.03 681.26,1312.83 687.14,1324.80 692.14,1334.01 699.30,1346.40 705.82,1357.03 714.32,1370.62 720.21,1380.52 731.91,1399.58" spreadType="center">
+        <lane index="0" allow="rail_electric"/>
+    </edge>
+    <edge id="61284122" from="765703090" to="721437426" type="highway.path" numLanes="1" speed="2.78" shape="546.88,998.44 560.64,985.30 555.35,929.73 539.59,926.31 524.40,925.10 512.07,929.25 497.44,926.89 492.02,915.18 447.78,908.66 415.12,903.72 385.60,903.53 355.32,900.70 318.30,893.45 287.63,888.11 267.44,892.82">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="61734682#0" from="769233907" to="26153672" type="highway.secondary" numLanes="2" speed="13.89" shape="1391.69,895.47 1363.34,892.78 1334.90,888.46" spreadType="center"/>
+    <edge id="61734682#1" from="26153672" to="cluster_269964112_269964114" type="highway.secondary" numLanes="2" speed="13.89" shape="1334.90,888.46 1290.39,879.07 1268.50,873.68 1247.64,867.91 1217.16,858.70 1187.73,848.12 1131.53,825.85 1107.14,815.86 1096.58,811.61 1078.54,804.19 1023.56,782.08 866.03,718.60" spreadType="center"/>
+    <edge id="61734682#2" from="cluster_269964112_269964114" to="440696683" type="highway.secondary" numLanes="2" speed="13.89" shape="866.03,718.60 829.97,703.98" spreadType="center"/>
+    <edge id="61734682#3" from="440696683" to="1778997188" type="highway.secondary" numLanes="2" speed="13.89" shape="829.97,703.98 792.62,689.48 752.92,674.73" spreadType="center"/>
+    <edge id="64797654#0" from="28201776" to="1713349266" type="railway.tram" numLanes="2" speed="27.78" shape="661.26,258.89 741.93,317.21 761.15,331.10" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#1" from="1713349266" to="26193288" type="railway.tram" numLanes="2" speed="27.78" shape="761.15,331.10 767.46,335.66 770.90,338.15" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#10" from="266777507" to="36745051" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#11" from="36745051" to="27557121" type="railway.tram" numLanes="2" speed="27.78" shape="1139.30,611.58 1176.35,636.54 1225.13,665.73 1270.83,688.82 1274.21,690.68 1324.83,715.78 1361.88,730.99 1421.00,754.30 1485.54,777.72 1574.03,812.05" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#2" from="26193288" to="27557127" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#3" from="27557127" to="378917495" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#4" from="378917495" to="59824154" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#5" from="59824154" to="1771199559" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#6" from="1771199559" to="269964113" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#7" from="269964113" to="480440288" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#8" from="480440288" to="59824195" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="64797654#9" from="59824195" to="266777507" type="railway.tram" numLanes="2" speed="27.78" spreadType="center">
+        <lane index="0" allow="rail_urban"/>
+        <lane index="1" allow="rail_urban"/>
+    </edge>
+    <edge id="66654719#0" from="806386164" to="853135513" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="66654719#1" from="853135513" to="513585702" type="highway.footway" numLanes="1" speed="8.33" shape="339.86,532.42 340.35,548.22 309.18,549.17 271.84,550.32 249.78,553.38">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="71763552" from="853135507" to="853135516" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="71763553" from="853135513" to="853135507" type="highway.footway" numLanes="1" speed="8.33">
+        <lane index="0" allow="pedestrian"/>
+    </edge>
+    <edge id="7745711#0" from="26154200" to="62004677" type="highway.residential" numLanes="1" speed="8.33" shape="703.66,531.53 693.11,528.84 657.49,524.20" spreadType="center"/>
+    <edge id="7745711#1" from="62004677" to="264778811" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="7745711#2" from="264778811" to="276419026" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="7745716#0" from="35651461" to="634580664" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="7745716#1" from="634580664" to="270703437" type="highway.residential" numLanes="1" speed="8.33" shape="520.03,503.65 486.85,504.59 445.91,505.75" spreadType="center"/>
+    <edge id="7745716#2" from="270703437" to="270703391" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="7745716#3" from="270703391" to="634580663" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="7745716#4" from="634580663" to="296893556" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="7745716#5" from="296893556" to="289047648" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="7745716#6" from="289047648" to="59612368" type="highway.residential" numLanes="1" speed="8.33" shape="359.74,508.29 307.17,510.17 302.77,510.06 281.84,510.99 240.75,512.15 194.32,513.08" spreadType="center"/>
+    <edge id="7782975#0" from="26189946" to="293696357" type="highway.residential" numLanes="1" speed="8.33" shape="1156.05,1079.29 1023.57,1035.41 978.17,1018.85 923.98,996.09"/>
+    <edge id="7782975#1" from="293696357" to="667901709" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="7782975#2" from="667901709" to="269964106" type="highway.residential" numLanes="1" speed="8.33" shape="914.71,992.68 796.17,953.16 787.33,952.59"/>
+    <edge id="7782975#3" from="269964106" to="26189950" type="highway.residential" numLanes="1" speed="8.33" shape="787.33,952.59 777.83,951.73 768.89,951.39 760.19,952.68 754.24,953.73"/>
+    <edge id="7782975#4" from="26189950" to="53251264" type="highway.residential" numLanes="1" speed="8.33" shape="754.24,953.73 747.06,955.54 740.22,958.18 648.59,997.37"/>
+    <edge id="8013387" from="34677731" to="34677738" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="8034799#0" from="34677652" to="1476473564" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="8034799#1" from="1476473564" to="1476473559" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="8034799#2" from="1476473559" to="1835408176" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="8034799#3" from="1835408176" to="34677659" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="8034799#4" from="34677659" to="1367507447" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="8034799#5" from="1367507447" to="467011002" type="highway.residential" numLanes="1" speed="8.33"/>
+    <edge id="8034799#6" from="467011002" to="cluster_26153656_34673725" type="highway.residential" numLanes="1" speed="8.33" shape="550.07,661.50 549.09,632.18"/>
+    <edge id="9363503#0" from="70936994" to="1356130740" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+    <edge id="9363503#1" from="1356130740" to="62004677" type="highway.residential" numLanes="1" speed="8.33" spreadType="center"/>
+</edges>

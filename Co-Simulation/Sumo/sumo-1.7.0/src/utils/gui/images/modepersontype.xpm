@@ -1,0 +1,28 @@
+/* XPM */
+static const char *modepersontype_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 6 1 ",
+"  c None",
+". c black",
+"X c red",
+"o c #338033",
+"O c #FFCB99",
+"+ c white",
+/* pixels */
+"     ......     ",
+"    .OOOOOO.    ",
+"   .OOOOOOOO.   ",
+"   .O++O++OO.   ",
+"   .O+.O+.OO.   ",
+"   .OOOOOOOO.   ",
+"   .OOOOOOOO.   ",
+"   .OOXXXXOO.   ",
+"    .OOOOOO.    ",
+"     ......     ",
+"                ",
+"   ..........   ",
+"  .oooooooooo.+ ",
+" .oooooooooooo.+",
+".oooooooooooooo.",
+".oooooooooooooo."
+};

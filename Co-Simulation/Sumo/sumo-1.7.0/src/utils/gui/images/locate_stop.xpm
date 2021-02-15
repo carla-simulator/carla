@@ -1,0 +1,22 @@
+/* XPM */
+static const char *locate_stop_xpm[] = {
+"16 16 3 1",
+" 	c None",
+".	c Black",
+"o	c Red",
+"           ...  ",
+"          .   . ",
+"              . ",
+"   .....     .  ",
+"  .ooooo.   .   ",
+" .ooooooo.      ",
+".ooooooooo. .   ",
+".ooooooooo.     ",
+".ooooooooo.     ",
+".ooooooooo.     ",
+".ooooooooo.     ",
+" .ooooooo.      ",
+"  .ooooo.       ",
+"   .....        ",
+"     .          ",
+"     .          "};

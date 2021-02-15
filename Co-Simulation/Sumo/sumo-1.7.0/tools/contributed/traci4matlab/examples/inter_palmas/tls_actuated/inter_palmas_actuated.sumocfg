@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="inter_palmas.net.xml"/>
+        <route-files value="../inter_palmas_pedestrians.trip.xml,../inter_palmas_demand.rou.xml,../inter_palmas_buses.rou.xml"/>
+		<additional-files value="../inter_palmas.poly.xml,../inter_palmas_bus_stops.add.xml"/>
+    </input>
+
+    <time>
+        <begin value="50400"/>
+		<end value="54000"/>
+    </time>
+
+    <report>
+        <verbose value="true"/>
+        <no-step-log value="true"/>
+    </report>
+	
+	<gui_only>
+        <gui-settings-file value="../viewsettings.xml"/>
+    </gui_only>
+
+</configuration>

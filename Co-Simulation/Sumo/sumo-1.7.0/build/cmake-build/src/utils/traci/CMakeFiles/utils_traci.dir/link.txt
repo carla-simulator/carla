@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_traci.a  CMakeFiles/utils_traci.dir/TraCIAPI.cpp.o
+/usr/bin/ranlib libutils_traci.a

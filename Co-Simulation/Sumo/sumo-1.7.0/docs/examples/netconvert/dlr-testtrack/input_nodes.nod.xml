@@ -1,0 +1,27 @@
+<nodes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/nodes_file.xsd">
+
+	<node id="ErnstRuskaSink1" x="-100" y="0"/>
+	<node id="ErnstRuskaEnd1" x="0" y="0"/>
+	<node id="ErnstRuskaEinstein" x="194.915" y="0"/>
+	<node id="ErnstRuskaHavestadtDiv1" x="885.25" y="0"/>
+	<node id="ErnstRuskaHavestadt" x="915.25" y="0"/>
+	<node id="ErnstRuskaHavestadtDiv2" x="945.25" y="0"/>
+	<node id="ErnstRuskaVolmer" x="1484.75" y="0"/>
+	<node id="ErnstRuskaAltglienicker" x="1808.47" y="0" type="traffic_light"/>
+	<node id="ErnstRuskaEnd2" x="1925.42" y="0"/>
+	<node id="ErnstRuskaSink2" x="2025.42" y="0"/>
+
+	<node id="EinsteinEnd" x="194.915" y="100"/>
+	<node id="EinsteinSinkEnd" x="194.915" y="200"/>
+
+	<node id="HavestadtEnd" x="915.25" y="100"/>
+	<node id="HavestadtSinkEnd" x="915.25" y="200"/>
+
+	<node id="VolmerEnd" x="1484.75" y="100"/>
+	<node id="VolmerSinkEnd" x="1484.75" y="200"/>
+
+	<node id="AltglienickerBreit" x="1808.47" y="-20"/>
+	<node id="AltglienickerEnd" x="1808.47" y="-100"/>
+	<node id="AltglienickerSinkEnd" x="1808.47" y="-200"/>
+
+</nodes>

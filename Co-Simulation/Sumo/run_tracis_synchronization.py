@@ -5,7 +5,6 @@ import logging
 import os
 import sys
 
-
 from util.func import (
     data_from_json,
 )
@@ -28,7 +27,6 @@ class TracisSyncronizer:
         # ----- set order -----
         self.tracis = [self.main_traci] + self.other_tracis
         for tmp_traci in self.tracis:
-            print(tmp_traci.getVersion())
             tmp_traci.setOrder(order)
 
     def start(self):

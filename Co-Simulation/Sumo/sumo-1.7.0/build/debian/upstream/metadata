@@ -1,0 +1,12 @@
+Reference:
+  Author: P. Alvarez Lopez and M. Behrisch and L. Bieker-Walz and J. Erdmann and Y.-P. Floetteroed and R. Hilbrich and L. Luecken and J. Rummel and P. Wagner and E. Wiessner
+  Title: "Microscopic Traffic Simulation using SUMO"
+  Journal: ITSC 2018, The 21st IEEE International Conference on Intelligent Transportation Systems
+  Year: 2018
+  Type: INPROCEEDINGS
+  eprint: https://elib.dlr.de/124092/
+Bug-Database: https://github.com/eclipse/sumo/issues
+Screenshots: https://sumo.dlr.de/wiki/Screenshots
+FAQ: https://sumo.dlr.de/wiki
+Homepage: https://sumo.dlr.de/
+Name: SUMO - Simulation of Urban MObility

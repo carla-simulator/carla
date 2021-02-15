@@ -1,0 +1,42 @@
+<routes>
+    <vTypeDistribution id="DEFAULT_VEHTYPE">
+        <vType id="passenger" length="5.0" minGap="2.5" guiShape="passenger" osgFile="vw_golf.3ds" probability="20" /> 
+        <vType id="bus" length="12.5" minGap="2.5" guiShape="bus" osgFile="tour_bus.3ds" width="2.4" probability="2"/> 
+        <vType id="truck/trailer" length="16.25" minGap="2.5" guiShape="truck/trailer" osgFile="lorry.3ds" width="2.6" probability="1"/> 
+    </vTypeDistribution>
+
+    <route id="1_right" edges="1fi 1si 3o 3fo"/>
+    <flow id="1_right" route="1_right" begin="0" end="90000" period="30" departSpeed="13.89"/>
+    <route id="2_right" edges="2fi 2si 4o 4fo"/>
+    <flow id="2_right" route="2_right" begin="0" end="90000" period="30" departSpeed="13.89"/>
+
+    <route id="1_left" edges="1fi 1si 4o 4fo"/>
+    <flow id="1_left" route="1_left" begin="0" end="90000" period="45" departSpeed="13.89"/>
+    <route id="2_left" edges="2fi 2si 3o 3fo"/>
+    <flow id="2_left" route="2_left" begin="0" end="90000" period="55" departSpeed="13.89"/>
+
+    <route id="1_horizontal" edges="1fi 1si 2o 2fo"/>
+    <flow id="1_horizontal" route="1_horizontal" begin="0" end="90000" period="15" departSpeed="13.89"/>
+    <route id="2_horizontal" edges="2fi 2si 1o 1fo"/>
+    <flow id="2_horizontal" route="2_horizontal" begin="0" end="90000" period="15" departSpeed="13.89"/>
+
+    <route id="3_right" edges="3fi 3si 2o 2fo"/>
+    <flow id="3_right" route="3_right" begin="20" end="90000" period="30" departSpeed="13.89"/>
+    <route id="4_right" edges="4fi 4si 1o 1fo"/>
+    <flow id="4_right" route="4_right" begin="20" end="90000" period="40" departSpeed="13.89"/>
+    <route id="3_left" edges="3fi 3si 1o 1fo"/>
+    <flow id="3_left" route="3_left" begin="20" end="90000" period="45" departSpeed="13.89"/>
+    <route id="4_left" edges="4fi 4si 2o 2fo"/>
+    <flow id="4_left" route="4_left" begin="20" end="90000" period="45" departSpeed="13.89"/>
+
+    <route id="3_vertical" edges="3fi 3si 4o 4fo"/>
+    <flow id="3_vertical" route="3_vertical" begin="40" end="90000" period="25" departSpeed="13.89"/>
+    <route id="4_vertical" edges="4fi 4si 3o 3fo"/>
+    <flow id="4_vertical" route="4_vertical" begin="40" end="90000" period="25" departSpeed="13.89"/>
+
+    <flow id="1_horizontal0" route="1_horizontal" begin="50" end="90000" period="20" departSpeed="13.89"/>
+    <flow id="3_vertical0" route="3_vertical" begin="60" end="90000" period="20" departSpeed="13.89"/>
+    <flow id="4_right0" route="4_right" begin="70" end="90000" period="40" departSpeed="13.89"/>
+    <flow id="2_left0" route="2_left" begin="80" end="90000" period="60" departSpeed="13.89"/>
+
+</routes>

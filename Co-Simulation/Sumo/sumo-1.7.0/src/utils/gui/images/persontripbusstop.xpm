@@ -1,0 +1,29 @@
+/* XPM */
+static const char *persontripbusstop_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1 ",
+"  c black",
+". c red",
+"X c #4CAA32",
+"o c #FFEB00",
+"O c #0026FF",
+"+ c #C800FF",
+"@ c white",
+/* pixels */
+"++O+++++++++++++",
+"++O+++++++++++++",
+"++O++++       ++",
+"OOOOO++ @ @ @ ++",
+"+OOO+++       ++",
+"++O++++ @ + @ ++",
+"          +   ++",
+"  . @ @ @ + @ ++",
+"          +   ++",
+"+++++++++++ @ ++",
+"+++XXX+++++   ++",
+"+++XoX+++++ @ ++",
+"XXXXXXXXX     ++",
+"XXXXXX.X@ @ @ ++",
+"XXXXXXXXX     ++",
+"++++++++++++++++"
+};

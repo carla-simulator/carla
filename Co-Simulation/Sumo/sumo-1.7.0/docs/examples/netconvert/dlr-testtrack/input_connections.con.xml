@@ -1,0 +1,30 @@
+<connections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/connections_file.xsd">
+	<connection from="ErnstRuska5W" to="ErnstRuska4W" fromLane="0" toLane="0"/>
+	<connection from="ErnstRuska5W" to="ErnstRuska4W" fromLane="1" toLane="1"/>
+	<connection from="ErnstRuska5W" to="AltglienickerBreitS" fromLane="2" toLane="0"/>
+
+	<connection from="ErnstRuska3W" to="ErnstRuska232W" fromLane="0" toLane="0"/>
+	<connection from="ErnstRuska3W" to="ErnstRuska232W" fromLane="1" toLane="1"/>
+
+	<connection from="ErnstRuska231W" to="ErnstRuska2W" fromLane="0" toLane="0"/>
+	<connection from="ErnstRuska231W" to="ErnstRuska2W" fromLane="1" toLane="1"/>
+
+	<connection from="ErnstRuska1O" to="ErnstRuska2O" fromLane="0" toLane="0"/>
+	<connection from="ErnstRuska1O" to="ErnstRuska2O" fromLane="1" toLane="1"/>
+	<connection from="ErnstRuska1O" to="EinsteinN" fromLane="1" toLane="0"/>
+
+
+	<connection from="ErnstRuska231O" to="ErnstRuska232O" fromLane="0" toLane="0"/>
+	<connection from="ErnstRuska231O" to="ErnstRuska232O" fromLane="1" toLane="1"/>
+	<connection from="ErnstRuska231O" to="HavestadtN" fromLane="2" toLane="1"/>
+
+
+	<connection from="ErnstRuska3O" to="ErnstRuska4O" fromLane="0" toLane="0"/>
+	<connection from="ErnstRuska3O" to="ErnstRuska4O" fromLane="1" toLane="1"/>
+	<connection from="ErnstRuska3O" to="VolmerN" fromLane="1" toLane="0"/>
+
+	<connection from="AltglienickerBreitN" to="ErnstRuska5O" fromLane="0" toLane="0"/>
+	<connection from="AltglienickerBreitN" to="ErnstRuska4W" fromLane="1" toLane="1"/>
+
+
+</connections>

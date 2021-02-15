@@ -1,0 +1,3500 @@
+% This file was created with JabRef 2.8.1.
+% Encoding: Cp1252
+
+@INPROCEEDINGS{Bajpai2011,
+  author = {Ashutosh Bajpai and Tom V Mathew},
+  title = {Development of an Interface between Signal Controller and Traffic
+	Simulator},
+  booktitle = {1st Conference of Transportation Research Group of India},
+  year = {2011},
+  month = {12},
+  organization = {Transportation Research Group of India},
+  abstract = {Adaptive Traffic Control algorithm is an important strategy to manage
+	traffic at an intersection. These are an improvement of vehicle actuated
+	signal control, where explicitly strategies are formulated to compute
+	the signal timing considering the current traffic state obtained
+	from sensors. However, field evaluation of these strategies is cumbersome
+	and expensive and hence simulators which model traffic system can
+	be a good alternative. The main challenge in this is a good interface
+	between the signal control system and the traffic simulators. The
+	signal control system needs the state of the junction in terms of
+	vehicle occupancy at every instant. On the other hand, traffic simulator
+	needs information on whether the signal state has changed. This two
+	way communication requires an efficient interface which is similar
+	to client-server architecture. The simulator acts as the server where
+	as the adaptive control strategy act like client. This paper proposes
+	an efficient interface to couple adaptive control strategy and traffic
+	simulator. This interface mediates between traffic control system
+	and traffic simulator and provides online interaction to simulation
+	from the control strategy. This interface facilitates pure procedural
+	routines to communicate and is written in C language along with Python/C
+	API. Additionally, a module to estimate the vehicular delay due to
+	the control strategy is developed. This delay is estimated by defining
+	effective length of queue, which is provided as a user input.
+	
+	
+	This interface is tested using SUMO (Simulation for Urban Mobility),
+	which is an open source, microscopic, space continuous and time discrete
+	simulator developed by German Aerospace Centre. The traffic control
+	strategy is analogous to the HCM vehicle actuated traffic control
+	except that there is a queue prediction model which computes upper
+	limits on the maximum green time. An isolated four arm junction having
+	four phases is simulated for various flow conditions. The simulator
+	supplied the state of the downstream detector to the traffic control
+	algorithm at every simulation step and the control algorithm determines
+	the signal time strategies (phase termination, green extension, and
+	maximum green time). These strategies are communicated to the simulator.
+	These communications were facilitated by the proposed interface.
+	The average stopped delay is computed as the performance parameter.
+	The interface was also coupled with another traffic simulator (VISSIM)
+	and the results are compared. This interface justifies the concept
+	of reusability by the evaluation of number of control strategy.},
+  file = {:https\://sumo.dlr.de/pdf/CTRG_Interface-SUMO.pdf:URL},
+  keywords = {Traffic simulator, Signal controller, Procedural Interface, SUMO (Simulation
+	of Urban Mobility), VISSIM (Verkehr In Städten - SIMulationsmodell)},
+  owner = {dkrajzew},
+  timestamp = {2012.02.07}
+}
+
+@INPROCEEDINGS{Bamberger2010,
+  author = {Walter Bamberger and Josef Schlittenlacher and Klaus Diepold},
+  title = {A Trust Model for Intervehicular Communication Based on Belief Theory},
+  booktitle = {Social Computing (SocialCom), 2010 IEEE Second International Conference
+	on},
+  year = {2010},
+  pages = {73-80},
+  publisher = {IEEE Computer Society},
+  note = {Best SocialCom Conference Paper Award},
+  abstract = {Vehicles will exchange much information in the future in order to
+	efficiently maintain their inner model of the environment. Before
+	they can belief received pieces of information, they must evaluate
+	their reliability. Trust is a mechanism to estimate this reliability
+	based on the sender. As cars often drive the same route, they meet
+	each other again and again. They can establish friendship-like relations
+	and thus are embedded in a social structure. A trust model depends
+	on this social structure. For this reason, we simulate the driving
+	pattern of a small town. Within this simulation, all cars are equipped
+	with a trust model that continuously monitors the experiences made
+	with others. The developed model focuses on direct experiences of
+	the individual and not on a system-wide reputation which would depend
+	on a central unit. It continuously evaluates the performance and
+	reputation of other cars and includes a feedback loop to faster adapt
+	to changes in the other’s behaviour. To make a decision out of the
+	collected data, the model uses the capacity of the binary error and
+	erasure channel from information theory. This capacity provides a
+	better decision criterion than the traditional expectation value.
+	The proposed trust model is an individual-level model; nonetheless
+	it can be connected to a system-wide reputation mechanism.},
+  doi = {10.1109/SocialCom.2010.20},
+  keywords = {V2X, sumo, Technische Universität München, Fidens, automobiles, road
+	traffic, security of data, telecommunication security, belief theory,
+	cars, driving pattern, vehicular network, social structure, trust
+	model},
+  url = {http://mediatum.ub.tum.de/node?id=997457}
+}
+
+@MASTERSTHESIS{Barber2011,
+  author = {Anthony Barber},
+  title = {SHARING THE ROADS USING ROUTE INFORMATION SHARING},
+  school = {University of Tulsa},
+  year = {2011},
+  file = {:https\://sumo.dlr.de/pdf/BarberThesis.pdf:URL},
+  keywords = {University of Tulsa, sumo},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19}
+}
+
+@ARTICLE{Barlovic2001,
+  author = {R. Barlovic and Elmar Brockfeld and A. Schadschneider and M. Schreckenberg},
+  title = {Optimizing traffic lights in a cellular automaton model for city
+	traffic},
+  journal = {Physical Review E},
+  year = {2001},
+  volume = {64},
+  pages = {056132},
+  number = {64, 056132},
+  month = {Oct},
+  note = { LIDO-Berichtsjahr=2003,},
+  abstract = {We study the impact of global traffic light control strategies in
+	a recently proposed cellular automaton model for vehicular traffic
+	in city networks. The model combines basic ideas of the Biham-Middleton-Levine
+	model for city traffic and the Nagel-Schreckenberg model for highway
+	traffic. The city network has a simple square lattice geometry. All
+	streets and intersections are treated equally, i.e., there are no
+	dominant streets. Starting from a simple synchronized strategy, we
+	show that the capacity of the network strongly depends on the cycle
+	times of the traffic lights. Moreover, we point out that the optimal
+	time periods are determined by the geometric characteristics of the
+	network, i.e., the distance between the intersections. In the case
+	of synchronized traffic lights, the derivation of the optimal cycle
+	times in the network can be reduced to a simpler problem, the flow
+	optimization of a single street with one traffic light operating
+	as a bottleneck. In order to obtain an enhanced throughput in the
+	model, improved global strategies are tested, e.g., green wave and
+	random switching strategies, which lead to surprising results.},
+  doi = {10.1103/PhysRevE.64.056132},
+  keywords = {DLR/TS/VM},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6570/}
+}
+
+@INPROCEEDINGS{Bauza2008,
+  author = {Bauza, R. and Gozalvez, J. and Sepulcre, M.},
+  title = {Operation and Performance of Vehicular Ad-Hoc Routing Protocols in
+	Realistic Environments},
+  booktitle = {Vehicular Technology Conference, 2008. VTC 2008-Fall. IEEE 68th},
+  year = {2008},
+  pages = {1 -5},
+  month = {sept.},
+  doi = {10.1109/VETECF.2008.450},
+  issn = {1090-3038},
+  keywords = {information dissemination;multihop communications;vehicle-to-infrastructure
+	wireless communications;vehicle-to-vehicle communications;vehicular
+	ad-hoc routing protocols;ad hoc networks;mobile radio;routing protocols;,
+	V2X, UMH, sumo},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19}
+}
+
+@INPROCEEDINGS{Behrisch2011,
+  author = {Michael Behrisch and Laura Bieker and Jakob Erdmann and Daniel Krajzewicz},
+  title = {SUMO - Simulation of Urban MObility: An Overview},
+  booktitle = {SIMUL 2011, The Third International Conference on Advances in System
+	Simulation},
+  year = {2011},
+  editor = {SINTEF \& University of Oslo Aida Omerovic and RTI International
+	- Research Triangle Park Diglio A. Simoni and RTI International -
+	Research Triangle Park Georgiy Bobashev},
+  pages = {63-68},
+  address = {Barcelona, Spain},
+  month = {October},
+  publisher = {ThinkMind},
+  abstract = {SUMO is an open source traffic simulation package including net import
+	and demand modeling components. We describe the current state of
+	the package as well as future developments and extensions. SUMO helps
+	to investigate several research topics e.g. route choice and traffic
+	light algorithm or simulating vehicular communication. Therefore
+	the framework is used in different projects to simulate automatic
+	driving or traffic management strategies.},
+  journal = {Proceedings of SIMUL 2011, The Third International Conference on
+	Advances in System Simulation},
+  keywords = {microscopic traffic simulation, software, open source},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/71460/}
+}
+
+@INPROCEEDINGS{Behrisch2008,
+  author = {Michael Behrisch and Michael Bonert and Elmar Brockfeld and Daniel
+	Krajzewicz and Peter Wagner},
+  title = {Event traffic forecast for metropolitan areas based on microscopic
+	simulation},
+  booktitle = {Third International Symposium of Transport Simulation 2008 (ISTS08)},
+  year = {2008},
+  month = {Januar},
+  abstract = {It is shown that a traditional travel demand forecast combined with
+	a simulationbased approach can serve as a short-term forecast for
+	the traffic situation. The approach presented was developed and tested
+	during the Soccer World Cup 2006 in the city of Cologne as a service
+	for the action forces to react as fast as possible to developing
+	aberrations. This paper discusses the merits and the short-comings
+	of the approach.},
+  file = {:http\://elib.dlr.de/55176/1/eventtrafficSubmitted.pdf:URL},
+  keywords = {traffic simulation, event traffic, urban traffic},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/55176/}
+}
+
+@INPROCEEDINGS{Behrisch2009a,
+  author = {Michael Behrisch and Michael Bonert and Daniel Hinkeldein and Daniel
+	Krajzewicz and G\"unter Kuhns and Yun-Pang Wang},
+  title = {DELPHI - a joint web decision support application for real time traffic
+	situation analysis and prognosis, information exchange and cooperation},
+  booktitle = {ITS World Congress 2009},
+  year = {2009},
+  abstract = {This paper describes DELPHI, a pilot version of a joint web decision
+	support application for real time traffic situation and prognosis,
+	information exchange and cooperation between the Traffic Management
+	Center, Emergency Rescue Services, the Police and the Emergency Call
+	Center. In two demonstration regions in Germany, Cologne and Munich
+	the R&D project started in 2007. The main purpose is to handle major
+	incidents that affect the transportation situation in conurbation
+	areas. The web application is intended to help task force members
+	at different stakeholders to obtain a common and joint overview.
+	DELPHI also allows to coordinate tactical measures among the task
+	forces.},
+  keywords = {decision support, TMC, Traffic Management Center, incident management,
+	ITS, Intelligent Transportation System},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62187/}
+}
+
+@INPROCEEDINGS{Behrisch2010a,
+  author = {Michael Behrisch and Jakob Erdmann and Daniel Krajzewicz},
+  title = {Adding intermodality to the microscopic simulation package SUMO},
+  booktitle = {MESM 2010},
+  year = {2010},
+  month = {Dezember},
+  abstract = {It is shown how the traffc simulation SUMO which traditionally focused
+	on individual road traffc could be extended to serve the purpose
+	of a general traffic simulation (including transport of individual
+	persons) while retaining most of in- and output formats and the performance
+	of the original system.},
+  file = {:http\://elib.dlr.de/65964/1/intermodalSumo.pdf:URL},
+  keywords = {Traffic, Microsimulation, Intermodal, SUMO},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/65964/}
+}
+
+@UNPUBLISHED{dlr76186,
+  author = {Michael Behrisch and Yun-Pang Fl\"otter\"od and Daniel Krajzewicz
+	and Peter Wagner},
+  title = {Ecological User Equilibrium in Traffic Management (TM)?},
+  note = {Der Eintrag wurde auf der DTA 2012 vorgestellt.},
+  month = {Februar},
+  year = {2012},
+  abstract = {With increasing environmental sustainability awareness significant
+	attention on ecological traffic management (eco-TM) has come into
+	the focus of researchers and practitioners. While different approaches
+	have been applied to reach minimal pollutant production, the classic
+	user equilibrium calculation with the pollutant production as travel
+	costs instead of using travel times remains in the center of attention.
+	However, the validity of such a direct transformation to find a user
+	equilibrium is questionable. In this paper, a simplified analytical
+	approach to examine the above aforementioned validity has been carried
+	out, followed by a simulation approach to verify the results of the
+	analytical approach. The result shows that the pollutant production
+	function violates the usual assumption of a monotonous function (typically,
+	emission has a minimum at travel speeds around 60 km/h). It also
+	indicates that the respective algorithms to compute the user equilibrium
+	must deal with the fact, that the equilibrium solution is not unique
+	and is dependent on the initial solution. This means that substantial
+	modifications to the algorithms that compute the user equilibrium
+	have to be discussed since they do not work as intended when pollutant
+	production is used as travel costs, especially in a transportation
+	system with mixed speeds that cover a range around the minimum emission
+	speed.},
+  institution = {Institut f\"ur Verkehrssystemtechnik},
+  keywords = {ecological traffic management, traffic simulation, user equilibrium},
+  owner = {dkrajzew},
+  timestamp = {2012.09.18},
+  url = {http://elib.dlr.de/76186/}
+}
+
+@INPROCEEDINGS{dlr71870,
+  author = {Michael Behrisch and Yun-Pang Fl\"otter\"od and Daniel Krajzewicz
+	and Peter Wagner},
+  title = {Ecological User Equilibrium?},
+  booktitle = {DTA 2012},
+  year = {2011},
+  month = {November},
+  abstract = {With increasing environmental sustainability awareness significant
+	attention on ecological traffic management (eco-TM) has come into
+	the focus of researchers and practitioners. While different approaches
+	have been applied to reach minimal pollutant production, the classic
+	user equilibrium calculation with the pollutant production as travel
+	costs instead of using travel times remains in the center of attention.
+	However, the validity of such a direct transformation to find a user
+	equilibrium is questionable. In this paper, a simplified analytical
+	approach to examine the above aforementioned validity has been carried
+	out, followed by a simulation approach to verify the results of the
+	analytical approach. The initial result shows that the pollutant
+	production function violates the usual assumption of a monotonous
+	function (typically, emission has a minimum at travel speeds around
+	\unit[60]{km/h} ). This means that substantial modifications to the
+	algorithms that compute the user equilibrium have to be discussed
+	since they do not work as intended when pollutant production is used
+	as travel costs, especially in a transportation system with mixed
+	speeds that cover a range around the minimum emission speed.},
+  keywords = {eco traffic management, dynamic traffic assignment, user equilibrium},
+  owner = {dkrajzew},
+  timestamp = {2012.09.18},
+  url = {http://elib.dlr.de/71870/}
+}
+
+@INPROCEEDINGS{Behrisch2010,
+  author = {Michael Behrisch and Marc Hohloch and Marek Junghans and G\"unter
+	Kuhns and Daniel Krajzewicz and Yun-Pang Wang},
+  title = {Traffic Management Decision Support based on on-line Data},
+  booktitle = {2010 POLIS CONFERENCE - 'Innovation in transport for sustainable
+	cities and regions'},
+  year = {2010},
+  month = {November},
+  abstract = {Natural disasters, industrial accidents, technological disasters as
+	well as terrorist attacks have raised a great attention to road traffic
+	management in emergencies and disasters worldwide. The road system
+	is the essential infrastructure for mobility and accessibility. It
+	is important in daily life and especially in disasters and emergencies.
+	Therefore, a successful road traffic management in such situations
+	should minimize losses in life and goods as well as economical losses
+	and assets through incident prevention, mitigation, preparedness,
+	response and recovery.
+	
+	Based on this concern, the German Aerospace Center has been continuously
+	undertaking the development of a real-time web-based decision support
+	system within four R&D projects, WJT2005, Soccer2006, DELPHI and
+	VABENE, since 2005. A pilot version of the new portal has already
+	been established in the demonstration region Munich in 2007.
+	
+	This system mainly aims to - establish a shared online traffic information
+	platform and decision-making support tool for the law enforcement
+	and emergency services - use available traffic information as best
+	as possible for online traffic monitoring and evaluation, and - provide
+	accurate traffic forecasting for supporting the decision-making in
+	traffic management.},
+  keywords = {online traffic management, decision support system},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/65965/}
+}
+
+@INPROCEEDINGS{Behrisch2009,
+  author = {Michael Behrisch and Daniel Krajzewicz and Ronald Nippold and Yun-Pang
+	Wang},
+  title = {Simulation of Urban MObility},
+  booktitle = {2nd NEARCTIS workshop 2009},
+  year = {2009},
+  keywords = {traffic simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62188/}
+}
+
+@INCOLLECTION{dlr81244,
+  author = {Michael Behrisch and Daniel Krajzewicz and Peter Wagner and Yun-Pang
+	Wang},
+  title = {Comparing Performance and Quality of Traffic Assignments for Microscopic
+	Simulation},
+  publisher = {Edward Elgar Publishing Limited},
+  year = {2010},
+  editor = {Chris M.J. Tampere and Francesco Viti and Lambertus H. (Ben) Immers},
+  pages = {361--386},
+  journal = {New Developments in Transport Planning - Advances in Dynamic Traffic
+	Assignment},
+  keywords = {dynamic traffic assignment, traffic simulation},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/81244/}
+}
+
+@INPROCEEDINGS{Behrisch2008b,
+  author = {Michael Behrisch and Daniel Krajzewicz and Peter Wagner and Yun-Pang
+	Wang},
+  title = {Comparison of Methods for Increasing the Performance of a DUA Computation},
+  booktitle = {DTA2008 International Symposium on Dynamic Traffic Assignment},
+  year = {2008},
+  month = {Mai},
+  abstract = {Computing realistic routes for a given road network and a known demand
+	of vehicles is one of the most important steps when preparing a road
+	traffic simulation. The approach developed by Christian Gawron in
+	1998 which we use for this purpose computes a dynamic user equilibrium
+	by iteratively performing the simulation and computing new vehicle
+	routes. The results are valid, but the computation is very time consuming
+	due to the need to perform both the complete simulation and rerouting
+	of all vehicles within each iteration step. Herein, we want to discuss
+	some approaches to reduce the needed time and memory consumption.
+	The results show that this can be achieved without reducing the algorithm?s
+	quality.},
+  journal = {Proceedings of DTA2008},
+  keywords = {microscopic simulation, traffic assignment, SUE, DUA},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/55173/}
+}
+
+@INPROCEEDINGS{Behrisch2008a,
+  author = {Michael Behrisch and Daniel Krajzewicz and Yun-Pang Wang},
+  title = {Comparing performance and quality of traffic assignment techniques
+	for microscopic road traffic simulations},
+  booktitle = {DTA2008 International Symposium on Dynamic Traffic Assignment},
+  year = {2008},
+  month = {Mai},
+  abstract = {Focusing on the tradeoff between accuracy of the assignment and computation
+	time this paper proposes different traffic assignment methods targeting
+	at microscopic traffic simulation. The corresponding network-wide
+	performance indices, the generated route sets and the respective
+	significance tests are analyzed and compared. The results indicate
+	that the saving on computa-tion time is significant with use of macroscopic
+	assignments. However, the deficiency of ne-glecting turning behaviors
+	in macroscopic assignments results in worse assignment results. Moreover,
+	the used computation time of some microscopic methods (e.g. the one-shot
+	method) is competitive with that of the macroscopic assignments.
+	While the exact parameteri-zation as well as the sensitivity of the
+	methods to the size of the scenarios still need further investigation,
+	it seems favorable to employ microscopic assignment techniques or
+	hybrid methods for producing a good traffic assignment for a microscopic
+	simulation.},
+  journal = {Proceedings of DTA2008},
+  keywords = {microscopic simulation, traffic assignment, SUE, DUA, route set similarity},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/55172/}
+}
+
+@INPROCEEDINGS{Bieker2011a,
+  author = {Laura Bieker},
+  title = {Emergency Vehicle Prioritization using Vehicle-To-Vehicle Communication},
+  booktitle = {Young Researchers Seminar},
+  year = {2011},
+  month = {Juni},
+  abstract = {Emergency vehicles need to reach their destination as fast as possible.
+	They deserve the highest priority at intersections. Therefore, they
+	are allowed to use bus lanes and pass red lights at traffic light
+	systems. Nevertheless, for emergency vehicles it is still quicker
+	and safer to get priority at the approaching intersection. This paper
+	analyses how the travel time of emergency vehicles can be improved
+	by using vehicle-to-infrastructure (V2I) communication. Emergency
+	vehicles are sending messages with their route information and their
+	current position. The traffic lights which have to be passed can
+	switch to green for emergency vehicles and to red for all other streets.
+	The traffic lights continue the normal operation after the emergency
+	vehicle has passed the intersection. Simulation results show that
+	emergency vehicles can reach their destination faster.},
+  keywords = {V2I communication, Emergency vehicle, traffic management, traffic
+	simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/70219/}
+}
+
+@INPROCEEDINGS{Bieker2011,
+  author = {Laura Bieker and Daniel Krajzewicz},
+  title = {Evaluation of opening Bus Lanes for private Traffic triggered via
+	V2X Communication},
+  booktitle = {First Forum on Integrated and Sustainable Transportation Systems
+	(FISTS)},
+  year = {2011},
+  month = {Juni},
+  abstract = {Within the EC project ?iTETRIS?, an architecture for simulating traffic
+	management applications based on vehicular communications (V2X) was
+	designed and implemented. The work was based on evaluating the needs
+	of a real city ? the city of Bologna. Applications which try to solve
+	the detected problems were defined and evaluated in subsequent steps.
+	This report describes the evaluation of one of the developed applications,
+	namely ?Bus Lane Management?. It was analyzed whether it is possible
+	to detect the traffic demand via V2X communication and open bus lanes
+	for private vehicles. It turned out that this could be done efficiently:
+	dedicating the free space on the bus lanes improves the average travel
+	times and route lengths of all vehicles. However, this is true only
+	if the penetration rates stay well below 50%. If more vehicles try
+	to benefit, the situation deteriorates readily.},
+  keywords = {traffc simulation, bus lane management, V2V communication},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/70220/}
+}
+
+@INPROCEEDINGS{Bieker2010,
+  author = {Laura Bieker and Daniel Krajzewicz and Matthias R\"ockl and Hans
+	Capelle},
+  title = {Derivation of a fast, approximating 802.11p simulation model},
+  booktitle = {Intelligent Transport Systems Telecommunications (ITST2010)},
+  year = {2010},
+  month = {November},
+  abstract = {This paper gives an overview of the development of a fast, approximating
+	model of vehicle-to-vehicle (V2V) and vehicle-to-infrastructure (V2X)
+	communication. Large-scale traffic simulations need to be fast, and
+	the lack of supporting this feature by common communication simulators
+	makes the development of a new one necessary. In a vehicular system,
+	packet error rate can be significant; hence models that consider
+	error characteristics are desirable. Our work considers communication
+	models that approximate the radio propagation characteristics in
+	a realistic way without compromising simulation speed.},
+  keywords = {V2X communication, Traffic simulation, Radio Propagation, Packet Error
+	Rate},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/66094/}
+}
+
+@INPROCEEDINGS{Blokpoel2010,
+  author = {Robbin Blokpoel and Daniel Krajzewicz and Ronald Nippold},
+  title = {Unambiguous metrics for evaluation of traffic networks},
+  booktitle = {13th International IEEE Conference on Intelligent Transportation
+	Systems (ITSC)},
+  year = {2010},
+  month = {September},
+  abstract = {This paper presents an extensive set of unambiguous metrics that can
+	be used for evaluation of new ITS applications. Currently in the
+	literature most authors define their own metrics and small differences
+	in definitions can lead to confusion when comparing the results.
+	To derive the set of metrics presented in this paper, several steps
+	have been taken. First, a list has been made with all metrics known
+	by the research partners. Afterwards, a set of base measures has
+	been defined. Using that set, clear formulas for all metrics have
+	been derived and are reported in this paper. Finally, an application
+	example about a cooperative traffic light controller is given.},
+  keywords = {simulation, performance indicators, performance metrics, traffic science,
+	traffic management},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/67734/}
+}
+
+@INPROCEEDINGS{Bonert2006,
+  author = {Michael Bonert and Elmar Brockfeld and Ines Ernst and Daniel Krajzewicz
+	and Martin Ruh\'e and Peter Wagner},
+  title = {SOCCER Verkehrslageerfassung und ?prognose w\"ahrend der Fu\ssball-WM},
+  booktitle = {IMA 2006 Informationssysteme f\"ur mobile Anwendungen},
+  year = {2006},
+  month = {Oktober},
+  abstract = {W?hrend der FIFA?Fu?ballweltmeisterschaft 2006 wurde im Rahmen des
+	vom BMWi ge-f?rderten Projektes SOCCER an drei Spielst?tten (Berlin,
+	K?ln, Stuttgart) ein integriertes Sys-tem getestet, das Verkehrsdaten
+	aus unterschiedlichen Quellen zu einer Verkehrslageerfas-sung und
+	anschlie?ender Prognose fusionieren konnte. Die beiden Systeme in
+	Berlin und K?ln setzten dabei jeweils auf eine Simulation der gesamten
+	Stadt auf, w?hrend das Stuttgar-ter System im Wesentlichen auf einer
+	ganglinienbasierten Prognose basierte. Die verwendeten Inputdaten
+	waren in allen F?llen eine Kombination aus (nicht in allen St?dten
+	gleich) luft-gest?tzter Verkehrslageerfassung an ausgesuchten Brennpunkten
+	(Zeppelin in K?ln, Flugzeug in Berlin und Hubschrauber in Stuttgart),
+	vorhandenen Z?hlschleifendaten (alle Orte) und den Reisezeitinformationen
+	aus den Taxi?FCD Projekten Stuttgart und Berlin des DLR (siehe www.cityrouter.com).
+	Dieser Beitrag beschreibt den Aufbau der Systeme und stellt erste
+	Er-gebnisse dar, mit denen die Prognoseg?te beurteilt werden kann.},
+  keywords = {Verkehrsmanagement von Gro?ereignissen, Verkehrssimulation, luftgest?tzte
+	Verkehrslageerfassung},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/50197/}
+}
+
+@ARTICLE{Brockfeld2003a,
+  author = {Elmar Brockfeld and Reinhart K\"uhne and Alexander Skabardonis and
+	Peter Wagner},
+  title = {Towards a benchmarking of Microscopic Traffic Flow Models},
+  journal = {Transportation Research Records},
+  year = {2003},
+  volume = {1852},
+  pages = {124--129},
+  number = {TRB2003-001164},
+  abstract = {Several microscopic traffic models have been tested with a publicly
+	available data set. The task was to predict the travel times between
+	sever observers along a one-lane rural road, given as boundary conditions
+	the flow into this road and the flow out of it. By using nonlinear
+	optimization, for each of the models the best matching set of parameters
+	have been estimated. For this particular data set, the models that
+	performed best are the ones with the smalles number of parameters.
+	The average error rate of the models is about 16 %, however, this
+	value is not very reliable: the error rate fluctuates between 2.5
+	and 25 % for different parts of the data set.},
+  booktitle = {82nd Annual Meeting Transportation Research Board},
+  editor = { Transportation Research Board},
+  keywords = {calibration, validation, simulation, models, microscopic flow models,
+	DLR/TS/VM, model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6646/}
+}
+
+@ARTICLE{Brockfeld2005a,
+  author = {Elmar Brockfeld and Reinhart K\"uhne and Peter Wagner},
+  title = {Calibration and Validation of Microscopic Traffic Flow Models},
+  journal = {Transportation Research Records},
+  year = {2005},
+  volume = {1934},
+  pages = {179--187},
+  month = {Januar},
+  abstract = {Since microscopic models are being heavily used in applications, the
+	appropriate calibration and validation have been a recent concern.
+	The contribution of this paper is to compare some of these models
+	by calibrating and validating them with data from double-loop detectors
+	on a multilane freeway. To simplify this task, the test of the models
+	is done by simplifying the multilane reality to a simulation of only
+	single lane. The results show that by simulating the multilane road
+	with single lane models, calibration errors (Theil?s U, root mean
+	squared error) of 14 % to 16 % can be obtained. A validation of the
+	models ?which means taking calibrated parameters of one data set
+	to reproduce the other data sets? gives additional errors of about
+	0.5 to 2.5 percentage points. This is in good agreement with other
+	calibration/validation approaches performed recently.},
+  booktitle = {Transportation Research Board 2005},
+  editor = { Transportation Research Board},
+  keywords = {microscopic traffic flow models, calibration/validation, freeway data,
+	DLR/TS/VM, model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/20987/}
+}
+
+@INPROCEEDINGS{Brockfeld2004c,
+  author = {Elmar Brockfeld and Reinhart K\"uhne and Peter Wagner},
+  title = {Calibration and Validation of Microscopic Traffic Flow Models},
+  booktitle = {TRB Annual Meeting},
+  year = {2004},
+  editor = { Transportation Research Board},
+  volume = {1876},
+  number = {TRB2004-001743},
+  pages = {62--70},
+  abstract = {Microscopic simulation models are becoming increasingly important
+	tools in modeling transport systems. There are a large number of
+	available models used in many countries. the most difficult stage
+	in the development and use of such models is the calibration and
+	validation of the microscopic sub-models describing the traffic flow,
+	such as the car following, lane changing and gap acceptance models.
+	This difficulty is due to the lack of suitable methods for adapting
+	models to empirical data. The aim of this paper is to present recent
+	progress in calibratin a number of microscopic traffic flow models.
+	By calibrating and validating various models using the same data
+	sets, the models are directly comparable to each other. This sets
+	the basis for a transparent benchmarking of those models. Furthermore,
+	the advantages and disadvantages of each model can be analyzed better
+	to develop a more realistic behavior of the simulated vehicles In
+	this work various microscopic traffic flow models have been tested
+	from a very microscopic point of view concerning the car-follwing
+	behavior and gap-acceptance. The data used for calibration and validation
+	is from car-following experiments performed in Japan in October 2001.
+	The data have been collected by letting nine DGPS-equipped cars follow
+	a lead car driving along a 3 km test track for about 15-30 minutes.
+	So one gets the positions and speeds of each car in time intervals
+	of 0.1 seconds. The experiment was repeated eight times letting the
+	leading driver perform various driving in waves and emulating many
+	acceleations/decelerations as they are typical at intersections.
+	To minimize driver-dependent correlations between the data sets,
+	the drivers were exchanged between the cars regularly after each
+	experiment},
+  journal = {TRB 2004 Annual Meeting},
+  keywords = {calibration, validation, traffic flow models, microscopic, GPS, DGPS,
+	DLR/TS/VM, model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6652/}
+}
+
+@INPROCEEDINGS{Brockfeld2002a,
+  author = {Elmar Brockfeld and Reinhart K\"uhne and Peter Wagner},
+  title = {Towards Benchmarking Microscopic Traffic Flow Models},
+  booktitle = {Networks for Mobility, International Symposium},
+  year = {2002},
+  volume = {I},
+  pages = {321--331},
+  note = { LIDO-Berichtsjahr=2003,},
+  journal = {Proceedings of Networks for Mobility},
+  keywords = {microscopic simulation, benchmarking, traffic flow models, DLR/TS/VM,
+	model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6506/}
+}
+
+@INPROCEEDINGS{Brockfeld2004b,
+  author = {Elmar Brockfeld and Rene Kelpin and Peter Wagner},
+  title = {Performance of car following behaviour in microscopic traffic flow
+	models},
+  booktitle = {2nd International Symposium "Networks for Mobility"},
+  year = {2004},
+  editor = {W. M\"ohlenbrink and F.C. Englmann and M. Friedrich and U. Martin
+	and U. Hangleiter},
+  pages = {43--43},
+  publisher = {Universit\"at Stuttgart},
+  abstract = {Microscopic simulation models are becoming increasingly important
+	tools in modelling transport systems. They are applied in simulation
+	programs for transport planning, traffic forecasting and advanced
+	vehicle control and safety systems (AVCSS). An important part of
+	the models are the microscopic sub-models which describe the interaction
+	between adjacent vehicles. For that purpose rules and equations are
+	defined describing the car-following and lane changing behaviour
+	of the vehicles. An essential problem is the calibration and validation
+	of the parameters used in these rules. In this paper ten microscopic
+	traffic flow models of very different kind are analysed concerning
+	the correct reproduction of the car-following behaviour on single
+	lane roads. The models are calibrated and validated with data collected
+	via DGPS-equipped cars (Differential Global Positioning System) on
+	a test track in Japan. The positions of the cars are delivered every
+	0.1 second with very high accuracy, which is perfect for analysing
+	the car following behaviour. To calibrate the models, in each case
+	one driver pair is under consideration. The measured data of a leading
+	car are fed into the model under consideration and the model is used
+	to compute the behaviour of a following car. In the analysis the
+	resulting simulated time series of headways are carried out and the
+	deviations to the measured headways are calculated to calibrate the
+	models. To find the optimal parameters an automated optimisation
+	technique is used which tries to minimise the deviations. For validation
+	purposes the resulting optimal parameter sets for single data sets
+	are taken to reproduce some other data sets by simulation. At first,
+	this is done in a driver independent way, where the drivers in the
+	data set used for the calibration are different from those used for
+	the validation. Secondly, to investigate whether individual driver
+	behaviour can be reproduced better a driver-special validation is
+	conducted, where the calibrated parameter sets obtained for each
+	driver are taken to validate the behaviour of the same driver in
+	other situations. Main results of the analyses are that all models
+	produce nearly the same errors, thus sophisticated models with up
+	to 15 parameters seem not to be better than simple models with only
+	4 or 6 parameters. In total it is found that the differences in the
+	driver behaviour are much bigger than the diversity of the models.
+	At last, the validation with special driver pairs produces slightly
+	better results than the driver-independent validation. Thus, the
+	behaviour of individual drivers can be reproduced a bit more accurately
+	than trying to transfer optimal parameter results from one driver
+	to another.},
+  journal = {Networks for Mobility 2004, Proceedings - Abstracts and CD-ROM},
+  keywords = {simulation,model,microscopic models,calibration,validation,GPS,DGPS,car
+	following, DLR/TS/VM},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/21349/}
+}
+
+@INPROCEEDINGS{Brockfeld2005,
+  author = {Elmar Brockfeld and Stefan Lorkowski},
+  title = {Calibration of car-following models using Kalman filters},
+  booktitle = {ISTTT 16},
+  year = {2005},
+  abstract = {Calibration and validation, especially of microscopic traffic flow
+	models is a challenging task. Currently, ther is a renewed interest
+	in results of those efforts [1, 2] as well as in developing the right
+	tools to actually perform the calibration. The approach developed
+	in [1] will be refined, extended and compared to an approach based
+	on the recent development of a so called unscented Kalman filter
+	[3]. These methods will be used to calibrate a couple of microscopic
+	traffic flow models to two sets of freeway data, one US-American
+	(the I-880 FSP-dataset) and an European dataset, data from the German
+	freeway A100.},
+  keywords = {calibration, validation, Kalman filter, , DLR/TS/VM, model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/22391/}
+}
+
+@INPROCEEDINGS{Brockfeld2003,
+  author = {Elmar Brockfeld and Peter Wagner},
+  title = {Calibration and Validation of Microscopic Traffic Flow Models},
+  booktitle = {Traffic and Granular Flow '03},
+  year = {2003},
+  editor = {P. H. L. Bovy and S. P. Hoogendoorn and M. Schreckenberg and D. E.
+	Wolf},
+  publisher = {Springer},
+  abstract = {Microscopic simulation models are becoming increasingly important
+	tools in modeling transport systems. There are a large number of
+	available models used in many countries. The most difficult stage
+	in the development and use of such models is the calibration and
+	validation of the microscopic sub-models describing the traffic flow,
+	such as the car following, lane changing and gap acceptance models.
+	This difficulty is due to the lack of suitable methods for adapting
+	models to empirical data. The aim of this paper is to present recent
+	progress in calibrating a number of microscopic traffic flow models.
+	By calibrating and validating various models using the same data
+	sets, the models are directly comparable to each other. This sets
+	the basis for a transparent benchmarking of those models. Furthermore,
+	the advantages and disadvantages of each model can be analyzed better
+	to develop a more realistic behavior of the simulated vehicles.
+	
+	
+	In this work various microscopic traffic flow models have been tested
+	from a very microscopic point of view concerning the car-following
+	behavior and gap-acceptance. The data used for calibration and validation
+	is from car-following experiments performed in Japan in October 2001.
+	The data have been collected by letting nine DGPS-equipped cars follow
+	a lead car driving along a 3 km test track for about 15-30 minutes.
+	So one gets the positions and speeds of each car in time intervals
+	of 0.1 seconds. The experiment was repeated eight times letting the
+	leading driver perform various driving patterns as there are constant
+	speeds of 20, 40, 60 and 80 km/h for some time, driving in waves
+	and emulating many accelerations/decelerations as they are typical
+	at intersections. To minimize driver-dependent correlations between
+	the data sets, the drivers were exchanged between the cars regularly
+	after each experiment.
+	
+	
+	In this paper we present analyses concerning four of the experiments,
+	namely the patterns mostly with intervals of constant speeds and
+	wave-performing. For each of the four experiments one gets the ten
+	trajectories of the cars in form of the DGPS-positions and speeds.
+	From these the accelerations and distances/gaps between the cars
+	have been calculated, which are used then for the simulation runs.<br/>
+	
+	The study was done analyzing the time-development of the gaps between
+	the cars. For the simulation setup only two cars are considered at
+	a time. The leading car is updated as the speeds in the recorded
+	data sets tell and the following car is updated as defined by the
+	equations and rules of the used model, respectively. The absolute
+	error a model produces is calculated via the simple quadratic distance
+	between the recorded gaps and the simulated gaps. To get a percentage
+	error it is additionally related to the mean average gap in each
+	data set. Altogether 36 vehicle pairs (4 experiments * 9 vehicle
+	pairs) were used as data sets for the analyses.
+	
+	
+	Each model has been calibrated with each of the 36 different constellations
+	separately gaining optimal parameter sets for each ?model - data
+	set? combination. To find the optimal parameter constellations a
+	gradient-free optimization method was used and started several times
+	with different initialization values for each ?model - data set?
+	pair. The variation in initialization is done to avoid sticking with
+	a local minimum, which of course can occur because getting a global
+	minimum can not be guaranteed by those type of optimization algorithms.
+	Subsequently, the validation was performed by determining the error
+	of a given model on all the data sets which have not been used to
+	calibrate the model.
+	
+	
+	By now, ten microscopic models of a very different kind using 3 to
+	14 parameters have been tested. The most basic parameters used by
+	the models are the car length, a maximum velocity, an acceleration
+	and mostly a deceleration rate. The acceleration and deceleration
+	rates are specified in more detail in some models depending on the
+	recent speed or traffic states (indicated by density for example).
+	Furthermore, some models use a parameter for random braking or another
+	kind of stochastic parameter describing individual driver behavior.
+	Finally, few models use much more parameters to describe the driver?s
+	behavior, which will be briefly described in the final paper. As
+	the time step for the models is 0.1 seconds according to the recorded
+	data, some models with a traditional time step of 1 second ? as for
+	example used for simple cellular automatons - have been modified
+	to adopt for an arbitrarily small time-step. So far the models tested
+	are as follows (more will be added): - CA (cellular automaton model
+	by K. Nagel, M. Schreckenberg), - SK-model (model by S. Krauss),
+	- OVM (?Optimal Velocity Model?, Bando, Hasebe), - IDM (?Intelligent
+	Driver Model?, Helbing), - IDMM (?Intelligent Driver Model with Memory?,
+	Helbing, Treiber), - CATauT (CA model with more variable acceleration
+	and deceleration, own development), - GIPPSLIKE (basic model by P.G.
+	Gipps), - Aerde (model used in the simulation package INTEGRATION),
+	- FRITZSCHE (model used in the british software PARAMICS; it is similar
+	to what is used in the german software VISSIM by PTV), - MitSim (model
+	by Yang, Koutsopulus, used in the software MitSim).
+	
+	
+	The error rates of the models in comparison to the data sets during
+	the calibration for each model reach from 9 to 24 %. But no model
+	appears to be significantly the best one since every model has the
+	same problems with distinct data sets and other data sets can be
+	simulated quite good with each model. Interestingly, it can be stated
+	that models with more parameters than others do not necessarily reproduce
+	the real data better. The results of the validation process draw
+	a similar picture. The produced errors in these cases are about 12
+	to 30 %, sometimes up to 40 or 60%, which is of course much bigger
+	than in the simple calibration cases. All in all the results after
+	the calibration agree with some results that have been obtained before.
+	But the results of the validation are in parts very bad which probably
+	calls for the development of much better models. The other way to
+	interpret the results is that ? from this microscopic point of view
+	? errors of about 12-30 % can probably not be suppressed no matter
+	what a model is used. This would be due to the different behavior
+	of each driver.},
+  journal = {Traffic and Granular Flow '03},
+  keywords = {calibration, validation, models, traffic flow models, microscopic,
+	DLR/TS/VM, model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6653/}
+}
+
+@INPROCEEDINGS{Brockfeld2004,
+  author = {Elmar Brockfeld and Peter Wagner},
+  title = {Testing and Benchmarking of Microscopic Traffic Flow Models},
+  booktitle = {WCTR04 - 10th World Conference on Transport Research},
+  year = {2004},
+  volume = {abstract book I},
+  number = {A-D},
+  pages = {775--776},
+  abstract = {Microscopic simulation models are becoming increasingly important
+	tools in modelling transport systems. There are large number of available
+	models used in many countries. The important difficult stage in the
+	development and use of such models is the calibration and validation
+	of the microscopic sub-models describing the traffic flow, such as
+	the car following models for example. The aim of this paper is to
+	present recent progress in calibrating more than a dozen microscopic
+	traffic flow models with very different data sets conducted by DGPS-equipped
+	cars (Differential Global Positioning System), loop detectors and
+	human observers. Different approaches to measure the errors the models
+	produce in comparison to reality are compared. It can be stated that
+	from a microscopic point of view errors of about 15-20 % in headway-
+	and travel time-estimation and about 2-7 % in speed-estimation of
+	individual vehicles in the car following process seem to be the minimal
+	reachable level. Furthermore, the larger the simulation horizon is,
+	the smaller the diversity of the analyzed models become in comparison
+	to the diversity in the driver behaviour. Most interesting, no model
+	cold be denoted to be the best and especially highly sophisticated
+	models did not produce better results than very simple ones.},
+  journal = {Proceedings of the 10th World Conference on Transport Research},
+  keywords = {traffic flow modeling, benchmarking, simulation, GPS, DLR/TS/VM, model
+	calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6709/}
+}
+
+@UNPUBLISHED{Brockfeld2004a,
+  author = {Elmar Brockfeld and Peter Wagner},
+  title = {Kalibrierung und Validierung von mikroskopischen Verkehrsflussmodellen},
+  year = {2004},
+  abstract = {Mikroskopische Verkehrsmodelle entwickeln sich zu immer wichtigeren
+	Hilfsmitteln bei der Modellierung von Transportsystemen. Sie helfen
+	bei der Infrastrukturplanung und beim Design von kleinr?umigen Bereichen
+	wie etwa Ampelkreuzungen bis hin zu gro?en Verkehrsnetzen. Auch im
+	Bereich der Verkehrsprognose, speziell der Kurzfristprognose und
+	bei der Entwicklung von Fahrerassistenzsystemen werde sie immer h?ufiger
+	eingesetzt. Von diesen Modellen gibt es eine sehr gro?e Anzahl, die
+	in vielen verschiedenen L?ndern eingesetzt werden. Oft ist jedoch
+	nicht hinreichend klar, welches Modell welche Verkehrsph?nomene und
+	Fahrerverhalten wie genau abbildet. Der schwierigste Schritt bei
+	der Entwicklung und Nutzung solcher Modelle ist der Abgleich der
+	mikroskopischen Teilmodelle, die den Verkehrsfluss beschreiben, mit
+	realen Daten - also die Kalibrierung und Validierung. Diese Teilmodelle
+	sind z. B. Fahrzeugfolgemodelle, Spurwechselmodelle und Abstands-Akzeptanz-Modelle.
+	Die Schwierigkeit der Kalibrierung liegt vor allem darin, dass derzeit
+	noch keine Methoden etabliert sind, wie die Modell mikroskopisch
+	mit realen Daten verglichen werden sollten. Im Vortrag werden methoden
+	hierf?r vorgeschlagen und aktuelle Forschungsergebnisse bzgl. des
+	Vergleichs verschiedener Verkehrsflussmodelle anhand realer Daten
+	vorgestellt. Die Modell wurden alle mit denselben ?ffentlich zug?nglichen
+	Datens?tzen kalibriert und validiert, wodurch vor allem Vergleichbarkeit
+	und Transparenz der ERgebnisse hergestellt wird. Ein wesentliches
+	Ergebnis ist bisher, dass komplexere Modelle nicht notwendigerweise
+	besser sein m?ssen als sehr einfach strukturierte. Ferner geben die
+	Ergebnisse Hinweise auf eine bisher unzureichende Abbildung des Fahrerverhaltens
+	in den Modellen.},
+  booktitle = {Braunschweiger Verkehrskolloquium des Zentrumf f\"ur Verkehr (ZVB)},
+  keywords = {Kalibrierung, Validierung, Fahrzeugdaten, Modelle, Simulation, DLR/TS/VM,
+	model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6706/}
+}
+
+@INPROCEEDINGS{Brockfeld2002,
+  author = {Elmar Brockfeld and Peter Wagner},
+  title = {Testing traffic flow models},
+  booktitle = {Computional Physics Conference},
+  year = {2002},
+  note = { LIDO-Berichtsjahr=2003,},
+  journal = {Proceedings of the Computional Physics Conference},
+  keywords = {DLR/TS/VM, model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30},
+  url = {http://elib.dlr.de/6505/}
+}
+
+@ARTICLE{Chao-Qun2008,
+  author = {Mei Chao-Qun and Huang Hai-Jun and Tang Tie-Qiao},
+  title = {Improving Urban Traffic by Velocity Guidance},
+  journal = {Intelligent Computation Technology and Automation, International
+	Conference on},
+  year = {2008},
+  volume = {2},
+  pages = {383-387},
+  __markedentry = {[dkrajzew:6]},
+  address = {Los Alamitos, CA, USA},
+  doi = {http://doi.ieeecomputersociety.org/10.1109/ICICTA.2008.288},
+  isbn = {978-0-7695-3357-5},
+  owner = {dkrajzew},
+  publisher = {IEEE Computer Society},
+  timestamp = {2012.01.26}
+}
+
+@ARTICLE{Chowdhury2000,
+  author = {Debashish Chowdhury and Ludger Santen and Andreas Schadschneider},
+  title = {Statistical physics of vehicular traffic and some related systems},
+  journal = {Physics Reports},
+  year = {2000},
+  volume = {329},
+  pages = {199 - 329},
+  number = {4-6},
+  doi = {10.1016/S0370-1573(99)00117-9},
+  issn = {0370-1573},
+  keywords = {Cellular automata, Models},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19},
+  url = {http://arxiv.org/abs/cond-mat/0007053}
+}
+
+@INPROCEEDINGS{Cottingham2005,
+  author = {David N. Cottingham AND Jonathan J. Davies AND Alastair R. Beresford},
+  title = {{Congestion-Aware Vehicular Traffic Routing Using WiFi Hotspots}},
+  booktitle = {{Communications Innovation Institute Workshop}},
+  year = {2005},
+  month = apr,
+  organization = {Cambridge-MIT Institute},
+  note = {Conference Paper},
+  keywords = {V2X, Assignment, University of Cambridge},
+  owner = {Jonathan Davies (jjd27)},
+  timestamp = {2011.09.19},
+  url = {http://www.cl.cam.ac.uk/research/dtg/www/files/publications/public/jjd27/ciiHandout.pdf}
+}
+
+@MISC{Duering2011,
+  author = {Michael Düring},
+  title = {Simulative Untersuchung und Bewertung Vehicle-to-Infrastructure basierter
+	Anfahrstrategien an Lichtsignalanlagen},
+  month = {07},
+  year = {2011},
+  abstract = {Das Institut für Verkehrssystemtechnik im Deutschen Zentrum für Luft-
+	und Raumfahrt e.V.
+	
+	(DLR) beschäftigt sich, unter anderem, mit der Entwicklung und Evaluation
+	von Fahrerassistenzsystemen.
+	
+	In diesem Zusammenhang ist das DLR Mitglied im Car-2-Car Communication
+	
+	Consortium, welches eine führende Rolle bei der Erarbeitung von Standards
+	(IEEE
+	
+	802.11p) für die drahtlose Übertragung von Informationen zwischen
+	Fahrzeugen sowie
+	
+	Fahrzeugen und kooperativer Verkehrsinfrastruktur definiert. Erste
+	Demonstrationen zeigen
+	
+	den sinnvollen Einsatz dieser Technologie für künftige Fahrerassistenzsysteme.
+	Das
+	
+	Ziel dieser Systeme ist es die Sicherheit und die Effizienz im Straßenverkehr
+	weiter zu
+	
+	erhöhen.
+	
+	
+	Im Entwicklungsprozess von Assistenz- und Automationssystemen werden
+	verschiedene
+	
+	Schritte, beginnend bei Simulationsstudien zur Abschätzung der Auswirkungen
+	eines neuartigen
+	
+	Systems im Verkehr bis hin zur Evaluation von Prototypen in Feldversuchen,
+	
+	durchlaufen. In der vorliegenden Arbeit wird das Anfahrverhalten von
+	50 Fahrzeugen simuliert,
+	
+	die sich in einem Rückstau vor einer Lichtsignalanlage (LSA) befinden.
+	Der Aufbau
+	
+	der Simulation besteht aus einer LSA gesteuerten Kreuzung, deren einzige
+	Fahrtrichtung
+	
+	jeweils die Geradeausfahrt ist. Als Simulationsumgebung wird SUMO
+	verwendet.
+	
+	
+	Das Ziel der Arbeit ist die Untersuchung und Auswertung von drei unterschiedlichen
+	Anfahrszenarien.
+	
+	Zum einen wird das derzeitige Anfahrverhalten abgebildet. Zum anderen
+	
+	werden zwei Fahrerassistenzsysteme betrachtet. Ein Assistenzsystem
+	unterstützt den
+	
+	Fahrer, indem ihm die Restzeit der Rotphase angezeigt wird bzw. indem
+	der Assistent den
+	
+	Fahrer beim Beschleunigungsvorgang unterstützt. Der andere Assistent
+	übernimmt vollautomatisch
+	
+	die Längsführung der Fahrzeuge. Für die beiden Assistenten wird die
+	Vehicleto-
+	
+	X Technologie mit einer Durchdringungsrate von 100% vorausgesetzt.
+	
+	
+	Es wird gezeigt, dass durch die Variation der Anfahrstrategie sowohl
+	eine Verringerung
+	
+	der Aufenthaltsdauer des letzten Fahrzeugs in der Simulation (im Folgenden
+	Simulationszeit)
+	
+	von 25% bis 85% als auch die Reduzierung der Anzahl der Grünphasen
+	der LSA zum
+	
+	Räumen der Kreuzung von 14 auf 4 möglich ist. Die Einsparungsmöglichkeiten
+	hinsichtlich
+	
+	des Kraftstoffverbrauchs liegen zwischen 21% und 94%. Weiterhin wurden
+	mit der Grünphasendauer
+	
+	und dem Beschleunigungswert zwei Parameter identifiziert, die bedeutenden
+	
+	Einfluss auf den Ablauf der Simulation und das Potential zur Reduzierung
+	der Simulationszeit
+	
+	und des Kraftstoffverbrauchs bzw. der Emission haben.},
+  file = {pdf:http\://elib.dlr.de/70524/1/Studienarbeit_Michael_D%C3%BCring_110726.pdf:URL},
+  keywords = {Lichtsignalanlagen, Anfahren, V2X, TLS, DLR/TS/VM},
+  owner = {dkrajzew},
+  timestamp = {2011.11.23},
+  url = {http://elib.dlr.de/70524/}
+}
+
+@INPROCEEDINGS{Figueiredo2001,
+  author = {Figueiredo, L. and Jesus, I. and Machado, J.A.T. and Ferreira, J.R.
+	and Martins de Carvalho, J.L.},
+  title = {Towards the development of intelligent transportation systems},
+  booktitle = {Intelligent Transportation Systems, 2001. Proceedings. 2001 IEEE},
+  year = {2001},
+  pages = {1206 -1211},
+  __markedentry = {[dkrajzew:6]},
+  abstract = {This paper presents a review of the state of the art on intelligent
+	transportation systems. ITS involves a large number of research areas
+	and, therefore, this paper focus on those we believe to be the most
+	relevant. The main purpose is to study the achievements attained
+	in the last years and to give an overview of possible directions
+	towards future research},
+  doi = {10.1109/ITSC.2001.948835},
+  keywords = {intelligent transportation system development;automated highways;reviews;},
+  owner = {dkrajzew},
+  timestamp = {2012.01.26}
+}
+
+@INPROCEEDINGS{dlr65966,
+  author = {Gunnar Fl{\"o}tter{\"o}d and Yun-Pang Fl{\"o}tter{\"o}d},
+  title = {A method to resolve non-unique flows in deterministic macroscopic
+	intersection models},
+  booktitle = {Transportation Research Board 92nd Annaul Meeting},
+  year = {2013},
+  abstract = {The modeling of complex urban road intersections with deterministic
+	macroscopic models of traffic flow is known to suffer from non-unique
+	solutions. This article proposes a new method to deal with this problem.},
+  keywords = {deterministic macroscopic traffic model, traffic simulation},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/65966/}
+}
+
+@INPROCEEDINGS{dlr62189,
+  author = {Gunnar Fl{\"o}tter{\"o}d and Daniel Krajzewicz and Yun-Pang Wang
+	and Michael Behrisch and Peter Wagner},
+  title = {Disaggregate route choice estimation for the SUMO traffic microsimulator
+	with the Cadyts calibration tool for improved traffic management},
+  booktitle = {2nd NEARCTIS workshop 2009},
+  year = {2009},
+  keywords = {route choice},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/62189/}
+}
+
+@INPROCEEDINGS{dlr72232,
+  author = {Gunnar Fl{\"o}tter{\"o}d and Peter Wagner and Yun-Pang Wang},
+  title = {Identifiability and practical relevance of complex car-following
+	models},
+  booktitle = {Traffic And Granular Flow},
+  year = {2011},
+  month = {September},
+  abstract = {This article looks at car-following models with a deliberately pragmatic
+	perspective: What information about driver behavior can be extracted
+	from a given data set without more or less speculative assumptions
+	about underlying behavioral laws. The objective of this exercise
+	is not to invalidate existing models but to obtain a better understanding
+	of how much (complex) model structure can be revealed/validated from
+	real data.},
+  keywords = {car following models, ARIMA, calibration},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/72232/}
+}
+
+@INPROCEEDINGS{dlr71871,
+  author = {Yun-Pang Fl{\"o}tter{\"o}d and Laura Bieker},
+  title = {Demand-oriented traffic management for incidents and disasters},
+  booktitle = {ICEM 2012},
+  year = {2012},
+  abstract = {Traffic simulation has been extensively used as a decision support
+	tool for efficient traffic management in daily life. During disasters
+	and incidents, traffic simulation can further help rescue teams to
+	understand the current traffic state and the possible impacts of
+	proposed strategies and then to make proper decisions. At this point,
+	the changes in traffic demand should also be considered in the simulation
+	to reflect the latest traffic state. In this paper, a demand-oriented
+	traffic management system for disasters and incidents with a web-based
+	portal is introduced. In this system, not only the real-time data
+	from loop and wireless detectors but also traffic simulation are
+	used for reconstructing and predicting the traffic state. Furthermore,
+	four traffic demand categories for disasters and incidents are proposed
+	in the system. Some respective demand characteristics are collected
+	according to historical cases, such as departure pattern and people?s
+	perception about evacuation. Such characteristics will be used in
+	the system, since they have a great influence on the simulated traffic
+	state and the effectiveness of applied strategies. Finally, the approach
+	how to generate the respective special demands for disasters and
+	incidents with consideration of the normal traffic demand is proposed
+	as well. },
+  keywords = {traffic management; disaster; SUMO;VABENE; traffic simulation},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/71871/}
+}
+
+@INPROCEEDINGS{dlr80610,
+  author = {Yun-Pang Fl{\"o}tter{\"o}d and Peter Wagner and Michael Behrisch
+	and Daniel Krajzewicz},
+  title = {Simulated-based Validity Analysis of Ecological User Equilibrium},
+  booktitle = {2012 Winter Simulation Conference},
+  year = {2012},
+  month = {Dezember},
+  abstract = {Microscopic traffic simulation models are applied in the analysis
+	of transportation systems for years. Nevertheless, calibration (and
+	validation) of microscopic sub-models such as car-following and gap-acceptance
+	models is still a recent matter. The objective of the calibration
+	is to adapt the simulation output to empirical data by adjusting
+	the model's parameters. However, simulation results may vary from
+	the underlying real-world data, despite the calibration. To analyze
+	these deviations the present paper compares two different approaches
+	of calibration using data from a single-lane car-following experiment
+	on a Japanese test track. It is demonstrated that the results of
+	the two methods differ significantly. A recommendation for the more
+	appropriate method to use is given.},
+  journal = {Winter Simulation Conference Archive},
+  keywords = {traffic simulation, user equilibrium, ecology},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/80610/}
+}
+
+@INPROCEEDINGS{Flotterod2009,
+  author = {Gunnar Fl\"otter\"od and Daniel Krajzewicz and Yun-Pang Wang and
+	Michael Behrisch and Peter Wagner},
+  title = {Disaggregate route choice estimation for the SUMO traffic microsimulator
+	with the Cadyts calibration tool for improved traffic management},
+  booktitle = {2nd NEARCTIS workshop 2009},
+  year = {2009},
+  file = {poster:http\://elib.dlr.de/62189/1/Nearctis_RouteChoiceEstimation_poster.pdf:URL},
+  keywords = {route choice},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62189/}
+}
+
+@TECHREPORT{Furian2013,
+  author = {Furian, Nikolaus and Hausberger, Stefan and Krajzewicz, Daniel},
+  title = {Extended Simulation Tool PHEM coupled to SUMO with User Guide (Draft)},
+  institution = {COLOMBO consortium},
+  year = {2013},
+  type = {Deliverable to the European Commission},
+  month = {October},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08}
+}
+
+@PHDTHESIS{Gawron1999,
+  author = {Gawron, Christian},
+  title = {Simulation-Based Traffic Assignment -- Computing User Equilibria
+	in Large Street Networks},
+  school = {Universit\"{a}t zu K\"{o}ln},
+  year = {1999},
+  citeulike-article-id = {8937803},
+  file = {:https\://sumo.dlr.de/pdf/GawronDiss.pdf:URL},
+  institution = {Informatik, Universit\"{a}t zu K\"{o}ln},
+  keywords = {equilibrium, learning, simulation, sumo, Assignment, ZAIK},
+  number = {366},
+  owner = {dkrajzew},
+  pages = {113},
+  posted-at = {2011-03-04 07:57:16},
+  priority = {2},
+  timestamp = {2011.09.19}
+}
+
+@INPROCEEDINGS{GOZALVEZ2009,
+  author = {Javier GOZALVEZ and Siebe TURKSMA and Lan LIN and Oscar LAZARO and
+	Fabio CARTOLANO and Eric ROBERT and Daniel KRAJZEWICZ and Ramon BAUZA
+	and Fethi FILALI and Matthias R\"OCKL and Jeremie LEGUAY and Carlo
+	MICHELACCI and Jaap VREESWIJK and Julen MANEROS and Ainara GONZALEZ
+	and Massimiliano LENARDI},
+  title = {iTETRIS: the Framework for Large-Scale Research on the Impact of
+	Cooperative Wireless Vehicular Communications Systems in Traffic
+	Efficiency},
+  booktitle = {ICT-MobileSummit 2009},
+  year = {2009},
+  abstract = {Cooperative vehicular ICT systems have been identified as an attractive
+	technology to improve traffic management and safety, while providing
+	Internet on the move. To achieve these objectives, cooperative vehicular
+	communication systems allow the dynamic exchange of messages between
+	vehicles, and between vehicles and infrastructure. To ensure the
+	efficiency of cooperative vehicular ICT systems, it is crucial that
+	the communication protocols are adequately designed and optimised,
+	and that the applications using such communication capabilities are
+	tested under realistic conditions. In this context, this paper presents
+	the EU-funded iTETRIS platform that is being created to allow for
+	a realistic and accurate evaluation of the design and impact of cooperative
+	vehicular communication systems and traffic management policies under
+	realistic large-scale scenarios.},
+  keywords = {Cooperative vehicular ICT, wireless communications, heterogeneous
+	systems, simulation platform, traffic management.},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62037/}
+}
+
+@INPROCEEDINGS{Greenwood:2009:GDT:1558109.1558322,
+  author = {Dominic Greenwood and Branislav Burdiliak and Ivan Trencansky and
+	Hartmut Armbruster and Christian Dannegger},
+  title = {GreenWave distributed traffic intersection control},
+  booktitle = {Proceedings of The 8th International Conference on Autonomous Agents
+	and Multiagent Systems - Volume 2},
+  year = {2009},
+  series = {AAMAS '09},
+  pages = {1413--1414},
+  address = {Richland, SC},
+  publisher = {International Foundation for Autonomous Agents and Multiagent Systems},
+  acmid = {1558322},
+  isbn = {978-0-9817381-7-8},
+  keywords = {distributed multiagent traffic intersection phase control, emergent
+	green wave, video camera sensor},
+  location = {Budapest, Hungary},
+  numpages = {2},
+  url = {http://dl.acm.org/citation.cfm?id=1558109.1558322}
+}
+
+@INPROCEEDINGS{Harri2011,
+  author = {J\'er\^ome H\"arri and Pasquale Cataldi and Daniel Krajzewicz and
+	Robbin J. Blokpoel and Yoann Lopez and Jeremie Leguay},
+  title = {Modeling and Simulating ITS Applications with iTETRIS},
+  booktitle = {MSWiM'11, 14th ACM International Conference on Modeling, Analysis
+	and Simulation of Wireless and Mobile Systems},
+  year = {2011},
+  month = {Oktober},
+  abstract = {his work presents the modeling methodology of the iTETRIS platform
+	to integrate and simulate ITS applications. iTETRIS is a modular
+	and open-source simulation platform composed of four key modules:
+	the network simulator ns-3, the traffic simulator SUMO, an ITS (Intelligent
+	Transportation System) application simulator, and a central federating
+	module called iCS. Our contribution is twofold: First, we propose
+	a methodology to model and simulate ITS applications with iTETRIS
+	around three main mechanisms: (i) message management with generic
+	open APIs based on subscription/result container mechanisms (ii)
+	data management with the integration of an application facilities
+	layer in the iCS, including a local dynamic map (LDM), (iii) application
+	management with an ITS application simulator including one or more
+	application logics. Second, we apply this methodology to implement
+	the following four ITS applications: dynamic route planning, bus
+	lane management, emergency vehicle, and contextual speed adaptation.
+	We describe their integrations in iTETRIS, including a characterization
+	of their interactions with the iCS, and illustrate the benefits of
+	these ITS applications on traffic efficiency, gasoline consumption,
+	or air pollutant emissions.},
+  keywords = {Intelligent Transportation Systems (ITS), Simulation Platform, ITS
+	Application, iTETRIS, Performance Evaluation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/70969/}
+}
+
+@INPROCEEDINGS{Hopfner2007,
+  author = {Marcus H\"opfner and Ingmar Ehrenpfordt and Eric Nicolay and Benjamin
+	Maier and Elmar Brockfeld and Daniel Krajzewicz},
+  title = {Simulation und Feldtest f\"ur die Validation mobilfunkbasierter Verkehrsdaten},
+  booktitle = {CeBIT in Motion - Forum for Telematics and Navigation},
+  year = {2007},
+  editor = { Deutsche Messe AG},
+  month = {M\"arz},
+  abstract = {Im Rahmen des vom BMBF gef?rderten Forschungsprojektes ?TrafficOnline
+	? Online Verkehrsdatenerfassung ?ber Mobilfunknetze? wird ein Verfahren
+	zur Erfassung von Verkehrsdaten entwickelt, welches auf der Beobachtung
+	von im Stra?enverkehr mitgef?hrten Mobiltelefonen basiert. Hierbei
+	wird insbesondere der im Verkehrsnetz zur?ckgelegte Weg mobiler Telefonate,
+	welche den Bereich mehrerer Mobilfunkzellen passieren, in anonymer
+	Art und Weise ausgewertet und daraus eine durchschnittliche Reisegeschwindigkeit
+	ermittelt. Das Institut f?r Verkehrsf?hrung und Fahrzeugsteuerung
+	hat eine Testmethodik aufgebaut, auf deren Basis die ?berpr?fung
+	der Einsatzgrenzen und Qualit?t des TrafficOnline-Verfahrens erfolgt.
+	F?r die Validation des Verfahrens fand im Gro?raum Berlin ein Feldtest
+	statt. Hierf?r wurden im GSM-Netz spezielle Erfassungsrechner installiert,
+	welche f?r einen l?ngeren Zeitraum s?mtliche an der Abis-Schnittstelle
+	auflaufenden Mobilfunkdaten aufzeichneten. Das Testgebiet erstreckte
+	sich dabei ?ber den s?dwestlichen Teil Berlins, ausgehend vom Zentrum
+	bis zum Autobahnring BAB A10. Damit umfasste es neben den ?bergeordneten
+	Bundesfernstra?en auch Teile des nachgeordneten Stra?ennetzes im
+	Zentrum Berlins. Im Rahmen der Auswertung des Feldtestes erfolgt
+	ein Abgleich der mittels des TrafficOnline-Verfahrens generierten
+	Verkehrsdaten mit lokalen Verkehrsdetektoren. Als Referenzdaten werden
+	dabei unter anderem die Induktionsschleifen und Passivinfrarotdetektoren
+	der Verkehrsmanagementzentrale Berlin verwendet. Neben diesem Feldtest
+	kommt als zweiter Teil der Validation eine Simulation zum Einsatz.
+	Als Simulationstool wurde das Programm "Simulation of Urban MObility"
+	(SUMO) gew?hlt. Es handelt sich dabei um eine mikroskopische Verkehrssimulation,
+	welche vom Zentrum f?r Angewandte Informatik K?ln und dem Institut
+	f?r Verkehrsforschung Berlin entwickelt wurde. Mit diesem Simulationstool
+	wird vor allem die ?bertragbarkeit des TrafficOnline-Verfahrens auf
+	verschiedenste r?umliche Gegebenheiten und unterschiedliche Mobilfunknetze
+	gepr?ft wird. Um diese Pr?fung durchf?hren zu k?nnen, wurde das Tool
+	SUMO an die speziellen Anforderungen angepasst und um notwendige
+	Funktionalit?ten erg?nzt.},
+  journal = {CeBIT in Motion - Forum for Telematics and Navigation},
+  keywords = {Verkehrsdatenerfassung, Floating Phone Data, Verkehrssimulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/48868/}
+}
+
+@MASTERSTHESIS{Heppner2010,
+  author = {Matthias Heppner},
+  title = {Einführung von Unit Tests in das bestehende C++ Softwaresystem SUMO},
+  school = {Humboldt-Universität zu Berlin},
+  year = {2010},
+  month = {January},
+  owner = {behr_mi},
+  timestamp = {2011.12.05},
+  url = {http://www2.informatik.hu-berlin.de/swt/dipl/MatthiasHeppner.2010.pdf}
+}
+
+@ARTICLE{joerer2012towards,
+  author = {Joerer, Stefan and Sommer, Christoph and Dressler, Falko},
+  title = {{Towards Reproducibility and Comparability of IVC Simulation Studies
+	- A Literature Survey}},
+  journal = {IEEE Communications Magazine},
+  year = {2012},
+  note = {to appear},
+  publisher = {IEEE}
+}
+
+@UNPUBLISHED{Kuhne2006,
+  author = {Reinhart K\"uhne and Marius Schlingelhof and Daniel Krajzewicz},
+  title = {NEW GLOBAL NAVIGATION SATELLITE SYSTEM BASED APPROACHES FOR ADVANCED
+	DRIVER ASSISTANCE},
+  note = {Probably duplicate},
+  month = {Januar},
+  year = {2006},
+  booktitle = {TRB 2006 (85. Annual Meeting)},
+  keywords = {Navigation, Satellite System, Driver Assistance},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/44423/}
+}
+
+@INPROCEEDINGS{Karnadi2007,
+  author = {Karnadi, F.K. and Zhi Hai Mo and Kun-chan Lan},
+  title = {Rapid Generation of Realistic Mobility Models for VANET},
+  booktitle = {Wireless Communications and Networking Conference, 2007.WCNC 2007.
+	IEEE},
+  year = {2007},
+  pages = {2506 -2511},
+  month = {march},
+  abstract = {One emerging, new type of ad-hoc network is the vehicular ad-hoc network
+	(VANET), in which vehicles constitute the mobile nodes in the network.
+	Due to the prohibitive cost of deploying and implementing such a
+	system in real world, most research in VANET relies on simulations
+	for evaluation. A key component for VANET simulations is a realistic
+	vehicular mobility model that ensures conclusions drawn from simulation
+	experiments will carry through to real deployments. In this work,
+	we introduce a tool MOVE that allows users to rapidly generate realistic
+	mobility models for VANET simulations. MOVE is built on top of an
+	open source micro-traffic simulator SUMO. The output of MOVE is a
+	realistic mobility model and can be immediately used by popular network
+	simulators such as ns-2 and qualnet. We evaluate and compare ad-hoc
+	routing performance for vehicular nodes using MOVE to that using
+	the random waypoint model. We show that the simulation results obtained
+	when nodes moving according to a realistic mobility model is significantly
+	different from that of the commonly used random waypoint model.},
+  doi = {10.1109/WCNC.2007.467},
+  issn = {1525-3511},
+  keywords = {MOVE tool;SUMO;VANET simulations;ad-hoc routing performance;mobile
+	nodes;network simulators;open source microtraffic simulator;random
+	waypoint model;realistic vehicular mobility model;vehicular ad-hoc
+	network;vehicular nodes;ad hoc networks;public domain software;telecommunication
+	network routing;traffic engineering computing;, V2X, New South Wales
+	University},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19}
+}
+
+@INPROCEEDINGS{Katsaros2011b,
+  author = {Katsaros, Konstantinos and Dianati, Mehrdad and Tafazolli, Rahim
+	and Kernchen, Ralf},
+  title = {{CLWPR - A Novel Cross-Layer Optimized Position Based Routing Protocol
+	for VANETs}},
+  booktitle = {2011 IEEE Vehicular Networking Conference (VNC) (VNC 2011)},
+  year = {2011},
+  pages = {200--207},
+  __markedentry = {[dkrajzew:]},
+  abstract = {In this paper, we propose a novel position-based routing protocol
+	designed to anticipate the characteristics of an urban VANET environment.
+	The proposed algorithm utilizes the prediction of the node's position
+	and navigation information to improve the efficiency of routing protocol
+	in a vehicular network. In addition, we use the information about
+	link layer quality in terms of SNIR and MAC frame error rate to further
+	improve the efficiency of the proposed routing protocol. This in
+	particular helps to decrease end-to-end delay. Finally, carry-n-forward
+	mechanism is employed as a repair strategy in sparse networks. It
+	is shown that use of this technique increases packet delivery ratio,
+	but increases end-to-end delay as well and is not recommended for
+	QoS constraint services. Our results suggest that compared with GPSR,
+	our proposal demonstrates better performance in the urban environment.},
+  file = {:http\://info.ee.surrey.ac.uk/Personal/K.Katsaros/papers/KK_CLWPR_VNC_11.pdf:URL},
+  keywords = {vehicular ad-hoc networks, position based routing, cross-layer.},
+  owner = {dkrajzew},
+  timestamp = {2012.01.25}
+}
+
+@INPROCEEDINGS{Katsaros2011a,
+  author = {Katsaros, Konstantinos and Kernchen, Ralf and Dianati, Mehrdad and
+	Rieck, David},
+  title = {{Performance study of a Green Light Optimized Speed Advisory ( GLOSA
+	) Application Using an Integrated Cooperative ITS Simulation Platform}},
+  booktitle = {International Wireless Communications and Mobile Computing Conference
+	(IWCMC)},
+  year = {2011},
+  pages = {918--923},
+  __markedentry = {[dkrajzew:]},
+  abstract = {This paper proposes a Green Light Optimized Speed Advisory (GLOSA)
+	application implementation in a typical reference area, and presents
+	the results of its performance analysis using an integrated cooperative
+	ITS simulation platform. Our interest was to monitor the impacts
+	of GLOSA on fuel and traffic efficiency by introducing metrics for
+	average fuel consumption and average stop time behind a traffic light,
+	respectively. For gathering the results we implemented a traffic
+	scenario defining a single route through an urban area including
+	two traffic lights. The simulations are varied for different penetration
+	rates of GLOSA-equipped vehicles and traffic density. Our results
+	indicate that GLOSA systems could improve fuel consumption and reduce
+	traffic congestion in junctions.},
+  doi = {10.1109/IWCMC.2011.5982524},
+  file = {:http\://info.ee.surrey.ac.uk/Personal/K.Katsaros/papers/KK_GLOSA_IWCMC_11.pdf:URL},
+  keywords = {GLOSA,fuel consumption,traffic congestion,traffic light advisory,vehicular
+	communications},
+  mendeley-tags = {GLOSA},
+  owner = {dkrajzew},
+  timestamp = {2012.01.25}
+}
+
+@ARTICLE{Katsaros2011,
+  author = {Katsaros, Konstantinos and Kernchen, Ralf and Dianati, Mehrdad and
+	Rieck, David and Zinoviou, Charalambos},
+  title = {{Application of Vehicular Communications for Improving the Efficiency
+	of Traffic in Urban Areas}},
+  journal = {Wireless Communications and Mobile Computing},
+  year = {2011},
+  volume = {11},
+  pages = {1657--1667},
+  number = {12},
+  __markedentry = {[dkrajzew:]},
+  abstract = {This paper studies the impacts of vehicular communications on efficiency
+	of traffic in urban areas. We consider a Green Light Optimized Speed
+	Advisory (GLOSA) application implementation in a typical reference
+	area, and present the results of its performance analysis using an
+	integrated cooperative ITS simulation platform. In addition, we study
+	route alternation using Vehicle to Infrastructure (V2I) and Vehicle
+	to Vehicle (V2V) communications. Our interest was to monitor the
+	impacts of these applications on fuel and traffic efficiency by introducing
+	metrics for average fuel consumption, average stop time behind a
+	traffic light and average trip time, respectively. For gathering
+	the results we implemented two traffic scenarios defining routes
+	through an urban area including traffic lights. The simulations are
+	varied for different penetration rates of application-equipped vehicles,
+	drivers compliance to the advised speed and traffic density. Our
+	results indicate that GLOSA systems could improve fuel consumption,
+	reduce traffic congestion in junctions and the total trip time.},
+  doi = {10.1002/wcm.1233},
+  file = {:http\://info.ee.surrey.ac.uk/Personal/K.Katsaros/papers/KK_GLOSA_SI_WCMC_11.pdf:URL},
+  keywords = {fuel consumption,traffic congestion,traffic light advisory,vehicular
+	communications, alternative route},
+  owner = {dkrajzew},
+  timestamp = {2012.01.25}
+}
+
+@INPROCEEDINGS{Kerekes2009,
+  author = {{Kerekes}, J.~P. and {Presnar}, M.~D. and {Fourspring}, K.~D. and
+	{Ninkov}, Z. and {Pogorzala}, D.~R. and {Raisanen}, A.~D. and {Rice},
+	A.~C. and {Vasquez}, J.~R. and {Patel}, J.~P. and {MacIntyre}, R.~T.
+	and {Brown}, S.~D.},
+  title = {{Sensor modeling and demonstration of a multi-object spectrometer
+	for performance-driven sensing}},
+  booktitle = {Society of Photo-Optical Instrumentation Engineers (SPIE) Conference
+	Series},
+  year = {2009},
+  volume = {7334},
+  series = {Society of Photo-Optical Instrumentation Engineers (SPIE) Conference
+	Series},
+  month = may,
+  adsnote = {Provided by the SAO/NASA Astrophysics Data System},
+  adsurl = {http://adsabs.harvard.edu/abs/2009SPIE.7334E..17K},
+  doi = {10.1117/12.819265},
+  keywords = {surveillance, Numerica Corporation, Air Force Institute of Technology,
+	Rochester Institute of Technology},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19}
+}
+
+@INBOOK{Krajzewicz2010b,
+  pages = {269--294},
+  title = {Traffic Simulation with SUMO - Simulation of Urban Mobility},
+  publisher = {Springer},
+  year = {2010},
+  editor = {Jaume Barcel\'o},
+  author = {Daniel Krajzewicz},
+  series = {International Series in Operations Research and Management Science},
+  month = {October},
+  journal = {Fundamentals of Traffic Simulation},
+  keywords = {traffic simulation, sumo},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/66135/}
+}
+
+@MISC{Krajzewicz2009a,
+  author = {Daniel Krajzewicz},
+  title = {Kombination von taktischen und strategischen Einfl\"ussen in einer
+	mikroskopischen Verkehrsflusssimulation},
+  year = {2009},
+  abstract = {Eine mikroskopische Verkehrsflusssimulation gro?er Areale kann nur
+	realit?tsnah durchge-f?hrt werden, wenn der Algorithmus zur Spurwahl
+	sowohl taktische als auch strategische Ent-scheidungen des Fahrers
+	umsetzt. Innerhalb dieser Arbeit wird das aktuell (Stand Juni 2008)
+	in der freien, mikroskopischen Verkehrsflusssimulation ?SUMO? implementierte
+	Modell vorgestellt und besprochen, welches beide Ebenen vereint.},
+  editor = {Thomas J\"urgensohn and Harald Kolrep},
+  journal = {Fahrermodellierung in Wissenschaft und Wirtschaft, 2. Berliner Fachtagung
+	f\"ur Fahrermodellierung},
+  keywords = {mikroskopische Verkehrsflusssimulation, Spurwechsel},
+  number = {28},
+  owner = {Daniel},
+  pages = {104--115},
+  publisher = {VDI-Verlag},
+  series = {Verein Deutscher Ingenieure [Fortschritt-Berichte VDI / 22]: Fortschritt-Berichte
+	/ VDI ; Nr. 28 : Reihe 22, Mensch-Maschine-Systeme},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/58663/}
+}
+
+@INPROCEEDINGS{Krajzewicz2003c,
+  author = {Daniel Krajzewicz},
+  title = {A Cognitive Driver Model},
+  booktitle = {ECTRI 2003 - Young Researcher Seminar},
+  year = {2003},
+  abstract = {many different approaches to understand the process of driving a car
+	exist, we try to simulate it within this project. This methodology
+	fits wll into our institute?s work where traffic simulations play
+	an important role. We not only hope to gain some information about
+	the most concerned topics on driver related problems - issues on
+	ergonomics and traffic security - but also some knowledge about traffic
+	itself. We hope this knowledge will help us to improve microscopic
+	traffic models used for large area simulations. Herein, som basic
+	concepts the model incorporates and the main problems during the
+	research and implementation are described.},
+  file = {:http\://elib.dlr.de/6718/1/YRS2003_dkrajzew_mod.pdf:URL},
+  journal = {ECTRI Report 2003-03},
+  keywords = {simulation, cognitive car driver model},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6718/}
+}
+
+@INPROCEEDINGS{Krajzewicz2010a,
+  author = {Daniel Krajzewicz and Laura Bieker},
+  title = {Investigating Ecological Impacts on selected Traffic Management Methods},
+  booktitle = {NEARCTIS 3rd Workshop},
+  year = {2010},
+  month = {Juni},
+  abstract = {Within the iTETRIS project, the used SUMO traffic simulation was extended
+	by models for computing the emissions of pollutants CO, CO2, HC,
+	PMx, and NOx, as well as for computing the fuel consumption on a
+	microscopic, per-vehicle, base. The emission model was based on the
+	HBEFA (?Handbuch der Emissionsfaktoren?) database which covers a
+	large variety of vehicle types, considering differences between passenger
+	and heavy duty vehicles, the engine displacement, the fuel type,
+	and the EURO emission norm of the vehicles. This database was reformulated
+	into a microscopic model which uses the vehicle class, the vehicle?s
+	speed and the vehicle?s acceleration for computing the amount of
+	a certain pollutant?s emission within one discrete time step. The
+	kind of this model?s embedding within SUMO allows to collect and
+	to evaluate the ecological impacts of traffic management strategies
+	on per-vehicle, per-lane, and per-road base. Using this information,
+	two sub-topics of traffic management were addressed: ecological routing
+	and the ecological impacts of traffic lights.},
+  keywords = {traffic management, ecological issues, navigation, traffic lights},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/64840/}
+}
+
+@INPROCEEDINGS{Krajzewicz2011,
+  author = {Daniel Krajzewicz and Laura Bieker and Elmar Brockfeld and Ronald
+	Nippold and Julia Ringel},
+  title = {\"Okologische Einfl\"usse ausgew\"ahlter Verkehrsmanagementans\"atze},
+  booktitle = {Heureka '11},
+  year = {2011},
+  month = {M\"arz},
+  abstract = {Eine der Aufgaben innerhalb des von der Europ?ischen Kommission kofinanzierten
+	Projektes ?iTETRIS? war die Betrachtung der ?kologischen Auswirkungen
+	von Verkehrsmanagementma?nahmen. Um diese Aufgabe erf?llen zu k?nnen
+	wurde die innerhalb dieses Projektes benutzte Verkehrsflusssimulation
+	SUMO um ein Modell der Schadstoffemission und des Kraftstoffverbrauchs
+	erweitert. Mit Hilfe der so erhaltenen Anwendung wurden Versuche
+	durchgef?hrt, die die Abh?ngigkeit zwischen konventionellen Kenngr??en
+	des Verkehrsmanagements und den neu errechenbaren ?kologischen Kenngr??en
+	aufdecken sollten. Innerhalb dieses Berichts werden neben dem Emissionsmodell
+	die Ergebnisse dieser Untersuchungen vorgestellt, wobei ein starker
+	Zusammenhang zwischen konventionellen und ?kologischen Kenngr??en
+	festgestellt wird.},
+  keywords = {Schadstoffemission, Routenwahl, Verkehrsmanagement},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/69859/}
+}
+
+@ARTICLE{Krajzewicz20121482,
+  author = {Daniel Krajzewicz and Laura Bieker and Jérôme Härri and Robbin Blokpoel},
+  title = {Simulation of V2X Applications with the iTETRIS System},
+  journal = {Procedia - Social and Behavioral Sciences},
+  year = {2012},
+  volume = {48},
+  pages = {1482 - 1492},
+  number = {0},
+  note = {<ce:title>Transport Research Arena 2012</ce:title>},
+  abstract = {The main task of the “iTETRIS” project which was co-funded by the
+	European Commission was the development of a software system for
+	the simulation of large-scale traffic management solutions based
+	on vehicular communication (V2X). Several steps were taken to assure
+	that the developed simulation system fits the current research and
+	engineering needs, including the evaluation of a city’s traffic problems,
+	definition of performance metrics, development of V2X-enabled traffic
+	management applications, and the extension of the simulators used
+	within the developed simulation architecture. Within this report,
+	the major results of the project will be presented. Most of these
+	results were made freely available after the project’s end.},
+  doi = {10.1016/j.sbspro.2012.06.1124},
+  issn = {1877-0428},
+  keywords = {traffic management},
+  url = {http://www.sciencedirect.com/science/article/pii/S1877042812028601}
+}
+
+@INPROCEEDINGS{Krajzewicz2010,
+  author = {Daniel Krajzewicz and Robbin Blokpoel and Fabio Cartolano and Pasquale
+	Cataldi and Ainara Gonzalez and Oscar Lazaro and J\'er\'emie Leguay
+	and Lan Lin and Julen Maneros and Michele Rondinone},
+  title = {iTETRIS - A System for the Evaluation of Cooperative Traffic Management
+	Solutions},
+  booktitle = {AMAA 2010},
+  year = {2010},
+  editor = {Gereon Meyer and J\"urgen Valldorf},
+  series = {VDI-Buch},
+  pages = {399--410},
+  month = {Mai},
+  publisher = {Springer},
+  abstract = {V2X communication - communication between vehicles (V2V) and between
+	vehicles and infrastructure (V2I) - promises new methods for traffic
+	management by supplying new data and by opening new ways to inform
+	drivers about the current situation on the roads. Currently, V2X
+	cooperative systems are under development, forced by both the industry
+	and by the European Commission which supports the development as
+	a part of its Intelligent Car Initiative. Within this publication,
+	"iTETRIS", a new system for simulating V2X-based traffic management
+	applications is described which aims on high-quality simulations
+	of large areas. This is achieved by coupling two well-known open
+	source simulators. The sustainability of the project is guaranteed
+	by making the whole also available as an open source tool.},
+  journal = {Advanced Microsystems for Automotive Applications 2010},
+  keywords = {V2X communication, simulation, traffic management},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/64340/}
+}
+
+@INPROCEEDINGS{Krajzewicz2006,
+  author = {Daniel Krajzewicz and Michael Bonert and Peter Wagner},
+  title = {The Open Source Traffic Simulation Package SUMO},
+  booktitle = {RoboCup 2006},
+  year = {2006},
+  month = {Juni},
+  abstract = {Since the year 2000, the Institute of Transportation Research (IVF)
+	at the German Aerospace Centre (DLR) is developing a microscopic,
+	traffic simulation package. The complete package is offered as open
+	source to establish the software as a common testbed for algorithms
+	and models from traffic research. Since the year 2003 the IVF also
+	works on a virtual traffic management centre and in conjunction with
+	this on traffic management. Several large-scale projects have been
+	done since this time, most importantly INVENT where modern traffic
+	management methods have been evaluated and the online-simulation
+	and prediction of traffic during the world youth day (Weltjugendtag)
+	2005 in Cologne/Germany. This publication briefly describes the simulation
+	package together with the projects mentioned above to show how SUMO
+	can be used to simulate largescale traffic scenarios. Additionally,
+	it is pointed out how SUMO may be used as a testbed for automatic
+	management algorithms with minor effort in developing extensions.},
+  journal = {RoboCup 2006},
+  keywords = {Simulation, Traffic Management, Disaster & Event Management},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/46740/}
+}
+
+@INPROCEEDINGS{Krajzewicz2007,
+  author = {Daniel Krajzewicz and Danilot Teta Boyom and Peter Wagner},
+  title = {Untersuchungen der Performanz einer auf C2C-Kommunikation basierenden,
+	autonomen Routenwahl bei Stauszenarien},
+  booktitle = {Heureka '08},
+  year = {2007},
+  month = {Juli},
+  abstract = {Neben m?glichem Einsatz bei der Warnung und Unterst?tzung des Fahrers,
+	der Vorbereitung des Fahrzeugs auf einen kurz bevorstehenden Unfall
+	oder der Realisierung eines Zugangs zum Internet innerhalb von Fahrzeugen
+	([6]) wird der Kommunikation zwischen Fahrzeugen auch die M?glichkeit
+	Staus zu reduzieren zugesprochen. F?r diese Funktion sollen die von
+	anderen Fahrzeugen erhaltenen Informationen ?ber den Zustand im Stra?ennetz
+	in angepasste Navigationssysteme einflie?en, so dass diese in der
+	Lage sind, auf realem und aktuellem Stra?enzustand basierend, Routen
+	f?r das jeweilige, sie tragende Fahrzeug vorherzusagen. Die hier
+	vorgestellte Untersuchung soll aufzeigen, inwiefern eine solche zwischen
+	den Fahrzeugen innerhalb des Systems unkoordinierte Routenwahl tats?chlich
+	in der Lage ist, die Auswirkungen von Staus zu reduzieren.
+	
+	
+	F?r die Untersuchung wurde die freie Verkehrsflusssimulation SUMO
+	([1, 2]) um eine C2C-Komponente erweitert. Als Datengrundlage wurde
+	ein Stra?ennetz der Stadt Magdeburg benutzt, f?r das eine validierte
+	Nachfrage existiert. Dieses Dokument beschreibt die Erweiterung der
+	Simulation um die C2C-Kommunikation, den Aufbau des simulierten Stauszenarios
+	sowie die Ergebnisse der Untersuchung.},
+  keywords = {car2car-Kommunikation, Verkehrsmanagement, Simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/50466/}
+}
+
+@INPROCEEDINGS{Krajzewicz2007a,
+  author = {Daniel Krajzewicz and Danilot Teta Boyom and Peter Wagner},
+  title = {Evaluation of the Performance of city-wide, autonomous Route Choice
+	based on Vehicle-to-vehicle-Communictaion
+	
+	},
+  booktitle = {TRB 2008 (87. Annual Meeting)},
+  year = {2007},
+  month = {Juli},
+  abstract = {The sharing of information between vehicles via vehicle-to-vehicle
+	communication has a great potential for future traffic surveillance
+	and management applications. One possible use case is the communication
+	of information about the state of the road network, for example by
+	transferring travel times into the navigation devices enabling them
+	to compute routes using this knowledge.
+	
+	
+	This work reports about a set of simulation results where the benefit
+	of using information exchanged between vehicles was evaluated for
+	a city scenario using an extended microscopic traffic flow simulation.
+	The scenario is based on validated real-life data for a normal weekday
+	within a middle-sized German city. Contrary to other approaches,
+	the used model of vehicle-to-vehicle communication was implemented
+	directly into the traffic simulation. It was kept as simple as possible
+	in order to allow a fast execution needed for evaluating the effects
+	on a large scale and was calibrated using data from the real life.
+	This simulation study evaluates the influences of the model?s parameters
+	and of the amount of vehicles equipped with vehicle-to-vehicle devices
+	on the mean travel time within the simulated city.},
+  keywords = {Vehicle-to-vehicle communication, traffic management, simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/50464/}
+}
+
+@INPROCEEDINGS{Krajzewicz2007b,
+  author = {Daniel Krajzewicz and Danilot Teta Boyom and Peter Wagner},
+  title = {Auswirkungen einer auf Car2Car-Kommunikation basierenden, dynamischen
+	Routenwahl bei Beeintr\"achtigungen im Stadtverkehr},
+  booktitle = {21. Verkehrswissenschaftliche Tage},
+  year = {2007},
+  month = {Juli},
+  abstract = {Die Kommunikation zwischen Fahrzeugen, die in K?rze im Rahmen des
+	Projektes SIM-TD praxisnah demonstriert werden soll, birgt ein gro?es
+	Potential f?r eine zuk?nftige Verkehrslageerfassung wie auch f?r
+	neue Verfahren beim Management von Verkehrssystemen. Beispielsweise
+	k?nnen Fahrzeuge Informationen ?ber von einem Normalfall abweichende
+	Reisezeiten an andere Fahrzeuge weiter geben, die ihrem Fahrer dann
+	eine neue, am Stau vorbei f?hrende, Route vorschlagen.
+	
+	
+	Im Rahmen der hier vorgestellten Untersuchung wurde ein solches Szenario
+	per Simulation evaluiert, um die Effizienz einer solchen Routenwahl
+	zu demonstrieren. Ausgegangen wurde hierbei von der Simulation einer
+	ganzen Stadt, die um Staus erweitert worden ist. Neben den Auswirkungen
+	unterschiedlicher Ausstattungsgrade wurden auch die Einfl?sse weiterer
+	Kommunikationsparameter untersucht.},
+  journal = {21. Verkehrswissenschaftliche Tage},
+  keywords = {Car2Car-Kommunikation, Verkehrsflusssimulation, Verkehrsmanagement},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/50463/}
+}
+
+@INPROCEEDINGS{Krajzewicz2005a,
+  author = {Daniel Krajzewicz and Elmar Brockfeld and J\"urgen Mikat and Julia
+	Ringel and C. R\"ossel and Wolfram Tuchscheerer and Peter Wagner
+	and Richard W\"osler},
+  title = {Simulation of modern Traffic Lights Control Systems using the open
+	source Traffic Simulation SUMO},
+  booktitle = {3rd Industrial Simulation Conference 2005},
+  year = {2005},
+  editor = {J. Kr\"uger and A. Lisounkin and G. Schreck},
+  pages = {299--302},
+  month = {Juni},
+  publisher = {EUROSIS-ETI},
+  abstract = {Within the project ?OIS? (optical information systems) new traffic
+	control mechanisms had to be invented and tested. One of the most
+	important topics was to optimize the flow over a junction using information
+	from the OIS sensors which can not be measured using normal sensors
+	such as induct loops. For this purpose, an ?agentbased? traffic lights
+	logic algorithm was used, which uses the length of a jam in front
+	of a traffic light as input. As we had no possibility to test the
+	traffic lights control within the reality, the improvement of the
+	flow throughput of such junctions was shown using the open source
+	traffic Simulation ?SUMO? (Simulation of Urban MObility) [1, 2].
+	This publication describes the algorithm itself and how it was embedded
+	within the simulation. Furthermore, the simulation results are given.},
+  journal = {Proceedings of the 3rd Industrial Simulation Conference 2005},
+  keywords = {Microscopic traffic simulation, open source, traffic lights, traffic
+	research},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/21012/}
+}
+
+@INPROCEEDINGS{dlr81834,
+  author = {Daniel Krajzewicz and Yun-Pang Fl{\"o}tter{\"o}d},
+  title = {Simulative Untersuchung abstrakter und realer Verkehrsmanagementans{\"a}tze
+	zur Emissionsreduktion},
+  booktitle = {Kolloquium "Luftqualit{\"a}t an Stra{\ss}en 2013"},
+  year = {2013},
+  pages = {42--57},
+  month = {M{\"a}rz},
+  publisher = {Bundesanstalt f{\"u}r Stra{\ss}enwesen},
+  abstract = {Verkehrsflusssimulationen sind ein etabliertes Werkzeug des Verkehrsmanagements,
+	die auch zur Bewertung von schadstoffreduzierenden Verkehrsmanagementma{\ss}nahmen
+	herangezogen werden k{\"o}nnen. Vorgestellt werden abgeschlossene
+	und laufende Arbeiten zur simulationsgest{\"u}tzten Entwicklung und
+	Bewertung solcher Ma{\ss}nahmen.},
+  journal = {Kolloquium Luftqualit{\"a}t an Stra{\ss}en 2013},
+  keywords = {Simulation, Schadstoffemission, Verkehrsmanagementma{\ss}nahmen},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/81834/}
+}
+
+@INPROCEEDINGS{Krajzewicz2003b,
+  author = {Daniel Krajzewicz and Markus Hartinger and Georg Hertkorn and Peter
+	Mieth and Christian R\"ossel and Julia Zimmer and Peter Wagner},
+  title = {Using the Road Traffic Simulation ``SUMO'' for educational Purposes},
+  booktitle = {Traffic and Granular Flow (TGF)},
+  year = {2003},
+  note = {LIDO-Berichtsjahr=2004},
+  abstract = {Since the year 2000, the Centre of Apllied Informatics and the Institute
+	f?r Transport Research at the German Aerospace Centre devops a microscopic
+	road traffic simulation package named &quot;SUMO&quot; - an acronym
+	for &quot;Simulation of Urban MObility&quot;. Meanwhile, the simulation
+	is capable to deal with realistic scenarios such as large cities
+	and is used for these purposes within the Institute?s projects. The
+	idea was to support the traffic research community with a common
+	platform to test new ideas and models without the need to reimplement
+	a framework that handles road data, vehicle routes, traffic light
+	steering etc. To achieve this goal, the simulation code is available
+	as open source. Within this publication, we would like to demonstrate
+	how most attributes of traffic flow can be simulated. This should
+	be mainly intersting for educational purposes.},
+  file = {:http\://elib.dlr.de/6719/1/dkrajzew_TGF03Poster_SUMOEducation.pdf:URL},
+  keywords = {traffic simulation, road traffic, car follwing, microscopic, continous,
+	multimodal, open source, car-driver model, traffic research, education},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6719/}
+}
+
+@INPROCEEDINGS{Krajzewicz2003a,
+  author = {Daniel Krajzewicz and Markus Hartinger and Georg Hertkorn and Peter
+	Mieth and Julia Ringel and Christian R\"ossel and Peter Wagner},
+  title = {The "Simulation of Urban MObility" package: An open source traffic
+	simulation},
+  booktitle = {2003 European Simulation and Modelling Conference},
+  year = {2003},
+  abstract = {SUMO is the acronym for "Simulation of Urban MObility", an open source
+	project concerned with the development and usage of a traffic simulation.
+	The project is a part of our scientific work concerned with the verification
+	of different microscopic models of traffic, and their comparison
+	([1]). Further, the traffic science community often involves ideas
+	where each of them needs a traffic simulation to be validated. Over
+	the time, many more or less sophisticated simulations have been developed
+	to do this job. They mostly stay unknown. This approach is not only
+	very inefficient as a traffic simulation has many things to regard;
+	also, the results are often not replicable or at least hard to compare.
+	When a common platform is supplied, such problems should not occur.
+	Within this publication, we would like to introduce our package to
+	the public in the hope to gain some further interest.},
+  journal = {Proceedings of the 2003 European Simulation and Modelling Conference},
+  keywords = {traffic simulation, road traffic, open source, car-driver model, traffic
+	research},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/21385/}
+}
+
+@INPROCEEDINGS{Krajzewicz2004b,
+  author = {Daniel Krajzewicz and Markus Hartinger and Georg Hertkorn and Eric
+	Nicolay and Christian R\"ossel and Julia Ringel and Peter Wagner},
+  title = {Recent Extensions to the open source Traffic Simulation SUMO},
+  booktitle = {WCTR04 - 10th World Conference on Transport Research},
+  year = {2004},
+  abstract = {"SUMO" is the acronym for "Simulation of Urban MObility", an open
+	source simulation package developed since 2000 at the Institute for
+	Transportation Research at the German Aerospace Centre (DLR) and
+	the Centre for Applied Informatics, Cologne (ZAIK). This quite ambitious
+	project has recently entered his version 0.8 and we will describe
+	some of the new features herein. Some of them are a new visualisation
+	module, an extension of the junction concept, simulation of actuated
+	traffic lights and many more. We hope this information to be interesting
+	for the traffic science community as the software may be downloaded
+	and extended for free.},
+  journal = {Proceedings of the 10th World Conference on Transport Research (on
+	CD)},
+  keywords = {SUMO},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/19475/}
+}
+
+@INPROCEEDINGS{Krajzewicz2002a,
+  author = {Daniel Krajzewicz and Georg Hertkorn and C. R\"ossel and Peter Wagner},
+  title = {SUMO (Simulation of Urban MObility) - an open-source traffic simulation},
+  booktitle = {4th Middle East Symposium on Simulation and Modelling},
+  year = {2002},
+  editor = {A. Al-Akaidi},
+  pages = {183--187},
+  note = { LIDO-Berichtsjahr=2004,},
+  abstract = {As no exact model of traffic flow exists due to its high complexity
+	and chaotic organisation, researchers mainly try to predict traffic
+	using simulations. Within this field, many simulation packages exist
+	and differ in their software architecture paradigm as well as in
+	the models that describe traffic itself. We will introduce yet another
+	system which, in contrast to most of the other simulation software
+	packages, is available as on open-source programm and may therfore
+	be extended in order to fit a researcher?s own needs and also be
+	used as a reference testbed for new traffic models.},
+  journal = {Proceedings of the 4th Middle East Symposium on Simulation and Modelling
+	(MESM20002)},
+  keywords = {traffic simulation, microscopic, continous, multimodal, open source,
+	car-driver model, traffic research, road traffic},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6661/}
+}
+
+@INPROCEEDINGS{Krajzewicz2002b,
+  author = {Daniel Krajzewicz and Georg Hertkorn and C. R\"ossel and Peter Wagner},
+  title = {An Example of Microscopic Car Models Validation using the open source
+	Traffic Simulation SUMO},
+  booktitle = {14th European Simulation Symposium},
+  year = {2002},
+  volume = {Jahrgang 2002},
+  series = {SCS European Publishing House},
+  pages = {318--322},
+  note = { LIDO-Berichtsjahr=2004,},
+  abstract = {In SUMO (Simulation of Urban MObility; An open-source traffic simulation)
+	we presented an open source simulation software for road traffic
+	simulation. Now we show one possible field of application, the validation
+	of microscopic car/car-driver models. Our motivation is to awake
+	the interest in using and extending the software, so this report
+	will describe the software?s usability but will not go into depth
+	in interpreting the results.},
+  journal = {Proceedings of Simulation in Industry, 14th European Simulation Symposium},
+  keywords = {traffic simulation, road traffic, car following, model validation,
+	microscopic, continuous, multimodal, open source, car-driver-model,
+	traffic research, validation, calibration},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6657/}
+}
+
+@INPROCEEDINGS{Krajzewicz2005,
+  author = {Daniel Krajzewicz and Georg Hertkorn and Julia Ringel and Peter Wagner},
+  title = {Preparation of Digital Maps for Traffic Simulation; Part 1: Approach
+	and Algorithms},
+  booktitle = {3rd Industrial Simulation Conference 2005},
+  year = {2005},
+  editor = {J. Kr\"uger and A. Lisounkin and G. Schreck},
+  pages = {285--290},
+  month = {Juni},
+  publisher = {EUROSIS-ETI},
+  abstract = {Traffic simulations are an accepted tool for investigations on road
+	traffic and used widely within the traffic science community. Modern
+	computer systems are fast enough to model and simulate traffic within
+	large areas at a microscopic scale regarding each vehicle, replacing
+	macroscopic simulations in most cases. Although microscopic traffic
+	simulations offer better quality than macroscopic ones, they also
+	need additional data to describe the modelled road networks. A street?s
+	lanes are modelled explicitly within microscopic simulations and
+	in most cases also the connections between their lanes over junctions.
+	If one wants to model large areas, the best source to get the description
+	about their road network is the usage of digital maps. Unfortunately,
+	most of these are used for routing purposes and do not contain the
+	fine-grained information mentioned above that is needed by microscopic
+	simulations. This document describes an algorithm for the computation
+	of the needed information from simple road networks.},
+  journal = {Proceedings of the 3rd Industrial Simulation Conference 2005},
+  keywords = {Microscopic traffic simulation, digital road maps, open source, traffic
+	research},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/21013/}
+}
+
+@INPROCEEDINGS{Krajzewicz2004a,
+  author = {Daniel Krajzewicz and Reinhart K\"uhne and Peter Wagner},
+  title = {A Car Driver's Cognition Model},
+  booktitle = {ITS Safety and Security Conference},
+  year = {2004},
+  volume = {CD},
+  abstract = {There is a basic need in transportation planning and traffic engineering
+	for developing and testing traffic models of different granularity.
+	Although our major intrest is the replication of traffic within larger
+	areas, both the current research on traffic safety and the desire
+	to improve the quality of microscopic simulations makes it necessary
+	to deal with the car driver?s cognition on a finer scale. This paper
+	presents our model assumptions for such sub-microscopic simulations,
+	which are based on results from cognitive psychology. Although some
+	preliminary work of this type is available, most of these applications
+	are not open to the public, which makes them useless for scientific
+	purposes. the cognition simulations availabele up to now mostly deal
+	withmemory processes and are not easily extendable by further structures
+	such as vehickles with their dynamics or a representation of the
+	simulated environment. These considerations motivated us to develop
+	the above mentioned model from scratch. The design of the model described
+	herein includes sub-models of a human being?s perception, visual
+	attention, internal environment representation and decision making
+	as well as the execution of actions in a simulated vehicle. Results
+	both from cognitive psychology and the research on human-machine
+	interaction are incorporated. This paper reveals our premises for
+	a driver?s cognition model and describes the model itself, followed
+	by a discussion of the model?s restrictions. As the implementation
+	process is not yet closed, only some basic results are presented
+	and a look into the furture of the model is given.},
+  file = {:http\://elib.dlr.de/6671/2/ITS_dkrajzew_ss25-29.pdf:URL},
+  journal = {Proceedings of Intelligent Transportation Systems Safety and Security
+	Conference},
+  keywords = {driver modeling, cognition, sub-microscopic traffic flow modelling,
+	model, lane-changing, Verkehrsmodellierung, Simulation, Anwendungen,
+	Modelle, Programme, Verkehrssicherheit, Verkehrstr?ger Stra?e},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6671/}
+}
+
+@INPROCEEDINGS{Krajzewicz2009,
+  author = {Daniel Krajzewicz and Ronald Nippold},
+  title = {iTETRIS: An integrated tool set for evaluation of large-scale traffic
+	management application based on vehicular communication},
+  booktitle = {2nd NEARCTIS workshop 2009},
+  year = {2009},
+  keywords = {traffic simulation, network (communication) simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62588/}
+}
+
+@TECHREPORT{Krajzewicz2009b,
+  author = {Krajzewicz, Daniel and Nippold, Ronald and Lazaro, Oscar},
+  title = {Traffic Modelling: Environmental Factors},
+  institution = {iTETRIS consortium},
+  year = {2009},
+  type = {Deliverable to the European Commission},
+  month = {February},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08}
+}
+
+@INPROCEEDINGS{Krajzewicz2002,
+  author = {Daniel Krajzewicz and Peter Wagner},
+  title = {ACME (A Common Mental Environment)-Driver - A Cognitive Car Driver
+	Model},
+  booktitle = {16th Simulation Mulitconference "Modelling and Simulation 2002"},
+  year = {2002},
+  editor = {Krzysztof Amborski and Hermann Meuth},
+  pages = {689--693},
+  note = { LIDO-Berichtsjahr=2004,},
+  abstract = {When working on large-scale traffic observation projects very often
+	simulations and therefore, models of the behavior of the molecular
+	simulation elements (the car-driver-units) are needed. Most of the
+	models for traffic simulations are based on approximations of statistical
+	real-world data. While fast in computation, they sometimes fail to
+	show real-world phenomena. Our project uses a different approach.
+	We try to model a human driver?s behaviour by modelling her or his
+	cognitive information processing in a simulated environment. While
+	several papers about experiments concerning single phenomena exist,
+	this approach is meant to describe the wohle information processing
+	of a driver on a high abstraction level. This paper will show some
+	topics of interest for a human cognition model. Possible applications
+	are listed, too.},
+  journal = {Proceedings of the 16th Simulation Multiconference "Modelling and
+	Simulation 2002"},
+  keywords = {cognitive modelling, artificial interlligence, psychology, simulation,
+	traffic simulation, short term memory, reception},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6658/}
+}
+
+@INPROCEEDINGS{Krajzewicz2003,
+  author = {Daniel Krajzewicz and Peter Wagner},
+  title = {Gestalten, Archetypen, Symbole und Signale: Herausforderungen an
+	und Vorteile f\"ur die Modellierung},
+  booktitle = {Modellierung und Simulation menschlichen Verhaltens},
+  year = {2003},
+  editor = {H.-D. Burkhard and T. Uthmann and G. Lindemann},
+  number = {163},
+  series = {Informatik-Bericht},
+  pages = {54--67},
+  publisher = {TU-Berlin},
+  note = {LIDO-Berichtsjahr=2004, monograph\verb1_1id=Nr. 163},
+  abstract = {Die im Titel genannten, komplexen und abstrakten Gebilde der Psychologie
+	wurden bislang selten modelliert und formal beschrieben. Unter Betrachtung
+	des Themengebietes eines unserer Projekte - der Modellierung eines
+	kognitiven Modells des Autofahrers - m?chten wir hier eine kurze
+	?bersicht ?ber unsere Idee zu diesen Themen geben, Probleme aufdecken
+	und einige Potentiale f?r die Modellierung der Kognition aufzeigen,
+	die einen einfachen Umgang mit diesen Strukturen erm?glichen und
+	sich tlw. positiv auf die Ausf?hrungsgeschwindigkeiten von Simulationen
+	auswirken. Zus?tzlich zeigen wir Modelle, die in unsere Arbeit aufgrund
+	ihrer hohen Ressourcenbeanspruchung, bedingt durch eine konnektionistischen
+	Herangehensweise, nicht direkt einflie?en k?nnen.},
+  journal = {Modellierung und Simulation menschlichen Verhaltens},
+  keywords = {Fahrermodellierung, Kognition, Wahrnehmung, Simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6659/}
+}
+
+@ARTICLE{Krajzewicz2004,
+  author = {Daniel Krajzewicz and Peter Wagner},
+  title = {Ans\"atze zur kognitiven Simulation eines Autofahrers},
+  journal = {MMI-Interaktiv},
+  year = {2004},
+  pages = {84--97},
+  number = {7},
+  abstract = {Das Institut f?r Verkehrsforschung am Deutschen Zentrum f?r Luft-
+	und Raumfahrt (IVF/DLR) setzt in vielen Projekten Simulationen des
+	Stra?enverkehrs ein, z. B. um Schwachstellen in Verkehrsnetzen zu
+	finden oder um Ger?te zur Verkehrskontrolle oder -beeinflussung w?hrend
+	ihrer Entwicklung zu bewerten. In der Regel kommen dabei sogenannte
+	mikroskopische Simulationen zum Einsatz, deren betrachtete Gr??e
+	ein Fahrer-Fahrzeug-Objekt ist, das die Bewegung eines Fahrzeugs
+	im Verkehrsnetz durch wenige Gleichungen beschreibt. Solche Modell
+	erlauben die Simulation des Stra?enverkehrs gro?er St?dte in Echtzeit,
+	allerdings bilden sie den Przess des Fahrzeugf?hrens nur vereinfacht
+	ab. Innerhalb eines der Projekte des IVF soll das Verhalten eines
+	einzelnen Autofahrers genauer untersucht und modelliert werden. W?hrend
+	solche Modelle auch f?r andere Gebiete der Verkehrsforschung interessant
+	sind, z. B. der Forschung zu Fahrsicherheit oder zu Fahrerassistenzsystemen,
+	erhoffen wir uns, so R?ckschl?sse auf den Verkehrsfluss ziehen und
+	somit die Qualit?t mikroskopischer Modell erh?hen zu k?nnen. Im Rahmen
+	dieses Berichts sollen nach einer kurzen Einf?hrung in die Thematik
+	&quot;Verkehrssimulation&quot; unsere ersten Ans?tze zum Aufbau einer
+	in ein simuliertes Verkehrsgeschehen integrierten Simulation der
+	Fahrerkognition gegeben werden.},
+  editor = {S. Leuchter and M. C. Kindsm\"uller and D. Schulze-Kissing and L.
+	Urbas},
+  file = {:http\://elib.dlr.de/6721/2/zmms_krajzewicz_wagner.pdf:URL},
+  keywords = {Fahrermodellierung, Verkehrssimulationen, Verkehrsmodelle, Kognition},
+  owner = {Daniel},
+  publisher = {Technische Universit\"at Berlin},
+  series = {Modellierung und Simulation in Mensch-Maschine-Systemen},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/6721/}
+}
+
+@INPROCEEDINGS{Krajzewicz2011a,
+  author = {Daniel Krajzewicz and Peter Wagner},
+  title = {Large-scale Vehicle Routing Scenarios based on Pollutant Emission},
+  booktitle = {AMAA 2011},
+  year = {2011},
+  editor = {Gereon Meyer and J\"urgen Valldorf},
+  pages = {237--246},
+  month = {Juni},
+  publisher = {Springer},
+  abstract = {This paper describes simulation-based investigations on route choice
+	based on pollutant emission. A microscopic simulation enhanced by
+	a pollutant emission model was used to evaluate whether a vehicle?s
+	pollutant emission can be used as an edge weight during route computation
+	and which effects can be observed in such cases. For each of the
+	pollutants CO, CO2, NOx, PMx, and HC and for the fuel consumption,
+	a dynamic user assignment has been performed. The investigations
+	have been performed twice, using two scenarios of different size.
+	Large discrepancies for route computation using pollutants have been
+	observed when comparing inner-city and suburban traffic networks.},
+  journal = {Advanced Microsystems for Automotive Applications 2011},
+  keywords = {pollutant emission, traffic management, route choice, assignment},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/70322/}
+}
+
+@PHDTHESIS{Krauss1998,
+  author = {Stefan Krauß},
+  title = {Microscopic Modeling of Traffic Flow: Investigation of Collision
+	Free Vehicle Dynamics},
+  school = {Universit\"{a}t zu K\"{o}ln},
+  year = {1998},
+  file = {:https\://sumo.dlr.de/pdf/KraussDiss.pdf:URL},
+  institution = {Mathematisches Institut, Universit\"at zu K\"oln},
+  keywords = {highway traffic, interacting random processes, statistical mechanics
+	type modells, statistical processes; 60K30, 60K35, 90B20, Models,
+	ZAIK},
+  number = {319},
+  owner = {dkrajzew},
+  pages = {116},
+  timestamp = {2011.09.19}
+}
+
+@ARTICLE{Krauss1997,
+  author = {Krauss, S. and Wagner, P. and Gawron, C.},
+  title = {Metastable states in a microscopic model of traffic flow },
+  journal = {Phys. Rev. E},
+  year = {1997},
+  volume = {55},
+  pages = {5597--5602},
+  month = {May},
+  doi = {10.1103/PhysRevE.55.5597},
+  file = {:https\://sumo.dlr.de/pdf/sk.pdf:URL},
+  issue = {5},
+  keywords = {Models, ZAIK},
+  owner = {dkrajzew},
+  publisher = {American Physical Society},
+  timestamp = {2011.09.19},
+  url = {http://link.aps.org/doi/10.1103/PhysRevE.55.5597}
+}
+
+@INPROCEEDINGS{Lazaro2008,
+  author = {Oscar Lazaro and Eric Robert and Lin Lan and Javier Gozalvez and
+	Siebe Turksma and Fethi Filali and Fabio Cartolano and M. A. Urrutia
+	and Daniel Krajzewicz},
+  title = {iTETRIS: An Integrated Wireless and Traffic Platform for Real-Time
+	Road Traffic Management Solutions},
+  booktitle = {21st WWRF 2008},
+  year = {2008},
+  month = {Oktober},
+  abstract = {Wireless vehicular cooperative systems have been identified as an
+	attractive solution to improve road traffic management, thereby contributing
+	to the European goal of safer, cleaner, and more efficient and sustainable
+	traffic solutions. V2V-V2I communication technologies can improve
+	traffic management through real-time exchange of data among vehicles
+	and with road infrastructure. It is also of great importance to investigate
+	the adequate combination of V2V and V2I technologies to ensure the
+	continuous and costefficient operation of traffic management solutions
+	based on wireless vehicular cooperative solutions. However, to adequately
+	design and optimize these communication protocols and analyze the
+	potential of wireless vehicular cooperative systems to improve road
+	traffic management, adequate testbeds and field operational tests
+	need to be conducted.
+	
+	
+	Despite the potential of Field Operational Tests to get the first
+	insights into the benefits and problems faced in the development
+	of wireless vehicular cooperative systems, there is yet the need
+	to evaluate in the long term and large dimension the true potential
+	benefits of wireless vehicular cooperative systems to improve traffic
+	efficiency. To this aim, iTETRIS is devoted to the development of
+	advanced tools coupling traffic and wireless communication simulators.},
+  keywords = {V2x communications, Simulation Platforms, Wireless Communications},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62607/}
+}
+
+@MASTERSTHESIS{Lehr2005,
+  author = {Sebastian Lehr},
+  title = {Optimierung der Kommunikation zwischen am Verkehr beteiligten Strukturen},
+  school = {Fachhochschule für Technik und Wirtschaft Berlin},
+  year = {2005},
+  month = {January},
+  file = {:https\://sumo.dlr.de/pdf/DiplomarbeitSebastianLehr.pdf:URL},
+  keywords = {Fachhochschule für Technik und Wirtschaft Berlin, DLR/TS/VM, sumo},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19},
+  url = {https://sumo.dlr.de/pdf/DiplomarbeitSebastianLehr.pdf}
+}
+
+@INPROCEEDINGS{Maneros2009,
+  author = {Julen Maneros and Michele Rondinone and Ainara Gonzalez and Ramon
+	Bauza and Daniel Krajzewicz},
+  title = {iTETRIS Platform Architecture for the Integration of Cooperative
+	Traffic and Wireless Simulations},
+  booktitle = {ITS-T 2009},
+  year = {2009},
+  abstract = {The use of cooperative wireless communications can support driving
+	through dynamic exchange of Vehicle-to-Vehicle (V2V) and Vehicle-to-Infrastructure
+	(V2I) messages. Traffic applications based on such systems will be
+	able to generate a safer, faster, cheaper and cleaner way for people
+	and goods to move. In this context, the iTERIS project aims at providing
+	the framework to combine traffic mobility and wireless communication
+	simulations for large scale testing of traffic management solutions
+	based on cooperative systems. This paper addresses the description
+	and explanation of the implementation choices taken to build a modular
+	and interoperable architecture integrating heterogeneous traffic
+	and wireless simulators, and application algorithms supporting traffic
+	management strategies. The functions of an ?in-between? control system
+	for managing correct simulation executions over the platform are
+	presented. The inter-block interaction procedures identified to ensure
+	optimum data transfer for simulation efficiency are also introduced.},
+  journal = {Proceedings of the 9th IEEE International Conference on ITS Telecommunications},
+  keywords = {simulation platform, architecture, vehicular communications, traffic,
+	modularity},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62604/}
+}
+
+@MASTERSTHESIS{Morenz2007,
+  author = {Tino Morenz},
+  title = {iTranSIM - Simulation-based Vehicle Location},
+  school = {University of Dublin},
+  year = {2007},
+  keywords = {University of Dublin, sumo},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19}
+}
+
+@ARTICLE{Niebel2008,
+  author = {Wolfgang Niebel and Michael Bonert and Elmar Brockfeld and Daniel
+	Krajzewicz and Peter Wagner},
+  title = {TRAFFIC SURVEILLANCE AND FORECAST FOR LARGE-SCALE EVENTS, Monitoring
+	and Simulating the World Youth Day 2005 and the Soccer World Cup
+	2006},
+  journal = {PROM: list studenata Fakulteta prometnih znanosti},
+  year = {2008},
+  pages = {64--66},
+  number = {21},
+  month = {Dezember},
+  editor = { Fakultet prometnih znanosti Zagreb},
+  keywords = {ANTAR, Traffic Finder, SUMO, SOCCER, Weltjugendtag, Gro?ereignis,
+	Verkehrsmanagement, K?ln, Stuttgart, Berlin},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/55012/}
+}
+
+@INPROCEEDINGS{dlr54498,
+  author = {Wolfgang Niebel and Gunnar Fl{\"o}tter{\"o}d},
+  title = {SOCCER - TRAFFIC SURVEILLANCE AND FORECAST FOR LARGE-SCALE EVENTS,
+	Monitoring and Simulating the World Youth Day 2005 and the Soccer
+	World Cup 2006},
+  booktitle = {6th Conference of European Students of Traffic and Transportation
+	Sciences},
+  year = {2008},
+  editor = { University of {\vZ}ilina, Faculty of Operation and Economics of
+	Tran},
+  month = {Juni},
+  note = {Datentr{\"a}ger CD-ROM},
+  abstract = {It could be demonstrated, that this novel surveillance system integrating
+	airborne traffic surveillance with traditional ground detection of
+	traffic flow can yield valuable information needed for a better management
+	of big events. The combination with a simulation-based ap-proach
+	to integrate a traditional travel demand forecast and the on-line
+	data generated during the event itself leads not only to an almost
+	complete coverage of the traffic system, it also delivers a short-term
+	forecast for the action forces to react fast to developing aberrations.
+	Still the methods need to be improved, e.g., data fusion between
+	simulation and reality.},
+  journal = {6th Conference of European Students of Traffic and Transportation
+	Sciences},
+  keywords = {ANTAR, Traffic Finder, SUMO, SOCCER, Weltjugendtag, Gro{\ss}ereignis,
+	Verkehrsmanagement, K{\"o}ln, Stuttgart, Berlin},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/54498/}
+}
+
+@MASTERSTHESIS{Pereira2011,
+  author = {José Luis Ferrás Pereira},
+  title = {An Integrated Architecture for Autonomous Vehicles Simulation},
+  school = {Faculdade de Engenharia da Universidade do Porto},
+  year = {2011},
+  month = {June},
+  abstract = {Research on autonomous vehicles has come a long way since first findings,
+	and its software tools
+	
+	are increasingly acclaimed by the research community. Particularly
+	with robotics simulators, autonomous
+	
+	vehicles were provided with a suitable test-bed for experimentation
+	of new methodologies
+	
+	such as long-term navigation algorithms, map building and intelligent
+	reasoning. However,
+	
+	when it concerns the deployment and validation of such vehicles in
+	a larger urban traffic scenario,
+	
+	robotics simulators do not seem to provide the required functionality
+	for road traffic analysis, or
+	
+	inter-vehicular communication infrastructure as they seem present
+	in today’s traffic simulators.
+	
+	The improvement of such features is the key for the successful practical
+	deployment of such a
+	
+	critical system.
+	
+	
+	The main objective of this dissertation is the integration of two
+	types of simulators, namely a
+	
+	robotics and a traffic simulator. This integration will enable autonomous
+	vehicles to be deployed
+	
+	in a rather realistic traffic flow as an agent entity (on the traffic
+	simulator), at the same time it
+	
+	simulates all its sensors and actuators (on the robotics counterpart).
+	Also, the statistical tools
+	
+	available in the traffic simulator will allow practitioners to infer
+	what kind of advantages such a
+	
+	novel technology will bring to our everyday’s lives. Furthermore,
+	the current features and issues on
+	
+	current robotics and traffic simulators are presented and a taxonomy
+	for selecting these simulators
+	
+	is proposed. An architecture for the integration of the aforementioned
+	simulators is proposed and
+	
+	implemented in the light of the most desired features of such software
+	environments.
+	
+	
+	To assess the usefulness of the platform architecture towards the
+	expected realistic simulation
+	
+	facility, a comprehensive system evaluation is also performed and
+	critically reviewed, leveraging
+	
+	the feasibility of the integration. Further developments and future
+	perspectives are pinpointed up
+	
+	in the end.},
+  file = {:https\://sumo.dlr.de/pdf/mieec1.pdf:URL},
+  keywords = {autonomous driving, SUMO, driver modelling, Universidade de Porto,
+	Models},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30}
+}
+
+@ARTICLE{Piorkowski2008,
+  author = {Piorkowski, Michal and Raya, Maxim and Lugo, Ada and Papadimitratos,
+	Panos and Grossglauser, Matthias and Hubaux, Jean-Pierre},
+  title = {Tra{NS}: {R}ealistic {J}oint {T}raffic and {N}etwork {S}imulator
+	for {VANET}s},
+  journal = {{ACM} {SIGMOBILE} {M}obile {C}omputing and {C}ommunications {R}eview},
+  year = {2008},
+  volume = {12},
+  pages = {31--33},
+  number = {1},
+  abstract = {Realistic simulation is a necessary tool for the proper evaluation
+	of newly developed protocols for Vehicular Ad Hoc Networks (VANETs).
+	Several recent efforts focus on achieving this goal. Yet, to this
+	date, none of the proposed solutions fulfill all the requirements
+	of the VANET environment. This is so mainly because road traffic
+	and communication network simulators evolve in disjoint research
+	communities. We are developing TraNS, an open-source simulation environment,
+	as a step towards bridging this gap. This short paper describes the
+	TraNS architecture and our ongoing development efforts.},
+  affiliation = {EPFL},
+  details = {http://infoscience.epfl.ch/record/113879},
+  documenturl = {http://infoscience.epfl.ch/record/113879/files/trans_mc2r_2007.pdf},
+  doi = {10.1145/1374512.1374522},
+  keywords = {VANET; Inter Vehicular Communication; Vehicular; applications; realistic
+	mobility models; simulation; performance evaluation; NCCR-MICS; NCCR-MICS/CL3,
+	V2X, EPFL Lausanne, sumo},
+  oai-id = {oai:infoscience.epfl.ch:113879},
+  oai-set = {fulltext-public},
+  owner = {dkrajzew},
+  review = {REVIEWED},
+  status = {PUBLISHED},
+  timestamp = {2011.09.19},
+  unit = {LCA}
+}
+
+@INPROCEEDINGS{Rondinone2009,
+  author = {Michele Rondinone and Oscar Lazaro and Carlo Michelacci and Daniel
+	Krajzewicz and Robbin Blokpoel and Julen Maneros and Lan Lin and
+	Fatma Hrizi and J\'er\'emie Leguay and Matthias R\"ockl},
+  title = {Investigating the Efficiency of ITS Cooperative Systems for a Better
+	Use of Urban Transport Infrastructures: The iTETRIS Simulation Platform},
+  booktitle = {POLIS 2009},
+  year = {2009},
+  month = {Dezember},
+  abstract = {The use of cooperative ITS communication systems, supporting driving
+	through the dynamic exchange of Vehicle-to- Vehicle (V2V) and Vehicle-to-Infrastructure
+	(V2I) messages, is a potential candidate to improve the economical
+	and societal welfare. The application of such systems for novel cooperative
+	traffic management strategies can introduce a lot of beneficial effects
+	not only for road safety, but also for the economy related to transportation
+	systems and the environmental impact. Despite this apparent set of
+	promising features, City Road Authorities, which hold a key-role
+	in determining the final adoption of such systems, still look at
+	cooperative systems without sharing a clear opinion. This is mainly
+	due to the current lack of definitive and solid evidences of the
+	effectiveness of such systems when applied in the real world. In
+	order to fill this gap and let Road Authorities estimate the usefulness
+	of such technologies in achieving the objectives dictated by cities?
+	traffic management policies, the EU consortium iTETRIS is developing
+	a simulation platform for large scale testing of traffic management
+	solutions making use of cooperative ITS systems. Thanks to its own
+	distinguishing features, iTETRIS aims at becoming a good supporting
+	tool for Road Authorities to implement preliminary tests on the effectiveness
+	of ITS solutions prior to investing money for the physical deployment
+	of the communication infrastructures allowing their functioning.},
+  journal = {Proceedings of the Polis Conference 2009 - European Cities and Regions
+	Networking for Innovative Transport Solutions},
+  keywords = {vehicular communication, simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/62610/}
+}
+
+@INPROCEEDINGS{Rosenbaum2011,
+  author = {Dominik Rosenbaum and Michael Behrisch and Jens Leitloff and Franz
+	Kurz and Oliver Meynberg and Tanja Reize and Peter Reinartz},
+  title = {An airborne camera system for rapid mapping in case of disaster and
+	mass events},
+  booktitle = {EOGC 2011},
+  year = {2011},
+  month = {April},
+  abstract = {Here we present an airborne optical camera system with an extended
+	image processing unit onboard the aircraft and a radio data downlink.
+	With all these components the system is well suited for rapid mapping
+	applications in case of mass events and disaster. The image processing
+	unit provides the possibility of direct orthorectification/georeferencing
+	of the aerial images by the use of an IMU/GPS real-time navigation
+	system without the use of ground control points. Furthermore thematic
+	processing algorithms implemented to the image processing unit can
+	analyse orthoimages e.g. for road traffic data content, people density
+	and movement during mass events or DSM generation and 3D analysis
+	directly onboard the aircraft. Resulting data and images can be transmitted
+	to the ground via radio data downlink immediately. Road traffic data
+	is used at the ground station in a traffic simulation for filling
+	coverage gaps and traffic forecast. All in all, the system forms
+	a powerful tool to operation controllers of security authorities
+	and organizations in case of mass events or disasters.},
+  journal = {Proceedings of the Earth Observation for Global Change 2011 - EOGC
+	2011 (Munich, Germany, 2011-04-13 to 2011-04-15)},
+  keywords = {Rapid Mapping, Monitoring, Recognition, Orthorectification, Georeferencing,
+	Image, Pattern, Sequences},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/70510/}
+}
+
+@INPROCEEDINGS{Sanchez2006,
+  author = {Miguel Sanchez and Juan-Carlos Cano and Dongkyun Kim},
+  title = {Predicting Traffic lights to Improve Urban Traffic Fuel Consumption},
+  booktitle = {ITS Telecommunications Proceedings, 2006 6th International Conference
+	on},
+  year = {2006},
+  pages = {331 -336},
+  month = {june },
+  __markedentry = {[dkrajzew:6]},
+  abstract = {Modern traffic control systems include smart feedback into the traffic
+	light control system. New ways of improving our transit systems fuel
+	efficiency are now more than welcome due to global warming and oil
+	high price. This paper presents a new approach on how drivers and
+	traffic lights can interact to save fuel. Our preliminary results
+	show that 25% savings are within range in urban circuits},
+  doi = {10.1109/ITST.2006.288906},
+  keywords = {global warming;light control system;traffic control system;urban traffic
+	fuel consumption;road traffic;traffic control;},
+  owner = {dkrajzew},
+  timestamp = {2012.01.26}
+}
+
+@INPROCEEDINGS{Schlingelhof2006,
+  author = {Marius Schlingelhof and Reinhart K\"uhne and Daniel Krajzewicz},
+  title = {NEW GNSS-BASED APPROACHES FOR ADVANCED DRIVER ASSISTANCE SYSTEMS},
+  booktitle = {TRB 2006 (85th Annual Meeting)},
+  year = {2006},
+  month = {Januar},
+  abstract = {The enhancement of road safety and traffic efficiency are the focus
+	of many endeavours in science, economy and politics. A traditional
+	approach is to increase vehicle safety by advanced and intelligent
+	onboard systems using high developed sensors for the monitoring of
+	the vehicle?s surrounding. However, these technologies are vehicle-autonomous
+	solutions that only consider information coming from onboard sensors.
+	These sensors are normally based on optical, ultra-sonic, radar or
+	video camera systems and can only detect other vehicles or other
+	objects along a line-of-sight up to the next obstacle. The view beyond
+	a truck cruising just in front of the vehicle, for example, is not
+	possible.
+	
+	
+	New approaches are now dealing with co-operative technologies that
+	enable the exchange of important information between vehicles and
+	infrastructures for updated traffic data acquisition, recognition
+	of traffic congestion due to accidents or other sudden incidents,
+	local dynamic map data updates and driver warning. One key technology
+	within such co-operative systems is the highly precise relative positioning
+	between vehicles and the monitoring of the broader vehicle environment
+	using ad-hoc data networks. These technologies can be primarily based
+	on satellite systems like GPS or GALILEO supplemented by other onboard
+	sensor data, whereby unprocessed sensor data and satellite pseudo
+	range information will be exchanged between the vehicles within a
+	dedicated radio range. These data, when compared with the onboard
+	data, will finally enable the creation of virtual images of a vehicle?s
+	surrounding using special microscopic traffic modelling algorithms.
+	Future applications are road safety and Advanced Driver Assistance
+	Systems (ADAS).},
+  keywords = {GPS, Galileo, GNSS, ADAS, Road Safety, Relative Positioning, Surrounding
+	Monitoring},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/21758/}
+}
+
+@ARTICLE{Smilowitz1999,
+  author = {Karen R. Smilowitz and Karen R. Smilowitz and Carlos F. Daganzo and
+	Carlos F. Daganzo and Michael J. Cassidy and Michael J. Cassidy and
+	Robert L. Bertini and Robert L. Bertini},
+  title = {Some Observations of Highway Traffic in Long Queues},
+  journal = {Transportation Research Records},
+  year = {1999},
+  volume = {1678},
+  pages = {225-233},
+  keywords = {real-world data, model calibration},
+  owner = {dkrajzew},
+  timestamp = {2011.09.30}
+}
+
+@INPROCEEDINGS{Sommer:2008:NBC:1374688.1374697,
+  author = {Christoph Sommer and Zheng Yao and Reinhard German and Falko Dressler},
+  title = {On the need for bidirectional coupling of road traffic microsimulation
+	and network simulation},
+  booktitle = {Proceedings of the 1st ACM SIGMOBILE workshop on Mobility models},
+  year = {2008},
+  series = {MobilityModels '08},
+  pages = {41--48},
+  address = {New York, NY, USA},
+  publisher = {ACM},
+  acmid = {1374697},
+  doi = {10.1145/1374688.1374697},
+  isbn = {978-1-60558-111-8},
+  keywords = {network simulation, road traffic microsimulation, vehicular ad hoc
+	networks},
+  location = {Hong Kong, Hong Kong, China},
+  numpages = {8},
+  url = {http://doi.acm.org/10.1145/1374688.1374697}
+}
+
+@INPROCEEDINGS{Tielert2010,
+  author = {Tielert, T. and Killat, M. and Hartenstein, H. and Luz, R. and Hausberger,
+	S. and Benz, T.},
+  title = {The impact of traffic-light-to-vehicle communication on fuel consumption
+	and emissions},
+  booktitle = {Internet of Things (IOT), 2010},
+  year = {2010},
+  pages = {1 -8},
+  month = {29 2010-dec. 1},
+  __markedentry = {[dkrajzew:6]},
+  abstract = {#x201C;Smart #x201D; vehicles of the future are envisioned to aid
+	their drivers in reducing fuel consumption and emissions by wirelessly
+	receiving phase-shifting information of the traffic lights in their
+	vicinity and computing an optimized speed in order to avoid braking
+	and acceleration maneuvers. Previous studies have demonstrated the
+	potential environmental benefit in small-scale simulation scenarios.
+	To assess the overall benefit, large-scale simulations are required.
+	In order to ensure computational feasibility, the applied simulation
+	models need to be simplified as far as possible without sacrificing
+	credibility. Therefore this work presents the results of a sensitivity
+	analysis and identifies gear choice and the distance from the traffic
+	light at which vehicles are informed as key influencing factors.
+	Our results indicate that a suboptimal gear choice can void the benefits
+	of the speed adaptation. Furthermore, we present first results of
+	a scale-up simulation using a real-world inner-city road network
+	and discuss the range in which we expect the saving in fuel consumption
+	to be in reality.},
+  doi = {10.1109/IOT.2010.5678454},
+  file = {:http\://www.caad.arch.ethz.ch/noolab/files/external/conferences/IoT2010_proceedings/pdf/Conference/GreenIoT/C3.pdf:URL},
+  keywords = {fuel consumption;phase shifting information;smart vehicles;traffic
+	lights;traffic-light-to-vehicle communication;mobile communication;phase
+	shifters;},
+  owner = {dkrajzew},
+  timestamp = {2012.01.26}
+}
+
+@ARTICLE{Treiber2000,
+  author = {Martin Treiber and Ansgar Hennecke and Dirk Helbing},
+  title = {Congested Traffic States in Empirical Observations and Microscopic
+	Simulations},
+  journal = {PHYSICAL REVIEW E},
+  year = {2000},
+  volume = {62},
+  pages = {1805},
+  __markedentry = {[dkrajzew:6]},
+  file = {:http\://arxiv.org/pdf/cond-mat/0002177v2.pdf:URL},
+  owner = {dkrajzew},
+  timestamp = {2012.01.26},
+  url = {doi:10.1103/PhysRevE.62.1805}
+}
+
+@INPROCEEDINGS{SandeshFiore2011,
+  author = {Sandesh Uppoor and Marco Fiore},
+  title = {Large-scale Urban Vehicular Mobility for Networking Research},
+  booktitle = {IEEE Vehicular Networking Conference (VNC)},
+  year = {2011},
+  address = {Amsterdam, The Netherlands},
+  month = {11},
+  abstract = {Simulation is the tool of choice for the largescale
+	
+	performance evaluation of upcoming telecommunication
+	
+	networking paradigms that involve users aboard vehicles, such
+	
+	as next-generation cellular networks for vehicular access, pure
+	
+	vehicular ad hoc networks, and opportunistic disruption-tolerant
+	
+	networks. The single most distinguishing feature of vehicular
+	
+	networks simulation lies in the mobility of users, which is the
+	
+	result of the interaction of complex macroscopic and microscopic
+	
+	dynamics. Notwithstanding the improvements that vehicular mobility
+	
+	modeling has undergone during the past few years, no car
+	
+	traffic trace is available today that captures both macroscopic and
+	
+	microscopic behaviors of drivers over a large urban region, and
+	
+	does so with the level of detail required for networking research.
+	
+	In this paper, we present a realistic synthetic dataset of the car
+	
+	traffic over a typical 24 hours in a 400-km2 region around the city
+	
+	of K¨oln, in Germany. We outline how our mobility description
+	
+	improves today’s existing traces and show the potential impact
+	
+	that a comprehensive representation of vehicular mobility can
+	
+	have one the evaluation of networking technologies.},
+  file = {:http\://kolntrace.project.citi-lab.fr/data/uppoor_vnc11.pdf:URL},
+  owner = {dkrajzew},
+  timestamp = {2011.12.01}
+}
+
+@INPROCEEDINGS{Varschen2006,
+  author = {Christian Varschen and Peter Wagner},
+  title = {Mikroskopische Modellierung der Personenverkehrsnachfrage auf Basis
+	von Zeitverwendungstageb\"uchern},
+  booktitle = {AMUS 2006 (7. Aachener Kolloqium "Mobilit\"at und Stadt")},
+  year = {2006},
+  editor = {Klaus J. Beckmann},
+  volume = {81},
+  series = {Stadt Region Land},
+  pages = {63--69},
+  publisher = {Institut f\"ur Stadtbauwesen und Stadtverkehr, RWTH Aachen},
+  abstract = {Die wachsende Verkehrsleistung und die hieraus resultierenden Verkehrsprobleme
+	f?hren verst?rkt zu der Frage, mit welchen Konzepten der zuk?nftige
+	Verkehrsbedarf erf?llt werden kann. Wichtige Werkzeuge im Rahmen
+	von Verkehrsplanung und Verkehrsmanagement sind Verkehrsmodelle,
+	mit denen Prognosen des zu erwartenden Verkehrsaufkommens erstellt
+	werden k?nnen und die damit Ansatzpunkte f?r seine verbesserte Lenkung
+	liefern. Im Rahmen mehrerer Projekte wird das am DLR-IVF entwickelte
+	agentenbasierte Personennachfragemodell TAPAS (Travel and Activity
+	PAtterns Simulation) genutzt. In diesem Modell wird ein aktivit?ten-basierter
+	Ansatz verwendet, welcher auf der Analyse von Zeitverwendungsdaten
+	beruht. Daher sind die zur Verf?gung stehenden Aktivit?tenmuster
+	auf die in den Zeitverwendungsdaten enthaltenen beschr?nkt, was f?r
+	Prognosen eine starke Einschr?nkung darstellt. Die hier beschriebene
+	Erweiterung des Modells erm?glicht das Einf?gen neuer Aktivit?tenkategorien;
+	TAPAS beschreibt jede Aktivit?t durch vier Parameter, die sich alle
+	aus Erhebungen sch?tzen lassen: Anteil und Umfang der Nutzung der
+	(f?r TAPAS neuen) Aktivit?t sowie die zeitliche Variabilit?t der
+	Aktivit?t hinsichtlich Anfangszeitpunkt und Dauer. Die ersten beiden
+	Parameter werden direkt aus den empirischen Daten gewonnen, w?hrend
+	die letzten beiden sich aus der statistischen Variation der Erhebungen
+	ergeben. Die Weiterentwicklung des Modells pr?zisiert die Absch?tzung
+	der Personenverkehrsnachfrage unter besonderer Ber?cksichtigung spezifischer
+	wissenschaftlicher und politischer Fragestellungen. Die enge Verkn?pfung
+	mit empirischen Daten erh?ht zudem eine hohe Zuverl?ssigkeit von
+	Prognosen.},
+  journal = {Integrierte Mikro-Simulation von Raum- und Verkehrsentwicklung. Theorie,
+	Konzepte, Modelle, Praxis},
+  keywords = {Personenverkehrsnachfrage, Modellierung, aktivit?ten-basiert, Zeitbudget,
+	TAPAS},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/45058/}
+}
+
+@MASTERSTHESIS{Verges2013,
+  author = {Vergés, Josep Tomàs},
+  title = {Analysis and simulation of traffic management actions for traffic
+	emission reduction},
+  school = {TU Berlin},
+  year = {2013},
+  type = {Master Thesis},
+  month = {July},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08}
+}
+
+@INPROCEEDINGS{dlr72224,
+  author = {Peter Wagner and Gunnar Fl{\"o}tter{\"o}d and Ronald Nippold and
+	Yun-Pang Fl{\"o}tter{\"o}d},
+  title = {Simplified car-following models},
+  booktitle = {Transportation Research Board 91st Annaul Meeting},
+  year = {2012},
+  month = {Januar},
+  abstract = {This work presents strong evidence that human car-following behaviour
+	can be described by a linear model with no more than three parameters
+	to an amazing degree of precision. From this result it can be inferred
+	that any microscopic traffic flow model can be composed of the car-following
+	behaviour plus a couple of rules that fixes boundaries of the behaviour
+	in terms of limitations to speed, acceleration, and safety. These
+	limitations, however, usually have a clear physical meaning and understanding
+	and are the only non-linearities needed to built a microscopic traffic
+	flow model.},
+  keywords = {car-following, simple traffic flow models, ARIMA, calibration of traffic
+	flow models},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/72224/}
+}
+
+@INPROCEEDINGS{dlr71872,
+  author = {Yun-Pang Wang and Gunnar Fl{\"o}tter{\"o}d},
+  title = {Route choice calibration from multi-point vehicle stream measurements},
+  booktitle = {MT-ITS 2011},
+  year = {2011},
+  month = {Juni},
+  abstract = {To better und more precisely assess different transporta-tion design
+	alternatives and traffic management strategies, microscopic traffic
+	simulation models are extensively applied. The respective calibration
+	and validation works are getting more and more important. Nowadays,
+	GPS-based systems are broadly applied. More and more route related
+	information can be collected, which promises great improvements of
+	calibra-tion accuracy. An approach using multi-point vehicle stream
+	measurements is proposed in this paper and is shown to work well
+	in synthetic experiments.},
+  keywords = {route choice, vehicle reidentification, traffic simulation SUMO, CADYTS},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/71872/}
+}
+
+@MISC{dlr56995,
+  author = {Yun-Pang Wang and Bernhard Friedrich},
+  title = {Optimierung der Matrixsch{\"a}tzung durch Elimination redundanter
+	Informationen},
+  month = {M{\"a}rz},
+  year = {2008},
+  abstract = {Mit den zunehmenden M{\"o}glichkeiten der automatischen Verkehrsdatenerfassung
+	stellt sich die Frage, welchen Einfluss die Kenntnis von Abbiegestr{\"o}men
+	und daraus folgende redun-dante Informationen auf die Sch{\"a}tzung
+	von Herkunft-/ Zielbeziehungen haben und wie m{\"o}g-liche negative
+	Effekte auf die G{\"u}te der Sch{\"a}tzung bei bestehenden Erfassungsstellen
+	ver-mieden werden k{\"o}nnen. Deshalb wurde in dieser Arbeit vor
+	allem der Einfluss redundanter Informationen analysiert. Ein geeignetes
+	Eliminationsverfahren (MERI) wurde entwickelt. Es wurde nachgewiesen,
+	dass die negative Auswirkung redundanter Informationen im Informa-tions-Minimierungs-Modell
+	(IM-Modell) durch MERI beseitigt werden konnte und die Sch{\"a}tz-g{\"u}te
+	besser als die des Verbesserten IM-Modells (VIM-Modell) ist.},
+  booktitle = {HEUREKA 2008},
+  editor = { Forschungsgesellschaft f{\"u}r Stra{\ss}en- und Verkehrswesen},
+  keywords = {Matrixsch{\"a}tzung, Matrixanpassung, redundante Information},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/56995/}
+}
+
+@INPROCEEDINGS{dlr62716,
+  author = {Yun-Pang Wang and Bernhard Friedrich},
+  title = {Improving matrix estimation pertaining to detailed traffic information
+	and sophisticated traffic state},
+  booktitle = {Transportation Research Board 2009 Annual Meeting},
+  year = {2009},
+  month = {Januar},
+  publisher = {Transportation Research Board},
+  abstract = {Technical innovation and extensive application of adaptive signal
+	control at intersections have made turning flow information that
+	provide more precise constraints for Origin-Destination matrix (O-D
+	matrix) estimation easily available in great quantity and more accurate
+	than ever. However, the influence of turning flow and duplication
+	of information on the existing matrix estimation models and on the
+	accuracy of O-D matrix estimation has not been broadly investigated.
+	Also, traffic phenomenon in networks becomes complicated and difficult
+	to explain with the increase in number of vehicles, variety of daily
+	activities and sophisticated travel behaviors. As such, general congested
+	traffic state as well as diverse travelers? perception about travel
+	time should be taken into consideration in O-D matrix estimation
+	models. In this paper, the influence of applying finer and duplicated
+	flow information as well as route choice proportion estimates on
+	the performance of the Information minimization (IM) and the modified
+	IM models were examined. It has shown that duplicate information
+	has adverse effect on the accuracy of matrix estimation, whereas
+	additional turning flow information can improve estimation accuracy.
+	Based on the examination results a methodology using the IM model,
+	the stochastic user equilibrium (SUE) assignment and the information
+	screening process, was proposed to optimize the goodness of estimation
+	and enhance the IM model to deal with the traffic situation more
+	realistically. The respective convergence and required computation
+	time were also examined. Furthermore, an empirical route choice study
+	was conducted in order to help determining the size of a route set
+	used in the SUE assignment model.},
+  journal = {Compendium of TRB 88th Annual Meeting},
+  keywords = {matrix estimation, SUE, information minimization, entropy maximization},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/62716/}
+}
+
+@INPROCEEDINGS{dlr77309,
+  author = {Yun-Pang Wang and Peter Wagner and Michael Behrisch},
+  title = {Ann{\"a}herung an das dynamische Systemoptimum mit Hilfe von Einzelfahrzeuginformationen},
+  booktitle = {HEUREKA 2011},
+  year = {2011},
+  month = {M{\"a}rz},
+  abstract = {Der Verkehr in einem gegebenen Untersuchungsgebiet organisiert sich
+	selbst in eine Ann{\"a}herung an das sogenannte Nutzeroptimum. Im
+	Widerspruch dazu steht die Forderung von Verkehrsmanagern, ein Systemoptimum
+	zur besten Nutzung der vorhandenen verkehrlichen Ressourcen anzustreben.
+	In der Praxis ist es wegen der sich st{\"a}ndig ver{\"a}ndernden
+	Verkehrszust{\"a}nde schwierig, Kantenwiderstandsfunktionen zu bestimmen.
+	Heutzutage k{\"o}nnen viele Verkehrsinformationen mittlerweile direkt
+	von Meldefahrzeugen erfasst werden. Daraus k{\"o}nnen viele zeitabh{\"a}ngige
+	Informationen abgeleitet werden. In dieser Arbeit wird untersucht,
+	ob und wie man auf einfache Weise ein Systemoptimum mit Hilfe einer
+	mikroskopischen Simulation berechnen kann und welches Ausma{\ss}
+	an Informationen zur Ann{\"a}herung an ein Systemoptimum erforderlich
+	ist.},
+  keywords = {dynamische Systemoptimum, mikroskopische Verkehrssimulation},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/77309/}
+}
+
+@INPROCEEDINGS{dlr65940,
+  author = {Yun-Pang Wang and Peter Wagner and Michael Behrisch},
+  title = {Towards a dynamic system optimum based on the simulated traffic data
+	in the microscopic traffic simulation},
+  booktitle = {3rd NEARCTIS workshop},
+  year = {2010},
+  month = {Juni},
+  abstract = {Microscopic traffic simulation has been applied since decades in order
+	to better describing both drivers? behaviors and interactive effects
+	among network infrastructure, drivers and traffic control applications.
+	Furthermore, it is also used as an evaluation tool for analyzing
+	influences of proposed management strategies and traffic-related
+	telematics technologies on network performances, such as efficiency
+	and safety. Achieving a system optimum in a road network is the main
+	concern of traffic managers at all times, although most road users
+	tend to make the route choice decision which is best suitable for
+	their journeys in practice. The main difference between system optimum
+	and user equilibrium is the marginal total travel costs, i.e. travel
+	times, which are the costs that an additional road user causes to
+	the other road users already in the network during the analysis period.
+	
+	Generally, travel times can be determined, i.e. approximated, by given
+	link travel time functions, which are functions of link flows. The
+	functional forms and respective parameters of the most travel time
+	functions are derived from empirical data. This approach has been
+	extensively applied in the macroscopic traffic modeling and the dynamic
+	traffic assignment modeling. Therefore, respective marginal costs
+	can be obtained by calculating the corresponding derivatives. However,
+	such travel time functions and their derivates are not required and
+	also not applied in a microscopic simulation, since the travel time,
+	travel flows and other parameters are directly measured in a simulation.
+	In this study, how to define and calculate marginal costs with use
+	of the simulated data is investigated.},
+  keywords = {system optimum, SUMO, microscopic traffic simulation},
+  owner = {dkrajzew},
+  timestamp = {2014.01.08},
+  url = {http://elib.dlr.de/65940/}
+}
+
+@INPROCEEDINGS{Wang2010,
+  author = {Yun-Pang Wang and Peter Wagner and Michael Behrisch},
+  title = {Towards a dynamic system optimum based on the simulated traffic data
+	in the microscopic traffic simulation},
+  booktitle = {3rd NEARCTIS workshop},
+  year = {2010},
+  month = {Juni},
+  abstract = {Microscopic traffic simulation has been applied since decades in order
+	to better describing both drivers? behaviors and interactive effects
+	among network infrastructure, drivers and traffic control applications.
+	Furthermore, it is also used as an evaluation tool for analyzing
+	influences of proposed management strategies and traffic-related
+	telematics technologies on network performances, such as efficiency
+	and safety. Achieving a system optimum in a road network is the main
+	concern of traffic managers at all times, although most road users
+	tend to make the route choice decision which is best suitable for
+	their journeys in practice. The main difference between system optimum
+	and user equilibrium is the marginal total travel costs, i.e. travel
+	times, which are the costs that an additional road user causes to
+	the other road users already in the network during the analysis period.
+	
+	
+	Generally, travel times can be determined, i.e. approximated, by given
+	link travel time functions, which are functions of link flows. The
+	functional forms and respective parameters of the most travel time
+	functions are derived from empirical data. This approach has been
+	extensively applied in the macroscopic traffic modeling and the dynamic
+	traffic assignment modeling. Therefore, respective marginal costs
+	can be obtained by calculating the corresponding derivatives. However,
+	such travel time functions and their derivates are not required and
+	also not applied in a microscopic simulation, since the travel time,
+	travel flows and other parameters are directly measured in a simulation.
+	In this study, how to define and calculate marginal costs with use
+	of the simulated data is investigated.},
+  keywords = {system optimum, SUMO, microscopic traffic simulation},
+  owner = {Daniel},
+  timestamp = {2011.12.02},
+  url = {http://elib.dlr.de/65940/}
+}
+
+@PHDTHESIS{Wegener2009,
+  author = {Axel Wegener},
+  title = {Organic-Computing-Konzepte und deren Umsetzung für dezentrale Anwendungen
+	im Straßenverkehr},
+  school = {Universit\"at zu L\"ubeck},
+  year = {2009},
+  file = {:http\://d-nb.info/997885203/34:URL},
+  owner = {dkrajzew},
+  timestamp = {2012.01.23}
+}
+
+@INPROCEEDINGS{Wegener2008,
+  author = {Wegener, A. and Hellbr\"uck, H. and Wewetzer, C. and L\"ubke, A.},
+  title = {VANET Simulation Environment with Feedback Loop and its Application
+	to Traffic Light Assistance},
+  booktitle = {GLOBECOM Workshops, 2008 IEEE},
+  year = {2008},
+  pages = {1 -7},
+  month = {30 2008-dec. 4},
+  abstract = {Traffic applications, in which vehicles are equipped with a radio
+	interface and communicate directly with each other and the road traffic
+	infrastructure are a promising field for ad-hoc network technology.
+	Vehicular applications reach from entertainment to traffic information
+	systems, including safety aspects where warning messages can inform
+	drivers about dangerous situations in advance. As performance tests
+	of the real system are very expensive and not comprehensive, today's
+	evaluations are based on analysis and simulation via traffic simulators.
+	In order to investigate the impact of traffic information systems
+	there are two options: First, traffic simulators can be extended
+	by application code and a simplified model for wireless communication.
+	Second, existing network simulators can be coupled with existing
+	traffic simulators. We favor the coupling of existing and well known
+	simulators as we believe that the wireless communication characteristics
+	influence the data transfer significantly and an oversimplified transmission
+	model can lead to flawed results. In this paper we describe the feedback
+	loop between traffic and network simulators named traffic control
+	interface (TraCI) and outline its versatility. We explain its use
+	to determine possible energy consumption reduction when traffic lights
+	send their phase schedules to vehicles.},
+  doi = {10.1109/GLOCOMW.2008.ECP.67},
+  keywords = {TraCI;VANET simulation environment;ad-hoc network technology;feedback
+	loop;oversimplified transmission model;radio interface;road traffic
+	infrastructure;safety aspects;traffic control interface;traffic information
+	systems;traffic light assistance;traffic simulators;wireless communication;ad
+	hoc networks;mobile radio;road safety;road traffic;traffic information
+	systems;, V2X, TU Lübeck, sumo},
+  owner = {dkrajzew},
+  timestamp = {2011.09.19}
+}
+
+@INPROCEEDINGS{Wegener2008a,
+  author = {Axel Wegener and Micha\l Pi\'{o}rkowski and Maxim Raya and Horst
+	Hellbr\"{u}ck and Stefan Fischer and Jean-Pierre Hubaux},
+  title = {Tra{CI}: {A}n {I}nterface for {C}oupling {R}oad {T}raffic and {N}etwork
+	{S}imulators},
+  booktitle = {11{t}h {C}ommunications and {N}etworking {S}imulation {S}ymposium
+	({CNS})},
+  year = {2008},
+  series = {CNS '08},
+  pages = {155--163},
+  address = {New York, NY, USA},
+  publisher = {ACM},
+  abstract = {Vehicular Ad-Hoc Networks (VANETs) enable communication among vehicles
+	as well as between vehicles and roadside infrastructures. Currently
+	available software tools for VANET research still lack the ability
+	to asses the usability of vehicular applications. In this article,
+	we present Traffic Control Interface (TraCI) a technique for interlinking
+	road traffic and network simulators. It permits us to control the
+	behavior of vehicles during simulation runtime, and consequently
+	to better understand the influence of VANET applications on traffic
+	patterns. In contrast to the existing approaches, i.e., generating
+	mobility traces that are fed to a network simulator as static input
+	files, the online coupling allows the adaptation of drivers' behavior
+	during simulation runtime. This technique is not limited to a special
+	traffic simulator or to a special network simulator. We introduce
+	a general framework for controlling the mobility which is adaptable
+	towards other research areas. We describe the basic concept, design
+	decisions and the message format of this open-source architecture.
+	Additionally, we provide implementations for non-commercial traffic
+	and network simulators namely SUMO and ns2, respectively. This coupling
+	enables for the first time systematic evaluations of VANET applications
+	in realistic settings.},
+  acmid = {1400740},
+  affiliation = {EPFL},
+  details = {http://infoscience.epfl.ch/record/115106},
+  doi = {10.1145/1400713.1400740},
+  isbn = {1-56555-318-7},
+  keywords = {network simulation, node mobility, vehicular ad-hoc networks (VANETs)},
+  location = {Ottawa, Canada},
+  numpages = {9},
+  url = {http://doi.acm.org/10.1145/1400713.1400740}
+}
+
+@INPROCEEDINGS{Widodo2000,
+  author = {Widodo, S. and Hasegawa, T. and Tsugawa, S.},
+  title = {Vehicle fuel consumption and emission estimation in environment-adaptive
+	driving with or without inter-vehicle communications},
+  booktitle = {Intelligent Vehicles Symposium, 2000. IV 2000. Proceedings of the
+	IEEE},
+  year = {2000},
+  pages = {382 -386},
+  __markedentry = {[dkrajzew:6]},
+  abstract = {In this paper, the vehicle fuel consumption and emission rates of
+	environment-adaptive driving with or without inter-vehicle communications
+	are estimated using an autonomous running traffic flow simulator.
+	In this study, a microscopic fuel consumption and emission model
+	is used. Simulation results show that environment-adaptive driving
+	can reduce both of the average fuel consumption and vehicle emission.
+	It also shows that inter-vehicle communications can improve these
+	impacts under high vehicle densities and long traffic light cycle
+	times},
+  doi = {10.1109/IVS.2000.898373},
+  keywords = {autonomous running traffic flow simulator;environment-adaptive driving;high
+	vehicle densities;inter-vehicle communications;long traffic light
+	cycle times;microscopic model;vehicle emission estimation;vehicle
+	fuel consumption estimation;air pollution;automated highways;environmental
+	factors;mobile communication;road vehicles;},
+  owner = {dkrajzew},
+  timestamp = {2012.01.26}
+}
+
+@comment{jabref-meta: selector_review:}
+
+@comment{jabref-meta: selector_publisher:}
+
+@comment{jabref-meta: selector_author:}
+
+@comment{jabref-meta: selector_journal:}
+
+@comment{jabref-meta: selector_keywords:}
+
+@comment{jabref-meta: groupsversion:3;}
+
+@comment{jabref-meta: groupstree:
+0 AllEntriesGroup:;
+1 ExplicitGroup:sumo\;0\;;
+2 ExplicitGroup:used\;0\;Bajpai2011\;Barber2011\;Bauza2008\;Behrisch20
+08\;Behrisch2008a\;Behrisch2008b\;Behrisch2009a\;Behrisch2010\;Bieker2
+010\;Bieker2011\;Bieker2011a\;Bonert2006\;Duering2011\;Flotterod2009\;
+Hopfner2007\;Karnadi2007\;Katsaros2011\;Katsaros2011a\;Kerekes2009\;Kr
+ajzewicz2002b\;Krajzewicz2003b\;Krajzewicz2005a\;Krajzewicz2007\;Krajz
+ewicz2007a\;Krajzewicz2007b\;Krajzewicz2010a\;Krajzewicz2011\;Krajzewi
+cz2011a\;Morenz2007\;Piorkowski2008\;Rosenbaum2011\;SandeshFiore2011\;
+Wegener2008\;Wegener2008a\;Wegener2009\;;
+2 ExplicitGroup:mentioned\;0\;GOZALVEZ2009\;Harri2011\;Krajzewicz2002\
+;Krajzewicz2003\;Krajzewicz2003c\;Krajzewicz2004\;Krajzewicz2009\;Kraj
+zewicz2010\;Lazaro2008\;Maneros2009\;Niebel2008\;Rondinone2009\;Wang20
+10\;;
+2 ExplicitGroup:compared\;0\;;
+2 ExplicitGroup:presentation\;0\;Behrisch2009\;Behrisch2010a\;Behrisch
+2011\;Hopfner2007\;Karnadi2007\;Krajzewicz2002a\;Krajzewicz2003a\;Kraj
+zewicz2003b\;Krajzewicz2004b\;Krajzewicz2005\;Krajzewicz2006\;Krajzewi
+cz2009a\;Krajzewicz2009b\;Krajzewicz2010b\;;
+1 ExplicitGroup:projects\;0\;;
+2 ExplicitGroup:OIS\;0\;Krajzewicz2005a\;;
+2 ExplicitGroup:INVENT\;0\;;
+2 ExplicitGroup:TAPAS\;0\;SandeshFiore2011\;Varschen2006\;;
+2 ExplicitGroup:GF4BOS\;2\;Behrisch2010\;Niebel2008\;;
+3 ExplicitGroup:WJT2005\;0\;;
+3 ExplicitGroup:Soccer2006\;0\;Behrisch2008\;Bonert2006\;;
+3 ExplicitGroup:DELPHI\;0\;Behrisch2009a\;;
+3 ExplicitGroup:VABENE\;0\;Rosenbaum2011\;;
+2 ExplicitGroup:small\;0\;;
+3 ExplicitGroup:ACMEDriver\;0\;Krajzewicz2002\;Krajzewicz2003\;Krajzew
+icz2003c\;Krajzewicz2004\;Krajzewicz2004a\;;
+2 ExplicitGroup:theses\;2\;;
+3 ExplicitGroup:DanilotTeteBoyom\;0\;Krajzewicz2007\;Krajzewicz2007a\;
+Krajzewicz2007b\;;
+2 ExplicitGroup:TrafficOnline\;0\;Hopfner2007\;;
+2 ExplicitGroup:iTETRIS\;0\;Bauza2008\;Bieker2011\;Bieker2011a\;Blokpo
+el2010\;Furian2013\;GOZALVEZ2009\;Harri2011\;Krajzewicz2009\;Krajzewic
+z2009b\;Krajzewicz2010\;Krajzewicz2010a\;Krajzewicz2011\;Lazaro2008\;M
+aneros2009\;Rondinone2009\;;
+2 ExplicitGroup:Pre-Drive C2X\;0\;Bieker2010\;;
+1 ExplicitGroup:topics\;0\;;
+2 ExplicitGroup:V2X\;2\;Figueiredo2001\;;
+3 ExplicitGroup:communication models\;2\;Bieker2010\;Harri2011\;Krajze
+wicz2007\;Krajzewicz2007a\;Krajzewicz2007b\;;
+3 ExplicitGroup:applications\;2\;Krajzewicz2010\;;
+4 ExplicitGroup:emergency\;0\;Bieker2011a\;;
+4 ExplicitGroup:TLS\;0\;Bieker2011a\;Duering2011\;;
+4 ExplicitGroup:public transport\;0\;Bieker2011\;;
+4 ExplicitGroup:surveillance\;0\;Bieker2011\;Wegener2009\;;
+4 ExplicitGroup:navigation\;0\;Barber2011\;Katsaros2011\;Krajzewicz200
+7\;Krajzewicz2007a\;Krajzewicz2007b\;Wegener2009\;;
+4 ExplicitGroup:ADAS\;0\;Duering2011\;;
+4 ExplicitGroup:GLOSA\;0\;Chao-Qun2008\;Katsaros2011\;Katsaros2011a\;S
+anchez2006\;Tielert2010\;Treiber2000\;Wegener2008\;Wegener2009\;Widodo
+2000\;;
+3 ExplicitGroup:simulation packages\;2\;Wegener2008a\;;
+4 ExplicitGroup:iTETRIS\;0\;Bauza2008\;GOZALVEZ2009\;Harri2011\;Krajze
+wicz2009\;Krajzewicz2010\;Lazaro2008\;Maneros2009\;Rondinone2009\;;
+4 ExplicitGroup:MOVE\;0\;Karnadi2007\;;
+4 ExplicitGroup:TraNS\;0\;Piorkowski2008\;;
+4 ExplicitGroup:VSimRTI\;0\;Katsaros2011\;Katsaros2011a\;;
+3 ExplicitGroup:network simulator\;0\;;
+4 ExplicitGroup:ns-3\;0\;GOZALVEZ2009\;Harri2011\;Krajzewicz2009\;Kraj
+zewicz2010\;Lazaro2008\;Maneros2009\;Rondinone2009\;;
+4 ExplicitGroup:own (DLR)\;0\;Bieker2010\;Krajzewicz2007\;Krajzewicz20
+07a\;Krajzewicz2007b\;;
+4 ExplicitGroup:ns-2\;0\;Karnadi2007\;Piorkowski2008\;Wegener2008\;Weg
+ener2009\;;
+4 ExplicitGroup:JiST/SWANS\;0\;Katsaros2011\;Katsaros2011a\;;
+3 ExplicitGroup:routing protocols\;0\;Bauza2008\;Katsaros2011b\;;
+3 ExplicitGroup:connectivity\;0\;SandeshFiore2011\;;
+2 ExplicitGroup:TLS\;2\;Bajpai2011\;Barlovic2001\;Krajzewicz2005a\;Kra
+jzewicz2010a\;Krajzewicz2011\;;
+2 ExplicitGroup:demand\;2\;;
+3 ExplicitGroup:generation\;2\;Behrisch2008\;SandeshFiore2011\;Varsche
+n2006\;;
+3 ExplicitGroup:assignment\;2\;Behrisch2008a\;Behrisch2008b\;Gawron199
+9\;Krajzewicz2003b\;Krajzewicz2011\;Krajzewicz2011a\;SandeshFiore2011\
+;Wang2010\;;
+3 ExplicitGroup:calibration\;2\;Flotterod2009\;;
+3 ExplicitGroup:event traffic\;2\;Behrisch2008\;;
+2 ExplicitGroup:driver modelling\;2\;;
+3 ExplicitGroup:submicro\;0\;Krajzewicz2002\;Krajzewicz2003\;Krajzewic
+z2003c\;Krajzewicz2004\;Krajzewicz2004a\;;
+3 ExplicitGroup:car-following\;0\;Krajzewicz2003b\;Krajzewicz2010b\;Kr
+auss1997\;Krauss1998\;;
+3 ExplicitGroup:mesoscopic\;0\;Behrisch2008\;;
+3 ExplicitGroup:lane changing\;0\;Krajzewicz2009a\;Krajzewicz2010b\;;
+2 ExplicitGroup:metrics\;2\;Blokpoel2010\;Krajzewicz2010a\;Krajzewicz2
+011a\;;
+2 ExplicitGroup:pollution\;2\;Blokpoel2010\;Krajzewicz2009b\;Krajzewic
+z2010a\;Krajzewicz2010b\;Krajzewicz2011\;Krajzewicz2011a\;Verges2013\;
+dlr54498\;dlr55172\;dlr55173\;dlr56995\;dlr62187\;dlr62188\;dlr62189\;
+dlr62716\;dlr65940\;dlr65965\;dlr65966\;dlr65967\;dlr71870\;dlr71871\;
+dlr71872\;dlr72224\;dlr72232\;dlr76186\;dlr77309\;dlr80610\;dlr81244\;
+dlr81834\;;
+2 ExplicitGroup:simulation packages\;2\;Behrisch2009\;Behrisch2010\;Be
+hrisch2011\;Krajzewicz2002a\;Krajzewicz2003a\;Krajzewicz2004b\;Krajzew
+icz2006\;Krajzewicz2010b\;;
+2 ExplicitGroup:calibration&validation\;2\;Brockfeld2002\;Brockfeld200
+2a\;Brockfeld2003\;Brockfeld2003a\;Brockfeld2004\;Brockfeld2004a\;Broc
+kfeld2004b\;Brockfeld2004c\;Brockfeld2005\;Brockfeld2005a\;Krajzewicz2
+002b\;Krajzewicz2003b\;Morenz2007\;;
+2 ExplicitGroup:inter-modality\;2\;Behrisch2010a\;;
+2 ExplicitGroup:surveillance\;2\;Behrisch2009a\;Behrisch2010\;Bonert20
+06\;Hopfner2007\;Kerekes2009\;Kuhne2006\;Morenz2007\;Niebel2008\;Rosen
+baum2011\;Schlingelhof2006\;;
+3 ExplicitGroup:airborne\;0\;Behrisch2009a\;Behrisch2010\;Bonert2006\;
+Niebel2008\;Rosenbaum2011\;;
+3 ExplicitGroup:inductive loops\;0\;;
+3 ExplicitGroup:cameras\;0\;Behrisch2009a\;Behrisch2010\;Bonert2006\;K
+erekes2009\;Niebel2008\;Rosenbaum2011\;;
+3 ExplicitGroup:mobile phones\;0\;Hopfner2007\;;
+2 ExplicitGroup:forecast\;0\;Behrisch2008\;Behrisch2009a\;Behrisch2010
+\;Bonert2006\;Morenz2007\;Niebel2008\;Rosenbaum2011\;;
+2 ExplicitGroup:road networks\;0\;Karnadi2007\;Krajzewicz2005\;Sandesh
+Fiore2011\;;
+2 ExplicitGroup:TraCI\;0\;Wegener2008\;Wegener2008a\;Wegener2009\;;
+2 ExplicitGroup:public transport\;0\;Bieker2011\;Morenz2007\;;
+2 ExplicitGroup:ITS\;0\;Figueiredo2001\;;
+1 ExplicitGroup:institutions\;0\;;
+2 ExplicitGroup:DLR\;2\;Kuhne2006\;;
+3 ExplicitGroup:TS\;2\;Barlovic2001\;Behrisch2008\;Behrisch2008a\;Behr
+isch2008b\;Behrisch2009\;Behrisch2009a\;Behrisch2010\;Behrisch2010a\;B
+ehrisch2011\;Bieker2010\;Bieker2011\;Bieker2011a\;Blokpoel2010\;Brockf
+eld2002\;Brockfeld2002a\;Brockfeld2003\;Brockfeld2003a\;Brockfeld2004\
+;Brockfeld2004a\;Brockfeld2004b\;Brockfeld2004c\;Brockfeld2005\;Brockf
+eld2005a\;Duering2011\;Flotterod2009\;GOZALVEZ2009\;Harri2011\;Hopfner
+2007\;Krajzewicz2002\;Krajzewicz2002a\;Krajzewicz2002b\;Krajzewicz2003
+\;Krajzewicz2003a\;Krajzewicz2003b\;Krajzewicz2003c\;Krajzewicz2004\;K
+rajzewicz2004a\;Krajzewicz2004b\;Krajzewicz2005\;Krajzewicz2005a\;Kraj
+zewicz2006\;Krajzewicz2007\;Krajzewicz2007a\;Krajzewicz2007b\;Krajzewi
+cz2009\;Krajzewicz2009a\;Krajzewicz2009b\;Krajzewicz2010\;Krajzewicz20
+10a\;Krajzewicz2010b\;Krajzewicz2011\;Krajzewicz2011a\;Krauss1997\;Laz
+aro2008\;Maneros2009\;Niebel2008\;Rosenbaum2011\;Schlingelhof2006\;Var
+schen2006\;Wang2010\;;
+3 ExplicitGroup:VF\;2\;Varschen2006\;;
+3 ExplicitGroup:MF\;2\;Rosenbaum2011\;;
+2 ExplicitGroup:Switzerland\;2\;;
+3 ExplicitGroup:EPFL\;2\;;
+4 ExplicitGroup:Transport and Mobility Laboratory\;0\;Flotterod2009\;;
+4 ExplicitGroup:LCA (Laboratory for computer Communications and Applic
+ations)\;0\;Piorkowski2008\;Wegener2008a\;;
+2 ExplicitGroup:Netherlands\;2\;;
+3 ExplicitGroup:Peek Traffic\;0\;Blokpoel2010\;GOZALVEZ2009\;Harri2011
+\;Krajzewicz2010\;Lazaro2008\;;
+2 ExplicitGroup:Belgium\;2\;;
+3 ExplicitGroup:IMEC\;0\;Bieker2010\;;
+2 ExplicitGroup:France\;2\;;
+3 ExplicitGroup:EURECOM\;0\;GOZALVEZ2009\;Harri2011\;Krajzewicz2010\;L
+azaro2008\;Rondinone2009\;;
+3 ExplicitGroup:HITACHI\;0\;GOZALVEZ2009\;Krajzewicz2010\;Lazaro2008\;
+Rondinone2009\;;
+3 ExplicitGroup:Thales\;0\;GOZALVEZ2009\;Harri2011\;Krajzewicz2010\;La
+zaro2008\;Rondinone2009\;;
+3 ExplicitGroup:Universit´e de Lyon\;0\;;
+4 ExplicitGroup:INRIA\;0\;SandeshFiore2011\;;
+2 ExplicitGroup:Germany\;2\;;
+3 ExplicitGroup:TU BS\;2\;Duering2011\;;
+3 ExplicitGroup:VW\;0\;Wegener2008\;;
+3 ExplicitGroup:TU L\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\\\\\\\\\\\\\"ubeck\;2\;;
+4 ExplicitGroup:Institute of Telematics\;0\;Wegener2008\;Wegener2008a\
+;Wegener2009\;;
+3 ExplicitGroup:University of Applied Sciences L\\\\\\\\\\\\\\\\\\\\\\
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"ubeck\;2\;;
+4 ExplicitGroup:Department of Electrical Engineering\;0\;Wegener2008\;
+;
+3 ExplicitGroup:Universit\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\\\\\\\\\\\\\\\\\\"at zu K\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+\\\\\\\\\\\\\\\\\\\\\"oln\;0\;Gawron1999\;Krauss1997\;Krauss1998\;;
+3 ExplicitGroup:Fraunhofer\;2\;;
+4 ExplicitGroup:FOKUS\;0\;Katsaros2011a\;Kerekes2009\;;
+2 ExplicitGroup:Spain\;2\;;
+3 ExplicitGroup:UMH\;0\;Bauza2008\;GOZALVEZ2009\;Krajzewicz2010\;Lazar
+o2008\;Maneros2009\;Rondinone2009\;;
+3 ExplicitGroup:Innovalia Association\;0\;GOZALVEZ2009\;Krajzewicz2009
+b\;Krajzewicz2010\;Lazaro2008\;Maneros2009\;Rondinone2009\;;
+3 ExplicitGroup:CBT\;0\;GOZALVEZ2009\;Krajzewicz2010\;Lazaro2008\;Mane
+ros2009\;Rondinone2009\;;
+2 ExplicitGroup:Italy\;2\;;
+3 ExplicitGroup:COBO\;0\;GOZALVEZ2009\;Krajzewicz2010\;Lazaro2008\;Ron
+dinone2009\;;
+2 ExplicitGroup:USA\;0\;;
+3 ExplicitGroup:University of Tulsa\;0\;Barber2011\;;
+3 ExplicitGroup:Rochester Institute of Technology\;0\;Kerekes2009\;;
+3 ExplicitGroup:Air Force Institute of Technology\;0\;Kerekes2009\;;
+3 ExplicitGroup:Numerica Corp.\;0\;Kerekes2009\;;
+2 ExplicitGroup:Australia\;2\;;
+3 ExplicitGroup:University of New South Wales\;0\;Karnadi2007\;;
+3 ExplicitGroup:National ICT Australia Ltd\;0\;Karnadi2007\;;
+2 ExplicitGroup:Ireland\;2\;;
+3 ExplicitGroup:University of Dublin\;0\;Morenz2007\;;
+2 ExplicitGroup:UK\;2\;;
+3 ExplicitGroup:University of Surrey\;0\;Katsaros2011\;Katsaros2011a\;
+Katsaros2011b\;;
+2 ExplicitGroup:India\;2\;;
+3 ExplicitGroup:IIT Bombay\;0\;Bajpai2011\;;
+1 ExplicitGroup:meta\;0\;;
+2 ExplicitGroup:assigned2groups\;0\;Bajpai2011\;Barber2011\;Barlovic20
+01\;Bauza2008\;Behrisch2008\;Behrisch2008a\;Behrisch2008b\;Behrisch200
+9\;Behrisch2009a\;Behrisch2010\;Behrisch2010a\;Behrisch2011\;Bieker201
+0\;Bieker2011\;Bieker2011a\;Blokpoel2010\;Bonert2006\;Brockfeld2002\;B
+rockfeld2002a\;Brockfeld2003\;Brockfeld2003a\;Brockfeld2004\;Brockfeld
+2004a\;Brockfeld2004b\;Brockfeld2004c\;Brockfeld2005\;Brockfeld2005a\;
+Chao-Qun2008\;Duering2011\;Figueiredo2001\;Flotterod2009\;GOZALVEZ2009
+\;Gawron1999\;Harri2011\;Hopfner2007\;Karnadi2007\;Katsaros2011\;Katsa
+ros2011a\;Katsaros2011b\;Kerekes2009\;Krajzewicz2002\;Krajzewicz2002a\
+;Krajzewicz2002b\;Krajzewicz2003\;Krajzewicz2003a\;Krajzewicz2003b\;Kr
+ajzewicz2003c\;Krajzewicz2004\;Krajzewicz2004a\;Krajzewicz2004b\;Krajz
+ewicz2005\;Krajzewicz2005a\;Krajzewicz2006\;Krajzewicz2007\;Krajzewicz
+2007a\;Krajzewicz2007b\;Krajzewicz2009\;Krajzewicz2009a\;Krajzewicz201
+0\;Krajzewicz2010a\;Krajzewicz2010b\;Krajzewicz2011\;Krajzewicz2011a\;
+Krauss1997\;Krauss1998\;Kuhne2006\;Lazaro2008\;Maneros2009\;Morenz2007
+\;Niebel2008\;Piorkowski2008\;Rondinone2009\;Rosenbaum2011\;Sanchez200
+6\;SandeshFiore2011\;Schlingelhof2006\;Tielert2010\;Treiber2000\;Varsc
+hen2006\;Wang2010\;Wegener2008\;Wegener2008a\;Wegener2009\;Widodo2000\
+;;
+2 ExplicitGroup:documentAssigned\;0\;Katsaros2011\;Katsaros2011a\;Kats
+aros2011b\;Tielert2010\;Treiber2000\;Wegener2009\;;
+}
+

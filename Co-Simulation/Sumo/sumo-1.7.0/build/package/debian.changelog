@@ -1,0 +1,35 @@
+sumo (0.13.1-1) unstable; urgency=low  
+  
+  * New upstream release.  
+   
+ -- Michael Behrisch <behrisch@users.sourceforge.net>  Tue, 01 Nov 2011 10:24:24 +0100
+
+sumo (0.13.0-1) unstable; urgency=low  
+  
+  * New upstream release.  
+   
+ -- Michael Behrisch <behrisch@users.sourceforge.net>  Wed, 13 Jul 2011 16:58:57 +0200
+
+sumo (0.12.3-1) unstable; urgency=low  
+  
+  * New upstream release.  
+   
+ -- Michael Behrisch <behrisch@users.sourceforge.net>  Wed, 13 Apr 2011 19:28:57 +0200
+
+sumo (0.10.2-1) unstable; urgency=low  
+  
+  * New upstream release.  
+   
+ -- Michael Behrisch <behrisch@informatik.hu-berlin.de>  Mon, 16 Mar 2009 22:00:47 +0100
+
+sumo (0.10.1-1) unstable; urgency=low  
+ 
+  * Update
+
+ -- Michael Behrisch <behrisch@informatik.hu-berlin.de>  Sun, 15 Feb 2009 22:34:33 +0200
+
+sumo (0.9.10-1) unstable; urgency=low  
+ 
+  * Initial Release
+
+ -- Michael Behrisch <behrisch@informatik.hu-berlin.de>  Thu, 23 Oct 2008 23:04:33 +0200

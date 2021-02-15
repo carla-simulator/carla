@@ -1,0 +1,22 @@
+/* XPM */
+static const char * show_tooltips_xpm[] = {
+"16 16 3 1",
+" 	c None",
+".	c Black",
+"X	c #f3f704",
+"                ",
+"   ..........   ",
+"  .XXXXXXXXXX.  ",
+" .XXXXX..XXXXX. ",
+" .XXXXX..XXXXX. ",
+" .XXXXX..XXXXX. ",
+" .XXXXX..XXXXX. ",
+" .XXXXXXXXXXXX. ",
+" .XXXXX..XXXXX. ",
+"  .XXXXXXXXXX.  ",
+"   .XX.......   ",
+"  .XX..         ",
+"  .X.           ",
+"  ..            ",
+"  .             ",
+"                "};

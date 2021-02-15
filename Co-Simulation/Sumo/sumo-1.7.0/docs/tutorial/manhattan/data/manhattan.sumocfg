@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Mon Mar 25 08:16:37 2019 by Eclipse SUMO Version v1_0_1+0645-93703db
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="net.net.xml"/>
+        <route-files value="routes.xml"/>
+    </input>
+
+    <report>
+        <no-step-log value="true"/>
+    </report>
+
+</configuration>

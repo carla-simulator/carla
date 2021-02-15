@@ -1,0 +1,21 @@
+<configuration>
+
+    <input>
+        <net-file value="bs3d/bs.net.xml"/>
+        <route-files value="bs3d/bs3d.rou.xml"/>
+        <additional-files value="input_additional.add.xml"/> 
+        <gui-settings-file value="bs3d/view_B.xml"/>
+    </input>
+    
+    <time>
+        <begin value="0"/>
+        <end value="180"/>
+        <step-length value=".2"/>
+    </time>
+
+    <report>
+        <no-duration-log value="true"/>
+        <no-step-log value="true"/>
+    </report>
+    <osg-view value="true"/>
+</configuration>

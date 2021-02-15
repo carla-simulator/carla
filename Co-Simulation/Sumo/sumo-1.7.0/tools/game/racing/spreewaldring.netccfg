@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Sep  6 09:27:28 2018 by Eclipse SUMO netconvert Version v1_0_0+0032-77a1026
+-->
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="spreewaldring.nod.xml"/>
+        <edge-files value="spreewaldring.edg.xml"/>
+        <type-files value="racing.typ.xml"/>
+        <osm-files value="spreewaldring.osm"/>
+    </input>
+
+    <output>
+        <output-file value="spreewaldring.net.xml"/>
+    </output>
+
+    <processing>
+        <geometry.remove value="false"/>
+    </processing>
+
+    <edge_removal>
+        <keep-edges.by-type value="highway.raceway"/>
+    </edge_removal>
+
+    <junctions>
+        <junctions.scurve-stretch value="0.8"/>
+    </junctions>
+
+</configuration>

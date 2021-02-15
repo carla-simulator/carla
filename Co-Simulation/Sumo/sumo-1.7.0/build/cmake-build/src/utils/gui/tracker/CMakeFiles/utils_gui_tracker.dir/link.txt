@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_gui_tracker.a  CMakeFiles/utils_gui_tracker.dir/GUIParameterTracker.cpp.o CMakeFiles/utils_gui_tracker.dir/TrackerValueDesc.cpp.o
+/usr/bin/ranlib libutils_gui_tracker.a

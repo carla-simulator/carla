@@ -1,0 +1,16 @@
+#!/bin/sh
+# autopkgtest check 
+# (C) 2014 Anton Gladky <gladk@debian.org>
+
+set -e
+
+export OMPI_MCA_orte_rsh_agent=/bin/false
+
+WORKDIR=$(mktemp -d)
+trap "rm -rf $WORKDIR" 0 INT QUIT ABRT PIPE TERM
+cp docs/examples/sumo/visualization/parade/* $WORKDIR/
+cd $WORKDIR
+ 
+sumo -b 0 -e 10000 -n net.net.xml -r input_routes.rou.xml -c parade.sumocfg --summary-output sum.out
+cat sum.out
+echo "run: OK"

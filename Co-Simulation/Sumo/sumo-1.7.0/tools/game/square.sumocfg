@@ -1,0 +1,21 @@
+<configuration>
+
+    <input>
+        <net-file value="square/square.net.xml"/>
+        <gui-settings-file value="square/settings.xml"/>
+        <route-files value="square/square.rou.xml"/>
+        <additional-files value="input_additional.add.xml"/>
+    </input>
+    
+    <output>
+        <human-readable-time value="false"/>
+        <tripinfo-output value="tripinfos.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+        <end value="180"/>
+        <step-length value=".1"/>
+    </time>
+
+</configuration>

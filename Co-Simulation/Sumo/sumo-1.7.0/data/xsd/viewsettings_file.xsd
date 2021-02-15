@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+    <xsd:element name="viewsettings">
+        <xsd:complexType>
+            <xsd:choice maxOccurs="unbounded">
+                <xsd:element name="breakpoint" type="breakpointType" minOccurs="0"/>
+                <xsd:element name="viewport" type="viewportType" minOccurs="0"/>
+                <xsd:element name="scheme" type="schemeType" minOccurs="0"/>
+                <xsd:element name="snapshot" type="snapshotType" minOccurs="0"/>
+                <xsd:element name="decal" type="decalType" minOccurs="0"/>
+                <xsd:element name="light" type="lightType" minOccurs="0"/>
+            </xsd:choice>
+        </xsd:complexType>
+    </xsd:element>
+	
+    <xsd:complexType name="breakpointType">
+        <xsd:attribute name="time" type="xsd:float" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="viewportType">
+        <xsd:attribute name="x" type="xsd:float" use="optional"/>
+        <xsd:attribute name="y" type="xsd:float" use="optional"/>
+        <xsd:attribute name="zoom" type="xsd:float" use="optional"/>
+        <xsd:attribute name="centerX" type="xsd:float" use="optional"/>
+        <xsd:attribute name="centerY" type="xsd:float" use="optional"/>
+        <xsd:attribute name="centerZ" type="xsd:float" use="optional"/>
+        <xsd:attribute name="rotation" type="xsd:float" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="schemeType">
+        <xsd:attribute name="name" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="snapshotType">
+        <xsd:attribute name="file" type="xsd:string" use="required"/>
+        <xsd:attribute name="time" type="xsd:float" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="decalType">
+        <xsd:attribute name="file" type="xsd:string" use="required"/>
+        <xsd:attribute name="centerX" type="xsd:float" use="optional"/>
+        <xsd:attribute name="centerY" type="xsd:float" use="optional"/>
+        <xsd:attribute name="centerZ" type="xsd:float" use="optional"/>
+        <xsd:attribute name="width" type="xsd:float" use="optional"/>
+        <xsd:attribute name="height" type="xsd:float" use="optional"/>
+        <xsd:attribute name="altitude" type="xsd:float" use="optional"/>
+        <xsd:attribute name="rotation" type="xsd:float" use="optional"/>
+        <xsd:attribute name="tilt" type="xsd:float" use="optional"/>
+        <xsd:attribute name="roll" type="xsd:float" use="optional"/>
+        <xsd:attribute name="layer" type="xsd:float" use="optional"/>
+        <xsd:attribute name="screenRelative" type="boolType" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name = "lightType">
+        <xsd:attribute name="index" type="xsd:string" use="optional"/>
+        <xsd:attribute name="centerX" type="xsd:float" use="optional"/>
+        <xsd:attribute name="centerY" type="xsd:float" use="optional"/>
+        <xsd:attribute name="centerZ" type="xsd:float" use="optional"/>
+        <xsd:attribute name="width" type="xsd:float" use="optional"/>
+        <xsd:attribute name="height" type="xsd:float" use="optional"/>
+        <xsd:attribute name="altitude" type="xsd:float" use="optional"/>
+        <xsd:attribute name="rotation" type="xsd:float" use="optional"/>
+        <xsd:attribute name="tilt" type="xsd:float" use="optional"/>
+        <xsd:attribute name="roll" type="xsd:float" use="optional"/>
+        <xsd:attribute name="layer" type="xsd:float" use="optional"/>
+    </xsd:complexType>
+</xsd:schema>

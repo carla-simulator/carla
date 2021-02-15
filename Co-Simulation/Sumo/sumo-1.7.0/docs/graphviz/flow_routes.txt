@@ -1,0 +1,51 @@
+graph G {
+	node [shape=Mcircle fontname="Arial" fillcolor="yellow1" style="filled"]; USER;
+	node [shape=box fontname="Arial" fillcolor="indianred1" style="filled"]; OD2TRIPS;
+	node [shape=box fontname="Arial" fillcolor="lightskyblue" style="filled"]; "SUMO/GUISIM";
+
+	subgraph T0 {
+		rank=same
+		node [shape=box fontname="Arial" fillcolor="goldenrod" style="filled"]; DUAROUTER;
+		node [shape=box fontname="Arial" fillcolor="goldenrod1" style="filled"]; DFROUTER;
+		node [shape=box fontname="Arial" fillcolor="goldenrod2" style="filled"]; JTRROUTER;
+	}
+
+	subgraph T1 {
+		rank=same
+		node [shape=ellipse fontname="Arial" fillcolor="goldenrod" style="filled"]; trips;
+		node [shape=ellipse fontname="Arial" fillcolor="goldenrod" style="filled"]; flows;
+		node [shape=ellipse fontname="Arial" fillcolor="goldenrod" style="filled"]; cell_routes;
+		node [shape=ellipse fontname="Arial" fillcolor="goldenrod" style="filled"]; artemis_routes;
+	}
+
+	subgraph T2 {
+		rank=same
+		node [shape=ellipse fontname="Arial" fillcolor="goldenrod1" style="filled"]; routes;
+		node [shape=ellipse fontname="Arial" fillcolor="goldenrod2" style="filled"]; route_alternatives;
+		node [shape=octagon fontname="Arial" fillcolor="lightcyan" style="filled"]; "emitter definitions";
+	}
+
+
+	USER -- trips [arrowhead="normal" fontname="Arial" fontsize="10"];
+	USER -- flows [arrowhead="normal" fontname="Arial" fontsize="10"];
+	USER -- routes [arrowhead="normal" fontname="Arial" fontsize="10"];
+
+	OD2TRIPS -- trips [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+
+	trips -- DUAROUTER [arrowhead="normal" label="--trip-defs" fontname="Arial" fontsize="10"];
+	cell_routes -- DUAROUTER [arrowhead="normal" label="--cell-input" fontname="Arial" fontsize="10"];
+	artemis_routes -- DUAROUTER [arrowhead="normal" label="--artemis-input" fontname="Arial" fontsize="10"];
+	flows -- DUAROUTER [arrowhead="normal" label="--flow-definition" fontname="Arial" fontsize="10"];
+	flows -- JTRROUTER [arrowhead="normal" label="--flow-definition" fontname="Arial" fontsize="10"];
+
+	DUAROUTER -- routes [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+	DUAROUTER -- route_alternatives [arrowhead="normal" label="--output (+.alt)" fontname="Arial" fontsize="10"];
+	JTRROUTER -- routes [arrowhead="normal" label="--output" fontname="Arial" fontsize="10"];
+	DFROUTER -- "emitter definitions" [arrowhead="normal" label="--emitters-output" fontname="Arial" fontsize="10"];
+
+	routes -- "SUMO/GUISIM" [arrowhead="normal" label="--route-files" fontname="Arial" fontsize="10"];
+	"emitter definitions" -- "SUMO/GUISIM" [arrowhead="normal" label="--additional-files" fontname="Arial" fontsize="10"];
+	routes -- DUAROUTER [arrowhead="normal" label="--sumo-input" fontname="Arial" fontsize="10"];
+
+	route_alternatives -- DUAROUTER [arrowhead="normal" label="--alternatives" fontname="Arial" fontsize="10"];
+}

@@ -8,7 +8,9 @@ lxml = "==4.5.0"
 psutil = "*"
 fastapi = "*"
 importlib-metadata = "<3"
+
 xmltodict = "*"
+
 
 [requires]
 python_version = "3.6"

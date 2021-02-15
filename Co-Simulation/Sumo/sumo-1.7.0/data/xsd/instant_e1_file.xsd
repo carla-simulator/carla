@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <xsd:include schemaLocation="baseTypes.xsd"/>
+
+	<xsd:element name="instantE1">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element minOccurs="0" maxOccurs="unbounded" ref="instantOut"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+    <xsd:element name="instantOut">
+		<xsd:complexType>
+			<xsd:attribute name="id" use="required" type="xsd:string"/>
+			<xsd:attribute name="time" use="required" type="nonNegativeFloatType"/>
+			<xsd:attribute name="state" use="required">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="enter"/>
+						<xsd:enumeration value="stay"/>
+						<xsd:enumeration value="leave"/>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:attribute>
+			<xsd:attribute name="vehID" use="required" type="xsd:string"/>
+			<xsd:attribute name="speed" use="required" type="xsd:decimal"/>
+			<xsd:attribute name="length" use="required" type="xsd:decimal"/>
+			<xsd:attribute name="type" use="required" type="xsd:string"/>
+			<xsd:attribute name="gap" use="optional" type="xsd:decimal"/>
+			<xsd:attribute name="occupancy" use="optional" type="xsd:decimal"/>
+		</xsd:complexType>
+    </xsd:element>
+</xsd:schema>

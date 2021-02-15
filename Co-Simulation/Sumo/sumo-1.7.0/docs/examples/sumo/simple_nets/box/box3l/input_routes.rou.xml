@@ -1,0 +1,11 @@
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+   <vType id="SUMO_DEFAULT_TYPE" accel="0.8" decel="4.5" sigma="0" length="5" minGap="2" maxSpeed="70"/>
+   <route id="from0" edges="0 1 2 3"/>
+   <flow id="from0" type="SUMO_DEFAULT_TYPE" route="from0" begin="1" end="502" period="1"/>
+   <route id="from1" edges="1 2 3 0"/>
+   <flow id="from1" type="SUMO_DEFAULT_TYPE" route="from1" begin="2" end="503" period="1"/>
+   <route id="from2" edges="2 3 0 1"/>
+   <flow id="from2" type="SUMO_DEFAULT_TYPE" route="from2" begin="3" end="504" period="1"/>
+   <route id="from3" edges="3 0 1 2"/>
+   <flow id="from3" type="SUMO_DEFAULT_TYPE" route="from3" begin="4" end="505" period="1"/>
+</routes>

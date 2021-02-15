@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu Apr 18 00:13:39 2019 by Eclipse SUMO dfrouter Version v1_2_0+0017-2a947141e5
+This data file and the accompanying materials
+are made available under the terms of the Eclipse Public License v2.0
+which accompanies this distribution, and is available at
+http://www.eclipse.org/legal/epl-v20.html
+SPDX-License-Identifier: EPL-2.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/dfrouterConfiguration.xsd">
+
+    <input>
+        <net-file value="input_tri.net.xml"/>
+        <detector-files value="input_tri.det.xml"/>
+        <measure-files value="input_tri_flows.txt"/>
+    </input>
+
+    <output>
+        <write-license value="true"/>
+        <routes-output value="routes.rou.xml"/>
+        <emitters-output value="emitters.add.xml"/>
+    </output>
+
+    <processing>
+        <keep-longer-routes value="true"/>
+        <include-unused-routes value="true"/>
+    </processing>
+
+    <time>
+        <end value="60"/>
+    </time>
+
+</configuration>
+-->
+
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <vType id="DEFAULT_VEHTYPE" speedFactor="1.43"/>
+    <routeDistribution id="MQ_beg">
+        <route refId="beg_to_end" probability="0.25"/>
+        <route refId="beg_to_end_1" probability="0.25"/>
+        <route refId="beg_to_end_2" probability="0.50"/>
+    </routeDistribution>
+    <vehicle id="MQ_beg.0" depart="0.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.1" depart="1.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.2" depart="3.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.3" depart="4.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.4" depart="6.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.5" depart="7.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.6" depart="9.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.7" depart="10.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.8" depart="12.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.9" depart="13.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.10" depart="15.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.11" depart="16.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.12" depart="18.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.13" depart="19.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.14" depart="21.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.15" depart="22.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.16" depart="24.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.17" depart="25.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.18" depart="27.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.19" depart="28.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.20" depart="30.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.21" depart="31.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.22" depart="33.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.23" depart="34.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.24" depart="36.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.25" depart="37.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.26" depart="39.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.27" depart="40.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.28" depart="42.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.29" depart="43.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.30" depart="45.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.31" depart="46.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.32" depart="48.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.33" depart="49.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.34" depart="51.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.35" depart="52.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.36" depart="54.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_2"/>
+    <vehicle id="MQ_beg.37" depart="55.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end_1"/>
+    <vehicle id="MQ_beg.38" depart="57.00" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+    <vehicle id="MQ_beg.39" depart="58.50" departLane="0" departPos="5.00" departSpeed="27.78" route="beg_to_end"/>
+</additional>

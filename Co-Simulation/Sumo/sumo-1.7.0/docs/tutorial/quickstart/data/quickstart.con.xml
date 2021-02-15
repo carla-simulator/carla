@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/connections_file.xsd">
+    <connection from="L2" to="L12" fromLane="0" toLane="0"/>
+    <connection from="L2" to="L12" fromLane="0" toLane="1"/>
+    <connection from="L2" to="L12" fromLane="1" toLane="2"/>
+    <connection from="L4" to="L14" fromLane="0" toLane="0"/>
+    <connection from="L4" to="L14" fromLane="1" toLane="1"/>
+    <connection from="L4" to="L14" fromLane="1" toLane="2"/>
+    <connection from="L9" to="L11" fromLane="0" toLane="0"/>
+    <connection from="L9" to="L11" fromLane="1" toLane="1"/>
+    <connection from="L9" to="L11" fromLane="1" toLane="2"/>
+    <connection from="L9" to="L15" fromLane="1" toLane="1"/>
+    <connection from="L9" to="L15" fromLane="2" toLane="2"/>
+    <connection from="L16" to="L10" fromLane="0" toLane="0"/>
+    <connection from="L16" to="L10" fromLane="1" toLane="1"/>
+    <connection from="L16" to="L10" fromLane="1" toLane="2"/>
+    <connection from="L16" to="L11" fromLane="2" toLane="2"/>
+    <connection from="L12" to="L15" fromLane="0" toLane="0"/> 
+    <connection from="L12" to="L15" fromLane="1" toLane="1"/>
+    <connection from="L12" to="L10" fromLane="1" toLane="0"/>
+    <connection from="L12" to="L10" fromLane="1" toLane="1"/>
+    <connection from="L12" to="L10" fromLane="2" toLane="2"/>
+    <connection from="L14" to="L16" fromLane="1" toLane="1"/>
+    <connection from="L14" to="L16" fromLane="1" toLane="0"/>
+    <connection from="L14" to="L16" fromLane="2" toLane="2"/>
+    <connection from="L14" to="L18" fromLane="0" toLane="0"/>
+    <connection from="L14" to="L18" fromLane="1" toLane="1"/>
+    <connection from="L14" to="L18" fromLane="1" toLane="2"/>
+    <connection from="L17" to="L16" fromLane="0" toLane="0"/>
+    <connection from="L17" to="L16" fromLane="1" toLane="1"/>
+    <connection from="L17" to="L16" fromLane="1" toLane="2"/>
+    <connection from="L17" to="L13" fromLane="1" toLane="0"/>
+    <connection from="L17" to="L13" fromLane="1" toLane="1"/>
+    <connection from="L17" to="L13" fromLane="2" toLane="2"/>
+</connections>

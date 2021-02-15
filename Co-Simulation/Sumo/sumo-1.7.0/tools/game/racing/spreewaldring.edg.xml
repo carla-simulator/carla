@@ -1,0 +1,11 @@
+<edges>
+    <!--
+    <edge id="172927499#0" width="4.8"/>
+    <edge id="172927499#1" width="4.8"/>
+    -->
+    <edge id="172927499#0" numLanes="1"/>
+    <edge id="172927499#1" numLanes="1"/>
+    <edge id="243040319" numLanes="1"/>
+    <edge id="172927073#7" priority="0"/>
+    <edge id="243040319" priority="0"/>
+</edges>

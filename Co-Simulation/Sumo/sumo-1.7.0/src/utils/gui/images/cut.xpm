@@ -1,0 +1,22 @@
+/* XPM */
+static const char *cut_xpm[] = {
+"16 15 4 1",
+" 	c None",
+".	c Black",
+"X	c Red",
+"o	c #00ff4e",
+"                ",
+"        .       ",
+"        .       ",
+"       .X.      ",
+"       .X.      ",
+"       .XX.     ",
+"       .XX.     ",
+"      .XXX.     ",
+".. .. .. ..... .",
+"      .oooo.    ",
+"   .. .ooooo.  .",
+". .o...ooooo.. .",
+". .oo.ooooooo.. ",
+"o.oooooooooooooo",
+"o.oooooooooooooo"};

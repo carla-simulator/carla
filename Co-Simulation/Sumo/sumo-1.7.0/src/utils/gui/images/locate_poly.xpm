@@ -1,0 +1,23 @@
+/* XPM */
+static const char * locate_poly_xpm[] = {
+"16 16 4 1",
+" 	c None",
+".	c Black",
+"X	c Gray50",
+"o	c Red",
+"  ...           ",
+" .XXX.     ...  ",
+" .XXX.    .   . ",
+" .XXX.        . ",
+"  ...        .  ",
+"            .   ",
+"                ",
+"   .     .. .   ",
+"  .o.   .oo.    ",
+"  .oo.  .ooo.   ",
+" .ooo.  .ooo.   ",
+" .oooo...oo..   ",
+" .oooooooo.     ",
+" .ooooooo.      ",
+"  .......       ",
+"                "};

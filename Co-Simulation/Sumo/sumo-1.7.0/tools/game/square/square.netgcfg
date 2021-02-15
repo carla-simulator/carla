@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://sumo.sf.net/xsd/netgenerateConfiguration.xsd">
+
+    <grid_network>
+        <grid value="true"/>
+        <grid.number value="2"/>
+        <grid.attach-length value="200"/>
+    </grid_network>
+
+    <output>
+        <output-file value="square.tmp.net.xml"/>
+    </output>
+
+    <building_defaults>
+        <default-junction-type value="traffic_light"/>
+    </building_defaults>
+
+</configuration>

@@ -1,0 +1,26 @@
+/* XPM */
+static const char *walkedges_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 4 1 ",
+"  c green",
+". c black",
+"X c red",
+"o c #0026FF",
+/* pixels */
+"  o             ",
+"  o             ",
+"  o             ",
+"ooooo   . . .   ",
+" ooo            ",
+"  o     .   .   ",
+"                ",
+"  X . . .   .   ",
+"                ",
+"            .   ",
+"                ",
+"  o         .   ",
+"  oo            ",
+"ooooo X . . .   ",
+"  oo            ",
+"  o             "
+};

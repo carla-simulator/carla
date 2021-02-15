@@ -1,0 +1,4 @@
+<add>
+    <busStop id="sanDiegoE" lane="-465_1" lines="--"/>
+    <busStop id="sanDiegoW" lane="-447_1" lines="--"/>
+</add>

@@ -1,0 +1,17 @@
+<additional>
+    <tlLogic id="gneJ1" type="static" programID="1" offset="0">
+        <phase duration="22" state="GGgGGGrrrr" name="North-South"/>
+        <phase duration="3"  state="yyyyyyrrrr" name="Transition to East-West"/>
+        <phase duration="22" state="rrrrrrGGGG" name="East-West"/>
+        <phase duration="3"  state="rrrrrryyyy" name="Transition to North-South"/>
+        <param key="foo" value="bar"/>
+    </tlLogic>
+
+    <tlLogic id="gneJ1" type="static" programID="2" offset="0">
+        <phase duration="50" state="GGgGGGrrrr" name="North-South" next="1"/>
+        <phase duration="3"  state="yyyyyyrrrr" name="Transition to East-West"/>
+        <phase duration="50" state="rrrrrrGGGG" name="East-West" next="3 0"/>
+        <phase duration="3"  state="rrrrrryyyy" name="Transition to North-South"/>
+        <param key="xyz" value="42"/>
+    </tlLogic>
+</additional>

@@ -1,0 +1,70 @@
+Source: sumo
+Maintainer: Debian Science Maintainers <debian-science-maintainers@lists.alioth.debian.org>
+Uploaders: Anton Gladky <gladk@debian.org>
+Section: science
+Testsuite: autopkgtest
+Priority: optional
+Build-Depends: cmake,
+               python,
+               python3-pip,
+               debhelper (>= 9),
+               dh-autoreconf,
+               dpkg-dev (>= 1.16.1~),
+               freeglut3-dev,
+               help2man,
+               libbz2-dev,
+               libcups2-dev,
+               libfox-1.6-dev,
+               libgdal-dev,
+               libgl2ps-dev,
+               libproj-dev,
+               libxerces-c-dev | libxerces-c2-dev,
+               libxrandr-dev,
+               swig
+Build-Depends-Indep: doxygen,
+                     maven,
+                     openjdk-8-jdk,
+                     python-matplotlib | python3-matplotlib,
+                     python,
+                     python-setuptools
+Standards-Version: 3.9.6
+Vcs-Browser: https://anonscm.debian.org/cgit/debian-science/packages/sumo.git
+Vcs-Git: git://anonscm.debian.org/debian-science/packages/sumo.git
+Homepage: https://sumo.dlr.de/
+
+Package: sumo
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Recommends: sumo-tools
+Description: Simulation of Urban MObility (SUMO)
+ SUMO is an open source,
+ highly portable, microscopic traffic simulation package
+ designed to handle large road networks.
+ Main binary.
+
+Package: sumo-doc
+Architecture: all
+Section: doc
+Depends: libjs-underscore,
+         ${misc:Depends}
+Recommends: sumo
+Description: Simulation of Urban MObility (SUMO), documentation and examples
+ SUMO is an open source,
+ highly portable, microscopic traffic simulation package
+ designed to handle large road networks.
+ The binary contains documentation and examples.
+
+Package: sumo-tools
+Architecture: all
+Depends: jarwrapper,
+         libjs-openlayers,
+         python,
+         python3,
+         ${misc:Depends}
+Recommends: sumo
+Description: Simulation of Urban MObility (SUMO), tools and scripts
+ SUMO is an open source,
+ highly portable, microscopic traffic simulation package
+ designed to handle large road networks.
+ The binary contains different tools and scripts.

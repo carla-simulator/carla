@@ -1,0 +1,59 @@
+set(microsim_devices_STAT_SRCS
+   MSDevice.cpp
+   MSDevice.h
+   MSDevice_SSM.cpp
+   MSDevice_SSM.h
+   MSDevice_DriverState.cpp
+   MSDevice_DriverState.h
+   MSDevice_ToC.cpp
+   MSDevice_ToC.h
+   MSDevice_BTreceiver.cpp
+   MSDevice_BTreceiver.h
+   MSDevice_BTsender.cpp
+   MSDevice_BTsender.h
+   MSDevice_Emissions.cpp
+   MSDevice_Emissions.h
+   MSDevice_Transportable.cpp
+   MSDevice_Transportable.h
+   MSDevice_Routing.cpp
+   MSDevice_Routing.h
+   MSDevice_Tripinfo.cpp
+   MSDevice_Tripinfo.h
+   MSDevice_Battery.cpp
+   MSDevice_Battery.h
+   MSDevice_Example.cpp
+   MSDevice_Example.h
+   MSDevice_Vehroutes.cpp
+   MSDevice_Vehroutes.h
+   MSDevice_Bluelight.cpp
+   MSDevice_Bluelight.h
+   MSDevice_FCD.cpp
+   MSDevice_FCD.h
+   MSDevice_ElecHybrid.cpp
+   MSDevice_ElecHybrid.h
+   MSDevice_Taxi.cpp
+   MSDevice_Taxi.h
+   MSTransportableDevice.h
+   MSTransportableDevice_Routing.cpp
+   MSTransportableDevice_Routing.h
+   MSTransportableDevice_FCD.cpp
+   MSTransportableDevice_FCD.h
+   MSRoutingEngine.cpp
+   MSRoutingEngine.h
+   MSDispatch.cpp
+   MSDispatch.h
+   MSDispatch_Greedy.cpp
+   MSDispatch_Greedy.h
+   MSDispatch_GreedyShared.cpp
+   MSDispatch_GreedyShared.h
+   MSDispatch_RouteExtension.cpp
+   MSDispatch_RouteExtension.h
+   MSDispatch_TraCI.h
+   MSDispatch_TraCI.cpp
+   MSIdling.cpp
+   MSIdling.h
+   MSVehicleDevice.h
+)
+
+add_library(microsim_devices STATIC ${microsim_devices_STAT_SRCS})
+set_property(TARGET microsim_devices PROPERTY PROJECT_LABEL "z_microsim_devices")

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutils_importio.a  CMakeFiles/utils_importio.dir/LineReader.cpp.o CMakeFiles/utils_importio.dir/NamedColumnsParser.cpp.o
+/usr/bin/ranlib libutils_importio.a

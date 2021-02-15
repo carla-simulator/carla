@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<polylines>
+  <segments>
+    <segment  id_ref="b" vertex="0.0,0.0,0.0 0.2,0.0,0.0" id_poly="aa10&1"/>
+    <segment  id_ref="c" vertex="0.2,0.0,0.0 0.3,0.5,0.0" id_poly="aa10&1"/>
+    <segment  id_ref="d" vertex="0.3,0.5,0.0 0.2,0.5,0.0" id_poly="aa10&1"/>
+    <segment  id_ref="e" vertex="0.2,0.5,0.0 0.0,0.5,0.1" id_poly="aa10&1"/>
+    <segment  id_ref="f" vertex="0.0,0.5,0.1 -1.5,-0.5,0.0" id_poly="aa10&1"/>
+    <segment  id_ref="g" vertex="0.0,0.3,0.0 0.2,0.3,0.0" id_poly="bb2210&1"/>
+    <segment  id_ref="h" vertex="0.2,0.3,0.0 0.3,0.8,0.0" id_poly="bb2210&1"/>
+    <segment  id_ref="i" vertex="0.3,0.8,0.0 0.2,0.8,0.0" id_poly="bb2210&1"/>
+    <segment  id_ref="j" vertex="0.2,0.8,0.0 0.0,0.8,0.1" id_poly="bb2210&1"/>
+    <segment  id_ref="k" vertex="0.0,0.8,0.1 -1.5,-0.8,0.0" id_poly="bb2210&1"/>
+    <segment  id_ref="l" vertex="0.5,0.3,0.0 -1.5,-0.8,0.0" id_poly="5b2310&1"/>
+  </segments>
+  <polyline  id_osm="aa10&1" segments="b c d e f"/>
+  <polyline  id_osm="bb2210&1" segments="g h i j k"/>
+  <polyline  id_osm="5b2310&1" segments="l"/>
+</polylines>

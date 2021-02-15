@@ -1,0 +1,28 @@
+/* XPM */
+static const char *modevehicletype_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 6 1 ",
+"  c black",
+". c #040403",
+"X c gray25",
+"o c red",
+"O c #808080",
+"+ c None",
+/* pixels */
+"+++XXXXXXXX+++++",
+"++++      ++++++",
+"+++XXXXXXX++++++",
+"X+XOOOOOOXXX++X+",
+"X+XOXXXOOOOXXXX ",
+"X XOX XOOOOOOOX ",
+"X XOXXXXXXOOOOX ",
+"X+XOOOOX.XOOOOX ",
+"X+XXOOOXXXOXXXX ",
+"+++XXOOOOOXX++X+",
+"++++XXXXXXX+++++",
+"++++++++++++++++",
+"+ooo+o+o+oo+oo++",
+"++o++ooo+oo+o+++",
+"++o+++o++o++oo++",
+"++++++++++++++++"
+};

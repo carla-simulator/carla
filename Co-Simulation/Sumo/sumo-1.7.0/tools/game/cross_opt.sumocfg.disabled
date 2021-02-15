@@ -1,0 +1,16 @@
+<configuration>
+
+    <input>
+        <net-file value="cross/cross.net.xml"/>
+        <gui-settings-file value="cross/cross.settings.xml"/>
+        <route-files value="cross/cross.rou.xml"/>
+        <additional-files value="input_additional.add.xml,cross/cross.tls_opt.add.xml"/>
+    </input>
+
+    <time>
+        <begin value="0"/>
+        <end value="90000"/>
+        <step-length value=".2"/>
+    </time>
+
+</configuration>

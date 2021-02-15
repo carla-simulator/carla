@@ -1,0 +1,27 @@
+/* XPM */
+static const char *persontripfromto_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 5 1 ",
+"  c black",
+". c red",
+"X c #0026FF",
+"o c #C800FF",
+"O c white",
+/* pixels */
+"ooXooooooooooooo",
+"ooXooooooooooooo",
+"ooXoooo       oo",
+"XXXXXoo O O O oo",
+"oXXXooo       oo",
+"ooXoooo O o O oo",
+"          o   oo",
+"  . O O O o O oo",
+"          o   oo",
+"ooooooooooo O oo",
+"ooooooooooo   oo",
+"ooXoooooooo O oo",
+"  XX          oo",
+"XXXXX . O O O oo",
+"  XX          oo",
+"ooXooooooooooooo"
+};

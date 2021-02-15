@@ -1,0 +1,86 @@
+<additional>
+    <e1Detector id="0.127_2.73_6_1__l0" lane="104_0" pos="23" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.73_6_1__l1" lane="104_1" pos="23" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.73_4_1__l0" lane="15_0" pos="77.542050042" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.73_2_1__l0" lane="103_0" pos="118" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.73_2_1__l1" lane="103_1" pos="118" freq="1800" file="e1_output.xml"/>
+
+
+    <!-- e1Detector id="2.19_2.19_6_1__l0" lane="83_0" pos="40" freq="1800" file="e1_output.xml"/ -->
+    <!-- e1Detector id="2.19_2.19_2_1__l0" lane="83_0" pos="37" freq="1800" file="e1_output.xml"/ -->
+    <e1Detector id="2.19_2.18_4_1__l0" lane="86_0" pos="31.3626881232" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_2.18_4_1__l1" lane="86_1" pos="31.3626881232" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_2.18_4_1__l2" lane="86_2" pos="31.3626881232" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_2.20_8_1__l0" lane="72[0]_0" pos="32.8995678051" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_2.20_8_1__l1" lane="72[0]_1" pos="32.8995678051" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_2.20_8_1__l2" lane="72[0]_2" pos="32.8995678051" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.19_6_1__l0" lane="11_0" pos="0" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.19_6_1__l1" lane="11_1" pos="0" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.19_6_1__l2" lane="11_2" pos="0" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_0.127_2_1__l0" lane="67_0" pos="42" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_0.127_2_1__l1" lane="67_1" pos="42" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.82_2.19_8_1__l0" lane="137_0" pos="158.698022913" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.19_0.127_8_1__l0" lane="180_0" pos="105" freq="1800" file="e1_output.xml"/>
+
+
+    <e1Detector id="2.20_2.19_4_1__l0" lane="17_0" pos="100" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.20_2.19_4_1__l1" lane="17_1" pos="100" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.20_2_1__l0" lane="18_0" pos="1" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.20_2_1__l1" lane="18_1" pos="1" freq="1800" file="e1_output.xml"/>
+    <!--e1Detector id="0.127_2.20_2_1__l2" lane="18_2" pos="1" freq="1800" file="e1_output.xml"/-->
+    <e1Detector id="2.20_2.21_8_1__l0" lane="161_0" pos="20" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.20_2.21_8_1__l1" lane="161_1" pos="20" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.20_2.21_8_1__l2" lane="161_2" pos="20" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.20_6_1__l0" lane="171_0" pos="166" freq="1800" file="e1_output.xml"/>
+
+
+    <e1Detector id="2.9_2.20_6_1__l0" lane="191_0" pos="12" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.9_2.10_8_1__l0" lane="87[1][1]_0" pos="2" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="0.127_2.9_6_1__l0" lane="153_0" pos="208.488866169" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.8_2.9_8_2__l0" lane="189[1][1]_0" pos="142" freq="1800" file="e1_output.xml"/>
+
+
+    <e1Detector id="2.6_2.10_6_1__l0" lane="210_0" pos="10.6430697599" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.6_2.10_6_1__l1" lane="210_1" pos="10.6430697599" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.6_2.10_6_1__l2" lane="210_2" pos="10.6430697599" freq="1800" file="e1_output.xml"/>
+
+
+    <e1Detector id="0.127_2.10_8_1__l0" lane="117_0" pos="105" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_2.6_6_1__l0" lane="113_0" pos="23.5161227555" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_2.6_6_1__l1" lane="113_1" pos="23.5161227555" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_2.6_6_1__l2" lane="113_2" pos="23.5161227555" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_2.21_6_1__l0" lane="201_0" pos="11.5139549672" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_2.21_6_1__l1" lane="201_1" pos="11.5139549672" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_2.21_6_1__l2" lane="201_2" pos="11.5139549672" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_0.127_8_1__l0" lane="134b_0" pos="145" freq="1800" file="e1_output.xml"/>
+    <!--e1Detector id="2.10_0.127_8_1__l1" lane="134b_1" pos="145" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.10_0.127_8_1__l2" lane="134b_2" pos="145" freq="1800" file="e1_output.xml"/-->
+
+
+    <e1Detector id="2.21_2.10_6_1__l0" lane="202_0" pos="75" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.21_2.10_6_1__l1" lane="202_1" pos="75" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.21_2.10_6_1__l2" lane="202_2" pos="75" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.21_2.35_8_1__l0" lane="204a[0]_0" pos="7.20261067361" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.21_2.35_8_1__l1" lane="204a[0]_1" pos="7.20261067361" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.21_2.35_8_1__l2" lane="204a[0]_2" pos="7.20261067361" freq="1800" file="e1_output.xml"/>
+
+
+    <e1Detector id="2.35_2.38_8_1__l0" lane="204[1][1]_0" pos="36" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_2.38_8_1__l1" lane="204[1][1]_1" pos="36" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_2.38_8_1__l2" lane="204[1][1]_2" pos="36" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_1.9_2_1__l0" lane="54_0" pos="11.6007252321" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_1.9_2_1__l1" lane="54_1" pos="11.6007252321" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_2.21_6_1__l0" lane="203[1]_0" pos="220" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_2.21_6_1__l1" lane="203[1]_1" pos="220" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_2.21_6_1__l2" lane="203[1]_2" pos="220" freq="1800" file="e1_output.xml"/>
+    <!--
+    <e1Detector id="San_Felice.1__l0" lane="203[1]_0" pos="11.9973887785" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="San_Felice.1__l1" lane="203[1]_1" pos="11.9973887785" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="San_Felice.1__l2" lane="203[1]_2" pos="11.9973887785" freq="1800" file="e1_output.xml"/>
+    -->
+    <e1Detector id="2.35_2.34_4_1__l0" lane="114_0" pos="11.3754906176" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_2.34_4_1__l1" lane="114_1" pos="11.3754906176" freq="1800" file="e1_output.xml"/>
+    <e1Detector id="2.35_2.34_4_1__l2" lane="114_2" pos="11.3754906176" freq="1800" file="e1_output.xml"/>
+
+
+</additional>

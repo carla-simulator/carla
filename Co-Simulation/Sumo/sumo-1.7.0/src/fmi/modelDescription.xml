@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<fmiModelDescription
+  fmiVersion="2.0"
+  modelName="SUMO"
+  guid="{2A81BBFB-D21C-4BCE-947F-5CA1CB7C12EE}"
+>
+
+  <CoSimulation modelIdentifier="libsumofmi2" canHandleVariableCommunicationStepSize="true" />
+  
+  <!-- In CoSimulation the stepSize defines the preferred communication StepSize.  -->
+  <DefaultExperiment  stepSize="1"/>
+
+  <ModelVariables>
+    <ScalarVariable name="simulation.totalVehicleCount" valueReference="0" causality="output" variability="discrete">
+      <Integer/>
+    </ScalarVariable>
+  </ModelVariables>
+  
+  <ModelStructure>
+    <Outputs>
+      <Unknown index="1"/>
+    </Outputs>
+  </ModelStructure>
+
+</fmiModelDescription>

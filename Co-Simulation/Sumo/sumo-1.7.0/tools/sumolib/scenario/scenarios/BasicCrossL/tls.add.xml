@@ -1,0 +1,14 @@
+<additional>
+  <tlLogic id="1/1" type="static" programID="adapted" offset="0">
+    <phase state="rrrGGgrrrGGg" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="2/1_to_1/1.-100_0 2/1_to_1/1.-100_1 0/1_to_1/1.-100_0 0/1_to_1/1.-100_1"/>
+    <phase state="rrryygrrryyg" duration="4" type="transient"/>
+    <phase state="rrryyGrrryyG" duration="4" minDur="1" maxDur="52" type="transient;decisional" targetLanes="2/1_to_1/1.-100_1 0/1_to_1/1.-100_1"/>
+    <phase state="rrrrryrrrrry" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+    <phase state="GGgrrrGGgrrr" duration="32" minDur="12" maxDur="52" type="target;decisional" targetLanes="1/2_to_1/1.-100_0 1/2_to_1/1.-100_1 1/0_to_1/1.-100_0 1/0_to_1/1.-100_1"/>
+    <phase state="yygrrryygrrr" duration="4" type="transient"/>
+    <phase state="yyGrrryyGrrr" duration="4" minDur="1" maxDur="52" type="transient;decisional" targetLanes="2/1_to_1/1.-100_1 0/1_to_1/1.-100_1"/>
+    <phase state="rryrrrrryrrr" duration="4" type="transient"/>
+    <phase state="rrrrrrrrrrrr" duration="4" type="transient;commit"/>
+  </tlLogic>
+</additional>

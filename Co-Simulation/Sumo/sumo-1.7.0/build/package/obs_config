@@ -1,0 +1,19 @@
+%if 0%{?mandriva_version}
+  Substitute: libnetcdf-devel netcdf-devel
+  Substitute: hdf-devel HDF-devel
+%endif
+%if 0%{?suse_version} == 1020 || 0%{?fedora_version}
+  Substitute: libnetcdf-devel netcdf
+%endif
+%if 0%{?fedora_version}
+  Substitute: libgdal-devel gdal-devel blas lapack
+  Substitute: libproj-devel proj-devel
+%endif
+%if 0%{?centos_version} || 0%{?rhel_version}
+  Substitute: gcc-fortran gcc-gfortran
+%endif
+%if 0%{?fedora_version} || 0%{?mandriva_version}
+  Substitute: Xerces-c-devel xerces-c-devel
+  Substitute: Xerces-c xerces-c
+%endif
+

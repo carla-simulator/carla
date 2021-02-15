@@ -1,0 +1,85 @@
+<routes>
+   <vType id="pedestrian" length=".215" width=".478" height="1.719" minGap=".5" accel="1.5" decel="2" maxSpeed="1.5" emissionClass="PHEMlight/zero" guiShape="pedestrian"/>
+   <vType id="bicycle" length="1.6" width=".65" height="1.7" minGap=".5" accel="1.2" decel="4.5" maxSpeed="5.55" emissionClass="PHEMlight/zero" guiShape="bicycle"/>
+
+   <vTypeDistribution id="passenger">
+      <vType id="passenger#0" emissionClass="PHEMlight/LNF_G_EU0_II" probability="2.31208290125e-59" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#1" emissionClass="PHEMlight/LNF_D_EU2_II" probability="1.13452897673e-30" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#2" emissionClass="PHEMlight/LNF_D_EU5_II" probability="0.000146115983087" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#3" emissionClass="PHEMlight/LNF_G_EU3_II" probability="1.06511073663e-23" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#4" emissionClass="PHEMlight/PKW_G_EU6" probability="0.151263689784" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#5" emissionClass="PHEMlight/PKW_G_EU4" probability="0.0675823565067" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#6" emissionClass="PHEMlight/PKW_G_EU5" probability="0.122926706176" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#7" emissionClass="PHEMlight/PKW_G_EU2" probability="0.0194279028432" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#8" emissionClass="PHEMlight/PKW_G_EU3" probability="0.0123324238506" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#9" emissionClass="PHEMlight/PKW_G_EU0" probability="0.0117999225442" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#10" emissionClass="PHEMlight/LNF_D_EU4_II" probability="2.87365287046e-12" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#11" emissionClass="PHEMlight/LNF_G_EU5_II" probability="2.98011320912e-06" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#12" emissionClass="PHEMlight/LNF_D_EU6_II" probability="0.0475715500405" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#13" emissionClass="PHEMlight/PKW_D_EU1" probability="0.015004517358" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#14" emissionClass="PHEMlight/PKW_D_EU0" probability="0.00150322552666" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#15" emissionClass="PHEMlight/PKW_D_EU3" probability="0.048165124649" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#16" emissionClass="PHEMlight/PKW_D_EU2" probability="0.0240699950142" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#17" emissionClass="PHEMlight/LNF_G_EU6_II" probability="0.000907751820956" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#18" emissionClass="PHEMlight/PKW_D_EU4" probability="0.0912741400782" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#19" emissionClass="PHEMlight/PKW_D_EU6" probability="0.21107656523" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#20" emissionClass="PHEMlight/LNF_D_EU1_II" probability="1.72517038112e-35" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#21" emissionClass="PHEMlight/LNF_D_EU0_II" probability="4.36113113869e-59" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#22" emissionClass="PHEMlight/PKW_D_EU5" probability="0.174945032479" width="1.8" length="4.3" maxSpeed="50" guiShape="passenger" minGap="2.5" accel="2.9" decel="4.5" height="1.5"/>
+      <vType id="passenger#23" emissionClass="PHEMlight/LNF_D_EU3_II" probability="4.11868435183e-22" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#24" emissionClass="PHEMlight/LNF_G_EU2_II" probability="6.91335141374e-31" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+      <vType id="passenger#25" emissionClass="PHEMlight/LNF_G_EU4_II" probability="6.76305935752e-14" width="1.9" length="4.7" maxSpeed="50" guiShape="delivery" minGap="2.5" accel="2.9" decel="4.5" height="1.73"/>
+   </vTypeDistribution>
+
+   <vTypeDistribution id="motorcycle">
+      <vType id="motorcycle#0" emissionClass="PHEMlight/MR_G_EU0_4T" probability="0.0172688277859" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#1" emissionClass="PHEMlight/MR_G_EU1_2T" probability="0.00199331522044" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#2" emissionClass="PHEMlight/MR_G_EU3_2T" probability="0.000447153750237" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#3" emissionClass="PHEMlight/MR_G_EU0_2T" probability="0.00120391047379" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#4" emissionClass="PHEMlight/MR_G_EU5_4T" probability="0.63510423156" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#5" emissionClass="PHEMlight/MR_G_EU2_2T" probability="4.52253839517e-05" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#6" emissionClass="PHEMlight/MR_G_EU3_4T" probability="0.126989225065" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#7" emissionClass="PHEMlight/MR_G_EU6_4T" probability="0.0" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#8" emissionClass="PHEMlight/MR_G_EU4_4T" probability="0.0729233830939" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#9" emissionClass="PHEMlight/MR_G_EU2_4T" probability="0.0275326838119" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#10" emissionClass="PHEMlight/MR_G_EU5_2T" probability="0.00737478455388" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#11" emissionClass="PHEMlight/MR_G_EU4_2T" probability="0.00113482618593" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#12" emissionClass="PHEMlight/MR_G_EU1_4T" probability="0.107982433114" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+      <vType id="motorcycle#13" emissionClass="PHEMlight/MR_G_EU6_2T" probability="0.0" width="1.8" length="2.2" maxSpeed="50" guiShape="motorcycle" minGap="2.5" accel="6" decel="4.5" height="1.5"/>
+   </vTypeDistribution>
+
+   <vTypeDistribution id="bus">
+      <vType id="bus#0" emissionClass="PHEMlight/LB_D_EU0" probability="0.000446339727433" width="2.5" length="12" maxSpeed="23.6" guiShape="bus" minGap="2.5" accel="1.2" decel="4.5" height="3.4"/>
+      <vType id="bus#1" emissionClass="PHEMlight/LB_D_EU1" probability="0.000437525242971" width="2.5" length="12" maxSpeed="23.6" guiShape="bus" minGap="2.5" accel="1.2" decel="4.5" height="3.4"/>
+      <vType id="bus#2" emissionClass="PHEMlight/LB_D_EU2" probability="0.00149708713298" width="2.5" length="12" maxSpeed="23.6" guiShape="bus" minGap="2.5" accel="1.2" decel="4.5" height="3.4"/>
+      <vType id="bus#3" emissionClass="PHEMlight/LB_D_EU3" probability="0.00230656544198" width="2.5" length="12" maxSpeed="23.6" guiShape="bus" minGap="2.5" accel="1.2" decel="4.5" height="3.4"/>
+      <vType id="bus#4" emissionClass="PHEMlight/LB_D_EU4" probability="0.00101290894389" width="2.5" length="12" maxSpeed="23.6" guiShape="bus" minGap="2.5" accel="1.2" decel="4.5" height="3.4"/>
+      <vType id="bus#5" emissionClass="PHEMlight/LB_D_EU5" probability="0.00822205073045" width="2.5" length="12" maxSpeed="23.6" guiShape="bus" minGap="2.5" accel="1.2" decel="4.5" height="3.4"/>
+      <vType id="bus#6" emissionClass="PHEMlight/LB_D_EU6" probability="0.98607752278" width="2.5" length="12" maxSpeed="23.6" guiShape="bus" minGap="2.5" accel="1.2" decel="4.5" height="3.4"/>
+   </vTypeDistribution>
+
+   <vTypeDistribution id="hdv">
+      <vType id="hdv#0" emissionClass="PHEMlight/Solo_LKW_D_EU0_II" probability="1.37029071655e-51" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#1" emissionClass="PHEMlight/Solo_LKW_D_EU1_I" probability="6.29202192291e-44" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#2" emissionClass="PHEMlight/Solo_LKW_D_EU6_II" probability="0.504113221182" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#3" emissionClass="PHEMlight/LSZ_D_EU5" probability="0.000176670409177" width="2.55" length="16.5" maxSpeed="36.1" guiShape="truck/semitrailer" minGap="2.5" accel="1.1" decel="4.5" height="4"/>
+      <vType id="hdv#4" emissionClass="PHEMlight/LSZ_D_EU0" probability="2.03086323224e-06" width="2.55" length="16.5" maxSpeed="36.1" guiShape="truck/semitrailer" minGap="2.5" accel="1.1" decel="4.5" height="4"/>
+      <vType id="hdv#5" emissionClass="PHEMlight/Solo_LKW_D_EU5_I" probability="1.26437762212e-09" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#6" emissionClass="PHEMlight/LSZ_D_EU2" probability="1.13354379959e-05" width="2.55" length="16.5" maxSpeed="36.1" guiShape="truck/semitrailer" minGap="2.5" accel="1.1" decel="4.5" height="4"/>
+      <vType id="hdv#7" emissionClass="PHEMlight/Solo_LKW_D_EU5_II" probability="1.34866118748e-09" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#8" emissionClass="PHEMlight/Solo_LKW_D_EU4_II" probability="1.25213378432e-17" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#9" emissionClass="PHEMlight/Solo_LKW_D_EU6_I" probability="0.360447028064" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#10" emissionClass="PHEMlight/Solo_LKW_D_EU1_II" probability="7.49960326562e-44" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#11" emissionClass="PHEMlight/LSZ_D_EU4" probability="1.69680653059e-05" width="2.55" length="16.5" maxSpeed="36.1" guiShape="truck/semitrailer" minGap="2.5" accel="1.1" decel="4.5" height="4"/>
+      <vType id="hdv#12" emissionClass="PHEMlight/Solo_LKW_D_EU3_II" probability="1.3933002396e-20" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#13" emissionClass="PHEMlight/Solo_LKW_D_EU2_I" probability="2.11806845849e-34" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#14" emissionClass="PHEMlight/LSZ_D_EU3" probability="3.50203786014e-05" width="2.55" length="16.5" maxSpeed="36.1" guiShape="truck/semitrailer" minGap="2.5" accel="1.1" decel="4.5" height="4"/>
+      <vType id="hdv#15" emissionClass="PHEMlight/Solo_LKW_D_EU0_I" probability="1.48741409681e-51" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#16" emissionClass="PHEMlight/LSZ_D_EU6" probability="0.13519437832" width="2.55" length="16.5" maxSpeed="36.1" guiShape="truck/semitrailer" minGap="2.5" accel="1.1" decel="4.5" height="4"/>
+      <vType id="hdv#17" emissionClass="PHEMlight/LSZ_D_EU1" probability="3.34466658016e-06" width="2.55" length="16.5" maxSpeed="36.1" guiShape="truck/semitrailer" minGap="2.5" accel="1.1" decel="4.5" height="4"/>
+      <vType id="hdv#18" emissionClass="PHEMlight/Solo_LKW_D_EU4_I" probability="8.07253172851e-18" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#19" emissionClass="PHEMlight/Solo_LKW_D_EU2_II" probability="2.75340267424e-34" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+      <vType id="hdv#20" emissionClass="PHEMlight/Solo_LKW_D_EU3_I" probability="9.27682187218e-21" width="2.4" length="7.1" maxSpeed="36.1" guiShape="truck" minGap="2.5" accel="1.3" decel="4.5" height="3"/>
+   </vTypeDistribution>
+
+</routes>

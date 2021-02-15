@@ -1,0 +1,29 @@
+/* XPM */
+static const char *tazreldata_xpm[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 7 1 ",
+"  c black",
+". c #007F0E",
+"X c red",
+"o c green",
+"O c #FFD800",
+"+ c #0026FF",
+"@ c white",
+/* pixels */
+"@@@@@@@@@@@@@@@@",
+"     @@ @@@     ",
+"@@ @@@   @@@@@@ ",
+"@@ @@@ @ @@@@@ @",
+"@@ @@  @  @@@ @@",
+"@@ @@     @@ @@@",
+"@@ @@ @@@ @ @@@@",
+"@@ @@ @@@ @     ",
+"@@@@@@@@@@@@@@@@",
+"                ",
+"oooooooXX++@@@@o",
+"oooooooXX++..@@o",
+"o@@oo@@XX++..OOo",
+"oooooooXX++..OOo",
+"oooooooXX++..OOo",
+"                "
+};
