@@ -1,5 +1,0 @@
-Veins+INET tutorial example.
-
-This simulation requires sumo-launchd to be started and listening for
-connections on a TCP socket, e.g. using "~/src/veins/sumo-launchd.py -vv".
-
