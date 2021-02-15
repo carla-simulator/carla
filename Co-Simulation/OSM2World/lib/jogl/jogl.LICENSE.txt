@@ -1,0 +1,363 @@
+The JOGL source code is mostly licensed under the New BSD 2-clause license,
+however it contains other licensed material as well.
+
+Below you find a detailed list of licenses used in this project.
+
++++
+
+The content of folder 'make/lib' contains build- and test-time only 
+Java binaries (JAR) to ease the build setup.
+Each JAR file has it's corresponding LICENSE file containing the 
+source location and license text. None of these binaries are contained in any way 
+by the generated and deployed JOGL binaries.
+
++++
+
+L.1) The JOGL source tree contains code from the JogAmp Community
+     which is covered by the Simplified BSD 2-clause license:
+
+   Copyright 2010 JogAmp Community. All rights reserved.
+  
+   Redistribution and use in source and binary forms, with or without modification, are
+   permitted provided that the following conditions are met:
+   
+      1. Redistributions of source code must retain the above copyright notice, this list of
+         conditions and the following disclaimer.
+   
+      2. Redistributions in binary form must reproduce the above copyright notice, this list
+         of conditions and the following disclaimer in the documentation and/or other materials
+         provided with the distribution.
+   
+   THIS SOFTWARE IS PROVIDED BY JogAmp Community ``AS IS'' AND ANY EXPRESS OR IMPLIED
+   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+   FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL JogAmp Community OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+   
+   The views and conclusions contained in the software and documentation are those of the
+   authors and should not be interpreted as representing official policies, either expressed
+   or implied, of JogAmp Community.
+
+   You can address the JogAmp Community via:
+       Web                http://jogamp.org/
+       Forum/Mailinglist  http://forum.jogamp.org
+       JogAmp Channel     server: conference.jabber.org room: jogamp
+       Repository         http://jogamp.org/git/
+       Email              mediastream _at_ jogamp _dot_ org
+
+
+L.2) The JOGL source tree contains code from Sun Microsystems, Inc. 
+     which is covered by the New BSD 3-clause license:
+
+   Copyright (c) 2003-2009 Sun Microsystems, Inc. All Rights Reserved.
+ 
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are
+   met:
+   
+   - Redistribution of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   
+   - Redistribution in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+   
+   Neither the name of Sun Microsystems, Inc. or the names of
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+   
+   This software is provided "AS IS," without a warranty of any kind. ALL
+   EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES,
+   INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A
+   PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN
+   MICROSYSTEMS, INC. ("SUN") AND ITS LICENSORS SHALL NOT BE LIABLE FOR
+   ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING, MODIFYING OR
+   DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES. IN NO EVENT WILL SUN OR
+   ITS LICENSORS BE LIABLE FOR ANY LOST REVENUE, PROFIT OR DATA, OR FOR
+   DIRECT, INDIRECT, SPECIAL, CONSEQUENTIAL, INCIDENTAL OR PUNITIVE
+   DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY,
+   ARISING OUT OF THE USE OF OR INABILITY TO USE THIS SOFTWARE, EVEN IF
+   SUN HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+   
+   You acknowledge that this software is not designed or intended for use
+   in the design, construction, operation or maintenance of any nuclear
+   facility.
+
+L.3) The JOGL source tree contains code ported from the OpenGL sample
+     implementation by Silicon Graphics, Inc. This code is licensed under
+     the SGI Free Software License B, Version 2.0
+
+   License Applicability. Except to the extent portions of this file are
+   made subject to an alternative license as permitted in the SGI Free
+   Software License B, Version 2.0 (the "License"), the contents of this
+   file are subject only to the provisions of the License. You may not use
+   this file except in compliance with the License. You may obtain a copy
+   of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
+   Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
+   
+   http://oss.sgi.com/projects/FreeB
+   http://oss.sgi.com/projects/FreeB/SGIFreeSWLicB.2.0.pdf
+   Or within this repository: doc/licenses/SGIFreeSWLicB.2.0.pdf
+   
+   Note that, as provided in the License, the Software is distributed on an
+   "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
+   DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
+   CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
+   PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+L.4) The JOGL source tree contains code from the LWJGL project which is
+     similarly covered by the New BSD 3-clause license:
+
+   Copyright (c) 2002-2004 LWJGL Project
+   All rights reserved.
+   
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are 
+   met:
+   
+   * Redistributions of source code must retain the above copyright 
+     notice, this list of conditions and the following disclaimer.
+  
+   * Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+  
+   * Neither the name of 'LWJGL' nor the names of 
+     its contributors may be used to endorse or promote products derived 
+     from this software without specific prior written permission.
+   
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+   TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+   PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+L.5) The JOGL source tree also contains a Java port of Brian Paul's Tile
+     Rendering library, used with permission of the author under the 
+     New BSD 3-clause license instead of the original LGPL:
+
+   Copyright (c) 1997-2005 Brian Paul. All Rights Reserved.
+ 
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions are
+   met:
+   
+   - Redistribution of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   
+   - Redistribution in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+   
+   Neither the name of Brian Paul or the names of contributors may be
+   used to endorse or promote products derived from this software
+   without specific prior written permission.
+   
+   This software is provided "AS IS," without a warranty of any
+   kind. ALL EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND
+   WARRANTIES, INCLUDING ANY IMPLIED WARRANTY OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT, ARE HEREBY
+   EXCLUDED. THE COPYRIGHT HOLDERS AND CONTRIBUTORS SHALL NOT BE
+   LIABLE FOR ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING,
+   MODIFYING OR DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES. IN NO
+   EVENT WILL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY
+   LOST REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL,
+   CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND
+   REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF OR
+   INABILITY TO USE THIS SOFTWARE, EVEN IF THE COPYRIGHT HOLDERS OR
+   CONTRIBUTORS HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+A.1) The JOGL source tree also contains header files from Khronos,
+     reflecting OpenKODE, EGL, OpenGL ES1, OpenGL ES2 and OpenGL.
+
+   http://www.khronos.org/legal/license/
+
+   Files:
+     make/stub_includes/opengl/**
+     make/stub_includes/egl/**
+     make/stub_includes/khr/**
+     make/stub_includes/openmax/**
+
+   Copyright (c) 2007-2010 The Khronos Group Inc.
+    
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and/or associated documentation files (the
+   "Materials"), to deal in the Materials without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Materials, and to
+   permit persons to whom the Materials are furnished to do so, subject to
+   the following conditions:
+    
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Materials.
+    
+   THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
+
+
+A.2) The JOGL source tree contains code from The Apache Software Foundation
+     which is covered by the Apache License Version 2.0
+
+   Apache Harmony - Open Source Java SE
+   =====================================
+
+   <http://harmony.apache.org/>
+
+   Author: The Apache Software Foundation (http://www.apache.org/).
+
+   Copyright 2006, 2010 The Apache Software Foundation.
+
+   Apache License Version 2.0, January 2004
+   http://www.apache.org/licenses/LICENSE-2.0
+   Or within this repository: doc/licenses/Apache.LICENSE-2.0
+
+   Files:
+    src/jogamp/graph/geom/plane/AffineTransform.java
+    src/jogamp/graph/geom/plane/IllegalPathStateException.java
+    src/jogamp/graph/geom/plane/NoninvertibleTransformException.java
+    src/jogamp/graph/geom/plane/PathIterator.java
+    src/jogamp/graph/geom/plane/Path2D.java
+    src/jogamp/graph/math/plane/Crossing.java
+    src/org/apache/harmony/misc/HashCode.java
+
+
+A.3) The JOGL source tree contains code from David Schweinsberg
+     which is covered by the Apache License Version 1.1 and Version 2.0
+
+   Typecast
+   ========
+
+   Typecast is a font development environment for OpenType font technology.
+
+   <http://typecast.dev.java.net/>
+
+   Author: David Schweinsberg
+
+   Copyright (C) 1999-2003 The Apache Software Foundation. All rights reserved.
+
+   Apache Licenses
+   http://www.apache.org/licenses/
+
+   Apache License Version 1.1
+   http://www.apache.org/licenses/LICENSE-1.1
+   Or within this repository: doc/licenses/Apache.LICENSE-1.1
+   Files:
+    src/jogl/classes/jogamp/graph/font/typecast/ot/*
+    src/jogl/classes/jogamp/graph/font/typecast/ot/table/*
+
+   Apache License Version 2.0
+   http://www.apache.org/licenses/LICENSE-2.0
+   Or within this repository: doc/licenses/Apache.LICENSE-2.0
+    src/jogl/classes/jogamp/graph/font/typecast/ot/*
+    src/jogl/classes/jogamp/graph/font/typecast/ot/mac/*
+    src/jogl/classes/jogamp/graph/font/typecast/ot/table/*
+    src/jogl/classes/jogamp/graph/font/typecast/tt/engine/*
+
+A.4) The JOGL source tree contains fonts from Ubuntu
+     which is covered by the UBUNTU FONT LICENCE Version 1.0
+
+   Ubuntu Font Family
+   ==================
+
+   The Ubuntu Font Family are libre fonts funded by Canonical Ltd on behalf of the Ubuntu project. 
+
+   <http://font.ubuntu.com/>
+
+   Copyright 2010 Canonical Ltd.  
+   Licensed under the Ubuntu Font Licence 1.0
+
+   Author: Canonical Ltd., Dalton Maag
+
+   UBUNTU FONT LICENCE 
+   Version 1.0
+   http://font.ubuntu.com/ufl/ubuntu-font-licence-1.0.txt
+   Or within this repository: doc/licenses/ubuntu-font-licence-1.0.txt
+
+   Files:
+    src/jogamp/graph/font/fonts/ubuntu/*
+
+A.5) The JOGL source tree also contains header files from NVIDIA,
+     reflecting Cg.
+
+   Files:
+     make/stub_includes/cg/CG/**
+
+   Copyright (c) 2002, NVIDIA Corporation
+   
+   NVIDIA Corporation("NVIDIA") supplies this software to you in consideration 
+   of your agreement to the following terms, and your use, installation, 
+   modification or redistribution of this NVIDIA software constitutes 
+   acceptance of these terms.  If you do not agree with these terms, please do 
+   not use, install, modify or redistribute this NVIDIA software.
+   
+   In consideration of your agreement to abide by the following terms, and 
+   subject to these terms, NVIDIA grants you a personal, non-exclusive license,
+   under NVIDIA's copyrights in this original NVIDIA software (the "NVIDIA 
+   Software"), to use, reproduce, modify and redistribute the NVIDIA 
+   Software, with or without modifications, in source and/or binary forms; 
+   provided that if you redistribute the NVIDIA Software, you must retain the 
+   copyright notice of NVIDIA, this notice and the following text and 
+   disclaimers in all such redistributions of the NVIDIA Software. Neither the 
+   name, trademarks, service marks nor logos of NVIDIA Corporation may be used 
+   to endorse or promote products derived from the NVIDIA Software without 
+   specific prior written permission from NVIDIA.  Except as expressly stated 
+   in this notice, no other rights or licenses express or implied, are granted 
+   by NVIDIA herein, including but not limited to any patent rights that may be 
+   infringed by your derivative works or by other works in which the NVIDIA 
+   Software may be incorporated. No hardware is licensed hereunder. 
+   
+   THE NVIDIA SOFTWARE IS BEING PROVIDED ON AN "AS IS" BASIS, WITHOUT 
+   WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING 
+   WITHOUT LIMITATION, WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, 
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR ITS USE AND OPERATION 
+   EITHER ALONE OR IN COMBINATION WITH OTHER PRODUCTS.
+   
+   IN NO EVENT SHALL NVIDIA BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL, 
+   EXEMPLARY, CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, LOST 
+   PROFITS; PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
+   PROFITS; OR BUSINESS INTERRUPTION) OR ARISING IN ANY WAY OUT OF THE USE, 
+   REPRODUCTION, MODIFICATION AND/OR DISTRIBUTION OF THE NVIDIA SOFTWARE, 
+   HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING 
+   NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF NVIDIA HAS BEEN ADVISED 
+   OF THE POSSIBILITY OF SUCH DAMAGE.
+   
+A.6) The JOGL source tree contains code from Hernan J. Gonzalez and Shawn Hartsock
+     which is covered by the Apache License Version 2.0
+
+   PNGJ
+   ====
+
+   PNGJ: Java library for reading and writing PNG images.
+
+   Version 0.85  (1 April 2012)
+
+   <http://code.google.com/p/pngj/>
+
+   Author: Hernan J. Gonzalez and Shawn Hartsock
+
+   Copyright (C) 2004 The Apache Software Foundation. All rights reserved.
+
+   Apache Licenses
+   http://www.apache.org/licenses/
+
+   Apache License Version 2.0
+   http://www.apache.org/licenses/LICENSE-2.0
+   Or within this repository: doc/licenses/Apache.LICENSE-2.0
+    src/jogl/classes/jogamp/opengl/util/pngj/**
+
+

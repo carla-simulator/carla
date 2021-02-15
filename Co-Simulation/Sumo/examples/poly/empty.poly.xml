@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<!--
+// Copyright (C) 2011 Christoph Sommer <sommer@ccs-labs.org>
+//
+// Documentation for these modules is at http://veins.car2x.org/
+//
+// SPDX-License-Identifier: CC-BY-SA-2.0
+//
+// You can redistribute and/or modify this file
+// under a
+// Creative Commons Attribution-ShareAlike 2.0 Generic License.
+//
+// You should have received a copy of the license along with this
+// work.  If not, see <http://creativecommons.org/licenses/by-sa/2.0/>.
+-->
+
+<!--
+Based on map data Copyright (C) 2011 OpenStreetMap contributors <http://openstreetmap.org>
+Licensed under the Creative Commons Attribution-ShareAlike 2.0 license <http://creativecommons.org/licenses/by-sa/2.0/>
+-->
+
+<!-- generated on Wed Nov 30 12:18:34 2011 by SUMO polyconvert Version 0.13.1
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.sf.net/xsd/polyconvertConfiguration.xsd">
+
+    <input>
+        <osm-files value="erlangen.osm"/>
+        <osm.keep-full-type value="false"/>
+        <type-file value="erlangen.polytypes.xml"/>
+    </input>
+
+    <output>
+        <output-file value="erlangen.poly.xml"/>
+    </output>
+
+    <projection>
+        <proj.utm value="true"/>
+    </projection>
+
+</configuration>
+-->
+
+<shapes>
+</shapes>

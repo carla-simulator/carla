@@ -1,0 +1,12 @@
+Rob Eden <robeden@users.sourceforge.net>
+Johan Parent <jparent@users.sourceforge.net>
+Jeff Randall <randall@uph.com>
+Eric D. Friedman <ericdf@users.sourceforge.net>
+
+Please do NOT email bug reports or feature requests.
+
+Instead use the very fine bug tracking system and feature request
+service on SourceForge:  http://sourceforge.net/projects/trove4j/
+We'll read your issue just as quickly, and the project's issues will
+remain out in the open where everyone can see them.  We also monitor
+the project forums, so feel free to use those too.

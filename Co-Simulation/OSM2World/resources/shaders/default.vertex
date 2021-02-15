@@ -1,0 +1,53 @@
+/* Vertex shader with support for bumpmaps/normalmaps, shadowmaps and phong lighting model
+ */
+#version 130
+// TODO: set from java to match MAX_TEXTURE_LAYERS there
+#define MAX_TEXTURE_LAYERS 4
+ 
+// per vertex input
+in vec3 VertexPosition;
+in vec3 VertexNormal;
+in vec4 VertexTangent;
+in vec2 VertexBumpMapCoord;
+in vec2 VertexTexCoord0;
+in vec2 VertexTexCoord1;
+in vec2 VertexTexCoord2;
+in vec2 VertexTexCoord3;
+
+// input for at least primitives
+uniform mat4 ProjectionMatrix;
+uniform mat4 ModelViewMatrix;
+uniform mat4 ModelViewProjectionMatrix;
+uniform mat4 NormalMatrix;
+uniform mat4 ShadowMatrix;
+
+// output to fragment shader for interpolation
+out vec3 VertexEye; // in eye space
+out vec3 NormalEye;
+out vec4 TangentEye; // last coordinate is the handedness to reconstruct the bitangent
+out vec2 BumpMapCoord;
+out vec4 ShadowCoord;
+out vec2 TexCoord0;
+out vec2 TexCoord1;
+out vec2 TexCoord2;
+out vec2 TexCoord3;
+
+void main()
+{
+	TexCoord0 = VertexTexCoord0;
+	TexCoord1 = VertexTexCoord1;
+	TexCoord2 = VertexTexCoord2;
+	TexCoord3 = VertexTexCoord3;
+	BumpMapCoord = VertexBumpMapCoord;
+	
+	// Transform to eye coordinates
+	NormalEye = normalize(vec3(NormalMatrix * vec4(VertexNormal, 1.0)));
+	TangentEye = vec4(normalize(vec3(NormalMatrix * vec4(VertexTangent.xyz, 1.0))), VertexTangent.w);
+	vec4 veye = ModelViewMatrix * vec4(VertexPosition, 1.0);
+	VertexEye = veye.xyz / veye.w;
+	
+	// Transform to shadow coordinates
+	ShadowCoord = ShadowMatrix * vec4(VertexPosition, 1.0);
+	
+	gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);
+} 

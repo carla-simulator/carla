@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+    <input>
+        <net-file value="sumo_for_vfc.net.xml"/>
+        <route-files value="sumo_for_vfc.rou.xml"/>
+        <additional-files value="sumo_for_vfc.poly.xml"/>
+    </input>
+</configuration>

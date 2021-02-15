@@ -1,0 +1,8 @@
+/* Empty fragment shader. Only depth buffer will be calculated.
+ */ 
+#version 130
+ 
+void main()
+{	
+	// nothing to output, only depth buffer needed
+} 

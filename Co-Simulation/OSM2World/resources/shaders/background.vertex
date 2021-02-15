@@ -1,0 +1,19 @@
+/* Simple vertex shader for drawing a 2d geometry with texture to screen
+ */
+#version 130
+ 
+// per vertex input
+in vec2 VertexPosition;
+in vec2 VertexTexCoord;
+
+// input for at least primitives
+uniform mat4 ModelViewProjectionMatrix;
+
+// output to fragment shader for interpolation
+out vec2 TexCoord;
+ 
+void main()
+{
+	TexCoord = VertexTexCoord;
+	gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition.x, VertexPosition.y, 0.0, 1.0);
+} 

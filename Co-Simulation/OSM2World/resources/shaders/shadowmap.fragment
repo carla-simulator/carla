@@ -1,0 +1,52 @@
+/* Simple fragment shader with texture layers for depth buffer calculation
+ */ 
+#version 130
+// TODO: set from java to match MAX_TEXTURE_LAYERS there
+#define MAX_TEXTURE_LAYERS 4
+
+// corresponds with output from vertex shader, gets interpolated
+in vec2 TexCoord0;
+in vec2 TexCoord1;
+in vec2 TexCoord2;
+in vec2 TexCoord3;
+
+uniform bool useTexture[MAX_TEXTURE_LAYERS];
+uniform sampler2D Tex[MAX_TEXTURE_LAYERS];
+
+uniform bool useAlphaTreshold;
+uniform float alphaTreshold;
+ 
+void main()
+{
+	float alpha = 1.0;
+	
+	// apply textures
+	// TODO: autogenerate based on MAX_TEXTURE_LAYERS
+	if ( useTexture[0] ) {
+		alpha = texture( Tex[0], TexCoord0 ).a;
+	}
+	if ( useTexture[1] ) {
+		float layerAlpha = texture( Tex[1], TexCoord1 ).a;
+		alpha = mix(alpha, 1, layerAlpha);
+	}
+	if ( useTexture[2] ) {
+		float layerAlpha = texture( Tex[2], TexCoord2 ).a;
+		alpha = mix(alpha, 1, layerAlpha);
+	}
+	if ( useTexture[3] ) {
+		float layerAlpha = texture( Tex[3], TexCoord3 ).a;
+		alpha = mix(alpha, 1, layerAlpha);
+	}
+	
+	if ( useAlphaTreshold ) {
+		if ( alpha < alphaTreshold )
+			alpha = 0.0;
+		else
+			alpha = 1.0;
+	}
+		
+	if( alpha < 0.01 )
+		discard;
+	
+	// nothing to output, only depth buffer needed
+} 

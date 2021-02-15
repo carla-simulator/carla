@@ -47,3 +47,10 @@ _out*
 _site
 core
 profiler.csv
+
+
+sumo-1.7.0
+sumo-1.2.0
+*.deb
+*.fbx
+*.obj

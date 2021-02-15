@@ -729,8 +729,6 @@ def main():
     global _SUMO_HOST
     _SUMO_PORT = options.sumo_port
     _SUMO_HOST = options.sumo_host
-    print(_SUMO_PORT)
-    print(_SUMO_HOST)
     # ----- END: my code: read sumo host -----
 
     # this is where we'll spend our time

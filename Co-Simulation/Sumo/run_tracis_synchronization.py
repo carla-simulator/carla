@@ -5,6 +5,10 @@ import logging
 import os
 import sys
 
+from util.func import (
+    data_from_json,
+)
+
 if 'SUMO_HOME' in os.environ:
     sys.path.append(os.path.join(os.environ['SUMO_HOME'], 'tools'))
     import traci
@@ -16,9 +20,9 @@ CTRL_C_PRESSED_MESSAGE = "ctrl-c is pressed."
 
 # ----- Class -----
 class TracisSyncronizer:
-    def __init__(self, main_sumo_port, other_sumo_ports, order):
-        self.main_traci = traci.connect(port=main_sumo_port)
-        self.other_tracis = [traci.connect(port=o_port) for o_port in other_sumo_ports]
+    def __init__(self, main_sumo_host_port, other_sumo_host_ports, order):
+        self.main_traci = traci.connect(host=main_sumo_host_port.split(":")[0], port=int(main_sumo_host_port.split(":")[1]))
+        self.other_tracis = [traci.connect(host=o_host_port.split(":")[0], port=int(o_host_port.split(":")[1])) for o_host_port in other_sumo_host_ports]
 
         # ----- set order -----
         self.tracis = [self.main_traci] + self.other_tracis
@@ -109,8 +113,8 @@ class TracisSyncronizer:
                 continue
 
 # ----- function -----
-def start_tracis_syncronizer(main_sumo_port, other_sumo_ports, order):
-    tracis_syncronizer = TracisSyncronizer(main_sumo_port, other_sumo_ports, order)
+def start_tracis_syncronizer(main_sumo_host_port, other_sumo_host_ports, order):
+    tracis_syncronizer = TracisSyncronizer(main_sumo_host_port, other_sumo_host_ports, order)
 
     try:
         tracis_syncronizer.start()
@@ -124,11 +128,13 @@ def start_tracis_syncronizer(main_sumo_port, other_sumo_ports, order):
 
 # ----- main -----
 if __name__ == "__main__":
+    env = data_from_json("./env.json")
+
     # ----- get args -----
     parser = argparse.ArgumentParser(description='This script is a middleware for tracis synchronization.')
 
-    parser.add_argument('--main_sumo_port', type=int)
-    parser.add_argument('--other_sumo_ports', type=int, nargs='*')
+    parser.add_argument('--main_sumo_host_port', default=f"127.0.0.1:{env['carla_sumo_port']}")
+    parser.add_argument('--other_sumo_host_ports', nargs='*', default=f"{env['vagrant_ip']}:{env['veins_sumo_port']}")
     parser.add_argument('--sumo_order', type=int, default=1)
     parser.add_argument('--log_file_path', default="./log/tracis_logger.log")
 
@@ -142,7 +148,7 @@ if __name__ == "__main__":
     )
 
     start_tracis_syncronizer(
-        main_sumo_port=args.main_sumo_port,
-        other_sumo_ports=args.other_sumo_ports,
+        main_sumo_host_port=args.main_sumo_host_port,
+        other_sumo_host_ports=args.other_sumo_host_ports,
         order=args.sumo_order
     )

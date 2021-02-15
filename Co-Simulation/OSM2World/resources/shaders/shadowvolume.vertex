@@ -1,0 +1,14 @@
+/* Simple vertex shader with vertex position
+ */
+#version 130
+
+// per vertex input
+in vec4 VertexPosition;
+
+// input for at least primitives
+uniform mat4 ModelViewProjectionMatrix;
+
+void main()
+{
+	gl_Position = ModelViewProjectionMatrix * VertexPosition;
+} 

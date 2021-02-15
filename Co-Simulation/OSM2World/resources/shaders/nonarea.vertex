@@ -1,0 +1,19 @@
+/* Simple vertex shader with static color, no lighting, no textures
+ */
+#version 130
+ 
+// per vertex input
+in vec3 VertexPosition;
+in vec4 VertexColor;
+
+// input for at least primitives
+uniform mat4 ModelViewProjectionMatrix;
+
+// output to fragment shader for interpolation
+out vec4 Color;
+ 
+void main()
+{
+	Color = VertexColor;
+	gl_Position = ModelViewProjectionMatrix * vec4(VertexPosition, 1.0);
+} 
