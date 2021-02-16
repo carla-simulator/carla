@@ -56,7 +56,18 @@ __1.__ Export the scene using the CARLA option:
 
   - In the main toolbar, select `File` -> `Export` -> `CARLA (.fbx, .xodr, .rrdata.xml)`
 
-__2.__ Leave `Export Individual Tiles` unchecked. This will generate one `.fbx` file with all map pieces.  
+__2.__ Check the following options:
+
+- Split by Segmentation: Divides the mesh by semantic segmentation.
+- Power of Two Texture Dimensions: Improves performance.
+- Embed Textures: Ensures textures are embedded in the mesh.
+- Export to Tiles: Choose the size of the tile or leave unchecked for only one piece.
+
+Leave unchecked:
+
+- `Export Individual Tiles`: Generates one `.fbx` file with all map pieces. 
+
+![roadrunner_export](/img/roadrunner_export.png)
 
 __3.__ Chose the directory where you want to export your files and click `Export`. This will generate `<mapName>.fbx` and `<mapName>.xodr` files among others. 
   
@@ -71,4 +82,3 @@ You are now ready to import your map into CARLA. The next step will depend upon 
 
 * __For users of CARLA built from source__, follow the guide [__here__](add_map_source.md).
 * __For users of a packaged (binary) version of CARLA__, follow the guide [__here__](add_map_package.md).
-* If you need to use one of the deprecated methods __for older versions of CARLA__, check [__here__](add_map_deprecated.md).
