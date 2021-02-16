@@ -89,6 +89,7 @@ cd /opt/carla-simulator # Open the folder where CARLA is installed
 
 This repository contains CARLA 0.9.10 and later versions. To install a specific version add the version tag to the installation command.  
 ```sh
+apt-cache madison carla-simulator # List the available versions of Carla
 sudo apt-get install carla-simulator=0.9.10-1 # In this case, "0.9.10" refers to a CARLA version, and "1" to the Debian revision
 ```
 

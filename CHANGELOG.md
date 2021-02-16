@@ -1,6 +1,7 @@
 ## Latest
 
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
+  * Added performance benchmarking section to documentation
 
 
 ## CARLA 0.9.11

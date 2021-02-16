@@ -115,7 +115,7 @@ def bold(buf):
 
 def snipet(name,class_key):
 
-    return join(["<button class=\"SnipetButton\" id=\"",class_key,".",name,"-snipet_button\">", "snipet &rarr;", '</button>'])
+    return join(["<button class=\"SnipetButton\" id=\"",class_key,".",name,"-snipet_button\">", "snippet &rarr;", '</button>'])
 
 def code(buf):
     return join(['`', buf, '`'])

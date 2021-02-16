@@ -596,7 +596,7 @@
       doc: >
         Loads the selected layers to the level.
         If the layer is already loaded the call has no effect.
-      warning: This only affects "Opt" maps.
+      warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
     # --------------------------------------
     - def_name: unload_map_layer
       params: 
@@ -607,7 +607,7 @@
       doc: >
         Unloads the selected layers to the level.
         If the layer is already unloaded the call has no effect.
-      warning: This only affects "Opt" maps.
+      warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
     # --------------------------------------
     - def_name: __str__
       return:

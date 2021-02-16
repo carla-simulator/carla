@@ -105,13 +105,13 @@ class Documentation:
             # Header for a snipet
             md.textn("<div id =\""+snipet_name+"-snipet\" style=\"display: none;\">\n"+
             "<p class=\"SnipetFont\">\n"+
-            "Snipet for "+snipet_name+"\n"+
+            "Snippet for "+snipet_name+"\n"+
             "</p>\n"+
             "<div id=\""+snipet_name+"-code\" class=\"SnipetContent\">\n\n```py\n")
             # The snipet code
             md.textn(current_snipet.read())
             # Closing for a snipet
-            md.textn("\n```\n<button id=\"button1\" class=\"CopyScript\" onclick=\"CopyToClipboard('"+snipet_name+"-code')\">Copy snipet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id=\"button1\" class=\"CloseSnipet\" onclick=\"CloseSnipet()\">Close snipet</button><br><br>\n")
+            md.textn("\n```\n<button id=\"button1\" class=\"CopyScript\" onclick=\"CopyToClipboard('"+snipet_name+"-code')\">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id=\"button1\" class=\"CloseSnipet\" onclick=\"CloseSnipet()\">Close snippet</button><br><br>\n")
             # Check if snipet image exists, and add it
             for snipet_path_to_image in self._snipets_images:
                 snipet_image_name = os.path.splitext(os.path.basename(snipet_path_to_image))[0]
