@@ -116,7 +116,7 @@ rem -- Messages and Errors -----------------------------------------------------
 rem ============================================================================
 
 :help
-    echo %FILE_N% Download and install a xerces.
+    echo %FILE_N% Download and install a the Chrono library.
     echo "Usage: %FILE_N% [-h^|--help] [--build-dir] [--zlib-install-dir]"
     goto eof
 
