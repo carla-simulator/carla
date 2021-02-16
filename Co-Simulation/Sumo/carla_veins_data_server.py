@@ -8,12 +8,15 @@ import json
 
 from copy import deepcopy
 
+from util.classes.sensor_loaded_vehicle import (
+    Vehicle,
+)
 
+VEHICLES = {}
 PACKETS = {}
 SENSOR_DATA = {}
 
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
-
     def handle(self):
         try:
             received_data = json.loads(str(self.request.recv(1024), 'ascii'))
@@ -24,6 +27,28 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             logging.error(e)
             self.request.sendall(self.__formated_response(500, {}))
 
+    def __args_from_dict(self, generated_args="", dict_args={}):
+        if 0 < len(dict_args):
+            item = dict_args.popitem()
+            args = item[0]
+            val = item[1] if type(item[1]) is not str else f"\"{item[1]}\""
+
+            return self.__args_from_dict(f"{generated_args}{args}={val}{', ' if 0 < len(dict_args) else ''}", deepcopy(dict_args))
+        else:
+            return generated_args
+
+    def __check_received_data_format(self, received_data):
+        try:
+            if "vehid" not in received_data.keys():
+                return False
+            if "method" not in received_data.keys():
+                return False
+
+            return True
+
+        except Exception as e:
+            logging.error(e)
+            return False
 
     def __formated_response(self, status=200, response_data={}):
         resp_d = {
@@ -33,71 +58,28 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         return bytes(json.dumps(resp_d), 'ascii')
 
+    def __get_vehicle_by_id(self, id):
+        global VEHICLES
+
+        if str(id) not in VEHICLES.keys():
+            VEHICLES[str(id)] = Vehicle(id)
+
+        return VEHICLES[str(id)]
+
     def __response_handler(self, recv_data={}):
         try:
-            if False:
+            if self.__check_received_data_format(recv_data) is False:
                 return 500, {}
-
-            elif recv_data["method"] == "get_sensor_data":
-                return 200, self.__get_sensor_data(recv_data["veh_id"])
-
-            elif recv_data["method"] == "get_packets":
-                return 200, self.__get_packets(recv_data["veh_id"])
-
-            elif recv_data["method"] == "post_packets":
-                return 200, self.__post_packets(recv_data["veh_id"], recv_data["packets"])
-
-            elif recv_data["method"] == "post_sensor_data":
-                return 200, self.__post_sensor_data(recv_data["veh_id"], recv_data["sensor_data"])
 
             else:
-                return 500, {}
+                vehicle = self.__get_vehicle_by_id(recv_data["vehid"])
+                dict_args = {} if "args" not in recv_data.keys() else recv_data['args']
+                print(f"vehicle.{str(recv_data['method'])}({self.__args_from_dict('', deepcopy(dict_args))})")
+                return 200, eval(f"vehicle.{str(recv_data['method'])}({self.__args_from_dict('', deepcopy(dict_args))})")
 
         except Exception as e:
             logging.error(e)
             return 500, {}
-
-    def __get_sensor_data(self, veh_id):
-        global SENSOR_DATA
-
-        if str(veh_id) not in SENSOR_DATA:
-            SENSOR_DATA[str(veh_id)] = []
-
-        resp_data = SENSOR_DATA[str(veh_id)]
-        SENSOR_DATA[str(veh_id)] = []
-
-        return resp_data
-
-    def __get_packets(self, veh_id):
-        global PACKETS
-
-        if str(veh_id) not in PACKETS:
-            PACKETS[str(veh_id)] = []
-
-        resp_data = PACKETS[str(veh_id)]
-        PACKETS[str(veh_id)] = []
-
-        return resp_data
-
-    def __post_sensor_data(self, veh_id, sensor_data):
-        global SENSOR_DATA
-
-        if str(veh_id) not in SENSOR_DATA:
-            SENSOR_DATA[str(veh_id)] = []
-
-        SENSOR_DATA[str(veh_id)].append(sensor_data)
-
-        return {}
-
-    def __post_packets(self, veh_id, packets):
-        global PACKETS
-
-        if str(veh_id) not in PACKETS:
-            PACKETS[str(veh_id)] = []
-
-        PACKETS[str(veh_id)].append(packets)
-
-        return {}
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
