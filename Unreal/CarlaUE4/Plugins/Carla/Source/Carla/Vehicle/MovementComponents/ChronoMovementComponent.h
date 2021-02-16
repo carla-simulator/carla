@@ -81,5 +81,11 @@ public:
       FActorComponentTickFunction* ThisTickFunction) override;
 
   void AdvanceChronoSimulation(float StepSize);
+
+  virtual FVector GetVelocity() const override;
+
+  virtual int32 GetVehicleCurrentGear() const override;
+
+  virtual float GetVehicleForwardSpeed() const override;
   #endif
 };
