@@ -55,6 +55,12 @@ struct FActorToConsider
 
   // Absolute location = Current Origin + Relative Tile Location
   FDVector Location;
+
+  bool operator==(const FActorToConsider& Other)
+  {
+    return Actor == Other.Actor &&
+           Location == Other.Location;
+  }
 };
 
 UCLASS()
@@ -86,7 +92,10 @@ public:
   void GenerateMap(FString InAssetsPath);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  void AddNewClientToConsider(AActor* InActor);
+  void AddActorToConsider(AActor* InActor);
+
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
+  void RemoveActorToConsider(AActor* InActor);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FIntVector GetNumTilesInXY() const;
@@ -129,7 +138,7 @@ protected:
 
   TArray<FActorToConsider> ActorsToConsider;
 
-  FDelegateHandle ActorSpawnedDelegate;
+  // TArray<FVector, TInlineAllocator<16>> TileLocationsToLoad;
 
   // Current Origin after rebase
   FIntVector CurrentOriginInt{0};
@@ -142,7 +151,7 @@ protected:
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float TileSide = 9.0f * 1000.0f * 100.0f; // 2km
+  float TileSide = 2.0f * 1000.0f * 100.0f; // 2km
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
@@ -165,6 +174,12 @@ protected:
   FString AssetsPath = "";
 
   FColor PositonMsgColor = FColor::Purple;
+
+  const int32 TilesDistMsgIndex = 100;
+  const int32 MaxTilesDistMsgIndex = TilesDistMsgIndex + 10;
+
+  const int32 ClientLocMsgIndex = 200;
+  const int32 MaxClientLocMsgIndex = ClientLocMsgIndex + 10;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool bPrintMapInfo = true;

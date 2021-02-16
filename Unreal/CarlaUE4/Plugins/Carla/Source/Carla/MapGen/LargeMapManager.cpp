@@ -30,7 +30,7 @@
 ALargeMapManager::ALargeMapManager()
 {
   PrimaryActorTick.bCanEverTick = true;
-
+  PrimaryActorTick.TickInterval = 5.0f;
 }
 
 ALargeMapManager::~ALargeMapManager()
@@ -42,8 +42,7 @@ ALargeMapManager::~ALargeMapManager()
   // Level added/removed from world
   FWorldDelegates::LevelRemovedFromWorld.RemoveAll(this);
   FWorldDelegates::LevelAddedToWorld.RemoveAll(this);
-  // Actor spawned
-  GetWorld()->RemoveOnActorSpawnedHandler(ActorSpawnedDelegate);
+
 }
 
 // Called when the game starts or when spawned
@@ -51,6 +50,7 @@ void ALargeMapManager::BeginPlay()
 {
   Super::BeginPlay();
 
+  UWorld* World = GetWorld();
   /* Setup delegates */
   // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.AddUObject(this, &ALargeMapManager::PreWorldOriginOffset);
@@ -61,9 +61,9 @@ void ALargeMapManager::BeginPlay()
   // Actor spawned
   FOnActorSpawned::FDelegate OnActorSpawnedDelegate =
     FOnActorSpawned::FDelegate::CreateUObject(this, &ALargeMapManager::OnActorSpawned);
-  ActorSpawnedDelegate = GetWorld()->AddOnActorSpawnedHandler(OnActorSpawnedDelegate);
+  World->AddOnActorSpawnedHandler(OnActorSpawnedDelegate);
 
-  UWorldComposition* WorldComposition = GetWorld()->WorldComposition;
+  UWorldComposition* WorldComposition = World->WorldComposition;
   // Setup Origin rebase settings
   WorldComposition->bRebaseOriginIn3DSpace = true;
   WorldComposition->RebaseOriginDistance = RebaseOriginDistance;
@@ -103,6 +103,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(LogCarla, Warning, TEXT("OnLevelAddedToWorld"));
+  FDebug::DumpStackTraceToLog();
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   SpawnAssetsInTile(Tile);
 }
@@ -110,6 +111,7 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(LogCarla, Warning, TEXT("OnLevelRemovedFromWorld"));
+  FDebug::DumpStackTraceToLog();
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   Tile.TilesSpawned = false;
 }
@@ -171,9 +173,25 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 #endif // WITH_EDITOR
 }
 
-void ALargeMapManager::AddNewClientToConsider(AActor* InActor)
+void ALargeMapManager::AddActorToConsider(AActor* InActor)
 {
   ActorsToConsider.Add({InActor});
+}
+
+void ALargeMapManager::RemoveActorToConsider(AActor* InActor)
+{
+  int Index = 0;
+  for(int i = 0; i < ActorsToConsider.Num(); i++)
+  {
+    const FActorToConsider& ActorToConsider = ActorsToConsider[i];
+    if(ActorToConsider.Actor == InActor)
+    {
+      ActorsToConsider.Remove(ActorToConsider);
+      Index = i;
+      break;
+    }
+  }
+
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -381,13 +399,26 @@ void ALargeMapManager::UpdateActorsToConsiderPosition()
     return;
   }
 
+  TArray<AActor*> ActorsToRemove;
   for(FActorToConsider& ActorToConsider : ActorsToConsider)
   {
     AActor* Actor = ActorToConsider.Actor;
-    // Relative location to the current origin
-    FDVector ActorLocation(Actor->GetActorLocation());
-    // Absolute location of the actor
-    ActorToConsider.Location = CurrentOriginD + ActorLocation;
+    if(Actor && !Actor->IsPendingKillPending())
+    {
+      // Relative location to the current origin
+      FDVector ActorLocation(Actor->GetActorLocation());
+      // Absolute location of the actor
+      ActorToConsider.Location = CurrentOriginD + ActorLocation;
+    }
+    else
+    {
+      ActorsToConsider.Add(Actor);
+    }
+  }
+
+  for(int i = 0; i < ActorsToRemove.Num(); i++)
+  {
+    // RemoveActorToConsider(ActorsToRemove[i]);
   }
 }
 
@@ -403,7 +434,6 @@ void ALargeMapManager::UpdateTilesState(const FActorToConsider& ActorToConsider)
 {
   UWorld* World = GetWorld();
   UWorldComposition* WorldComposition = World->WorldComposition;
-
 
   FDVector ActorLocation = ActorToConsider.Location;
 
@@ -435,12 +465,12 @@ void ALargeMapManager::UpdateTilesState(const FActorToConsider& ActorToConsider)
       {
         // Check that the level is not already loaded
         ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
-        if(!StreamingLevel->IsLevelLoaded())
-        {
-          LM_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\n    %d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
+        //{
+          LM_LOG(LogCarla, Error, TEXT("Tile %s should be loaded:\n    %s\t%d"), *Tile->Name, *Tile->Location.ToString(), StreamingLevel->GetCurrentState());
           TileLocationsToLoad.Add(Tile->Location);
-        }
-        else
+        //}
+        //else
+        if(StreamingLevel->IsLevelLoaded())
         {
           SpawnAssetsInTile(*Tile);
         }
@@ -449,7 +479,11 @@ void ALargeMapManager::UpdateTilesState(const FActorToConsider& ActorToConsider)
   }
 
   // Load tiles
-  WorldComposition->UpdateStreamingState(TileLocationsToLoad.GetData(), TileLocationsToLoad.Num());
+  if( TileLocationsToLoad.Num() > 0 )
+  {
+    LM_LOG(LogCarla, Error, TEXT("Force Tiles load"));
+    WorldComposition->UpdateStreamingState(TileLocationsToLoad.GetData(), TileLocationsToLoad.Num());
+  }
 
 }
 
@@ -522,7 +556,7 @@ void ALargeMapManager::OnActorSpawned(AActor *Actor)
   LM_LOG(LogCarla, Warning, TEXT("OnActorSpawned %s"), *Actor->GetName());
   if(Vehicle || Walker)
   {
-    AddNewClientToConsider(Actor);
+    AddActorToConsider(Actor);
   }
 
 }
@@ -598,8 +632,8 @@ void ALargeMapManager::PrintMapInfo()
   */
   GEngine->AddOnScreenDebugMessage(0, 30.0f, FColor::Cyan, Output);
 
-  int LastMsgIndex = 0;
-  GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, FColor::White, TEXT("Closest tiles - Distance:"));
+  int LastMsgIndex = TilesDistMsgIndex;
+  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, FColor::White, TEXT("Closest tiles - Distance:"));
 
   ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
   FVector ViewLocation;
@@ -612,21 +646,26 @@ void ALargeMapManager::PrintMapInfo()
     float Distance = FDVector::Dist(LevelLocation, CurrentActorPosition);
 
     FColor MsgColor = (Levels.Contains(Level->GetLoadedLevel())) ? FColor::Green : FColor::Red;
-    if(Distance < (TileSide * 2.0f))
+    if( Distance < (TileSide * 2.0f) && (LastMsgIndex < MaxTilesDistMsgIndex) )
     {
-      GEngine->AddOnScreenDebugMessage(++LastMsgIndex, 30.0f, MsgColor,
+      GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, MsgColor,
         FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance / (1000.0f * 100.0f) ));
     }
   }
 
+  LastMsgIndex = ClientLocMsgIndex;
+  for(const FActorToConsider& ActorToConsider : ActorsToConsider)
+  {
+    if(LastMsgIndex > MaxClientLocMsgIndex) break;
 
-  FIntVector IntViewLocation(ViewLocation); // km
-  GEngine->AddOnScreenDebugMessage(50000, 30.0f, PositonMsgColor,
-    FString::Printf(TEXT("Local Loc: %s meters"), *IntViewLocation.ToString()));
+    FIntVector IntViewLocation(ViewLocation); // km
+    GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, PositonMsgColor,
+      FString::Printf(TEXT("Local Loc: %s meters"), *IntViewLocation.ToString()));
 
-  FString StrCurrentActorPosition = (CurrentActorPosition / (1000.0f * 100.0f)).ToString();
-  GEngine->AddOnScreenDebugMessage(50001, 30.0f, PositonMsgColor,
-    FString::Printf(TEXT("Origin: %s km\nClient Loc: %s km"), *(CurrentOriginInt/ (1000.0f * 100.0f)).ToString(), *StrCurrentActorPosition));
+    FString StrCurrentActorPosition = (CurrentActorPosition / (1000.0f * 100.0f)).ToString();
+    GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, PositonMsgColor,
+      FString::Printf(TEXT("Origin: %s km\nClient Loc: %s km"), *(CurrentOriginInt/ (1000.0f * 100.0f)).ToString(), *StrCurrentActorPosition));
+  }
 }
 
 #endif // WITH_EDITOR

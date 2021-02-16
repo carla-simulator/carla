@@ -152,7 +152,7 @@ void ACarlaGameModeBase::BeginPlay()
   {
     // TODO: match with vehicle
     ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
-    LMManager->AddNewClientToConsider(Player->GetPlayerController(World)->GetPawn());
+    LMManager->AddActorToConsider(Player->GetPlayerController(World)->GetPawn());
   }
 
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
