@@ -66,6 +66,10 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         return VEHICLES[str(id)]
 
+    def read_all_bytes(received_bytes=b'', buffsize=1024):
+
+
+
     def __response_handler(self, recv_data={}):
         try:
             if self.__check_received_data_format(recv_data) is False:
