@@ -108,34 +108,12 @@ std::pair<bool, FHitResult>
   return std::make_pair(bDidHit, Hit);
 }
 
-void DrawPoint(UWorld* World, FVector Location, FColor Color, float Size, float LifeTime)
-{
-  World->PersistentLineBatcher->DrawPoint(
-      Location,
-      Color,
-      Size,
-      SDPG_World,
-      LifeTime);
-}
-void DrawLine(UWorld* World, FVector Start, FVector End, FColor Color, float Thickness, float LifeTime)
-{
-  World->PersistentLineBatcher->DrawLine(
-      Start,
-      End,
-      Color,
-      SDPG_World,
-      Thickness,
-      LifeTime);
-}
-
 double UERayCastTerrain::GetHeight(const ChVector<>& loc) const
 {
-  DrawPoint(CarlaVehicle->GetWorld(), ChronoToUE4Location(loc), FColor(0,255,0), 5, 0.1);
   FVector Location = ChronoToUE4Location(loc + ChVector<>(0,0,0.5)); // small offset to detect the ground properly
   auto point_pair = GetTerrainProperties(Location);
   if (point_pair.first)
   {
-    DrawPoint(CarlaVehicle->GetWorld(), point_pair.second.Location, FColor(255,0,0), 5, 0.1);
     double Height = CMTOM*static_cast<double>(point_pair.second.Location.Z);
     return Height;
   }
@@ -148,7 +126,6 @@ ChVector<> UERayCastTerrain::GetNormal(const ChVector<>& loc) const
   if (point_pair.first)
   {
     FVector Normal = point_pair.second.Normal;
-    DrawLine(CarlaVehicle->GetWorld(), point_pair.second.Location, point_pair.second.Location+Normal*10, FColor(0,0,255), 1, 0.003);
     auto ChronoNormal = UE4DirectionToChrono(Normal);
     return ChronoNormal;
   }
@@ -200,13 +177,23 @@ void UChronoMovementComponent::BeginPlay()
 
   // Create the terrain
   Terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, Vehicle.get());
-
-  // carla::log_warning("ChronoBeginPlay");
 }
 
 void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)
 {
   VehicleControl = Control;
+  auto PowerTrain = Vehicle->GetPowertrain();
+  if (PowerTrain)
+  {
+    if (VehicleControl.bReverse)
+    {
+      PowerTrain->SetDriveMode(ChPowertrain::DriveMode::REVERSE);
+    }
+    else
+    {
+      PowerTrain->SetDriveMode(ChPowertrain::DriveMode::FORWARD);
+    }
+  }
 }
 
 void UChronoMovementComponent::TickComponent(float DeltaTime,
@@ -246,9 +233,7 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
   auto VehiclePos = Vehicle->GetVehiclePos() - ChVector<>(0,0,0.5);
   auto VehicleRot = Vehicle->GetVehicleRot();
   double Time = Vehicle->GetSystem()->GetChTime();
-  // carla::log_warning("Time:", Time);
-  // carla::log_warning("vehicle pos (", VehiclePos.x(), VehiclePos.y(), VehiclePos.z(), ")");
-  // carla::log_warning("vehicle rot (", VehicleRot.e1(), VehicleRot.e2(), VehicleRot.e3(), VehicleRot.e0(), ")");
+
   FVector NewLocation = ChronoToUE4Location(VehiclePos);
   FQuat NewRotation = ChronoToUE4Quat(VehicleRot);
   if(NewLocation.ContainsNaN() || NewRotation.ContainsNaN())
@@ -271,5 +256,37 @@ void UChronoMovementComponent::AdvanceChronoSimulation(float StepSize)
   Vehicle->Synchronize(Time, {Steering, Throttle, Brake}, *Terrain.get());
   Vehicle->Advance(StepSize);
   Sys.DoStepDynamics(StepSize);
+}
+
+FVector UChronoMovementComponent::GetVelocity() const
+{
+  if (Vehicle)
+  {
+    return ChronoToUE4Location(
+        Vehicle->GetVehiclePointVelocity(ChVector<>(0,0,0)));
+  }
+  return FVector();
+}
+
+int32 UChronoMovementComponent::GetVehicleCurrentGear() const
+{
+  if (Vehicle)
+  {
+    auto PowerTrain = Vehicle->GetPowertrain();
+    if (PowerTrain)
+    {
+      return PowerTrain->GetCurrentTransmissionGear();
+    }
+  }
+  return 0;
+}
+
+float UChronoMovementComponent::GetVehicleForwardSpeed() const
+{
+  if (Vehicle)
+  {
+    return GetVelocity().X;
+  }
+  return 0.f;
 }
 #endif
