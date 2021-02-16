@@ -63,9 +63,7 @@ __6.__ The package will be generated in the `output_folder` as `<map_package>.ta
         ./ImportAssets.sh
 ```
 
-__7.__ Two packages cannot have the same name in CARLA so you may need to change the name of the package folder. Go to `CarlaUE4/Content` and change the package name appropriately.
-
-__8.__ To run a simulation with the new map, run CARLA and then change the map using the `config.py` file:
+__7.__ To run a simulation with the new map, run CARLA and then change the map using the `config.py` file:
 
 ```sh
     cd PythonAPI/util

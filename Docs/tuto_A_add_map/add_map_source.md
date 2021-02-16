@@ -18,6 +18,7 @@ The ingestion process involves importing the relevant map files by compiling the
 - Ensure you are using a version of CARLA that has been built from source. If you are using a packaged (binary) version of CARLA then follow the tutorial [here][import_map_package].
 - You should have at least two files, `<mapName>.xodr` and `<mapName>.fbx` that have been [generated][rr_generate_map] from a map editor such as RoadRunner. 
 - These files should have the same value for `<mapName>` in order to be recognised as the same map.
+- You can ingest multiple maps into the same package. Each map should have a unique name.
 
 [import_map_package]: add_map_package.md
 [rr_generate_map]: generate_map_roadrunner.md
@@ -46,8 +47,10 @@ Before generating the pedestrian navigation, you may want to customize the map i
     - In the editor, go to the `Modes` panel and search for "spawn" in the `Search Classes` search bar.
     - Choose the type of spawning point you would like to create and drag it on to the map.
     - Place the spawn point about 0.5-1m above the ground to prevent collisions with the road.
-*   __Add crosswalk meshes to crosswalks defined in the `.xodr` file.__ Crosswalks defined inside the `.xodr` file remain in the logic of the map, but are not visible. For each of them, create a plane mesh that extends a bit over both sidewalks connected. __Place it overlapping the ground, and disable its physics and rendering__. 
-* __Generate new crosswalks__ by changing the name of the mesh to `Road_Crosswalk` or `Roads_Crosswalk`. Avoid doing this if the crosswalk is already defined the `.xodr` file. This will lead to duplication. 
+* __Generate new crosswalks__. Avoid doing this if the crosswalk is already defined the `.xodr` file as this will lead to duplication:
+    - Create a plane mesh that extends a bit over two sidewalks that you want to connect. 
+    - Place the mesh overlapping the ground and disable it's physics and rendering. 
+    - Change the name of the mesh to `Road_Crosswalk` or `Roads_Crosswalk`.  
 
 ![ue_crosswalks](../img/ue_crosswalks.jpg)  
 
@@ -59,7 +62,7 @@ __1.__ To prevent the map being too large to export, select the __BP_Sky object_
 
 ![ue_skybox_no_export](../img/ue_noexport.png) 
 
-__2.__ Check the name of the meshes. Name these planes following the conventional format of `Road_Crosswalk_<mapName>` or `Roads_Crosswalk_<mapName>`. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest):  
+__2.__ Double check your mesh names. Mesh names should start with any of the appropriate formats listed below in order to be recognized as areas where pedestrians can walk. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest):  
 
 *   Sidewalk = `Road_Sidewalk` or `Roads_Sidewalk` 
 *   Crosswalk = `Road_Crosswalk` or `Roads_Crosswalk` 
