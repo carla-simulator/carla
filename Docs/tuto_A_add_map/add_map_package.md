@@ -2,7 +2,7 @@
 
 This section describes the process of ingesting maps into __a package (binary) version of CARLA__. If you are using a version of CARLA that has been built from source to ingest maps then follow the guidelines [here][source_ingest] instead.
 
-The import process involves running a Docker image of Unreal Engine to import the relevant files and then export them as a standalone package which can then be configured to be used in CARLA. The Docker image takes around 4h and 600-700 GB to be built. This is only needed the first time the image is built.
+This process is only available for Linux systems. The import process involves running a Docker image of Unreal Engine to import the relevant files and then export them as a standalone package which can then be configured to be used in CARLA. The Docker image takes around 4h and 600-700 GB to be built. This is only needed the first time the image is built.
 
 - [__Before you begin__](#before-you-begin)
 - [__Map ingestion in a CARLA package__](#map-ingestion-in-a-carla-package)
