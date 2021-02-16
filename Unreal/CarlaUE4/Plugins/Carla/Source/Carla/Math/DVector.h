@@ -51,6 +51,14 @@ struct FDVector
     return *this;
   }
 
+  bool operator==(const FDVector& Other)
+  {
+    return X == Other.X &&
+           Y == Other.Y &&
+           Z == Other.Z;
+
+  }
+
   FDVector operator+(const FDVector& V) const
   {
     return FDVector(X + V.X, Y + V.Y, Z + V.Z);
