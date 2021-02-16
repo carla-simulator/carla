@@ -47,14 +47,12 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
 #ifdef WITH_CHRONO
   chrono::ChSystemNSC sys;
   chrono::vehicle::hmmwv::HMMWV_Full my_hmmwv;
-  // chrono::vehicle::WheeledVehicle Vehicle;
   std::shared_ptr<UERayCastTerrain> terrain;
 #endif
 
   uint64_t MaxSubsteps = 10;
   float MaxSubstepDeltaTime = 0.01;
   FVehicleControl VehicleControl;
-  // FString VehicleFilePath = "/home/axel/Documents/Chrono/build/data/hmmwv/vehicle/HMMWV_Vehicle.json";
 
 public:
 

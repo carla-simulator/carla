@@ -107,12 +107,12 @@ void DrawLine(UWorld* World, FVector Start, FVector End, FColor Color, float Thi
 
 double UERayCastTerrain::GetHeight(const ChVector<>& loc) const
 {
-  // DrawPoint(CarlaVehicle->GetWorld(), ChronoToUE4Location(loc), FColor(0,255,0), 5, 0.1);
+  DrawPoint(CarlaVehicle->GetWorld(), ChronoToUE4Location(loc), FColor(0,255,0), 5, 0.1);
   FVector Location = ChronoToUE4Location(loc + ChVector<>(0,0,0.5)); // small offset to detect the ground properly
   auto point_pair = GetTerrainProperties(Location);
   if (point_pair.first)
   {
-    // DrawPoint(CarlaVehicle->GetWorld(), point_pair.second.Location, FColor(255,0,0), 5, 0.1);
+    DrawPoint(CarlaVehicle->GetWorld(), point_pair.second.Location, FColor(255,0,0), 5, 0.1);
     double Height = CMTOM*static_cast<double>(point_pair.second.Location.Z);
     return Height;
   }
@@ -125,7 +125,7 @@ ChVector<> UERayCastTerrain::GetNormal(const ChVector<>& loc) const
   if (point_pair.first)
   {
     FVector Normal = point_pair.second.Normal;
-    // DrawLine(CarlaVehicle->GetWorld(), point_pair.second.Location, point_pair.second.Location+Normal*10, FColor(0,0,255), 1, 0.003);
+    DrawLine(CarlaVehicle->GetWorld(), point_pair.second.Location, point_pair.second.Location+Normal*10, FColor(0,0,255), 1, 0.003);
     auto ChronoNormal = UE4DirectionToChrono(Normal);
     return ChronoNormal;
   }
@@ -167,29 +167,20 @@ void UChronoMovementComponent::BeginPlay()
   my_hmmwv.SetTireStepSize(MaxSubstepDeltaTime);
   my_hmmwv.SetAerodynamicDrag(0.5, 5.0, 1.2);
   my_hmmwv.Initialize();
-  // vehicle = WheeledVehicle(vehicle::GetDataFile(carla::rpc::FromFString(VehicleFilePath)));
-  // vehicle.Initialize(ChCoordsys<>(ChronoLocation, ChronoRotation));
-  // vehicle.GetChassis()->SetFixed(false);
-
 
   // Create the terrain
   terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, &my_hmmwv.GetVehicle());
-
-  // carla::log_warning("ChronoBeginPlay");
 }
 
 void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)
 {
   VehicleControl = Control;
-  // my_hmmwv.Synchronize(Time, {Throttle, Steering, Brake}, *terrain.get());
-  // carla::log_warning("ChronoProcessControl");
 }
 
 void UChronoMovementComponent::TickComponent(float DeltaTime,
       ELevelTick TickType,
       FActorComponentTickFunction* ThisTickFunction)
 {
-  // carla::log_warning("DeltaTime:", DeltaTime);
   if (DeltaTime > MaxSubstepDeltaTime)
   {
     uint64_t NumberSubSteps = FGenericPlatformMath::FloorToInt(DeltaTime/MaxSubstepDeltaTime);
@@ -204,7 +195,6 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
       {
         AdvanceChronoSimulation(RemainingTime);
       }
-      // carla::log_warning("NumberSubSteps:", NumberSubSteps);
     }
     else
     {
@@ -213,12 +203,10 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
       {
         AdvanceChronoSimulation(SubDelta);
       }
-      // carla::log_warning("MaxSubsteps limit, SubDelta:", SubDelta);
     }
   }
   else
   {
-    // carla::log_warning("Single step");
     AdvanceChronoSimulation(DeltaTime);
   }
 
@@ -226,9 +214,6 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
   auto VehiclePos = vehicle->GetVehiclePos() - ChVector<>(0,0,0.5);
   auto VehicleRot = vehicle->GetVehicleRot();
   double Time = my_hmmwv.GetSystem()->GetChTime();
-  // carla::log_warning("Time:", Time);
-  // carla::log_warning("vehicle pos (", VehiclePos.x(), VehiclePos.y(), VehiclePos.z(), ")");
-  // carla::log_warning("vehicle rot (", VehicleRot.e1(), VehicleRot.e2(), VehicleRot.e3(), VehicleRot.e0(), ")");
   FVector NewLocation = ChronoToUE4Location(VehiclePos);
   FQuat NewRotation = ChronoToUE4Quat(VehicleRot);
   if(NewLocation.ContainsNaN() || NewRotation.ContainsNaN())
@@ -239,8 +224,6 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
   }
   CarlaVehicle->SetActorLocation(NewLocation);
   CarlaVehicle->SetActorRotation(NewRotation);
-
-  // carla::log_warning("ChronoTick");
 }
 
 void UChronoMovementComponent::AdvanceChronoSimulation(float StepSize)
