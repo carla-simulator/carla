@@ -57,11 +57,7 @@ __5.__ Navigate to `~/carla/Util/Docker`. This is where the ingestion script is 
 > !!! Warning
     If the argument `--packages map_package` is not provided, the Docker image will make a package of CARLA. 
 
-__6.__ The package will be generated in the `output_folder` as `<map_package>.tar.gz`. This is the standalone package that is now ready to be imported into CARLA:
-
-> *   __On Windows__ extract the package to the `WindowsNoEditor` folder. 
-
-> *   __On Linux__ move the package to the `Import` folder in the CARLA root directory (of the package/binary version where you will be using the map), and run the following script from the root directory to import it: 
+__6.__ The package will be generated in the `output_folder` as `<map_package>.tar.gz`. This is the standalone package that is now ready to be imported into CARLA. Move the package to the `Import` folder in the CARLA root directory (of the package/binary version where you will be using the map), and run the following script from the root directory to import it: 
 
 ```sh
         ./ImportAssets.sh
