@@ -52,7 +52,9 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
                 os.path.join(pwd, 'dependencies/lib/libosm2odr.a'),
-                os.path.join(pwd, 'dependencies/lib/libxerces-c.a')]
+                os.path.join(pwd, 'dependencies/lib/libxerces-c.a'),
+                os.path.join(pwd, 'dependencies/lib/libproj.a'),
+                os.path.join(pwd, 'dependencies/lib/libsqlite3.a')]
             extra_link_args += ['-lz']
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
