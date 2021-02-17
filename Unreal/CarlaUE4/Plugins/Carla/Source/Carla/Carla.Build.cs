@@ -180,6 +180,7 @@ public class Carla : ModuleRules
         PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
         PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
         PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
+        bUseRTTI = true;
       }
     }
     else
@@ -204,6 +205,7 @@ public class Carla : ModuleRules
         RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
         RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_robot.so"));
         bUseRTTI = true;
+        bEnableExceptions = true;
       }
     }
 
