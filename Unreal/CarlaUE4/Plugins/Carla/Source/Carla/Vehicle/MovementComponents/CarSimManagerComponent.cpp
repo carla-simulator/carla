@@ -16,12 +16,11 @@
 #endif
 
 void UCarSimManagerComponent::CreateCarsimComponent(
-      ACarlaWheeledVehicle* Vehicle, FString Simfile, int ForceFrames)
+      ACarlaWheeledVehicle* Vehicle, FString Simfile)
 {
   #ifdef WITH_CARSIM
   UCarSimManagerComponent* CarSimManagerComponent = NewObject<UCarSimManagerComponent>(Vehicle);
   CarSimManagerComponent->SimfilePath = Simfile;
-  CarSimManagerComponent->FramesApplyingForce = ForceFrames;
   CarSimManagerComponent->RegisterComponent();
   Vehicle->SetCarlaMovementComponent(CarSimManagerComponent);
   #else
@@ -50,8 +49,6 @@ void UCarSimManagerComponent::BeginPlay()
       SpawnParams);
   CarSimMovementComponent = NewObject<UCarSimMovementComponent>(OffsetActor);
 
-  // CarSimMovementComponent = NewObject<UCarSimMovementComponent>(this);
-  // BaseMovementComponent = CarSimMovementComponent;
   carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
   CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(false);
   CarlaVehicle->GetVehicleMovementComponent()->Deactivate();

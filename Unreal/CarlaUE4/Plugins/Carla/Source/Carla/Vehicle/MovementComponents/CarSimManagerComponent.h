@@ -32,7 +32,7 @@ class CARLA_API UCarSimManagerComponent : public UBaseCarlaMovementComponent
 public:
 
   static void CreateCarsimComponent(
-      ACarlaWheeledVehicle* Vehicle, FString Simfile, int ForceFrames = 1);
+      ACarlaWheeledVehicle* Vehicle, FString Simfile);
 
   FString SimfilePath = "";
 
@@ -53,9 +53,6 @@ public:
   float GetVehicleForwardSpeed() const override;
 
 private:
-
-  uint64_t ResetForces { 0 };
-  int FramesApplyingForce { 1 };
 
   // On car mesh hit, only works when carsim is enabled
   UFUNCTION()
