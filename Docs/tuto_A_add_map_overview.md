@@ -35,7 +35,20 @@ This is where the route splits in two:
 
 Regardless of the method used, there are some common themes involved in the ingestion process:
 	
-- __Package `.json` file and folder structure__. Map packages have a particular folder structure and this structure is described in a `.json` file. This file is automatically created during the import process if it is not provided by the user. 
+- __Package `.json` file and folder structure__. Map packages have a particular folder structure and this structure is described in a `.json` file. This file is automatically created during the import process if it is not provided by the user. If you prefer to provide the `.json` file yourself, find below an example of the file structure:
+```json
+	{
+		"maps": [
+			{
+				"source": "./MapName.fbx", 
+				"use_carla_materials": true, 
+				"name": "MapName", 
+				"xodr": "./MapName.xodr"
+			}
+		], 
+		"props": []
+	}
+```
 - __Traffic signs and traffic lights.__ The simulator will generate the traffic lights, stops and yields automatically when running. These will be created according to their `.xodr` definition. Any other landmarks present in the map will not be physically on scene, but they can be queried using the API.  
 *   __Pedestrian navigation.__ The ingestion process will generate a `.bin` file describing the pedestrian navigation. It is based on the sidewalks and crosswalks that appear in the `.xodr` definition. This can only be modified if working in a build from source.  
 
