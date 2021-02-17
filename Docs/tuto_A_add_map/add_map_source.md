@@ -37,7 +37,7 @@ __2.__ Run the command below to ingest the files:
 __Note that there are two parameter flags that can be set__:
 
 - `--package <package_name>` specifies the name of the package. By default, this is set to `map_package`. Two packages cannot have the same name, so using the default value will lead to errors on a subsequent ingestion. __It is highly recommended to change the name of the package__. 
-- `--no-carla-materials` specifies that you do not want to use the default CARLA materials (road textures etc). You will use the RoadRunner materials instead. This flag is only required if you are not providing your own [`.json` file](../tuto_A_add_map_overview.md#ingest-the-map-in-carla).
+- `--no-carla-materials` specifies that you do not want to use the default CARLA materials (road textures etc). You will use the RoadRunner materials instead. This flag is only required if you are not providing your own [`.json` file](../tuto_A_add_map_overview.md#ingest-the-map-in-carla). Any value in the `.json` file will override this flag.
 
 ### Customize the map
 
