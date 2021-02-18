@@ -71,7 +71,7 @@ void ACarlaGameModeBase::InitGame(
         FTransform());
     check(LMManager);
     // TODO: parameters
-    LMManager->GenerateMap("/Game/Carla/Maps/Map99x99");
+    LMManager->GenerateMap("/Game/Carla/Maps/Map99x99_2km");
     /*
     */
     InMapName = "Map99x99";
@@ -150,9 +150,8 @@ void ACarlaGameModeBase::BeginPlay()
 
   if(LMManager)
   {
-    // TODO: match with vehicle
-    ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
-    LMManager->AddActorToConsider(Player->GetPlayerController(World)->GetPawn());
+    //ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
+    //LMManager->AddActorToConsider(Player->GetPlayerController(World)->GetPawn());
   }
 
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
