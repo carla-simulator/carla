@@ -20,7 +20,7 @@ CarlaUE4Editor: LibCarla
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build $(ARGS)
 
 launch: CarlaUE4Editor
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch $(ARGS)
 
 launch-only:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
@@ -71,7 +71,7 @@ LibCarla: setup
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --client
 
 setup:
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.1
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.1 $(ARGS)
 
 .PHONY: Plugins
 plugins:
