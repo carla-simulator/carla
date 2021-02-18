@@ -56,7 +56,6 @@ struct FDVector
     return X == Other.X &&
            Y == Other.Y &&
            Z == Other.Z;
-
   }
 
   FDVector operator+(const FDVector& V) const
@@ -70,5 +69,9 @@ struct FDVector
     return FDVector(X * RScale, Y * RScale, Z * RScale);
   }
 
+  FDVector operator*(float Scale) const
+  {
+    return FDVector(X * Scale, Y * Scale, Z * Scale);
+  }
 
 };
