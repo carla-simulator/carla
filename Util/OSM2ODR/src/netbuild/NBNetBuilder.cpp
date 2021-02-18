@@ -614,9 +614,9 @@ NBNetBuilder::compute(OptionsCont& oc, const std::set<std::string>& explicitTurn
     WRITE_MESSAGE("-----------------------------------------------------");
     NBRequest::reportWarnings();
     // report on very large networks
-    if (MAX2(geoConvHelper.getConvBoundary().xmax(), geoConvHelper.getConvBoundary().ymax()) > 1000000 ||
-            MIN2(geoConvHelper.getConvBoundary().xmin(), geoConvHelper.getConvBoundary().ymin()) < -1000000) {
-        WRITE_WARNING("Network contains very large coordinates and will probably flicker in the GUI. Check for outlying nodes and make sure the network is shifted to the coordinate origin");
+    if (MAX2(geoConvHelper.getConvBoundary().xmax(), geoConvHelper.getConvBoundary().ymax()) > 50000 ||
+            MIN2(geoConvHelper.getConvBoundary().xmin(), geoConvHelper.getConvBoundary().ymin()) < -50000) {
+        WRITE_WARNING("Network contains very large coordinates and could cause problems with Unreal Engine coordinates. The recomended maximum value in any axis is 50000");
     }
 }
 
@@ -637,8 +637,9 @@ void
 NBNetBuilder::moveToOrigin(GeoConvHelper& geoConvHelper, bool lefthand) {
     long before = PROGRESS_BEGIN_TIME_MESSAGE("Moving network to origin");
     Boundary boundary = geoConvHelper.getConvBoundary();
-    const double x = -boundary.xmin();
-    const double y = -(lefthand ? boundary.ymax() : boundary.ymin());
+    // Center the network
+    const double x = -(boundary.xmin() + boundary.xmax())*0.5;
+    const double y = -(boundary.ymin() + boundary.ymax())*0.5;
     //if (lefthand) {
     //    y = boundary.ymax();
     //}
