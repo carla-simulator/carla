@@ -30,7 +30,7 @@
 ALargeMapManager::ALargeMapManager()
 {
   PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.TickInterval = 5.0f;
+  PrimaryActorTick.TickInterval = TickInterval;
 }
 
 ALargeMapManager::~ALargeMapManager()
@@ -81,7 +81,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
   CurrentOriginInt = InDstOrigin;
   CurrentOriginD = FDVector(InDstOrigin);
 
-  GEngine->AddOnScreenDebugMessage(66, 30.0f, FColor::Yellow,
+  GEngine->AddOnScreenDebugMessage(66, MsgTime, FColor::Yellow,
     FString::Printf(TEXT("Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString()));
   LM_LOG(LogCarla, Error, TEXT("PostWorldOriginOffset Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString());
 
@@ -427,11 +427,11 @@ void ALargeMapManager::UpdateActorsToConsiderPosition()
     return;
   }
 
-  TArray<AActor*> ActorsToRemove;
+  TArray<FActorToConsider> ActorsToRemove;
   for (FActorToConsider& ActorToConsider : ActorsToConsider)
   {
     AActor* Actor = ActorToConsider.Actor;
-    if (Actor && !Actor->IsPendingKillPending())
+    if (IsValid(Actor))
     {
       // Relative location to the current origin
       FDVector ActorLocation(Actor->GetActorLocation());
@@ -440,13 +440,13 @@ void ALargeMapManager::UpdateActorsToConsiderPosition()
     }
     else
     {
-      ActorsToRemove.Add(Actor);
+      ActorsToRemove.Add(ActorToConsider);
     }
   }
 
-  for (int i = 0; i < ActorsToRemove.Num(); i++)
+  for (const FActorToConsider& ActorToRemove : ActorsToRemove)
   {
-    // RemoveActorToConsider(ActorsToRemove[i]);
+    ActorsToConsider.Remove(ActorToRemove);
   }
 }
 
@@ -684,10 +684,10 @@ void ALargeMapManager::PrintMapInfo()
     Output += Level->GetName() + " - " + Level->GetFullName() + " - " + Level->GetWorldAssetPackageFName().ToString() + "\n";
   }
   */
-  GEngine->AddOnScreenDebugMessage(0, 30.0f, FColor::Cyan, Output);
+  GEngine->AddOnScreenDebugMessage(0, MsgTime, FColor::Cyan, Output);
 
   int LastMsgIndex = TilesDistMsgIndex;
-  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, FColor::White, TEXT("Closest tiles - Distance:"));
+  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White, TEXT("Closest tiles - Distance:"));
 
   ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
   FVector ViewLocation;
@@ -702,16 +702,16 @@ void ALargeMapManager::PrintMapInfo()
     FColor MsgColor = (Levels.Contains(Level->GetLoadedLevel())) ? FColor::Green : FColor::Red;
     if (Distance < (TileSide * 2.0f))
     {
-      GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, MsgColor,
+      GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, MsgColor,
         FString::Printf(TEXT("%s       %.2f"), *Level->GetName(), Distance / (1000.0f * 100.0f)));
     }
     if (LastMsgIndex < MaxTilesDistMsgIndex) break;
   }
 
   LastMsgIndex = ClientLocMsgIndex;
-  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, FColor::White,
+  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("Origin: %s km"), *(FDVector(CurrentOriginInt) / (1000 * 100)).ToString()) );
-  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, FColor::White,
+  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("Actors To Consider (%d)"), ActorsToConsider.Num()) );
   for (const FActorToConsider& ActorToConsider : ActorsToConsider)
   {
@@ -723,7 +723,7 @@ void ALargeMapManager::PrintMapInfo()
     Output += FString::Printf(TEXT("Local Loc: %s meters\n"), *(TileActorLocation / ToKm).ToString());
     Output += FString::Printf(TEXT("Client Loc: %s km\n"), *(ClientActorLocation / ToKm).ToString());
     Output += "---------------";
-    GEngine->AddOnScreenDebugMessage(LastMsgIndex++, 30.0f, PositonMsgColor, Output);
+    GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, PositonMsgColor, Output);
 
     if (LastMsgIndex > MaxClientLocMsgIndex) break;
   }
