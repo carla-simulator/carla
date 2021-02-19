@@ -47,8 +47,6 @@ public:
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
 
-public:
-
   /// Load a new map and start a new episode.
   ///
   /// If @a MapString is empty, the current map is reloaded.
@@ -67,8 +65,6 @@ public:
   // -- Episode settings -------------------------------------------------------
   // ===========================================================================
 
-public:
-
   UFUNCTION(BlueprintCallable)
   const FEpisodeSettings &GetSettings() const
   {
@@ -81,8 +77,6 @@ public:
   // ===========================================================================
   // -- Retrieve info about this episode ---------------------------------------
   // ===========================================================================
-
-public:
 
   /// Return the unique id of this episode.
   auto GetId() const
@@ -125,8 +119,6 @@ public:
   // -- Retrieve special actors ------------------------------------------------
   // ===========================================================================
 
-public:
-
   UFUNCTION(BlueprintCallable)
   APawn *GetSpectatorPawn() const
   {
@@ -147,8 +139,6 @@ public:
   // ===========================================================================
   // -- Actor look up methods --------------------------------------------------
   // ===========================================================================
-
-public:
 
   /// Find a Carla actor by id.
   ///
@@ -181,8 +171,6 @@ public:
   // ===========================================================================
   // -- Actor handling methods -------------------------------------------------
   // ===========================================================================
-
-public:
 
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
@@ -256,8 +244,6 @@ public:
   // -- Other methods ----------------------------------------------------------
   // ===========================================================================
 
-public:
-
   /// Create a serializable object describing the actor.
   carla::rpc::Actor SerializeActor(FActorView ActorView) const;
 
@@ -281,6 +267,10 @@ public:
   }
 
   std::string StartRecorder(std::string name, bool AdditionalData);
+
+  FIntVector GetCurrentMapOrigin() const { return CurrentMapOrigin; }
+
+  void SetCurrentMapOrigin(const FIntVector& NewOrigin) { CurrentMapOrigin = NewOrigin; }
 
 private:
 
@@ -331,4 +321,6 @@ private:
   ACarlaRecorder *Recorder = nullptr;
 
   carla::geom::GeoLocation MapGeoReference;
+
+  FIntVector CurrentMapOrigin;
 };

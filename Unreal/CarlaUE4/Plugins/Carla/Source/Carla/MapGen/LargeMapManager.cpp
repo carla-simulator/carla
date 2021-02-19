@@ -81,12 +81,16 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
   CurrentOriginInt = InDstOrigin;
   CurrentOriginD = FDVector(InDstOrigin);
 
+  UWorld* World = GetWorld();
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+  CarlaEpisode->SetCurrentMapOrigin(CurrentOriginInt);
+
+#if WITH_EDITOR
   GEngine->AddOnScreenDebugMessage(66, MsgTime, FColor::Yellow,
     FString::Printf(TEXT("Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString()));
   LM_LOG(LogCarla, Error, TEXT("PostWorldOriginOffset Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString());
 
   // This is just to update the color of the msg with the same as the closest map
-  UWorld* World = GetWorld();
   const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
   FColor LevelColor = FColor::White;
   float MinDistance = 10000000.0f;
@@ -101,6 +105,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
       PositonMsgColor = Level->LevelColor.ToFColor(false);
     }
   }
+#endif // WITH_EDITOR
 }
 
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
