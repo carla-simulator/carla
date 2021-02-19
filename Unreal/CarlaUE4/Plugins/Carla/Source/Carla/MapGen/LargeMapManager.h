@@ -84,6 +84,8 @@ protected:
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
+  void OnActorSpawned(AActor *Actor);
+
 public:
   // Called every frame
   virtual void Tick(float DeltaTime) override;
@@ -102,6 +104,9 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   bool IsLevelOfTileLoaded(FIntVector InTileID) const;
+
+  // TODO: IsTileLoaded(FDVector Location)
+  // TODO: IsTileLoaded(FVector Location)
 
 protected:
 
@@ -128,24 +133,39 @@ protected:
 
   void UpdateTilesState();
 
-  void UpdateTilesState(const FActorToConsider& ActorToConsider);
+  void GetTilesToConsider(
+    const FActorToConsider& ActorToConsider,
+    TSet<uint64>& OutTilesToConsider);
+
+  void GetTilesThatNeedToChangeState(
+    const TSet<uint64>& InTilesToConsider,
+    TSet<uint64>& OutTilesToBeVisible,
+    TSet<uint64>& OutTilesToHidde);
+
+  void UpdateTileState(
+    const TSet<uint64>& InTilesToUpdate,
+    bool InShouldBlockOnLoad,
+    bool InShouldBeLoaded,
+    bool InShouldBeVisible);
+
+  void UpdateCurrentTilesLoaded(
+    const TSet<uint64>& InTilesToBeVisible,
+    const TSet<uint64>& InTilesToHidde);
 
   void SpawnAssetsInTile(FCarlaMapTile& Tile);
-
-  void OnActorSpawned(AActor *Actor);
 
   TMap<uint64, FCarlaMapTile> MapTiles;
 
   TArray<FActorToConsider> ActorsToConsider;
 
-  // TArray<FVector, TInlineAllocator<16>> TileLocationsToLoad;
+  TSet<uint64> CurrentTilesLoaded;
 
   // Current Origin after rebase
-  FIntVector CurrentOriginInt{0};
+  FIntVector CurrentOriginInt{ 0 };
   FDVector CurrentOriginD;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float LayerStreamingDistance = 13.0f * 1000.0f * 100.0f;
+  float LayerStreamingDistance = 3.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
@@ -159,9 +179,9 @@ protected:
 #if WITH_EDITOR
 
   UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
-  void GenerateMap_Editor()
+    void GenerateMap_Editor()
   {
-    if(!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
+    if (!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
   }
 
   FString GenerateTileName(uint64 TileID);
@@ -172,6 +192,8 @@ protected:
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   FString AssetsPath = "";
+
+  FString BaseTileMapPath = "/Game/Carla/Maps/LargeMap/EmptyTileBase";
 
   FColor PositonMsgColor = FColor::Purple;
 
