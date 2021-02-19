@@ -104,7 +104,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
   {
     UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
-    if (reset_settings)
+    if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
   }
   return bIsFileFound;
