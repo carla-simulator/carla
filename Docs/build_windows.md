@@ -71,7 +71,7 @@ Be aware that to download this fork of Unreal Engine, __you need to have a GitHu
 
 To build the modified version of Unreal Engine:
 
-__1.__ In a terminal, navigate to the location you want to save Unreal Engine and clone the 4.26 branch:
+__1.__ In a terminal, navigate to the location you want to save Unreal Engine and clone the _carla_ branch:
 
 ```sh
     git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
