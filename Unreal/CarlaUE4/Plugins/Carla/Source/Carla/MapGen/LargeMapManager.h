@@ -165,6 +165,9 @@ protected:
   FDVector CurrentOriginD;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  float TickInterval = 0.0f;
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float LayerStreamingDistance = 3.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
@@ -202,6 +205,9 @@ protected:
 
   const int32 ClientLocMsgIndex = 200;
   const int32 MaxClientLocMsgIndex = ClientLocMsgIndex + 10;
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  float MsgTime = 1.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool bPrintMapInfo = true;
