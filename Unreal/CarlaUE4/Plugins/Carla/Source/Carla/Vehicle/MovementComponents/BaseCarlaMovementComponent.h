@@ -20,6 +20,7 @@ class CARLA_API UBaseCarlaMovementComponent : public UMovementComponent
 
 protected:
 
+  UPROPERTY()
   ACarlaWheeledVehicle* CarlaVehicle;
 
 public:
