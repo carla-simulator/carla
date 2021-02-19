@@ -55,7 +55,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
 }
 
-bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool reset_settings)
+bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
   FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
   bool bIsFileFound = false;
