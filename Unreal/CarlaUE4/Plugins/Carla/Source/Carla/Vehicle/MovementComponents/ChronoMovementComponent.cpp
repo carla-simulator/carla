@@ -6,16 +6,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "ChronoMovementComponent.h"
-#include "Carla/Util/RayTracer.h"
 #include "compiler/disable-ue4-macros.h"
-#include "carla/rpc/String.h"
+#include <carla/rpc/String.h>
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 #include "compiler/enable-ue4-macros.h"
+#include "Carla/Util/RayTracer.h"
 
-#ifdef WITH_CHRONO
-using namespace chrono;
-using namespace chrono::vehicle;
-#endif
 
 void UChronoMovementComponent::CreateChronoMovementComponent(
     ACarlaWheeledVehicle* Vehicle,
@@ -28,7 +24,6 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
 {
   #ifdef WITH_CHRONO
   UChronoMovementComponent* ChronoMovementComponent = NewObject<UChronoMovementComponent>(Vehicle);
-  carla::log_warning("JSONS:", carla::rpc::FromFString(BaseJSONPath), carla::rpc::FromFString(VehicleJSON), carla::rpc::FromFString(PowertrainJSON), carla::rpc::FromFString(TireJSON));
   if (!VehicleJSON.IsEmpty())
   {
     ChronoMovementComponent->VehicleJSON = VehicleJSON;
@@ -55,6 +50,9 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
 }
 
 #ifdef WITH_CHRONO
+
+using namespace chrono;
+using namespace chrono::vehicle;
 
 constexpr double CMTOM = 0.01;
 ChVector<> UE4LocationToChrono(const FVector& Location)
@@ -156,21 +154,42 @@ void UChronoMovementComponent::BeginPlay()
 
   // Set base path for vehicle JSON files
   vehicle::SetDataPath(carla::rpc::FromFString(BaseJSONPath));
+  
+  std::string BasePath_string = carla::rpc::FromFString(BaseJSONPath);
+
+  // Create full path for json files
+  // Do NOT use vehicle::GetDataFile() as strings from chrono lib
+  // messes with unreal's std lib
+  std::string VehicleJSON_string = carla::rpc::FromFString(VehicleJSON);
+  std::string VehiclePath_string = BasePath_string + VehicleJSON_string;
+  FString VehicleJSONPath = carla::rpc::ToFString(VehiclePath_string);
+
+  std::string PowerTrainJSON_string = carla::rpc::FromFString(PowertrainJSON);
+  std::string PowerTrain_string = BasePath_string + PowerTrainJSON_string;
+  FString PowerTrainJSONPath = carla::rpc::ToFString(PowerTrain_string);
+  
+  std::string TireJSON_string = carla::rpc::FromFString(TireJSON);
+  std::string Tire_string = BasePath_string + TireJSON_string;
+  FString TireJSONPath = carla::rpc::ToFString(Tire_string);
+  
+  UE_LOG(LogCarla, Log, TEXT("Loading Chrono files: Vehicle: %s, PowerTrain: %s, Tire: %s"), 
+      *VehicleJSONPath,
+      *PowerTrainJSONPath,
+      *TireJSONPath);
   // Create JSON vehicle
   Vehicle = chrono_types::make_shared<WheeledVehicle>(
       &Sys,
-      vehicle::GetDataFile(carla::rpc::FromFString(VehicleJSON)));
+	  VehiclePath_string);
   Vehicle->Initialize(ChCoordsys<>(ChronoLocation, ChronoRotation));
   Vehicle->GetChassis()->SetFixed(false);
   // Create and initialize the powertrain System
   auto powertrain = ReadPowertrainJSON(
-      vehicle::GetDataFile(carla::rpc::FromFString(PowertrainJSON)));
+	  PowerTrain_string);
   Vehicle->InitializePowertrain(powertrain);
   // Create and initialize the tires
   for (auto& axle : Vehicle->GetAxles()) {
       for (auto& wheel : axle->GetWheels()) {
-          auto tire = ReadTireJSON(
-              vehicle::GetDataFile(carla::rpc::FromFString(TireJSON)));
+          auto tire = ReadTireJSON(Tire_string);
           Vehicle->InitializeTire(tire, wheel, VisualizationType::MESH);
       }
   }
