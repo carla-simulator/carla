@@ -230,14 +230,14 @@ namespace detail {
 
   void Client::SetWheelSteerDirection(
         rpc::ActorId vehicle, 
-        uint8_t vehicle_wheel,
+        rpc::VehicleWheelLocation vehicle_wheel,
         float angle_in_deg){
     return _pimpl->AsyncCall("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
   }
 
   float Client::GetWheelSteerAngle(
         rpc::ActorId vehicle,
-        uint8_t wheel_location){
+        rpc::VehicleWheelLocation wheel_location){
     return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
   }
 

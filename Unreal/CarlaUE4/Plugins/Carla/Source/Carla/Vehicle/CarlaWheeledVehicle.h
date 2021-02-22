@@ -30,8 +30,6 @@
 
 class UBoxComponent;
 
-///Enum for identifying the location of the wheel in vehicle
-///Works for bikes too
 UENUM()
 enum class VehicleWheelLocation : uint8 {
 
@@ -39,9 +37,8 @@ enum class VehicleWheelLocation : uint8 {
   FR_Wheel = 1,
   BL_Wheel = 2,
   BR_Wheel = 3,
-  //Bike front wheel
+  //Use for bikes and bicycles
   Front_Wheel = 0,
-  //Bike back wheel
   Back_Wheel = 1,
 };
 
@@ -277,10 +274,6 @@ public:
   ///NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetWheelSteerDirection(VehicleWheelLocation WheelLocation, float AngleInDeg);
-  
-  ///Should the vehicle wheels use the rotations input by the user?
-  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void EnableWheelsCustomRotations(bool Enable = true);
   
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelSteerAngle(VehicleWheelLocation WheelLocation);

@@ -24,6 +24,7 @@
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/VehicleWheels.h"
 
 #include <boost/optional.hpp>
 
@@ -446,13 +447,11 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
-    void SetWheelSteerDirection(Vehicle &vehicle, uint8_t wheel_location, float angle_in_deg){
-      
+    void SetWheelSteerDirection(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
       _client.SetWheelSteerDirection(vehicle.GetId(), wheel_location, angle_in_deg);
     }
 
-    float GetWheelSteerAngle(Vehicle &vehicle, uint8_t wheel_location){
-
+    float GetWheelSteerAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
       return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
     }
 

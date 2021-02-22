@@ -46,6 +46,7 @@
 #include <carla/rpc/VehicleLightStateList.h>
 #include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
+#include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -907,7 +908,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(set_wheel_steer_direction) << [this](
     cr::ActorId ActorId,
-    uint8_t WheelLocation,
+    cr::VehicleWheelLocation WheelLocation,
     float AngleInDeg) -> R<void>
   {
 
@@ -930,7 +931,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(get_wheel_steer_angle) << [this](
       const cr::ActorId ActorId,
-      uint8_t WheelLocation) -> R<float>
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);

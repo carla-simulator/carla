@@ -128,6 +128,15 @@ void export_actor() {
     .value("All", cr::VehicleLightState::LightState::All)
   ;
 
+  enum_<cr::VehicleWheelLocation>("VehicleWheelLocation")
+    .value("FL_Wheel", cr::VehicleWheelLocation::FL_Wheel)
+    .value("FR_Wheel", cr::VehicleWheelLocation::FR_Wheel)
+    .value("BL_Wheel", cr::VehicleWheelLocation::BL_Wheel)
+    .value("BR_Wheel", cr::VehicleWheelLocation::BR_Wheel)
+    .value("Front_Wheel", cr::VehicleWheelLocation::Front_Wheel)
+    .value("Back_Wheel", cr::VehicleWheelLocation::Back_Wheel)
+  ;
+  
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))

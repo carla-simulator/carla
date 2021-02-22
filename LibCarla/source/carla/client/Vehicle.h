@@ -11,6 +11,7 @@
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleWheels.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
 using carla::traffic_manager::constants::Networking::TM_DEFAULT_PORT;
@@ -32,6 +33,8 @@ namespace client {
     using PhysicsControl = rpc::VehiclePhysicsControl;
     using LightState = rpc::VehicleLightState::LightState;
     using TM = traffic_manager::TrafficManager;
+    using WheelLocation = carla::rpc::VehicleWheelLocation;
+
 
     explicit Vehicle(ActorInitializer init);
 
@@ -48,11 +51,12 @@ namespace client {
     void SetLightState(const LightState &light_state);
 
     /// Sets a @a Rotation to a wheel of the vehicle (affects the bone of the car skeleton, not the physics)
-    ///0 = FL, 1 = FR, 2 = BL, 3 = BR
-    void SetWheelSteerDirection(uint8_t wheel_location, float angle_in_deg);
+    void SetWheelSteerDirection(WheelLocation wheel_location, float angle_in_deg);
 
-    /// Gets a @a Rotation from a wheel (based on it's physics) of the vehicle
-    float GetWheelSteerAngle(uint8_t wheel_location);
+    /// Return a @a Rotation from a wheel of the vehicle
+    ///
+    /// @note The function returns the rotation of the vehicle based on the it's physics
+    float GetWheelSteerAngle(WheelLocation wheel_location);
 
     /// Return the control last applied to this vehicle.
     ///
@@ -106,6 +110,6 @@ namespace client {
 
     Control _control;
   };
-
+  
 } // namespace client
 } // namespace carla
