@@ -31,13 +31,13 @@ CTRL_C_PRESSED_MESSAGE = "ctrl-c is pressed."
 # ----- function -----
 
 def run_carla_sumo_synchronization(args, env, sumo_files):
-    return Popen(f"python run_synchronization.py {sumo_files['sumocfg']} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} > /dev/null 2>&1", shell=True)
+    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host}", shell=True)
 
 def run_veins_sumo_synchronization(args, env, sumo_files):
     return Popen(f"vagrant ssh -c \"python /vagrant/my-sumo-launched.py --sh localhost --sp {args.veins_sumo_port}\"", cwd=args.veins_vagrant_path, shell=True)
 
 def start_carla_veins_data_server(args, env, sumo_files):
-    return Popen(f"python carla_veins_data_server --host {args.data_api_host} --port {args.data_api_port} > /dev/null 2>&1", shell=True)
+    return Popen(f"python carla_veins_data_server.py --host {args.data_api_host} --port {args.data_api_port}", shell=True)
 
 def start_sumo_for_carla(args, env, sumo_files):
     return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.carla_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
