@@ -28,6 +28,9 @@ set BOOST_VERSION=1.72.0
 set INSTALLERS_DIR=%ROOT_PATH:/=\%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
+set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
+set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Binaries\Win64
+set USE_CHRONO=false
 
 :arg-parse
 if not "%1"=="" (
@@ -36,6 +39,9 @@ if not "%1"=="" (
     )
     if "%1"=="--boost-toolset" (
         set TOOLSET=%2
+    )
+    if "%1"=="--chrono" (
+        set USE_CHRONO=true
     )
     if "%1"=="-h" (
         goto help
@@ -184,7 +190,41 @@ rem ============================================================================
 
 echo %FILE_N% Installing Xercesc...
 call "%INSTALLERS_DIR%install_xercesc.bat"^
- --build-dir "%INSTALLATION_DIR%"^
+ --build-dir "%INSTALLATION_DIR%"
+
+rem ============================================================================
+rem -- Download and install Chrono ----------------------------------------------
+rem ============================================================================
+
+if %USE_CHRONO% == true (
+    echo %FILE_N% Installing Chrono...
+    call "%INSTALLERS_DIR%install_chrono.bat"^
+     --build-dir "%INSTALLATION_DIR%"
+
+    if not exist "%CARLA_DEPENDENCIES_FOLDER%" (
+        mkdir "%CARLA_DEPENDENCIES_FOLDER%"
+    )
+    if not exist "%CARLA_DEPENDENCIES_FOLDER%include" (
+        mkdir "%CARLA_DEPENDENCIES_FOLDER%include"
+    )
+    if not exist "%CARLA_DEPENDENCIES_FOLDER%lib" (
+        mkdir "%CARLA_DEPENDENCIES_FOLDER%lib"
+    )
+    if not exist "%CARLA_DEPENDENCIES_FOLDER%dll" (
+        mkdir "%CARLA_DEPENDENCIES_FOLDER%dll"
+    )
+    if not exist "%CARLA_BINARIES_FOLDER%" (
+        mkdir %CARLA_BINARIES_FOLDER%
+    )
+    echo "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
+    xcopy /Y /S /I "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
+    copy "%INSTALLATION_DIR%chrono-install\lib\*.lib" "%CARLA_DEPENDENCIES_FOLDER%lib\*.lib" > NUL
+    copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_DEPENDENCIES_FOLDER%dll\*.dll" > NUL
+    xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
+    rem Workaround for unreal not finding the .dll files
+    copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_BINARIES_FOLDER%\*.dll" > NUL
+    
+)
 
 rem ============================================================================
 rem -- Assets download URL -----------------------------------------------------
@@ -228,7 +268,9 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")
 >>"%CMAKE_CONFIG_FILE%" echo   # Prevent exceptions
->>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(/GR-)
+if not %USE_CHRONO% == true (
+>>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(/GR-^)
+)
 >>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(/EHsc)
 >>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DASIO_NO_EXCEPTIONS)
 >>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DBOOST_NO_EXCEPTIONS)

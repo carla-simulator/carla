@@ -68,8 +68,7 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 Building CARLA
 --------------
 
-Use `git clone` or download the project from this page. Note that the master branch contains the latest fixes and features, for the latest stable code may be
-best to switch to the `stable` branch.
+Use `git clone` or download the project from this page. Note that the master branch contains the most recent release of CARLA with the latest fixes and features.
 
 Then follow the instruction at [How to build on Linux][buildlinuxlink] or [How to build on Windows][buildwindowslink].  
 The Linux build needs for an UE patch to solve some visualization issues regarding Vulkan. Those already working with a Linux build should install the patch and make the UE build again using the following commands.  
