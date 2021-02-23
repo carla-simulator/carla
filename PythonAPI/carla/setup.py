@@ -98,8 +98,6 @@ def get_libcarla_extensions():
         else:
             raise NotImplementedError
     elif os.name == "nt":
-        sources += [x for x in walk('dependencies/include/carla', '*.cpp')]
-
         pwd = os.path.dirname(os.path.realpath(__file__))
         pylib = 'libboost_python%d%d' % (
             sys.version_info.major,
