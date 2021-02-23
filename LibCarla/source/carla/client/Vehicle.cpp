@@ -96,5 +96,9 @@ namespace client {
     GetEpisode().Lock()->UseCarSimRoad(*this, enabled);
   }
 
+  void Vehicle::EnableChronoPhysics(uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
+    GetEpisode().Lock()->EnableChronoPhysics(*this, MaxSubsteps, MaxSubstepDeltaTime);
+  }
+
 } // namespace client
 } // namespace carla
