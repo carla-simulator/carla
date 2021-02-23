@@ -53,7 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2"'
-                                sh 'make CarlaUE4Editor ARGS="--carsim"'
+                                sh 'make CarlaUE4Editor'
                                 sh 'make plugins'
                                 sh 'make examples'
                             }
@@ -92,7 +92,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2 --carsim"'
+                                sh 'make package ARGS="--python-version=3.7,2"'
                                 sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
@@ -224,7 +224,7 @@ pipeline
                     agent { label "windows && build && ${JOB_ID}" }
                     environment
                     {
-                        UE4_ROOT = 'C:\\Program Files\\Epic Games\\UE_4.26'
+                        UE4_ROOT = 'C:\\UE_4.26'
                     }
                     stages
                     {
@@ -256,7 +256,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make CarlaUE4Editor ARGS="--carsim"
+                                    make CarlaUE4Editor
                                 """
                                 bat """
                                     call ../setEnv64.bat
@@ -288,7 +288,7 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--carsim"
+                                    make package
                                 """
                                 bat """
                                     call ../setEnv64.bat
