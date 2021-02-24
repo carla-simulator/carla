@@ -28,7 +28,7 @@ namespace detail {
           actor.id,
           ActorSnapshot{
               actor.id,
-              actor.transform,
+              transform,
               actor.velocity,
               actor.angular_velocity,
               actor.acceleration,
