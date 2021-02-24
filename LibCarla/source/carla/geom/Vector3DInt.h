@@ -135,12 +135,12 @@ namespace geom {
 
     /// Return a Vector3DInt converted from centimeters to meters.
     Vector3DInt ToMeters() const {
-      return *this * 1e-2;
+      return *this / 100;
     }
 
     /// Return a Vector3DInt converted from meters to centimeters.
     Vector3DInt ToCentimeters() const {
-      return *this * 1e2;
+      return *this * 100;
     }
 
     FIntVector ToFIntVector() const {
