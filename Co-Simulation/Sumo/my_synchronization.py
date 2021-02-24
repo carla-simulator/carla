@@ -148,7 +148,6 @@ class SimulationSynchronization(object):
                 bp = self.carla.world.get_blueprint_library().find('sensor.other.obstacle')
                 bp.set_attribute('distance', '100')
                 bp.set_attribute('only_dynamics', 'True')
-                # bp.set_attribute('sensor_tick', '1.0')
                 self.sumoid2sensors[sumo_actor_id]['sensor.other.obstacle'] = self.attach_to_actor(bp, self.carla.get_actor(carla_actor_id))
                 self.sumoid2sensors[sumo_actor_id]['sensor.other.obstacle'].listen(lambda data: self.save_obstacle_data(data, sumo_actor_id))
 
