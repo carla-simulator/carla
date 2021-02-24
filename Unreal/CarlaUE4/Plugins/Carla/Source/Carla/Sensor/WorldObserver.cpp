@@ -205,7 +205,7 @@ static carla::Buffer FWorldObserver_Serialize(
   header.delta_seconds = DeltaSeconds;
   FIntVector MapOrigin = Episode.GetCurrentMapOrigin();
   MapOrigin /= 100; // to meters
-  header.map_origin = { MapOrigin.X, MapOrigin.Y, MapOrigin.Z };
+  header.map_origin = carla::geom::Vector3DInt{ MapOrigin.X, MapOrigin.Y, MapOrigin.Z };
 
   uint8_t simulation_state = (SimulationState::MapChange * MapChange);
   simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);
