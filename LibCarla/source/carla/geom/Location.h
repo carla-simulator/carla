@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/geom/Vector3D.h"
+#include "carla/geom/Vector3DInt.h"
 #include "carla/geom/Math.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -28,6 +29,9 @@ namespace geom {
     using Vector3D::Vector3D;
 
     Location(const Vector3D &rhs) : Vector3D(rhs) {}
+
+    Location(const Vector3DInt &rhs) : 
+        Vector3D((float)rhs.x, (float)rhs.y, (float)rhs.z) {}
 
     // =========================================================================
     // -- Other methods --------------------------------------------------------

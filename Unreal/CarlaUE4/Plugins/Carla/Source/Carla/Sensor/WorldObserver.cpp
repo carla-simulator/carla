@@ -27,7 +27,7 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
 {
   using AType = FActorView::ActorType;
 
-  carla::sensor::data::ActorDynamicState::TypeDependentState state;
+  carla::sensor::data::ActorDynamicState::TypeDependentState state{};
 
   if (AType::Vehicle == View.GetActorType())
   {
@@ -203,6 +203,9 @@ static carla::Buffer FWorldObserver_Serialize(
   header.episode_id = Episode.GetId();
   header.platform_timestamp = FPlatformTime::Seconds();
   header.delta_seconds = DeltaSeconds;
+  FIntVector MapOrigin = Episode.GetCurrentMapOrigin();
+  MapOrigin /= 100; // to meters
+  header.map_origin = { MapOrigin.X, MapOrigin.Y, MapOrigin.Z };
 
   uint8_t simulation_state = (SimulationState::MapChange * MapChange);
   simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);

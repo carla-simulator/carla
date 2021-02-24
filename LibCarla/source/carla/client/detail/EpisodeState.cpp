@@ -17,9 +17,12 @@ namespace detail {
           state.GetGameTimeStamp(),
           state.GetDeltaSeconds(),
           state.GetPlatformTimeStamp()),
+      _map_origin(state.GetMapOrigin()),
       _simulation_state(state.GetSimulationState()) {
     _actors.reserve(state.size());
     for (auto &&actor : state) {
+      geom::Transform transform = actor.transform;
+      transform.location += {_map_origin};
       DEBUG_ONLY(auto result = )
       _actors.emplace(
           actor.id,
