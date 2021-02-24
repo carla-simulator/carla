@@ -21,11 +21,11 @@ namespace geom {
     // -- Public data members --------------------------------------------------
     // =========================================================================
 
-    int32_t x = 0.0f;
+    int32_t x = 0;
 
-    int32_t y = 0.0f;
+    int32_t y = 0;
 
-    int32_t z = 0.0f;
+    int32_t z = 0;
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------
@@ -78,36 +78,36 @@ namespace geom {
       return lhs;
     }
 
-    Vector3DInt &operator*=(float rhs) {
+    Vector3DInt &operator*=(int32_t rhs) {
       x *= rhs;
       y *= rhs;
       z *= rhs;
       return *this;
     }
 
-    friend Vector3DInt operator*(Vector3DInt lhs, float rhs) {
+    friend Vector3DInt operator*(Vector3DInt lhs, int32_t rhs) {
       lhs *= rhs;
       return lhs;
     }
 
-    friend Vector3DInt operator*(float lhs, Vector3DInt rhs) {
+    friend Vector3DInt operator*(int32_t lhs, Vector3DInt rhs) {
       rhs *= lhs;
       return rhs;
     }
 
-    Vector3DInt &operator/=(float rhs) {
+    Vector3DInt &operator/=(int32_t rhs) {
       x /= rhs;
       y /= rhs;
       z /= rhs;
       return *this;
     }
 
-    friend Vector3DInt operator/(Vector3DInt lhs, float rhs) {
+    friend Vector3DInt operator/(Vector3DInt lhs, int32_t rhs) {
       lhs /= rhs;
       return lhs;
     }
 
-    friend Vector3DInt operator/(float lhs, Vector3DInt rhs) {
+    friend Vector3DInt operator/(int32_t lhs, Vector3DInt rhs) {
       rhs /= lhs;
       return rhs;
     }
@@ -130,20 +130,17 @@ namespace geom {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    /// These 2 methods are explicitly deleted to avoid creating them by other users,
-    /// unlike locations, some vectors have units and some don't, by removing
-    /// these methods we found several places were the conversion from cm to m was missing
     Vector3DInt(const FIntVector &v) = delete;
     Vector3DInt& operator=(const FIntVector &rhs) = delete;
 
     /// Return a Vector3DInt converted from centimeters to meters.
     Vector3DInt ToMeters() const {
-      return *this * 1e-2f;
+      return *this * 1e-2;
     }
 
     /// Return a Vector3DInt converted from meters to centimeters.
     Vector3DInt ToCentimeters() const {
-      return *this * 1e2f;
+      return *this * 1e2;
     }
 
     FIntVector ToFIntVector() const {
