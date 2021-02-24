@@ -30,8 +30,10 @@ namespace geom {
 
     Location(const Vector3D &rhs) : Vector3D(rhs) {}
 
-    Location(const Vector3DInt &rhs) : 
-        Vector3D((float)rhs.x, (float)rhs.y, (float)rhs.z) {}
+    Location(const Vector3DInt &rhs) :
+        Vector3D(static_cast<float>(rhs.x),
+                 static_cast<float>(rhs.y),
+                 static_cast<float>(rhs.z)) {}
 
     // =========================================================================
     // -- Other methods --------------------------------------------------------
