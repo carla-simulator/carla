@@ -86,9 +86,9 @@ The experiment should be configured through a `.yaml` file. Any settings passed 
 
 The configuration file has three main uses:
 
-1. Sets up most of the CARLA server and client settings. See the default values [here][defaultCarlaSettings]. 
+1. Sets up most of the CARLA server and client settings, such as timeout or map quality. See the default values [here][defaultCarlaSettings]. 
 2. Sets up variables specific to your experiment as well as specifying town conditions and the spawning of the ego vehicle and its sensors. The default settings are found [here][defaultExperimentSettings] and provide an example of how to set up sensors.
-3. Configures settings specific to [Ray's training][raySettings].
+3. Configures settings specific to [Ray's training][raySettings]. These settings are related to the specific trainer used. If you are using a built-in model, you can apply settings for it here. 
 
 [defaultCarlaSettings]: https://github.com/carla-simulator/rllib-integration/blob/main/rllib_integration/carla_core.py#L23
 [defaultExperimentSettings]: https://github.com/carla-simulator/rllib-integration/blob/main/rllib_integration/base_experiment.py#L12
@@ -96,7 +96,9 @@ The configuration file has three main uses:
 
 #### 3. The training and inference scripts
 
-The last step is to create your own training and inference scripts. This part is completely up to you and is dependent on the Ray API.
+The last step is to create your own training and inference scripts. This part is completely up to you and is dependent on the Ray API. If you want to create your own specific model, check out [Ray's custom model documentation][rayCustomModel].
+
+[rayCustomModel]: https://docs.ray.io/en/master/rllib-models.html#custom-models-implementing-your-own-forward-logic
 
 ---
 
@@ -133,7 +135,9 @@ To run the example locally:
         python3 dqn_train.py dqn_example/dqn_config.yaml --name dqn        
 
 !!! Note
-    The default configuration uses 1 GPU and 12 CPUs, so if your local machine doesn't have that capacity, lower the numbers in the [configuration file][dqnConfig].
+    The default configuration uses 1 GPU and 12 CPUs, so if your local machine doesn't have that capacity, lower the numbers in the [configuration file][dqnConfig]. 
+    
+    If you experience out of memory problems, consider reducing the `buffer_size` parameter. 
 
 ---
 
