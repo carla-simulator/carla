@@ -44,7 +44,7 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
       return std::pair<int, FActorView>(0, view_empty);
     }
   }
-  else if (!ActorDesc.Id.StartsWith("sensor."))
+  else
   {
     // check if an actor of that type already exist with same id
     if (Episode->GetActorRegistry().Contains(DesiredId))
@@ -78,11 +78,6 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
       UE_LOG(LogCarla, Log, TEXT("Actor could't be created by replayer"));
       return std::pair<int, FActorView>(0, Result.Value);
     }
-  }
-  else
-  {
-    // actor ignored
-    return std::pair<int, FActorView>(0, view_empty);
   }
 }
 
