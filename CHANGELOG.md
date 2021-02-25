@@ -1,6 +1,7 @@
 ## Latest
 
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
+  * Added Lincoln 2020 vehicle dimensions for CarSim integration
   * Added performance benchmarking section to documentation
 
 
