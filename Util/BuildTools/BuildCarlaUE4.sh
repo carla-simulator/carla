@@ -13,11 +13,12 @@ HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
+USE_CHRONO=false
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,chrono -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -48,6 +49,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --carsim )
       USE_CARSIM=true;
+      shift ;;
+    --chrono )
+      USE_CHRONO=true
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -117,13 +121,20 @@ fi
 
 if ${BUILD_CARLAUE4} ; then
 
+  OPTIONAL_MODULES_TEXT=""
   if ${USE_CARSIM} ; then
     python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
-    echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
+    OPTIONAL_MODULES_TEXT="CarSim ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
     python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
-    echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
+    OPTIONAL_MODULES_TEXT="CarSim OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
+  if ${USE_CHRONO} ; then
+    OPTIONAL_MODULES_TEXT="Chrono ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    OPTIONAL_MODULES_TEXT="Chrono OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
+  echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 
   if [ ! -f Makefile ]; then
 
