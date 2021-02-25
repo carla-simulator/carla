@@ -32,11 +32,13 @@ The following requirements should be fulfilled before installing CARLA:
 
 There are two methods to download and install CARLA as a package:
 
-__A)__ [Download the Debian package on Ubuntu 18.04.](#a-debian-carla-installation)
+__A)__ [Download the Debian package.](#a-debian-carla-installation)
 
 __B)__ [Download the binary from GitHub.](#b-binary-installation) 
 
 ### A. Debian CARLA installation
+
+The Debain package is available for both Ubuntu 18.04 and Ubuntu 20.04, however __the officially supported platform is Ubuntu 18.04__.
 
 __1.__ Set up the Debian repository in the system:
 ```sh
