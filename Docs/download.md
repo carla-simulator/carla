@@ -1,6 +1,6 @@
 # Download
 
-### Latest Release [[Documentation](https://carla.readthedocs.io/en/latest/)]
+### Latest Release [Documentation](https://carla.readthedocs.io/en/latest/)
 
 - [CARLA 0.9.11](https://github.com/carla-simulator/carla/releases/tag/0.9.11)
 
