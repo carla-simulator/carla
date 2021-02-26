@@ -18,6 +18,7 @@ In this guide we will outline the requirements needed for running the RLlib inte
 - [__Running on AWS__](#running-on-aws)
     - [Configure AWS](#configure-aws)
     - [Create the training AMI](#create-the-training-ami)
+    - [Configure the cluster](#configure-the-cluster)
     - [Run the training](#run-the-training)
     - [Running the DQN example on AWS](#running-the-dqn-example-on-aws)
 
@@ -159,12 +160,14 @@ Use the provided [`aws_helper.py`][awsHelper] script to automatically create the
 
         python3 aws_helper.py create-image --name <AMI-name> --installation-scripts <installation-scripts> --instance-type <instance-type> --volume-size <volume-size>
 
-!!! Note
-    There will be an output with information about the ceated image. To use the Ray autoscaler, update the `<ImageId>` and `<SecurityGroupIds>` settings in your [autoscaler configuration file][autoscalerSettings] with the information from the output.
-
 [awsHelper]: https://github.com/carla-simulator/rllib-integration/blob/main/aws/aws_helper.py
 [installsh]: https://github.com/carla-simulator/rllib-integration/blob/main/aws/install/install.sh
-[autoscalerSettings]: https://docs.ray.io/en/latest/cluster/config.html#quickstart
+
+#### Configure the cluster
+
+Once the image is created, there will be an output with image information. To use the Ray autoscaler, update the `<ImageId>` and `<SecurityGroupIds>` settings in your [autoscaler configuration file][autoscalerSettings] with the information from the output.
+
+[autoscalerSettings]: https://docs.ray.io/en/latest/cluster/config.html
 
 #### Run the training
 
@@ -202,7 +205,7 @@ To run the DQN example on AWS:
 
 [dqnAutoscaler]: https://github.com/carla-simulator/rllib-integration/blob/main/dqn_example/dqn_autoscaler.yaml
 
-2. Update the `<ImageId>` and `<SecurityGroupIds>` settings in `dqn_autoscaler.yaml` with the information provided by the previous command.
+2. Update the `<ImageId>` and `<SecurityGroupIds>` settings in [`dqn_autoscaler.yaml`][dqnAutoscaler] with the information provided by the previous command.
 
 3. Initialize the cluster:
 
