@@ -44,72 +44,78 @@ def start_sumo_for_carla(args, env, sumo_files):
 
 def start_sumo_for_veins(args, env, sumo_files):
     return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['veins_ini_dir_in_vagrant']}/{env['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.veins_sumo_port} --num-clients 2 > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
-    # return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.veins_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
 
-# ----- main -----
-def main(args, env):
-    procs = []
-    sumo_files = env["map_2_sumo_files"][args.carla_map_name]
+class Main:
+    def __init__(self, args, env):
+        self.args = args
+        self.env = env
+        self.sumo_files = env["map_2_sumo_files"][args.carla_map_name]
 
-    try:
         # ----- copy sumo files into Veins directory -----
         logging.info("Coping sumo files (rou, net poly, sumocfg) into Veins directory.")
-        copy_local_file_to_vagrant(sumo_files["rou"], f"{env['sumo_files_name_in_veins']}.rou.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
-        copy_local_file_to_vagrant(sumo_files["net"], f"{env['sumo_files_name_in_veins']}.net.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
-        copy_local_file_to_vagrant(sumo_files["poly"], f"{env['sumo_files_name_in_veins']}.poly.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
-        copy_local_file_to_vagrant(sumo_files["sumocfg_for_veins"], f"{env['sumo_files_name_in_veins']}.sumocfg", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
+        copy_local_file_to_vagrant(self.sumo_files["rou"], f"{env['sumo_files_name_in_veins']}.rou.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
+        copy_local_file_to_vagrant(self.sumo_files["net"], f"{env['sumo_files_name_in_veins']}.net.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
+        copy_local_file_to_vagrant(self.sumo_files["poly"], f"{env['sumo_files_name_in_veins']}.poly.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
+        copy_local_file_to_vagrant(self.sumo_files["sumocfg_for_veins"], f"{env['sumo_files_name_in_veins']}.sumocfg", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
 
-        # ----- start sumo servers -----
-        logging.info(f"For Carla, Sumo reads {sumo_files['sumocfg']} and starts on {args.carla_sumo_port} port.")
-        procs.append(start_sumo_for_carla(args, env, sumo_files))
+    def run(self):
+        procs = []
+        args = self.args
+        env = self.env
+        sumo_files = self.sumo_files
 
-        logging.info(f"For Veins, Sumo reads {sumo_files['sumocfg']} and starts on {args.veins_sumo_port} port.")
-        procs.append(start_sumo_for_veins(args, env, sumo_files))
+        try:
+            # ----- start sumo servers -----
+            logging.info(f"For Carla, Sumo reads {sumo_files['sumocfg']} and starts on {args.carla_sumo_port} port.")
+            procs.append(start_sumo_for_carla(args, env, sumo_files))
 
-        # ----- start carla-sumo synchronizer -----
-        logging.info(f"Checking that Carla server is started on {args.carla_unrealengine_port} port.")
-        if check_port_listens(args.carla_unrealengine_port) is False:
-            raise Exception("Carla server is not standed.")
+            logging.info(f"For Veins, Sumo reads {sumo_files['sumocfg']} and starts on {args.veins_sumo_port} port.")
+            procs.append(start_sumo_for_veins(args, env, sumo_files))
 
-        logging.info(f"Changing the Carla map to {args.carla_map_name}.")
-        p = Popen(f"python config.py -p {args.carla_unrealengine_port} -m {args.carla_map_name} > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True)
-        p.wait()
+            # ----- start carla-sumo synchronizer -----
+            logging.info(f"Checking that Carla server is started on {args.carla_unrealengine_port} port.")
+            if check_port_listens(args.carla_unrealengine_port) is False:
+                raise Exception("Carla server is not standed.")
 
-        logging.info("Running Carla-Sumo synchronizer.")
-        procs.append(run_carla_sumo_synchronization(args, env, sumo_files))
+            logging.info(f"Changing the Carla map to {args.carla_map_name}.")
+            p = Popen(f"python config.py -p {args.carla_unrealengine_port} -m {args.carla_map_name} > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True)
+            p.wait()
 
-        # ----- start veins-sumo synchronizer -----
-        logging.info("Running Veins-Sumo synchronizer.")
-        procs.append(run_veins_sumo_synchronization(args, env, sumo_files))
+            logging.info("Running Carla-Sumo synchronizer.")
+            procs.append(run_carla_sumo_synchronization(args, env, sumo_files))
 
-        # ----- start carla-veins data synchronizer -----
-        logging.info("Starting Carla-Veins data server.")
-        procs.append(start_carla_veins_data_server(args, env, sumo_files))
+            # ----- start veins-sumo synchronizer -----
+            logging.info("Running Veins-Sumo synchronizer.")
+            procs.append(run_veins_sumo_synchronization(args, env, sumo_files))
 
-        # ----- start two-traci synchronizer -----
-        logging.info("Connecting Carla-Sumo and Veins-Sumo.")
-        logging.info(f"Please run {env['ini_file_in_veins']} manually in Veins.")
-        if args.main_mobility_handler == "carla":
-            tracis_syncronizer_proc = Popen(f"python run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} > /dev/null 2>&1", shell=True)
-            procs.append(tracis_syncronizer_proc)
-        else:
-            tracis_syncronizer_proc = Popen(f"python run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2} > /dev/null 2>&1", shell=True)
-            procs.append(tracis_syncronizer_proc)
-        tracis_syncronizer_proc.wait()
+            # ----- start carla-veins data synchronizer -----
+            logging.info("Starting Carla-Veins data server.")
+            procs.append(start_carla_veins_data_server(args, env, sumo_files))
 
-    except KeyboardInterrupt:
-        logging.info(CTRL_C_PRESSED_MESSAGE)
-        kill_processes(procs)
+            # ----- start two-traci synchronizer -----
+            logging.info("Connecting Carla-Sumo and Veins-Sumo.")
+            logging.info(f"Please run {env['ini_file_in_veins']} manually in Veins.")
+            if args.main_mobility_handler == "carla":
+                tracis_syncronizer_proc = Popen(f"python run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} > /dev/null 2>&1", shell=True)
+                procs.append(tracis_syncronizer_proc)
+            else:
+                tracis_syncronizer_proc = Popen(f"python run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2} > /dev/null 2>&1", shell=True)
+                procs.append(tracis_syncronizer_proc)
+            tracis_syncronizer_proc.wait()
 
-    except Exception as e:
-        logging.error(e)
-        kill_processes(procs)
+        except KeyboardInterrupt:
+            logging.info(CTRL_C_PRESSED_MESSAGE)
+            kill_processes(procs)
 
-    finally:
-        kill_processes(procs)
+        except Exception as e:
+            logging.error(e)
+            kill_processes(procs)
+
+        finally:
+            kill_processes(procs)
 
 
-
+# ----- main -----
 if __name__ == '__main__':
     env = data_from_json("./env.json")
     maps = list(env["map_2_sumo_files"].keys())
@@ -146,4 +152,5 @@ if __name__ == '__main__':
         format='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s: %(message)s',
         level=logging.DEBUG
     )
-    main(args, env)
+    
+    Main(args, env).run()
