@@ -6,9 +6,14 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarSimManagerComponent.h"
+#include "Carla/Game/CarlaEngine.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Util/EmptyActor.h"
 
+#ifdef WITH_CARSIM
+#include "CarSimMovementComponent.h"
+#include "VsVar.h"
+#endif
 
 void UCarSimManagerComponent::CreateCarsimComponent(
       ACarlaWheeledVehicle* Vehicle, FString Simfile)
@@ -44,8 +49,6 @@ void UCarSimManagerComponent::BeginPlay()
       SpawnParams);
   CarSimMovementComponent = NewObject<UCarSimMovementComponent>(OffsetActor);
 
-  // CarSimMovementComponent = NewObject<UCarSimMovementComponent>(this);
-  // BaseMovementComponent = CarSimMovementComponent;
   carla::log_warning("Loading simfile:", carla::rpc::FromFString(SimfilePath));
   CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(false);
   CarlaVehicle->GetVehicleMovementComponent()->Deactivate();
@@ -68,6 +71,7 @@ void UCarSimManagerComponent::BeginPlay()
   // set callbacks to react to collisions
   CarlaVehicle->OnActorHit.AddDynamic(this, &UCarSimManagerComponent::OnCarSimHit);
   CarlaVehicle->GetMesh()->OnComponentBeginOverlap.AddDynamic(this, &UCarSimManagerComponent::OnCarSimOverlap);
+  CarlaVehicle->GetMesh()->OnComponentEndOverlap.AddDynamic(this, &UCarSimManagerComponent::OnCarSimEndOverlap);
   CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
 
   // workaround to prevent carsim from interacting with its own car
@@ -79,6 +83,10 @@ void UCarSimManagerComponent::BeginPlay()
   UE_LOG(LogCarla, Warning, TEXT("Error: CarSim plugin is not enabled") );
   return;
   #endif
+}
+
+void UCarSimManagerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
 }
 
 void UCarSimManagerComponent::ProcessControl(FVehicleControl &Control)
@@ -101,7 +109,24 @@ void UCarSimManagerComponent::OnCarSimHit(AActor *Actor,
     const FHitResult &Hit)
 {
   #ifdef WITH_CARSIM
-  // handle collision forces here
+  // finish Carsim simulation
+  UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
+  CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
+  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+  CarlaVehicle->GetVehicleMovementComponent()->Activate();
+  CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+  auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(true);
+  }
+  else
+  {
+    carla::log_warning("No bone with name");
+  }
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");    
+  CarlaVehicle->RestoreVehiclePhysicsControl();
   #endif
 }
 
@@ -118,9 +143,33 @@ void UCarSimManagerComponent::OnCarSimOverlap(UPrimitiveComponent* OverlappedCom
       ECollisionResponse::ECR_Block)
   {
     #ifdef WITH_CARSIM
-    // handle collision forces here
+    // finish Carsim simulation
+    UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
+    CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(FVector(0,0,0), false, "Vehicle_Base");
+    CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+    CarlaVehicle->GetVehicleMovementComponent()->Activate();
+    CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+    auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+    if (Bone)
+    {
+      Bone->SetInstanceSimulatePhysics(true);
+    }
+    else
+    {
+      carla::log_warning("No bone with name");
+    }
+    CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+    CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");    
+    CarlaVehicle->RestoreVehiclePhysicsControl();
     #endif
   }
+}
+
+void UCarSimManagerComponent::OnCarSimEndOverlap(UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex)
+{
 }
 
 void UCarSimManagerComponent::UseCarSimRoad(bool bEnabled)
@@ -140,6 +189,18 @@ void UCarSimManagerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
   {
     OffsetActor->Destroy();
   }
+  
+  if(!CarlaVehicle)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Error: Owner is not properly set for UCarSimManagerComponent") );
+    return;
+  }
+
+  // reset callbacks to react to collisions
+  CarlaVehicle->OnActorHit.RemoveDynamic(this, &UCarSimManagerComponent::OnCarSimHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(this, &UCarSimManagerComponent::OnCarSimOverlap);
+  CarlaVehicle->GetMesh()->OnComponentEndOverlap.RemoveDynamic(this, &UCarSimManagerComponent::OnCarSimEndOverlap);
+
   #endif
 }
 

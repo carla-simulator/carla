@@ -337,13 +337,13 @@ float ASceneCaptureSensor::GetExposureSpeedUp() const
 void ASceneCaptureSensor::SetExposureCalibrationConstant(float Constant)
 {
   check(CaptureComponent2D != nullptr);
-  CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant = Constant;
+  CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant_DEPRECATED = Constant;
 }
 
 float ASceneCaptureSensor::GetExposureCalibrationConstant() const
 {
   check(CaptureComponent2D != nullptr);
-  return CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant;
+  return CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant_DEPRECATED;
 }
 
 void ASceneCaptureSensor::SetMotionBlurIntensity(float Intensity)
@@ -542,7 +542,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
     PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
     PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
-    PostProcessSettings.bOverride_AutoExposureCalibrationConstant = true;
+    PostProcessSettings.bOverride_AutoExposureCalibrationConstant_DEPRECATED = true;
     PostProcessSettings.bOverride_HistogramLogMin = true;
     PostProcessSettings.HistogramLogMin = 1.0f;
     PostProcessSettings.bOverride_HistogramLogMax = true;
@@ -753,7 +753,6 @@ namespace SceneCaptureSensor_local_ns {
     // ShowFlags.SetVisualizeBloom(false);
     ShowFlags.SetVisualizeBuffer(false);
     ShowFlags.SetVisualizeDistanceFieldAO(false);
-    ShowFlags.SetVisualizeDistanceFieldGI(false);
     ShowFlags.SetVisualizeDOF(false);
     ShowFlags.SetVisualizeHDR(false);
     ShowFlags.SetVisualizeLightCulling(false);
