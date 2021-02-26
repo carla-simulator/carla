@@ -290,10 +290,6 @@ pipeline
                                     call ../setEnv64.bat
                                     make package
                                 """
-                                bat """
-                                    call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate"
-                                """
                             }
                             post {
                                 always {
