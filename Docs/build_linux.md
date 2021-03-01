@@ -179,10 +179,11 @@ __2.__ Get into the directory where UE4.24 has been cloned.
 cd ~/UnrealEngine_4.24
 ```
 
-__3.__ Download a patch for Unreal Engine. This patch fixes some Vulkan visualization issues that may occur when changing the map. Download and install it with the following commands.
+__3.__ Download the patches for Unreal Engine. The first patch fixes some Vulkan visualization issues that may occur when changing the map and the second improves the collision of the wheels with the terrain. Download and install them with the following commands.
 ```sh
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt 430667-13636743-patch.txt
-patch --strip=4 < 430667-13636743-patch.txt
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_vulkan.patch
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_wheels.patch
+git apply UE4_patch_vulkan.patch UE4_patch_wheels.patch
 ```
 
 !!! Warning
@@ -229,9 +230,8 @@ git clone https://github.com/carla-simulator/carla
 
 Now the latest state of the simulator, known as `master` branch in the repository, has been copied in local. Here is brief introduction to the most relevant branches of the repository.  Remember that you can change and check your branches with the command `git branch`.  
 
-*   __`master` branch__ — Latest fixes and features that have been tested. These will be featured in the next CARLA release.  
+*   __`master` branch__ — The most recent release of CARLA which contains the latest fixes and features. 
 *   __`dev` branch__ — Latest fixes and features still in development and testing. This branch will be merged with `master` when the time for a new release comes.  
-*   __`stable` branch__ — Latest version of CARLA tagged as stable. Previous CARLA versions also have their own branch.  
 
 
 ### Get assets

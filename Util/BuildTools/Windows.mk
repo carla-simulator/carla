@@ -20,13 +20,13 @@ CarlaUE4Editor: LibCarla
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --build $(ARGS)
 
 launch: CarlaUE4Editor
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch $(ARGS)
 
 launch-only:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch
 
 package: PythonAPI
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --ue-version 4.24 $(ARGS)
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --ue-version 4.26 $(ARGS)
 
 .PHONY: docs
 docs:
@@ -38,7 +38,7 @@ PythonAPI.docs:
 	cd PythonAPI/docs && python bp_doc_gen.py
 
 clean:
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --clean --ue-version 4.24
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --clean --ue-version 4.26
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --clean
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --clean
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --clean
@@ -71,7 +71,7 @@ LibCarla: setup
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --client
 
 setup:
-	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.1
+	@"${CARLA_BUILD_TOOLS_FOLDER}/Setup.bat" --boost-toolset msvc-14.1 $(ARGS)
 
 .PHONY: Plugins
 plugins:

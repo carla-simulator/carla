@@ -55,7 +55,7 @@
   - class_name: CityObjectLabel
     # - DESCRIPTION ------------------------
     doc: >
-      Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the [semantic tag](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) that the elements in the scene have.
+      Enum declaration that contains the different tags available to filter the bounding boxes returned by carla.World.get_level_bbs(). These values correspond to the [semantic tag](ref_sensors.md#semantic-segmentation-camera) that the elements in the scene have.
 
     # - PROPERTIES -------------------------
     instance_variables:
@@ -741,7 +741,7 @@
   - class_name: DVSEventArray
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines a stream of events in [carla.DVSEvent](#carla.DVSEvent). Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).
+      Class that defines a stream of events in carla.DVSEvent. Such stream is an array of arbitrary size depending on the number of events. This class also stores the field of view, the height and width of the image and the timestamp from convenience. Learn more about them [here](ref_sensors.md).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: fov
