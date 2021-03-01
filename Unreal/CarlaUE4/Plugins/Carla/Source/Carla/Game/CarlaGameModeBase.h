@@ -96,6 +96,8 @@ private:
 
   void SpawnActorFactories();
 
+  void GenerateSpawnPoints();
+
   void ParseOpenDrive(const FString &MapName);
 
   void RegisterEnvironmentObjects();

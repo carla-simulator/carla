@@ -63,18 +63,20 @@ void ACarlaGameModeBase::InitGame(
   checkf(
       Episode != nullptr,
       TEXT("Missing episode, can't continue without an episode!"));
-
-  if(InMapName.Contains("LargeMap"))
+  bool IsLargeMap = InMapName.Contains("LargeMap");
+  if(IsLargeMap)
   {
     LMManager = World->SpawnActor<ALargeMapManager>(
         ALargeMapManager::StaticClass(),
         FTransform());
     check(LMManager);
     // TODO: parameters
-    LMManager->GenerateMap("/Game/Carla/Maps/Map99x99_2km");
+    FString MapsPath = "/Game/Carla/Maps/";
+    FString LargeMapName = "Map99x99_2km";
+    InMapName = LargeMapName;
+    LMManager->GenerateMap(MapsPath + InMapName);
     /*
     */
-    InMapName = "Map99x99";
   }
 
 #if WITH_EDITOR
@@ -129,6 +131,13 @@ void ACarlaGameModeBase::InitGame(
   Episode->SetRecorder(Recorder);
 
   ParseOpenDrive(Episode->MapName);
+
+
+  // TODO: Generate spawn points in large maps
+  if(IsLargeMap && Map.has_value())
+  {
+    GenerateSpawnPoints();
+  }
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -243,6 +252,22 @@ void ACarlaGameModeBase::SpawnActorFactories()
       }
     }
   }
+}
+
+void ACarlaGameModeBase::GenerateSpawnPoints()
+{
+  UE_LOG(LogCarla, Log, TEXT("Generating SpawnPoints ..."));
+  std::vector<std::pair<carla::road::element::Waypoint, carla::road::element::Waypoint>> Topology = Map->GenerateTopology();
+  UWorld* World = GetWorld();
+  for(auto& Pair : Topology)
+  {
+    AVehicleSpawnPoint *Spawner = World->SpawnActor<AVehicleSpawnPoint>();
+    carla::geom::Transform CarlaTransform = Map->ComputeTransform(Pair.first);
+    FTransform Transform(CarlaTransform);
+    Spawner->SetActorRotation(Transform.GetRotation());
+    Spawner->SetActorLocation(Transform.GetTranslation() + FVector(0.f, 0.f, 300.0f));
+  }
+  UE_LOG(LogCarla, Log, TEXT("%d SpawnPoints generated"), Topology.size());
 }
 
 void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
