@@ -1,0 +1,49 @@
+PARSFILE
+#FullDataName Vehicle: Sprung Mass`Lincoln 2020`CARLA
+#VehCode Rigid sprung mass
+#RingCtrl0 0
+#CheckBox2 0    
+X_LENGTH 2860
+Y_LENGTH 1500
+iaxle 2
+iside 1
+LX_AXLE 2860
+LX_CG_SU 1471
+M_SU 2404
+IXX_SU 536.6
+IYY_SU 1536.7
+IZZ_SU 1536.7
+IXZ_SU 0
+*RX 0.472
+*RY 0.800
+*RZ 0.800
+Y_CG_SU 0
+H_CG_SU 359
+IXY_SU 0
+IYZ_SU 0
+Z_LENGTH 1300
+Y_LENGTH 1800
+*HWC_LF 359
+*HWC_RF 359
+*HWC_LR 359
+*HWC_RR 359
+H_WC 359
+iside 2
+H_WC 359
+iaxle 1
+iside 1
+H_WC 359
+iside 2
+H_WC 359
+iaxle 2
+iside 1
+
+LOG_ENTRY Used Dataset: Vehicle: Sprung Mass; { CARLA } Lincoln 2020
+#Library : Vehicle: Sprung Mass
+#DataSet : Lincoln 2020
+#Category: CARLA
+#FileID  : SprMass_d80b7dcb-e4b1-4456-9d41-6fc41b8cd79a
+#Product : CarSim 2020.0
+#VehCode Rigid sprung mass
+
+END

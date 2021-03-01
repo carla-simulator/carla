@@ -96,13 +96,12 @@ void MoveFiles(const TArray<UObject *> &Assets, const FString &DestPath)
     {
       continue;
     }
-
-    new(AssetsAndNames) FAssetRenameData(Asset, DestPath, Asset->GetName());
+    AssetsAndNames.Emplace(Asset, DestPath, Asset->GetName());
   }
 
   if (AssetsAndNames.Num() > 0)
   {
-    AssetToolsModule.Get().RenameAssetsWithDialog(AssetsAndNames);
+    AssetToolsModule.Get().RenameAssets(AssetsAndNames);
   }
 }
 
@@ -181,6 +180,7 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   for (const auto &Elem : AssetDataMap)
   {
     FString DestPath = TEXT("/Game/") + PackageName + TEXT("/Static/") + Elem.Key + "/" + MapName;
+    
     MoveFiles(Elem.Value, DestPath);
   }
 }

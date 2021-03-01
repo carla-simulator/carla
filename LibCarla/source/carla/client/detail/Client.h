@@ -219,6 +219,11 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    void EnableChronoPhysics(
+        rpc::ActorId vehicle,
+        uint64_t MaxSubsteps,
+        float MaxSubstepDeltaTime);
+
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
