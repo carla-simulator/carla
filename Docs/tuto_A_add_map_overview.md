@@ -5,13 +5,14 @@ Users of CARLA can create custom maps and use them to run simulations. There are
 - [__Overview__](#overview)
 	- [Export from RoadRunner](#export-from-roadrunner)
 	- [Ingest the map in CARLA](#ingest-the-map-in-carla)
+- [__Alternative import methods__](#alternative-import-methods)
 - [__Summary__](#summary)
 
 ---
 
 ## Overview
 
-Below is a summary of the steps in the ingestion process or you can follow the links to go directly to the relevant guide:
+Follow the links to go directly to the relevant guide or read on futher for a brief summary of the steps involved in the ingestion process:
 
 1. [__Export from RoadRunner__](tuto_A_add_map/generate_map_roadrunner.md)
 2. [__Import into source build version of CARLA__](tuto_A_add_map/add_map_source.md)
@@ -31,27 +32,18 @@ RoadRunner is the recommended software to create a map due to its simplicity. We
 
 This is where the route splits in two:
 
- - If you are using CARLA built from source, follow the guide [__here__](tuto_A_add_map/add_map_source.md).
- - If you are using a packaged (binary) version of CARLA, follow the guide [__here__](tuto_A_add_map/add_map_package.md).
+ - __If you are using CARLA built from source__, follow the guide [__here__](tuto_A_add_map/add_map_source.md).
+ - __If you are using a packaged (binary) version of CARLA__, follow the guide [__here__](tuto_A_add_map/add_map_package.md).
 
 Regardless of the method used, there are some common themes involved in the ingestion process:
 	
-- __Package `.json` file and folder structure__. Map packages have a particular folder structure and this structure is described in a `.json` file. This file is automatically created during the import process if it is not provided by the user. If you prefer to provide the `.json` file yourself, find below an example of the file structure:
-```json
-	{
-		"maps": [
-			{
-				"source": "./MapName.fbx", 
-				"use_carla_materials": true, 
-				"name": "MapName", 
-				"xodr": "./MapName.xodr"
-			}
-		], 
-		"props": []
-	}
-```
+- __Package `.json` file and folder structure__. Map packages have a particular folder structure and this structure is described in a `.json` file. This file is automatically created during the import process if it is not provided by the user. If you prefer to provide the `.json` file yourself, check the [alternative methods guide](tuto_A_add_map/add_map_alternative.md#manual-package-preparation) for an outline on how to do this.
 - __Traffic signs and traffic lights.__ The simulator will generate the traffic lights, stops and yields automatically when running. These will be created according to their `.xodr` definition. Any other landmarks present in the map will not be physically on scene, but they can be queried using the API.  
 *   __Pedestrian navigation.__ The ingestion process will generate a `.bin` file describing the pedestrian navigation. It is based on the sidewalks and crosswalks that appear in the `.xodr` definition. This can only be modified if working in a build from source.  
+
+### Alternative import methods
+
+We provide a section that details alternative methods of importing maps to CARLA that involve the use of plugins or performing each step manually. You will find those methods [here](tuto_A_add_map/add_map_alternative.md).
 
 ---
 
