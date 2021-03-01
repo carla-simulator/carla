@@ -183,7 +183,9 @@ public:
       FActorDescription thisActorDescription,
       FActorView::IdType DesiredId = 0)
   {
-    auto result = ActorDispatcher->SpawnActor(Transform, thisActorDescription, DesiredId);
+    FTransform NewTransform = Transform;
+    NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
+    auto result = ActorDispatcher->SpawnActor(NewTransform, thisActorDescription, DesiredId);
     if (Recorder->IsEnabled())
     {
       if (result.Key == EActorSpawnResultStatus::Success)
@@ -191,7 +193,7 @@ public:
         Recorder->CreateRecorderEventAdd(
           result.Value.GetActorId(),
           static_cast<uint8_t>(result.Value.GetActorType()),
-          Transform,
+          NewTransform,
           std::move(thisActorDescription)
         );
       }
