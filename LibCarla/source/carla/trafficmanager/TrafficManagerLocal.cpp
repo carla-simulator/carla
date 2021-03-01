@@ -208,7 +208,12 @@ void TrafficManagerLocal::Run() {
       step_end.store(true);
       step_end_trigger.notify_one();
     } else {
-      episode_proxy.Lock()->ApplyBatch(control_frame, false);
+      if (control_frame.size() > 0){
+        episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+      }
+      episode_proxy.Lock()->WaitForTick(
+          carla::time_duration::milliseconds(
+          TM_WAIT_FOR_TICK_TIMEOUT));
     }
   }
 }
