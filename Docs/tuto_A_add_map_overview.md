@@ -11,11 +11,12 @@ Users of CARLA can create custom maps and use them to run simulations. There are
 
 ## Overview
 
-Below is a summary of the steps in the ingestion process or you can follow the links directly to find each relevant guide:
+Below is a summary of the steps in the ingestion process or you can follow the links to go directly to the relevant guide:
 
 1. [__Export from RoadRunner__](tuto_A_add_map/generate_map_roadrunner.md)
 2. [__Import into source build version of CARLA__](tuto_A_add_map/add_map_source.md)
 3. [__Import into package version of CARLA__](tuto_A_add_map/add_map_package.md)
+4. [__Alternative methods to import maps__](tuto_A_add_map/add_map_alternative.md)
 
 You can also watch the following video to see an explanation of the various methods:
 
