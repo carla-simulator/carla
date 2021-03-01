@@ -44,7 +44,7 @@ pipeline
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.7,2"'
+                                sh 'make setup ARGS="--python-version=3.7,2 --chrono"'
                             }
                         }
                         stage('ubuntu build')
@@ -53,7 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2"'
-                                sh 'make CarlaUE4Editor'
+                                sh 'make CarlaUE4Editor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
                             }
@@ -92,7 +92,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2"'
+                                sh 'make package ARGS="--python-version=3.7,2 --chrono"'
                                 sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
@@ -238,7 +238,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make setup
+                                    make setup ARGS="--chrono"
                                 """
                             }
                         }
@@ -256,7 +256,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make CarlaUE4Editor
+                                    make CarlaUE4Editor ARGS="--chrono"
                                 """
                                 bat """
                                     call ../setEnv64.bat
@@ -288,7 +288,7 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
-                                    make package
+                                    make package ARGS="--chrono"
                                 """
                                 bat """
                                     call ../setEnv64.bat
