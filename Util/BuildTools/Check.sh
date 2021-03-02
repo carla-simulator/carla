@@ -210,17 +210,11 @@ fi
 
 pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/test" >/dev/null
 
-if ${XML_OUTPUT} ; then
-  EXTRA_ARGS="-X"
-else
-  EXTRA_ARGS=
-fi
-
 if ${SMOKE_TESTS} ; then
   smoke_list=`cat smoke_test_list.txt`
   for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Running smoke tests for Python ${PY_VERSION}."
-    /usr/bin/env python${PY_VERSION} -m nose2 ${EXTRA_ARGS} -v ${smoke_list}
+    /usr/bin/env python${PY_VERSION} -m nose2 -v ${smoke_list}
   done
 
   if ${XML_OUTPUT} ; then
