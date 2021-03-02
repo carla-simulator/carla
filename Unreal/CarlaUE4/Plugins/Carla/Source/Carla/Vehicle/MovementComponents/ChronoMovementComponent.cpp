@@ -181,12 +181,12 @@ void UChronoMovementComponent::BeginPlay()
   // Create JSON vehicle
   Vehicle = chrono_types::make_shared<WheeledVehicle>(
       &Sys,
-	  VehiclePath_string);
+      VehiclePath_string);
   Vehicle->Initialize(ChCoordsys<>(ChronoLocation, ChronoRotation));
   Vehicle->GetChassis()->SetFixed(false);
   // Create and initialize the powertrain System
   auto powertrain = ReadPowertrainJSON(
-	  PowerTrain_string);
+      PowerTrain_string);
   Vehicle->InitializePowertrain(powertrain);
   // Create and initialize the tires
   for (auto& axle : Vehicle->GetAxles()) {
