@@ -352,6 +352,10 @@ class SumoSimulation(object):
     def traffic_light_ids(self):
         return self.traffic_light_manager.get_all_landmarks()
 
+    @property
+    def current_time(self):
+        return traci.simulation.getCurrentTime()
+
     @staticmethod
     def subscribe(actor_id):
         """

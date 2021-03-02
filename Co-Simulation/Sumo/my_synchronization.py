@@ -35,6 +35,11 @@ try:
 except IndexError:
     pass
 
+##### Begin: My code #####
+DATA_SERVER_HOST = "localhost"
+DATA_SERVER_PORT = 9998
+##### End: My code #####
+
 # ==================================================================================================
 # -- find traci module -----------------------------------------------------------------------------
 # ==================================================================================================
@@ -66,9 +71,10 @@ class SimulationSynchronization(object):
     simulations.
     """
 
-
-    def save_obstacle_data(self, data, sumo_actor_id):
+    ##### Begin: My code #####
+    def save_obstacle_data(self, data, sumo_actor_id, host, port):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+
             s.connect(('127.0.0.1', 9998))
             send_data = {
                 "vehid": str(sumo_actor_id),
@@ -83,7 +89,10 @@ class SimulationSynchronization(object):
 
             s.sendall(bytes(json.dumps(send_data), "ascii"))
             recv_data = s.recv(1024)
+            print(f"time: {self.sumo.current_time}")
             print(json.loads(str(recv_data, "ascii")))
+    ##### End: My code #####
+
 
     def attach_to_actor(self, bp, actor):
         return self.carla.world.spawn_actor(bp, carla.Transform(carla.Location(x=0.8, z=1.7)), attach_to=actor)
@@ -143,16 +152,28 @@ class SimulationSynchronization(object):
 
                 carla_actor_id = self.carla.spawn_actor(carla_blueprint, carla_transform)
 
+                ##### Begin: My code #####
+                global DATA_SERVER_HOST
+                global DATA_SERVER_PORT
+
                 # ----- attach sensors to new actors -----
                 self.sumoid2sensors[sumo_actor_id] = {}
                 bp = self.carla.world.get_blueprint_library().find('sensor.other.obstacle')
                 bp.set_attribute('distance', '100')
                 bp.set_attribute('only_dynamics', 'True')
                 self.sumoid2sensors[sumo_actor_id]['sensor.other.obstacle'] = self.attach_to_actor(bp, self.carla.get_actor(carla_actor_id))
-                self.sumoid2sensors[sumo_actor_id]['sensor.other.obstacle'].listen(lambda data: self.save_obstacle_data(data, sumo_actor_id))
+                self.sumoid2sensors[sumo_actor_id]['sensor.other.obstacle'].listen(lambda data: self.save_obstacle_data(
+                    data,
+                    sumo_actor_id,
+                    DATA_SERVER_HOST,
+                    DATA_SERVER_PORT)
+                )
 
                 if carla_actor_id != INVALID_ACTOR_ID:
                     self.sumo2carla_ids[sumo_actor_id] = carla_actor_id
+
+                ##### End: My code #####
+
             else:
                 self.sumo.unsubscribe(sumo_actor_id)
 
@@ -298,6 +319,9 @@ def synchronization_loop(args):
 
 
 if __name__ == '__main__':
+    # global DATA_SERVER_HOST
+    # global DATA_SERVER_PORT
+
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument('sumo_cfg_file', type=str, help='sumo configuration file')
     argparser.add_argument('--carla-host',
@@ -343,7 +367,18 @@ if __name__ == '__main__':
                            help="select traffic light manager (default: none)",
                            default='none')
     argparser.add_argument('--debug', action='store_true', help='enable debug messages')
+
+    ###### Begin: My codes. #####
+    argparser.add_argument('--carla_veins_data_server_host', default="localhost")
+    argparser.add_argument('--carla_veins_data_server_port', default=9998)
+    ###### End: My codes #####
+
     arguments = argparser.parse_args()
+
+    ###### Begin: My codes. #####
+    DATA_SERVER_HOST = arguments.carla_veins_data_server_host
+    DATA_SERVER_PORT = arguments.carla_veins_data_server_port
+    ###### End: My codes #####
 
     if arguments.sync_vehicle_all is True:
         arguments.sync_vehicle_lights = True
