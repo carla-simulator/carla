@@ -117,7 +117,6 @@ class TestDeterminism(SmokeTest):
         # run simulation 1
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run1 = self.run_simulation(world, vehicle_actor_list)
-        traffic_manager.set_synchronous_mode(False)
 
         # reset for simulation 2
         self.client.reload_world(False)
@@ -129,9 +128,9 @@ class TestDeterminism(SmokeTest):
         #run simulation 2
         vehicle_actor_list = self.spawn_vehicles(world, blueprint_transform_list)
         record_run2 = self.run_simulation(world, vehicle_actor_list)
-        traffic_manager.set_synchronous_mode(False)
 
         self.client.reload_world()
+        traffic_manager.set_synchronous_mode(False)
         world.apply_settings(old_settings)
 
         self.compare_records(record_run1, record_run2)
