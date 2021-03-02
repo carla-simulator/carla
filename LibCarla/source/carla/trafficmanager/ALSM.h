@@ -51,6 +51,7 @@ private:
   TrackTraffic &track_traffic;
   // Array of vehicles marked by stages for removal.
   std::vector<ActorId>& marked_for_removal;
+  std::unordered_set<ActorId>& marked_for_rerouting;
   const Parameters &parameters;
   const cc::World &world;
   const LocalMapPtr &local_map;
@@ -90,6 +91,7 @@ public:
        BufferMap &buffer_map,
        TrackTraffic &track_traffic,
        std::vector<ActorId>& marked_for_removal,
+       std::unordered_set<ActorId>& marked_for_rerouting,
        const Parameters &parameters,
        const cc::World &world,
        const LocalMapPtr &local_map,
@@ -101,6 +103,8 @@ public:
        RandomGeneratorMap &random_devices);
 
   void Update();
+
+  bool VehicleRerouting(const ActorId& actor_id);
 
   // Removes an actor from traffic manager and performs clean up of associated data
   // from various stages tracking the said vehicle.

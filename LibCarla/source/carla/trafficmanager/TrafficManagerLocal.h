@@ -116,6 +116,7 @@ private:
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   std::vector<ActorId> marked_for_removal;
+  std::unordered_set<ActorId> marked_for_rerouting;
   /// Mutex to prevent vehicle registration during frame array re-allocation.
   std::mutex registration_mutex;
 

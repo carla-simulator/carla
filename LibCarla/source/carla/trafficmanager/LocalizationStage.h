@@ -36,6 +36,7 @@ private:
   Parameters &parameters;
   // Array of vehicles marked by stages for removal.
   std::vector<ActorId>& marked_for_removal;
+  std::unordered_set<ActorId>& marked_for_rerouting;
   LocalizationFrame &output_array;
   cc::DebugHelper &debug_helper;
   LaneChangeLocationMap last_lane_change_location;
@@ -55,6 +56,11 @@ private:
                               const bool is_at_junction_entrance,
                               Buffer &waypoint_buffer);
 
+  uint16_t ChooseWaypoint(std::vector<SimpleWaypointPtr> next_waypoints,
+                          const ActorId actor_id);
+
+  bool VehiclePathChange(const ActorId& actor_id);
+
 public:
   LocalizationStage(const std::vector<ActorId> &vehicle_id_list,
                     BufferMap &buffer_map,
@@ -63,6 +69,7 @@ public:
                     const LocalMapPtr &local_map,
                     Parameters &parameters,
                     std::vector<ActorId>& marked_for_removal,
+                    std::unordered_set<ActorId>& marked_for_rerouting,
                     LocalizationFrame &output_array,
                     cc::DebugHelper &debug_helper,
                     RandomGeneratorMap &random_devices);

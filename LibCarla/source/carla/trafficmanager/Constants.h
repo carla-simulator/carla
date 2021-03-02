@@ -30,6 +30,10 @@ static const double RED_TL_BLOCKED_TIME_THRESHOLD = 180.0;
 static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
+namespace VehicleReroute {
+static const double REROUTE_TIME_THRESHOLD = 60.0;
+} // namespace VehicleRemoval
+
 namespace HybridMode {
 static const float HYBRID_MODE_DT_FL = 0.05f;
 static const double HYBRID_MODE_DT = 0.05;
@@ -56,10 +60,10 @@ static const float HORIZON_RATE = RATE(MAXIMUM_HORIZON_LENGTH,
 namespace WaypointSelection {
 static const float TARGET_WAYPOINT_TIME_HORIZON = 0.3f;
 static const float TARGET_WAYPOINT_HORIZON_LENGTH = 0.8f;
-static const float JUNCTION_LOOK_AHEAD = 6.0f;
-static const float SAFE_DISTANCE_AFTER_JUNCTION = 6.0f;
+static const float JUNCTION_LOOK_AHEAD = 10.0f;
+static const float SAFE_DISTANCE_AFTER_JUNCTION = 10.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
-static const float MIN_SAFE_INTERVAL_LENGTH = 1.5f * SAFE_DISTANCE_AFTER_JUNCTION;
+static const float MIN_SAFE_INTERVAL_LENGTH = 0.9f * SAFE_DISTANCE_AFTER_JUNCTION;
 } // namespace WaypointSelection
 
 namespace LaneChange {

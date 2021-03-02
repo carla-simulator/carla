@@ -14,11 +14,14 @@
 namespace carla {
 namespace traffic_manager {
 
+using namespace constants::VehicleReroute;
+
 ALSM::ALSM(
   AtomicActorSet &registered_vehicles,
   BufferMap &buffer_map,
   TrackTraffic &track_traffic,
   std::vector<ActorId>& marked_for_removal,
+  std::unordered_set<ActorId>& marked_for_rerouting,
   const Parameters &parameters,
   const cc::World &world,
   const LocalMapPtr &local_map,
@@ -32,6 +35,7 @@ ALSM::ALSM(
     buffer_map(buffer_map),
     track_traffic(track_traffic),
     marked_for_removal(marked_for_removal),
+    marked_for_rerouting(marked_for_rerouting),
     parameters(parameters),
     world(world),
     local_map(local_map),
@@ -109,6 +113,10 @@ void ALSM::Update() {
     RemoveActor(max_idle_time.first, true);
     elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
   }
+
+ else if (VehicleRerouting(max_idle_time.first)) {
+    marked_for_rerouting.insert(max_idle_time.first);
+ }
 
   // Destorying vehicles for marked for removal by stages.
   if (parameters.GetOSMMode()) {
@@ -330,6 +338,17 @@ bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
     TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
     if ((!tl_state.at_traffic_light && tl_state.tl_state != TLS::Red && delta_idle_time >= BLOCKED_TIME_THRESHOLD)
     || (delta_idle_time >= RED_TL_BLOCKED_TIME_THRESHOLD)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ALSM::VehicleRerouting(const ActorId& actor_id) {
+  if (idle_time.find(actor_id) != idle_time.end()) {
+    double delta_idle_time = current_timestamp.elapsed_seconds - idle_time.at(actor_id);
+    TrafficLightState tl_state = simulation_state.GetTLS(actor_id);
+    if (!tl_state.at_traffic_light && tl_state.tl_state != TLS::Red && delta_idle_time >= REROUTE_TIME_THRESHOLD) {
       return true;
     }
   }
