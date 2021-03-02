@@ -4,7 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from __init__ import SyncSmokeTest
+from . import SyncSmokeTest
 
 import carla
 import time
@@ -335,3 +335,5 @@ class TestSensorDeterminism(SyncSmokeTest):
 
         # Remove all the output files
         shutil.rmtree(output_path)
+
+        self.client.load_world("Town03")
