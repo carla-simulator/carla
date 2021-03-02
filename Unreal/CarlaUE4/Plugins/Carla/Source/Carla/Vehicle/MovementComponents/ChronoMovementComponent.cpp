@@ -8,7 +8,9 @@
 #include "ChronoMovementComponent.h"
 #include "compiler/disable-ue4-macros.h"
 #include <carla/rpc/String.h>
+#ifdef WITH_CHRONO
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
+#endif
 #include "compiler/enable-ue4-macros.h"
 #include "Carla/Util/RayTracer.h"
 
@@ -154,7 +156,7 @@ void UChronoMovementComponent::BeginPlay()
 
   // Set base path for vehicle JSON files
   vehicle::SetDataPath(carla::rpc::FromFString(BaseJSONPath));
-  
+
   std::string BasePath_string = carla::rpc::FromFString(BaseJSONPath);
 
   // Create full path for json files
@@ -167,12 +169,12 @@ void UChronoMovementComponent::BeginPlay()
   std::string PowerTrainJSON_string = carla::rpc::FromFString(PowertrainJSON);
   std::string PowerTrain_string = BasePath_string + PowerTrainJSON_string;
   FString PowerTrainJSONPath = carla::rpc::ToFString(PowerTrain_string);
-  
+
   std::string TireJSON_string = carla::rpc::FromFString(TireJSON);
   std::string Tire_string = BasePath_string + TireJSON_string;
   FString TireJSONPath = carla::rpc::ToFString(Tire_string);
-  
-  UE_LOG(LogCarla, Log, TEXT("Loading Chrono files: Vehicle: %s, PowerTrain: %s, Tire: %s"), 
+
+  UE_LOG(LogCarla, Log, TEXT("Loading Chrono files: Vehicle: %s, PowerTrain: %s, Tire: %s"),
       *VehicleJSONPath,
       *PowerTrainJSONPath,
       *TireJSONPath);
