@@ -67,11 +67,6 @@ if (CMAKE_GENERATOR MATCHES Xcode)
 endif ()
 message(STATUS "")
 
-#set(Python_ADDITIONAL_VERSIONS 3)
-#find_package(PythonInterp REQUIRED)
-#message(STATUS "Found Python: " ${PYTHON_EXECUTABLE})
-#execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import setuptools" RESULT_VARIABLE SETUPTOOLS_MISSING)
-
 find_package(Proj)
 if (PROJ_FOUND)
     include_directories(SYSTEM ${PROJ_INCLUDE_DIR})
