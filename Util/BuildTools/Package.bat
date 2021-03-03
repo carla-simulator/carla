@@ -275,6 +275,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
         echo   - prepare
         REM # Prepare cooking of package
+        echo call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe " "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject" -run=PrepareAssetsForCooking -PackageName=!PACKAGE_NAME! -OnlyPrepareMaps=false
         call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
         "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
         -run=PrepareAssetsForCooking^
@@ -286,6 +287,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
         echo   - cook
         REM # Cook maps
+        echo call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe " "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject" -run=cook -map="!MAPS_TO_COOK!" -cooksinglepackage -targetplatform="WindowsNoEditor" -OutputDir="!BUILD_FOLDER!"
         call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
         "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
         -run=cook^
