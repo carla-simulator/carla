@@ -81,7 +81,7 @@ void export_actor() {
       .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
       .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
       .add_property("semantic_tags", &GetSemanticTags)
-      .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
+      .add_property("is_alive", CALL_WITHOUT_GIL(cc::Actor, IsAlive))
       .add_property("attributes", +[] (const cc::Actor &self) {
         boost::python::dict attribute_dict;
         for (auto &&attribute_value : self.GetAttributes()) {

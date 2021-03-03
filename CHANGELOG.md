@@ -3,8 +3,14 @@
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
+  * Improved performance bencharmark script: sync, map and sensor selection, ...
+  * Improved performance, destroyed PhysX state for vehicles when physics are disable
+  * Added 'visualize_multiple_sensors' example
+  * Added 'check_lidar_bb' util script
+  * Improved manual_control: now cameras are set in relation with car size
   * Added performance benchmarking section to documentation
-
+  * CARLA is compatible with the last RoadRunner nomenclature for road assets
+  * Fixed a bug when importing a FBX map with some **_** in the FBX name
 
 ## CARLA 0.9.11
 

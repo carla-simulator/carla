@@ -259,7 +259,7 @@ namespace detail {
 
   bool Client::DestroyActor(rpc::ActorId actor) {
     try {
-      return _pimpl->CallAndWait<void>("destroy_actor", actor);
+      return _pimpl->CallAndWait<bool>("destroy_actor", actor);
     } catch (const std::exception &e) {
       log_error("failed to destroy actor", actor, ':', e.what());
       return false;
