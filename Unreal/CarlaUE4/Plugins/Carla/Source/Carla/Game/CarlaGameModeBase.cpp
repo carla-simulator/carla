@@ -266,6 +266,9 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
     FTransform Transform(CarlaTransform);
     Spawner->SetActorRotation(Transform.GetRotation());
     Spawner->SetActorLocation(Transform.GetTranslation() + FVector(0.f, 0.f, 300.0f));
+    #if WITH_EDITOR
+      Spawner->SetFolderPath("/SpawnPoints");
+    #endif
   }
   UE_LOG(LogCarla, Log, TEXT("%d SpawnPoints generated"), Topology.size());
 }
