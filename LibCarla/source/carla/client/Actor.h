@@ -24,9 +24,7 @@ namespace client {
 
     explicit Actor(ActorInitializer init)
       : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(init.GetDisplayId()),
-        Super(std::move(init)) {
-          _is_alive = IsAliveInEpisode();
-        }
+        Super(std::move(init)) {}
 
     using ActorState::GetBoundingBox;
 
@@ -107,9 +105,8 @@ namespace client {
     /// @warning This method only checks whether this instance of Actor has
     /// called the Destroy() method, it does not check whether the actor is
     /// actually alive in the simulator.
-    bool IsAlive() {
-      _is_alive = _is_alive && GetEpisode().IsValid() && IsAliveInEpisode();
-      return _is_alive;
+    bool IsAlive() const {
+      return _is_alive && GetEpisode().IsValid() && IsAliveInEpisode();
     }
 
     /// Tell the simulator to destroy this Actor, and return whether the actor
