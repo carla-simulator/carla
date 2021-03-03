@@ -38,6 +38,8 @@ public:
 
   virtual void BeginPlay() override;
 
+  virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
   void ProcessControl(FVehicleControl &Control) override;
 
   FVector GetVelocity() const override;
@@ -69,4 +71,11 @@ private:
       bool bFromSweep,
       const FHitResult & SweepResult);
 
+  // On car mesh overlap end, only works when carsim is enabled
+  // (this event triggers when overlapping with static environment)
+  UFUNCTION()
+  void OnCarSimEndOverlap(UPrimitiveComponent* OverlappedComponent,
+      AActor* OtherActor,
+      UPrimitiveComponent* OtherComp,
+      int32 OtherBodyIndex);
 };

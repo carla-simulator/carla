@@ -17,6 +17,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
+#include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -493,7 +494,7 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(Result.Value);
   };
 
-  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<void>
+  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -505,7 +506,7 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("internal error: unable to destroy actor");
     }
-    return R<void>::Success();
+    return true;
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1173,6 +1174,26 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("UCarSimManagerComponent plugin is not activated");
     }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(enable_chrono_physics) << [this](
+      cr::ActorId ActorId,
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set chrono physics: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set chrono physics: not actor is not a vehicle");
+    }
+    UChronoMovementComponent::CreateChronoMovementComponent(Vehicle, MaxSubsteps, MaxSubstepDeltaTime);
     return R<void>::Success();
   };
 

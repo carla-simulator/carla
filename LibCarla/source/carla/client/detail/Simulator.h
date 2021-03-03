@@ -463,6 +463,10 @@ namespace detail {
       _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
+    void EnableChronoPhysics(Vehicle &vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
+      _client.EnableChronoPhysics(vehicle.GetId(), MaxSubsteps, MaxSubstepDeltaTime);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder

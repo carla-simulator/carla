@@ -59,19 +59,19 @@ void SetMaterials(FbxNode* pNode)
         pNode->RemoveAllMaterials();
         // check nomenclature
         const char *name = pNode->GetName();
-        if (StartsWith(name, "Road_Road"))
+        if (StartsWith(name, "Road_Road") || StartsWith(name, "Roads_Road"))
             mat = gMatRoad;
-        else if (StartsWith(name, "Road_Marking"))
+        else if (StartsWith(name, "Road_Marking") || StartsWith(name, "Roads_Marking"))
             mat = gMatRoad;
-        else if (StartsWith(name, "Road_Curb"))
+        else if (StartsWith(name, "Road_Curb") || StartsWith(name, "Roads_Curb"))
             mat = gMatRoad;
-        else if (StartsWith(name, "Road_Gutter"))
+        else if (StartsWith(name, "Road_Gutter") || StartsWith(name, "Roads_Gutter"))
             mat = gMatRoad;
-		else if (StartsWith(name, "Road_Sidewalk"))
+		else if (StartsWith(name, "Road_Sidewalk") || StartsWith(name, "Roads_Sidewalk"))
 			mat = gMatSidewalk;
-		else if (StartsWith(name, "Road_Crosswalk"))
+		else if (StartsWith(name, "Road_Crosswalk") || StartsWith(name, "Roads_Crosswalk"))
 			mat = gMatCross;
-		else if (StartsWith(name, "Road_Grass"))
+		else if (StartsWith(name, "Road_Grass") || StartsWith(name, "Roads_Grass"))
 			mat = gMatGrass;
 
         printf("Node %s : %s\n", name, mat->GetName());

@@ -17,5 +17,6 @@
 
 #pragma pop_macro("check")
 #pragma pop_macro("TEXT")
+#pragma pop_macro("PI")
 
 #undef LIBCARLA_INCLUDED_FROM_UE4

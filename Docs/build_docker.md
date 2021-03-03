@@ -42,10 +42,10 @@ Pull the CARLA image.
 docker pull carlasim/carla:version
 ```
 
-For selecting a version, for instance, version 0.8.2 (stable), do:
+To select a specific version:
 
 ```sh
-docker pull carlasim/carla:0.8.2
+docker pull carlasim/carla:0.9.11
 ```
 
 Running CARLA under docker.

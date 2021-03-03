@@ -8,17 +8,21 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
+USE_CHRONO=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --python-version )
       PY_VERSION_LIST="$2";
       shift 2 ;;
+    --chrono )
+      USE_CHRONO=true;
+      shift ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -461,6 +465,84 @@ else
   rm -Rf ${XERCESC_SRC_DIR}
 fi
 
+if ${USE_CHRONO} ; then
+
+  # ==============================================================================
+  # -- Get Eigen headers (Chrono dependency) -------------------------------------
+  # ==============================================================================
+
+  EIGEN_VERSION=3.3.7
+  EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
+  EIGEN_BASENAME=eigen-${EIGEN_VERSION}
+
+  EIGEN_SRC_DIR=eigen-${EIGEN_VERSION}-src
+  EIGEN_INSTALL_DIR=eigen-${EIGEN_VERSION}-install
+  EIGEN_INCLUDE=${EIGEN_INSTALL_DIR}/include
+
+
+  if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
+    log "Eigen already installed."
+  else
+    log "Retrieving Eigen."
+    wget ${EIGEN_REPO}
+
+    log "Extracting Eigen."
+    tar -xzf ${EIGEN_BASENAME}.tar.gz
+    mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
+    mkdir -p ${EIGEN_INCLUDE}/unsupported
+    mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
+    mv ${EIGEN_SRC_DIR}/unsupported/Eigen ${EIGEN_INCLUDE}/unsupported/Eigen
+
+    rm -Rf ${EIGEN_BASENAME}.tar.gz
+    rm -Rf ${EIGEN_SRC_DIR}
+  fi
+
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+  cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+
+  # ==============================================================================
+  # -- Get Chrono and compile it with libc++ -------------------------------------
+  # ==============================================================================
+
+  CHRONO_TAG=6.0.0
+  # CHRONO_TAG=develop
+  CHRONO_REPO=https://github.com/projectchrono/chrono.git
+
+  CHRONO_SRC_DIR=chrono-source
+  CHRONO_INSTALL_DIR=chrono-install
+
+  if [[ -d ${CHRONO_INSTALL_DIR} ]] ; then
+    log "chrono library already installed."
+  else
+    log "Retrieving chrono library."
+    git clone --depth 1 --branch ${CHRONO_TAG} ${CHRONO_REPO} ${CHRONO_SRC_DIR}
+
+    mkdir -p ${CHRONO_SRC_DIR}/build
+
+    pushd ${CHRONO_SRC_DIR}/build >/dev/null
+
+    cmake -G "Ninja" \
+        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
+        -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
+        -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DENABLE_MODULE_VEHICLE=ON \
+        ..
+    ninja
+    ninja install
+
+    popd >/dev/null
+
+    rm -Rf ${CHRONO_SRC_DIR}
+  fi
+
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+  cp -p ${CHRONO_INSTALL_DIR}/lib/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p -r ${CHRONO_INSTALL_DIR}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+
+fi
+
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
@@ -511,7 +593,7 @@ cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL

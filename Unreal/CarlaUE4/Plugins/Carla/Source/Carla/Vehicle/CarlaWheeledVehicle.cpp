@@ -118,6 +118,7 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   Vehicle4W->WheelSetups = NewWheelSetups;
 
+  LastPhysicsControl = GetVehiclePhysicsControl();
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -337,8 +338,15 @@ FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
   return InputControl.LightState;
 }
 
+void ACarlaWheeledVehicle::RestoreVehiclePhysicsControl()
+{
+  ApplyVehiclePhysicsControl(LastPhysicsControl);
+}
+
 void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
+  LastPhysicsControl = PhysicsControl;
+
   UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
       GetVehicleMovement());
   check(Vehicle4W != nullptr);
