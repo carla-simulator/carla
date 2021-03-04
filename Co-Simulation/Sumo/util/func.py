@@ -5,6 +5,7 @@ import signal
 import socket
 import shutil
 
+from functools import reduce
 from subprocess import Popen
 
 def check_port_listens(checked_port):
@@ -53,17 +54,3 @@ def host_ip():
         s.close()
 
     return ip
-
-def kill_processes(procs):
-    try:
-        if 0 < len(procs):
-            os.killpg(os.getpgid(procs[0].pid), signal.SIGTERM)
-            procs.pop(0)
-            return kill_processes(procs)
-        else:
-            return procs
-
-    except Exception as e:
-        logging.error(e)
-        logging.error(f"Pids: {[proc.pid for proc in procs]} are remained.")
-        return procs

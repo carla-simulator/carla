@@ -2,6 +2,7 @@ import argparse
 import logging
 import multiprocessing
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -16,7 +17,6 @@ from util.func import (
     check_port_listens_by_port_scan,
     data_from_json,
     host_ip,
-    kill_processes,
 )
 
 if 'SUMO_HOME' in os.environ:
@@ -29,7 +29,35 @@ else:
 CTRL_C_PRESSED_MESSAGE = "ctrl-c is pressed."
 
 # ----- function -----
+# ----- handling processes -----
+def is_processes_alive(procs):
+    is_alive = True
 
+    for p in procs:
+        if p.poll() is None:
+            is_alive = is_alive & True
+        else:
+            is_alive = is_alive & False
+
+    return is_alive
+
+
+def kill_processes(procs):
+    try:
+        if 0 < len(procs):
+            os.killpg(os.getpgid(procs[0].pid), signal.SIGTERM)
+            procs.pop(0)
+            return kill_processes(procs)
+        else:
+            return procs
+
+    except Exception as e:
+        logging.error(e)
+        logging.error(f"Pids: {[proc.pid for proc in procs]} are remained.")
+        return procs
+
+
+# ----- processes -----
 def change_carla_map(args, env, sumo_files):
     return Popen(f"python config.py -p {args.carla_unrealengine_port} -m {args.carla_map_name} > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True)
 
@@ -56,9 +84,9 @@ def start_sumo_for_veins(args, env, sumo_files):
 
 def start_tracis_synchronization(args, env, sumo_files):
     if args.main_mobility_handler == "carla":
-        return Popen(f"python run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} > /dev/null 2>&1", shell=True)
+        return Popen(f"python run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} ", shell=True)
     else:
-        return Popen(f"python run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2} > /dev/null 2>&1", shell=True)
+        return Popen(f"python run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2}  ", shell=True)
 
 
 class Main:
@@ -88,16 +116,20 @@ class Main:
             p = change_carla_map(args, env, sumo_files)
             p.wait()
 
-            print("Starting processes ...")
+            print("Starting SUMO-traci servers ...")
             procs.append(start_sumo_for_carla(args, env, sumo_files))
             procs.append(start_sumo_for_veins(args, env, sumo_files))
+            time.sleep(5)
+
+            print("Starting synchronization processes ...")
             procs.append(start_carla_sumo_synchronization(args, env, sumo_files))
             procs.append(start_veins_sumo_synchronization(args, env, sumo_files))
             procs.append(start_carla_veins_data_server(args, env, sumo_files))
+            procs.append(start_tracis_synchronization(args, env, sumo_files))
 
             print(f"Please run {env['ini_file_in_veins']} manually in Veins.")
-            tracis_syncronizer_proc = start_tracis_synchronization(args, env, sumo_files)
-            tracis_syncronizer_proc.wait()
+            while is_processes_alive(procs) == True:
+                pass
 
         except KeyboardInterrupt:
             logging.info(CTRL_C_PRESSED_MESSAGE)

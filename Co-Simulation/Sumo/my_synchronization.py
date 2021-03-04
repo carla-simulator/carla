@@ -89,7 +89,7 @@ class SimulationSynchronization(object):
 
             s.sendall(bytes(json.dumps(send_data), "ascii"))
             recv_data = s.recv(1024)
-            print(f"time: {self.sumo.current_time}")
+            print(f"time: {self.current_time}")
             print(json.loads(str(recv_data, "ascii")))
     ##### End: My code #####
 
@@ -119,7 +119,11 @@ class SimulationSynchronization(object):
         # Mapped actor ids.
         self.sumo2carla_ids = {}  # Contains only actors controlled by sumo.
         self.carla2sumo_ids = {}  # Contains only actors controlled by carla.
+
+        ##### Begin: My code #####
         self.sumoid2sensors = {}
+        self.current_time = 0
+        ##### End: My code #####
 
         BridgeHelper.blueprint_library = self.carla.world.get_blueprint_library()
         BridgeHelper.offset = self.sumo.get_net_offset()
@@ -138,6 +142,10 @@ class SimulationSynchronization(object):
         # sumo-->carla sync
         # -----------------
         self.sumo.tick()
+
+        ##### Begin: My code #####
+        self.current_time = self.sumo.current_time()
+        ##### End: My code #####
 
         # Spawning new sumo actors in carla (i.e, not controlled by carla).
         sumo_spawned_actors = self.sumo.spawned_actors - set(self.carla2sumo_ids.values())

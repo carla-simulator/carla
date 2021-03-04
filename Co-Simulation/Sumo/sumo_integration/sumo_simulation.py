@@ -352,9 +352,16 @@ class SumoSimulation(object):
     def traffic_light_ids(self):
         return self.traffic_light_manager.get_all_landmarks()
 
-    @property
-    def current_time(self):
-        return traci.simulation.getCurrentTime()
+    ##### Begin: My code #####
+    def current_time(self, error_time=0):
+        if 1000 <= error_time:
+            raise Exception("Cannot get current time.")
+
+        try:
+            return traci.simulation.getTime()
+        except Exception as e:
+            return self.current_time(error_time + 1)
+    ##### End: My code #####
 
     @staticmethod
     def subscribe(actor_id):
