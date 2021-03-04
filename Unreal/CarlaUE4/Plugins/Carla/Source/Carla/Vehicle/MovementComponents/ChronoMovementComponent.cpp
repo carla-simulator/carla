@@ -148,6 +148,21 @@ void UChronoMovementComponent::BeginPlay()
   Sys.SetSolverMaxIterations(150);
   Sys.SetMaxPenetrationRecoverySpeed(4.0);
 
+  InitializeChronoVehicle();
+
+  // Create the terrain
+  Terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, Vehicle.get());
+
+  CarlaVehicle->OnActorHit.AddDynamic(
+      this, &UChronoMovementComponent::OnVehicleHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.AddDynamic(
+      this, &UChronoMovementComponent::OnVehicleOverlap);
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+}
+
+void UChronoMovementComponent::InitializeChronoVehicle()
+{
   // Initial location with small offset to prevent falling through the ground
   FVector VehicleLocation = CarlaVehicle->GetActorLocation() + FVector(0,0,25);
   FQuat VehicleRotation = CarlaVehicle->GetActorRotation().Quaternion();
@@ -195,9 +210,6 @@ void UChronoMovementComponent::BeginPlay()
           Vehicle->InitializeTire(tire, wheel, VisualizationType::MESH);
       }
   }
-
-  // Create the terrain
-  Terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, Vehicle.get());
 }
 
 void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)
@@ -311,4 +323,80 @@ float UChronoMovementComponent::GetVehicleForwardSpeed() const
   }
   return 0.f;
 }
+
+void UChronoMovementComponent::SynchronizeActorChronoTransform()
+{
+
+}
+
+void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  if(!CarlaVehicle)
+  {
+    return;
+  }
+  // reset callbacks to react to collisions
+  CarlaVehicle->OnActorHit.RemoveDynamic(
+      this, &UChronoMovementComponent::OnVehicleHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(
+      this, &UChronoMovementComponent::OnVehicleOverlap);
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+}
 #endif
+
+void UChronoMovementComponent::DisableChronoPhysics(float Duration)
+{
+  this->SetComponentTickEnabled(false);
+  EnableUE4VehiclePhysics(false);
+  CarlaVehicle->OnActorHit.RemoveDynamic(this, &UChronoMovementComponent::OnVehicleHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(
+      this, &UChronoMovementComponent::OnVehicleOverlap);
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  // FTimerHandle TimerHandler;
+  // GetWorld()->GetTimerManager().
+  //     SetTimer(TimerHandler, this, &UChronoMovementComponent::ResetChronoPhysics, Duration);
+  UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
+  carla::log_warning("DisableChronoPhysics");
+}
+
+void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
+    AActor *OtherActor,
+    FVector NormalImpulse,
+    const FHitResult &Hit)
+{
+  DisableChronoPhysics(CollisionBehaviorTime);
+}
+
+// On car mesh overlap, only works when carsim is enabled
+// (this event triggers when overlapping with static environment)
+void UChronoMovementComponent::OnVehicleOverlap(
+    UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex,
+    bool bFromSweep,
+    const FHitResult & SweepResult)
+{
+  if (OtherComp->GetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldDynamic) ==
+      ECollisionResponse::ECR_Block)
+  {
+    DisableChronoPhysics(CollisionBehaviorTime);
+  }
+}
+
+void UChronoMovementComponent::ResetChronoPhysics()
+{
+  DisableUE4VehiclePhysics();
+  InitializeChronoVehicle();
+  this->SetComponentTickEnabled(true);
+  carla::log_warning("ResetChronoPhysics");
+  CarlaVehicle->OnActorHit.AddDynamic(
+      this, &UChronoMovementComponent::OnVehicleHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.AddDynamic(
+      this, &UChronoMovementComponent::OnVehicleOverlap);
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+}
