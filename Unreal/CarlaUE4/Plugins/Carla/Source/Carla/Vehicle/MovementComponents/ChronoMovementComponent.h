@@ -46,7 +46,6 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
 
 #ifdef WITH_CHRONO
   chrono::ChSystemNSC Sys;
-  // chrono::vehicle::hmmwv::HMMWV_Full my_hmmwv;
   std::shared_ptr<chrono::vehicle::WheeledVehicle> Vehicle;
   std::shared_ptr<UERayCastTerrain> Terrain;
 #endif
@@ -74,6 +73,8 @@ public:
   #ifdef WITH_CHRONO
   virtual void BeginPlay() override;
 
+  void InitializeChronoVehicle();
+
   void ProcessControl(FVehicleControl &Control) override;
 
   void TickComponent(float DeltaTime,
@@ -87,5 +88,33 @@ public:
   virtual int32 GetVehicleCurrentGear() const override;
 
   virtual float GetVehicleForwardSpeed() const override;
+
+  void SynchronizeActorChronoTransform();
+
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   #endif
+
+private:
+  void DisableChronoPhysics(float Duration);
+
+  UFUNCTION()
+  void OnVehicleHit(AActor *Actor,
+      AActor *OtherActor,
+      FVector NormalImpulse,
+      const FHitResult &Hit);
+
+  // On car mesh overlap, only works when carsim is enabled
+  // (this event triggers when overlapping with static environment)
+  UFUNCTION()
+  void OnVehicleOverlap(UPrimitiveComponent* OverlappedComponent,
+      AActor* OtherActor,
+      UPrimitiveComponent* OtherComp,
+      int32 OtherBodyIndex,
+      bool bFromSweep,
+      const FHitResult & SweepResult);
+
+  UFUNCTION()
+  void ResetChronoPhysics();
+
+  const float CollisionBehaviorTime = 0.1;
 };
