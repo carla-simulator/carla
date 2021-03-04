@@ -5,6 +5,7 @@ rem BAT script that downloads and installs a ready to use
 rem x64 zlib build for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
+set MAKEFLAGS=
 set LOCAL_PATH=%~dp0
 set FILE_N=    -[%~n0]:
 

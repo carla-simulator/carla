@@ -1180,7 +1180,11 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(enable_chrono_physics) << [this](
       cr::ActorId ActorId,
       uint64_t MaxSubsteps,
-      float MaxSubstepDeltaTime) -> R<void>
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -1193,7 +1197,14 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set chrono physics: not actor is not a vehicle");
     }
-    UChronoMovementComponent::CreateChronoMovementComponent(Vehicle, MaxSubsteps, MaxSubstepDeltaTime);
+    UChronoMovementComponent::CreateChronoMovementComponent(
+        Vehicle,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        cr::ToFString(VehicleJSON),
+        cr::ToFString(PowertrainJSON),
+        cr::ToFString(TireJSON),
+        cr::ToFString(BaseJSONPath));
     return R<void>::Success();
   };
 

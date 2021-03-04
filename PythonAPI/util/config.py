@@ -229,7 +229,7 @@ def main():
             print('file not found.')
     elif args.osm_path is not None:
         if os.path.exists(args.osm_path):
-            with open(args.osm_path) as od_file:
+            with open(args.osm_path, encoding='utf-8') as od_file:
                 try:
                     data = od_file.read()
                 except OSError:

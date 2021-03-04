@@ -463,8 +463,20 @@ namespace detail {
       _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
-    void EnableChronoPhysics(Vehicle &vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
-      _client.EnableChronoPhysics(vehicle.GetId(), MaxSubsteps, MaxSubstepDeltaTime);
+    void EnableChronoPhysics(Vehicle &vehicle,
+        uint64_t MaxSubsteps,
+        float MaxSubstepDeltaTime,
+        std::string VehicleJSON,
+        std::string PowertrainJSON,
+        std::string TireJSON,
+        std::string BaseJSONPath) {
+      _client.EnableChronoPhysics(vehicle.GetId(),
+          MaxSubsteps,
+          MaxSubstepDeltaTime,
+          VehicleJSON,
+          PowertrainJSON,
+          TireJSON,
+          BaseJSONPath);
     }
 
     /// @}

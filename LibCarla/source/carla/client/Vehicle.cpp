@@ -104,8 +104,20 @@ namespace client {
     GetEpisode().Lock()->UseCarSimRoad(*this, enabled);
   }
 
-  void Vehicle::EnableChronoPhysics(uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
-    GetEpisode().Lock()->EnableChronoPhysics(*this, MaxSubsteps, MaxSubstepDeltaTime);
+  void Vehicle::EnableChronoPhysics(
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) {
+    GetEpisode().Lock()->EnableChronoPhysics(*this,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        VehicleJSON,
+        PowertrainJSON,
+        TireJSON,
+        BaseJSONPath);
   }
 
 } // namespace client

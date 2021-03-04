@@ -544,6 +544,97 @@ if ${USE_CHRONO} ; then
 fi
 
 # ==============================================================================
+# -- Get and compile Sqlite3 ---------------------------------------------------
+# ==============================================================================
+
+SQLITE_VERSION=sqlite-autoconf-3340100
+SQLITE_REPO=https://www.sqlite.org/2021/${SQLITE_VERSION}.tar.gz
+
+SQLITE_TAR=${SQLITE_VERSION}.tar.gz
+SQLITE_SOURCE_DIR=sqlite-src
+SQLITE_INSTALL_DIR=sqlite-install
+
+SQLITE_INCLUDE_DIR=${PWD}/${SQLITE_INSTALL_DIR}/include
+SQLITE_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/libsqlite3.a
+SQLITE_EXE=${PWD}/${SQLITE_INSTALL_DIR}/bin/sqlite3
+
+if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
+  log "Sqlite already installed."
+else
+  log "Retrieving Sqlite3"
+  wget ${SQLITE_REPO}
+
+  log "Extracting Sqlite3"
+  tar -xzf ${SQLITE_TAR}
+  mv ${SQLITE_VERSION} ${SQLITE_SOURCE_DIR}
+
+  mkdir ${SQLITE_INSTALL_DIR}
+
+  pushd ${SQLITE_SOURCE_DIR} >/dev/null
+
+  export CFLAGS="-fPIC"
+  ./configure --prefix=${PWD}/../sqlite-install/
+  make
+  make install
+
+  popd >/dev/null
+
+  rm -Rf ${SQLITE_TAR}
+  rm -Rf ${SQLITE_SOURCE_DIR}
+fi
+
+cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+# ==============================================================================
+# -- Get and compile PROJ ------------------------------------------------------
+# ==============================================================================
+
+PROJ_VERSION=proj-7.2.1
+PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
+
+PROJ_TAR=${PROJ_VERSION}.tar.gz
+PROJ_SRC_DIR=proj-src
+PROJ_INSTALL_DIR=proj-install
+PROJ_INSTALL_DIR_FULL=${PWD}/${PROJ_INSTALL_DIR}
+PROJ_LIB=${PROJ_INSTALL_DIR_FULL}/lib/libproj.a
+
+if [[ -d ${PROJ_INSTALL_DIR} ]] ; then
+  log "PROJ already installed."
+else
+  log "Retrieving PROJ"
+  wget ${PROJ_REPO}
+
+  log "Extracting PROJ"
+  tar -xzf ${PROJ_TAR}
+  mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
+
+  mkdir ${PROJ_SRC_DIR}/build
+  mkdir ${PROJ_INSTALL_DIR}
+
+  pushd ${PROJ_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" .. \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DEXE_SQLITE3=${SQLITE_EXE} \
+      -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
+      -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
+      -DBUILD_CCT=OFF -DBUILD_CS2CS=OFF -DBUILD_GEOD=OFF -DBUILD_GIE=OFF \
+      -DBUILD_PROJ=OFF -DBUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX=${PROJ_INSTALL_DIR_FULL}
+  ninja
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${PROJ_TAR}
+  rm -Rf ${PROJ_SRC_DIR}
+
+fi
+
+cp ${PROJ_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
