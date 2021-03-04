@@ -71,7 +71,7 @@ def start_veins_sumo_synchronization(args, env, sumo_files):
 
 
 def start_carla_veins_data_server(args, env, sumo_files):
-    return Popen(f"python carla_veins_data_server.py --host {args.data_server_host} --port {args.data_server_port}", shell=True)
+    return Popen(f"python ./synch/carla_veins_data_server.py --host {args.data_server_host} --port {args.data_server_port}", shell=True)
 
 
 def start_sumo_for_carla(args, env, sumo_files):
@@ -84,9 +84,9 @@ def start_sumo_for_veins(args, env, sumo_files):
 
 def start_tracis_synchronization(args, env, sumo_files):
     if args.main_mobility_handler == "carla":
-        return Popen(f"python run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} ", shell=True)
+        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} ", shell=True)
     else:
-        return Popen(f"python run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2}  ", shell=True)
+        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2}  ", shell=True)
 
 
 class Main:

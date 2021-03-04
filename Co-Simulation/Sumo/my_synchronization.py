@@ -91,11 +91,12 @@ class SimulationSynchronization(object):
             recv_data = s.recv(1024)
             print(f"time: {self.current_time}")
             print(json.loads(str(recv_data, "ascii")))
-    ##### End: My code #####
 
 
     def attach_to_actor(self, bp, actor):
         return self.carla.world.spawn_actor(bp, carla.Transform(carla.Location(x=0.8, z=1.7)), attach_to=actor)
+    ##### End: My code #####
+    
 
     def __init__(self,
                  sumo_simulation,

@@ -32,7 +32,6 @@ class TracisSyncronizer:
     def start(self):
         while self.check_sumo_finish is not False:
             self.main_traci.simulationStep()
-            print(self.main_traci.simulation.getTime())
 
             for o_traci in self.other_tracis:
                 self.sync_tracis(self.main_traci, o_traci)
