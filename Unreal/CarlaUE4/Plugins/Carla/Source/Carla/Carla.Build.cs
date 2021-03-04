@@ -129,6 +129,13 @@ public class Carla : ModuleRules
     }
   }
 
+  private void AddDynamicLibrary(string library)
+  {
+    PublicAdditionalLibraries.Add(library);
+    RuntimeDependencies.Add(library);
+    PublicDelayLoadDLLs.Add(library);
+  }
+
   delegate string ADelegate(string s);
 
   private void AddBoostLibs(string LibPath)
@@ -180,6 +187,7 @@ public class Carla : ModuleRules
         PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
         PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
         PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
+        bUseRTTI = true;
       }
     }
     else
@@ -195,15 +203,18 @@ public class Carla : ModuleRules
       }
       if (UsingChrono)
       {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_robot.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_robot.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1.0"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1.0"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
         bUseRTTI = true;
+        bEnableExceptions = true;
       }
     }
 
