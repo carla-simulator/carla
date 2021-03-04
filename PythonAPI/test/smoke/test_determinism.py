@@ -130,6 +130,7 @@ class TestDeterminism(SmokeTest):
         record_run2 = self.run_simulation(world, vehicle_actor_list)
 
         self.client.reload_world()
+        traffic_manager.set_synchronous_mode(False)
         world.apply_settings(old_settings)
 
         self.compare_records(record_run1, record_run2)
