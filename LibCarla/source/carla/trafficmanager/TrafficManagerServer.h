@@ -168,6 +168,10 @@ public:
         tm->SetHybridPhysicsRadius(mode_switch);
       });
 
+      server->bind("shut_down", [=]() {
+        tm->Release();
+      });
+
       /// Method to set synchronous mode.
       server->bind("set_synchronous_mode", [=](const bool mode) {
         tm->SetSynchronousMode(mode);

@@ -105,6 +105,8 @@ public:
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
 
+  virtual void ShutDown();
+
   /// Method to provide synchronous tick
   bool SynchronousTick();
 

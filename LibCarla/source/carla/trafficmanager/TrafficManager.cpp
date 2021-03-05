@@ -66,6 +66,19 @@ void TrafficManager::Tick() {
   }
 }
 
+void TrafficManager::ShutDown() {
+  TrafficManagerBase* tm_ptr = GetTM(_port);
+  std::lock_guard<std::mutex> lock(_mutex);
+  auto it = _tm_map.find(_port);
+  if (it != _tm_map.end()) {
+    _tm_map.erase(it);
+  }
+  if(tm_ptr != nullptr) {
+    tm_ptr->ShutDown();
+    delete tm_ptr;
+  }
+}
+
 void TrafficManager::CreateTrafficManagerServer(
     carla::client::detail::EpisodeProxy episode_proxy,
     uint16_t port) {
