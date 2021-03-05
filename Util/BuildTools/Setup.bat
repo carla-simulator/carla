@@ -232,17 +232,11 @@ if %USE_CHRONO% == true (
     if not exist "%CARLA_DEPENDENCIES_FOLDER%dll" (
         mkdir "%CARLA_DEPENDENCIES_FOLDER%dll"
     )
-    if not exist "%CARLA_BINARIES_FOLDER%" (
-        mkdir %CARLA_BINARIES_FOLDER%
-    )
     echo "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
     copy "%INSTALLATION_DIR%chrono-install\lib\*.lib" "%CARLA_DEPENDENCIES_FOLDER%lib\*.lib" > NUL
     copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_DEPENDENCIES_FOLDER%dll\*.dll" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
-    rem Workaround for unreal not finding the .dll files
-    copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_BINARIES_FOLDER%\*.dll" > NUL
-
 )
 
 rem ============================================================================
