@@ -69,7 +69,7 @@ class LocalPlanner(object):
         self._next_waypoints = None
         self.target_waypoint = None
         self._vehicle_controller = None
-        self._global_plan = None
+        self._stop_waypoint_creation = None
         # queue with tuples of (waypoint, RoadOption)
         self._waypoints_queue = deque(maxlen=20000)
         self._buffer_size = 5
@@ -145,7 +145,7 @@ class LocalPlanner(object):
                                                         max_brake=self._max_brake,
                                                         max_steering=self._max_steer)
 
-        self._global_plan = False
+        self._stop_waypoint_creation = False
 
         # compute initial waypoints
         self._waypoints_queue.append((self._current_waypoint.next(self._sampling_radius)[0], RoadOption.LANEFOLLOW))
@@ -194,12 +194,13 @@ class LocalPlanner(object):
 
             self._waypoints_queue.append((next_waypoint, road_option))
 
-    def set_global_plan(self, current_plan):
+    def set_global_plan(self, current_plan, stop_waypoint_creation=True):
         """
         Resets the waypoint queue and buffer to match the new plan. Also
-        sets the global_plan flag to avoid creating more waypoints
+        handles the stop_waypoint_creation flag to avoid creating more waypoints
 
         :param current_plan: list of (carla.Waypoint, RoadOption)
+        :param stop_waypoint_creation: bool
         :return:
         """
 
@@ -218,7 +219,7 @@ class LocalPlanner(object):
             else:
                 break
 
-        self._global_plan = True
+        self._stop_waypoint_creation = stop_waypoint_creation
 
     def run_step(self, debug=False):
         """
@@ -230,7 +231,7 @@ class LocalPlanner(object):
         """
 
         # not enough waypoints in the horizon? => add more!
-        if not self._global_plan and len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
+        if not self._stop_waypoint_creation and len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
             self._compute_next_waypoints(k=100)
 
         if len(self._waypoints_queue) == 0 and len(self._waypoint_buffer) == 0:
