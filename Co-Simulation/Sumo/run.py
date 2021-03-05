@@ -63,7 +63,7 @@ def change_carla_map(args, env, sumo_files):
 
 
 def start_carla_sumo_synchronization(args, env, sumo_files):
-    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} ", shell=True)
+    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} ", shell=True)
 
 
 def start_veins_sumo_synchronization(args, env, sumo_files):
@@ -75,11 +75,11 @@ def start_carla_veins_data_server(args, env, sumo_files):
 
 
 def start_sumo_for_carla(args, env, sumo_files):
-    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.carla_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
+    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
 
 
 def start_sumo_for_veins(args, env, sumo_files):
-    return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['veins_ini_dir_in_vagrant']}/{env['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.sumo_step_length} --remote-port {args.veins_sumo_port} --num-clients 2 > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
+    return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['veins_ini_dir_in_vagrant']}/{env['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients 2 > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
 
 
 def start_tracis_synchronization(args, env, sumo_files):
@@ -153,12 +153,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--python_api_util_path', default="./../../PythonAPI/util/")
     parser.add_argument('--carla_map_name', default=maps[0], choices=maps)
+    parser.add_argument('--time_step', default=float(env["time_step"]))
 
     parser.add_argument('--sumocmd', default="sumo")
     parser.add_argument('--sumo_host', default="127.0.0.1")
     parser.add_argument('--sumo_begin_time', default=0)
     parser.add_argument('--sumo_end_time', default=(24 * 60 * 60))
-    parser.add_argument('--sumo_step_length', default=0.1)
 
     parser.add_argument('--carla_unrealengine_port', default=2000)
     parser.add_argument('--carla_sumo_port', default=env["carla_sumo_port"])

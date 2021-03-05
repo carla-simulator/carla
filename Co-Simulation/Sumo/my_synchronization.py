@@ -89,14 +89,17 @@ class SimulationSynchronization(object):
 
             s.sendall(bytes(json.dumps(send_data), "ascii"))
             recv_data = s.recv(1024)
-            print(f"time: {self.current_time}")
-            print(json.loads(str(recv_data, "ascii")))
+            # print(f"time: {self.current_time}, elapsed_seconds: {self.elapsed_seconds(data.timestamp)}, sim time: {data.timestamp}, carla time: {self.carla.world.get_snapshot().timestamp.elapsed_seconds}, frame: {data.frame}, recver_id: {data.actor.id}, target_id: {data.other_actor.id}, target_type: {data.other_actor.type_id}, distance: {data.distance}")
 
 
     def attach_to_actor(self, bp, actor):
         return self.carla.world.spawn_actor(bp, carla.Transform(carla.Location(x=0.8, z=1.7)), attach_to=actor)
+
+
+    def elapsed_seconds(self, world_elapsed_seconds):
+        return world_elapsed_seconds - self.init_time
     ##### End: My code #####
-    
+
 
     def __init__(self,
                  sumo_simulation,
@@ -121,11 +124,6 @@ class SimulationSynchronization(object):
         self.sumo2carla_ids = {}  # Contains only actors controlled by sumo.
         self.carla2sumo_ids = {}  # Contains only actors controlled by carla.
 
-        ##### Begin: My code #####
-        self.sumoid2sensors = {}
-        self.current_time = 0
-        ##### End: My code #####
-
         BridgeHelper.blueprint_library = self.carla.world.get_blueprint_library()
         BridgeHelper.offset = self.sumo.get_net_offset()
 
@@ -134,6 +132,13 @@ class SimulationSynchronization(object):
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = self.carla.step_length
         self.carla.world.apply_settings(settings)
+
+        ##### Begin: My code #####
+        self.sumoid2sensors = {}
+        self.current_time = 0
+        self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
+        ##### End: My code #####
+
 
     def tick(self):
         """
