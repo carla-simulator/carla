@@ -37,15 +37,15 @@ namespace element {
     auto w1_marks = map.GetMarkRecord(*w1);
 
     if (dest_is_at_right) {
-      if (w0_is_offroad) {
+      if (w0_is_offroad && w1_marks.second) {
         return { LaneMarking(*w1_marks.second) };
-      } else {
+      } else if(w0_marks.first) {
         return { LaneMarking(*w0_marks.first) };
       }
     } else {
-      if (w0_is_offroad) {
+      if (w0_is_offroad && w1_marks.first) {
         return { LaneMarking(*w1_marks.first) };
-      } else {
+      } else if(w0_marks.second) {
         return { LaneMarking(*w0_marks.second) };
       }
     }
