@@ -155,7 +155,7 @@ void TrafficManagerLocal::Run() {
         episode_proxy.Lock()->WaitForTick(
           carla::time_duration::milliseconds(
           TM_WAIT_FOR_TICK_TIMEOUT));
-      } catch (const carla::client::TimeoutException& e) {}
+      } catch (const std::exception &e) {}
       carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
       if (timestamp.frame == last_frame) {
         continue;
