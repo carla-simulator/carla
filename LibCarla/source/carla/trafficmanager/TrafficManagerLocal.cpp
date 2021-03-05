@@ -151,6 +151,11 @@ void TrafficManagerLocal::Run() {
 
     // Stop TM from processing the same frame more than once
     if (!synchronous_mode) {
+      try {
+        episode_proxy.Lock()->WaitForTick(
+          carla::time_duration::milliseconds(
+          TM_WAIT_FOR_TICK_TIMEOUT));
+      } catch (const carla::client::TimeoutException& e) {}
       carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
       if (timestamp.frame == last_frame) {
         continue;
