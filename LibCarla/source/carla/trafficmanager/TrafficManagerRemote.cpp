@@ -185,6 +185,10 @@ void TrafficManagerRemote::SetOSMMode(const bool mode_switch) {
   client.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerRemote::ShutDown() {
+  client.ShutDown();
+}
+
 void TrafficManagerRemote::SetSynchronousMode(bool mode) {
   client.SetSynchronousMode(mode);
 }

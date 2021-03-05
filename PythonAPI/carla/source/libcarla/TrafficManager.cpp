@@ -35,5 +35,6 @@ void export_trafficmanager() {
     .def("set_hybrid_physics_mode", &ctm::TrafficManager::SetHybridPhysicsMode)
     .def("set_hybrid_physics_radius", &ctm::TrafficManager::SetHybridPhysicsRadius)
     .def("set_random_device_seed", &ctm::TrafficManager::SetRandomDeviceSeed)
-    .def("set_osm_mode", &carla::traffic_manager::TrafficManager::SetOSMMode);
+    .def("set_osm_mode", &carla::traffic_manager::TrafficManager::SetOSMMode)
+    .def("shut_down", &ctm::TrafficManager::ShutDown);
 }
