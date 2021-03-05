@@ -21,6 +21,7 @@ namespace Networking {
 static const uint64_t MIN_TRY_COUNT = 20u;
 static const unsigned short TM_DEFAULT_PORT = 8000u;
 static const int64_t TM_TIMEOUT = 2000; // ms
+const int64_t TM_WAIT_FOR_TICK_TIMEOUT = 1000;
 } // namespace Networking
 
 namespace VehicleRemoval {
