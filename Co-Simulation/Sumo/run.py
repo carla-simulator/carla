@@ -155,7 +155,7 @@ if __name__ == '__main__':
     parser.add_argument('--carla_map_name', default=maps[0], choices=maps)
     parser.add_argument('--time_step', default=float(env["time_step"]))
 
-    parser.add_argument('--sumocmd', default="sumo")
+    parser.add_argument('--sumocmd', default=env["sumocmd"], choices=env["sumocmd_choices"])
     parser.add_argument('--sumo_host', default="127.0.0.1")
     parser.add_argument('--sumo_begin_time', default=0)
     parser.add_argument('--sumo_end_time', default=(24 * 60 * 60))

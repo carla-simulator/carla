@@ -64,6 +64,91 @@ from sumo_integration.sumo_simulation import SumoSimulation  # pylint: disable=w
 # -- synchronization_loop --------------------------------------------------------------------------
 # ==================================================================================================
 
+##### Begin: My code. #####
+class CAV:
+    def __init__(self, sumo_actor_id, carla_sim, sumo_sim):
+        self.sumo_actor_id = sumo_actor_id
+        self.carla = carla_sim
+        self.sumo = sumo_sim
+
+        self.sensor_data = []
+        self.perceived_objects = []
+        self.received_CPMs = []
+
+        self.load_sensors()
+
+    def load_sensors(self):
+        pass
+
+    def receive_CPMs(self):
+        pass
+
+    def receive_sensor_data(self, data):
+        pass
+
+    def send_CPMs(self):
+        pass
+
+    def tick(self):
+        self.update_perceived_objects()
+        self.receive_CPMs()
+        self.send_CPMs()
+
+    def update_perceived_objects(self):
+        pass
+
+
+class CAVWithObstacleSensor(CAV):
+    def load_sensors(self):
+        pass
+
+
+    def update_perceived_objects(self):
+        pass
+
+
+class CPM:
+    MAX_SIZE = 800
+
+    def __init__(ITS_PDU_Header={}, Management_Container={}, Station_Data_Container={}, Sensor_Information_Container=[], Perceived_Object_Container=[], option={}):
+        # Easy implementation of a Cooprative Perception Message (CPM).
+        # If you want to use detail information of CPM, you should include the information in CPM.
+        self.ITS_PDU_Header = ITS_PDU_Header
+        self.Management_Container = Management_Container
+        self.Station_Data_Container = Station_Data_Container
+        self.Sensor_Information_Container = Sensor_Information_Container
+        self.Perceived_Object_Container = Perceived_Object_Container
+
+        # For convenience, we add optional data like payload size
+        self.option = option
+        self.update_option()
+
+    def dict_format(self):
+        message = {
+            "ITS_PDU_Header": self.ITS_PDU_Header,
+            "Management_Container": self.Management_Container,
+            "Station_Data_Container": self.Station_Data_Container,
+            "Sensor_Information_Container": self.Sensor_Information_Container,
+            "Perceived_Object_Container": self.Perceived_Object_Container,
+            "option": self.option
+        }
+
+        return json
+
+
+    def update_option(self):
+        """
+        ITS_PDU_Header + Management_Container + Station_Data_Container = 121 (Byte)
+        Sensor_Information_Container = 35 (Byte/data)
+        Perceived_Object_Container = 35 (Byte/data)
+
+        cite from:
+        Thandavarayan, G., Sepulcre, M., & Gozalvez, J. (2020). Cooperative Perception for Connected and Automated Vehicles: Evaluation and Impact of Congestion Control. IEEE Access, 8, 197665–197683. https://doi.org/10.1109/access.2020.3035119
+        """
+
+        self.option["size"] = 121 + 35 * len(self.Sensor_Information_Container) + 35 * len(self.Perceived_Object_Container)
+##### End: My code. #####
+
 
 class SimulationSynchronization(object):
     """
@@ -75,7 +160,7 @@ class SimulationSynchronization(object):
     def save_obstacle_data(self, data, sumo_actor_id, host, port):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
-            s.connect(('127.0.0.1', 9998))
+            s.connect((str(host), int(port)))
             send_data = {
                 "vehid": str(sumo_actor_id),
                 "method": "save_obstacle_data",
@@ -89,15 +174,33 @@ class SimulationSynchronization(object):
 
             s.sendall(bytes(json.dumps(send_data), "ascii"))
             recv_data = s.recv(1024)
-            # print(f"time: {self.current_time}, elapsed_seconds: {self.elapsed_seconds(data.timestamp)}, sim time: {data.timestamp}, carla time: {self.carla.world.get_snapshot().timestamp.elapsed_seconds}, frame: {data.frame}, recver_id: {data.actor.id}, target_id: {data.other_actor.id}, target_type: {data.other_actor.type_id}, distance: {data.distance}")
+            print(f"time: {self.current_time}, elapsed_seconds: {self.elapsed_seconds(data.timestamp)}, recver_sumo_id: {sumo_actor_id}, target_sumo_id: {self.carlaid2sumoid(data.other_actor.id)}, transform: {data.transform}, target_type: {data.other_actor.type_id}, distance: {data.distance}")
 
 
     def attach_to_actor(self, bp, actor):
-        return self.carla.world.spawn_actor(bp, carla.Transform(carla.Location(x=0.8, z=1.7)), attach_to=actor)
+        return self.carla.world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=1.7)), attach_to=actor)
 
 
     def elapsed_seconds(self, world_elapsed_seconds):
         return world_elapsed_seconds - self.init_time
+
+    def carlaid2sumoid(self, carlaid):
+        sumoid = None
+
+        try:
+            sumoid = ([v_sumoid for k_carlaid, v_sumoid in self.carla2sumo_ids.items() if str(k_carlaid) == str(carlaid)])[0]
+        except Exception as e:
+            pass
+
+        if sumoid is not None:
+            return sumoid
+
+        try:
+            sumoid = ([k_sumoid for k_sumoid, v_carlaid in self.sumo2carla_ids.items() if str(v_carlaid) == str(carlaid)])[0]
+        except Exception as e:
+            pass
+
+        return sumoid
     ##### End: My code #####
 
 
