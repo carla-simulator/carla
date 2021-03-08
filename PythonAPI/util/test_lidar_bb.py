@@ -43,6 +43,7 @@ Important Data structure description:
         trace.process()
         trace.check_lidar_data()
 
+This test must be run in Town_03
 
 """
 
@@ -50,7 +51,6 @@ import glob
 import os
 import sys
 import numpy as np
-import weakref
 from queue import Queue
 from queue import Empty
 
