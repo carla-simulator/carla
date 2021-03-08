@@ -583,6 +583,7 @@ else
   rm -Rf ${SQLITE_SOURCE_DIR}
 fi
 
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
 # ==============================================================================
