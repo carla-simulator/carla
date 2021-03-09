@@ -274,13 +274,11 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
   UWorld* World = GetWorld();
   for(auto& Pair : Topology)
   {
-    AVehicleSpawnPoint *Spawner = World->SpawnActor<AVehicleSpawnPoint>();
     carla::geom::Transform CarlaTransform = Map->ComputeTransform(Pair.first);
     FTransform Transform(CarlaTransform);
     Transform.AddToTranslation(FVector(0.f, 0.f, 300.0f));
     SpawnPointsTransforms.Add(Transform);
   }
-  UE_LOG(LogCarla, Log, TEXT("%d SpawnPoints generated"), Topology.size());
 }
 
 void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)

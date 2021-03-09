@@ -250,6 +250,8 @@ void UCarlaEpisode::AttachActors(
     AActor *Parent,
     EAttachmentType InAttachmentType)
 {
+  Child->AddActorWorldOffset(FVector(CurrentMapOrigin));
+
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
 
   // recorder event
