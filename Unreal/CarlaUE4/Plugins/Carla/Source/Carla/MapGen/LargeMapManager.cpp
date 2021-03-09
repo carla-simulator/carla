@@ -129,12 +129,37 @@ void ALargeMapManager::OnActorSpawned(AActor *Actor)
   if (Cast<APawn>(Actor))
   {
     LM_LOG(LogCarla, Warning, TEXT("OnActorSpawned %s"), *Actor->GetName());
+
+    // Check if is hero vehicle
+    UWorld* World = GetWorld();
+    UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+    FActorView ActorView = CarlaEpisode->FindActor(Actor);
+    const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+
+    if(!ActorInfo) return;
+    
+    const FActorDescription& Description = ActorInfo->Description;
+    UE_LOG(LogCarla, Warning, TEXT("Num attributes %d"), Description.Variations.Num());
+
+    // const FActorAttribute* Attribute = Description.Variations.Find("role_name");
+    // if(Attribute && Attribute->Value.Contains("hero"))
+    // {
+    //   // is hero
+    // }
+
+    FString Output = "";
+    for(auto& It : Description.Variations)
+    {
+      Output += FString::Printf(TEXT("%s - (%s, %s)\n"), *It.Key, *It.Value.Id, *It.Value.Value);
+    }
+    UE_LOG(LogCarla, Warning, TEXT("%s"), *Output);
+
     AddActorToConsider(Actor);
 
     UpdateTilesState();
 
     // Can I force a level streaming flush here?
-    GetWorld()->FlushLevelStreaming();
+    World->FlushLevelStreaming();
     // GEngine->BlockTillLevelStreamingCompleted(PlayWorld);
   }
 }
