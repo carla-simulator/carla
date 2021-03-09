@@ -129,6 +129,19 @@ public class Carla : ModuleRules
     }
   }
 
+  private void AddDynamicLibrary(string library)
+  {
+    PublicAdditionalLibraries.Add(library);
+    RuntimeDependencies.Add(library);
+    PublicDelayLoadDLLs.Add(library);
+  }
+  private void AddDllDependency(string PathToFolder, string DllName)
+  {
+    string Source = Path.Combine(PathToFolder, DllName);
+    string Destination = Path.Combine("$(BinaryOutputDir)", DllName);
+    RuntimeDependencies.Add(Destination, Source);
+  }
+
   delegate string ADelegate(string s);
 
   private void AddBoostLibs(string LibPath)
@@ -172,14 +185,11 @@ public class Carla : ModuleRules
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_robot")));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine_vehicle.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_vehicle.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_robot.dll");
+        bUseRTTI = true;
       }
     }
     else
@@ -195,15 +205,18 @@ public class Carla : ModuleRules
       }
       if (UsingChrono)
       {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_robot.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_robot.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1.0"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1.0"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
         bUseRTTI = true;
+        bEnableExceptions = true;
       }
     }
 
@@ -218,5 +231,6 @@ public class Carla : ModuleRules
     PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
     PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
     PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
   }
 }

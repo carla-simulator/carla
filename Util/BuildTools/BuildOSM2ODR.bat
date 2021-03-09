@@ -82,6 +82,8 @@ if %BUILD_OSM2ODR% == true (
     cmake -G "Visual Studio 15 2017 Win64"^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
+        -DPROJ_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\proj-install\include^
+        -DPROJ_LIBRARY=%INSTALLATION_DIR:/=\%\proj-install/lib\proj.lib^
         "%ROOT_PATH%\Util\OSM2ODR"
     if %errorlevel% neq 0 goto error_cmake
 

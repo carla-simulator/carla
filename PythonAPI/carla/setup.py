@@ -52,7 +52,9 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
                 os.path.join(pwd, 'dependencies/lib/libosm2odr.a'),
-                os.path.join(pwd, 'dependencies/lib/libxerces-c.a')]
+                os.path.join(pwd, 'dependencies/lib/libxerces-c.a'),
+                os.path.join(pwd, 'dependencies/lib/libproj.a'),
+                os.path.join(pwd, 'dependencies/lib/libsqlite3.a')]
             extra_link_args += ['-lz']
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
@@ -98,21 +100,20 @@ def get_libcarla_extensions():
         else:
             raise NotImplementedError
     elif os.name == "nt":
-        sources += [x for x in walk('dependencies/include/carla', '*.cpp')]
-
         pwd = os.path.dirname(os.path.realpath(__file__))
         pylib = 'libboost_python%d%d' % (
             sys.version_info.major,
             sys.version_info.minor)
 
-        extra_link_args = ['shlwapi.lib', 'Advapi32.lib']
+        extra_link_args = ['shlwapi.lib', 'Advapi32.lib', 'ole32.lib', 'shell32.lib']
 
         required_libs = [
             pylib, 'libboost_filesystem',
             'rpc.lib', 'carla_client.lib',
             'libpng.lib', 'zlib.lib',
             'Recast.lib', 'Detour.lib', 'DetourCrowd.lib',
-            'osm2odr.lib', 'xerces-c_3.lib']
+            'xerces-c_3.lib', 'sqlite3.lib',
+            'proj.lib', 'osm2odr.lib']
 
         # Search for files in 'PythonAPI\carla\dependencies\lib' that contains
         # the names listed in required_libs in it's file name
@@ -126,7 +127,7 @@ def get_libcarla_extensions():
             '/experimental:external', '/external:I', 'dependencies/include/system',
             '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
             '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0600', '/DHAVE_SNPRINTF',
-            '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
+            '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true', '/MD']
     else:
         raise NotImplementedError
 

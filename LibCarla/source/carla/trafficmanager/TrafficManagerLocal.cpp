@@ -125,6 +125,7 @@ void TrafficManagerLocal::Run() {
   control_frame.reserve(INITIAL_SIZE);
   current_reserved_capacity = INITIAL_SIZE;
 
+  size_t last_frame = 0;
   while (run_traffic_manger.load()) {
 
     bool synchronous_mode = parameters.GetSynchronousMode();
@@ -146,6 +147,15 @@ void TrafficManagerLocal::Run() {
         std::this_thread::sleep_for(time_to_wait);
       }
       previous_update_instance = current_instance;
+    }
+
+    // Stop TM from processing the same frame more than once
+    if (!synchronous_mode) {
+      carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
+      if (timestamp.frame == last_frame) {
+        continue;
+      }
+      last_frame = timestamp.frame;
     }
 
     std::unique_lock<std::mutex> registration_lock(registration_mutex);
@@ -208,7 +218,9 @@ void TrafficManagerLocal::Run() {
       step_end.store(true);
       step_end_trigger.notify_one();
     } else {
-      episode_proxy.Lock()->ApplyBatch(control_frame, false);
+      if (control_frame.size() > 0){
+        episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+      }
     }
   }
 }

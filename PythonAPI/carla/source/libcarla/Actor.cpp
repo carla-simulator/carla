@@ -81,7 +81,7 @@ void export_actor() {
       .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
       .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
       .add_property("semantic_tags", &GetSemanticTags)
-      .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
+      .add_property("is_alive", CALL_WITHOUT_GIL(cc::Actor, IsAlive))
       .add_property("attributes", +[] (const cc::Actor &self) {
         boost::python::dict attribute_dict;
         for (auto &&attribute_value : self.GetAttributes()) {
@@ -143,7 +143,7 @@ void export_actor() {
       .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
       .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
-      .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002))
+      .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
       .def(self_ns::str(self_ns::self))
   ;
 

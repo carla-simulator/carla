@@ -259,7 +259,7 @@ namespace detail {
 
   bool Client::DestroyActor(rpc::ActorId actor) {
     try {
-      return _pimpl->CallAndWait<void>("destroy_actor", actor);
+      return _pimpl->CallAndWait<bool>("destroy_actor", actor);
     } catch (const std::exception &e) {
       log_error("failed to destroy actor", actor, ':', e.what());
       return false;
@@ -338,8 +338,22 @@ namespace detail {
     _pimpl->AsyncCall("use_carsim_road", vehicle, enabled);
   }
 
-  void Client::EnableChronoPhysics(rpc::ActorId vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
-    _pimpl->AsyncCall("enable_chrono_physics", vehicle, MaxSubsteps, MaxSubstepDeltaTime);
+  void Client::EnableChronoPhysics(
+      rpc::ActorId vehicle,
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) {
+    _pimpl->AsyncCall("enable_chrono_physics",
+        vehicle,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        VehicleJSON,
+        PowertrainJSON,
+        TireJSON,
+        BaseJSONPath);
   }
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {

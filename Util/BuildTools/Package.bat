@@ -20,7 +20,7 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean] [--target-archive]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean] [--clean-intermediate] [--target-archive]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
@@ -37,7 +37,10 @@ if not "%1"=="" (
         set DO_TARBALL=false
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
+    )
 
+    if "%1"=="--clean-intermediate" (
+        set DO_CLEAN=true
     )
 
     if "%1"=="--no-zip" (
@@ -270,7 +273,9 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
         pushd "%CARLAUE4_ROOT_FOLDER%"
 
+        echo   - prepare
         REM # Prepare cooking of package
+        echo call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe " "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject" -run=PrepareAssetsForCooking -PackageName=!PACKAGE_NAME! -OnlyPrepareMaps=false
         call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
         "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
         -run=PrepareAssetsForCooking^
@@ -280,7 +285,9 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
         set /p PACKAGE_FILE=<%PACKAGE_PATH_FILE%
         set /p MAPS_TO_COOK=<%MAP_LIST_FILE%
 
+        echo   - cook
         REM # Cook maps
+        echo call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe " "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject" -run=cook -map="!MAPS_TO_COOK!" -cooksinglepackage -targetplatform="WindowsNoEditor" -OutputDir="!BUILD_FOLDER!"
         call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
         "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
         -run=cook^

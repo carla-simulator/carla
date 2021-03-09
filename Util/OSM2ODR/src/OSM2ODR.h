@@ -16,6 +16,8 @@ namespace osm2odr {
     double offset_y = 0;
     double default_lane_width = 4.0;
     double elevation_layer_height = 0;
+    std::string proj_string = "+proj=tmerc";
+    bool center_map = true;
   };
 
   std::string ConvertOSMToOpenDRIVE(std::string osm_file, OSM2ODRSettings settings = OSM2ODRSettings());
