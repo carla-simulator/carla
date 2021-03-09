@@ -221,12 +221,9 @@ void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
-  TArray<FTransform> SpawnPoints;
-  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It)
-  {
-    SpawnPoints.Add(It->GetActorTransform());
-  }
-  return SpawnPoints;
+  ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
+
+  return GM->GetSpawnPointsTransforms();
 }
 
 carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
