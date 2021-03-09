@@ -5,7 +5,7 @@ This guide shows how to download and install the packaged version of CARLA. The 
 * __[Before you begin](#before-you-begin)__  
 * __[CARLA installation](#carla-installation)__  
 	* [A. Debian CARLA installation](#a-debian-carla-installation)  
-	* [B. Binary installation](#b-binary-installation)  
+	* [B. Package installation](#b-package-installation)  
 * __[Import additional assets](#import-additional-assets)__  
 * __[Running CARLA](#running-carla)__  
 	* [Command-line options](#command-line-options)  
@@ -17,10 +17,10 @@ This guide shows how to download and install the packaged version of CARLA. The 
 
 The following requirements should be fulfilled before installing CARLA:
 
-* __System requirements.__ Any 64-bits OS should run CARLA. However, since release 0.9.9, __CARLA cannot run in 16.04 Linux systems with default compilers__. These should be upgraded to work with CARLA.  
+* __System requirements.__ Any 64-bits OS should run CARLA.
 * __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although we would recommend 8 GB. A dedicated GPU is highly recommended for machine learning. 
 * __Disk space.__ CARLA will use about 20 GB of space.
-* __Python.__ [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports both Python 2 and Python 3 although Python 3 is recommended.
+* __Python.__ [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports both Python 2 and Python 3.7.
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
 * __Other requirements.__  Two Python modules: [Pygame](https://pypi.org/project/pygame/) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for calculus. Install them using:
 
@@ -34,7 +34,7 @@ There are two methods to download and install CARLA as a package:
 
 __A)__ [Download the Debian package.](#a-debian-carla-installation)
 
-__B)__ [Download the binary from GitHub.](#b-binary-installation) 
+__B)__ [Download the package from GitHub.](#b-package-installation) 
 
 ### A. Debian CARLA installation
 
@@ -62,7 +62,7 @@ This repository contains CARLA 0.9.10 and later versions. To install a specific 
 !!! Important
     To install CARLA versions prior to 0.9.10, change to a previous version of the documentation using the panel in the bottom right corner of the window, and follow the old instructions.  
 
-### B. Binary installation
+### B. Package installation
 
 <div class="build-buttons">
 <p>
@@ -90,6 +90,7 @@ __2.__ Extract the package:
 
 ```sh
         cd path/to/carla/root
+
         ./ImportAssets.sh
 ```
 
@@ -106,20 +107,23 @@ The method to start a CARLA server depends on the installation method you used a
 
 ```sh
     cd /opt/carla-simulator/bin/
+
     ./CarlaUE4.sh
 ```
 
-- Linux binary installation:
+- Linux package installation:
 
 ```sh
     cd path/to/carla/root
+
     ./CarlaUE4.sh
 ```
 
-- Windows binary installation:
+- Windows package installation:
 
 ```sh
     cd path/to/carla/root
+
     CarlaUE4.exe
 ```
 
@@ -130,11 +134,14 @@ This is the server simulator which is now running and waiting for a client to co
 ```sh
         # Terminal A 
         cd PythonAPI\examples
+
         python3 -m pip install -r requirements.txt # Support for Python2 is provided in the CARLA release packages
+
         python3 spawn_npc.py  
 
         # Terminal B
         cd PythonAPI\examples
+
         python3 manual_control.py 
 ```
 
@@ -153,7 +160,7 @@ There are some configuration options available when launching CARLA and they can
 
 [ue4clilink]: https://docs.unrealengine.com/en-US/Programming/Basics/CommandLineArguments
 
-The script [`PythonAPI/util/config.py`][config] provides more configuration options and should be run when the server has been started up:
+The script [`PythonAPI/util/config.py`][config] provides more configuration options and should be run when the server has been started:
 
 [config]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/config.py
 
