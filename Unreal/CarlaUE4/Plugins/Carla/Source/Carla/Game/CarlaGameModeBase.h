@@ -54,6 +54,11 @@ public:
   UFUNCTION(BlueprintCallable, Category = "CARLA Game Mode")
   ATrafficLightManager* GetTrafficLightManager();
 
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable)
+  const TArray<FTransform>& GetSpawnPointsTransforms() const{
+    return SpawnPointsTransforms;
+  }
+
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0xFF) const;
 
@@ -96,6 +101,8 @@ private:
 
   void SpawnActorFactories();
 
+  void StoreSpawnPoints();
+
   void GenerateSpawnPoints();
 
   void ParseOpenDrive(const FString &MapName);
@@ -132,6 +139,9 @@ private:
   /// available in game.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
   TSet<TSubclassOf<ACarlaActorFactory>> ActorFactories;
+
+  UPROPERTY()
+  TArray<FTransform> SpawnPointsTransforms;
 
   UPROPERTY()
   TArray<ACarlaActorFactory *> ActorFactoryInstances;

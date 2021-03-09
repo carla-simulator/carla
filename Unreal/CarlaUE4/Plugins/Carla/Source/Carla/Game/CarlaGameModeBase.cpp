@@ -132,11 +132,9 @@ void ACarlaGameModeBase::InitGame(
 
   ParseOpenDrive(Episode->MapName);
 
-
-  // TODO: Generate spawn points in large maps
-  if(IsLargeMap && Map.has_value())
+  if(Map.has_value())
   {
-    GenerateSpawnPoints();
+    StoreSpawnPoints();
   }
 }
 
@@ -254,6 +252,21 @@ void ACarlaGameModeBase::SpawnActorFactories()
   }
 }
 
+void ACarlaGameModeBase::StoreSpawnPoints()
+{
+  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It)
+  {
+    SpawnPointsTransforms.Add(It->GetActorTransform());
+  }
+
+  if(SpawnPointsTransforms.Num() == 0)
+  {
+    GenerateSpawnPoints();
+  }
+
+  UE_LOG(LogCarla, Log, TEXT("There are %d SpawnPoints in the map"), SpawnPointsTransforms.Num());
+}
+
 void ACarlaGameModeBase::GenerateSpawnPoints()
 {
   UE_LOG(LogCarla, Log, TEXT("Generating SpawnPoints ..."));
@@ -264,11 +277,8 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
     AVehicleSpawnPoint *Spawner = World->SpawnActor<AVehicleSpawnPoint>();
     carla::geom::Transform CarlaTransform = Map->ComputeTransform(Pair.first);
     FTransform Transform(CarlaTransform);
-    Spawner->SetActorRotation(Transform.GetRotation());
-    Spawner->SetActorLocation(Transform.GetTranslation() + FVector(0.f, 0.f, 300.0f));
-    #if WITH_EDITOR
-      Spawner->SetFolderPath("/SpawnPoints");
-    #endif
+    Transform.AddToTranslation(FVector(0.f, 0.f, 300.0f));
+    SpawnPointsTransforms.Add(Transform);
   }
   UE_LOG(LogCarla, Log, TEXT("%d SpawnPoints generated"), Topology.size());
 }
