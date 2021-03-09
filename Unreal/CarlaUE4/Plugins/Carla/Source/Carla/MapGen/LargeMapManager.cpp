@@ -154,7 +154,13 @@ void ALargeMapManager::Tick(float DeltaTime)
     AActor* ActorToConsider = ActorsToConsider[0].Actor;
     if( IsValid(ActorToConsider) )
     {
-      WorldComposition->EvaluateWorldOriginLocation(ActorToConsider->GetActorLocation());
+      FVector ActorLocation = ActorToConsider->GetActorLocation();
+      FIntVector ILocation = FIntVector(ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
+      //WorldComposition->EvaluateWorldOriginLocation(ActorToConsider->GetActorLocation());
+      if (ActorLocation.SizeSquared() > FMath::Square(RebaseOriginDistance)) {
+
+        GetWorld()->SetNewWorldOrigin(ILocation + CurrentOriginInt);
+      }
     }
   }
 
