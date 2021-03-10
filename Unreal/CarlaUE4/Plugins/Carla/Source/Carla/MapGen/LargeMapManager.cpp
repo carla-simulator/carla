@@ -58,7 +58,7 @@ void ALargeMapManager::BeginPlay()
   // Level added/removed from world
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &ALargeMapManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &ALargeMapManager::OnLevelRemovedFromWorld);
-  
+
   // Setup Origin rebase settings
     UWorldComposition* WorldComposition = World->WorldComposition;
   WorldComposition->bRebaseOriginIn3DSpace = true;
