@@ -85,6 +85,10 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
   void OnUnloadStreamLevel();
 
+  ALargeMapManager* GetLMManager() const {
+    return LMManager;
+  }
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;

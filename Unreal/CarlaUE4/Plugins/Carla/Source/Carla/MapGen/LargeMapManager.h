@@ -84,9 +84,9 @@ protected:
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
-  void OnActorSpawned(AActor *Actor);
-
 public:
+  void OnActorSpawned(const FActorView& ActorView);
+
   // Called every frame
   virtual void Tick(float DeltaTime) override;
 

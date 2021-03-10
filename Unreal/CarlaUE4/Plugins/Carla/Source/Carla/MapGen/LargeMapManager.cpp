@@ -58,13 +58,9 @@ void ALargeMapManager::BeginPlay()
   // Level added/removed from world
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &ALargeMapManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &ALargeMapManager::OnLevelRemovedFromWorld);
-  // Actor spawned
-  FOnActorSpawned::FDelegate OnActorSpawnedDelegate =
-    FOnActorSpawned::FDelegate::CreateUObject(this, &ALargeMapManager::OnActorSpawned);
-  World->AddOnActorSpawnedHandler(OnActorSpawnedDelegate);
-
-  UWorldComposition* WorldComposition = World->WorldComposition;
+  
   // Setup Origin rebase settings
+    UWorldComposition* WorldComposition = World->WorldComposition;
   WorldComposition->bRebaseOriginIn3DSpace = true;
   WorldComposition->RebaseOriginDistance = RebaseOriginDistance;
 
@@ -124,43 +120,33 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
   Tile.TilesSpawned = false;
 }
 
-void ALargeMapManager::OnActorSpawned(AActor *Actor)
+void ALargeMapManager::OnActorSpawned(const FActorView& ActorView)
 {
+  const AActor* Actor = ActorView.GetActor();
   if (Cast<APawn>(Actor))
   {
-    LM_LOG(LogCarla, Warning, TEXT("OnActorSpawned %s"), *Actor->GetName());
-
     // Check if is hero vehicle
     UWorld* World = GetWorld();
-    UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
-    FActorView ActorView = CarlaEpisode->FindActor(Actor);
     const FActorInfo* ActorInfo = ActorView.GetActorInfo();
 
-    if(!ActorInfo) return;
-    
-    const FActorDescription& Description = ActorInfo->Description;
-    UE_LOG(LogCarla, Warning, TEXT("Num attributes %d"), Description.Variations.Num());
-
-    // const FActorAttribute* Attribute = Description.Variations.Find("role_name");
-    // if(Attribute && Attribute->Value.Contains("hero"))
-    // {
-    //   // is hero
-    // }
-
-    FString Output = "";
-    for(auto& It : Description.Variations)
+    if(!ActorInfo)
     {
-      Output += FString::Printf(TEXT("%s - (%s, %s)\n"), *It.Key, *It.Value.Id, *It.Value.Value);
+      return;
     }
-    UE_LOG(LogCarla, Warning, TEXT("%s"), *Output);
 
-    AddActorToConsider(Actor);
+    const FActorDescription& Description = ActorInfo->Description;
+    const FActorAttribute* Attribute = Description.Variations.Find("role_name");
+    // If is the hero vehicle
+    if(Attribute && Attribute->Value.Contains("hero"))
+    {
+      AddActorToConsider(const_cast<AActor*>(Actor));
 
-    UpdateTilesState();
+      UpdateTilesState();
 
-    // Can I force a level streaming flush here?
-    World->FlushLevelStreaming();
-    // GEngine->BlockTillLevelStreamingCompleted(PlayWorld);
+      // Wait until the pending levels changes are finished to avoid spawning
+      // the car without ground underneath
+      World->FlushLevelStreaming();
+    }
   }
 }
 
