@@ -128,24 +128,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
   AStaticMeshActor *MeshActor;
 
   // try to get the name of the map that precedes all assets name
-  FString MapName, AssetName;
-  for (auto MapAsset : MapContents)
-  {
-    // Rename asset
-    MapAsset.AssetName.ToString(AssetName);
-    int32 FindIndex1 = AssetName.Find("Road_", ESearchCase::IgnoreCase, ESearchDir::FromStart, 0);
-    int32 FindIndex2 = AssetName.Find("Roads_", ESearchCase::IgnoreCase, ESearchDir::FromStart, 0);
-    if (FindIndex1 >= 0)
-    {
-      MapName = AssetName.Left(FindIndex1);
-      break;
-    } else if (FindIndex2 >= 0)
-    {
-      MapName = AssetName.Left(FindIndex2);
-      break;
-    }
-  }
-    
+  FString AssetName;
   for (auto MapAsset : MapContents)
   {
     // Spawn Static Mesh
@@ -158,9 +141,6 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
 
       // Rename asset
       MapAsset.AssetName.ToString(AssetName);
-      // Remove the prefix with the FBX name
-      AssetName.RemoveFromStart(MapName, ESearchCase::IgnoreCase);
-      MeshActor->SetActorLabel(AssetName, true);
 
       // set complex collision as simple in asset
       UBodySetup *BodySetup = MeshAsset->BodySetup;
