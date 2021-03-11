@@ -323,11 +323,6 @@ float UChronoMovementComponent::GetVehicleForwardSpeed() const
   return 0.f;
 }
 
-void UChronoMovementComponent::SynchronizeActorChronoTransform()
-{
-
-}
-
 void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   if(!CarlaVehicle)
@@ -344,20 +339,17 @@ void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 #endif
 
-void UChronoMovementComponent::DisableChronoPhysics(float Duration)
+void UChronoMovementComponent::DisableChronoPhysics()
 {
   this->SetComponentTickEnabled(false);
-  EnableUE4VehiclePhysics(false);
+  EnableUE4VehiclePhysics(true);
   CarlaVehicle->OnActorHit.RemoveDynamic(this, &UChronoMovementComponent::OnVehicleHit);
   CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(
       this, &UChronoMovementComponent::OnVehicleOverlap);
   CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
       ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-  // FTimerHandle TimerHandler;
-  // GetWorld()->GetTimerManager().
-  //     SetTimer(TimerHandler, this, &UChronoMovementComponent::ResetChronoPhysics, Duration);
   UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
-  carla::log_warning("DisableChronoPhysics");
+  carla::log_warning("Chrono physics does not support collisions yet, reverting to default PhysX phisics.");
 }
 
 void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
@@ -365,7 +357,7 @@ void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
     FVector NormalImpulse,
     const FHitResult &Hit)
 {
-  DisableChronoPhysics(CollisionBehaviorTime);
+  DisableChronoPhysics();
 }
 
 // On car mesh overlap, only works when carsim is enabled
@@ -382,20 +374,6 @@ void UChronoMovementComponent::OnVehicleOverlap(
       ECollisionChannel::ECC_WorldDynamic) ==
       ECollisionResponse::ECR_Block)
   {
-    DisableChronoPhysics(CollisionBehaviorTime);
+    DisableChronoPhysics();
   }
-}
-
-void UChronoMovementComponent::ResetChronoPhysics()
-{
-  DisableUE4VehiclePhysics();
-  InitializeChronoVehicle();
-  this->SetComponentTickEnabled(true);
-  carla::log_warning("ResetChronoPhysics");
-  CarlaVehicle->OnActorHit.AddDynamic(
-      this, &UChronoMovementComponent::OnVehicleHit);
-  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.AddDynamic(
-      this, &UChronoMovementComponent::OnVehicleOverlap);
-  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
-      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
 }
