@@ -21,7 +21,7 @@
 #endif // WITH_EDITOR
 
 #if LARGEMAP_LOGS
-#define LM_LOG UE_LOG
+#define LM_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), __VA_ARGS__)
 #else
 #define LM_LOG(...)
 #endif
@@ -69,7 +69,7 @@ void ALargeMapManager::BeginPlay()
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
 {
-  LM_LOG(LogCarla, Error, TEXT("PreWorldOriginOffset Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString());
+  LM_LOG(Error, "PreWorldOriginOffset Src: %s  ->  Dst: %s", *InSrcOrigin.ToString(), *InDstOrigin.ToString());
 }
 
 void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -84,7 +84,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 #if WITH_EDITOR
   GEngine->AddOnScreenDebugMessage(66, MsgTime, FColor::Yellow,
     FString::Printf(TEXT("Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString()));
-  LM_LOG(LogCarla, Error, TEXT("PostWorldOriginOffset Src: %s  ->  Dst: %s"), *InSrcOrigin.ToString(), *InDstOrigin.ToString());
+  LM_LOG(Error, "PostWorldOriginOffset Src: %s  ->  Dst: %s", *InSrcOrigin.ToString(), *InDstOrigin.ToString());
 
   // This is just to update the color of the msg with the same as the closest map
   const TArray<ULevelStreaming*>& StreamingLevels = World->GetStreamingLevels();
@@ -106,7 +106,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
-  LM_LOG(LogCarla, Warning, TEXT("OnLevelAddedToWorld"));
+  LM_LOG(Warning, "OnLevelAddedToWorld");
   //FDebug::DumpStackTraceToLog(/*ELogVerbosity::Log*/);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   SpawnAssetsInTile(Tile);
@@ -114,7 +114,7 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 
 void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
-  LM_LOG(LogCarla, Warning, TEXT("OnLevelRemovedFromWorld"));
+  LM_LOG(Warning, "OnLevelRemovedFromWorld");
   //FDebug::DumpStackTraceToLog(/*ELogVerbosity::Log*/);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   Tile.TilesSpawned = false;
@@ -123,8 +123,11 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 void ALargeMapManager::OnActorSpawned(const FActorView& ActorView)
 {
   const AActor* Actor = ActorView.GetActor();
-  if (Cast<APawn>(Actor))
+
+  if (IsValid(Actor) && Cast<APawn>(Actor))
   {
+    LM_LOG(Warning, "ALargeMapManager::OnActorSpawned %s", Actor->GetName());
+
     // Check if is hero vehicle
     UWorld* World = GetWorld();
     const FActorInfo* ActorInfo = ActorView.GetActorInfo();
@@ -183,7 +186,7 @@ void ALargeMapManager::Tick(float DeltaTime)
 
 void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
-  LM_LOG(LogCarla, Warning, TEXT("Generating Map %s ..."), *InAssetsPath);
+  LM_LOG(Warning, "Generating Map %s ...", *InAssetsPath);
 
 #if WITH_EDITOR
   AssetsPath = InAssetsPath;
@@ -218,7 +221,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   ActorsToConsider.Reset();
 
 #if WITH_EDITOR
-  LM_LOG(LogCarla, Warning, TEXT("GenerateMap num Tiles generated %d"), MapTiles.Num());
+  LM_LOG(Warning, "GenerateMap num Tiles generated %d", MapTiles.Num());
   DumpTilesTable();
 #endif // WITH_EDITOR
 }
@@ -271,7 +274,7 @@ bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
   {
     if (bPrintErrors)
     {
-      LM_LOG(LogCarla, Warning, TEXT("IsLevelOfTileLoaded Tile %s does not exist"), *InTileID.ToString());
+      LM_LOG(Warning, "IsLevelOfTileLoaded Tile %s does not exist", *InTileID.ToString());
     }
     return false;
   }
@@ -396,12 +399,12 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 
   if (!FPackageName::DoesPackageExist(FullName, NULL, &PackageFileName))
   {
-    LM_LOG(LogCarla, Error, TEXT("Level does not exist in package with FullName variable -> %s"), *FullName);
+    LM_LOG(Error, "Level does not exist in package with FullName variable -> %s", *FullName);
   }
 
   if (!FPackageName::DoesPackageExist(LongLevelPackageName, NULL, &PackageFileName))
   {
-    LM_LOG(LogCarla, Error, TEXT("Level does not exist in package with LongLevelPackageName variable -> %s"), *LongLevelPackageName);
+    LM_LOG(Error, "Level does not exist in package with LongLevelPackageName variable -> %s", *LongLevelPackageName);
   }
 
   //Actual map package to load
@@ -581,7 +584,7 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
     UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
     if (!Mesh)
     {
-      LM_LOG(LogCarla, Error, TEXT("Mesh %s could not be loaded in %s"), *AssetData.ObjectPath.ToString(), *Tile.Name);
+      LM_LOG(Error, "Mesh %s could not be loaded in %s", *AssetData.ObjectPath.ToString(), *Tile.Name);
       continue;
     }
     FBox BoundingBox = Mesh->GetBoundingBox();
@@ -617,7 +620,7 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
 #endif // WITH_EDITOR
     }
   }
-  LM_LOG(LogCarla, Warning, TEXT("%s"), *Output);
+  LM_LOG(Warning, "%s", *Output);
 
   LoadedLevel->ApplyWorldOffset(TileLocation, false);
 
