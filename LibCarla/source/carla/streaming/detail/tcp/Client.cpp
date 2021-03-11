@@ -203,7 +203,7 @@ namespace tcp {
               _socket,
               message->buffer(),
               boost::asio::bind_executor(_strand, handle_read_data));
-        } else {
+        } else if (!_done) {
           log_info("streaming client: failed to read header:", ec.message());
           DEBUG_ONLY(log_debug("size  = ", message->size()));
           DEBUG_ONLY(log_debug("bytes = ", bytes));

@@ -118,7 +118,7 @@ void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 #if PLATFORM_LINUX
   // Looks like Windows and Linux have different outputs with the
   // same exposure compensation, this fixes it.
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation - 1.5f;
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 0.75f;
 #else
   CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
 #endif

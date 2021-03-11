@@ -29,6 +29,8 @@ void export_osm2odr() {
     .add_property("offset_y", &OSM2ODRSettings::offset_y, &OSM2ODRSettings::offset_y)
     .add_property("default_lane_width", &OSM2ODRSettings::default_lane_width, &OSM2ODRSettings::default_lane_width)
     .add_property("elevation_layer_height", &OSM2ODRSettings::elevation_layer_height, &OSM2ODRSettings::elevation_layer_height)
+    .add_property("proj_string", &OSM2ODRSettings::proj_string, &OSM2ODRSettings::proj_string)
+    .add_property("center_map", &OSM2ODRSettings::center_map, &OSM2ODRSettings::center_map)
     .def(self_ns::str(self_ns::self))
   ;
 

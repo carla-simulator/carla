@@ -106,6 +106,8 @@ public:
   /// Method to set Open Street Map mode.
   virtual void SetOSMMode(const bool mode_switch) = 0;
 
+  virtual void ShutDown() = 0;
+
 protected:
 
 };

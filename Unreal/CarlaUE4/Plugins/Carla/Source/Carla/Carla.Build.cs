@@ -135,6 +135,12 @@ public class Carla : ModuleRules
     RuntimeDependencies.Add(library);
     PublicDelayLoadDLLs.Add(library);
   }
+  private void AddDllDependency(string PathToFolder, string DllName)
+  {
+    string Source = Path.Combine(PathToFolder, DllName);
+    string Destination = Path.Combine("$(BinaryOutputDir)", DllName);
+    RuntimeDependencies.Add(Destination, Source);
+  }
 
   delegate string ADelegate(string s);
 
@@ -179,14 +185,10 @@ public class Carla : ModuleRules
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_robot")));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
-        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
-        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine_vehicle.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_vehicle.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_robot.dll");
         bUseRTTI = true;
       }
     }

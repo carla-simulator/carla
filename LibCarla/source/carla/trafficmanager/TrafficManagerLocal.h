@@ -226,6 +226,8 @@ public:
 
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
+
+  void ShutDown() {};
 };
 
 } // namespace traffic_manager

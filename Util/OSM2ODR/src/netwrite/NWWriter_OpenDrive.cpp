@@ -89,7 +89,6 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
     device.writeAttr("maxJunc", nc.size());
     device.writeAttr("maxPrg", 0);
     */
-    device.closeTag();
     // write optional geo reference
     const GeoConvHelper& gch = GeoConvHelper::getFinal();
     if (gch.usingGeoProjection()) {
@@ -100,9 +99,10 @@ NWWriter_OpenDrive::writeNetwork(const OptionsCont& oc, NBNetBuilder& nb) {
                                         + "\n]]>\n");
             device.closeTag();
         } else {
-            WRITE_WARNING("Could not write OpenDRIVE geoReference. Only unshifted Coordinate systems are supported (offset=" + toString(gch.getOffsetBase()) + ")");
+            WRITE_WARNING("Could not write OpenDRIVE geoReference. Only unshifted Coordinate systems are supported (center_map and use_offsets need to be set to False)");
         }
     }
+    device.closeTag();
 
     // write normal edges (road)
     for (std::map<std::string, NBEdge*>::const_iterator i = ec.begin(); i != ec.end(); ++i) {
