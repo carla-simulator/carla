@@ -89,13 +89,12 @@ public:
 
   virtual float GetVehicleForwardSpeed() const override;
 
-  void SynchronizeActorChronoTransform();
-
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   #endif
 
 private:
-  void DisableChronoPhysics(float Duration);
+
+  void DisableChronoPhysics();
 
   UFUNCTION()
   void OnVehicleHit(AActor *Actor,
@@ -112,9 +111,4 @@ private:
       int32 OtherBodyIndex,
       bool bFromSweep,
       const FHitResult & SweepResult);
-
-  UFUNCTION()
-  void ResetChronoPhysics();
-
-  const float CollisionBehaviorTime = 0.1;
 };
