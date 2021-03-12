@@ -84,27 +84,26 @@ class CAV:
 
 
     def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time):
-        self.sumo_actor_id = sumo_actor_id
-        self.carla_actor_id = carla_actor_id
-        self.init_time = carla_init_time
-
         self.carla = carla_sim
         self.sumo = sumo_sim
+
+        self.carla_actor = self.carla.get_actor(carla_actor_id)
+        self.carla_actor_id = carla_actor_id
+        self.sumo_actor_id = sumo_actor_id
+        self.init_time = carla_init_time
 
         self.sensors = []
 
         self.sensor_data = []
-        self.received_packets = []
         self.perceived_objects = []
+
+        self.received_CAMs = []
         self.received_CPMs = []
 
         self.load_sensors()
 
-    def carla_actor(self):
-        return self.carla.get_actor(self.carla_actor_id)
-
     def attach_bp(self, bp, transform):
-        return self.carla.world.spawn_actor(bp, transform, attach_to=self.carla_actor())
+        return self.carla.world.spawn_actor(bp, transform, attach_to=self.carla_actor)
 
     def sensor_bp(self, sensor_name="", attributes={}):
         bp = self.carla.world.get_blueprint_library().find(sensor_name)
@@ -121,7 +120,7 @@ class CAV:
         pass
 
     def receive_sensor_data(self, data):
-        print(data)
+        print(f"sumo_id: {self.sumo_actor_id}, actor_transform: {self.carla_actor.get_transform()}, sensor_transform: {data.actor.get_transform()}, distance: {data.distance}, other_actor_transform: {data.other_actor.get_transform()}")
         self.sensor_data.append(data)
 
     def send_CPMs(self):
@@ -196,7 +195,7 @@ class CPM:
             "option": self.option
         }
 
-        return json
+        return message
 
 
     def update_option(self):
