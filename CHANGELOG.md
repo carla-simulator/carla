@@ -12,7 +12,8 @@
   * Added performance benchmarking section to documentation
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
-  * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer.
+  * Fix bug in carla.Transform.get_up_vector()
+  * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
 
 ## CARLA 0.9.11
 
