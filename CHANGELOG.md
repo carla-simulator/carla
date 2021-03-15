@@ -1,5 +1,5 @@
 ## Latest
-
+	
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
@@ -14,6 +14,9 @@
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Fix bug in carla.Transform.get_up_vector()
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
+  * API extensions:
+  - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
+  - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee
 
 ## CARLA 0.9.11
 
