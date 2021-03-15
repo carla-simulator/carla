@@ -1,6 +1,6 @@
 # Scenic
 
-This guide provides an overview of how to use Scenic with CARLA. It assumes that users have prior knowledge of the Scenic syntax. If you need to learn more about Scenic, then read their ["Getting Started with Scenic"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) guide and have a look at their tutorials for creating [simple](https://scenic-lang.readthedocs.io/en/latest/tutorials/tutorial.html) and [dynamic](https://scenic-lang.readthedocs.io/en/latest/tutorials/dynamics.html) scenarios.
+This guide provides an overview of how to use Scenic with CARLA to generate multiple, diverse scenarios with a single scenario definition. It assumes that users have prior knowledge of the Scenic syntax. If you need to learn more about Scenic, then read their ["Getting Started with Scenic"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) guide and have a look at their tutorials for creating [simple](https://scenic-lang.readthedocs.io/en/latest/tutorials/tutorial.html) and [dynamic](https://scenic-lang.readthedocs.io/en/latest/tutorials/dynamics.html) scenarios.
 
 By the end of the guide you will know:
 
@@ -128,7 +128,7 @@ require (distance to intersection) > 80
 
 __6.__ Set an end point so the script knows when the scene is finished:
 
-The scenario will end with the speed of the ego vehicle goes below 0.1 meters per second and is situated less than 30 meters from the obstacle.
+The scenario will end when the speed of the ego vehicle goes below 0.1 meters per second and is situated less than 30 meters from the obstacle.
 
 ```scenic
 terminate when ego.speed < 0.1 and (distance to obstacle) < 30
@@ -160,8 +160,8 @@ Below is a table of configurable parameters in the CARLA model:
 
 | Name | Value | Description |
 |------|-------|-------------|
-| `carla_map` | `str` | Name of the CARLA map to use, e.g. 'Town01'. If set to ``None``, CARLA will attempt to create a world from the `.xodr` file defined in the [`map`][scenic_map] parameter. |
-| `timestep` | `float` | Timestep to use for simulations (i.e., how frequently Scenic interrupts CARLA to run behaviors, check requirements, etc.) in seconds. Default is 0.1 seconds. |
+| `carla_map` | `str` | Name of the CARLA map to use (e.g. 'Town01'). If set to ``None``, CARLA will attempt to create a world from the `.xodr` file defined in the [`map`][scenic_map] parameter. |
+| `timestep` | `float` | Timestep to use for simulations (how frequently Scenic interrupts CARLA to run behaviors, check requirements, etc.) in seconds. Default is 0.1 seconds. |
 | `weather` | `str` or `dict` | Weather to use for the simulation. Can be either a string identifying one of the CARLA weather presets (e.g. 'ClearSunset') or a dictionary specifying all the [weather parameters](python_api.md#carla.WeatherParameters)). Default is a uniform distribution over all the weather presets. |
 | `address` | `str` | IP address to connect to CARLA. Default is localhost (127.0.0.1).|
 | `port` | `int` | Port to connect to CARLA. Default is 2000. |
