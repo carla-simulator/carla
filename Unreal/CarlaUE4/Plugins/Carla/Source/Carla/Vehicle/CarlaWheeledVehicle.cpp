@@ -461,6 +461,24 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
   BaseMovementComponent = MovementComponent;
 }
 
+void ACarlaWheeledVehicle::SetWheelSteerDirection(VehicleWheelLocation WheelLocation, float AngleInDeg) {
+
+  check((uint8)WheelLocation >= 0)
+  check((uint8)WheelLocation < 4)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
+}
+
+float ACarlaWheeledVehicle::GetWheelSteerAngle(VehicleWheelLocation WheelLocation) {
+
+  check((uint8)WheelLocation >= 0)
+  check((uint8)WheelLocation < 4)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
+}
+
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   if(!GetCarlaMovementComponent<UDefaultMovementComponent>())
   {
