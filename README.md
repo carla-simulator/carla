@@ -123,13 +123,25 @@ __CARLA Talks 2020 (May):__
 	*   The External Sensor Interface (ESI) — [video](https://youtu.be/5hXHPV9FIeY) | [slides](https://drive.google.com/file/d/1VWFaEoS12siW6NtQDUkm44BVO7tveRbJ/view?usp=sharing)  
 	*   The OpenDRIVE Standalone Mode — [video](https://youtu.be/U25GhofVV1Q) | [slides](https://drive.google.com/file/d/1D5VsgfX7dmgPWn7UtDDid3-OdS1HI4pY/view?usp=sharing)  
 
-License
+Licenses
 -------
+
+###### CARLA licenses
 
 CARLA specific code is distributed under MIT License.
 
 CARLA specific assets are distributed under CC-BY License.
 
+###### CARLA Dependency and Integration licenses
+
 The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/adv_rss.md) introduces LGPL-2.1-only License.
 
-Note that UE4 itself follows its own license terms.
+Unreal Engine 4 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
+
+CARLA uses [PROJ](https://proj.org/), a generic coordinate transformation software which uses the [X/MIT open source license](https://proj.org/about.html#license).
+
+CARLA includes a SQLite dependency for CARLA's Python API which you can check here: https://www.sqlite.org/purchase/license
+
+CARLA uses the Autodesk FBX SDK for converting FBX to OBJ in the import process of maps. This step is optional, and the SDK is located here: https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0
+
+This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2020 Autodesk, Inc. All rights, reserved. Such code is provided "as is" and Autodesk, Inc. disclaims any and all warranties, whether express or implied, including without limitation the implied warranties of merchantability, fitness for a particular purpose or non-infringement of third party rights. In no event shall Autodesk, Inc. be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of such code."

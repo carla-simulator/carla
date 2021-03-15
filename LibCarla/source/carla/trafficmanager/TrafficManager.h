@@ -230,6 +230,8 @@ public:
     }
   }
 
+  void ShutDown();
+
 private:
 
   void CreateTrafficManagerServer(
