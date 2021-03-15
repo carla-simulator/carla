@@ -228,6 +228,19 @@ namespace detail {
     return _pimpl->AsyncCall("set_vehicle_light_state", vehicle, light_state);
   }
 
+  void Client::SetWheelSteerDirection(
+        rpc::ActorId vehicle, 
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg){
+    return _pimpl->AsyncCall("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
+  }
+
+  float Client::GetWheelSteerAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location){
+    return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
+  }
+
   rpc::Actor Client::SpawnActor(
       const rpc::ActorDescription &description,
       const geom::Transform &transform) {

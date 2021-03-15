@@ -145,7 +145,7 @@ namespace geom {
     return {
         -cy * sp * cr - sy * sr,
         -sy * sp * cr + cy * sr,
-        -cp * cr};
+        cp * cr};
   }
 
   std::vector<int> Math::GenerateRange(int a, int b) {
