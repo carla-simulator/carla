@@ -66,10 +66,56 @@ from sumo_integration.sumo_simulation import SumoSimulation  # pylint: disable=w
 # ==================================================================================================
 
 ##### Begin: My code. #####
+class PerceivedObject:
+    def __init__(self):
+        pass
+
+
+class PerceivedObjectsHandler:
+    def __init__(self):
+        pass
+
+
+
+class ObstacleSensorData:
+    def __init__(self, data, time=0.0):
+        self.__dict__ = data.__dict__
+
+        self.time = time
+
+    def location(self):
+        location = [
+            self.actor.get_transform().location.x + self.distance * math.cos(math.radians(self.actor.get_transform().rotation.yaw)),
+            self.actor.get_transform().location.y + self.distance * math.sin(math.radians(self.actor.get_transform().rotation.yaw)),
+        ]
+
+        return location
+
+
+class ObstacleSensorDataHandler(SensorDataHandler):
+    def __init__(self):
+        pass
+
+
+class SensorDataHandler:
+    def __init__(self):
+        self.past_data = []
+        self.new_data = []
+
+        
+    def all(self):
+        return self.past_data + self.new_data
+
+
+    def save(self, new_data):
+        self.new_data.append(new_data)
+
+
 class CAV:
     TARGET_ROAD_WIDTH = 3.2 * 3
     TARGET_ROAD_LENGTH = 150
     VEHICLE_WIDTH = 1.8
+    VEHICLE_LENGTH = 5.0
 
     """
     TARGET_ROAD_WIDTH: 3.2 (m) * 3 (lanes)
@@ -79,6 +125,7 @@ class CAV:
     cite from: ETSI. (2019). Intelligent Transport Systems (ITS); Vehicular Communications; Basic Set of Applications; Analysis of the Collective Perception Service (CPS). Draft TR 103 562 V0.0.16, 1, 1–119.
 
     VEHICLE_WIDTH: 1.8 (m)
+    VEHICLE_LENGTH: 5.0 (m)
     cite from: https://sumo.dlr.de/docs/Definition_of_Vehicles%2C_Vehicle_Types%2C_and_Routes.html
     """
 
@@ -94,11 +141,12 @@ class CAV:
 
         self.sensors = []
 
-        self.sensor_data = []
-        self.perceived_objects = []
+        self.sensor_data_handler = SensorDataHandler()
+        self.perceived_objects_handler = PerceivedObjectsHandler()
 
-        self.received_CAMs = []
-        self.received_CPMs = []
+        self.received_CAMs_handler = CAMsHandler()
+        self.received_CPMs_handler = CPMsHandler()
+        self.generated_CPMs_handler = CPMsHandler()
 
         self.load_sensors()
 
@@ -116,12 +164,17 @@ class CAV:
     def load_sensors(self):
         pass
 
+
+    def rads(self, sensor_dist, target_rad, center_rad=0):
+        sensor_num = self.sensor_num(sensor_dist, target_rad)
+
+        return [float(target_rad) / sensor_num * i - float(target_rad * (sensor_num - 1) / sensor_num / 2.0 + center_rad) for i in range(0, sensor_num)]
+
     def receive_CPMs(self):
         pass
 
     def receive_sensor_data(self, data):
-        print(f"sumo_id: {self.sumo_actor_id}, actor_transform: {self.carla_actor.get_transform()}, sensor_transform: {data.actor.get_transform()}, distance: {data.distance}, other_actor_transform: {data.other_actor.get_transform()}")
-        self.sensor_data.append(data)
+        pass
 
     def send_CPMs(self):
         pass
@@ -129,10 +182,8 @@ class CAV:
     def sensor_num(self, sensor_dist, target_rad):
         return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(CAV.VEHICLE_WIDTH)) + 1
 
-    def rads(self, sensor_dist, target_rad, center_rad=0):
-        sensor_num = self.sensor_num(sensor_dist, target_rad)
-
-        return [float(target_rad) / sensor_num * i - float(target_rad * (sensor_num - 1) / sensor_num / 2.0 + center_rad) for i in range(0, sensor_num)]
+    def sumo_elapsed_seconds(self):
+        return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
     def tick(self):
         self.update_perceived_objects()
@@ -144,6 +195,11 @@ class CAV:
 
 
 class CAVWithObstacleSensors(CAV):
+    def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time):
+        super().__init__(sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time)
+        self.sensor_data_handler = ObstacleSensorDataHandler()
+
+
     def load_sensors(self):
         # 360 sensor
         rads_360 = self.rads(CAV.TARGET_ROAD_WIDTH, 360.0)
@@ -151,28 +207,45 @@ class CAVWithObstacleSensors(CAV):
         rads_back = self.rads(CAV.TARGET_ROAD_LENGTH, 2 * math.degrees(math.atan(float(CAV.TARGET_ROAD_WIDTH) / float(CAV.TARGET_ROAD_LENGTH))), 180)
 
         for z_rad in rads_360:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(roll=z_rad)))
+            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
             sensor.listen(lambda data: self.receive_sensor_data(data))
             self.sensors.append(sensor)
 
         for z_rad in rads_front:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(roll=z_rad)))
+            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
             sensor.listen(lambda data: self.receive_sensor_data(data))
             self.sensors.append(sensor)
 
         for z_rad in rads_back:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(roll=z_rad)))
+            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
             sensor.listen(lambda data: self.receive_sensor_data(data))
             self.sensors.append(sensor)
 
+    def receive_sensor_data(self, data):
+        if "static" in data.actor.type_id:
+            return
+
+        # print(f"sumo_id: {self.sumo_actor_id}, sensor_transform: {data.actor.get_transform()}, distance: {data.distance}, pridected_location: {pridected_location}, other_type: {data.other_actor.type_id}, other_transform: {data.other_actor.get_transform()}")
+        self.sensor_data_handler.save(ObstacleSensorData(data, self.sumo_elapsed_seconds()))
+
     def update_perceived_objects(self):
+        pass
+
+
+class CAM:
+    def __init__(self):
+        pass
+
+
+class CAMsHandler:
+    def __init__(self):
         pass
 
 
 class CPM:
     MAX_SIZE = 800
 
-    def __init__(ITS_PDU_Header={}, Management_Container={}, Station_Data_Container={}, Sensor_Information_Container=[], Perceived_Object_Container=[], option={}):
+    def __init__(self, ITS_PDU_Header={}, Management_Container={}, Station_Data_Container={}, Sensor_Information_Container=[], Perceived_Object_Container=[], option={}):
         # Easy implementation of a Cooprative Perception Message (CPM).
         # If you want to use detail information of CPM, you should include the information in CPM.
         self.ITS_PDU_Header = ITS_PDU_Header
@@ -186,14 +259,16 @@ class CPM:
         self.update_option()
 
     def dict_format(self):
-        message = {
-            "ITS_PDU_Header": self.ITS_PDU_Header,
-            "Management_Container": self.Management_Container,
-            "Station_Data_Container": self.Station_Data_Container,
-            "Sensor_Information_Container": self.Sensor_Information_Container,
-            "Perceived_Object_Container": self.Perceived_Object_Container,
-            "option": self.option
-        }
+        message = self.__dict__
+
+        # message = {
+        #     "ITS_PDU_Header": self.ITS_PDU_Header,
+        #     "Management_Container": self.Management_Container,
+        #     "Station_Data_Container": self.Station_Data_Container,
+        #     "Sensor_Information_Container": self.Sensor_Information_Container,
+        #     "Perceived_Object_Container": self.Perceived_Object_Container,
+        #     "option": self.option
+        # }
 
         return message
 
@@ -207,6 +282,11 @@ class CPM:
         """
 
         self.option["size"] = 121 + 35 * len(self.Sensor_Information_Container) + 35 * len(self.Perceived_Object_Container)
+
+
+class CPMsHandler:
+    def __init__(self):
+        pass
 ##### End: My code. #####
 
 
