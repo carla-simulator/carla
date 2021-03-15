@@ -318,7 +318,7 @@ The hybrid mode is disabled by default. There are two ways to enable it.
 
 The are two parameters ruling the hybrid mode. One is the __radius__ that states the proximity area around any ego vehicle where physics are enabled. The other is the __vehicle__ with , that will act as center of this radius.  
 
-*   __Radius__ *(default = 70 meters)* — States the proximity area around the ego vehicle where physics are enabled. The value be changed with [traffic_manager.set_hybrid_mode_radius(r)](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_mode_radius).  
+*   __Radius__ *(default = 70 meters)* — States the proximity area around the ego vehicle where physics are enabled. The value can be changed via [traffic_manager.set_hybrid_physics_radius(r)](python_api.md#carla.TrafficManager.set_hybrid_physics_radius).  
 *   __Ego vehicle__ — A vehicle tagged with `role_name='hero'` that will act of the radius.
 	*   __If there is none,__ all the vehicles will disable physics.
 	*   __If there are many,__ the radius will be considered for all of them. That will create different areas of influence with physics enabled.  
