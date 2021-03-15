@@ -15,10 +15,14 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
 set DOC_STRING=Build LibCarla.
-set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean]
+set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [--no-pull]
 
 set REMOVE_INTERMEDIATE=false
 set BUILD_OSM2ODR=false
+set GIT_PULL=true
+set CURRENT_OSM2ODR_COMMIT=f05c86588f797922758f1a7a50585a3aa969c17a
+set OSM2ODR_BRANCH=carla_osm2odr
+set OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
 :arg-parse
 if not "%1"=="" (
@@ -28,6 +32,9 @@ if not "%1"=="" (
     )
     if "%1"=="--build" (
         set BUILD_OSM2ODR=true
+    )
+    if "%1"=="--no-pull" (
+        set GIT_PULL=false
     )
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
@@ -60,6 +67,7 @@ rem ============================================================================
 rem Set the visual studio solution directory
 rem
 set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
+set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%som2odr-source\
 set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 
 if %REMOVE_INTERMEDIATE% == true (
@@ -74,17 +82,27 @@ if %REMOVE_INTERMEDIATE% == true (
     )
 )
 
-if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
-cd "%OSM2ODR_VSPROJECT_PATH%"
-
 rem Build OSM2ODR
 if %BUILD_OSM2ODR% == true (
+
+    if  %GIT_PULL% == true (
+        if not exist "%OSM2ODR_SOURCE_PATH%" git clone -b %OSM2ODR_BRANCH% %OSM2ODR_REPO% %OSM2ODR_SOURCE_PATH%
+        cd "%OSM2ODR_SOURCE_PATH%"
+        git fetch
+        git checkout %CURRENT_OSM2ODR_COMMIT%
+    )
+
+    if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
+    cd "%OSM2ODR_VSPROJECT_PATH%"
+
     cmake -G "Visual Studio 15 2017 Win64"^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
         -DPROJ_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\proj-install\include^
-        -DPROJ_LIBRARY=%INSTALLATION_DIR:/=\%\proj-install/lib\proj.lib^
-        "%ROOT_PATH%\Util\OSM2ODR"
+        -DPROJ_LIBRARY=%INSTALLATION_DIR:/=\%\proj-install\lib\proj.lib^
+        -DXercesC_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\xerces-c-3.2.3-install\include^
+        -DXercesC_LIBRARY=%INSTALLATION_DIR:/=\%\xerces-c-3.2.3-install\lib\xerces-c.lib^
+        "%OSM2ODR_SOURCE_PATH%"
     if %errorlevel% neq 0 goto error_cmake
 
     cmake --build . --config Release --target install | findstr /V "Up-to-date:"
