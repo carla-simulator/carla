@@ -29,6 +29,7 @@
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/VehicleWheels.h"
 
 #include <functional>
 #include <memory>
@@ -219,6 +220,17 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    void SetWheelSteerDirection(
+        rpc::ActorId vehicle, 
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg
+    );
+
+    float GetWheelSteerAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location
+    );
+    
     void EnableChronoPhysics(
         rpc::ActorId vehicle,
         uint64_t MaxSubsteps,
