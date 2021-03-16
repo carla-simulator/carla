@@ -47,6 +47,7 @@
 #include <carla/rpc/VehicleLightStateList.h>
 #include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
+#include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -904,6 +905,49 @@ void FCarlaServer::FPimpl::BindActions()
     Vehicle->SetVehicleLightState(FVehicleLightState(LightState));
 
     return R<void>::Success();
+  };
+
+  BIND_SYNC(set_wheel_steer_direction) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float AngleInDeg) -> R<void>
+  {
+
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if(!ActorView.IsValid()){
+
+      RESPOND_ERROR("unable to apply actor wheel steer : actor not found");
+    }
+
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if(Vehicle == nullptr){
+
+      RESPOND_ERROR("unable to apply actor wheel steer : actor is not a vehicle");
+    }
+
+    Vehicle->SetWheelSteerDirection((VehicleWheelLocation)WheelLocation, AngleInDeg);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_steer_angle) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if(!ActorView.IsValid()){
+
+      RESPOND_ERROR("unable to get actor wheel angle : actor not found");
+    }
+
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if(Vehicle == nullptr){
+
+      RESPOND_ERROR("unable to get actor wheel angle : actor is not a vehicle");
+    }
+
+    return Vehicle->GetWheelSteerAngle((VehicleWheelLocation)WheelLocation);
   };
 
   BIND_SYNC(set_actor_simulate_physics) << [this](
