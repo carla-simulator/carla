@@ -8,6 +8,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "ProceduralMeshComponent.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Materials/Material.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -27,6 +29,12 @@ public:
 
   UPROPERTY(Category = "Procedural Mesh Actor", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   UProceduralMeshComponent* MeshComponent;
+
+  UPROPERTY(EditAnywhere)
+  UMaterial* RoadMaterial;
+
+  UPROPERTY(EditAnywhere)
+  UMaterial* RoadMarkMaterial;
 };
 
 UCLASS()
@@ -50,6 +58,9 @@ public:
 
   /// Generates the road and sidewalk mesh based on the OpenDRIVE information.
   void GenerateRoadMesh();
+
+  /// Generates the road marking mesh based on the OpenDRIVE information.
+  void GenerateMarkMesh();
 
   /// Generates pole meshes based on the OpenDRIVE information.
   void GeneratePoles();

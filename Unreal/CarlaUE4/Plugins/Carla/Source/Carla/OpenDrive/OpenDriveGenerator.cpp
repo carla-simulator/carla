@@ -23,6 +23,24 @@ AProceduralMeshActor::AProceduralMeshActor()
   PrimaryActorTick.bCanEverTick = false;
   MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("RootComponent"));
   RootComponent = MeshComponent;
+
+  // Find/Load road material
+  FString MaterialPath(TEXT("Material'/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt1.M_Asphalt1'"));
+  static ConstructorHelpers::FObjectFinder<UMaterial> RoadMaterialAsset(*MaterialPath);
+  if (RoadMaterialAsset.Succeeded()) {
+    RoadMaterial = (UMaterial*) RoadMaterialAsset.Object;
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Road material not found at %s"), *MaterialPath);
+  }
+
+  // Find/Load road marking material
+  MaterialPath = FString(TEXT("Material'/Game/Carla/Static/Road/RoadsTown06/Assets_Markings.Assets_Markings'"));
+  static ConstructorHelpers::FObjectFinder<UMaterial> RoadMarkMaterialAsset(*MaterialPath);
+  if (RoadMarkMaterialAsset.Succeeded()) {
+    RoadMarkMaterial = (UMaterial*) RoadMarkMaterialAsset.Object;
+  } else {
+    UE_LOG(LogCarla, Error, TEXT("Road material not found at %s"), *MaterialPath);
+  }
 }
 
 AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitializer)
@@ -101,6 +119,8 @@ void AOpenDriveGenerator::GenerateRoadMesh()
         TArray<FProcMeshTangent>(), // Tangents
         true); // Create collision
 
+    TempPMC->SetMaterial(0, TempActor->RoadMaterial);
+
     ActorMeshList.Add(TempActor);
   }
 
@@ -127,6 +147,64 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   // {
   //   UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
   // }
+}
+
+/// Generate road markings Mesh
+void AOpenDriveGenerator::GenerateMarkMesh()
+{
+  if (!IsOpenDriveValid())
+  {
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
+    return;
+  }
+
+  carla::rpc::OpendriveGenerationParameters Parameters;
+  UCarlaGameInstance * GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+  if(GameInstance)
+  {
+    Parameters = GameInstance->GetOpendriveGenerationParameters();
+  }
+  else
+  {
+    carla::log_warning("Missing game instance");
+  }
+
+  auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
+  const auto Meshes = CarlaMap->GenerateMarkMesh(Parameters);
+  for (const auto &Mesh : Meshes) {
+    if (!Mesh->GetVertices().size())
+    {
+      continue;
+    }
+    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
+    TempPMC->bUseAsyncCooking = true;
+    TempPMC->bUseComplexAsSimpleCollision = true;
+    TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+    const FProceduralCustomMesh MeshData = *Mesh;
+    TempPMC->CreateMeshSection_LinearColor(
+        0,
+        MeshData.Vertices,
+        MeshData.Triangles,
+        MeshData.Normals,
+        TArray<FVector2D>(), // UV0
+        TArray<FLinearColor>(), // VertexColor
+        TArray<FProcMeshTangent>(), // Tangents
+        true); // Create collision
+
+    TempPMC->SetMaterial(0, TempActor->RoadMarkMaterial);
+
+    ActorMeshList.Add(TempActor);
+  }
+
+  if(!Parameters.enable_mesh_visibility)
+  {
+    for(AActor * actor : ActorMeshList)
+    {
+      actor->SetActorHiddenInGame(true);
+    }
+  }
 }
 
 void AOpenDriveGenerator::GeneratePoles()
@@ -161,6 +239,7 @@ void AOpenDriveGenerator::GenerateSpawnPoints()
 void AOpenDriveGenerator::GenerateAll()
 {
   GenerateRoadMesh();
+  GenerateMarkMesh();
   GenerateSpawnPoints();
   GeneratePoles();
 }

@@ -8,6 +8,8 @@
 
 #include <memory>
 #include <vector>
+#include <utility>
+#include <unordered_map>
 
 #include <carla/geom/Mesh.h>
 #include <carla/road/Road.h>
@@ -58,6 +60,18 @@ namespace geom {
     std::unique_ptr<Mesh> GenerateLeftWall(
         const road::Lane &lane, const double s_start, const double s_end) const;
 
+    // -- Markings --
+
+    /// Generates a mesh for the markings that define a lane section
+    std::unique_ptr<Mesh> GenerateMark(const road::LaneSection &lane_section) const;
+
+    /// Generates a mesh for the markings that define a lane from a given s start and end
+    std::unique_ptr<Mesh> GenerateMark(
+        const road::Lane &lane, const double s_start, const double s_end) const;
+
+    /// Generates a mesh for the markings that define the whole lane
+    std::unique_ptr<Mesh> GenerateMark(const road::Lane &lane) const;
+
     // -- Chunked --
 
     /// Generates a list of meshes that defines a road with a maximum length
@@ -66,6 +80,10 @@ namespace geom {
 
     /// Generates a list of meshes that defines a lane_section with a maximum length
     std::vector<std::unique_ptr<Mesh>> GenerateWithMaxLen(
+        const road::LaneSection &lane_section) const;
+
+    /// Generates a list of meshes that defines a marking with a maximum length
+    std::vector<std::unique_ptr<Mesh>> GenerateMarkWithMaxLen(
         const road::LaneSection &lane_section) const;
 
     /// Generates a list of meshes that defines a road safety wall with a maximum length
@@ -94,6 +112,9 @@ namespace geom {
       float max_road_len                = 50.0f;
       float extra_lane_width            =  1.0f;
       float wall_height                 =  0.6f;
+      float mark_height                 =0.005f;
+      float broken_mark_len             =  6.0f;
+      float broken_gap_len              = 12.0f;
       // Road mesh smoothness:
       float max_weight_distance         =  5.0f;
       float same_lane_weight_multiplier =  2.0f;
@@ -102,6 +123,7 @@ namespace geom {
 
     RoadParameters road_param;
 
+    std::unordered_map<road::RoadId, std::vector<road::RoadId>> connections;
   };
 
 } // namespace geom

@@ -5,8 +5,14 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/road/MeshFactory.h>
+#include "carla/road/RoadTypes.h"
+#include "carla/road/element/RoadInfoMarkRecord.h"
+
+#include <boost/functional/hash.hpp>
 
 #include <vector>
+#include <utility>
+#include <unordered_map>
 
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Rtree.h>
@@ -25,6 +31,11 @@ namespace geom {
   /// sections to avoid floating point precision errors.
   static constexpr double EPSILON = 10.0 * std::numeric_limits<double>::epsilon();
   static constexpr double MESH_EPSILON = 50.0 * std::numeric_limits<double>::epsilon();
+
+  // Holds information for a successor/predecessor lane if a mark/gap went past a section/road
+  typedef std::pair<road::RoadId, road::LaneId> pair;
+  static std::unordered_map<pair, std::pair<bool,float>, boost::hash<pair>> mark_lane_memory;
+  static std::unordered_map<road::RoadId, std::vector<road::RoadId>> connections;
 
   std::unique_ptr<Mesh> MeshFactory::Generate(const road::Road &road) const {
     Mesh out_mesh;
@@ -222,6 +233,151 @@ namespace geom {
     return std::make_unique<Mesh>(out_mesh);
   }
 
+  std::unique_ptr<Mesh> MeshFactory::GenerateMark(const road::LaneSection &lane_section) const {
+    Mesh out_mesh;
+    for (auto &&lane_pair : lane_section.GetLanes()) {
+      out_mesh += *GenerateMark(lane_pair.second);
+    }
+    return std::make_unique<Mesh>(out_mesh);
+  }
+
+  std::unique_ptr<Mesh> MeshFactory::GenerateMark(const road::Lane &lane) const {
+    const double s_start = lane.GetDistance() + EPSILON;
+    const double s_end = lane.GetDistance() + lane.GetLength() - EPSILON;
+    return GenerateMark(lane, s_start, s_end);
+  }
+
+  std::unique_ptr<Mesh> MeshFactory::GenerateMark(
+      const road::Lane &lane, const double s_start, const double s_end) const {
+    RELEASE_ASSERT(road_param.resolution > 0.0);
+    DEBUG_ASSERT(s_start >= 0.0);
+    DEBUG_ASSERT(s_end <= lane.GetDistance() + lane.GetLength());
+    DEBUG_ASSERT(s_end >= EPSILON);
+    DEBUG_ASSERT(s_start < s_end);
+    // The lane with lane_id 0 have no physical representation in OpenDRIVE
+    Mesh out_mesh;
+    if (lane.GetId() == 0) {
+      return std::make_unique<Mesh>(out_mesh);
+    }
+    double s_current = s_start;
+
+    // get the marking information, type, height and lateral offset
+    const auto mark_info = lane.GetInfo<road::element::RoadInfoMarkRecord>(s_current);
+    if (mark_info == nullptr) {
+      return std::make_unique<Mesh>(out_mesh);
+    }
+    const auto mark_type = mark_info->GetType();
+    const float mark_half_width = static_cast<float>(mark_info->GetWidth()) / 2.0f;
+    const geom::Vector3D height_vector = geom::Vector3D(0.f, 0.f, road_param.mark_height);
+    const geom::Vector3D lateral_offset_vector = geom::Vector3D(0.f, mark_half_width, 0.f);
+
+    const auto road_id = lane.GetRoad()->GetId();
+    const auto lane_id = lane.GetId();
+    const auto key = std::make_pair(road_id, lane_id);
+
+    // Initialize mark_lane_memory depending on mark_type
+    if (mark_type == "solid") {
+      mark_lane_memory.erase(key);
+      mark_lane_memory.insert(std::make_pair(key, std::make_pair(true, s_end - s_start)));
+    } else if (mark_type == "broken") {
+      const auto search = mark_lane_memory.find(key);
+      if (search == mark_lane_memory.end()) {
+        mark_lane_memory.insert(std::make_pair(key, std::make_pair(true, road_param.broken_mark_len)));
+      }
+    } else {
+      //TODO: Implement alternatives, uses "solid" as default
+      mark_lane_memory.erase(key);
+      mark_lane_memory.insert(std::make_pair(key, std::make_pair(true, s_end - s_start)));
+    }
+
+    auto mark_memory = mark_lane_memory.at(key);
+
+    std::vector<geom::Vector3D> vertices;
+    do {
+      if (mark_memory.first) {
+        // Get the location of the edges of the current lane at the current waypoint
+        const auto edges = lane.GetCornerPositions(s_current, 0.0f);
+        if (lane_id > 0) {
+          vertices.push_back(edges.second + height_vector + lateral_offset_vector);
+          vertices.push_back(edges.second + height_vector - lateral_offset_vector);
+        } else if (lane_id < 0) {
+          vertices.push_back(edges.first + height_vector + lateral_offset_vector);
+          vertices.push_back(edges.first + height_vector - lateral_offset_vector);
+        }
+      }
+
+      // Update the current waypoint's "s"
+      s_current += road_param.resolution;
+      if (s_current < s_end) {
+        mark_memory.second -= road_param.resolution;
+
+        // Update memory, build sub-mesh and clear vertices for new sub-mesh
+        if (mark_memory.second <= 0 && s_current + mark_memory.second < s_end) {
+          const auto edges = lane.GetCornerPositions(s_current + mark_memory.second, 0.0f);
+          if (lane_id > 0) {
+            vertices.push_back(edges.second + height_vector + lateral_offset_vector);
+            vertices.push_back(edges.second + height_vector - lateral_offset_vector);
+          } else if (lane_id < 0) {
+            vertices.push_back(edges.first + height_vector + lateral_offset_vector);
+            vertices.push_back(edges.first + height_vector - lateral_offset_vector);
+          }
+          if (mark_memory.first) {
+            Mesh tmp_mesh;
+            tmp_mesh.AddTriangleStrip(vertices);
+            out_mesh += tmp_mesh;
+            vertices.clear();
+          }
+          auto rest_len = mark_memory.second;
+          mark_memory.second = (mark_memory.first) ? road_param.broken_gap_len : road_param.broken_mark_len;
+          mark_memory.second += rest_len;
+          mark_memory.first ^= true;
+        }
+      }
+    } while(s_current < s_end);
+
+    // This ensures the mesh is constant and have no gaps between roads,
+    // adding geometry at the very end of the lane
+    if (s_end - (s_current - road_param.resolution) > EPSILON) {
+      if (mark_memory.first) {
+        const auto edges = lane.GetCornerPositions(s_end - MESH_EPSILON, 0.0f);
+        if (lane_id > 0) {
+          vertices.push_back(edges.second + height_vector + lateral_offset_vector);
+          vertices.push_back(edges.second + height_vector - lateral_offset_vector);
+        } else if (lane_id < 0) {
+          vertices.push_back(edges.first + height_vector + lateral_offset_vector);
+          vertices.push_back(edges.first + height_vector - lateral_offset_vector);
+        }
+      }
+      mark_memory.second -= (s_end + road_param.resolution - s_current - MESH_EPSILON);
+      if (mark_memory.second <= 0) {
+        auto rest_len = mark_memory.second;
+        mark_memory.second = (mark_memory.first) ? road_param.broken_gap_len : road_param.broken_mark_len;
+        mark_memory.second += rest_len;
+        mark_memory.first ^= true;
+      }
+    }
+
+    // checks if s_end >= the actual end of the road, else only end of section
+    if (s_end >= lane.GetRoad()->GetStartSection(0)->GetDistance() + lane.GetRoad()->GetLength() - EPSILON) {
+      const auto nxt_lane_id = (lane.GetId() < 0) ? lane.GetSuccessor() : lane.GetPredecessor();
+      auto succs = connections.find(road_id)->second;
+      for (auto nxt_road_id : succs) {
+        auto nxt_key = std::make_pair(nxt_road_id, nxt_lane_id);
+        mark_lane_memory.erase(nxt_key);
+        mark_lane_memory.insert(std::make_pair(nxt_key, mark_memory));
+      }
+    } else {
+      mark_lane_memory.erase(key);
+      mark_lane_memory.insert(std::make_pair(key, mark_memory));
+    }
+
+    // Create the strip
+    Mesh tmp_mesh;
+    tmp_mesh.AddTriangleStrip(vertices);
+    out_mesh += tmp_mesh;
+    return std::make_unique<Mesh>(out_mesh);
+  }
+
   std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateWithMaxLen(
       const road::Road &road) const {
     std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
@@ -256,6 +412,34 @@ namespace geom {
         Mesh lane_section_mesh;
         for (auto &&lane_pair : lane_section.GetLanes()) {
           lane_section_mesh += *Generate(lane_pair.second, s_current, s_end);
+        }
+        mesh_uptr_list.emplace_back(std::make_unique<Mesh>(lane_section_mesh));
+      }
+    }
+    return mesh_uptr_list;
+  }
+
+  std::vector<std::unique_ptr<Mesh>> MeshFactory::GenerateMarkWithMaxLen(
+      const road::LaneSection &lane_section) const {
+    std::vector<std::unique_ptr<Mesh>> mesh_uptr_list;
+    if (lane_section.GetLength() < road_param.max_road_len) {
+      mesh_uptr_list.emplace_back(GenerateMark(lane_section));
+    } else {
+      double s_current = lane_section.GetDistance() + EPSILON;
+      const double s_end = lane_section.GetDistance() + lane_section.GetLength() - EPSILON;
+      while(s_current + road_param.max_road_len < s_end) {
+        const auto s_until = s_current + road_param.max_road_len;
+        Mesh lane_section_mesh;
+        for (auto &&lane_pair : lane_section.GetLanes()) {
+          lane_section_mesh += *GenerateMark(lane_pair.second, s_current, s_until);
+        }
+        mesh_uptr_list.emplace_back(std::make_unique<Mesh>(lane_section_mesh));
+        s_current = s_until;
+      }
+      if (s_end - s_current > EPSILON) {
+        Mesh lane_section_mesh;
+        for (auto &&lane_pair : lane_section.GetLanes()) {
+          lane_section_mesh += *GenerateMark(lane_pair.second, s_current, s_end);
         }
         mesh_uptr_list.emplace_back(std::make_unique<Mesh>(lane_section_mesh));
       }
