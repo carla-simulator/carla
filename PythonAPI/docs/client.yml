@@ -471,7 +471,7 @@
       params:
       - param_name: r
         type: float
-        default: 70.0
+        default: 50.0
         param_units: meters
         doc: >
           New radius where physics are enabled.
