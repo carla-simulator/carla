@@ -66,7 +66,6 @@ void ALargeMapManager::BeginPlay()
 
 }
 
-
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
 {
   LM_LOG(Error, "PreWorldOriginOffset Src: %s  ->  Dst: %s", *InSrcOrigin.ToString(), *InDstOrigin.ToString());
@@ -224,6 +223,11 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   LM_LOG(Warning, "GenerateMap num Tiles generated %d", MapTiles.Num());
   DumpTilesTable();
 #endif // WITH_EDITOR
+}
+
+void ALargeMapManager::AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform)
+{
+  GhostActors.Add(ActorView.GetActorId(), {Transform, ActorView});
 }
 
 void ALargeMapManager::AddActorToConsider(AActor* InActor)

@@ -117,10 +117,15 @@ bool UActorDispatcher::DestroyActor(AActor *Actor)
 
 FActorView UActorDispatcher::RegisterActor(AActor &Actor, FActorDescription Description, FActorRegistry::IdType DesiredId)
 {
-  auto View = Registry.Register(Actor, std::move(Description), DesiredId);
+  FActorView View = Registry.Register(Actor, std::move(Description), DesiredId);
   if (View.IsValid())
   {
     Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
   }
   return View;
+}
+
+FActorView UActorDispatcher::PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
+{
+  return Registry.PrepareActorViewForFutureActor(ActorDescription);
 }

@@ -65,9 +65,9 @@ private:
 
   friend class FActorRegistry;
 
-  FActorView(IdType ActorId, AActor &Actor, TSharedPtr<const FActorInfo> Info)
+  FActorView(IdType ActorId, AActor* Actor, TSharedPtr<const FActorInfo> Info)
     : Id(ActorId),
-      TheActor(&Actor),
+      TheActor(Actor),
       Info(std::move(Info)) {}
 
   IdType Id = 0u;

@@ -39,6 +39,8 @@ public:
   /// @warning Undefined if an actor is registered more than once.
   FActorView Register(AActor &Actor, FActorDescription Description, IdType DesiredId = 0);
 
+  FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription);
+
   void Deregister(IdType Id);
 
   void Deregister(AActor *Actor);
@@ -110,4 +112,6 @@ private:
   TMap<AActor *, IdType> Ids;
 
   DatabaseType ActorDatabase;
+
+  static IdType ID_COUNTER;
 };

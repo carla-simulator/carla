@@ -61,6 +61,8 @@ public:
   /// that should be kept in the registry.
   FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription, FActorRegistry::IdType DesiredId = 0);
 
+  FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription);
+
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
     return Definitions;

@@ -14,9 +14,6 @@
 #include "LargeMapManager.generated.h"
 
 
-// World->RequestNewWorldOrigin - Force rebase ?
-// WorldComposition->UpdateStreamingState - Force stream levels ?
-
 USTRUCT()
 struct FCarlaMapTile
 {
@@ -63,6 +60,23 @@ struct FActorToConsider
   }
 };
 
+/*
+  Actor that was spawned or queried to be spawn at some point but it was so far away
+  from the origin that was removed from the level (or not spawned).
+  It is possible that the actor keeps receiving updates, eg, traffic manager.
+  FGhostActor is a wrapper of the info and state of the actor in case it needs to be re-spawned.
+*/
+struct FGhostActor
+{
+  FGhostActor(const FTransform& InTransform, const FActorView& InActorView) : 
+    Transform(InTransform),
+    ActorView(InActorView) {}
+
+  FTransform Transform;
+  
+  FActorView ActorView;
+};
+
 UCLASS()
 class CARLA_API ALargeMapManager : public AActor
 {
@@ -92,6 +106,8 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateMap(FString InAssetsPath);
+
+  void AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void AddActorToConsider(AActor* InActor);
@@ -154,7 +170,10 @@ protected:
 
   void SpawnAssetsInTile(FCarlaMapTile& Tile);
 
+
   TMap<uint64, FCarlaMapTile> MapTiles;
+
+  TMap<uint32, FGhostActor> GhostActors;
 
   TArray<FActorToConsider> ActorsToConsider;
 

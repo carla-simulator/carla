@@ -242,6 +242,11 @@ public:
     return ActorDispatcher->DestroyActor(Actor);
   }
 
+  FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
+  {
+    return ActorDispatcher->PrepareActorViewForFutureActor(ActorDescription);
+  }
+
   // ===========================================================================
   // -- Other methods ----------------------------------------------------------
   // ===========================================================================

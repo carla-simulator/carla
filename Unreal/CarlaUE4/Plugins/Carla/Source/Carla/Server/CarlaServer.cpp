@@ -456,19 +456,25 @@ void FCarlaServer::FPimpl::BindActions()
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
+      UE_LOG(LogCarla, Error, TEXT("Actor not Spawned"));
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
     if (!Result.Value.IsValid())
     {
+      // Actor could not be spawned
+      if(LargeMap)
+      {
+        // Get Fake View from Registry forcing it to update its ID_COUNTER
+        FActorView ActorView = Episode->PrepareActorViewForFutureActor(Description);
+        // Add State to LM
+        LargeMap->AddActorToUnloadedList(ActorView, Transform);
+      }
+
       RESPOND_ERROR("internal error: actor could not be spawned");
     }
 
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    if (!GameMode)
-    {
-      RESPOND_ERROR("unable to find CARLA game mode");
-    }
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
     if(LargeMap)
     {
       LargeMap->OnActorSpawned(Result.Value);

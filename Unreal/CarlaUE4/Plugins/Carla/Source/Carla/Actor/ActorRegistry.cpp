@@ -15,25 +15,29 @@
 
 namespace crp = carla::rpc;
 
+FActorRegistry::IdType FActorRegistry::ID_COUNTER = 0u;
+
 static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
 {
   if (!View.IsValid())
   {
     return FActorView::ActorType::INVALID;
   }
-  else if (nullptr != Cast<ACarlaWheeledVehicle>(View.GetActor()))
+
+  const AActor* Actor = View.GetActor();
+  if (nullptr != Cast<ACarlaWheeledVehicle>(Actor))
   {
     return FActorView::ActorType::Vehicle;
   }
-  else if (nullptr != Cast<ACharacter>(View.GetActor()))
+  else if (nullptr != Cast<ACharacter>(Actor))
   {
     return FActorView::ActorType::Walker;
   }
-  else if (nullptr != Cast<ATrafficLightBase>(View.GetActor()))
+  else if (nullptr != Cast<ATrafficLightBase>(Actor))
   {
     return FActorView::ActorType::TrafficLight;
   }
-  else if (nullptr != Cast<ATrafficSignBase>(View.GetActor()))
+  else if (nullptr != Cast<ATrafficSignBase>(Actor))
   {
     return FActorView::ActorType::TrafficSign;
   }
@@ -58,8 +62,7 @@ static FString GetRelevantTagAsString(const TSet<crp::CityObjectLabel> &Semantic
 
 FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description, IdType DesiredId)
 {
-  static IdType ID_COUNTER = 0u;
-  auto Id = ++ID_COUNTER;
+  IdType Id = ++FActorRegistry::ID_COUNTER;
 
   if (DesiredId != 0 && Id != DesiredId) {
     // check if the desired Id is free, then use it instead
@@ -83,12 +86,22 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
   }
   Ids.Emplace(&Actor, Id);
 
-  auto View = MakeView(Id, Actor, std::move(Description));
+  FActorView View = MakeView(Id, Actor, std::move(Description));
 
   auto Result = ActorDatabase.emplace(Id, View);
   check(Result.second);
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
   return Result.first->second;
+}
+
+FActorView FActorRegistry::PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
+{
+  IdType Id = ++FActorRegistry::ID_COUNTER;
+  auto Info = MakeShared<FActorInfo>();
+  Info->Description = std::move(ActorDescription);
+  FActorView View = FActorView{Id, nullptr, std::move(Info)};
+  View.Type = FActorRegistry_GetActorType(View);
+  return View;
 }
 
 void FActorRegistry::Deregister(IdType Id)
@@ -150,7 +163,7 @@ FActorView FActorRegistry::MakeView(
         std::begin(Token.data),
         std::end(Token.data));
   }
-  auto View = FActorView{Id, Actor, std::move(Info)};
+  auto View = FActorView{Id, &Actor, std::move(Info)};
   View.Type = FActorRegistry_GetActorType(View);
   return View;
 }
