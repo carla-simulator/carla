@@ -426,10 +426,6 @@
       doc: >
         During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with walkers will be ignored for a vehicle.
     # --------------------------------------
-    - def_name: reset_traffic_lights
-      doc: >
-        Resets every traffic light in the map to its initial state.
-    # --------------------------------------
     - def_name: vehicle_percentage_speed_difference
       params:
       - param_name: actor
@@ -471,7 +467,7 @@
       doc: >
         Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.
     # --------------------------------------
-    - def_name: set_hybrid_mode_radius
+    - def_name: set_hybrid_physics_radius
       params:
       - param_name: r
         type: float
