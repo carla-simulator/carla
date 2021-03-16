@@ -426,10 +426,6 @@
       doc: >
         During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with walkers will be ignored for a vehicle.
     # --------------------------------------
-    - def_name: reset_traffic_lights
-      doc: >
-        Resets every traffic light in the map to its initial state.
-    # --------------------------------------
     - def_name: vehicle_percentage_speed_difference
       params:
       - param_name: actor
