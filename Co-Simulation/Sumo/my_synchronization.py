@@ -73,14 +73,16 @@ class PerceivedObject:
 
 class PerceivedObjectsHandler:
     def __init__(self):
-        pass
+        self.past_data = []
+        self.new_data = []
 
+    def save(self, data):
+        self.new_data.append(data)
 
 
 class ObstacleSensorData:
     def __init__(self, data, time=0.0):
         self.__dict__ = data.__dict__
-
         self.time = time
 
     def location(self):
@@ -102,13 +104,13 @@ class SensorDataHandler:
         self.past_data = []
         self.new_data = []
 
-        
+
     def all(self):
         return self.past_data + self.new_data
 
 
-    def save(self, new_data):
-        self.new_data.append(new_data)
+    def save(self, data):
+        self.new_data.append(data)
 
 
 class CAV:
@@ -144,9 +146,8 @@ class CAV:
         self.sensor_data_handler = SensorDataHandler()
         self.perceived_objects_handler = PerceivedObjectsHandler()
 
-        self.received_CAMs_handler = CAMsHandler()
-        self.received_CPMs_handler = CPMsHandler()
-        self.generated_CPMs_handler = CPMsHandler()
+        self.CAMs_handler = CAMsHandler()
+        self.CPMs_handler = CPMsHandler()
 
         self.load_sensors()
 
@@ -186,9 +187,10 @@ class CAV:
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
     def tick(self):
-        self.update_perceived_objects()
-        self.receive_CPMs()
-        self.send_CPMs()
+        self.perceived_objects_handler.update()
+        self.CAMs_handler.receive()
+        self.CPMs_handler.receive()
+        self.CPMs_handler.send()
 
     def update_perceived_objects(self):
         pass
@@ -227,9 +229,6 @@ class CAVWithObstacleSensors(CAV):
 
         # print(f"sumo_id: {self.sumo_actor_id}, sensor_transform: {data.actor.get_transform()}, distance: {data.distance}, pridected_location: {pridected_location}, other_type: {data.other_actor.type_id}, other_transform: {data.other_actor.get_transform()}")
         self.sensor_data_handler.save(ObstacleSensorData(data, self.sumo_elapsed_seconds()))
-
-    def update_perceived_objects(self):
-        pass
 
 
 class CAM:
