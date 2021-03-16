@@ -1,5 +1,6 @@
 ## Latest
-	
+
+  * Fixed import sumo_integration module from other scripts
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
