@@ -1,6 +1,7 @@
 ## CARLA 0.9.11
 
   * Improved the documentation for use with pandoc tool by converting html tags to their markdown equivalent
+  * Improved visuals of OpenDRIVE Standalone mode generated maps
   * Refactored FAQ section of docs to use minimal html and fix broken layout
   * Extended the local planner with a lateral `offset`
   * Upgraded to DirectX 12 on Windows
@@ -17,6 +18,13 @@
     - Added `enable_environment_objects`call to enable/disable objects of the level
     - Added `horizontal_fov` parameter to lidar sensor to allow for restriction of its field of view
     - Added `WorldSettings.deterministic_ragdolls` to enable deterministic or physically based ragdolls
+    - Added `GenerateMarkMesh()` function that generates a mesh for lane markings to the OpenDRIVE map generation
+    - Added textures for the road/marking meshes to the OpenDRIVE map generation
+    - Added new method to `Map`: `GenerateMarkMesh(Parameters)`
+    - Added new methods to `MeshFactory`: `GenerateMarkWithMaxLen(LaneSection)`, `GenerateMark(LaneSection)`, `GenerateMark(Lane)` and `GenerateMark(Lane, s_start, s_end)`
+    - Added new paramters to `road_params`: `mark_height`, `broken_mark_len` and `broken_gap_len`
+    - Added `unordered_map connections` to track the successor RoadIds of every road (to circumvent JunctionIds) to `MeshFactory`
+    - Added `unordered_map mark_lane_memory` to track information about markings of type _broken_ to `MeshFactory`
   * Fixed RSSSensor python3 build and import of open drive maps by updating to ad-rss v4.2.0 and ad-map-access v2.3.0. Python import of dependent 'ad' python modules reflects now the namespaces of the C++ interface and follow doxygen documentation
   * Fixed sensor transformations and sensor data transformations mismatch in IMU and camera-based sensors
   * Fixed random dead-lock on synchronous mode at high frame rate
