@@ -121,6 +121,9 @@ public:
   FVehiclePhysicsControl GetVehiclePhysicsControl() const;
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void RestoreVehiclePhysicsControl();
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehicleLightState GetVehicleLightState() const;
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
@@ -252,6 +255,7 @@ private:
   InputControl;
 
   FVehicleControl LastAppliedControl;
+  FVehiclePhysicsControl LastPhysicsControl;
 
 public:
 
@@ -269,6 +273,5 @@ private:
   // Small workarround to allow optional CarSim plugin usage
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   UBaseCarlaMovementComponent * BaseMovementComponent = nullptr;
-
 
 };

@@ -64,9 +64,11 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
   if (DesiredId != 0 && Id != DesiredId) {
     // check if the desired Id is free, then use it instead
     if (!Actors.Contains(DesiredId))
+    {
       Id = DesiredId;
       if (ID_COUNTER < Id)
         ID_COUNTER = Id;
+    }
   }
 
   Actors.Emplace(Id, &Actor);

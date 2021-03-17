@@ -7,6 +7,7 @@ using UnrealBuildTool;
 public class Carla : ModuleRules
 {
   bool UsingCarSim = false;
+  bool UsingChrono = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -24,19 +25,23 @@ public class Carla : ModuleRules
     // Read config about carsim
     string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
     string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
-    string CarSimConfigFile = Path.Combine(ConfigDir, "CarSimConfig.ini");
-    string[] text = System.IO.File.ReadAllLines(CarSimConfigFile);
-    Console.WriteLine("----------------------------------------------");
+    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
+    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
     foreach (string line in text)
     {
-      Console.WriteLine(line);
       if (line.Contains("CarSim ON"))
       {
-        Console.WriteLine("Enabling carsim-----------");
+        Console.WriteLine("Enabling carsim");
         UsingCarSim = true;
         PublicDefinitions.Add("WITH_CARSIM");
         PrivateDefinitions.Add("WITH_CARSIM");
-        Definitions.Add("WITH_CARSIM");
+      }
+      if (line.Contains("Chrono ON"))
+      {
+        Console.WriteLine("Enabling chrono");
+        UsingChrono = true;
+        PublicDefinitions.Add("WITH_CHRONO");
+        PrivateDefinitions.Add("WITH_CHRONO");
       }
     }
 
@@ -161,6 +166,21 @@ public class Carla : ModuleRules
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
       }
+      if (UsingChrono)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_robot")));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
+        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine.dll"));
+        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoEngine_vehicle.dll"));
+        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_vehicle.dll"));
+        PublicDelayLoadDLLs.Add(Path.Combine(LibCarlaInstallPath, "dll", "ChronoModels_robot.dll"));
+      }
     }
     else
     {
@@ -172,6 +192,18 @@ public class Carla : ModuleRules
       else
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+      }
+      if (UsingChrono)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_robot.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoEngine_vehicle.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_vehicle.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib/libChronoModels_robot.so"));
+        bUseRTTI = true;
       }
     }
 
@@ -185,5 +217,7 @@ public class Carla : ModuleRules
     PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
     PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
     PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
   }
 }

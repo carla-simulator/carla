@@ -33,4 +33,6 @@ public:
   virtual int32 GetVehicleCurrentGear() const;
 
   virtual float GetVehicleForwardSpeed() const;
+
+  void DisableUE4VehiclePhysics();
 };
