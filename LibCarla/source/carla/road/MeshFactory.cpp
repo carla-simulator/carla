@@ -34,7 +34,7 @@ namespace geom {
 
   // Holds information for a successor/predecessor lane if a mark/gap went past a section/road
   typedef std::pair<road::RoadId, road::LaneId> pair;
-  static std::unordered_map<pair, std::pair<bool,float>, boost::hash<pair>> mark_lane_memory;
+  static std::unordered_map<pair, std::pair<bool,double>, boost::hash<pair>> mark_lane_memory;
   static std::unordered_map<road::RoadId, std::vector<road::RoadId>> connections;
 
   std::unique_ptr<Mesh> MeshFactory::Generate(const road::Road &road) const {

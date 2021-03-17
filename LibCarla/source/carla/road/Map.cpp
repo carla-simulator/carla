@@ -1100,7 +1100,7 @@ namespace road {
       std::vector<road::RoadId> succs;
       if (_data.ContainsRoad(road.GetSuccessor())) {
         succs.push_back(road.GetSuccessor());
-      } else if (road.GetSuccessor() >= 0) { 
+      } else { 
         for (auto tmp : road.GetNexts()) {
           if (tmp->GetJunctionId() != -1 && tmp->GetPredecessor() == road.GetId()) {
             succs.push_back(tmp->GetId());
