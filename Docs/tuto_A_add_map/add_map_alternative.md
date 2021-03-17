@@ -189,6 +189,9 @@ __1.__ Generate new crosswalks if needed. Avoid doing this if the crosswalk is a
 
 - Create a plane mesh that extends a bit over two sidewalks that you want to connect.
 - Place the mesh overlapping the ground and disable it's physics and rendering.
+
+>>![disable_rendering](../img/disable_rendering.png)
+
 - Change the name of the mesh to `Road_Crosswalk` or `Roads_Crosswalk`.
 
 __2.__ To prevent the map being too large to export, select the __BP_Sky object__ and add a tag `NoExport` to it. If you have any other particularly large meshes that are not involved in the pedestrian navigation, add the `NoExport` tag to them as well. 
