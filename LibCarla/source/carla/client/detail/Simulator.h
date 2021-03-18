@@ -24,6 +24,7 @@
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/VehicleWheels.h"
 
 #include <boost/optional.hpp>
 
@@ -446,6 +447,14 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
+    void SetWheelSteerDirection(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelSteerDirection(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelSteerAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }
@@ -454,8 +463,20 @@ namespace detail {
       _client.UseCarSimRoad(vehicle.GetId(), enabled);
     }
 
-    void EnableChronoPhysics(Vehicle &vehicle, uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
-      _client.EnableChronoPhysics(vehicle.GetId(), MaxSubsteps, MaxSubstepDeltaTime);
+    void EnableChronoPhysics(Vehicle &vehicle,
+        uint64_t MaxSubsteps,
+        float MaxSubstepDeltaTime,
+        std::string VehicleJSON,
+        std::string PowertrainJSON,
+        std::string TireJSON,
+        std::string BaseJSONPath) {
+      _client.EnableChronoPhysics(vehicle.GetId(),
+          MaxSubsteps,
+          MaxSubstepDeltaTime,
+          VehicleJSON,
+          PowertrainJSON,
+          TireJSON,
+          BaseJSONPath);
     }
 
     /// @}

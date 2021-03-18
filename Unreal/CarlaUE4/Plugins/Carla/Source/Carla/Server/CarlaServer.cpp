@@ -47,6 +47,7 @@
 #include <carla/rpc/VehicleLightStateList.h>
 #include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
+#include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -493,7 +494,7 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(Result.Value);
   };
 
-  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<void>
+  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -505,7 +506,7 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("internal error: unable to destroy actor");
     }
-    return R<void>::Success();
+    return true;
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -906,6 +907,49 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_wheel_steer_direction) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float AngleInDeg) -> R<void>
+  {
+
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if(!ActorView.IsValid()){
+
+      RESPOND_ERROR("unable to apply actor wheel steer : actor not found");
+    }
+
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if(Vehicle == nullptr){
+
+      RESPOND_ERROR("unable to apply actor wheel steer : actor is not a vehicle");
+    }
+
+    Vehicle->SetWheelSteerDirection((VehicleWheelLocation)WheelLocation, AngleInDeg);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_steer_angle) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if(!ActorView.IsValid()){
+
+      RESPOND_ERROR("unable to get actor wheel angle : actor not found");
+    }
+
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if(Vehicle == nullptr){
+
+      RESPOND_ERROR("unable to get actor wheel angle : actor is not a vehicle");
+    }
+
+    return Vehicle->GetWheelSteerAngle((VehicleWheelLocation)WheelLocation);
+  };
+
   BIND_SYNC(set_actor_simulate_physics) << [this](
       cr::ActorId ActorId,
       bool bEnabled) -> R<void>
@@ -1136,7 +1180,11 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(enable_chrono_physics) << [this](
       cr::ActorId ActorId,
       uint64_t MaxSubsteps,
-      float MaxSubstepDeltaTime) -> R<void>
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -1149,7 +1197,14 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set chrono physics: not actor is not a vehicle");
     }
-    UChronoMovementComponent::CreateChronoMovementComponent(Vehicle, MaxSubsteps, MaxSubstepDeltaTime);
+    UChronoMovementComponent::CreateChronoMovementComponent(
+        Vehicle,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        cr::ToFString(VehicleJSON),
+        cr::ToFString(PowertrainJSON),
+        cr::ToFString(TireJSON),
+        cr::ToFString(BaseJSONPath));
     return R<void>::Success();
   };
 

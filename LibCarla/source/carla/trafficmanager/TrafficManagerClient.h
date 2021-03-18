@@ -199,6 +199,11 @@ public:
     _client->call("set_osm_mode", mode_switch);
   }
 
+  void ShutDown() {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("shut_down");
+  }
+
 private:
 
   /// RPC client.

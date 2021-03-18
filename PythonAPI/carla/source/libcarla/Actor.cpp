@@ -81,7 +81,7 @@ void export_actor() {
       .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
       .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
       .add_property("semantic_tags", &GetSemanticTags)
-      .add_property("is_alive", CALL_RETURNING_COPY(cc::Actor, IsAlive))
+      .add_property("is_alive", CALL_WITHOUT_GIL(cc::Actor, IsAlive))
       .add_property("attributes", +[] (const cc::Actor &self) {
         boost::python::dict attribute_dict;
         for (auto &&attribute_value : self.GetAttributes()) {
@@ -128,11 +128,22 @@ void export_actor() {
     .value("All", cr::VehicleLightState::LightState::All)
   ;
 
+  enum_<cr::VehicleWheelLocation>("VehicleWheelLocation")
+    .value("FL_Wheel", cr::VehicleWheelLocation::FL_Wheel)
+    .value("FR_Wheel", cr::VehicleWheelLocation::FR_Wheel)
+    .value("BL_Wheel", cr::VehicleWheelLocation::BL_Wheel)
+    .value("BR_Wheel", cr::VehicleWheelLocation::BR_Wheel)
+    .value("Front_Wheel", cr::VehicleWheelLocation::Front_Wheel)
+    .value("Back_Wheel", cr::VehicleWheelLocation::Back_Wheel)
+  ;
+  
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
       .def("get_control", &cc::Vehicle::GetControl)
       .def("set_light_state", &cc::Vehicle::SetLightState, (arg("light_state")))
+      .def("set_wheel_steer_direction", &cc::Vehicle::SetWheelSteerDirection, (arg("wheel_location")), (arg("angle_in_deg")))
+      .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
       .def("get_light_state", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetLightState))
       .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
       .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
@@ -143,7 +154,7 @@ void export_actor() {
       .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
       .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
-      .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002))
+      .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
       .def(self_ns::str(self_ns::self))
   ;
 
