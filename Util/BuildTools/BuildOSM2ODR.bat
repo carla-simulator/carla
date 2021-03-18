@@ -67,7 +67,7 @@ rem ============================================================================
 rem Set the visual studio solution directory
 rem
 set OSM2ODR_VSPROJECT_PATH=%INSTALLATION_DIR:/=\%osm2odr-visualstudio\
-set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%som2odr-source\
+set OSM2ODR_SOURCE_PATH=%INSTALLATION_DIR:/=\%om2odr-source\
 set OSM2ODR_INSTALL_PATH=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 
 if %REMOVE_INTERMEDIATE% == true (
