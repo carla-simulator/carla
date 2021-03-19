@@ -1,6 +1,6 @@
 # Scenic
 
-This guide provides an overview of how to use Scenic with CARLA to generate multiple, diverse scenarios with a single scenario definition. It assumes that users have prior knowledge of the Scenic syntax. If you need to learn more about Scenic, then read their ["Getting Started with Scenic"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) guide and have a look at their tutorials for creating [simple](https://scenic-lang.readthedocs.io/en/latest/tutorials/tutorial.html) and [dynamic](https://scenic-lang.readthedocs.io/en/latest/tutorials/dynamics.html) scenarios.
+This guide provides an overview of how to use Scenic with CARLA to generate multiple, diverse scenarios with a single scenario definition. It assumes that users have prior knowledge of the Scenic syntax. If you need to learn more about Scenic, then read their ["Getting Started with Scenic"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) guide and have a look at their tutorials for creating [static](https://scenic-lang.readthedocs.io/en/latest/tutorials/tutorial.html) and [dynamic](https://scenic-lang.readthedocs.io/en/latest/tutorials/dynamics.html) scenarios.
 
 By the end of the guide you will know:
 
@@ -12,6 +12,7 @@ By the end of the guide you will know:
 ---
 
 - [__Before you begin__](#before-you-begin)
+- [__Scenic libraries__](#scenic-libraries)
 - [__Creating a Scenic scenario to use with CARLA__](#creating-a-scenic-scenario-to-use-with-carla)
 - [__Run the scenario__](#run-the-scenario)
 - [__Additional parameters__](#additional-parameters)
@@ -27,6 +28,17 @@ Before using Scenic with CARLA, you will need to fulfill the following requireme
 
 ---
 
+## Scenic Libraries
+
+Scenic provides its own libraries that can be used with any simulator to define behaviours, actions, roads etc. Scenic also provides libraries that are simulator specific and can be used in conjunction with the Scenic ones. These libraries communicate directly with the particular simulator API.
+
+To access the library documentation:
+
+- [__Scenic libraries__](https://scenic-lang.readthedocs.io/en/latest/internals.html)
+- [__CARLA libraries__](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.simulators.carla.html#module-scenic.simulators.carla)
+
+---
+
 ## Creating a Scenic scenario to use with CARLA
 
 This section walks through how to write a basic Scenic script in which a leading vehicle decelerates suddenly due to an obstacle in the road. An ego vehicle then needs to brake suddenly to avoid a collison with the leading vehicle. The [full script](https://github.com/BerkeleyLearnVerify/Scenic/blob/master/examples/carla/Carla_Challenge/carlaChallenge2.scenic) is found in the Scenic repository along with other examples involving more complex road networks. 
@@ -34,7 +46,7 @@ This section walks through how to write a basic Scenic script in which a leading
 __1.__ Set the map parameters and declare the model to be used in the scenario:
 
 - An `.xodr` file should be set as the value for the [`map`][scenic_map] parameter, this will be used later to generate road network information. 
-- The parameter `carla_map` refers to the name of the CARLA map you would like to use in the simulation. If this is not defined then the `.xodr` file in `map` will also be used to generate the simulation map.
+- The parameter `carla_map` refers to the name of the CARLA map you would like to use in the simulation. If this is defined then Scenic will load all the assets of the map (buildings, trees, etc.), if this is not defined then the [OpenDRIVE standalone mode](adv_opendrive.md) will be used.
 - The model includes all the utilities specific to running scenarios on CARLA. This should be defined in all the scripts you want to run on CARLA.
 
 ```scenic
@@ -64,7 +76,7 @@ BRAKE_ACTION = 1.0
 
 __3__. Define the scenario behaviours:
 
-Behaviours can be defined using the native Scenic [behaviours library](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.domains.driving.behaviors.html) as well as the CARLA specific [behaviours library](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.simulators.carla.behaviors.html). In this scenario we will instruct the ego vehicle to follow the lane at the predefined speed and then brake hard when it gets within a certain distance of another vehicle. The leading vehicle will also follow the lane at the predefined speed and brake hard within a certain distance of any objects:
+In this scenario we will use the Scenic [behaviour library](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.domains.driving.behaviors.html) to instruct the ego vehicle to follow the lane at the predefined speed and then brake hard when it gets within a certain distance of another vehicle. The leading vehicle will also follow the lane at the predefined speed and brake hard within a certain distance of any objects:
 
 ```scenic
 ## DEFINING BEHAVIORS
@@ -160,7 +172,7 @@ Below is a table of configurable parameters in the CARLA model:
 
 | Name | Value | Description |
 |------|-------|-------------|
-| `carla_map` | `str` | Name of the CARLA map to use (e.g. 'Town01'). If set to ``None``, CARLA will attempt to create a world from the `.xodr` file defined in the [`map`][scenic_map] parameter. |
+| `carla_map` | `str` | Name of the CARLA map to use (e.g. 'Town01'). If set to ``None``, CARLA will attempt to create a world in the OpenDRIVE standalone mode using the `.xodr` file defined in the [`map`][scenic_map] parameter. |
 | `timestep` | `float` | Timestep to use for simulations (how frequently Scenic interrupts CARLA to run behaviors, check requirements, etc.) in seconds. Default is 0.1 seconds. |
 | `weather` | `str` or `dict` | Weather to use for the simulation. Can be either a string identifying one of the CARLA weather presets (e.g. 'ClearSunset') or a dictionary specifying all the [weather parameters](python_api.md#carla.WeatherParameters)). Default is a uniform distribution over all the weather presets. |
 | `address` | `str` | IP address to connect to CARLA. Default is localhost (127.0.0.1).|
