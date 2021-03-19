@@ -12,7 +12,7 @@ By the end of the guide you will know:
 ---
 
 - [__Before you begin__](#before-you-begin)
-- [__Scenic libraries__](#scenic-libraries)
+- [__Scenic domains__](#scenic-domains)
 - [__Creating a Scenic scenario to use with CARLA__](#creating-a-scenic-scenario-to-use-with-carla)
 - [__Run the scenario__](#run-the-scenario)
 - [__Additional parameters__](#additional-parameters)
@@ -28,14 +28,16 @@ Before using Scenic with CARLA, you will need to fulfill the following requireme
 
 ---
 
-## Scenic Libraries
+## Scenic Domains
 
-Scenic provides its own libraries that can be used with any simulator to define behaviours, actions, roads etc. Scenic also provides libraries that are simulator specific and can be used in conjunction with the Scenic ones. These libraries communicate directly with the particular simulator API.
+Scenic has a general driving domain which allows users to define scenarios that can be run on any driving simulator. In addition, it has other domains that are specific to each simulator. Check [here](https://scenic-lang.readthedocs.io/en/latest/libraries.html) for more information on Scenic domains.
 
-To access the library documentation:
+Of particular importance within each domain are the behaviour and actions definitions. Check the links below for reference material to behaviours and actions from the Scenic driving domain and the CARLA domain:
 
-- [__Scenic libraries__](https://scenic-lang.readthedocs.io/en/latest/internals.html)
-- [__CARLA libraries__](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.simulators.carla.html#module-scenic.simulators.carla)
+- [Behaviours in the Scenic driving domain](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.domains.driving.behaviors.html)
+- [Behaviours in the CARLA domain](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.simulators.carla.behaviors.html)
+- [Actions in the Scenic driving domain](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.domains.driving.actions.html)
+- [Actions in the CARLA domain](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.simulators.carla.actions.html#module-scenic.simulators.carla.actions)
 
 ---
 
