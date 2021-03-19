@@ -46,7 +46,7 @@ This section walks through how to write a basic Scenic script in which a leading
 __1.__ Set the map parameters and declare the model to be used in the scenario:
 
 - An `.xodr` file should be set as the value for the [`map`][scenic_map] parameter, this will be used later to generate road network information. 
-- The parameter `carla_map` refers to the name of the CARLA map you would like to use in the simulation. If this is defined then Scenic will load all the assets of the map (buildings, trees, etc.), if this is not defined then the [OpenDRIVE standalone mode](adv_opendrive.md) will be used.
+- The parameter `carla_map` refers to the name of the CARLA map you would like to use in the simulation. If this is defined then Scenic will load all the assets of the map (buildings, trees, etc.), and if not then the [OpenDRIVE standalone mode](adv_opendrive.md) will be used.
 - The model includes all the utilities specific to running scenarios on CARLA. This should be defined in all the scripts you want to run on CARLA.
 
 ```scenic
