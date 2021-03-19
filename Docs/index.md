@@ -14,8 +14,10 @@ The CARLA forum is available to post any doubts or suggestions that may arise du
 CARLA forum</a>
 </div>
 
+<br>
+
 !!! Warning
-    Change the docs version to fit the CARLA version you are using. Use the pannel in the bottom-right side of this window to change to previous versions. ![docs_version_panel](img/docs_version_panel.jpg)
+    __Change the docs version to fit the CARLA version you are using__. Use the panel in the bottom-right side of this window to change to previous versions. __The _Latest_ version points to documentation in the `dev` branch__ which may refer to features currently in development and __not available__ in any packaged version of CARLA, as well general documentation improvements. ![docs_version_panel](img/docs_version_panel.jpg)
 
 ---
 
