@@ -66,7 +66,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         return VEHICLES[str(id)]
 
-    def __read_all_bytes(self, buffsize=1024):
+    def __read_all_bytes(self, buffsize=65536):
         received_data = b''
 
         while True:

@@ -18,6 +18,7 @@ import json
 import logging
 import time
 import math
+from multiprocessing import Process
 
 # ==================================================================================================
 # -- find carla module -----------------------------------------------------------------------------
@@ -61,78 +62,45 @@ from sumo_integration.constants import INVALID_ACTOR_ID  # pylint: disable=wrong
 from sumo_integration.sumo_simulation import SumoSimulation  # pylint: disable=wrong-import-position
 
 
+##### Begin: My code. #####
+from util.classes.constants import (
+    Constants,
+)
+from util.classes.messages import (
+    CAM,
+    CAMsHandler,
+    CPM,
+    CPMsHandler,
+)
+from util.classes.perceived_objects import (
+    PerceivedObject,
+    PerceivedObjectsHandler,
+)
+from util.classes.sensor_data import (
+    SensorData,
+    SensorDataHandler,
+    ObstacleSensorData,
+    ObstacleSensorDataHandler,
+)
+##### End: My code. #####
+
 # ==================================================================================================
 # -- synchronization_loop --------------------------------------------------------------------------
 # ==================================================================================================
 
 ##### Begin: My code. #####
-class PerceivedObject:
-    def __init__(self):
-        pass
-
-
-class PerceivedObjectsHandler:
-    def __init__(self):
-        self.past_data = []
-        self.new_data = []
-
-    def save(self, data):
-        self.new_data.append(data)
-
-
-class ObstacleSensorData:
-    def __init__(self, data, time=0.0):
-        self.__dict__ = data.__dict__
-        self.time = time
-
-    def location(self):
-        location = [
-            self.actor.get_transform().location.x + self.distance * math.cos(math.radians(self.actor.get_transform().rotation.yaw)),
-            self.actor.get_transform().location.y + self.distance * math.sin(math.radians(self.actor.get_transform().rotation.yaw)),
-        ]
-
-        return location
-
-
-class ObstacleSensorDataHandler(SensorDataHandler):
-    def __init__(self):
-        pass
-
-
-class SensorDataHandler:
-    def __init__(self):
-        self.past_data = []
-        self.new_data = []
-
-
-    def all(self):
-        return self.past_data + self.new_data
-
-
-    def save(self, data):
-        self.new_data.append(data)
-
-
 class CAV:
-    TARGET_ROAD_WIDTH = 3.2 * 3
-    TARGET_ROAD_LENGTH = 150
-    VEHICLE_WIDTH = 1.8
-    VEHICLE_LENGTH = 5.0
-
-    """
-    TARGET_ROAD_WIDTH: 3.2 (m) * 3 (lanes)
-    cite from:  https://sumo.dlr.de/docs/Simulation/SublaneModel.html#:~:text=The%20default%20lane%2Dwidth%20of,of%20that%20width%20per%20lane.
-
-    TARGET_ROAD_LENGTH: 150 (m)
-    cite from: ETSI. (2019). Intelligent Transport Systems (ITS); Vehicular Communications; Basic Set of Applications; Analysis of the Collective Perception Service (CPS). Draft TR 103 562 V0.0.16, 1, 1–119.
-
-    VEHICLE_WIDTH: 1.8 (m)
-    VEHICLE_LENGTH: 5.0 (m)
-    cite from: https://sumo.dlr.de/docs/Definition_of_Vehicles%2C_Vehicle_Types%2C_and_Routes.html
-    """
+    TARGET_ROAD_WIDTH = Constants.TARGET_ROAD_WIDTH
+    TARGET_ROAD_LENGTH = Constants.TARGET_ROAD_LENGTH
+    VEHICLE_WIDTH = Constants.VEHICLE_WIDTH
+    VEHICLE_LENGTH = Constants.VEHICLE_LENGTH
+    SENSOR_TICK = Constants.SENSOR_TICK
 
 
     def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time):
+        global DATA_SERVER_HOST
+        global DATA_SERVER_PORT
+
         self.carla = carla_sim
         self.sumo = sumo_sim
 
@@ -146,8 +114,8 @@ class CAV:
         self.sensor_data_handler = SensorDataHandler()
         self.perceived_objects_handler = PerceivedObjectsHandler()
 
-        self.CAMs_handler = CAMsHandler()
-        self.CPMs_handler = CPMsHandler()
+        self.CAMs_handler = CAMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT)
+        self.CPMs_handler = CPMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT)
 
         self.load_sensors()
 
@@ -171,13 +139,7 @@ class CAV:
 
         return [float(target_rad) / sensor_num * i - float(target_rad * (sensor_num - 1) / sensor_num / 2.0 + center_rad) for i in range(0, sensor_num)]
 
-    def receive_CPMs(self):
-        pass
-
     def receive_sensor_data(self, data):
-        pass
-
-    def send_CPMs(self):
         pass
 
     def sensor_num(self, sensor_dist, target_rad):
@@ -187,13 +149,75 @@ class CAV:
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
     def tick(self):
-        self.perceived_objects_handler.update()
-        self.CAMs_handler.receive()
-        self.CPMs_handler.receive()
-        self.CPMs_handler.send()
 
-    def update_perceived_objects(self):
+        for new_perceived_object in self.sensor_data_handler.perceived_objects(self.sumo_elapsed_seconds(), Constants.VALID_TIME_DELTA):
+            self.perceived_objects_handler.save(new_perceived_object)
+
+        p1 = Process(target=self.CPMs_handler.receive, args=[self.sumo_actor_id])
+        p1.start()
+        p1.join()
+
+        p2 = Process(target=self.CPMs_handler.send, args=[self.sumo_actor_id, [CPM(
+            self.sumo_elapsed_seconds(),
+            self.ITS_PDU_Header(),
+            self.Management_Container(),
+            self.Station_Data_Container(),
+            self.Sensor_Information_Container(),
+            self.Perceived_Object_Container()
+        )]])
+        p2.start()
+        p2.join()
+        # self.CPMs_handler.receive(self.sumo_actor_id)
+        # self.CPMs_handler.send(self.sumo_actor_id, [CPM(
+        #     self.sumo_elapsed_seconds(),
+        #     self.ITS_PDU_Header(),
+        #     self.Management_Container(),
+        #     self.Station_Data_Container(),
+        #     self.Sensor_Information_Container(),
+        #     self.Perceived_Object_Container()
+        # )])
+
+
+    def new_CPM(self):
         pass
+
+    def ITS_PDU_Header(self):
+        return {"tmp": "tmp"}
+
+    def Management_Container(self):
+        return {"tmp": "tmp"}
+
+    def Station_Data_Container(self):
+        location = self.carla_actor.get_transform().location
+        speed = self.carla_actor.get_velocity()
+
+        data = {
+            "location" : [location.x, location.y, location.z],
+            "speed" : [speed.x, speed.y, speed.z]
+        }
+
+        return data
+
+    def Sensor_Information_Container(self):
+        return ["360_sensor", "forward_sensor", "backward_sensor"]
+
+    def Perceived_Object_Container(self):
+        detected_objects_for_new_CPM = []
+
+        for the_detected_objects in self.perceived_objects_handler.pseudonym2objects.values():
+            the_latest_detected_object = the_detected_objects.latest()
+            is_already_sent, delta_t, delta_s, delta_p = self.CPMs_handler.is_already_sent(the_latest_detected_object)
+
+            if is_already_sent:
+                # ETSI Standard
+                if Constants.CPM_DELTA_T < delta_t or Constants.CPM_DELTA_S < delta_s or Constants.CPM_DELTA_P < delta_p:
+                    detected_objects_for_new_CPM.append(the_latest_detected_object)
+
+            else:
+                detected_objects_for_new_CPM.append(the_latest_detected_object)
+
+        return [obj.dict_format() for obj in detected_objects_for_new_CPM]
+
 
 
 class CAVWithObstacleSensors(CAV):
@@ -209,17 +233,17 @@ class CAVWithObstacleSensors(CAV):
         rads_back = self.rads(CAV.TARGET_ROAD_LENGTH, 2 * math.degrees(math.atan(float(CAV.TARGET_ROAD_WIDTH) / float(CAV.TARGET_ROAD_LENGTH))), 180)
 
         for z_rad in rads_360:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
             sensor.listen(lambda data: self.receive_sensor_data(data))
             self.sensors.append(sensor)
 
         for z_rad in rads_front:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
             sensor.listen(lambda data: self.receive_sensor_data(data))
             self.sensors.append(sensor)
 
         for z_rad in rads_back:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True'}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
             sensor.listen(lambda data: self.receive_sensor_data(data))
             self.sensors.append(sensor)
 
@@ -229,63 +253,6 @@ class CAVWithObstacleSensors(CAV):
 
         # print(f"sumo_id: {self.sumo_actor_id}, sensor_transform: {data.actor.get_transform()}, distance: {data.distance}, pridected_location: {pridected_location}, other_type: {data.other_actor.type_id}, other_transform: {data.other_actor.get_transform()}")
         self.sensor_data_handler.save(ObstacleSensorData(data, self.sumo_elapsed_seconds()))
-
-
-class CAM:
-    def __init__(self):
-        pass
-
-
-class CAMsHandler:
-    def __init__(self):
-        pass
-
-
-class CPM:
-    MAX_SIZE = 800
-
-    def __init__(self, ITS_PDU_Header={}, Management_Container={}, Station_Data_Container={}, Sensor_Information_Container=[], Perceived_Object_Container=[], option={}):
-        # Easy implementation of a Cooprative Perception Message (CPM).
-        # If you want to use detail information of CPM, you should include the information in CPM.
-        self.ITS_PDU_Header = ITS_PDU_Header
-        self.Management_Container = Management_Container
-        self.Station_Data_Container = Station_Data_Container
-        self.Sensor_Information_Container = Sensor_Information_Container
-        self.Perceived_Object_Container = Perceived_Object_Container
-
-        # For convenience, we add optional data like payload size
-        self.option = option
-        self.update_option()
-
-    def dict_format(self):
-        message = self.__dict__
-
-        # message = {
-        #     "ITS_PDU_Header": self.ITS_PDU_Header,
-        #     "Management_Container": self.Management_Container,
-        #     "Station_Data_Container": self.Station_Data_Container,
-        #     "Sensor_Information_Container": self.Sensor_Information_Container,
-        #     "Perceived_Object_Container": self.Perceived_Object_Container,
-        #     "option": self.option
-        # }
-
-        return message
-
-
-    def update_option(self):
-        """
-        ITS_PDU_Header + Management_Container + Station_Data_Container: 121 (Byte)
-        Sensor_Information_Container:                                   35 (Byte/data)
-        Perceived_Object_Container:                                     35 (Byte/data)
-        cite from:                                                      Thandavarayan, G., Sepulcre, M., & Gozalvez, J. (2020). Cooperative Perception for Connected and Automated Vehicles: Evaluation and Impact of Congestion Control. IEEE Access, 8, 197665–197683. https://doi.org/10.1109/access.2020.3035119
-        """
-
-        self.option["size"] = 121 + 35 * len(self.Sensor_Information_Container) + 35 * len(self.Perceived_Object_Container)
-
-
-class CPMsHandler:
-    def __init__(self):
-        pass
 ##### End: My code. #####
 
 
@@ -294,53 +261,6 @@ class SimulationSynchronization(object):
     SimulationSynchronization class is responsible for the synchronization of sumo and carla
     simulations.
     """
-
-    ##### Begin: My code #####
-    def save_obstacle_data(self, data, sumo_actor_id, host, port):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-
-            s.connect((str(host), int(port)))
-            send_data = {
-                "vehid": str(sumo_actor_id),
-                "method": "save_obstacle_data",
-                "args": {
-                    "data": {
-                        "obstacle_id": data.other_actor.id,
-                        "distance": data.distance,
-                    }
-                }
-            }
-
-            s.sendall(bytes(json.dumps(send_data), "ascii"))
-            recv_data = s.recv(1024)
-            print(f"time: {self.current_time}, elapsed_seconds: {self.elapsed_seconds(data.timestamp)}, recver_sumo_id: {sumo_actor_id}, target_sumo_id: {self.carlaid2sumoid(data.other_actor.id)}, transform: {data.transform}, target_type: {data.other_actor.type_id}, distance: {data.distance}")
-
-
-    def attach_to_actor(self, bp, actor):
-        return self.carla.world.spawn_actor(bp, carla.Transform(carla.Location(x=0.0, z=1.7)), attach_to=actor)
-
-
-    def elapsed_seconds(self, world_elapsed_seconds):
-        return world_elapsed_seconds - self.init_time
-
-    def carlaid2sumoid(self, carlaid):
-        sumoid = None
-
-        try:
-            sumoid = ([v_sumoid for k_carlaid, v_sumoid in self.carla2sumo_ids.items() if str(k_carlaid) == str(carlaid)])[0]
-        except Exception as e:
-            pass
-
-        if sumoid is not None:
-            return sumoid
-
-        try:
-            sumoid = ([k_sumoid for k_sumoid, v_carlaid in self.sumo2carla_ids.items() if str(v_carlaid) == str(carlaid)])[0]
-        except Exception as e:
-            pass
-
-        return sumoid
-    ##### End: My code #####
 
 
     def __init__(self,
@@ -459,6 +379,10 @@ class SimulationSynchronization(object):
         # carla-->sumo sync
         # -----------------
         self.carla.tick()
+        ##### Start: My code. #####
+        for cav in self.cavs:
+            cav.tick()
+        ##### End: My code. #####
 
         # Spawning new carla actors (not controlled by sumo)
         carla_spawned_actors = self.carla.spawned_actors - set(self.sumo2carla_ids.values())
