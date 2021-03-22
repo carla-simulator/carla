@@ -49,34 +49,21 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 #if WITH_EDITORONLY_DATA
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
-  static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03.M_Road_03'"));
-  if (RoadNode.Object == NULL) {
-	
-    static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
-    "Material'/Game/Carla/Static/GenericMaterials/Masters/LowComplexity/M_Road1.M_Road1'"));
-	RoadNodeMaterial = (UMaterial *)RoadNode.Object;
-  }
-  else {
-
-    RoadNodeMaterialInstance = (UMaterialInstance *)RoadNode.Object;
-  }
-
-  static ConstructorHelpers::FObjectFinder<UMaterial> RoadNodeAux(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_Y.M_MarkingLane_Y'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNodeAux(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMY.M_Road_03_LMY'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Grass/M_Grass01.M_Grass01'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> SidewalkNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/CheapMaterials/M_SideWalkCheap01'"));
-  static ConstructorHelpers::FObjectFinder<UClass> RoadPainterBlueprint(TEXT(
-	  "Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset_C'"));
 
-  MarkingNodeMaterial = (UMaterial *) MarkingNode.Object;
-  MarkingNodeMaterialAux = (UMaterial *) RoadNodeAux.Object;
+  MarkingNodeMaterial = (UMaterialInstance *) MarkingNode.Object;
+  RoadNodeMaterial = (UMaterialInstance *) RoadNode.Object;
+  MarkingNodeMaterialAux = (UMaterialInstance *) RoadNodeAux.Object;
   SidewalkNodeMaterial = (UMaterial *) SidewalkNode.Object;
-  RoadPainterSubclass = RoadPainterBlueprint.Object;
 #endif
 }
 #if WITH_EDITORONLY_DATA
@@ -185,10 +172,6 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
 
       SpawnedMeshes.Add(MeshActor);
 
-	  ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
-	  RoadPainterBp->PaintAllRoadsEvent();
-	  RoadPainterBp->Destroy();
-
       if (bUseCarlaMaterials)
       {
         // Set Carla Materials depending on RoadRunner's Semantic Segmentation
@@ -200,15 +183,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
         }
         else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
         {
-
-		  if(RoadNodeMaterialInstance != NULL){
-
-		    MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterialInstance);
-		  }
-		  else {
-
-			MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
-		  }
+		  MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
         }
         else if (AssetName.Contains(SSTags::R_TERRAIN))
         {

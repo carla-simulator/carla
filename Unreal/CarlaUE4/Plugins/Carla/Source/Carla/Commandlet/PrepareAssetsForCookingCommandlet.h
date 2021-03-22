@@ -9,7 +9,6 @@
 #include "Carla/OpenDrive/OpenDriveActor.h"
 #include "Commandlets/Commandlet.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-#include "Util/RoadPainterWrapper.h"
 #include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
@@ -151,19 +150,15 @@ private:
 
   /// Workaround material for MarkingNodes mesh
   UPROPERTY()
-  UMaterial *MarkingNodeMaterial;
-
-  /// Material used by RoadPainter
-  UPROPERTY()
-  UMaterialInstance *RoadNodeMaterialInstance;
+  UMaterialInstance *MarkingNodeMaterial;
 
   /// Workaround material for the RoadNode mesh
   UPROPERTY()
-  UMaterial *RoadNodeMaterial;
+  UMaterialInstance *RoadNodeMaterial;
 
   /// Workaround material for the second material for the MarkingNodes
   UPROPERTY()
-  UMaterial *MarkingNodeMaterialAux;
+  UMaterialInstance *MarkingNodeMaterialAux;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()
@@ -172,10 +167,6 @@ private:
   /// Workaround material for the SidewalkNodes
   UPROPERTY()
   UMaterial *SidewalkNodeMaterial;
-
-  /// Subclass for acquiring the RoadPainter blueprint
-  UPROPERTY()
-  TSubclassOf<ARoadPainterWrapper> RoadPainterSubclass;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder

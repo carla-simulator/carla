@@ -281,8 +281,16 @@ def import_assets_from_json_list(json_list):
 
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
+            
+            # We apply the carla materials to the imported maps
+            load_asset_materials_commandlet(package_name)
 
 
+def load_asset_materials_commandlet(package_name):
+    commandlet_name = "LoadAssetMaterials"
+    commandlet_arguments = ["-PackageName=%s" % package_name]
+    invoke_commandlet(commandlet_name, commandlet_arguments)
+    
 def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = ["-PackageName=%s" % package_name]
