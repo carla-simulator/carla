@@ -12,11 +12,10 @@ from util.classes.sensor_loaded_vehicle import (
     Vehicle,
 )
 
-VEHICLES = {}
-PACKETS = {}
-SENSOR_DATA = {}
 
 class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
+    VEHICLES = {}
+
     def handle(self):
         try:
             received_data = json.loads(str(self.__read_all_bytes(), 'ascii'))
@@ -59,12 +58,10 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
         return bytes(json.dumps(resp_d), 'ascii')
 
     def __get_vehicle_by_id(self, id):
-        global VEHICLES
+        if str(id) not in ThreadedTCPRequestHandler.VEHICLES.keys():
+            ThreadedTCPRequestHandler.VEHICLES[str(id)] = Vehicle(id)
 
-        if str(id) not in VEHICLES.keys():
-            VEHICLES[str(id)] = Vehicle(id)
-
-        return VEHICLES[str(id)]
+        return ThreadedTCPRequestHandler.VEHICLES[str(id)]
 
     def __read_all_bytes(self, buffsize=65536):
         received_data = b''

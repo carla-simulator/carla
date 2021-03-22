@@ -21,18 +21,33 @@ class MessagesHandler:
         """
         received_data = b''
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((str(self.data_server_host), int(self.data_server_port)))
-            send_data = {
-                "vehid": str(sumo_vehid),
-                "method": str(method_name),
-            }
+        # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        #     s.connect((str(self.data_server_host), int(self.data_server_port)))
+        #     send_data = {
+        #         "vehid": str(sumo_vehid),
+        #         "method": str(method_name),
+        #     }
+        #
+        #     if args is not None and type(args) is dict:
+        #         send_data["args"] = args
+        #
+        #     s.sendall(bytes(json.dumps(send_data), "ascii"))
+        #     received_data = self.__read_all_bytes(s)
 
-            if args is not None and type(args) is dict:
-                send_data["args"] = args
 
-            s.sendall(bytes(json.dumps(send_data), "ascii"))
-            received_data = self.__read_all_bytes(s)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((str(self.data_server_host), int(self.data_server_port)))
+        send_data = {
+            "vehid": str(sumo_vehid),
+            "method": str(method_name),
+        }
+
+        if args is not None and type(args) is dict:
+            send_data["args"] = args
+
+        s.sendall(bytes(json.dumps(send_data), "ascii"))
+        received_data = self.__read_all_bytes(s)
+        s.close()
 
         return received_data
 

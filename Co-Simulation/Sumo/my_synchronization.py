@@ -149,34 +149,45 @@ class CAV:
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
     def tick(self):
+        start = time.time()
+        t1 = start
+        t2 = start
+        t3 = start
 
         for new_perceived_object in self.sensor_data_handler.perceived_objects(self.sumo_elapsed_seconds(), Constants.VALID_TIME_DELTA):
             self.perceived_objects_handler.save(new_perceived_object)
+        t1 = time.time()
 
-        p1 = Process(target=self.CPMs_handler.receive, args=[self.sumo_actor_id])
-        p1.start()
-        p1.join()
-
-        p2 = Process(target=self.CPMs_handler.send, args=[self.sumo_actor_id, [CPM(
-            self.sumo_elapsed_seconds(),
-            self.ITS_PDU_Header(),
-            self.Management_Container(),
-            self.Station_Data_Container(),
-            self.Sensor_Information_Container(),
-            self.Perceived_Object_Container()
-        )]])
-        p2.start()
-        p2.join()
-        # self.CPMs_handler.receive(self.sumo_actor_id)
-        # self.CPMs_handler.send(self.sumo_actor_id, [CPM(
+        # p1 = Process(target=self.CPMs_handler.receive, args=[self.sumo_actor_id])
+        # p1.start()
+        # p1.join()
+        #
+        # p2 = Process(target=self.CPMs_handler.send, args=[self.sumo_actor_id, [CPM(
         #     self.sumo_elapsed_seconds(),
         #     self.ITS_PDU_Header(),
         #     self.Management_Container(),
         #     self.Station_Data_Container(),
         #     self.Sensor_Information_Container(),
         #     self.Perceived_Object_Container()
-        # )])
+        # )]])
+        # p2.start()
+        # p2.join()
+        self.CPMs_handler.receive(self.sumo_actor_id)
+        t2 = time.time()
 
+        perceived_object_container = self.Perceived_Object_Container()
+        if 1 <= len(perceived_object_container):
+            self.CPMs_handler.send(self.sumo_actor_id, [CPM(
+                self.sumo_elapsed_seconds(),
+                self.ITS_PDU_Header(),
+                self.Management_Container(),
+                self.Station_Data_Container(),
+                self.Sensor_Information_Container(),
+                perceived_object_container
+            )])
+
+        t3 = time.time()
+        print(f"Delay: {t3 - start}, {t2 - start}, {t1 - start}")
 
     def new_CPM(self):
         pass
@@ -380,8 +391,14 @@ class SimulationSynchronization(object):
         # -----------------
         self.carla.tick()
         ##### Start: My code. #####
+        # for cav in self.cavs:
+        #     cav.tick()
+
+        procs = []
         for cav in self.cavs:
-            cav.tick()
+            procs.append(Process(target=cav.tick, args=()))
+            procs[-1].start()
+
         ##### End: My code. #####
 
         # Spawning new carla actors (not controlled by sumo)
@@ -432,6 +449,10 @@ class SimulationSynchronization(object):
 
                 # Updates all the sumo links related to this landmark.
                 self.sumo.synchronize_traffic_light(landmark_id, sumo_tl_state)
+
+
+        for p in procs:
+            p.join()
 
     def close(self):
         """
