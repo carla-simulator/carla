@@ -161,10 +161,6 @@ private:
   UPROPERTY()
   UMaterialInstance *MarkingNodeMaterial;
 
-  /// Material used by RoadPainter
-  UPROPERTY()
-  UMaterialInstance *RoadNodeMaterialInstance;
-
   /// Workaround material for the RoadNode mesh
   UPROPERTY()
   UMaterialInstance *RoadNodeMaterial;
@@ -180,10 +176,6 @@ private:
   /// Workaround material for the SidewalkNodes
   UPROPERTY()
   UMaterial *SidewalkNodeMaterial;
-
-  /// Subclass for acquiring the RoadPainter blueprint
-  UPROPERTY()
-  TSubclassOf<ARoadPainterWrapper> RoadPainterSubclass;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder

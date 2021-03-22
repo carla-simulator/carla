@@ -59,14 +59,11 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
       "Material'/Game/Carla/Static/GenericMaterials/Grass/M_Grass01.M_Grass01'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> SidewalkNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/CheapMaterials/M_SideWalkCheap01'"));
-  static ConstructorHelpers::FObjectFinder<UClass> RoadPainterBlueprint(TEXT(
-	  "Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset_C'"));
 
   MarkingNodeMaterial = (UMaterialInstance *) MarkingNode.Object;
   RoadNodeMaterial = (UMaterialInstance *) RoadNode.Object;
   MarkingNodeMaterialAux = (UMaterialInstance *) RoadNodeAux.Object;
   SidewalkNodeMaterial = (UMaterial *) SidewalkNode.Object;
-  RoadPainterSubclass = RoadPainterBlueprint.Object;
 #endif
 }
 #if WITH_EDITORONLY_DATA
