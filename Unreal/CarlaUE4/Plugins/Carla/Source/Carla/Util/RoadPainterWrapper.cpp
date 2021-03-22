@@ -8,4 +8,5 @@
 
 ARoadPainterWrapper::ARoadPainterWrapper(){
 
+	MapSize = 0.0f;
 }

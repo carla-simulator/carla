@@ -53,4 +53,7 @@ public:
 
   UFUNCTION(BlueprintImplementableEvent, Category = "ARoadPainterWrapper")
 	  void ClearAllEvent();
+	
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ARoadPainterWrapper")
+	  float MapSize;
 };
