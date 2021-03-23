@@ -55,7 +55,7 @@ nav:
   - 'RLlib Integration': "tuto_G_rllib_integration.md"
   - 'Scenic': 'tuto_G_scenic.md'
 - Tutorials (assets):
-  - 'Add a new map': 'tuto_A_add_map.md'
+  - 'Add a new map': 'tuto_A_add_map_overview.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
   - 'Add new props': 'tuto_A_add_props.md'
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
