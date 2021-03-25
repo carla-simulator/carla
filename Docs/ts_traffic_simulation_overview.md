@@ -54,7 +54,7 @@ Go to Traffic Manager</a>
 
 [Scenic](https://scenic-lang.readthedocs.io) is a domain-specific probabilistic programming language for modeling the environments of cyber-physical systems like robots and autonomous cars. Scenic provides an [specialized domain](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.simulators.carla.html) to facilitate execution of Scenic scripts on the CARLA simulator. 
 
-Scenic scenario definitions are easy to read and construct. A tutorial to create a simple scenario is provided [here]().
+Scenic scenario definitions are easy to read and construct. A tutorial to create a simple scenario is provided [here](tuto_G_scenic.md).
 
 __Useful for:__
 
@@ -63,7 +63,7 @@ __Useful for:__
 
 <div class="build-buttons">
 <p>
-<a href="ts_scenic.md" target="_blank" class="btn btn-neutral" title="Go to Scenic Tutorial">
+<a href="https://carla.readthedocs.io/en/latest/tuto_G_scenic/" target="_blank" class="btn btn-neutral" title="Go to Scenic Tutorial">
 Go to Scenic Tutorial</a>
 </p>
 </div>
@@ -89,7 +89,7 @@ Go to SUMO Co-Simulation</a>
 
 ---
 
-If you have any doubts about the different options available to simulate traffic in CARLA, feel free to post in the forum or in [Discord](https://discord.gg/8kqACuC).
+If you have any doubts about the different options available to simulate traffic in CARLA, feel free to post in the [forum](https://forum.carla.org/) or in [Discord](https://discord.gg/8kqACuC).
 
 <div class="build-buttons">
 <p>
