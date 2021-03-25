@@ -13,9 +13,9 @@ Traffic simulation is integral to the accurate and efficient training and testin
 
 Scenario Runner provides [predefined traffic scenarios](https://carla-scenariorunner.readthedocs.io/en/latest/list_of_scenarios/) out of the box and also allows users to [define their own](https://carla-scenariorunner.readthedocs.io/en/latest/creating_new_scenario/) scenarios using either Python or the [OpenSCENARIO 1.0 standard](https://releases.asam.net/OpenSCENARIO/1.0.0/ASAM_OpenSCENARIO_BS-1-2_User-Guide_V1-0-0.html#_foreword).
 
-The primary use of OpenSCENARIO is the description of complex maneuvers that involve multiple vehicles. Users can see which features of OpenSCENARIO are supported by Scenario Runner [here](https://carla-scenariorunner.readthedocs.io/en/latest/openscenario_support/). These features include maneuver Actions, Conditions, Stories and the Storyboard. 
+The primary use of OpenSCENARIO is the description of complex maneuvers that involve multiple vehicles. Users can see which features of OpenSCENARIO are supported by Scenario Runner [here](https://carla-scenariorunner.readthedocs.io/en/latest/openscenario_support/). These features include Maneuvers, Actions, Conditions, Stories and the Storyboard. 
 
-Scenario Runner needs to be installed [separately](https://github.com/carla-simulator/scenario_runner) from the main CARLA package.
+Scenario Runner has to be installed [separately](https://github.com/carla-simulator/scenario_runner) from the main CARLA package.
 
 __Useful for:__
 
