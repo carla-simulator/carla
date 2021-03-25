@@ -18,6 +18,7 @@ import json
 import logging
 import time
 import math
+from copy import deepcopy
 from multiprocessing import Process
 
 # ==================================================================================================
@@ -40,6 +41,7 @@ except IndexError:
 ##### Begin: My code #####
 DATA_SERVER_HOST = "localhost"
 DATA_SERVER_PORT = 9998
+DATA_DIR = "./../Veins/carla-veins-data/"
 ##### End: My code #####
 
 # ==================================================================================================
@@ -82,6 +84,10 @@ from util.classes.sensor_data import (
     ObstacleSensorData,
     ObstacleSensorDataHandler,
 )
+from util.classes.utils import (
+    Location,
+    Speed,
+)
 ##### End: My code. #####
 
 # ==================================================================================================
@@ -89,6 +95,32 @@ from util.classes.sensor_data import (
 # ==================================================================================================
 
 ##### Begin: My code. #####
+def location(actor, distance):
+    x = actor.get_transform().location.x + distance * math.cos(math.radians(actor.get_transform().rotation.yaw))
+    y = actor.get_transform().location.y + distance * math.sin(math.radians(actor.get_transform().rotation.yaw))
+
+    return Location(x, y)
+
+def speed(actor, abs_speed):
+    x = abs_speed * math.cos(math.radians(actor.get_transform().rotation.yaw))
+    y = abs_speed * math.sin(math.radians(actor.get_transform().rotation.yaw))
+
+    return Speed(x, y)
+
+class VehicleData:
+    def __init__(self):
+        self.time2past_location = {}
+        self.time2new_location = {}
+
+    def tick(self, time, new_location):
+        self.time2past_location =  deepcopy(self.time2new_location)
+        self.time2new_location[time] = deepcopy(new_location)
+
+    def speed(self):
+        pass
+
+
+
 class CAV:
     TARGET_ROAD_WIDTH = Constants.TARGET_ROAD_WIDTH
     TARGET_ROAD_LENGTH = Constants.TARGET_ROAD_LENGTH
@@ -97,10 +129,12 @@ class CAV:
     SENSOR_TICK = Constants.SENSOR_TICK
 
 
-    def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time):
+    def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization):
         global DATA_SERVER_HOST
         global DATA_SERVER_PORT
+        global DATA_DIR
 
+        self.sim_synchronization = sim_synchronization
         self.carla = carla_sim
         self.sumo = sumo_sim
 
@@ -114,8 +148,8 @@ class CAV:
         self.sensor_data_handler = SensorDataHandler()
         self.perceived_objects_handler = PerceivedObjectsHandler()
 
-        self.CAMs_handler = CAMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT)
-        self.CPMs_handler = CPMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT)
+        self.CAMs_handler = CAMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        self.CPMs_handler = CPMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
 
         self.load_sensors()
 
@@ -172,22 +206,22 @@ class CAV:
         # )]])
         # p2.start()
         # p2.join()
-        self.CPMs_handler.receive(self.sumo_actor_id)
+        # self.CPMs_handler.receive(self.sumo_actor_id)
         t2 = time.time()
 
         perceived_object_container = self.Perceived_Object_Container()
         if 1 <= len(perceived_object_container):
-            self.CPMs_handler.send(self.sumo_actor_id, [CPM(
+            self.CPMs_handler.send(self.sumo_actor_id, CPM(
                 self.sumo_elapsed_seconds(),
                 self.ITS_PDU_Header(),
                 self.Management_Container(),
                 self.Station_Data_Container(),
                 self.Sensor_Information_Container(),
                 perceived_object_container
-            )])
+            ))
 
         t3 = time.time()
-        print(f"Delay: {t3 - start}, {t2 - start}, {t1 - start}")
+        print(f"Delay: {t3 - t2}, {t2 - t1}, {t1 - start}")
 
     def new_CPM(self):
         pass
@@ -232,8 +266,8 @@ class CAV:
 
 
 class CAVWithObstacleSensors(CAV):
-    def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time):
-        super().__init__(sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time)
+    def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization):
+        super().__init__(sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization)
         self.sensor_data_handler = ObstacleSensorDataHandler()
 
 
@@ -263,7 +297,14 @@ class CAVWithObstacleSensors(CAV):
             return
 
         # print(f"sumo_id: {self.sumo_actor_id}, sensor_transform: {data.actor.get_transform()}, distance: {data.distance}, pridected_location: {pridected_location}, other_type: {data.other_actor.type_id}, other_transform: {data.other_actor.get_transform()}")
-        self.sensor_data_handler.save(ObstacleSensorData(data, self.sumo_elapsed_seconds()))
+        other_sumo_id = self.sim_synchronization.sumoid_from_carlaid(data.other_actor.id)
+        print(f"other_sumo_id: {other_sumo_id}")
+        self.sensor_data_handler.save(ObstacleSensorData(
+            data,
+            self.sumo_elapsed_seconds(),
+            location(data.actor, data.distance),
+            speed(data.other_actor, 10)
+        ))
 ##### End: My code. #####
 
 
@@ -311,6 +352,21 @@ class SimulationSynchronization(object):
         self.sumoid2sensors = {}
         self.current_time = 0
         self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
+
+    def sumoid_from_carlaid(self, carlaid):
+        print(carlaid)
+        print(self.carla2sumo_ids)
+        print(self.sumo2carla_ids)
+        if carlaid in self.carla2sumo_ids.keys():
+            return self.carla2sumo_ids[carlaid]
+        else:
+            for k, v in self.sumo2carla_ids.items():
+                if v == carlaid:
+                    return k
+                else:
+                    continue
+
+        return None
         ##### End: My code #####
 
 
@@ -341,7 +397,7 @@ class SimulationSynchronization(object):
                 carla_actor_id = self.carla.spawn_actor(carla_blueprint, carla_transform)
 
                 ##### Begin: My code #####
-                self.cavs.append(CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time))
+                self.cavs.append(CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self))
                 ##### End: My code #####
 
                 if carla_actor_id != INVALID_ACTOR_ID:
@@ -509,6 +565,7 @@ def synchronization_loop(args):
 if __name__ == '__main__':
     # global DATA_SERVER_HOST
     # global DATA_SERVER_PORT
+    # global DATA_DIR
 
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument('sumo_cfg_file', type=str, help='sumo configuration file')
@@ -557,8 +614,9 @@ if __name__ == '__main__':
     argparser.add_argument('--debug', action='store_true', help='enable debug messages')
 
     ###### Begin: My codes. #####
-    argparser.add_argument('--carla_veins_data_server_host', default="localhost")
-    argparser.add_argument('--carla_veins_data_server_port', default=9998)
+    argparser.add_argument('--carla_veins_data_server_host', default=DATA_SERVER_HOST)
+    argparser.add_argument('--carla_veins_data_server_port', default=DATA_SERVER_PORT)
+    argparser.add_argument('--carla_veins_data_dir', default=DATA_DIR)
     ###### End: My codes #####
 
     arguments = argparser.parse_args()
@@ -566,6 +624,7 @@ if __name__ == '__main__':
     ###### Begin: My codes. #####
     DATA_SERVER_HOST = arguments.carla_veins_data_server_host
     DATA_SERVER_PORT = arguments.carla_veins_data_server_port
+    DATA_DIR = arguments.carla_veins_data_dir
     ###### End: My codes #####
 
     if arguments.sync_vehicle_all is True:

@@ -361,6 +361,9 @@ class SumoSimulation(object):
             return traci.simulation.getTime()
         except Exception as e:
             return self.current_time(error_time + 1)
+
+    def getSpeed(self, veh_id):
+        return traci.vehicle.getSpeed(str(veh_id))
     ##### End: My code #####
 
     @staticmethod

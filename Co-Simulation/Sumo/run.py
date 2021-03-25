@@ -1,7 +1,9 @@
 import argparse
+import glob
 import logging
 import multiprocessing
 import os
+import pathlib
 import signal
 import subprocess
 import sys
@@ -56,6 +58,13 @@ def kill_processes(procs):
         logging.error(f"Pids: {[proc.pid for proc in procs]} are remained.")
         return procs
 
+def remove_cache(cache_dir):
+    files = glob.glob(cache_dir + "*")
+    for file in files:
+        if pathlib.Path(file).is_file():
+            os.remove(file)
+        elif pathlib.Path(file).is_symlink():
+            os.unlink(file)
 
 # ----- processes -----
 def change_carla_map(args, env, sumo_files):
@@ -63,7 +72,7 @@ def change_carla_map(args, env, sumo_files):
 
 
 def start_carla_sumo_synchronization(args, env, sumo_files):
-    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} ", shell=True)
+    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} --carla_veins_data_dir {args.data_dir}", shell=True)
 
 
 def start_veins_sumo_synchronization(args, env, sumo_files):
@@ -97,6 +106,7 @@ class Main:
 
         # ----- copy sumo files into Veins directory -----
         print("Initializing ...")
+        remove_cache(args.data_dir)
         copy_local_file_to_vagrant(self.sumo_files["rou"], f"{env['sumo_files_name_in_veins']}.rou.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
         copy_local_file_to_vagrant(self.sumo_files["net"], f"{env['sumo_files_name_in_veins']}.net.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
         copy_local_file_to_vagrant(self.sumo_files["poly"], f"{env['sumo_files_name_in_veins']}.poly.xml", env['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
@@ -133,11 +143,9 @@ class Main:
 
         except KeyboardInterrupt:
             logging.info(CTRL_C_PRESSED_MESSAGE)
-            kill_processes(procs)
 
         except Exception as e:
             logging.error(e)
-            kill_processes(procs)
 
         finally:
             kill_processes(procs)
@@ -168,6 +176,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--data_server_host', default="localhost")
     parser.add_argument('--data_server_port', default=9998)
+    parser.add_argument('--data_dir', default='./../Veins/carla-veins-data/')
 
     parser.add_argument('--main_mobility_handler', default=env["mobility_handler_choices"][0], choices=env["mobility_handler_choices"])
     parser.add_argument('--log_file_path', default="./log/carla_veins_logger.log")

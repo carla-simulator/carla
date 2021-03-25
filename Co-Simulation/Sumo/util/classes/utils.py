@@ -10,3 +10,9 @@ class Location:
         diff_y = (self.y - other_location.y)
 
         return (math.sqrt(diff_x * diff_x + diff_y * diff_y) <= threshold)
+
+class Speed:
+    def __init__(self, x, y, z=0):
+        self.x = x
+        self.y = y
+        self.z = z

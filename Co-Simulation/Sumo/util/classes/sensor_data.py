@@ -10,11 +10,14 @@ from util.classes.utils import Location
 from util.classes.constants import Constants
 
 class SensorData:
-    def __init__(self, data, time=0.0):
+    def __init__(self, data, time, location, speed):
         self.actor = data.actor
         self.other_actor = data.other_actor
         self.distance = data.distance
         self.time = time
+
+        self.l = location
+        self.s = speed
 
 
 class SensorDataHandler:
@@ -37,20 +40,23 @@ class ObstacleSensorData(SensorData):
 
 
     def location(self):
-        x = self.actor.get_transform().location.x + self.distance * math.cos(math.radians(self.actor.get_transform().rotation.yaw))
-        y = self.actor.get_transform().location.y + self.distance * math.sin(math.radians(self.actor.get_transform().rotation.yaw))
+        # x = self.actor.get_transform().location.x + self.distance * math.cos(math.radians(self.actor.get_transform().rotation.yaw))
+        # y = self.actor.get_transform().location.y + self.distance * math.sin(math.radians(self.actor.get_transform().rotation.yaw))
+        #
+        # return Location(x, y)
 
-        return Location(x, y)
+        return self.l
 
     def predicted_location(self, delta_t):
-        speed = self.get_velocity()
+        speed = self.speed()
         location = location()
 
         return Location(location.x + delta_t * speed.x, location.y + delta_t * speed.y)
 
     def speed(self):
-        print(self.other_actor.get_velocity())
-        return self.other_actor.get_velocity()
+        # return self.other_actor.get_velocity()
+
+        return self.s
 
 
 class ObstacleSensorDataHandler(SensorDataHandler):

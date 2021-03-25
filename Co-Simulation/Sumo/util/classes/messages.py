@@ -1,16 +1,74 @@
 import math
 import json
+import os
 import socket
 
 from util.classes.perceived_objects import PerceivedObject
 
+def unlock(dst):
+    os.unlink(dst)
+
+
+def make_symlink(src, dst):
+    try:
+        os.symlink(src, dst)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def lock(src, dst):
+    while make_symlink(src, dst) is False:
+        print("!!!")
+        continue
+
+
+
 class MessagesHandler:
-    def __init__(self, data_server_host, data_server_port):
+    def __init__(self, data_server_host, data_server_port, data_sync_dir):
         self.data_server_host = data_server_host
         self.data_server_port = data_server_port
+        self.data_sync_dir = data_sync_dir
 
         self.received_messages = []
         self.reserved_messages = []
+
+    def sensor_data_file_path(self, veh_id):
+        return self.data_sync_dir + f"{veh_id}_sensor.json"
+
+    def sensor_lock_file_path(self, veh_id):
+        return self.data_sync_dir + f"{veh_id}_sensor.json.lock"
+
+    def packet_data_file_path(self, veh_id):
+        return self.data_sync_dir + f"{veh_id}_packet.json"
+
+    def packet_lock_file_path(self, veh_id):
+        return self.data_sync_dir + f"{veh_id}_packet.json.lock"
+
+
+    def receive(self, data_file, lock_file):
+        data = None
+        # ----- file base -----
+        lock(data_file, lock_file)
+        try:
+            with open(data_file) as f:
+                data = f.readlines()
+        except:
+            pass
+
+        with open(data_file, mode="w") as f:
+            f.write("")
+
+        unlock(lock_file)
+
+        return data
+
+    def send(self, data_file, lock_file, data):
+        # ----- file base -----
+        lock(data_file, lock_file)
+        with open(data_file, mode="a") as f:
+            f.write(data + "\n")
+        unlock(lock_file)
 
     def access_data_server(self, sumo_vehid, method_name, args=None):
         """
@@ -116,16 +174,24 @@ class CPM:
 
 class CPMsHandler(MessagesHandler):
     def receive(self, sumo_id):
-        resp = json.loads(str(self.access_data_server(sumo_id, "get_received_CPMs"), 'ascii'))
-        data = resp["data"]
+        # ----- socket base -----
+        # resp = json.loads(str(self.access_data_server(sumo_id, "get_received_CPMs"), 'ascii'))
+        # data = resp["data"]
+        #
+        # self.received_messages = self.received_messages + [CPM(**d) for d in data]
 
-        self.received_messages = self.received_messages + [CPM(**d) for d in data]
+        # ----- file base -----
+        return super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
 
-    def send(self, sumo_id, CPMs_list):
-        resp = json.loads(str(self.access_data_server(sumo_id, "post_reserved_CPMs", {"data": [cpm.dict_format() for cpm in CPMs_list]}), 'ascii'))
-        data = resp["data"]
+    def send(self, sumo_id, cpm):
+        # ----- socket base -----
+        # resp = json.loads(str(self.access_data_server(sumo_id, "post_reserved_CPMs", {"data": [cpm.dict_format() for cpm in CPMs_list]}), 'ascii'))
+        # data = resp["data"]
+        #
+        # self.reserved_messages = self.reserved_messages + CPMs_list
 
-        self.reserved_messages = self.reserved_messages + CPMs_list
+        # ----- file base -----
+        super().send(self.sensor_data_file_path(sumo_id), self.sensor_lock_file_path(sumo_id), json.dumps(cpm.dict_format()))
 
     def is_already_sent(self, detected_object):
         is_already_sent = False
