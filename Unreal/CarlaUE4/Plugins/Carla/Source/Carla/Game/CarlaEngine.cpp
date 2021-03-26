@@ -111,6 +111,7 @@ void FCarlaEngine::NotifyEndEpisode()
 
 void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
   if (TickType == ELevelTick::LEVELTICK_All)
   {
     // update frame counter
@@ -132,6 +133,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
   // tick the recorder/replayer system
   if (GetCurrentEpisode())
   {

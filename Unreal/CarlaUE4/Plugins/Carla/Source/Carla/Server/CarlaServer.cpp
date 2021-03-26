@@ -1662,14 +1662,31 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
   check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
-  auto RPCThreads = NumberOfWorkerThreads / 2u;
-  auto StreamingThreads = NumberOfWorkerThreads - RPCThreads;
-  Pimpl->Server.AsyncRun(std::max(2u, RPCThreads));
-  Pimpl->StreamingServer.AsyncRun(std::max(2u, StreamingThreads));
+  int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+  int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+
+  UE_LOG(LogCarla, Error, TEXT("FCommandLine %s"), FCommandLine::Get());
+
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
+  {
+    RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+  }
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-StreamingThreads="), StreamingThreads))
+  {
+    StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+  }
+
+  UE_LOG(LogCarla, Error, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
+        NumberOfWorkerThreads, RPCThreads, StreamingThreads);
+
+  Pimpl->Server.AsyncRun(RPCThreads);
+  Pimpl->StreamingServer.AsyncRun(StreamingThreads);
+
 }
 
 void FCarlaServer::RunSome(uint32 Milliseconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 
