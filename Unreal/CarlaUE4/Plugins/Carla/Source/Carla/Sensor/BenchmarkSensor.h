@@ -61,7 +61,7 @@ protected:
 
   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-  void Tick(float DeltaTime) override;
+  void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
 private:
 

@@ -10,7 +10,6 @@
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Server/CarlaServer.h"
 #include "Carla/Settings/EpisodeSettings.h"
-#include "Carla/Util/BenchmarkAgent.h"
 #include "Carla/Util/NonCopyable.h"
 
 #include "Misc/CoreDelegates.h"

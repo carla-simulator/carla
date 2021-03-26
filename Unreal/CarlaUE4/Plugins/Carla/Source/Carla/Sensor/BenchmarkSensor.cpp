@@ -99,10 +99,8 @@ void ABenchmarkSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   GEngine->Exec(GWorld, TEXT("stat none"));
 }
 
-void ABenchmarkSensor::Tick(float DeltaTime)
+void ABenchmarkSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  Super::Tick(DeltaTime);
-
   FString StatsOutput = "";
   int64 Frame = CollectFrameStats(StatsOutput);
 
@@ -130,7 +128,7 @@ FString ABenchmarkSensor::CollectStatUnit()
     FrameTime = StatUnitData->FrameTime;
     GameThreadTime = StatUnitData->GameThreadTime;
     RenderThreadTime = StatUnitData->RenderThreadTime;
-    GPUFrameTime = StatUnitData->GPUFrameTime;
+    GPUFrameTime = StatUnitData->GPUFrameTime[0];
     RHITTime = StatUnitData->RHITTime;
   }
 
