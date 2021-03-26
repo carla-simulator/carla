@@ -213,7 +213,7 @@ class World(object):
 
         # Set up the sensors.
         self.camera_manager = CameraManager(self.player, self.hud, self.num_cameras)
-        self.benchmark_sensor = BenchmarkSensor(self.player)
+        self.benchmark_sensor = BenchmarkSensor(self.world, self.player)
 
     def tick(self, clock):
         if self.sync:
@@ -647,10 +647,10 @@ class Camera(object,):
 
 
 class BenchmarkSensor(object):
-    def __init__(self, parent_actor):
+    def __init__(self, world, parent_actor):
         self.sensor = None
         self._parent = parent_actor
-        self.world = self._parent.get_world()
+        self.world = world
         self.capture = False
 
         self.num_samples = 100
