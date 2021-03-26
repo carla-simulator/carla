@@ -18,9 +18,9 @@ import json
 import logging
 import time
 import math
+from collections import deque
 from copy import deepcopy
 from multiprocessing import Process
-
 # ==================================================================================================
 # -- find carla module -----------------------------------------------------------------------------
 # ==================================================================================================
@@ -108,17 +108,30 @@ def speed(actor, abs_speed):
     return Speed(x, y)
 
 class VehicleData:
-    def __init__(self):
-        self.time2past_location = {}
-        self.time2new_location = {}
+    def __init__(self, time, actor):
+        self.data = []
+        self.tick(time, actor)
 
-    def tick(self, time, new_location):
-        self.time2past_location =  deepcopy(self.time2new_location)
-        self.time2new_location[time] = deepcopy(new_location)
+    def latest(self):
+        if len(self.data) <= 0:
+            return None
+        else:
+            return self.data[-1]
 
-    def speed(self):
-        pass
+    def tick(self, time, actor):
+        al = actor.get_transform().location
 
+        if len(self.data) <= 0:
+            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(0, 0)))
+        else:
+            dT = time - self.data[-1]["time"]
+            dX = al.x - self.data[-1]["location"].x
+            dY = al.y - self.data[-1]["location"].y
+
+            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(dX / dT, dY / dT)))
+
+    def formatted_data(self, time, location, speed):
+        return {"time": time, "location": location, "speed": speed}
 
 
 class CAV:
@@ -151,6 +164,7 @@ class CAV:
         self.CAMs_handler = CAMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
         self.CPMs_handler = CPMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
 
+        self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id] = VehicleData(self.sumo_elapsed_seconds(), self.carla_actor)
         self.load_sensors()
 
     def attach_bp(self, bp, transform):
@@ -166,6 +180,11 @@ class CAV:
 
     def load_sensors(self):
         pass
+
+    def new_perceived_objects_with_pseudonym(self):
+        new_perceived_objects = self.sensor_data_handler.perceived_objects(self.sumo_elapsed_seconds(), Constants.VALID_TIME_DELTA)
+
+        return [self.perceived_objects_handler.save(new_perceived_object) for new_perceived_object in new_perceived_objects]
 
 
     def rads(self, sensor_dist, target_rad, center_rad=0):
@@ -188,8 +207,10 @@ class CAV:
         t2 = start
         t3 = start
 
-        for new_perceived_object in self.sensor_data_handler.perceived_objects(self.sumo_elapsed_seconds(), Constants.VALID_TIME_DELTA):
-            self.perceived_objects_handler.save(new_perceived_object)
+        # ----- update vehicle data -----
+        self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].tick(self.sumo_elapsed_seconds(), self.carla_actor)
+
+        # ----- update perceived_objects -----
         t1 = time.time()
 
         # p1 = Process(target=self.CPMs_handler.receive, args=[self.sumo_actor_id])
@@ -209,7 +230,7 @@ class CAV:
         # self.CPMs_handler.receive(self.sumo_actor_id)
         t2 = time.time()
 
-        perceived_object_container = self.Perceived_Object_Container()
+        perceived_object_container = self.Perceived_Object_Container(self.new_perceived_objects_with_pseudonym())
         if 1 <= len(perceived_object_container):
             self.CPMs_handler.send(self.sumo_actor_id, CPM(
                 self.sumo_elapsed_seconds(),
@@ -246,11 +267,10 @@ class CAV:
     def Sensor_Information_Container(self):
         return ["360_sensor", "forward_sensor", "backward_sensor"]
 
-    def Perceived_Object_Container(self):
+    def Perceived_Object_Container(self, new_perceived_objects_with_pseudonym):
         detected_objects_for_new_CPM = []
 
-        for the_detected_objects in self.perceived_objects_handler.pseudonym2objects.values():
-            the_latest_detected_object = the_detected_objects.latest()
+        for the_latest_detected_object in new_perceived_objects_with_pseudonym:
             is_already_sent, delta_t, delta_s, delta_p = self.CPMs_handler.is_already_sent(the_latest_detected_object)
 
             if is_already_sent:
@@ -296,14 +316,11 @@ class CAVWithObstacleSensors(CAV):
         if "static" in data.actor.type_id:
             return
 
-        # print(f"sumo_id: {self.sumo_actor_id}, sensor_transform: {data.actor.get_transform()}, distance: {data.distance}, pridected_location: {pridected_location}, other_type: {data.other_actor.type_id}, other_transform: {data.other_actor.get_transform()}")
-        other_sumo_id = self.sim_synchronization.sumoid_from_carlaid(data.other_actor.id)
-        print(f"other_sumo_id: {other_sumo_id}")
         self.sensor_data_handler.save(ObstacleSensorData(
             data,
             self.sumo_elapsed_seconds(),
             location(data.actor, data.distance),
-            speed(data.other_actor, 10)
+            self.sim_synchronization.carlaid2vehicle_data[data.other_actor.id].latest()["speed"]
         ))
 ##### End: My code. #####
 
@@ -350,6 +367,7 @@ class SimulationSynchronization(object):
         ##### Begin: My code #####
         self.cavs = []
         self.sumoid2sensors = {}
+        self.carlaid2vehicle_data = {}
         self.current_time = 0
         self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
 
@@ -367,6 +385,10 @@ class SimulationSynchronization(object):
                     continue
 
         return None
+
+
+    def sumo_elapsed_seconds(self):
+        return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
         ##### End: My code #####
 
 
@@ -447,13 +469,13 @@ class SimulationSynchronization(object):
         # -----------------
         self.carla.tick()
         ##### Start: My code. #####
-        # for cav in self.cavs:
-        #     cav.tick()
+        for cav in self.cavs:
+            cav.tick()
 
         procs = []
-        for cav in self.cavs:
-            procs.append(Process(target=cav.tick, args=()))
-            procs[-1].start()
+        # for cav in self.cavs:
+        #     procs.append(Process(target=cav.tick, args=()))
+        #     procs[-1].start()
 
         ##### End: My code. #####
 

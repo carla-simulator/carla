@@ -29,7 +29,6 @@ class PerceivedObject:
     def predicted_location(self, delta_t):
         return Location(self.location.x + delta_t * self.speed.x, self.location.y + delta_t * self.speed.y)
 
-
     def is_predictable_location(self, other):
         if self.time <= other.time:
             return (self.predicted_location(other.time - self.time).is_close_to(other.location, Constants.LOCATION_THRESHOLD))
@@ -71,6 +70,8 @@ class PerceivedObjectsHandler:
     def save(self, obj):
         obj.pseudonym = self.pseudonym(obj)
         self.pseudonym2objects[obj.pseudonym].save(obj)
+
+        return obj
 
     def remove_unused_objects(self, current_time, duration):
         unused_psues = [pseu for pseu, objects in self.pseudonym2objects.items() if max([obj.time for obj in objects.list]) + duration < current_time]
