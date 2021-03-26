@@ -71,6 +71,7 @@ inline void ACarlaRecorder::StopReplayer(bool KeepActors)
 
 void ACarlaRecorder::Ticking(float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaRecorder::Ticking);
   Super::Tick(DeltaSeconds);
 
   if (!Episode)

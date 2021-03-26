@@ -51,7 +51,9 @@ namespace rpc {
     }
 
     void SyncRunFor(time_duration duration) {
+      #ifdef LIBCARLA_INCLUDED_FROM_UE4
       TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
+      #endif // LIBCARLA_INCLUDED_FROM_UE4
       _sync_io_context.reset();
       _sync_io_context.run_for(duration.to_chrono());
     }

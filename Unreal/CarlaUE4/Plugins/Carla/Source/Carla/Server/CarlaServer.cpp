@@ -219,6 +219,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
+    TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
     ++TickCuesReceived;
     return FCarlaEngine::GetFrameCounter();
   };
@@ -1688,7 +1689,7 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 
 void FCarlaServer::RunSome(uint32 Milliseconds)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 

@@ -676,6 +676,7 @@ void CarlaReplayer::InterpolatePosition(
 // tick for the replayer
 void CarlaReplayer::Tick(float Delta)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(CarlaReplayer::Tick);
   // check if there are events to process
   if (Enabled)
   {

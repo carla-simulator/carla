@@ -179,7 +179,7 @@ static carla::Buffer FWorldObserver_Serialize(
     bool MapChange,
     bool PendingLightUpdates)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using SimulationState = carla::sensor::s11n::EpisodeStateSerializer::SimulationState;
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
@@ -243,7 +243,7 @@ void FWorldObserver::BroadcastTick(
     bool MapChange,
     bool PendingLightUpdates)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
   auto buffer = FWorldObserver_Serialize(

@@ -68,13 +68,17 @@ void ARadar::BeginPlay()
 
 void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARadar::PostPhysTick);
   CalculateCurrentVelocity(DeltaTime);
 
   RadarData.Reset();
   SendLineTraces(DeltaTime);
 
-  auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
+    auto DataStream = GetDataStream(*this);
+    DataStream.Send(*this, RadarData, DataStream.PopBufferFromPool());
+  }
 }
 
 void ARadar::CalculateCurrentVelocity(const float DeltaTime)
@@ -86,7 +90,7 @@ void ARadar::CalculateCurrentVelocity(const float DeltaTime)
 
 void ARadar::SendLineTraces(float DeltaTime)
 {
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARadar::SendLineTraces);
   constexpr float TO_METERS = 1e-2;
   const FTransform& ActorTransform = GetActorTransform();
   const FRotator& TransformRotator = ActorTransform.Rotator();
@@ -112,45 +116,49 @@ void ARadar::SendLineTraces(float DeltaTime)
 
   FCriticalSection Mutex;
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
-  ParallelFor(NumPoints, [&](int32 idx) {
-    FHitResult OutHit(ForceInit);
-    const float Radius = Rays[idx].Radius;
-    const float Angle  = Rays[idx].Angle;
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
+    ParallelFor(NumPoints, [&](int32 idx) {
+      TRACE_CPUPROFILER_EVENT_SCOPE(ParallelForTask);
+      FHitResult OutHit(ForceInit);
+      const float Radius = Rays[idx].Radius;
+      const float Angle  = Rays[idx].Angle;
 
-    float Sin, Cos;
-    FMath::SinCos(&Sin, &Cos, Angle);
+      float Sin, Cos;
+      FMath::SinCos(&Sin, &Cos, Angle);
 
-    const FVector EndLocation = RadarLocation + TransformRotator.RotateVector({
-      Range,
-      MaxRx * Radius * Cos,
-      MaxRy * Radius * Sin
-    });
+      const FVector EndLocation = RadarLocation + TransformRotator.RotateVector({
+        Range,
+        MaxRx * Radius * Cos,
+        MaxRy * Radius * Sin
+      });
 
-    const bool Hitted = GetWorld()->LineTraceSingleByChannel(
-      OutHit,
-      RadarLocation,
-      EndLocation,
-      ECC_GameTraceChannel2,
-      TraceParams,
-      FCollisionResponseParams::DefaultResponseParam
-    );
-
-    const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
-    if (Hitted && HittedActor.Get()) {
-      Rays[idx].Hitted = true;
-
-      Rays[idx].RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation);
-
-      Rays[idx].AzimuthAndElevation = FMath::GetAzimuthAndElevation (
-        (EndLocation - RadarLocation).GetSafeNormal() * Range,
-        TransformXAxis,
-        TransformYAxis,
-        TransformZAxis
+      const bool Hitted = GetWorld()->LineTraceSingleByChannel(
+        OutHit,
+        RadarLocation,
+        EndLocation,
+        ECC_GameTraceChannel2,
+        TraceParams,
+        FCollisionResponseParams::DefaultResponseParam
       );
 
-      Rays[idx].Distance = OutHit.Distance * TO_METERS;
-    }
-  });
+      const TWeakObjectPtr<AActor> HittedActor = OutHit.Actor;
+      if (Hitted && HittedActor.Get()) {
+        Rays[idx].Hitted = true;
+
+        Rays[idx].RelativeVelocity = CalculateRelativeVelocity(OutHit, RadarLocation);
+
+        Rays[idx].AzimuthAndElevation = FMath::GetAzimuthAndElevation (
+          (EndLocation - RadarLocation).GetSafeNormal() * Range,
+          TransformXAxis,
+          TransformYAxis,
+          TransformZAxis
+        );
+
+        Rays[idx].Distance = OutHit.Distance * TO_METERS;
+      }
+    });
+  }
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
   // Write the detections in the output structure
