@@ -101,6 +101,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
   (
     [&Sensor, Stream=Sensor.GetDataStream(Sensor)](auto &InRHICmdList) mutable
     {
+      TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("FWritePixels_SendPixelsInRenderThread");
+
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())
       {
@@ -113,12 +115,16 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
         if(Buffer.data())
         {
           SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+          TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("Stream Send");
           Stream.Send(Sensor, std::move(Buffer));
         }
       }
     }
   );
 
-  // Blocks until the render thread has finished all it's tasks
-  Sensor.WaitForRenderThreadToFinsih();
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("FPixelReader::WaitForRenderThreadToFinsih");
+    // Blocks until the render thread has finished all it's tasks
+    Sensor.WaitForRenderThreadToFinsih();
+  }
 }

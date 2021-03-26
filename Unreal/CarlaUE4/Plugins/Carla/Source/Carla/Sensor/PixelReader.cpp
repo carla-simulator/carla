@@ -46,6 +46,7 @@ static void WritePixelsToBuffer_Vulkan(
     uint32 Offset,
     FRHICommandListImmediate &InRHICmdList)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
   check(IsInRenderingThread());
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
@@ -58,12 +59,18 @@ static void WritePixelsToBuffer_Vulkan(
   FIntPoint Rect = RenderResource->GetSizeXY();
 
   // NS: Extra copy here, don't know how to avoid it.
-  InRHICmdList.ReadSurfaceData(
-      Texture,
-      FIntRect(0, 0, Rect.X, Rect.Y),
-      gPixels,
-      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-  Buffer.copy_from(Offset, gPixels);
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("Read Surface");
+    InRHICmdList.ReadSurfaceData(
+        Texture,
+        FIntRect(0, 0, Rect.X, Rect.Y),
+        gPixels,
+        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+  }
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("Buffer Copy");
+    Buffer.copy_from(Offset, gPixels);
+  }
 }
 
 // =============================================================================
@@ -130,6 +137,7 @@ void FPixelReader::WritePixelsToBuffer(
     FRHICommandListImmediate &InRHICmdList
     )
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
   check(IsInRenderingThread());
 
   if (IsVulkanPlatform(GMaxRHIShaderPlatform) || IsD3DPlatform(GMaxRHIShaderPlatform, false))

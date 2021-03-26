@@ -51,6 +51,7 @@ namespace rpc {
     }
 
     void SyncRunFor(time_duration duration) {
+      TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(__FUNCTION__);
       _sync_io_context.reset();
       _sync_io_context.run_for(duration.to_chrono());
     }
