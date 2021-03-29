@@ -9,10 +9,6 @@
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
-#include "Engine/StaticMeshActor.h"
-#include "HAL/PlatformFilemanager.h"
-#include "Materials/MaterialInstanceConstant.h"
-#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
@@ -29,11 +25,8 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 	static ConstructorHelpers::FObjectFinder<UBlueprint> RoadPainterBlueprint(TEXT(
 		"Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset'"));
-	static ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> RoadPainterTexRenderTarget(TEXT(
-		"TextureRenderTarget2D'/Game/Carla/Blueprints/LevelDesign/RoadPainterAssets/RenderTexture.RenderTexture'"));
 
 	RoadPainterSubclass = (UClass*)RoadPainterBlueprint.Object->GeneratedClass;
-	RoadPainterTexture = RoadPainterTexRenderTarget.Object;
 	
 #endif
 }
@@ -42,75 +35,130 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials()
 {
-	// ImportedMap path from import process
-	const FString ImportedMap = TEXT("/Game/map_package/Maps/TestOSM");
-	
+
 	ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
 	if (RoadPainterBp)
 	{
 		//Needed to call events in editor-mode
 		FEditorScriptExecutionGuard ScriptGuard;
+    RoadPainterBp->ClearAllEvent();
 		RoadPainterBp->ZSizeEvent();
-		RoadPainterBp->ClearAllEvent();
-		RoadPainterBp->PaintAllRoadsEvent();
-		
-		//TArray<AActor*> FoundActors;
-		//UGameplayStatics::GetAllActorsOfClass(World, AStaticMeshActor::StaticClass(), FoundActors);
-		//
-		//AStaticMeshActor *RoadMeshActor = nullptr;
-		//
-		//bool FoundRoadActor = false;
-		//for(int32 i = 0; i < FoundActors.Num() && FoundRoadActor == false; ++i)
-		//{
-		//	RoadMeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
-		//	if(RoadMeshActor)
-		//	{
-		//		if(RoadMeshActor->GetName().Equals("Roads_RoadNode") == true)
-		//		{
-		//			UE_LOG(LogTemp, Log, TEXT("Got it!"), *FoundActors[i]->GetName());
-		//
-		//			UMaterialInstanceDynamic *MI = UMaterialInstanceDynamic::Create(RoadNodeMaterialMaster, this, FName(TEXT("Road Painter Material Dynamic")));
-		//			MI->CopyParameterOverrides((UMaterialInstance*)RoadMeshActor->GetStaticMeshComponent()->GetMaterial(0));
-		//			RoadMeshActor->GetStaticMeshComponent()->SetMaterial(0, MI);
-		//			MI->SetScalarParameterValue(TEXT("Map units (CM)"), RoadPainterBp->MapSize);
-		//			MI->SetTextureParameterValue(TEXT("Texture Mask"), RoadPainterTexture);
-		//			FoundRoadActor = true;
-		//		}
-		//	}
-		//}
-
-		//FTimerHandle Handle;
-		//World->GetTimerManager().SetTimer(Handle, [=]() { RoadPainterBp->PaintAllRoadsEvent(); }, 5.0f, 1);
+    RoadPainterBp->ModifyRoadMaterialParameters();
+    RoadPainterBp->SetBlueprintVariables();
 	}
 }
 
-void ULoadAssetMaterialsCommandlet::LoadImportedMapWorld(FAssetData &AssetData)
+FString ULoadAssetMaterialsCommandlet::GetFirstPackagePath(const FString &PackageName) const
 {
-	// ImportedMap path from import process
-	const FString ImportedMap = TEXT("/Game/map_package/Maps/TestOSM");
+  // Get all Package names
+  TArray<FString> PackageList;
+  IFileManager::Get().FindFilesRecursive(PackageList, *(FPaths::ProjectContentDir()),
+      *(PackageName + TEXT(".Package.json")), true, false, false);
 
-	// Load Map folder using object library
-	MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
-	MapObjectLibrary->AddToRoot();
-	MapObjectLibrary->LoadAssetDataFromPath(*ImportedMap);
-	MapObjectLibrary->LoadAssetsFromAssetData();
-	MapObjectLibrary->GetAssetDataList(AssetDatas);
+  if (PackageList.Num() == 0)
+  {
+    UE_LOG(LogTemp, Error, TEXT("Package json file not found."));
+    return {};
+  }
 
-	if (AssetDatas.Num() > 0)
-	{
-		// Extract first asset found in folder path (i.e. the imported map)
-		AssetData = AssetDatas.Pop();
-		UE_LOG(LogTemp, Log, TEXT("The name of the asset : %s"), *AssetData.GetFullName());
-	}
+  return IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PackageList[0]);
+}
+
+void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageName, const TArray<FMapData> &MapsPaths)
+{
+  // Load World
+  FAssetData AssetData;
+  for (const auto &Map : MapsPaths)
+  {
+  
+    const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
+    MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
+    MapObjectLibrary->AddToRoot();
+    MapObjectLibrary->LoadAssetDataFromPath(*DefaultPath);
+    MapObjectLibrary->LoadAssetsFromAssetData();
+    MapObjectLibrary->GetAssetDataList(AssetDatas);
+    if (AssetDatas.Num() > 0)
+    {
+        // Extract first asset found in folder path (i.e. the imported map)
+        AssetData = AssetDatas.Pop();
+        UE_LOG(LogTemp, Log, TEXT("The name of the asset : %s"), *AssetData.GetFullName());
+    }
+    
+    World = CastChecked<UWorld>(AssetData.GetAsset());
+    World->InitWorld();
+    ApplyRoadPainterMaterials();
+  }
+}
+
+FPackageParams ULoadAssetMaterialsCommandlet::ParseParams(const FString &InParams) const
+{
+  TArray<FString> Tokens;
+  TArray<FString> Params;
+  TMap<FString, FString> ParamVals;
+  
+  ParseCommandLine(*InParams, Tokens, Params);
+  
+  FPackageParams PackageParams;
+  
+  // Parse and store Package name
+  FParse::Value(*InParams, TEXT("PackageName="), PackageParams.Name);
+
+  return PackageParams;
+}
+
+FAssetsPaths ULoadAssetMaterialsCommandlet::GetAssetsPathFromPackage(const FString &PackageName) const
+{
+  const FString PackageJsonFilePath = GetFirstPackagePath(PackageName);
+
+  FAssetsPaths AssetsPaths;
+
+  // Get All Maps Path
+  FString MapsFileJsonContent;
+  if (FFileHelper::LoadFileToString(MapsFileJsonContent, *PackageJsonFilePath))
+  {
+    TSharedPtr<FJsonObject> JsonParsed;
+    TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(MapsFileJsonContent);
+    if (FJsonSerializer::Deserialize(JsonReader, JsonParsed))
+    {
+      // Add Maps Path
+      auto MapsJsonArray = JsonParsed->GetArrayField(TEXT("maps"));
+
+      for (auto &MapJsonValue : MapsJsonArray)
+      {
+        TSharedPtr<FJsonObject> MapJsonObject = MapJsonValue->AsObject();
+
+        FMapData MapData;
+        MapData.Name = MapJsonObject->GetStringField(TEXT("name"));
+        MapData.Path = MapJsonObject->GetStringField(TEXT("path"));
+        MapData.bUseCarlaMapMaterials = MapJsonObject->GetBoolField(TEXT("use_carla_materials"));
+
+        AssetsPaths.MapsPaths.Add(std::move(MapData));
+      }
+
+      // Add Props Path
+      auto PropJsonArray = JsonParsed->GetArrayField(TEXT("props"));
+
+      for (auto &PropJsonValue : PropJsonArray)
+      {
+        TSharedPtr<FJsonObject> PropJsonObject = PropJsonValue->AsObject();
+
+        const FString PropAssetPath = PropJsonObject->GetStringField(TEXT("path"));
+
+        AssetsPaths.PropsPaths.Add(std::move(PropAssetPath));
+      }
+    }
+  }
+  return AssetsPaths;
 }
 
 int32 ULoadAssetMaterialsCommandlet::Main(const FString &Params)
 {
-	FAssetData AssetData;
-	LoadImportedMapWorld(AssetData);
-	World = CastChecked<UWorld>(AssetData.GetAsset());
-	World->InitWorld();
-	ApplyRoadPainterMaterials();
+  FPackageParams PackageParams = ParseParams(Params);
+
+  // Get Props and Maps Path
+  FAssetsPaths AssetsPaths = GetAssetsPathFromPackage(PackageParams.Name);
+
+  LoadAssetsMaterials(PackageParams.Name, AssetsPaths.MapsPaths);
 	
 #if WITH_EDITOR
 	UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
