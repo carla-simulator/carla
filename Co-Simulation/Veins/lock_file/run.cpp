@@ -5,8 +5,12 @@
 #include <iostream>
 #include <fstream>
 
-void lock(const char *oldpath, const char *newpath) {
-  while (symlink(oldpath, newpath) == -1) {
+void lock(const char *oldpath, const char *newpath, std::string message="tmp") {
+  int i = symlink(oldpath, newpath);
+  std::cout << i << message << std::endl;
+  while (i == -1) {
+    i = symlink(oldpath, newpath);
+    std::cout << i << message << std::endl;
     continue;
   }
 }
@@ -31,22 +35,27 @@ int main() {
     packet_data = "[{\"id\": " + std::to_string(veh_id) + ", \"sender\": " + std::to_string(veh_id + 1) + ", \"c\": " + std::to_string(c) + "}]";
 
     sleep(1);
-    lock((data_sync_dir + packet_data_file_name).c_str(), (data_sync_dir + packet_lock_file_name).c_str());
+    lock((data_sync_dir + packet_data_file_name).c_str(), (data_sync_dir + packet_lock_file_name).c_str(), "packet_data");
     std::ofstream ofs(data_sync_dir + packet_data_file_name, std::ios::in | std::ios::ate);
-    ofs << packet_data << std::endl;
+    if (ofs.is_open()) {
+      ofs << packet_data << "!!!" << std::endl;
+    }
     ofs.close();
     unlink((data_sync_dir + packet_lock_file_name).c_str());
+    std::cout << "c: " << c << std::endl;
 
-    lock((data_sync_dir + sensor_data_file_name).c_str(), (data_sync_dir + sensor_lock_file_name).c_str());
+    lock((data_sync_dir + sensor_data_file_name).c_str(), (data_sync_dir + sensor_lock_file_name).c_str(), "sensor_data");
     std::ifstream ifs(data_sync_dir + sensor_data_file_name);
     std::string buf;
     std::string data;
-    while (!ifs.eof()) {
-      std::getline(ifs, buf);
-      std::cout << buf << std::endl;
-      data += buf + "\n";
+    if (ifs.is_open()) {
+      while (!ifs.eof()) {
+        std::getline(ifs, buf);
+        std::cout << buf << std::endl;
+        data += buf + "\n";
+      }
+      // std::cout << data << std::endl;
     }
-    // std::cout << data << std::endl;
     ifs.close();
 
     std::ofstream ofs2(data_sync_dir + sensor_data_file_name);

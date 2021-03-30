@@ -14,12 +14,11 @@ def make_symlink(src, dst):
         os.symlink(src, dst)
         return True
     except Exception as e:
-        print(e)
+        # print(e)
         return False
 
 def lock(src, dst):
     while make_symlink(src, dst) is False:
-        print("!!!")
         continue
 
 
@@ -47,7 +46,7 @@ class MessagesHandler:
 
 
     def receive(self, data_file, lock_file):
-        data = None
+        data = ""
         # ----- file base -----
         lock(data_file, lock_file)
         try:

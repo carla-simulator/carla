@@ -227,7 +227,7 @@ class CAV:
         # )]])
         # p2.start()
         # p2.join()
-        # self.CPMs_handler.receive(self.sumo_actor_id)
+        self.CPMs_handler.receive(self.sumo_actor_id)
         t2 = time.time()
 
         perceived_object_container = self.Perceived_Object_Container(self.new_perceived_objects_with_pseudonym())
@@ -243,6 +243,8 @@ class CAV:
 
         t3 = time.time()
         print(f"Delay: {t3 - t2}, {t2 - t1}, {t1 - start}")
+
+        return 0
 
     def new_CPM(self):
         pass
@@ -370,6 +372,8 @@ class SimulationSynchronization(object):
         self.carlaid2vehicle_data = {}
         self.current_time = 0
         self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
+        self.cav_procs = []
+
 
     def sumoid_from_carlaid(self, carlaid):
         print(carlaid)
@@ -389,7 +393,13 @@ class SimulationSynchronization(object):
 
     def sumo_elapsed_seconds(self):
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
-        ##### End: My code #####
+
+    def cav_tick(self):
+        for cav in self.cavs:
+            cav.tick()
+
+        return 0
+    ##### End: My code #####
 
 
     def tick(self):
@@ -467,15 +477,22 @@ class SimulationSynchronization(object):
         # -----------------
         # carla-->sumo sync
         # -----------------
+
+        ##### Start: My code. #####
+        # for p in self.cav_procs:
+        #     p.join()
+        # self.cav_procs = []
+        ##### End: My code. #####
+
         self.carla.tick()
+
         ##### Start: My code. #####
         for cav in self.cavs:
             cav.tick()
 
-        procs = []
         # for cav in self.cavs:
-        #     procs.append(Process(target=cav.tick, args=()))
-        #     procs[-1].start()
+        #     self.cav_procs.append(Process(target=cav.tick, args=()))
+        #     self.cav_procs[-1].start()
 
         ##### End: My code. #####
 
@@ -528,9 +545,6 @@ class SimulationSynchronization(object):
                 # Updates all the sumo links related to this landmark.
                 self.sumo.synchronize_traffic_light(landmark_id, sumo_tl_state)
 
-
-        for p in procs:
-            p.join()
 
     def close(self):
         """
