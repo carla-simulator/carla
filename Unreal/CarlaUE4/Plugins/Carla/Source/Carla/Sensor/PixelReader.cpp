@@ -60,7 +60,7 @@ static void WritePixelsToBuffer_Vulkan(
 
   // NS: Extra copy here, don't know how to avoid it.
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("Read Surface");
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Read Surface");
     InRHICmdList.ReadSurfaceData(
         Texture,
         FIntRect(0, 0, Rect.X, Rect.Y),
@@ -68,7 +68,7 @@ static void WritePixelsToBuffer_Vulkan(
         FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
   }
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE_TEXT("Buffer Copy");
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
     Buffer.copy_from(Offset, gPixels);
   }
 }
