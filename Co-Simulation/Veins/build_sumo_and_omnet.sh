@@ -51,3 +51,7 @@ echo "cd ~/" >> ~/.bashrc
 sudo cp /vagrant/sshd_config /etc/ssh/
 echo "SUMO_HOME=/usr/local/share/sumo" >> ~/.ssh/environment
 sudo /etc/init.d/ssh restart
+
+# ----- valid cache for vagrant -----
+sudo apt-get install -y cachefilesd
+sudo echo "RUN=yes" > /etc/default/cachefilesd

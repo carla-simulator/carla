@@ -40,6 +40,7 @@ Vagrant.configure("2") do |config|
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
   config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.synced_folder '.', '/vagrant', nfs: true, mount_options: ['rw', 'vers=3', 'tcp', 'fsc'], linux__nfs_options: ['rw','no_subtree_check','all_squash','async']
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -101,6 +102,7 @@ Vagrant.configure("2") do |config|
     sudo apt-get upgrade -y
     sudo apt-get install ubuntu-desktop -y
     sudo apt-get install ubuntu-defaults-ja -y
+    sudo apt-get install gnome-system-monitor -y
 
     # タイムゾーンを日本時間に変更
     sudo timedatectl set-timezone Asia/Tokyo
