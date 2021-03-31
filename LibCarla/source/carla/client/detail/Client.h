@@ -221,7 +221,7 @@ namespace detail {
         bool enabled);
 
     void SetWheelSteerDirection(
-        rpc::ActorId vehicle, 
+        rpc::ActorId vehicle,
         rpc::VehicleWheelLocation vehicle_wheel,
         float angle_in_deg
     );
@@ -230,7 +230,7 @@ namespace detail {
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation wheel_location
     );
-    
+
     void EnableChronoPhysics(
         rpc::ActorId vehicle,
         uint64_t MaxSubsteps,
@@ -292,7 +292,8 @@ namespace detail {
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
-    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
+    std::string ReplayFile(std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors);
 
     void SetReplayerTimeFactor(double time_factor);
 

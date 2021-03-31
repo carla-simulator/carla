@@ -27,7 +27,8 @@ public:
       FVector Rotation,
       CarlaRecorderActorDescription Description,
       uint32_t DesiredId,
-      bool bIgnoreHero);
+      bool bIgnoreHero,
+      bool ReplaySensors);
 
   // replay event for removing actor
   bool ProcessReplayerEventDel(uint32_t DatabaseId);
@@ -75,7 +76,8 @@ private:
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
-    uint32_t DesiredId);
+    uint32_t DesiredId,
+    bool SpawnSensors);
 
   AActor *FindTrafficLightAt(FVector Location);
 

@@ -11,7 +11,7 @@
 #include <sstream>
 
 // structure to save replaying info when need to load a new map (static member by now)
-CarlaReplayer::PlayAfterLoadMap CarlaReplayer::Autoplay { false, "", "", 0.0, 0.0, 0, 1.0 };
+CarlaReplayer::PlayAfterLoadMap CarlaReplayer::Autoplay { false, "", "", 0.0, 0.0, 0, 1.0, false };
 
 void CarlaReplayer::Stop(bool bKeepActors)
 {
@@ -101,7 +101,8 @@ double CarlaReplayer::GetTotalTime(void)
   return Frame.Elapsed;
 }
 
-std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, double Duration, uint32_t ThisFollowId)
+std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, double Duration,
+    uint32_t ThisFollowId, bool ReplaySensors)
 {
   std::stringstream Info;
   std::string s;
@@ -149,6 +150,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
     Autoplay.Duration = Duration;
     Autoplay.FollowId = ThisFollowId;
     Autoplay.TimeFactor = TimeFactor;
+    Autoplay.ReplaySensors = ReplaySensors;
   }
 
   // get Total time of recorder
@@ -175,6 +177,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   // set the follow Id
   FollowId = ThisFollowId;
 
+  bReplaySensors = ReplaySensors;
   // if we don't need to load a new map, then start
   if (!Autoplay.Enabled)
   {
@@ -234,6 +237,8 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
 
   // set the follow Id
   FollowId = Autoplay.FollowId;
+
+  bReplaySensors = Autoplay.ReplaySensors;
 
   // apply time factor
   TimeFactor = Autoplay.TimeFactor;
@@ -401,7 +406,8 @@ void CarlaReplayer::ProcessEventsAdd(void)
         EventAdd.Rotation,
         EventAdd.Description,
         EventAdd.DatabaseId,
-        IgnoreHero);
+        IgnoreHero,
+        bReplaySensors);
 
     switch (Result.first)
     {

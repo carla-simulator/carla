@@ -190,7 +190,7 @@ void export_client() {
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))
     .def("show_recorder_collisions", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderCollisions, std::string, char, char), (arg("name"), arg("type1"), arg("type2")))
     .def("show_recorder_actors_blocked", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderActorsBlocked, std::string, double, double), (arg("name"), arg("min_time"), arg("min_distance")))
-    .def("replay_file", CALL_WITHOUT_GIL_4(cc::Client, ReplayFile, std::string, double, double, uint32_t), (arg("name"), arg("time_start"), arg("duration"), arg("follow_id")))
+    .def("replay_file", CALL_WITHOUT_GIL_5(cc::Client, ReplayFile, std::string, double, double, uint32_t, bool), (arg("name"), arg("time_start"), arg("duration"), arg("follow_id"), arg("replay_sensors")=false))
     .def("stop_replayer", &cc::Client::StopReplayer, (arg("keep_actors")))
     .def("set_replayer_time_factor", &cc::Client::SetReplayerTimeFactor, (arg("time_factor")))
     .def("set_replayer_ignore_hero", &cc::Client::SetReplayerIgnoreHero, (arg("ignore_hero")))
