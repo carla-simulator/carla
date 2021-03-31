@@ -1447,14 +1447,16 @@ void FCarlaServer::FPimpl::BindActions()
       std::string name,
       double start,
       double duration,
-      uint32_t follow_id) -> R<std::string>
+      uint32_t follow_id,
+      bool replay_sensors) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
         name,
         start,
         duration,
-        follow_id));
+        follow_id,
+        replay_sensors));
   };
 
   BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>

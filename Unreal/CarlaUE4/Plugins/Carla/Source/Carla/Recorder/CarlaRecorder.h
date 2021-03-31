@@ -147,7 +147,8 @@ public:
   std::string ShowFileActorsBlocked(std::string Name, double MinTime = 30, double MinDistance = 10);
 
   // replayer
-  std::string ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId);
+  std::string ReplayFile(std::string Name, double TimeStart, double Duration,
+      uint32_t FollowId, bool ReplaySensors);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
   void StopReplayer(bool KeepActors = false);
