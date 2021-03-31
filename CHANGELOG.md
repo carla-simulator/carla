@@ -3,6 +3,7 @@
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
+  * Enabling the **no_delay** option to RPC and stream sockets
   * Improved performance bencharmark script: sync, map and sensor selection, ...
   * Improved performance, destroyed PhysX state for vehicles when physics are disable
   * Added 'visualize_multiple_sensors' example
