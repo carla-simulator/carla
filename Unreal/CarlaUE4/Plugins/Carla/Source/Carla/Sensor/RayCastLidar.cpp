@@ -93,41 +93,41 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   return Detection;
 }
 
-  void ARayCastLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
-    Super::PreprocessRays(Channels, MaxPointsPerChannel);
+void ARayCastLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+  Super::PreprocessRays(Channels, MaxPointsPerChannel);
 
-    for (auto ch = 0u; ch < Channels; ch++) {
-      for (auto p = 0u; p < MaxPointsPerChannel; p++) {
-        RayPreprocessCondition[ch][p] = !(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate);
-      }
+  for (auto ch = 0u; ch < Channels; ch++) {
+    for (auto p = 0u; p < MaxPointsPerChannel; p++) {
+      RayPreprocessCondition[ch][p] = !(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate);
     }
   }
+}
 
-  bool ARayCastLidar::PostprocessDetection(FDetection& Detection) const
-  {
-    if (Description.NoiseStdDev > std::numeric_limits<float>::epsilon()) {
-      const auto ForwardVector = Detection.point.MakeUnitVector();
-      const auto Noise = ForwardVector * RandomEngine->GetNormalDistribution(0.0f, Description.NoiseStdDev);
-      Detection.point += Noise;
-    }
-
-    const float Intensity = Detection.intensity;
-    if(Intensity > Description.DropOffIntensityLimit)
-      return true;
-    else
-      return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
+bool ARayCastLidar::PostprocessDetection(FDetection& Detection) const
+{
+  if (Description.NoiseStdDev > std::numeric_limits<float>::epsilon()) {
+    const auto ForwardVector = Detection.point.MakeUnitVector();
+    const auto Noise = ForwardVector * RandomEngine->GetNormalDistribution(0.0f, Description.NoiseStdDev);
+    Detection.point += Noise;
   }
 
-  void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-    for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
-      PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-    LidarData.ResetSerPoints(PointsPerChannel);
+  const float Intensity = Detection.intensity;
+  if(Intensity > Description.DropOffIntensityLimit)
+    return true;
+  else
+    return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
+}
 
-    for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
-      for (auto& hit : RecordedHits[idxChannel]) {
-        FDetection Detection = ComputeDetection(hit, SensorTransform);
-        if (PostprocessDetection(Detection))
-          LidarData.WritePointSync(Detection);
-      }
+void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
+    PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
+  LidarData.ResetSerPoints(PointsPerChannel);
+
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
+    for (auto& hit : RecordedHits[idxChannel]) {
+      FDetection Detection = ComputeDetection(hit, SensorTransform);
+      if (PostprocessDetection(Detection))
+        LidarData.WritePointSync(Detection);
     }
   }
+}
