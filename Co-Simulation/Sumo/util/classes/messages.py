@@ -206,12 +206,11 @@ class CPMsHandler(MessagesHandler):
                     delta_t = detected_object.time - sent_perceived_object.time
 
                     delta_s_x = detected_object.speed.x - sent_perceived_object.speed.x
-                    delta_s_y = detected_object.speed.x - sent_perceived_object.speed.x
-                    delta_s_z = detected_object.speed.x - sent_perceived_object.speed.x
-                    delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y * delta_s_z * delta_s_z)
+                    delta_s_y = detected_object.speed.y - sent_perceived_object.speed.y
+                    delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y)
 
                     delta_p_x = detected_object.location.x - detected_object.location.x
-                    delta_p_y = detected_object.location.x - detected_object.location.x
+                    delta_p_y = detected_object.location.y - detected_object.location.y
                     delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
 
                 if is_already_sent:

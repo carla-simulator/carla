@@ -202,34 +202,13 @@ class CAV:
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
     def tick(self):
-        start = time.time()
-        t1 = start
-        t2 = start
-        t3 = start
-
         # ----- update vehicle data -----
         self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].tick(self.sumo_elapsed_seconds(), self.carla_actor)
 
         # ----- update perceived_objects -----
-        t1 = time.time()
-
-        # p1 = Process(target=self.CPMs_handler.receive, args=[self.sumo_actor_id])
-        # p1.start()
-        # p1.join()
-        #
-        # p2 = Process(target=self.CPMs_handler.send, args=[self.sumo_actor_id, [CPM(
-        #     self.sumo_elapsed_seconds(),
-        #     self.ITS_PDU_Header(),
-        #     self.Management_Container(),
-        #     self.Station_Data_Container(),
-        #     self.Sensor_Information_Container(),
-        #     self.Perceived_Object_Container()
-        # )]])
-        # p2.start()
-        # p2.join()
         self.CPMs_handler.receive(self.sumo_actor_id)
-        t2 = time.time()
 
+        # ----- send perceived objects -----
         perceived_object_container = self.Perceived_Object_Container(self.new_perceived_objects_with_pseudonym())
         if 1 <= len(perceived_object_container):
             self.CPMs_handler.send(self.sumo_actor_id, CPM(
@@ -240,11 +219,6 @@ class CAV:
                 self.Sensor_Information_Container(),
                 perceived_object_container
             ))
-
-        t3 = time.time()
-        print(f"Delay: {t3 - t2}, {t2 - t1}, {t1 - start}")
-
-        return 0
 
     def new_CPM(self):
         pass
@@ -295,9 +269,9 @@ class CAVWithObstacleSensors(CAV):
 
     def load_sensors(self):
         # 360 sensor
-        rads_360 = self.rads(CAV.TARGET_ROAD_WIDTH, 360.0)
-        rads_front = self.rads(CAV.TARGET_ROAD_LENGTH, 2 * math.degrees(math.atan(float(CAV.TARGET_ROAD_WIDTH) / float(CAV.TARGET_ROAD_LENGTH))))
-        rads_back = self.rads(CAV.TARGET_ROAD_LENGTH, 2 * math.degrees(math.atan(float(CAV.TARGET_ROAD_WIDTH) / float(CAV.TARGET_ROAD_LENGTH))), 180)
+        rads_360 = self.rads(Constants.SENSOR_RANGE_360, Constants.SENSOR_DEGREE_360)
+        rads_front = self.rads(Constants.SENSOR_RANGE_FRONT, Constants.SENSOR_DEGREE_FRONT)
+        rads_back = self.rads(Constants.SENSOR_RANGE_BACK, Constants.SENSOR_DEGREE_BACK, 180)
 
         for z_rad in rads_360:
             sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
@@ -367,7 +341,7 @@ class SimulationSynchronization(object):
         self.carla.world.apply_settings(settings)
 
         ##### Begin: My code #####
-        self.cavs = []
+        self.sumoid2cav = {}
         self.sumoid2sensors = {}
         self.carlaid2vehicle_data = {}
         self.current_time = 0
@@ -395,7 +369,7 @@ class SimulationSynchronization(object):
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
     def cav_tick(self):
-        for cav in self.cavs:
+        for cav in self.sumoid2cav.values():
             cav.tick()
 
         return 0
@@ -429,7 +403,7 @@ class SimulationSynchronization(object):
                 carla_actor_id = self.carla.spawn_actor(carla_blueprint, carla_transform)
 
                 ##### Begin: My code #####
-                self.cavs.append(CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self))
+                self.sumoid2cav[sumo_actor_id] = CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
                 ##### End: My code #####
 
                 if carla_actor_id != INVALID_ACTOR_ID:
@@ -443,6 +417,12 @@ class SimulationSynchronization(object):
         for sumo_actor_id in self.sumo.destroyed_actors:
             if sumo_actor_id in self.sumo2carla_ids:
                 self.carla.destroy_actor(self.sumo2carla_ids.pop(sumo_actor_id))
+
+                ##### Begin: My code #####
+                del self.sumoid2cav[sumo_actor_id]
+                ##### End: My code #####
+
+
 
         # Updating sumo actors in carla.
         for sumo_actor_id in self.sumo2carla_ids:
@@ -487,13 +467,8 @@ class SimulationSynchronization(object):
         self.carla.tick()
 
         ##### Start: My code. #####
-        for cav in self.cavs:
+        for cav in self.sumoid2cav.values():
             cav.tick()
-
-        # for cav in self.cavs:
-        #     self.cav_procs.append(Process(target=cav.tick, args=()))
-        #     self.cav_procs[-1].start()
-
         ##### End: My code. #####
 
         # Spawning new carla actors (not controlled by sumo)

@@ -1,3 +1,5 @@
+import math
+
 class Constants:
 
     CPM_DELTA_T = 1
@@ -15,8 +17,8 @@ class Constants:
     VEHICLE_WIDTH = 1.8
     VEHICLE_LENGTH = 5.0
     """
-    TARGET_ROAD_WIDTH: 3.2 (m) * 3 (lanes)
-    cite from:  https://sumo.dlr.de/docs/Simulation/SublaneModel.html#:~:text=The%20default%20lane%2Dwidth%20of,of%20that%20width%20per%20lane.
+    TARGET_ROAD_WIDTH: 65 (m)
+    cite from: https://sumo.dlr.de/docs/Simulation/SublaneModel.html#:~:text=The%20default%20lane%2Dwidth%20of,of%20that%20width%20per%20lane.
 
     TARGET_ROAD_LENGTH: 150 (m)
     cite from: ETSI. (2019). Intelligent Transport Systems (ITS); Vehicular Communications; Basic Set of Applications; Analysis of the Collective Perception Service (CPS). Draft TR 103 562 V0.0.16, 1, 1–119.
@@ -29,3 +31,16 @@ class Constants:
     VALID_TIME_DELTA = 8
     LOCATION_THRESHOLD = max([VEHICLE_WIDTH, VEHICLE_LENGTH])
     SENSOR_TICK = 0.1
+
+    SENSOR_RANGE_360 = max([TARGET_ROAD_WIDTH, 65])
+    SENSOR_DEGREE_360 = 360.0
+    """
+    SENSOR_RANGE_360: 65 (m)
+    cite from: ETSI. (2019). Intelligent Transport Systems (ITS); Vehicular Communications; Basic Set of Applications; Analysis of the Collective Perception Service (CPS). Draft TR 103 562 V0.0.16, 1, 1–119.
+    """
+
+    SENSOR_RANGE_FRONT = TARGET_ROAD_LENGTH
+    SENSOR_DEGREE_FRONT = 2 * math.degrees(math.atan(float(TARGET_ROAD_WIDTH) / float(TARGET_ROAD_LENGTH)))
+
+    SENSOR_RANGE_BACK = TARGET_ROAD_LENGTH
+    SENSOR_DEGREE_BACK = 2 * math.degrees(math.atan(float(TARGET_ROAD_WIDTH) / float(TARGET_ROAD_LENGTH)))
