@@ -469,7 +469,7 @@ void FCarlaServer::FPimpl::BindActions()
         // Get Fake View from Registry forcing it to update its ID_COUNTER
         FActorView ActorView = Episode->PrepareActorViewForFutureActor(Description);
         // Add State to LM
-        LargeMap->AddActor(ActorView, Transform);
+        LargeMap->AddActorToUnloadedList(ActorView, Transform);
       }
 
       RESPOND_ERROR("internal error: actor could not be spawned");
