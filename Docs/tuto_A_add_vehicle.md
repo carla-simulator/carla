@@ -135,6 +135,7 @@ __3. Set the Collision mesh.__
 - Select all the wheels:
     - Go to the **_Tools_** panel and change the **_Primitive Type_** to `Sphere`.
     - Go to the **_Details_** panel and change **_Physics Type_** to `Kinematic`.
+- Enable **_Simulation Generates Hit Event_** for all meshes.
 - Click **_Re-generate Bodies_**.
 - Adjust the wheel sphere to the size of the wheel.
 - Save and close the window.
