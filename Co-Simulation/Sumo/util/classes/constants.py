@@ -1,7 +1,6 @@
 import math
 
 class Constants:
-
     CPM_DELTA_T = 1
     CPM_DELTA_S = 0.5
     CPM_DELTA_P = 4

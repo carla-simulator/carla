@@ -231,10 +231,11 @@ class CAV:
 
     def Station_Data_Container(self):
         location = self.carla_actor.get_transform().location
-        speed = self.carla_actor.get_velocity()
+        speed = self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].latest()["speed"]
 
         data = {
-            "location" : [location.x, location.y, location.z],
+            "sumo_id": self.sumo_actor_id,
+            "location" : [location.x, location.y],
             "speed" : [speed.x, speed.y, speed.z]
         }
 
@@ -350,9 +351,6 @@ class SimulationSynchronization(object):
 
 
     def sumoid_from_carlaid(self, carlaid):
-        print(carlaid)
-        print(self.carla2sumo_ids)
-        print(self.sumo2carla_ids)
         if carlaid in self.carla2sumo_ids.keys():
             return self.carla2sumo_ids[carlaid]
         else:

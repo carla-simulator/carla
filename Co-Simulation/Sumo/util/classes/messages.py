@@ -3,6 +3,7 @@ import json
 import os
 import socket
 
+from functools import reduce
 from util.classes.perceived_objects import PerceivedObject
 
 def unlock(dst):
@@ -46,7 +47,7 @@ class MessagesHandler:
 
 
     def receive(self, data_file, lock_file):
-        data = ""
+        data = []
         # ----- file base -----
         lock(data_file, lock_file)
         try:
@@ -180,7 +181,9 @@ class CPMsHandler(MessagesHandler):
         # self.received_messages = self.received_messages + [CPM(**d) for d in data]
 
         # ----- file base -----
-        return super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
+        data = super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
+        dict_data = [json.loads(d) for d in data]
+        self.received_messages = self.received_messages + [CPM(**d) for d in dict_data]
 
     def send(self, sumo_id, cpm):
         # ----- socket base -----
@@ -190,33 +193,43 @@ class CPMsHandler(MessagesHandler):
         # self.reserved_messages = self.reserved_messages + CPMs_list
 
         # ----- file base -----
+        self.reserved_messages = self.reserved_messages + [cpm]
         super().send(self.sensor_data_file_path(sumo_id), self.sensor_lock_file_path(sumo_id), json.dumps(cpm.dict_format()))
+
+    def similar_reserved_perceived_object(self, new_time, new_pseudonym):
+        srpo = None
+        diff_time = float('inf')
+
+        for reserved_message in self.reserved_messages:
+            for reserved_perceived_object in reserved_message.perceived_objects():
+                if str(new_pseudonym) == str(reserved_perceived_object.pseudonym) and math.fabs(new_time - reserved_perceived_object.time) < diff_time:
+                    srpo = reserved_perceived_object
+                    diff_time = math.fabs(new_time - reserved_perceived_object.time)
+                else:
+                    continue
+
+        return srpo
+
 
     def is_already_sent(self, detected_object):
         is_already_sent = False
-        delta_t = None
-        delta_s = None
-        delta_p = None
+        delta_t = 0
+        delta_s = 0
+        delta_p = 0
 
-        for reserved_message in self.reserved_messages:
-            for sent_perceived_object in reserved_message.perceived_objects():
-                if str(detected_object.pseudonym) == str(sent_perceived_object.pseudonym):
-                    is_already_sent = True
+        sent_perceived_object = self.similar_reserved_perceived_object(detected_object.time, detected_object.pseudonym)
 
-                    delta_t = detected_object.time - sent_perceived_object.time
+        if sent_perceived_object is not None:
+            is_already_sent = True
 
-                    delta_s_x = detected_object.speed.x - sent_perceived_object.speed.x
-                    delta_s_y = detected_object.speed.y - sent_perceived_object.speed.y
-                    delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y)
+            delta_t = detected_object.time - sent_perceived_object.time
 
-                    delta_p_x = detected_object.location.x - detected_object.location.x
-                    delta_p_y = detected_object.location.y - detected_object.location.y
-                    delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
+            delta_s_x = detected_object.speed.x - sent_perceived_object.speed.x
+            delta_s_y = detected_object.speed.y - sent_perceived_object.speed.y
+            delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y)
 
-                if is_already_sent:
-                    break
-
-            if is_already_sent:
-                break
+            delta_p_x = detected_object.location.x - detected_object.location.x
+            delta_p_y = detected_object.location.y - detected_object.location.y
+            delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
 
         return is_already_sent, delta_t, delta_s, delta_p
