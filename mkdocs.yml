@@ -61,7 +61,6 @@ nav:
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
   - 'Map customization tools': 'tuto_A_map_customization.md'
   - "Material customization": 'tuto_A_material_customization.md'
-  - 'Vehicle modelling': 'tuto_A_vehicle_modelling.md'
 - Tutorials (developers):
   - 'Contribute assets': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'
