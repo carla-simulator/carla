@@ -7,9 +7,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-#include "Engine/LevelStreamingDynamic.h"
-
-#include "Math/DVector.h"
+#include "LargeMapTileManager.h"
+#include "LargeMapActorManager.h"
 
 #include "LargeMapManager.generated.h"
 
@@ -93,30 +92,29 @@ class CARLA_API ALargeMapManager : public AActor
   GENERATED_BODY()
 
 public:
-  // Sets default values for this actor's properties
   ALargeMapManager();
 
   ~ALargeMapManager();
 
 protected:
-  // Called when the game starts or when spawned
   virtual void BeginPlay() override;
 
   void PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin);
 
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
 public:
+
   void OnActorSpawned(const FActorView& ActorView);
 
-  // Called every frame
   virtual void Tick(float DeltaTime) override;
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  void GenerateMap(FString InAssetsPath);
+  void GenerateMap(const FString& InAssetsPath);
 
-  void AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform);
+  void AddActor(const FActorView& ActorView, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void AddActorToConsider(AActor* InActor);
@@ -124,124 +122,33 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void RemoveActorToConsider(AActor* InActor);
 
-  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  FIntVector GetNumTilesInXY() const;
+  void EvaluatePossibleRebase();
 
-  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  bool IsLevelOfTileLoaded(FIntVector InTileID) const;
+private:
 
-  // TODO: IsTileLoaded(FDVector Location)
-  // TODO: IsTileLoaded(FVector Location)
+  TArray<FDVector> ActorsLocation;
 
-protected:
+  // Components
+  ULargeMapTileManager* TileManager = nullptr;
 
-  FIntVector GetTileVectorID(FVector TileLocation) const;
-
-  FIntVector GetTileVectorID(FDVector TileLocation) const;
-
-  FIntVector GetTileVectorID(uint64 TileID) const;
-
-  /// From a given location it retrieves the TileID that covers that area
-  uint64 GetTileID(FVector TileLocation) const;
-
-  uint64 GetTileID(FIntVector TileVectorID) const;
-
-  FCarlaMapTile& GetCarlaMapTile(FVector Location);
-
-  FCarlaMapTile& GetCarlaMapTile(ULevel* InLevel);
-
-  FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
-
-  ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
-
-  void UpdateActorsToConsiderPosition();
-
-  void UpdateTilesState();
-
-  void GetTilesToConsider(
-    const FActorToConsider& ActorToConsider,
-    TSet<uint64>& OutTilesToConsider);
-
-  void GetTilesThatNeedToChangeState(
-    const TSet<uint64>& InTilesToConsider,
-    TSet<uint64>& OutTilesToBeVisible,
-    TSet<uint64>& OutTilesToHidde);
-
-  void UpdateTileState(
-    const TSet<uint64>& InTilesToUpdate,
-    bool InShouldBlockOnLoad,
-    bool InShouldBeLoaded,
-    bool InShouldBeVisible);
-
-  void UpdateCurrentTilesLoaded(
-    const TSet<uint64>& InTilesToBeVisible,
-    const TSet<uint64>& InTilesToHidde);
-
-  void SpawnAssetsInTile(FCarlaMapTile& Tile);
-
-
-  TMap<uint64, FCarlaMapTile> MapTiles;
-
-  TMap<uint32, FGhostActor> GhostActors;
-
-  TArray<FActorToConsider> ActorsToConsider;
-
-  TSet<uint64> CurrentTilesLoaded;
+  ULargeMapActorManager* ActorManager = nullptr;
 
   // Current Origin after rebase
   FIntVector CurrentOriginInt{ 0 };
   FDVector CurrentOriginD;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float TickInterval = 0.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float LayerStreamingDistance = 3.0f * 1000.0f * 100.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float TileSide = 2.0f * 1000.0f * 100.0f; // 2km
-
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  bool ShouldTilesBlockOnLoad = false;
+  float TickInterval = 0.0f;
 
 #if WITH_EDITOR
-
-  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
-    void GenerateMap_Editor()
-  {
-    if (!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
-  }
-
-  FString GenerateTileName(uint64 TileID);
-
-  void DumpTilesTable() const;
 
   void PrintMapInfo();
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  FString AssetsPath = "";
-
-  FString BaseTileMapPath = "/Game/Carla/Maps/LargeMap/EmptyTileBase";
-
-  FColor PositonMsgColor = FColor::Purple;
-
-  const int32 TilesDistMsgIndex = 100;
-  const int32 MaxTilesDistMsgIndex = TilesDistMsgIndex + 10;
-
-  const int32 ClientLocMsgIndex = 200;
-  const int32 MaxClientLocMsgIndex = ClientLocMsgIndex + 10;
-
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  float MsgTime = 1.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool bPrintMapInfo = true;
-
-  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
-  bool bPrintErrors = false;
 
 #endif // WITH_EDITOR
 
