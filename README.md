@@ -126,22 +126,26 @@ __CARLA Talks 2020 (May):__
 Licenses
 -------
 
-###### CARLA licenses
+#### CARLA licenses
 
 CARLA specific code is distributed under MIT License.
 
 CARLA specific assets are distributed under CC-BY License.
 
-###### CARLA Dependency and Integration licenses
+#### CARLA Dependency and Integration licenses
 
-The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/adv_rss.md) introduces LGPL-2.1-only License.
+The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/adv_rss.md) introduces [LGPL-2.1-only License](https://opensource.org/licenses/LGPL-2.1).
 
 Unreal Engine 4 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
 
-CARLA uses [PROJ](https://proj.org/), a generic coordinate transformation software which uses the [X/MIT open source license](https://proj.org/about.html#license).
+CARLA uses three dependencies as part of the SUMO integration:
+- [PROJ](https://proj.org/), a generic coordinate transformation software which uses the [X/MIT open source license](https://proj.org/about.html#license).
+- [SQLite](https://www.sqlite.org), part of the PROJ dependencies, which is [in the public domain](https://www.sqlite.org/purchase/license).
+- [Xerces-C](https://xerces.apache.org/xerces-c/), a validating XML parser, which is made available under the [Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-CARLA includes a SQLite dependency for CARLA's Python API which you can check here: https://www.sqlite.org/purchase/license
+CARLA uses one dependency as part of the Chrono integration:
+- [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page), a C++ template library for linear algebra which uses the [MPL2 license](https://www.mozilla.org/en-US/MPL/2.0/).
 
-CARLA uses the Autodesk FBX SDK for converting FBX to OBJ in the import process of maps. This step is optional, and the SDK is located here: https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0
+CARLA uses the Autodesk FBX SDK for converting FBX to OBJ in the import process of maps. This step is optional, and the SDK is located [here](https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0)
 
 This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2020 Autodesk, Inc. All rights, reserved. Such code is provided "as is" and Autodesk, Inc. disclaims any and all warranties, whether express or implied, including without limitation the implied warranties of merchantability, fitness for a particular purpose or non-infringement of third party rights. In no event shall Autodesk, Inc. be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of such code."
