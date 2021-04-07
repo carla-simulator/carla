@@ -144,6 +144,7 @@ void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControl &Walke
 
 void AWalkerController::Tick(float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AWalkerController::Tick);
   Super::Tick(DeltaSeconds);
   AWalkerController::ControlTickVisitor ControlTickVisitor(this);
   boost::apply_visitor(ControlTickVisitor, Control);

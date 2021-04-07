@@ -106,6 +106,9 @@ namespace tcp {
           if (_done) {
             return;
           }
+          // This forces not using Nagle's algorithm.
+          // Improves the sync mode velocity on Linux by a factor of ~3.
+          _socket.set_option(boost::asio::ip::tcp::no_delay(true));
           log_debug("streaming client: connected to", ep);
           // Send the stream id to subscribe to the stream.
           const auto &stream_id = _token.get_stream_id();

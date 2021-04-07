@@ -233,6 +233,7 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
       ELevelTick TickType,
       FActorComponentTickFunction* ThisTickFunction)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(UChronoMovementComponent::TickComponent);
   if (DeltaTime > MaxSubstepDeltaTime)
   {
     uint64_t NumberSubSteps =

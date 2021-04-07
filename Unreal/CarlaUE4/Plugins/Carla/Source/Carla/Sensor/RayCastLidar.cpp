@@ -56,10 +56,14 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
 
 void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastLidar::PostPhysTick);
   SimulateLidar(DeltaTime);
 
-  auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
+    auto DataStream = GetDataStream(*this);
+    DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
+  }
 }
 
 float ARayCastLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const

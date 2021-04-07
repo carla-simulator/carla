@@ -76,7 +76,7 @@ CARLA forum</a>
 [__Retrieve simulation data__](tuto_G_retrieve_data.md) — A step by step guide to properly gather data using the recorder.  
 
 ## Tutorials — Assets
-[__Add a new map__](tuto_A_add_map.md) — Create and ingest a new map.  
+[__Add a new map__](tuto_A_add_map_overview.md) — Create and ingest a new map.  
 [__Add a new vehicle__](tuto_A_add_vehicle.md) — Prepare a vehicle to be used in CARLA.  
 [__Add new props__](tuto_A_add_props.md) — Import additional props into CARLA.  
 [__Create standalone packages__](tuto_A_create_standalone.md) — Generate and handle standalone packages for assets.  

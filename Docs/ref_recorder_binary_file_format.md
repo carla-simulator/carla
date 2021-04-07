@@ -177,7 +177,7 @@ This packet records the position and orientation of all actors of type **vehicle
 This packet records the state of all **traffic lights** in the scene. Which means that it
 stores the state (red, orange or green) and the time it is waiting to change to a new state.
 
-![state](img/RecorderTrafficLight.jpg)
+![state](img/RecorderTrafficLight.png)
 
 ### Packet 8 - Vehicle animation
 
