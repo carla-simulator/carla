@@ -56,6 +56,7 @@ nav:
   - 'CarSim Integration (Beta)': "tuto_G_carsim_integration.md"
   - 'RLlib Integration': "tuto_G_rllib_integration.md"
   - 'Scenic': 'tuto_G_scenic.md'
+  - 'Chrono Integration': 'tuto_G_chrono.md'
 - Tutorials (assets):
   - 'Add a new map': 'tuto_A_add_map_overview.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
