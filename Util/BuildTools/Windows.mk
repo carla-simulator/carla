@@ -81,4 +81,4 @@ deploy:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Deploy.bat" $(ARGS)
 
 osm2odr:
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat" --build
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.bat" --build $(ARGS)
