@@ -41,6 +41,7 @@ In this section you will find details of system requirements, minor and major so
 * [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files.  
 * [__Git__](https://git-scm.com/downloads) is a version control system to manage CARLA repositories.  
 * [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables. It is necessary to use __Make version 3.81__, otherwise the build may fail. If you have multiple versions of Make installed, check that you are using version 3.81 in your PATH when building CARLA. You can check your default version of Make by running `make --version`.
+* [__7Zip__](https://www.7-zip.org/) is a file compression software. This is required for automatic decompression of asset files and prevents errors during build time due to large files being extracted incorrectly or partially.
 * [__Python3 x64__](https://www.python.org/downloads/) is the main scripting language in CARLA. Having a x32 version installed may cause conflict, so it is highly advisable to have it uninstalled.
 
 !!! Important
@@ -56,7 +57,7 @@ Run the following command to install the dependencies for the Python API client:
 
 Get the 2017 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2017-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
 
-* __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.  
+* __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.
 * __x64 Visual C++ Toolset.__ In the _Workloads_ section, choose __Desktop development with C++__. This will enable a x64 command prompt that will be used for the build. Check that it has been installed correctly by pressing the `Windows` button and searching for `x64`. Be careful __not to open a `x86_x64` prompt__.  
 * __.NET framework 4.6.2__. In the _Workloads_ section, choose __.NET desktop development__ and then in the _Installation details_ panel on the right, select `.NET Framework 4.6.2 development tools`. This is required to build Unreal Engine. 
 
@@ -132,7 +133,7 @@ Download the __latest__ assets to work with the current version of CARLA by runn
     Update.bat
 ```
 
-The assets will be downloaded and extracted to the appropriate location.
+The assets will be downloaded and extracted to the appropriate location if have 7zip installed. If you do not have this software installed, you will need to manually extract the file contents to `Unreal\CarlaUE4\Content\Carla`.
 
 To download the assets for a __specific version__ of CARLA:
 
