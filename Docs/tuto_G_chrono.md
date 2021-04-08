@@ -44,7 +44,7 @@ make launch ARGS="--chrono"
 
 ### Enabling Chrono physics
 
-Chrono physics is enabled using the `enable_chrono_physics` method available through the Actor class. As well as values for substeps and substep delta time, it requires three template files and a base path to locate those files:
+Chrono physics is enabled using the `enable_chrono_physics` method available through the [Actor](python_api.md#carlaactor) class. As well as values for substeps and substep delta time, it requires three template files and a base path to locate those files:
 
 - __`base_path`:__ Path of the directory which contains the template files. This is necessary to ensure that auxiliary files referenced from the template files have a common base path from which to search.
 - __`vehicle_json`:__ Path of the vehicle template file relative to the `base_path`.

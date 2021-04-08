@@ -111,7 +111,7 @@
         - param_name: base_json_path
           type: str
           doc: >
-            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final / character is required).
+            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).
       doc: >
         Enables Chrono physics on a spawned vehicle.
       note: >

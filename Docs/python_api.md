@@ -50,7 +50,7 @@ Enables Chrono physics on a spawned vehicle.
         - `vehicle_json` (_str_) – Path to vehicle json file relative to `base_json_path`.  
         - `powertrain_json` (_str_) – Path to powertrain json file relative to `base_json_path`.  
         - `tire_json` (_str_) – Path to tire json file relative to `base_json_path`.  
-        - `base_json_path` (_str_) – Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final / character is required).  
+        - `base_json_path` (_str_) – Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).  
     - **Note:** <font color="#8E8E8E">_Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
 _</font>  
     - **Warning:** <font color="#ED2F2F">_Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
