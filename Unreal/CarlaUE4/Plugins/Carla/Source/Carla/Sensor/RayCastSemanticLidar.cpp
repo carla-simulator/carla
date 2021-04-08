@@ -160,7 +160,7 @@ void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detect
 void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
   for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
     PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-  SemanticLidarData.ResetSerPoints(PointsPerChannel);
+  SemanticLidarData.ResetMemory(PointsPerChannel);
 
   for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
     for (auto& hit : RecordedHits[idxChannel]) {
@@ -169,6 +169,8 @@ void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTra
       SemanticLidarData.WritePointSync(detection);
     }
   }
+
+  SemanticLidarData.WriteChannelCount(PointsPerChannel);
 }
 
 void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FSemanticDetection& Detection) const
