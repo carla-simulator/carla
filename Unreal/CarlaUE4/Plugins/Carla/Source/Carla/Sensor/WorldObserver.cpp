@@ -185,7 +185,7 @@ static carla::Buffer FWorldObserver_Serialize(
   using ActorDynamicState = carla::sensor::data::ActorDynamicState;
 
 
-  const auto &Registry = Episode.GetActorRegistry();
+  const FActorRegistry &Registry = Episode.GetActorRegistry();
 
   auto total_size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
   auto current_size = 0;
@@ -223,6 +223,7 @@ static carla::Buffer FWorldObserver_Serialize(
 
     ActorDynamicState info = {
       View.GetActorId(),
+      View.GetActorState(),
       View.GetActor()->GetActorTransform(),
       carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
       FWorldObserver_GetAngularVelocity(*View.GetActor()),
@@ -248,7 +249,7 @@ void FWorldObserver::BroadcastTick(
 {
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
-  auto buffer = FWorldObserver_Serialize(
+  carla::Buffer buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
       Episode,
       DeltaSecond,

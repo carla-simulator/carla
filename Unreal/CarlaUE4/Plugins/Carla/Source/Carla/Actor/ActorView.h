@@ -8,6 +8,8 @@
 
 #include "Carla/Actor/ActorInfo.h"
 
+#include "carla/rpc/ActorState.h"
+
 class AActor;
 
 /// A view over an actor and its properties.
@@ -61,20 +63,28 @@ public:
     return Info.Get();
   }
 
+  carla::rpc::ActorState GetActorState() const
+  {
+    return State;
+  }
+
 private:
 
   friend class FActorRegistry;
 
   FActorView(IdType ActorId, AActor* Actor, TSharedPtr<const FActorInfo> Info)
-    : Id(ActorId),
-      TheActor(Actor),
-      Info(std::move(Info)) {}
-
-  IdType Id = 0u;
-
-  ActorType Type = ActorType::Other;
+    : TheActor(Actor),
+      Info(std::move(Info)),
+      Id(ActorId) {}
 
   AActor *TheActor = nullptr;
 
   TSharedPtr<const FActorInfo> Info = nullptr;
+
+  IdType Id = 0u;
+
+  carla::rpc::ActorState State = carla::rpc::ActorState::Alive;
+
+  ActorType Type = ActorType::Other;
+
 };

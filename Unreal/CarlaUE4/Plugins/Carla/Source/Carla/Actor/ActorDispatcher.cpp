@@ -53,7 +53,7 @@ TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
   UE_LOG(LogCarla, Log, TEXT("Spawning actor '%s'"), *Description.Id);
 
   Description.Class = Classes[Description.UId - 1];
-  auto Result = SpawnFunctions[Description.UId - 1](Transform, Description);
+  FActorSpawnResult Result = SpawnFunctions[Description.UId - 1](Transform, Description);
 
   if ((Result.Status == EActorSpawnResultStatus::Success) && (Result.Actor == nullptr))
   {

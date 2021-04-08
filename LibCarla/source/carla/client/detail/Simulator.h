@@ -337,6 +337,10 @@ namespace detail {
       return GetActorSnapshot(actor.GetId());
     }
 
+    rpc::ActorState GetActorState(const Actor &actor) const {
+      return GetActorSnapshot(actor).actor_state;
+    }
+
     geom::Location GetActorLocation(const Actor &actor) const {
       return GetActorSnapshot(actor).transform.location;
     }
