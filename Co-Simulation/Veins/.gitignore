@@ -1,2 +1,5 @@
 .vagrant
 *.log
+
+veins_results/*
+!veins_results/.gitkeep

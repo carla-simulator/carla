@@ -108,6 +108,12 @@ def speed(actor, abs_speed):
     return Speed(x, y)
 
 class VehicleData:
+    """
+    This class is essential for obtaining veihicle data such as location and speed of vehicles.
+    In Co-simulation of Carla and SUMO, we cannot obtain vehicle speeds from Carla.
+    Specifically, Carla always returns [0, 0, 0] as vehicle speed.
+    """
+
     def __init__(self, time, actor):
         self.data = []
         self.tick(time, actor)
@@ -293,12 +299,19 @@ class CAVWithObstacleSensors(CAV):
         if "static" in data.actor.type_id:
             return
 
-        self.sensor_data_handler.save(ObstacleSensorData(
-            data,
-            self.sumo_elapsed_seconds(),
-            location(data.actor, data.distance),
-            self.sim_synchronization.carlaid2vehicle_data[data.other_actor.id].latest()["speed"]
-        ))
+        try:
+            self.sensor_data_handler.save(ObstacleSensorData(
+                data,
+                self.sumo_elapsed_seconds(),
+                location(data.actor, data.distance),
+                self.sim_synchronization.carlaid2vehicle_data[data.other_actor.id].latest()["speed"]
+            ))
+        except KeyError as e:
+            if str(data.other_actor.id) == '0':
+                pass
+            else:
+                raise KeyError(e)
+
 ##### End: My code. #####
 
 
