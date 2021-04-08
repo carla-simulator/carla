@@ -86,6 +86,39 @@
       doc: >
         Disables any constant velocity previously set for a carla.Vehicle actor.  
     # --------------------------------------
+    - def_name: enable_chrono_physics
+      params:
+        - param_name: max_substeps
+          type: int
+          doc: >
+            Max number of Chrono substeps
+        - param_name: max_substep_delta_time
+          type: int
+          doc: >
+            Max size of substep
+        - param_name: vehicle_json
+          type: str
+          doc: >
+            Path to vehicle json file relative to `base_json_path`
+        - param_name: powertrain_json
+          type: str
+          doc: >
+            Path to powertrain json file relative to `base_json_path`
+        - param_name: tire_json
+          type: str
+          doc: >
+            Path to tire json file relative to `base_json_path`
+        - param_name: base_json_path
+          type: str
+          doc: >
+            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final / character is required).
+      doc: >
+        Enables Chrono physics on a spawned vehicle.
+      note: >
+        Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+      warning: >
+        Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+    # --------------------------------------
     - def_name: enable_constant_velocity
       params:
       - param_name: velocity
@@ -95,7 +128,7 @@
         param_units: m/s
       doc: >
         Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
-      Note: >
+      note: >
         Only carla.Vehicle actors can use this method.  
       warning: >
         Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  

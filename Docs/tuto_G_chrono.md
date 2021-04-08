@@ -1,6 +1,6 @@
 # Chrono Integration
 
-This guide outlines what Chrono is, how it can be used in CARLA and the limitations involved in the integration.
+This guide outlines what Chrono is, how to use it in CARLA, and the limitations involved in the integration.
 
 - [__Project Chrono__](#project-chrono)
 - [__Using Chrono on CARLA__](#using-chrono-on-carla)
@@ -12,19 +12,19 @@ This guide outlines what Chrono is, how it can be used in CARLA and the limitati
 
 ## Project Chrono
 
-[Project Chrono](https://projectchrono.org/) is an open-source, multi-physics simulation engine that provides highly realistic vehicle dynamics using a template-based approach. The integration in CARLA allows users to utilise Chrono templates to simulate vehicle dynamics while navigating a map.
+[Project Chrono](https://projectchrono.org/) is an open-source, multi-physics simulation engine that provides highly realistic vehicle dynamics using a template-based approach. The integration in CARLA allows users to utilize Chrono templates to simulate vehicle dynamics while navigating a map.
 
 ---
 
 ## Using Chrono on CARLA
 
-Using the Chrono integration involves configuration of the server with a tag on start-up and use of the PythonAPI. Read on for more details.
+To use the Chrono integration, you must first configure the server with a tag on startup and then use the PythonAPI to enable it on a spawned vehicle. Read on for more details.
 
 ### Configuring the server
 
-The CARLA server needs to be configured to use Chrono on start up.
+Chrono will only work if the CARLA server is launched/compiled with the Chrono tag.
 
-When launching the server in a packaged version of CARLA, run the following command:
+__When launching the server in a packaged version of CARLA__, run the following command:
 
 ```sh
 # Linux
@@ -34,7 +34,7 @@ When launching the server in a packaged version of CARLA, run the following comm
 ./CarlaUE4.exe --chrono
 ```
 
-In the build from source version of CARLA, run the following command to start the server:
+__In the build from source version of CARLA__, run the following command to start the server:
 
 ```sh
 make launch ARGS="--chrono"
@@ -44,15 +44,15 @@ make launch ARGS="--chrono"
 
 ### Enabling Chrono physics
 
-Chrono physics is enabled using the `enable_chrono_physics` method available through the Actor class. As well as values for substeps and substep delta time, it requires 3 template files and a base path to locate those files:
+Chrono physics is enabled using the `enable_chrono_physics` method available through the Actor class. As well as values for substeps and substep delta time, it requires three template files and a base path to locate those files:
 
-- __`base_path`:__ Path of the directory which contains the template files. This is necessary to ensure that auxiliary files referenced from the template files have a common base path to search from.
+- __`base_path`:__ Path of the directory which contains the template files. This is necessary to ensure that auxiliary files referenced from the template files have a common base path from which to search.
 - __`vehicle_json`:__ Path of the vehicle template file relative to the `base_path`.
 - __`tire_json`:__ Path of the tire template file relative to the `base_path`.
 - __`powertrain_json`:__ Path of the powertrain template file relative to the `base_path`.
 
 !!! Important
-    Double check your paths. Incorrect or missing paths can cause Unreal Engine to crash.
+    Double-check your paths. Incorrect or missing paths can cause Unreal Engine to crash.
 
 There are a variety of example template files for different vehicles available in `Build/chrono-install/share/chrono/data/vehicle`. Read the Project Chrono [documentation](https://api.projectchrono.org/manual_vehicle.html) to find out more about their vehicle examples and how to create templates.
 
@@ -82,4 +82,4 @@ You can try the Chrono physics integration using the example script `manual_cont
 
 ### Limitations
 
-Collisions are not supported with Chrono physics. __When a collision occurs, the vehicle will revert to CARLA default physics.__
+This integration does not support collisions. __When a collision occurs, the vehicle will revert to CARLA default physics.__
