@@ -6,6 +6,7 @@
   * Enabling the **no_delay** option to RPC and stream sockets
   * Improved performance bencharmark script: sync, map and sensor selection, ...
   * Improved performance, destroyed PhysX state for vehicles when physics are disable
+  * Improved parallelism of raycast sensors in system with large number of cores
   * Added 'visualize_multiple_sensors' example
   * Added 'check_lidar_bb' util script
   * Added optional flag to `client.replay_file()` `replay_sensors` to enable or disable the replaying the sensors
