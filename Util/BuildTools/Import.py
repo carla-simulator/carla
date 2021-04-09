@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -320,7 +320,22 @@ def generate_package_file(package_name, props, maps):
 
     with open(os.path.join(package_config_path, package_name + ".Package.json"), "w+") as fh:
         json.dump(output_json, fh, indent=4)
+        
 
+def copy_roadpainter_config_files(package_name):
+    """Copies roadpainter configuration files into Unreal content folder"""
+    
+    two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")      
+    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    if not os.path.exists(package_config_path):
+        try:
+            os.makedirs(package_config_path)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise      
+    shutil.copy(final_path, package_config_path) 
+    
 
 def copy_roadpainter_config_files(package_name):
     """Copies roadpainter configuration files into Unreal content folder"""
