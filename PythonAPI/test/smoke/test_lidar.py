@@ -11,11 +11,11 @@ import carla
 import time
 import math
 import numpy as np
-from enum import Enum, auto
+from enum import Enum
 
 class SensorType(Enum):
-    LIDAR = auto()
-    SEMLIDAR = auto()
+    LIDAR = 1
+    SEMLIDAR = 2
 
 class Sensor():
     def __init__(self, test, sensor_type, attributes):
