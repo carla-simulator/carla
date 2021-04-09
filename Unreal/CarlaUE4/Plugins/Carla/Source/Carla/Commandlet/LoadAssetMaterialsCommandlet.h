@@ -33,7 +33,7 @@ public:
 
 	void LoadAssetsMaterials(const FString &PackageName, const TArray<FMapData> &MapsPaths);
 
-  void ApplyRoadPainterMaterials();
+  void ApplyRoadPainterMaterials(const FString &PackageName);
 	
 	/// Main method and entry of the commandlet, taking as input parameters @a
 	/// Params.
@@ -49,6 +49,9 @@ private:
 
 	UPROPERTY()
   UWorld *World;
+
+  UPROPERTY()
+  UWorld *NewWorldToLoad;
 	
 	/// Used for loading maps in object library. Loaded Data is stored in
 	/// AssetDatas.

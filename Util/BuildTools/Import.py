@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -203,7 +203,22 @@ def generate_package_file(package_name, props, maps):
 
     with open(os.path.join(package_config_path, package_name + ".Package.json"), "w+") as fh:
         json.dump(output_json, fh, indent=4)
+        
 
+def copy_roadpainter_config_files(package_name):
+    """Copies roadpainter configuration files into Unreal content folder"""
+    
+    two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")      
+    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    if not os.path.exists(package_config_path):
+        try:
+            os.makedirs(package_config_path)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise      
+    shutil.copy(final_path, package_config_path) 
+    
 
 def import_assets(package_name, json_dirname, props, maps):
     """Same commandlet is used for importing assets and also maps."""
@@ -384,9 +399,11 @@ def main():
     args = argparser.parse_known_args()[0]
 
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
-    json_list = get_packages_json_list(import_folder)
+    #json_list = get_packages_json_list(import_folder)
+    json_list = ""
     if (len(json_list) == 0):
         json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
+    copy_roadpainter_config_files(args.package)
     import_assets_from_json_list(json_list)
 
 if __name__ == '__main__':
