@@ -33,18 +33,20 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 #if WITH_EDITORONLY_DATA
 
-void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials()
+void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &PackageName)
 {
-
 	ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
+  UE_LOG(LogTemp, Log, TEXT("The name of the world where I'm spawning the blueprint is : %s"), *World->GetFullName());
 	if (RoadPainterBp)
 	{
 		//Needed to call events in editor-mode
 		FEditorScriptExecutionGuard ScriptGuard;
     RoadPainterBp->ClearAllEvent();
-		RoadPainterBp->ZSizeEvent();
-    RoadPainterBp->ModifyRoadMaterialParameters();
+    RoadPainterBp->ReadConfigFile();
     RoadPainterBp->SetBlueprintVariables();
+
+    //Spawn the decals indicated in the JSON file
+    RoadPainterBp->SpawnDecalsEvent();
 	}
 }
 
@@ -68,25 +70,38 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
 {
   // Load World
   FAssetData AssetData;
+  MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
+  MapObjectLibrary->AddToRoot();
+
   for (const auto &Map : MapsPaths)
   {
-  
+    AssetDatas.Empty();
     const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
-    MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
-    MapObjectLibrary->AddToRoot();
     MapObjectLibrary->LoadAssetDataFromPath(*DefaultPath);
     MapObjectLibrary->LoadAssetsFromAssetData();
     MapObjectLibrary->GetAssetDataList(AssetDatas);
+
     if (AssetDatas.Num() > 0)
     {
         // Extract first asset found in folder path (i.e. the imported map)
         AssetData = AssetDatas.Pop();
-        UE_LOG(LogTemp, Log, TEXT("The name of the asset : %s"), *AssetData.GetFullName());
+        if(World != nullptr)
+        {
+          NewWorldToLoad = CastChecked<UWorld>(AssetData.GetAsset());
+          World->DestroyWorld(true, NewWorldToLoad);
+          World = NewWorldToLoad;
+          NewWorldToLoad = nullptr;
+        }else
+        {
+          World = CastChecked<UWorld>(AssetData.GetAsset());
+        }
+        World->InitWorld();
+        ApplyRoadPainterMaterials(PackageName);
+
+#if WITH_EDITOR
+        UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+#endif
     }
-    
-    World = CastChecked<UWorld>(AssetData.GetAsset());
-    World->InitWorld();
-    ApplyRoadPainterMaterials();
   }
 }
 
