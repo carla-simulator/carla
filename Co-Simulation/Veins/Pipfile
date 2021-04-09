@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 psutil = "*"
+fpdf = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.6"

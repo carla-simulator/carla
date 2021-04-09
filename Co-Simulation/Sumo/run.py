@@ -71,6 +71,12 @@ def remove_cache(cache_dir):
 def change_carla_map(args, env, sumo_files):
     return Popen(f"python config.py -p {args.carla_unrealengine_port} -m {args.carla_map_name} > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True)
 
+def switch_carla_rendering(args, env, is_carla_rendering):
+    if bool(is_carla_rendering):
+        Popen(f"python config.py -p {args.carla_unrealengine_port} --rendering > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True).wait()
+    else:
+        Popen(f"python config.py -p {args.carla_unrealengine_port} --no-rendering > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True).wait()
+
 
 def start_carla_sumo_synchronization(args, env, sumo_files):
     return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} --carla_veins_data_dir {args.data_dir}", shell=True)
@@ -193,6 +199,7 @@ class Main:
             procs.append(start_tracis_synchronization(args, env, sumo_files))
 
             print(f"Please run {env['in_vagrant']['ini_file_in_veins']} manually in Veins.")
+            switch_carla_rendering(args, env, args.is_carla_rendering)
             while is_processes_alive(procs) == True and self.veins_state_handler.run_time() <= 0:
                 pass
 
@@ -203,6 +210,9 @@ class Main:
             logging.error(e)
 
         finally:
+            # switch on the calra rendering
+            switch_carla_rendering(args, env, 1)
+
             # save veins result
             save_dir_name = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
             Popen(f"vagrant ssh -c \"mkdir {args.veins_result_aggrigation_dir}/{save_dir_name} \"", cwd=args.veins_vagrant_path, shell=True).wait()
@@ -237,6 +247,8 @@ if __name__ == '__main__':
     parser.add_argument('--data_server_port', default=9998)
     parser.add_argument('--data_dir', default='./../Veins/carla-veins-data/')
 
+
+    parser.add_argument('--is_carla_rendering', default=env["is_carla_rendering"], choices=[0, 1])
     parser.add_argument('--main_mobility_handler', default=env["mobility_handler_choices"][0], choices=env["mobility_handler_choices"])
     parser.add_argument('--log_file_path', default="./log/carla_veins_logger.log")
     parser.add_argument('--result_file_path_in_veins', default=env["in_vagrant"]["result_file_path_in_veins"])

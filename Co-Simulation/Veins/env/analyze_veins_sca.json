@@ -1,3 +1,5 @@
 {
+  "analyze_results_dir": "./analyze_results/",
+  "config_file_name": "config.txt",
   "sca_file_path": "./veins_results/veins_results/2021-04-07_19-05-10/WithBeaconing-"
 }
