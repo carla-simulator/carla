@@ -30,6 +30,7 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadPresetMaterial(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03.M_Road_03'"));
 
+  //Initialization of map for translating from the JSON decal_names as a MaterialInstance
   DecalNamesMap.Add("dirt1", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_01.DI_RoadDirt_01'")).Object);
   DecalNamesMap.Add("dirt2", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_02.DI_RoadDirt_02'")).Object);
   DecalNamesMap.Add("dirt3", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_03.DI_RoadDirt_03'")).Object);
@@ -102,10 +103,7 @@ void ARoadPainterWrapper::GenerateDynamicAssets()
 {
   ZSizeEvent();
 
-  if(RoadTexture == nullptr)
-  {
-    GenerateTexture();
-  }
+  if(RoadTexture == nullptr) GenerateTexture();
 
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), FoundActors);
@@ -118,6 +116,7 @@ void ARoadPainterWrapper::GenerateDynamicAssets()
   	{
   		if (RoadMeshActor->GetName().Contains("Roads_Road", ESearchCase::Type::CaseSensitive) == true)
   		{
+        //Create the dynamic material instance for the road (which will hold the map size and road texture)
         UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
         MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
         MI->SetScalarParameterValue(FName("Map units (CM)"), MapSize);
@@ -174,7 +173,7 @@ void ARoadPainterWrapper::GenerateTexture()
   }
 }
 
-void ARoadPainterWrapper::ReadConfigFile()
+void ARoadPainterWrapper::ReadConfigFile(const FString &CurrentMapName)
 {
   // Get road painter configuration file
   FString JsonConfigFile;
@@ -189,41 +188,52 @@ void ARoadPainterWrapper::ReadConfigFile()
     TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonConfigFile);
     if(FJsonSerializer::Deserialize(JsonReader, JsonParsed))
     {
-      //Get decals object
-      const TSharedPtr<FJsonObject> DecalJsonObject = JsonParsed->GetObjectField(TEXT("decals"));
+      //Get decals object array
+      auto DecalJsonArray = JsonParsed->GetArrayField(TEXT("decals"));
+      for(auto &DecalJsonValue : DecalJsonArray)
+      {
+        const auto DecalJsonObject = DecalJsonValue->AsObject();
 
-      //Inside the decals object, get the map name where the decals should be applied
-      FString MapName = DecalJsonObject->GetStringField(TEXT("map_name"));
-
-      //Get the decal types array
-      auto DecalTypesJsonArray = DecalJsonObject->GetArrayField(TEXT("decal_types"));
-
-      UMaterialInstance **MaterialExists = nullptr;
-      FString DecalName = "";
-      int32 NumDecals = 0;
-      for(auto &DecalTypeValue : DecalTypesJsonArray){
-
-        const TSharedPtr<FJsonObject> DecalTypeObject = DecalTypeValue->AsObject();
-        DecalName = DecalTypeObject->GetStringField(TEXT("decal_name"));
-        NumDecals = DecalTypeObject->GetIntegerField(TEXT("num_decals"));
-
-        MaterialExists = DecalNamesMap.Find(DecalName);
-
-        if(MaterialExists != nullptr)
+        //Inside the decals object array, get the map name where the decals should be applied
+        //If it coincides with the map this object is in, then it's the correct configuration
+        FString JsonMapName = DecalJsonObject->GetStringField(TEXT("map_name"));
+        if(JsonMapName.Equals(CurrentMapName) == true)
         {
-          DecalPropertiesConfig.DecalMaterials.Add(*MaterialExists);
-          DecalPropertiesConfig.DecalNumToSpawn.Add(NumDecals);
-        }else
-        {
-          UE_LOG(LogTemp, Warning, TEXT("Could not find the designated decal (via it's decal name %s)"), *DecalName);
+          //Get the decal types array
+          auto DecalTypesJsonArray = DecalJsonObject->GetArrayField(TEXT("decal_types"));
+
+          UMaterialInstance **MaterialExists = nullptr;
+          FString DecalName = "";
+          int32 NumDecals = 0;
+          for (auto &DecalTypeValue : DecalTypesJsonArray) {
+
+            const auto DecalTypeObject = DecalTypeValue->AsObject();
+            DecalName = DecalTypeObject->GetStringField(TEXT("decal_name"));
+            NumDecals = DecalTypeObject->GetIntegerField(TEXT("num_decals"));
+
+            MaterialExists = DecalNamesMap.Find(DecalName);
+
+            if (MaterialExists != nullptr)
+            {
+              DecalPropertiesConfig.DecalMaterials.Add(*MaterialExists);
+              DecalPropertiesConfig.DecalNumToSpawn.Add(NumDecals);
+            }
+            else
+            {
+              UE_LOG(LogTemp, Warning, TEXT("Could not find the designated decal (via it's decal name %s)"), *DecalName);
+            }
+          }
+
+          //Prepare the decal properties struct variable inside the class
+          //so the blueprint can read from it, later on
+          DecalPropertiesConfig.DecalScale = ReadVectorFromJsonObject(DecalJsonObject->GetObjectField(TEXT("decal_scale")));
+          DecalPropertiesConfig.FixedDecalOffset = ReadVectorFromJsonObject(DecalJsonObject->GetObjectField(TEXT("fixed_decal_offset")));
+          DecalPropertiesConfig.DecalMinScale = (float)DecalJsonObject->GetNumberField(TEXT("decal_min_scale"));
+          DecalPropertiesConfig.DecalMaxScale = (float)DecalJsonObject->GetNumberField(TEXT("decal_max_scale"));
+          DecalPropertiesConfig.DecalRandomYaw = (float)DecalJsonObject->GetNumberField(TEXT("decal_random_yaw"));
+          DecalPropertiesConfig.RandomOffset = (float)DecalJsonObject->GetNumberField(TEXT("random_offset"));
         }
       }
-      DecalPropertiesConfig.DecalScale = ReadVectorFromJsonObject(DecalJsonObject->GetObjectField(TEXT("decal_scale")));
-      DecalPropertiesConfig.FixedDecalOffset = ReadVectorFromJsonObject(DecalJsonObject->GetObjectField(TEXT("fixed_decal_offset")));
-      DecalPropertiesConfig.DecalMinScale = (float) DecalJsonObject->GetNumberField(TEXT("decal_min_scale"));
-      DecalPropertiesConfig.DecalMaxScale = (float) DecalJsonObject->GetNumberField(TEXT("decal_max_scale"));
-      DecalPropertiesConfig.DecalRandomYaw = (float) DecalJsonObject->GetNumberField(TEXT("decal_random_yaw"));
-      DecalPropertiesConfig.RandomOffset = (float) DecalJsonObject->GetNumberField(TEXT("random_offset"));
       //UE_LOG(LogTemp, Warning, TEXT("Displaying JSON variables, %f %f"), DecalPropertiesConfig.DecalRandomYaw, DecalPropertiesConfig.DecalScale.X);
     }
   }
