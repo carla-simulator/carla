@@ -33,7 +33,7 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 #if WITH_EDITORONLY_DATA
 
-void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &PackageName)
+void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &LoadedMapName)
 {
 	ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
   UE_LOG(LogTemp, Log, TEXT("The name of the world where I'm spawning the blueprint is : %s"), *World->GetFullName());
@@ -42,7 +42,7 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Pac
 		//Needed to call events in editor-mode
 		FEditorScriptExecutionGuard ScriptGuard;
     RoadPainterBp->ClearAllEvent();
-    RoadPainterBp->ReadConfigFile();
+    RoadPainterBp->ReadConfigFile(LoadedMapName);
     RoadPainterBp->SetBlueprintVariables();
 
     //Spawn the decals indicated in the JSON file
@@ -96,7 +96,7 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
           World = CastChecked<UWorld>(AssetData.GetAsset());
         }
         World->InitWorld();
-        ApplyRoadPainterMaterials(PackageName);
+        ApplyRoadPainterMaterials(Map.Name);
 
 #if WITH_EDITOR
         UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);

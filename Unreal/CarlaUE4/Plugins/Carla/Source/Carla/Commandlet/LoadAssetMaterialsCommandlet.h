@@ -33,7 +33,7 @@ public:
 
 	void LoadAssetsMaterials(const FString &PackageName, const TArray<FMapData> &MapsPaths);
 
-  void ApplyRoadPainterMaterials(const FString &PackageName);
+  void ApplyRoadPainterMaterials(const FString &LoadedMapName);
 	
 	/// Main method and entry of the commandlet, taking as input parameters @a
 	/// Params.

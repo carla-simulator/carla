@@ -15,27 +15,35 @@ struct CARLA_API FDecalsProperties
 {
   GENERATED_USTRUCT_BODY()
 
+  /// The decals used on the road
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   TArray<UMaterialInstance*> DecalMaterials;
 
+  /// How many decals (or material instances) of each, should be applied to the road
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   TArray<int32> DecalNumToSpawn;
 
+  /// Scale of each decal on the road
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   FVector DecalScale;
 
+  /// Min offset from one decal to another
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   FVector FixedDecalOffset;
 
+  /// Maximum scale to be applied to the decals
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   float DecalMaxScale;
 
+  /// Min scale to be applied to the decals
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   float DecalMinScale;
 
+  /// The decal yaw to be applied randomly
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   float DecalRandomYaw;
 
+  /// Random offset from one decal to another
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
   float RandomOffset;
 };
@@ -102,8 +110,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
   void SetBlueprintVariables();
 
+  /// Function for reading the decals configuration file (in JSON format)
   UFUNCTION(Category = "RoadPainter Wrapper")
-  void ReadConfigFile();
+  void ReadConfigFile(const FString &CurrentMapName);
 
   /// Generate the assets necessary for painting the roads.
   /// This function MUST only be called right after the construction script
@@ -120,6 +129,8 @@ public:
   UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
   UTextureRenderTarget2D *RoadTexture; 
 
+  /// Variable used for storing the JSON values of the decals
+  /// so it can be later used by the blueprint (Road Painter Preset)
   UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
   FDecalsProperties DecalPropertiesConfig;
 
@@ -127,11 +138,13 @@ private:
 
   /// Create a procedural texture for painting the road maps
   /// and save it to disk.
-  UFUNCTION(Category = "RoadPainter Wrapper")
   void GenerateTexture();
 
+  /// Function to read 3D vectors from a JSON file
   FVector ReadVectorFromJsonObject(TSharedPtr<FJsonObject> JsonObject);
 
+  /// Dictionary for translating the JSON file "decal_names" array
+  /// to already loaded Material Instances, which are used to apply on the roads
   UPROPERTY()
   TMap<FString, UMaterialInstance*> DecalNamesMap;
 

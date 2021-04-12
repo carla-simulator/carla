@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/env python
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -78,6 +78,53 @@ def generate_json_package(folder, package_name, use_carla_materials):
 
     return json_files
 
+def generate_decals_file(folder):
+       
+    # search for all .fbx and .xodr pair of files
+    maps = []
+    for root, _, filenames in os.walk(folder):
+        files = fnmatch.filter(filenames, "*.fbx")
+        for file_name in files:
+            fbx = file_name[:-4]
+            # check if exist the .xodr file
+            if os.path.exists("%s/%s.xodr" % (root, fbx)):
+                maps.append([os.path.relpath(root, folder), fbx])
+                
+    if (len(maps) > 0):
+        # build all the maps in .json format
+        json_decals = []
+        for map_name in maps:
+        
+            name = map_name[1]
+            
+            #create the decals default config file
+            json_decals.append({
+                'map_name' : name,
+                'decal_types' : [{
+                'decal_name' : 'dirt1',
+                'num_decals' : '10'},
+                {'decal_name' : 'tarsnake2',
+                'num_decals' : '20'}],
+                'decal_scale' : {
+                'x_axis' : '1.0',
+                'y_axis' : '1.0',
+                'z_axis' : '1.0'},
+                'fixed_decal_offset': {
+                'x_axis' : '0.0',
+                'y_axis' : '0.0',
+                'z_axis' : '0.0'},
+                'decal_min_scale' : '1.0',
+                'decal_max_scale' : '1.0',
+                'decal_random_yaw' : '360.0',
+                'random_offset' : '0.0'
+            });
+            
+        # build and write the .json
+        f = open("%s/%s.json" % (folder, 'roadpainter_decals'), "w")
+        my_json = {'decals': json_decals}
+        serialized = json.dumps(my_json, sort_keys=False, indent=3)
+        f.write(serialized)
+        f.close()
 
 def invoke_commandlet(name, arguments):
     """Generic function for running a commandlet with its arguments."""
@@ -399,10 +446,15 @@ def main():
     args = argparser.parse_known_args()[0]
 
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
-    #json_list = get_packages_json_list(import_folder)
-    json_list = ""
-    if (len(json_list) == 0):
+    json_list = get_packages_json_list(import_folder)
+    
+    #If we only gather one file or none from the json file search
+    #we need to create the missing files, 
+    #so might as well create them all again
+    if (len(json_list) < 2):
         json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
+        decals_json_file = generate_decals_file(import_folder)
+        
     copy_roadpainter_config_files(args.package)
     import_assets_from_json_list(json_list)
 
