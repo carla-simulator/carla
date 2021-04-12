@@ -18,6 +18,8 @@
   * Added performance benchmarking section to documentation
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
+  * Extended make import process for applying road painter materials (carla art tool)
+  * Added creation of custom JSON file for applying decals to imported roads
   * Fix bug in carla.Transform.get_up_vector()
   * Fix bug in lidar channel point count
   * Fix imu: some weird cases were given nan values
