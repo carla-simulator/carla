@@ -66,14 +66,19 @@ void ARayCastSemanticLidar::CreateLasers()
 
 void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::PostPhysTick);
   SimulateLidar(DeltaTime);
 
-  auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, SemanticLidarData, DataStream.PopBufferFromPool());
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
+    auto DataStream = GetDataStream(*this);
+    DataStream.Send(*this, SemanticLidarData, DataStream.PopBufferFromPool());
+  }
 }
 
 void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::SimulateLidar);
   const uint32 ChannelCount = Description.Channels;
   const uint32 PointsToScanWithOneLaser =
     FMath::RoundHalfFromZero(
@@ -93,7 +98,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 
   const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
       SemanticLidarData.GetHorizontalAngle());
-  const float AngleDistanceOfTick = Description.RotationFrequency * Description.HorizontalFov 
+  const float AngleDistanceOfTick = Description.RotationFrequency * Description.HorizontalFov
       * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
@@ -101,19 +106,23 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
-  ParallelFor(ChannelCount, [&](int32 idxChannel) {
-    for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
-      FHitResult HitResult;
-      const float VertAngle = LaserAngles[idxChannel];
-      const float HorizAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfLaserMeasure
-          * idxPtsOneLaser, Description.HorizontalFov) - Description.HorizontalFov / 2;
-      const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
+    ParallelFor(ChannelCount, [&](int32 idxChannel) {
+      TRACE_CPUPROFILER_EVENT_SCOPE(ParallelForTask);
+      for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
+        FHitResult HitResult;
+        const float VertAngle = LaserAngles[idxChannel];
+        const float HorizAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfLaserMeasure
+            * idxPtsOneLaser, Description.HorizontalFov) - Description.HorizontalFov / 2;
+        const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
 
-      if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
-        WritePointAsync(idxChannel, HitResult);
-      }
-    };
-  });
+        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
+          WritePointAsync(idxChannel, HitResult);
+        }
+      };
+    });
+  }
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
   FTransform ActorTransf = GetTransform();
@@ -208,7 +217,7 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
   const auto Range = Description.Range;
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
-  GetWorld()->LineTraceSingleByChannel(
+  GetWorld()->ParallelLineTraceSingleByChannel(
     HitInfo,
     LidarBodyLoc,
     EndTrace,

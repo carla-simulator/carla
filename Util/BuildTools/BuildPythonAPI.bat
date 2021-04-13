@@ -105,7 +105,7 @@ if %BUILD_FOR_PYTHON2%==true (
     goto py2_not_supported
 )
 
-rem Build for Python 2
+rem Build for Python 3
 rem
 if %BUILD_FOR_PYTHON3%==true (
     echo Building Python API for Python 3.

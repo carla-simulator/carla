@@ -40,6 +40,7 @@ void ASensor::Set(const FActorDescription &Description)
 
 void ASensor::Tick(const float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::Tick);
   Super::Tick(DeltaTime);
   ReadyToTick = true;
   PrePhysTick(DeltaTime);
@@ -81,6 +82,7 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
 
 void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::PostPhysTickInternal);
   if(ReadyToTick)
   {
     PostPhysTick(World, TickType, DeltaSeconds);

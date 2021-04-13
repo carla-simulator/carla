@@ -126,6 +126,25 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
   UStaticMesh *MeshAsset;
   AStaticMeshActor *MeshActor;
 
+  // try to get the name of the map that precedes all assets name
+  FString MapName, AssetName;
+  for (auto MapAsset : MapContents)
+  {
+    // Rename asset
+    MapAsset.AssetName.ToString(AssetName);
+    int32 FindIndex1 = AssetName.Find("Road_", ESearchCase::IgnoreCase, ESearchDir::FromStart, 0);
+    int32 FindIndex2 = AssetName.Find("Roads_", ESearchCase::IgnoreCase, ESearchDir::FromStart, 0);
+    if (FindIndex1 >= 0)
+    {
+      MapName = AssetName.Left(FindIndex1);
+      break;
+    } else if (FindIndex2 >= 0)
+    {
+      MapName = AssetName.Left(FindIndex2);
+      break;
+    }
+  }
+    
   for (auto MapAsset : MapContents)
   {
     // Spawn Static Mesh
@@ -137,14 +156,9 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       MeshComponent->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
 
       // Rename asset
-      FString AssetName;
       MapAsset.AssetName.ToString(AssetName);
       // Remove the prefix with the FBX name
-      int32 FindIndex = AssetName.Find("_", ESearchCase::IgnoreCase, ESearchDir::FromStart, 0);
-      if (FindIndex >= 0)
-      {
-        AssetName.RemoveAt(0, FindIndex + 1, true);
-      }
+      AssetName.RemoveFromStart(MapName, ESearchCase::IgnoreCase);
       MeshActor->SetActorLabel(AssetName, true);
 
       // set complex collision as simple in asset
@@ -161,12 +175,12 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       {
         // Set Carla Materials depending on RoadRunner's Semantic Segmentation
         // tag
-        if (AssetName.Contains(SSTags::R_MARKING))
+        if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
         {
           MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
           MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
         }
-        else if (AssetName.Contains(SSTags::R_ROAD))
+        else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
         {
           MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
         }
@@ -174,7 +188,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
         {
           MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
         }
-        else if (AssetName.Contains(SSTags::R_SIDEWALK))
+        else if (AssetName.Contains(SSTags::R_SIDEWALK1) || AssetName.Contains(SSTags::R_SIDEWALK2))
         {
           MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterial);
         }

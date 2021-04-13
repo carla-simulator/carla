@@ -45,3 +45,46 @@ float UBaseCarlaMovementComponent::GetVehicleForwardSpeed() const
 {
   return 0.f;
 }
+
+void UBaseCarlaMovementComponent::DisableUE4VehiclePhysics()
+{
+  if(!CarlaVehicle)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Error: Owner is not properly set for UCarSimManagerComponent") );
+    return;
+  }
+  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(false);
+  CarlaVehicle->GetVehicleMovementComponent()->Deactivate();
+  CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::ComponentTransformIsKinematic;
+  auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(false);
+  }
+}
+
+void UBaseCarlaMovementComponent::EnableUE4VehiclePhysics(bool bResetVelocity)
+{
+
+  FVector CurrentVelocity(0, 0, 0);
+  if (!bResetVelocity)
+  {
+    CurrentVelocity = GetVelocity();
+  }
+  CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(CurrentVelocity, false, "Vehicle_Base");
+  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+  CarlaVehicle->GetVehicleMovementComponent()->Activate();
+  CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+  auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(true);
+  }
+  else
+  {
+    carla::log_warning("No bone with name");
+  }
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");
+  CarlaVehicle->RestoreVehiclePhysicsControl();
+}

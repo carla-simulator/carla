@@ -47,10 +47,11 @@ std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTi
   return Query.QueryBlocked(Name, MinTime, MinDistance);
 }
 
-std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration, uint32_t FollowId)
+std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration,
+    uint32_t FollowId, bool ReplaySensors)
 {
   Stop();
-  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, ReplaySensors);
 }
 
 inline void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
@@ -70,6 +71,7 @@ inline void ACarlaRecorder::StopReplayer(bool KeepActors)
 
 void ACarlaRecorder::Ticking(float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaRecorder::Ticking);
   Super::Tick(DeltaSeconds);
 
   if (!Episode)

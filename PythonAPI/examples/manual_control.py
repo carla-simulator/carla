@@ -284,10 +284,14 @@ class World(object):
             self.radar_sensor.sensor.destroy()
             self.radar_sensor = None
 
-    def modify_vehicle_physics(self, vehicle):
-        physics_control = vehicle.get_physics_control()
-        physics_control.use_sweep_wheel_collision = True
-        vehicle.apply_physics_control(physics_control)
+    def modify_vehicle_physics(self, actor):
+        #If actor is not a vehicle, we cannot use the physics control
+        try:
+            physics_control = actor.get_physics_control()
+            physics_control.use_sweep_wheel_collision = True
+            actor.apply_physics_control(physics_control)
+        except Exception:
+            pass
 
     def tick(self, clock):
         self.hud.tick(self, clock)
@@ -789,15 +793,18 @@ class CollisionSensor(object):
 class LaneInvasionSensor(object):
     def __init__(self, parent_actor, hud):
         self.sensor = None
-        self._parent = parent_actor
-        self.hud = hud
-        world = self._parent.get_world()
-        bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
-        self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
-        # We need to pass the lambda a weak reference to self to avoid circular
-        # reference.
-        weak_self = weakref.ref(self)
-        self.sensor.listen(lambda event: LaneInvasionSensor._on_invasion(weak_self, event))
+
+        # If the spawn object is not a vehicle, we cannot use the Lane Invasion Sensor
+        if parent_actor.type_id.startswith("vehicle."):
+            self._parent = parent_actor
+            self.hud = hud
+            world = self._parent.get_world()
+            bp = world.get_blueprint_library().find('sensor.other.lane_invasion')
+            self.sensor = world.spawn_actor(bp, carla.Transform(), attach_to=self._parent)
+            # We need to pass the lambda a weak reference to self to avoid circular
+            # reference.
+            weak_self = weakref.ref(self)
+            self.sensor.listen(lambda event: LaneInvasionSensor._on_invasion(weak_self, event))
 
     @staticmethod
     def _on_invasion(weak_self, event):
@@ -951,14 +958,26 @@ class CameraManager(object):
         self._parent = parent_actor
         self.hud = hud
         self.recording = False
+        bound_x = 0.5 + self._parent.bounding_box.extent.x
         bound_y = 0.5 + self._parent.bounding_box.extent.y
+        bound_z = 0.5 + self._parent.bounding_box.extent.z
         Attachment = carla.AttachmentType
-        self._camera_transforms = [
-            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
-            (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=5.5, y=1.5, z=1.5)), Attachment.SpringArm),
-            (carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
-            (carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)]
+
+        if not self._parent.type_id.startswith("walker.pedestrian"):
+            self._camera_transforms = [
+                (carla.Transform(carla.Location(x=-2.0*bound_x, y=+0.0*bound_y, z=2.0*bound_z), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
+                (carla.Transform(carla.Location(x=+0.8*bound_x, y=+0.0*bound_y, z=1.3*bound_z)), Attachment.Rigid),
+                (carla.Transform(carla.Location(x=+1.9*bound_x, y=+1.0*bound_y, z=1.2*bound_z)), Attachment.SpringArm),
+                (carla.Transform(carla.Location(x=-2.8*bound_x, y=+0.0*bound_y, z=4.6*bound_z), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
+                (carla.Transform(carla.Location(x=-1.0, y=-1.0*bound_y, z=0.4*bound_z)), Attachment.Rigid)]
+        else:
+            self._camera_transforms = [
+                (carla.Transform(carla.Location(x=-2.5, z=0.0), carla.Rotation(pitch=-8.0)), Attachment.SpringArm),
+                (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
+                (carla.Transform(carla.Location(x=2.5, y=0.5, z=0.0), carla.Rotation(pitch=-8.0)), Attachment.SpringArm),
+                (carla.Transform(carla.Location(x=-4.0, z=2.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
+                (carla.Transform(carla.Location(x=0, y=-2.5, z=-0.0), carla.Rotation(yaw=90.0)), Attachment.Rigid)]
+
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {}],

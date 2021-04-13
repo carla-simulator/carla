@@ -20,7 +20,8 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
-    uint32_t DesiredId)
+    uint32_t DesiredId,
+    bool SpawnSensors)
 {
   check(Episode != nullptr);
 
@@ -44,7 +45,7 @@ std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
       return std::pair<int, FActorView>(0, view_empty);
     }
   }
-  else if (!ActorDesc.Id.StartsWith("sensor."))
+  else if (SpawnSensors || !ActorDesc.Id.StartsWith("sensor."))
   {
     // check if an actor of that type already exist with same id
     if (Episode->GetActorRegistry().Contains(DesiredId))
@@ -161,7 +162,8 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
     FVector Rotation,
     CarlaRecorderActorDescription Description,
     uint32_t DesiredId,
-    bool bIgnoreHero)
+    bool bIgnoreHero,
+    bool ReplaySensors)
 {
   check(Episode != nullptr);
   FActorDescription ActorDesc;
@@ -182,7 +184,12 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
       IsHero = true;
   }
 
-  auto result = TryToCreateReplayerActor(Location, Rotation, ActorDesc, DesiredId);
+  auto result = TryToCreateReplayerActor(
+      Location,
+      Rotation,
+      ActorDesc,
+      DesiredId,
+      ReplaySensors);
 
   if (result.first != 0)
   {

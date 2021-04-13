@@ -118,6 +118,7 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   Vehicle4W->WheelSetups = NewWheelSetups;
 
+  LastPhysicsControl = GetVehiclePhysicsControl();
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -337,8 +338,15 @@ FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
   return InputControl.LightState;
 }
 
+void ACarlaWheeledVehicle::RestoreVehiclePhysicsControl()
+{
+  ApplyVehiclePhysicsControl(LastPhysicsControl);
+}
+
 void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
+  LastPhysicsControl = PhysicsControl;
+
   UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
       GetVehicleMovement());
   check(Vehicle4W != nullptr);
@@ -451,6 +459,24 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
     BaseMovementComponent->DestroyComponent();
   }
   BaseMovementComponent = MovementComponent;
+}
+
+void ACarlaWheeledVehicle::SetWheelSteerDirection(VehicleWheelLocation WheelLocation, float AngleInDeg) {
+
+  check((uint8)WheelLocation >= 0)
+  check((uint8)WheelLocation < 4)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
+}
+
+float ACarlaWheeledVehicle::GetWheelSteerAngle(VehicleWheelLocation WheelLocation) {
+
+  check((uint8)WheelLocation >= 0)
+  check((uint8)WheelLocation < 4)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {

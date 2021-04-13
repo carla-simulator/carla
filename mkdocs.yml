@@ -9,7 +9,7 @@ nav:
 - Home: 'index.md'
 - Getting started:
   - 'Introduction': 'start_introduction.md'
-  - 'Quick start installation': 'start_quickstart.md'
+  - 'Quick start package installation': 'start_quickstart.md'
 - Building CARLA:
   - 'Linux build': 'build_linux.md'
   - 'Windows build': 'build_windows.md'
@@ -33,6 +33,8 @@ nav:
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
   - 'Traffic Manager': 'adv_traffic_manager.md'
   - 'Benchmarking Performance': 'adv_benchmarking.md'
+- Traffic Simulation:
+  - 'Traffic Simulation Overview': 'ts_traffic_simulation_overview.md'
 - References:
   - 'Python API reference': 'python_api.md'
   - 'Blueprint Library': 'bp_library.md'
@@ -52,8 +54,10 @@ nav:
   - 'Generate maps with OpenStreetMap': 'tuto_G_openstreetmap.md'
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
   - 'CarSim Integration (Beta)': "tuto_G_carsim_integration.md"
+  - 'RLlib Integration': "tuto_G_rllib_integration.md"
+  - 'Scenic': 'tuto_G_scenic.md'
 - Tutorials (assets):
-  - 'Add a new map': 'tuto_A_add_map.md'
+  - 'Add a new map': 'tuto_A_add_map_overview.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
   - 'Add new props': 'tuto_A_add_props.md'
   - 'Create standalone packages': 'tuto_A_create_standalone.md'

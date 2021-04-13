@@ -17,6 +17,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
+#include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -46,6 +47,7 @@
 #include <carla/rpc/VehicleLightStateList.h>
 #include <carla/rpc/WalkerBoneControl.h>
 #include <carla/rpc/WalkerControl.h>
+#include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -217,6 +219,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
+    TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
     ++TickCuesReceived;
     return FCarlaEngine::GetFrameCounter();
   };
@@ -492,7 +495,7 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(Result.Value);
   };
 
-  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<void>
+  BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
     auto ActorView = Episode->FindActor(ActorId);
@@ -504,7 +507,7 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("internal error: unable to destroy actor");
     }
-    return R<void>::Success();
+    return true;
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -905,6 +908,49 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_wheel_steer_direction) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float AngleInDeg) -> R<void>
+  {
+
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if(!ActorView.IsValid()){
+
+      RESPOND_ERROR("unable to apply actor wheel steer : actor not found");
+    }
+
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if(Vehicle == nullptr){
+
+      RESPOND_ERROR("unable to apply actor wheel steer : actor is not a vehicle");
+    }
+
+    Vehicle->SetWheelSteerDirection((VehicleWheelLocation)WheelLocation, AngleInDeg);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_steer_angle) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if(!ActorView.IsValid()){
+
+      RESPOND_ERROR("unable to get actor wheel angle : actor not found");
+    }
+
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if(Vehicle == nullptr){
+
+      RESPOND_ERROR("unable to get actor wheel angle : actor is not a vehicle");
+    }
+
+    return Vehicle->GetWheelSteerAngle((VehicleWheelLocation)WheelLocation);
+  };
+
   BIND_SYNC(set_actor_simulate_physics) << [this](
       cr::ActorId ActorId,
       bool bEnabled) -> R<void>
@@ -1129,6 +1175,37 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("UCarSimManagerComponent plugin is not activated");
     }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(enable_chrono_physics) << [this](
+      cr::ActorId ActorId,
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set chrono physics: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to set chrono physics: not actor is not a vehicle");
+    }
+    UChronoMovementComponent::CreateChronoMovementComponent(
+        Vehicle,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        cr::ToFString(VehicleJSON),
+        cr::ToFString(PowertrainJSON),
+        cr::ToFString(TireJSON),
+        cr::ToFString(BaseJSONPath));
     return R<void>::Success();
   };
 
@@ -1371,14 +1448,16 @@ void FCarlaServer::FPimpl::BindActions()
       std::string name,
       double start,
       double duration,
-      uint32_t follow_id) -> R<std::string>
+      uint32_t follow_id,
+      bool replay_sensors) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
         name,
         start,
         duration,
-        follow_id));
+        follow_id,
+        replay_sensors));
   };
 
   BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>
@@ -1586,14 +1665,31 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
   check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
-  auto RPCThreads = NumberOfWorkerThreads / 2u;
-  auto StreamingThreads = NumberOfWorkerThreads - RPCThreads;
-  Pimpl->Server.AsyncRun(std::max(2u, RPCThreads));
-  Pimpl->StreamingServer.AsyncRun(std::max(2u, StreamingThreads));
+  int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+  int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+
+  UE_LOG(LogCarla, Error, TEXT("FCommandLine %s"), FCommandLine::Get());
+
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
+  {
+    RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+  }
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-StreamingThreads="), StreamingThreads))
+  {
+    StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+  }
+
+  UE_LOG(LogCarla, Error, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
+        NumberOfWorkerThreads, RPCThreads, StreamingThreads);
+
+  Pimpl->Server.AsyncRun(RPCThreads);
+  Pimpl->StreamingServer.AsyncRun(StreamingThreads);
+
 }
 
 void FCarlaServer::RunSome(uint32 Milliseconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 

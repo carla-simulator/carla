@@ -8,17 +8,21 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
+USE_CHRONO=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --python-version )
       PY_VERSION_LIST="$2";
       shift 2 ;;
+    --chrono )
+      USE_CHRONO=true;
+      shift ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -191,7 +195,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c3
+RPCLIB_PATCH=v2.2.1_c5
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
@@ -429,6 +433,7 @@ XERCESC_REPO=https://ftp.cixug.es/apache//xerces/c/3/sources/xerces-c-${XERCESC_
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
+XERCESC_LIB=${XERCESC_INSTALL_DIR}/lib/libxerces-c.a
 
 if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
   log "Xerces-c already installed."
@@ -460,6 +465,179 @@ else
   rm -Rf ${XERCESC_BASENAME}.tar.gz
   rm -Rf ${XERCESC_SRC_DIR}
 fi
+
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+if ${USE_CHRONO} ; then
+
+  # ==============================================================================
+  # -- Get Eigen headers (Chrono dependency) -------------------------------------
+  # ==============================================================================
+
+  EIGEN_VERSION=3.3.7
+  EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
+  EIGEN_BASENAME=eigen-${EIGEN_VERSION}
+
+  EIGEN_SRC_DIR=eigen-${EIGEN_VERSION}-src
+  EIGEN_INSTALL_DIR=eigen-${EIGEN_VERSION}-install
+  EIGEN_INCLUDE=${EIGEN_INSTALL_DIR}/include
+
+
+  if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
+    log "Eigen already installed."
+  else
+    log "Retrieving Eigen."
+    wget ${EIGEN_REPO}
+
+    log "Extracting Eigen."
+    tar -xzf ${EIGEN_BASENAME}.tar.gz
+    mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
+    mkdir -p ${EIGEN_INCLUDE}/unsupported
+    mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
+    mv ${EIGEN_SRC_DIR}/unsupported/Eigen ${EIGEN_INCLUDE}/unsupported/Eigen
+
+    rm -Rf ${EIGEN_BASENAME}.tar.gz
+    rm -Rf ${EIGEN_SRC_DIR}
+  fi
+
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+  cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+
+  # ==============================================================================
+  # -- Get Chrono and compile it with libc++ -------------------------------------
+  # ==============================================================================
+
+  CHRONO_TAG=6.0.0
+  # CHRONO_TAG=develop
+  CHRONO_REPO=https://github.com/projectchrono/chrono.git
+
+  CHRONO_SRC_DIR=chrono-source
+  CHRONO_INSTALL_DIR=chrono-install
+
+  if [[ -d ${CHRONO_INSTALL_DIR} ]] ; then
+    log "chrono library already installed."
+  else
+    log "Retrieving chrono library."
+    git clone --depth 1 --branch ${CHRONO_TAG} ${CHRONO_REPO} ${CHRONO_SRC_DIR}
+
+    mkdir -p ${CHRONO_SRC_DIR}/build
+
+    pushd ${CHRONO_SRC_DIR}/build >/dev/null
+
+    cmake -G "Ninja" \
+        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
+        -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
+        -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DENABLE_MODULE_VEHICLE=ON \
+        ..
+    ninja
+    ninja install
+
+    popd >/dev/null
+
+    rm -Rf ${CHRONO_SRC_DIR}
+  fi
+
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+  cp -p ${CHRONO_INSTALL_DIR}/lib/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+  cp -p -r ${CHRONO_INSTALL_DIR}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+
+fi
+
+# ==============================================================================
+# -- Get and compile Sqlite3 ---------------------------------------------------
+# ==============================================================================
+
+SQLITE_VERSION=sqlite-autoconf-3340100
+SQLITE_REPO=https://www.sqlite.org/2021/${SQLITE_VERSION}.tar.gz
+
+SQLITE_TAR=${SQLITE_VERSION}.tar.gz
+SQLITE_SOURCE_DIR=sqlite-src
+SQLITE_INSTALL_DIR=sqlite-install
+
+SQLITE_INCLUDE_DIR=${PWD}/${SQLITE_INSTALL_DIR}/include
+SQLITE_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/libsqlite3.a
+SQLITE_EXE=${PWD}/${SQLITE_INSTALL_DIR}/bin/sqlite3
+
+if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
+  log "Sqlite already installed."
+else
+  log "Retrieving Sqlite3"
+  wget ${SQLITE_REPO}
+
+  log "Extracting Sqlite3"
+  tar -xzf ${SQLITE_TAR}
+  mv ${SQLITE_VERSION} ${SQLITE_SOURCE_DIR}
+
+  mkdir ${SQLITE_INSTALL_DIR}
+
+  pushd ${SQLITE_SOURCE_DIR} >/dev/null
+
+  export CFLAGS="-fPIC"
+  ./configure --prefix=${PWD}/../sqlite-install/
+  make
+  make install
+
+  popd >/dev/null
+
+  rm -Rf ${SQLITE_TAR}
+  rm -Rf ${SQLITE_SOURCE_DIR}
+fi
+
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+# ==============================================================================
+# -- Get and compile PROJ ------------------------------------------------------
+# ==============================================================================
+
+PROJ_VERSION=proj-7.2.1
+PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
+
+PROJ_TAR=${PROJ_VERSION}.tar.gz
+PROJ_SRC_DIR=proj-src
+PROJ_INSTALL_DIR=proj-install
+PROJ_INSTALL_DIR_FULL=${PWD}/${PROJ_INSTALL_DIR}
+PROJ_LIB=${PROJ_INSTALL_DIR_FULL}/lib/libproj.a
+
+if [[ -d ${PROJ_INSTALL_DIR} ]] ; then
+  log "PROJ already installed."
+else
+  log "Retrieving PROJ"
+  wget ${PROJ_REPO}
+
+  log "Extracting PROJ"
+  tar -xzf ${PROJ_TAR}
+  mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
+
+  mkdir ${PROJ_SRC_DIR}/build
+  mkdir ${PROJ_INSTALL_DIR}
+
+  pushd ${PROJ_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" .. \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DEXE_SQLITE3=${SQLITE_EXE} \
+      -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
+      -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
+      -DBUILD_CCT=OFF -DBUILD_CS2CS=OFF -DBUILD_GEOD=OFF -DBUILD_GIE=OFF \
+      -DBUILD_PROJ=OFF -DBUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX=${PROJ_INSTALL_DIR_FULL}
+  ninja
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${PROJ_TAR}
+  rm -Rf ${PROJ_SRC_DIR}
+
+fi
+
+cp ${PROJ_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
@@ -511,7 +689,7 @@ cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -lc++ -lc++abi" CACHE STRING "" FORCE)
 EOL

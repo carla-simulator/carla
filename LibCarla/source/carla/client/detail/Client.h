@@ -29,6 +29,7 @@
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/VehicleWheels.h"
 
 #include <functional>
 #include <memory>
@@ -219,6 +220,26 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    void SetWheelSteerDirection(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg
+    );
+
+    float GetWheelSteerAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location
+    );
+
+    void EnableChronoPhysics(
+        rpc::ActorId vehicle,
+        uint64_t MaxSubsteps,
+        float MaxSubstepDeltaTime,
+        std::string VehicleJSON,
+        std::string PowertrainJSON,
+        std::string TireJSON,
+        std::string BaseJSONPath);
+
     void ApplyControlToWalker(
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
@@ -271,7 +292,8 @@ namespace detail {
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
-    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id);
+    std::string ReplayFile(std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors);
 
     void SetReplayerTimeFactor(double time_factor);
 

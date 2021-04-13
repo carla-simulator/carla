@@ -59,6 +59,14 @@ namespace client {
     GetEpisode().Lock()->SetLightStateToVehicle(*this, rpc::VehicleLightState(light_state));
   }
 
+  void Vehicle::SetWheelSteerDirection(WheelLocation wheel_location, float angle_in_deg) {
+    GetEpisode().Lock()->SetWheelSteerDirection(*this, wheel_location, angle_in_deg);
+  }
+
+  float Vehicle::GetWheelSteerAngle(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelSteerAngle(*this, wheel_location);
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
   }
@@ -94,6 +102,22 @@ namespace client {
 
   void Vehicle::UseCarSimRoad(bool enabled) {
     GetEpisode().Lock()->UseCarSimRoad(*this, enabled);
+  }
+
+  void Vehicle::EnableChronoPhysics(
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) {
+    GetEpisode().Lock()->EnableChronoPhysics(*this,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        VehicleJSON,
+        PowertrainJSON,
+        TireJSON,
+        BaseJSONPath);
   }
 
 } // namespace client
