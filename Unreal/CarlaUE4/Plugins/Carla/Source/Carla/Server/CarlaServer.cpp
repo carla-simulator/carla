@@ -453,14 +453,19 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::Transform &Transform) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
+
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
+
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
       UE_LOG(LogCarla, Error, TEXT("Actor not Spawned"));
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
+
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    /*
+    // TODO: dormant spawn, I think I can remove all of this
     if (!Result.Value.IsValid())
     {
       // Actor could not be spawned
@@ -475,9 +480,10 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("internal error: actor could not be spawned");
     }
 
+    */
     if(LargeMap)
     {
-      LargeMap->OnActorSpawned(Result.Value);
+      LargeMap->OnActorSpawned(Result.Value, Transform);
     }
 
     return Episode->SerializeActor(Result.Value);

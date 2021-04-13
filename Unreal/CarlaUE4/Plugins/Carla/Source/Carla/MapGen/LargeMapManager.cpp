@@ -13,13 +13,13 @@
 #if WITH_EDITOR
 #include "FileHelper.h"
 #include "Paths.h"
-#define LARGEMAP_LOGS 0
+#define LARGEMAP_LOGS 1
 #else
 #define LARGEMAP_LOGS 0
 #endif // WITH_EDITOR
 
 #if LARGEMAP_LOGS
-#define LM_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), __VA_ARGS__)
+#define LM_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
 #else
 #define LM_LOG(...)
 #endif
@@ -46,7 +46,7 @@ ALargeMapManager::~ALargeMapManager()
 // Called when the game starts or when spawned
 void ALargeMapManager::BeginPlay()
 {
-	Super::BeginPlay();
+  Super::BeginPlay();
 
   UWorld* World = GetWorld();
   /* Setup delegates */
@@ -58,7 +58,7 @@ void ALargeMapManager::BeginPlay()
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &ALargeMapManager::OnLevelRemovedFromWorld);
 
   // Setup Origin rebase settings
-    UWorldComposition* WorldComposition = World->WorldComposition;
+  UWorldComposition* WorldComposition = World->WorldComposition;
   WorldComposition->bRebaseOriginIn3DSpace = true;
   WorldComposition->RebaseOriginDistance = RebaseOriginDistance;
 
@@ -117,63 +117,88 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
   Tile.TilesSpawned = false;
 }
 
-void ALargeMapManager::OnActorSpawned(const FActorView& ActorView)
+void ALargeMapManager::OnActorSpawned(const FActorView& ActorView, const FTransform& Transform)
 {
-  const AActor* Actor = ActorView.GetActor();
+  UWorld* World = GetWorld();
+  const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+  AActor* Actor = const_cast<AActor*>(ActorView.GetActor());
+  bool IsHeroVehicle = false;
 
-  if (IsValid(Actor) && Cast<APawn>(Actor))
-  {
-    LM_LOG(Warning, "ALargeMapManager::OnActorSpawned %s", Actor->GetName());
+  LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s", *Actor->GetName());
 
-    // Check if is hero vehicle
-    UWorld* World = GetWorld();
-    const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+  if (IsValid(Actor) && ActorView.GetActorType() == FActorView::ActorType::Vehicle)
+  { // Check if is hero vehicle
 
-    if(!ActorInfo)
-    {
-      return;
-    }
+    assert(ActorInfo);
 
     const FActorDescription& Description = ActorInfo->Description;
     const FActorAttribute* Attribute = Description.Variations.Find("role_name");
     // If is the hero vehicle
     if(Attribute && Attribute->Value.Contains("hero"))
     {
-      AddActorToConsider(const_cast<AActor*>(Actor));
+      LM_LOG(Error, "HERO VEHICLE DETECTED");
+
+      AddActorToConsider(Actor);
+
+      CheckIfRebaseIsNeeded();
 
       UpdateTilesState();
 
       // Wait until the pending levels changes are finished to avoid spawning
       // the car without ground underneath
       World->FlushLevelStreaming();
+
+      IsHeroVehicle = true;
     }
   }
+
+  if(!IsHeroVehicle)
+  {
+    UCarlaEpisode* CurrentEpisode = UCarlaStatics::GetCurrentEpisode(World);
+    const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
+
+    if(IsValid(Actor))
+    { // Actor was spwaned succesfully
+      // TODO: not dormant but not hero => GhostActor
+      //       LM: Map<AActor* FGhostActor>  maybe per tile and in a tile sublevel?
+
+    }
+    else
+    { // Actor was spawned as dormant
+      // TODO: dormant => no actor so Actorview stored per tile
+      //       LM: Map<ActorId, TileID> , Tile: Map<ActorID, FDormantActor>
+      //       In case of update: update Tile Map, update LM Map
+    }
+
+    //GhostActors.Add(ActorView.GetActorId(),
+    //                FGhostActor(
+    //                  ActorView,
+    //                  FDVector(Transform.GetTranslation()),
+    //                  Transform.GetRotation() ));
+  }
+
+  if (IsValid(Actor)) {
+    Actor->OnDestroyed.AddDynamic(this, &ALargeMapManager::OnActorDestroyed);
+  }
+
+}
+
+void ALargeMapManager::OnActorDestroyed(AActor* DestroyedActor)
+{
+  LM_LOG(Warning, "ALargeMapManager::OnActorDestroyed %s", *DestroyedActor->GetName());
 }
 
 void ALargeMapManager::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
-  UpdateActorsToConsiderPosition();
-
   UpdateTilesState();
 
-  // TODO: choose ego vehicle
-  if(ActorsToConsider.Num() > 0)
-  {
-    UWorldComposition* WorldComposition = GetWorld()->WorldComposition;
-    AActor* ActorToConsider = ActorsToConsider[0].Actor;
-    if( IsValid(ActorToConsider) )
-    {
-      FVector ActorLocation = ActorToConsider->GetActorLocation();
-      FIntVector ILocation = FIntVector(ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
-      //WorldComposition->EvaluateWorldOriginLocation(ActorToConsider->GetActorLocation());
-      if (ActorLocation.SizeSquared() > FMath::Square(RebaseOriginDistance)) {
+  DiscardPendingActorsToRemove();
 
-        GetWorld()->SetNewWorldOrigin(ILocation + CurrentOriginInt);
-      }
-    }
-  }
+  CheckIfRebaseIsNeeded();
+
+  /**/
 
 #if WITH_EDITOR
   if (bPrintMapInfo) PrintMapInfo();
@@ -225,12 +250,12 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 
 void ALargeMapManager::AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform)
 {
-  GhostActors.Add(ActorView.GetActorId(), {Transform, ActorView});
+  // GhostActors.Add(ActorView.GetActorId(), {Transform, ActorView});
 }
 
 void ALargeMapManager::AddActorToConsider(AActor* InActor)
 {
-  ActorsToConsider.Add({ InActor });
+  ActorsToConsider.Add(FActorToConsider(InActor));
 }
 
 void ALargeMapManager::RemoveActorToConsider(AActor* InActor)
@@ -246,7 +271,6 @@ void ALargeMapManager::RemoveActorToConsider(AActor* InActor)
       break;
     }
   }
-
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -433,42 +457,23 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
   return StreamingLevel;
 }
 
-void ALargeMapManager::UpdateActorsToConsiderPosition()
+void ALargeMapManager::UpdateTilesState()
 {
-  if (!ActorsToConsider.Num())
-  {
-    return;
-  }
+  TSet<uint64> TilesToConsider;
 
-  TArray<FActorToConsider> ActorsToRemove;
+  // Loop over ActorsToConsider to update the state of the map tiles
+  // if the actor is not valid will be removed
   for (FActorToConsider& ActorToConsider : ActorsToConsider)
   {
     AActor* Actor = ActorToConsider.Actor;
     if (IsValid(Actor))
     {
-      // Relative location to the current origin
-      FDVector ActorLocation(Actor->GetActorLocation());
-      // Absolute location of the actor
-      ActorToConsider.Location = CurrentOriginD + ActorLocation;
+      GetTilesToConsider(ActorToConsider, TilesToConsider);
     }
     else
     {
       ActorsToRemove.Add(ActorToConsider);
     }
-  }
-
-  for (const FActorToConsider& ActorToRemove : ActorsToRemove)
-  {
-    ActorsToConsider.Remove(ActorToRemove);
-  }
-}
-
-void ALargeMapManager::UpdateTilesState()
-{
-  TSet<uint64> TilesToConsider;
-  for (FActorToConsider& ActorToConsider : ActorsToConsider)
-  {
-    GetTilesToConsider(ActorToConsider, TilesToConsider);
   }
 
   TSet<uint64> TilesToBeVisible;
@@ -483,10 +488,43 @@ void ALargeMapManager::UpdateTilesState()
 
 }
 
+void ALargeMapManager::DiscardPendingActorsToRemove()
+{
+  // Discard removed actors
+  for (const FActorToConsider& ActorToRemove : ActorsToRemove)
+  {
+    ActorsToConsider.Remove(ActorToRemove);
+  }
+}
+
+void ALargeMapManager::CheckIfRebaseIsNeeded()
+{
+  if(ActorsToConsider.Num() > 0)
+  {
+    UWorld* World = GetWorld();
+    UWorldComposition* WorldComposition = World->WorldComposition;
+    // TODO: consider multiple hero vehicles for rebasing
+    AActor* ActorToConsider = ActorsToConsider[0].Actor;
+    if( IsValid(ActorToConsider) )
+    {
+      FVector ActorLocation = ActorToConsider->GetActorLocation();
+      FIntVector ILocation = FIntVector(ActorLocation.X, ActorLocation.Y, ActorLocation.Z);
+      //WorldComposition->EvaluateWorldOriginLocation(ActorToConsider->GetActorLocation());
+      if (ActorLocation.SizeSquared() > FMath::Square(RebaseOriginDistance) )
+      {
+        LM_LOG(Error, "Rebasing from %s to %s", *CurrentOriginInt.ToString(), *(ILocation + CurrentOriginInt).ToString());
+        World->SetNewWorldOrigin(ILocation + CurrentOriginInt);
+      }
+    }
+  }
+}
+
 void ALargeMapManager::GetTilesToConsider(const FActorToConsider& ActorToConsider,
                                           TSet<uint64>& OutTilesToConsider)
 {
-  FDVector ActorLocation = ActorToConsider.Location;
+  AActor* Actor = ActorToConsider.Actor;
+  // Relative location to the current origin
+  FDVector ActorLocation = CurrentOriginD + Actor->GetActorLocation();
 
   // Calculate Current Tile
   FIntVector CurrentTile = GetTileVectorID(ActorLocation);
@@ -706,17 +744,21 @@ void ALargeMapManager::PrintMapInfo()
     FString::Printf(TEXT("Actors To Consider (%d)"), ActorsToConsider.Num()) );
   for (const FActorToConsider& ActorToConsider : ActorsToConsider)
   {
-    Output = "";
-    float ToKm = 1000.0f * 100.0f;
-    FVector TileActorLocation = ActorToConsider.Actor->GetActorLocation();
-    FDVector ClientActorLocation = CurrentOriginD + FDVector(TileActorLocation);
+    AActor* Actor = ActorToConsider.Actor;
+    if (IsValid(Actor))
+    {
+      Output = "";
+      float ToKm = 1000.0f * 100.0f;
+      FVector TileActorLocation = Actor->GetActorLocation();
+      FDVector ClientActorLocation = CurrentOriginD + FDVector(TileActorLocation);
 
-    Output += FString::Printf(TEXT("Local Loc: %s meters\n"), *(TileActorLocation / ToKm).ToString());
-    Output += FString::Printf(TEXT("Client Loc: %s km\n"), *(ClientActorLocation / ToKm).ToString());
-    Output += "---------------";
-    GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, PositonMsgColor, Output);
+      Output += FString::Printf(TEXT("Local Loc: %s meters\n"), *(TileActorLocation / ToKm).ToString());
+      Output += FString::Printf(TEXT("Client Loc: %s km\n"), *(ClientActorLocation / ToKm).ToString());
+      Output += "---------------";
+      GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, PositonMsgColor, Output);
 
-    if (LastMsgIndex > MaxClientLocMsgIndex) break;
+      if (LastMsgIndex > MaxClientLocMsgIndex) break;
+    }
   }
 }
 

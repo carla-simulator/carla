@@ -51,12 +51,12 @@ struct FActorToConsider
   AActor* Actor = nullptr;
 
   // Absolute location = Current Origin + Relative Tile Location
-  FDVector Location;
+  //FDVector Location;
 
   bool operator==(const FActorToConsider& Other)
   {
-    return Actor == Other.Actor &&
-           Location == Other.Location;
+    return Actor == Other.Actor;
+           // && Location == Other.Location;
   }
 };
 
@@ -64,18 +64,25 @@ struct FActorToConsider
   Actor that was spawned or queried to be spawn at some point but it was so far away
   from the origin that was removed from the level (or not spawned).
   It is possible that the actor keeps receiving updates, eg, traffic manager.
-  FGhostActor is a wrapper of the info and state of the actor in case it needs to be re-spawned.
+  FDormantActor is a wrapper of the info and state of the actor in case it needs to be re-spawned.
 */
-struct FGhostActor
+struct FDormantActor
 {
-  FGhostActor(const FTransform& InTransform, const FActorView& InActorView) :
-    Transform(InTransform),
-    ActorView(InActorView) {}
-
-  FTransform Transform;
+  FDormantActor(
+    const FActorView& InActorView,
+    const FDVector& InWorldLocation,
+    const FQuat& InRotation)
+    : ActorView(InActorView),
+      WorldLocation(InWorldLocation),
+      Rotation(InRotation) {}
 
   FActorView ActorView;
+
+  FDVector WorldLocation;
+
+  FQuat Rotation;
 };
+/**/
 
 UCLASS()
 class CARLA_API ALargeMapManager : public AActor
@@ -99,10 +106,14 @@ protected:
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
 public:
-  void OnActorSpawned(const FActorView& ActorView);
+
+  void OnActorSpawned(const FActorView& ActorView, const FTransform& Transform);
+
+  // UFUNCTION(BlueprintAssignable, Category="Large Map Manager")
+  void OnActorDestroyed(AActor* DestroyedActor);
 
   // Called every frame
-  virtual void Tick(float DeltaTime) override;
+  void Tick(float DeltaTime) override;
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateMap(FString InAssetsPath);
@@ -145,9 +156,11 @@ protected:
 
   ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
 
-  void UpdateActorsToConsiderPosition();
-
   void UpdateTilesState();
+
+  void DiscardPendingActorsToRemove();
+
+  void CheckIfRebaseIsNeeded();
 
   void GetTilesToConsider(
     const FActorToConsider& ActorToConsider,
@@ -170,12 +183,17 @@ protected:
 
   void SpawnAssetsInTile(FCarlaMapTile& Tile);
 
-
   TMap<uint64, FCarlaMapTile> MapTiles;
 
-  TMap<uint32, FGhostActor> GhostActors;
+  // TMap<uint32, FDormantActor> DormantActors;
 
+  // TMap<AActor*, FActorView> GhostActors;
+
+  // TODO: support more than one hero vehicle
+  // All actors to be consider for tile loading
   TArray<FActorToConsider> ActorsToConsider;
+
+  TArray<FActorToConsider> ActorsToRemove;
 
   TSet<uint64> CurrentTilesLoaded;
 
@@ -191,6 +209,8 @@ protected:
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
+
+  float RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float TileSide = 2.0f * 1000.0f * 100.0f; // 2km
