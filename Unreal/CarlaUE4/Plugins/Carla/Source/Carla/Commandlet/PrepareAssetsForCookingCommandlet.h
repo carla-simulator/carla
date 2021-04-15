@@ -74,6 +74,10 @@ public:
   /// structure.
   void LoadWorld(FAssetData &AssetData);
 
+  /// Loads a UWorld object contained in Carla BaseTile into @a AssetData data
+  /// structure.
+  void LoadWorldTile(FAssetData &AssetData);
+
   /// Spawns all the static meshes located in @a AssetsPaths inside the World.
   /// There is an option to use Carla materials by setting @a bUseCarlaMaterials
   /// to true, otherwise it will use RoadRunner materials.
@@ -82,7 +86,9 @@ public:
   /// @pre World is expected to be previously loaded
   TArray<AStaticMeshActor *> SpawnMeshesToWorld(
       const TArray<FString> &AssetsPaths,
-      bool bUseCarlaMaterials);
+      bool bUseCarlaMaterials,
+      int i = -1, 
+      int j = -1);
 
   /// Saves the current World, contained in @a AssetData, into @a DestPath
   /// composed of @a PackageName and with @a WorldName.
@@ -115,6 +121,9 @@ public:
   /// all the props inside the world and saves it in .umap format
   /// in a destination path built from @a PackageName and @a MapDestPath.
   void PreparePropsForCooking(FString &PackageName, const TArray<FString> &PropsPaths, FString &MapDestPath);
+
+  /// Return if there is any tile between the assets to cook
+  bool IsMapInTiles(const TArray<FString> &AssetsPaths);
 
 public:
 

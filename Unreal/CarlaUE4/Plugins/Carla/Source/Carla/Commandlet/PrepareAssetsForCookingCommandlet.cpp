@@ -105,27 +105,54 @@ void UPrepareAssetsForCookingCommandlet::LoadWorld(FAssetData &AssetData)
   }
 }
 
+void UPrepareAssetsForCookingCommandlet::LoadWorldTile(FAssetData &AssetData)
+{
+  // BaseTile path inside Carla
+  const FString BaseTile = TEXT("/Game/Carla/Maps/TestMaps");
+
+  // Load Map folder using object library
+  MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
+  MapObjectLibrary->AddToRoot();
+  MapObjectLibrary->LoadAssetDataFromPath(*BaseTile);
+  MapObjectLibrary->LoadAssetsFromAssetData();
+  MapObjectLibrary->GetAssetDataList(AssetDatas);
+
+  if (AssetDatas.Num() > 0)
+  {
+    // Extract first asset found in folder path (i.e. the BaseTile)
+    AssetData = AssetDatas.Pop();
+  }
+}
+
 TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorld(
     const TArray<FString> &AssetsPaths,
-    bool bUseCarlaMaterials)
+    bool bUseCarlaMaterials,
+    int i,
+    int j)
 {
   TArray<AStaticMeshActor *> SpawnedMeshes;
+
+  // Create default Transform for all assets to spawn
+  const FTransform zeroTransform = FTransform();
 
   // Load assets specified in AssetsPaths by using an object library
   // for building map world
   AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
   AssetsObjectLibrary->AddToRoot();
-
   AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPaths);
   AssetsObjectLibrary->LoadAssetsFromAssetData();
   MapContents.Empty();
   AssetsObjectLibrary->GetAssetDataList(MapContents);
 
-  // Create default Transform for all assets to spawn
-  const FTransform zeroTransform = FTransform();
-
   UStaticMesh *MeshAsset;
   AStaticMeshActor *MeshActor;
+
+  // name of current tile to cook
+  FString TileName;
+  if (i != -1)
+  {
+    TileName = FString::Printf(TEXT("_Tile_%d_%d"), i, j);
+  }
 
   // try to get the name of the map that precedes all assets name
   FString AssetName;
@@ -135,43 +162,48 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
     MeshAsset = Cast<UStaticMesh>(MapAsset.GetAsset());
     if (MeshAsset && ValidateStaticMesh(MeshAsset))
     {
-      MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), zeroTransform);
-      UStaticMeshComponent *MeshComponent = MeshActor->GetStaticMeshComponent();
-      MeshComponent->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
-
-      // Rename asset
+      // get asset name
       MapAsset.AssetName.ToString(AssetName);
 
-      // set complex collision as simple in asset
-      UBodySetup *BodySetup = MeshAsset->BodySetup;
-      if (BodySetup)
+      // check to ignore meshes from other tiles
+      if (i == -1 || (i != -1 && AssetName.Contains(TileName)))
       {
-        BodySetup->CollisionTraceFlag = CTF_UseComplexAsSimple;
-        MeshAsset->MarkPackageDirty();
-      }
+        MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), zeroTransform);
+        UStaticMeshComponent *MeshComponent = MeshActor->GetStaticMeshComponent();
+        MeshComponent->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
+        MeshActor->SetActorLabel(AssetName, true);
 
-      SpawnedMeshes.Add(MeshActor);
+        // set complex collision as simple in asset
+        UBodySetup *BodySetup = MeshAsset->BodySetup;
+        if (BodySetup)
+        {
+          BodySetup->CollisionTraceFlag = CTF_UseComplexAsSimple;
+          MeshAsset->MarkPackageDirty();
+        }
 
-      if (bUseCarlaMaterials)
-      {
-        // Set Carla Materials depending on RoadRunner's Semantic Segmentation
-        // tag
-        if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
+        SpawnedMeshes.Add(MeshActor);
+
+        if (bUseCarlaMaterials)
         {
-          MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
-          MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
-        }
-        else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
-        {
-          MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
-        }
-        else if (AssetName.Contains(SSTags::R_TERRAIN))
-        {
-          MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
-        }
-        else if (AssetName.Contains(SSTags::R_SIDEWALK1) || AssetName.Contains(SSTags::R_SIDEWALK2))
-        {
-          MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterial);
+          // Set Carla Materials depending on RoadRunner's Semantic Segmentation
+          // tag
+          if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
+          {
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
+            MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
+          }
+          else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
+          {
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
+          }
+          else if (AssetName.Contains(SSTags::R_TERRAIN))
+          {
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
+          }
+          else if (AssetName.Contains(SSTags::R_SIDEWALK1) || AssetName.Contains(SSTags::R_SIDEWALK2))
+          {
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterial);
+          }
         }
       }
     }
@@ -184,6 +216,45 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
   World->MarkPackageDirty();
 
   return SpawnedMeshes;
+}
+
+bool UPrepareAssetsForCookingCommandlet::IsMapInTiles(const TArray<FString> &AssetsPaths)
+{
+  // Load assets specified in AssetsPaths by using an object library
+  // for building map world
+  AssetsObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), false, GIsEditor);
+  AssetsObjectLibrary->AddToRoot();
+  AssetsObjectLibrary->LoadAssetDataFromPaths(AssetsPaths);
+  AssetsObjectLibrary->LoadAssetsFromAssetData();
+  MapContents.Empty();
+  AssetsObjectLibrary->GetAssetDataList(MapContents);
+
+  UStaticMesh *MeshAsset;
+ 
+  FString AssetName;
+  bool Found = false;
+  for (auto MapAsset : MapContents)
+  {
+    // Spawn Static Mesh
+    MeshAsset = Cast<UStaticMesh>(MapAsset.GetAsset());
+    if (MeshAsset && ValidateStaticMesh(MeshAsset))
+    {
+      // get asset name
+      MapAsset.AssetName.ToString(AssetName);
+
+      // check if the asset is a tile
+      if (AssetName.Contains("_Tile_"))
+      {
+        Found = true;
+        break;
+      }
+    }
+  }
+  
+  // Clear loaded assets in library
+  AssetsObjectLibrary->ClearLoaded();
+
+  return Found;
 }
 
 void UPrepareAssetsForCookingCommandlet::DestroySpawnedActorsInWorld(
@@ -397,11 +468,6 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
     const FString &PackageName,
     const TArray<FMapData> &MapsPaths)
 {
-  // Load World
-  FAssetData AssetData;
-  LoadWorld(AssetData);
-  World = CastChecked<UWorld>(AssetData.GetAsset());
-
   FString BasePath = TEXT("/Game/") + PackageName + TEXT("/Static/");
 
   for (const auto &Map : MapsPaths)
@@ -417,13 +483,59 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
     // Spawn assets located in semantic segmentation folders
     TArray<FString> DataPath = {DefaultPath, RoadsPath, RoadLinesPath, TerrainPath, SidewalkPath};
 
-    TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials);
-
-    // Save the World in specified path
-    SaveWorld(AssetData, PackageName, Map.Path, Map.Name);
-
-    // Remove spawned actors from world to keep equal as BaseMap
-    DestroySpawnedActorsInWorld(SpawnedActors);
+    // check whether we have a single map or a map in tiles
+    if (!IsMapInTiles(DataPath))
+    {
+      UE_LOG(LogTemp, Log, TEXT("Cooking map"));
+      // Load World
+      FAssetData AssetData;
+      LoadWorld(AssetData);
+      World = CastChecked<UWorld>(AssetData.GetAsset());
+      // try to cook the whole map (no tiles)
+      TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials, -1, -1);
+      // Save the World in specified path
+      SaveWorld(AssetData, PackageName, Map.Path, Map.Name);
+      // Remove spawned actors from world to keep equal as BaseMap
+      DestroySpawnedActorsInWorld(SpawnedActors);
+    }
+    else
+    {
+      UE_LOG(LogTemp, Log, TEXT("Cooking tiles:"));
+      // Load World
+      FAssetData AssetData;
+      LoadWorldTile(AssetData);
+      World = CastChecked<UWorld>(AssetData.GetAsset());
+      // try to create each possible tile of the map
+      int  i, j;
+      bool Res;
+      j = 0;
+      do
+      {
+        i = 0;
+        do
+        {
+          // Spawn
+          TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials, i, j);
+          Res = SpawnedActors.Num() > 0;
+          if (Res)
+          {
+            UE_LOG(LogTemp, Log, TEXT(" Tile %d,%d found"), i, j);
+            FString TileName;
+            TileName = FString::Printf(TEXT("%s_Tile_%d_%d"), *Map.Name, i, j);
+            // Save the World in specified path
+            // UE_LOG(LogTemp, Log, TEXT("Saving as %s to %s"), *TileName, *Map.Path);
+            SaveWorld(AssetData, PackageName, Map.Path, TileName);
+            // Remove spawned actors from world to keep equal as BaseMap
+            DestroySpawnedActorsInWorld(SpawnedActors);
+            ++i;
+          }
+        }
+        while (Res);
+        ++j;
+      }
+      while (i > 0);
+      UE_LOG(LogTemp, Log, TEXT("End cooking tiles"));
+    }
   }
 }
 
