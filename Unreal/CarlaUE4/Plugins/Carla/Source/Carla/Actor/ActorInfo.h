@@ -9,6 +9,8 @@
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Game/Tagger.h"
 
+#include "Math/DVector.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ObjectLabel.h>
@@ -31,4 +33,8 @@ public:
 
   /// @todo To be used solely by the FWorldObserver.
   mutable FVector Velocity = {0.0f, 0.0f, 0.0f};
+
+  FDVector Location;
+
+  FQuat Rotation;
 };

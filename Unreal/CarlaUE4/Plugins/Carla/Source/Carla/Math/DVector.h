@@ -23,6 +23,16 @@ struct FDVector
 
   FDVector(const FIntVector& V) : X(V.X), Y(V.Y), Z(V.Z) {}
 
+  double Size() const
+  {
+    return std::sqrt(X*X + Y*Y + Z*Z);
+  }
+
+  double SizeSquared() const
+  {
+    return X*X + Y*Y + Z*Z;
+  }
+
   static double Dist(const FDVector &V1, const FDVector &V2)
   {
     return std::sqrt(FDVector::DistSquared(V1, V2));
@@ -31,6 +41,11 @@ struct FDVector
   static double DistSquared(const FDVector &V1, const FDVector &V2)
   {
     return FMath::Square(V2.X-V1.X) + FMath::Square(V2.Y-V1.Y) + FMath::Square(V2.Z-V1.Z);
+  }
+
+  FVector ToFVector() const
+  {
+    return FVector(X, Y, Z);
   }
 
   FString ToString() const

@@ -11,12 +11,10 @@
 
 #include "Math/DVector.h"
 
-//#include <compiler/disable-ue4-macros.h>
-//#include <carla/rpc/ActorDescription.h>
-//#include <compiler/enable-ue4-macros.h>
-
 #include "LargeMapManager.generated.h"
 
+
+// TODO: Cache CarlaEpisode
 
 /*
   Actor that was spawned or queried to be spawn at some point but it was so far away
@@ -164,9 +162,23 @@ protected:
 
   void UpdateTilesState();
 
-  void DiscardPendingActorsToRemove();
+  void RemovePendingActorsToRemove();
 
+  // Check if any ghost actor has to be converted into dormant actor
+  // because it went out of range (ActorStreamingDistance)
+  // Just stores the array of selected actors
   void CheckGhostActors();
+
+  // Converts ghost actors that went out of range to dormant actors
+  void ConvertGhostToDormantActors();
+
+  // Check if any dormant actor has to be converted into ghost actor
+  // because it enter in range (ActorStreamingDistance)
+  // Just stores the array of selected actors
+  void CheckDormantActors();
+
+  // Converts ghost actors that went out of range to dormant actors
+  void ConvertDormantToGhostActors();
 
   void CheckIfRebaseIsNeeded();
 
@@ -193,20 +205,19 @@ protected:
 
   TMap<uint64, FCarlaMapTile> MapTiles;
 
-  // TMap<uint32, FDormantActor> DormantActors;
-
-  // TMap<AActor*, FActorView> GhostActors;
-
-  TMap<FActorView::IdType, AActor*> GhostActors;
-
   // All actors to be consider for tile loading (all hero vehicles)
   // The first actor in the array is the one selected for rebase
   // TODO: support rebase in more than one hero vehicle
   TArray<AActor*> ActorsToConsider;
 
+  TArray<AActor*> GhostActors;
+
+  TArray<FActorView::IdType> DormantActors;
+
   // Temporal sets. Helpers to remove Actors from one array to another.
   TSet<AActor*> ActorsToRemove;
   TSet<AActor*> GhostToDormantActors;
+  TSet<FActorView::IdType> DormantToGhostActors;
 
   TSet<uint64> CurrentTilesLoaded;
 
