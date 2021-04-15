@@ -5,6 +5,7 @@
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
   * Enabling the **no_delay** option to RPC and stream sockets
+  * The special nomenclature to define roads (ROAD_ROAD), sidewalks (ROAD_SIDEWALK)... can be at any position of the asset name
   * Improved performance bencharmark script: sync, map and sensor selection, ...
   * Improved performance, destroyed PhysX state for vehicles when physics are disable
   * Improved parallelism of raycast sensors in system with large number of cores
