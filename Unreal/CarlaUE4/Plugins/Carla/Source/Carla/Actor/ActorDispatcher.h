@@ -57,8 +57,6 @@ public:
   /// destruction, false if indestructible or nullptr.
   bool DestroyActor(AActor *Actor);
 
-  bool ConvertActorDormant(AActor *Actor);
-
   /// Register an actor that was not created using "SpawnActor" function but
   /// that should be kept in the registry.
   FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription, FActorRegistry::IdType DesiredId = 0);

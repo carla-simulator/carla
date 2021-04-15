@@ -115,46 +115,6 @@ bool UActorDispatcher::DestroyActor(AActor *Actor)
   return false;
 }
 
-bool UActorDispatcher::ConvertActorDormant(AActor *Actor)
-{
-  if (Actor == nullptr) {
-    UE_LOG(LogCarla, Error, TEXT("Trying to convert dormant nullptr actor"));
-    return false;
-  }
-
-  // Check if the actor is in the registry.
-  FActorView* View = Registry.FindPtr(Actor);
-  if (!View->IsValid()) {
-    UE_LOG(LogCarla, Warning, TEXT("Trying to convert dormant actor that is not in the registry"));
-    return false;
-  }
-  View->SetActorState(carla::rpc::ActorState::Dormant);
-
-  const FString &Id = View->GetActorInfo()->Description.Id;
-
-  // Destroy its controller if present.
-  APawn* Pawn = Cast<APawn>(Actor);
-  AController* Controller = (Pawn != nullptr ? Pawn->GetController() : nullptr);
-  if (Controller != nullptr)
-  {
-    UE_LOG(LogCarla, Log, TEXT("Destroying actor's controller: '%s'"), *Id);
-    bool Success = Controller->Destroy();
-    if (!Success)
-    {
-      UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor's controller: '%s'"), *Id);
-    }
-  }
-
-  // Destroy the actor.
-  UE_LOG(LogCarla, Log, TEXT("Destroying actor: '%s'"), *Id);
-  if (Actor->Destroy())
-  {
-    return true;
-  }
-  UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor: '%s'"), *Id);
-  return false;
-}
-
 FActorView UActorDispatcher::RegisterActor(AActor &Actor, FActorDescription Description, FActorRegistry::IdType DesiredId)
 {
   FActorView View = Registry.Register(Actor, std::move(Description), DesiredId);

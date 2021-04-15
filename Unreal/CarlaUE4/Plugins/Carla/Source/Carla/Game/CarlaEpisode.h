@@ -242,11 +242,6 @@ public:
     return ActorDispatcher->DestroyActor(Actor);
   }
 
-  bool ConvertActorDormant(AActor *Actor)
-  {
-    return ActorDispatcher->ConvertActorDormant(Actor);
-  }
-
   FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
   {
     return ActorDispatcher->PrepareActorViewForFutureActor(ActorDescription);
