@@ -29,7 +29,7 @@ There are differences between them, that make them fit specific purposes. Howeve
 * __Customize the pattern__. This is where the blueprints present differences between each other.  
 
 !!! Warning
-    New props will probably interfere with the mesh navigation. If necessary, rebuild that as explained [here](tuto_A_add_map/add_map_source.md#generate-pedestrian-navigation) after doing these changes.
+    New props will probably interfere with the mesh navigation. If necessary, rebuild that as explained [here](tuto_M_add_map_source.md#generate-pedestrian-navigation) after doing these changes.
 
 ### BP_RepSpline
 

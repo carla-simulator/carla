@@ -21,9 +21,9 @@ This process is only available for Linux systems. The import process involves ru
 - These files should have the same value for `<mapName>` in order to be recognised as the same map.
 
 
-[source_ingest]: add_map_source.md
-[import_map_package]: add_map_package.md
-[rr_generate_map]: generate_map_roadrunner.md
+[source_ingest]: tuto_M_add_map_source.md
+[import_map_package]: tuto_M_add_map_package.md
+[rr_generate_map]: tuto_M_generate_map.md
 
 ---
 ## Map ingestion in a CARLA package
@@ -44,7 +44,7 @@ __3.__ Create an `input_folder`.  This is where you will put the files to be imp
 ```
 
 > !!! Note
-    This is not necessary if the package is [prepared manually](add_map_deprecated.md#manual-package-preparation), and contains a `.json` file already. 
+    This is not necessary if the package is prepared manually, and contains a `.json` file already. 
 
 __4.__ Create an `output_folder`. This is where the Docker image will write the output files after it has cooked the map. 
 
