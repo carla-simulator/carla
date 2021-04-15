@@ -7,7 +7,7 @@
 #pragma once
 
 class UCarlaEpisode;
-class FActorView;
+struct FActorView;
 struct FActorDescription;
 
 class CarlaReplayerHelper

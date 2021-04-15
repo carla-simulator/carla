@@ -84,7 +84,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
     // through all actors in registry
     for (auto It = Registry.begin(); It != Registry.end(); ++It)
     {
-      FActorView View = *It;
+      FActorView View = It.Value();
 
       switch (View.GetActorType())
       {
@@ -595,8 +595,9 @@ void ACarlaRecorder::AddExistingActors(void)
 {
   // registring all existing actors in first frame
   FActorRegistry Registry = Episode->GetActorRegistry();
-  for (auto &&View : Registry)
+  for (auto& It : Registry)
   {
+    const FActorView& View = It.Value;
     const AActor *Actor = View.GetActor();
     if (Actor != nullptr)
     {

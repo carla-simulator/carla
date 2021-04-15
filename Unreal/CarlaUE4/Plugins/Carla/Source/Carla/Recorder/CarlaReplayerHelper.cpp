@@ -382,9 +382,11 @@ void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walk
 bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero)
 {
   // set autopilot and physics to all AI vehicles
-  auto registry = Episode->GetActorRegistry();
-  for (const FActorView &ActorView : registry)
+  const FActorRegistry& Registry = Episode->GetActorRegistry();
+  for (auto& It : Registry)
   {
+    const FActorView &ActorView = It.Value;
+
     // enable physics only on vehicles
     switch (ActorView.GetActorType())
     {

@@ -88,10 +88,10 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
 
   FActorView View = MakeView(Id, Actor, std::move(Description));
 
-  auto Result = ActorDatabase.emplace(Id, View);
-  check(Result.second);
-  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
-  return Result.first->second;
+  FActorView& Result = ActorDatabase.Emplace(Id, View);
+
+  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
+  return Result;
 }
 
 FActorView FActorRegistry::PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
@@ -109,10 +109,10 @@ void FActorRegistry::Deregister(IdType Id)
   check(Contains(Id));
   AActor *Actor = Find(Id).GetActor();
   check(Actor != nullptr);
-  ActorDatabase.erase(Id);
+  ActorDatabase.Remove(Id);
   Actors.Remove(Id);
   Ids.Remove(Actor);
-  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
+  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
 }
 
 void FActorRegistry::Deregister(AActor *Actor)

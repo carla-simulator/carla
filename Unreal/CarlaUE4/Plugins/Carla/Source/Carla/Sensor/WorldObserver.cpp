@@ -215,8 +215,10 @@ static carla::Buffer FWorldObserver_Serialize(
   write_data(header);
 
   // Write every actor.
-  for (auto &&View : Registry)
+    for (auto& It : Registry)
   {
+    const FActorView& View = It.Value;
+
     check(View.IsValid());
     constexpr float TO_METERS = 1e-2;
     const auto Velocity = TO_METERS * View.GetActor()->GetVelocity();
@@ -224,6 +226,7 @@ static carla::Buffer FWorldObserver_Serialize(
     ActorDynamicState info = {
       View.GetActorId(),
       View.GetActorState(),
+      // TODO: View.GetActorTransform() { AActor? Actor->GetActorTransform(): LastSavedTransform}
       View.GetActor()->GetActorTransform(),
       carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
       FWorldObserver_GetAngularVelocity(*View.GetActor()),

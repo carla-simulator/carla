@@ -21,11 +21,13 @@ class FActorRegistry
 {
 private:
 
-  using DatabaseType = std::unordered_map<FActorView::IdType, FActorView>;
+  // using DatabaseType = std::unordered_map<FActorView::IdType, FActorView>;
+  using DatabaseType = TMap<FActorView::IdType, FActorView>;
 
 public:
 
-  using IdType = DatabaseType::key_type;
+  using IdType = FActorView::IdType;
+  using value_type = FActorView;
 
   // ===========================================================================
   /// @name Actor registry functions
@@ -58,25 +60,38 @@ public:
 
   bool IsEmpty() const
   {
-    return ActorDatabase.empty();
+    return Num() == 0;
   }
 
   bool Contains(uint32 Id) const
   {
-    return ActorDatabase.find(Id) != ActorDatabase.end();
+    return ActorDatabase.Find(Id) != nullptr;
   }
 
   FActorView Find(IdType Id) const
   {
-    auto it = ActorDatabase.find(Id);
-    return it != ActorDatabase.end() ? it->second : FActorView();
+    const FActorView* ActorView = ActorDatabase.Find(Id);
+    return ActorView ? *ActorView : FActorView();
   }
 
   FActorView Find(const AActor *Actor) const
   {
-    auto PtrToId = Ids.Find(Actor);
-    return PtrToId != nullptr ? Find(*PtrToId) : FActorView();
+    const IdType* PtrToId = Ids.Find(Actor);
+    return PtrToId ? Find(*PtrToId) : FActorView();
   }
+
+  FActorView* FindPtr(IdType Id)
+  {
+    FActorView* ActorView = ActorDatabase.Find(Id);
+    return ActorView;
+  }
+
+  FActorView* FindPtr(const AActor *Actor)
+  {
+    IdType* PtrToId = Ids.Find(Actor);
+    return PtrToId ? FindPtr(*PtrToId) : nullptr;
+  }
+
 
   /// If the actor is not found in the registry, create a fake actor view. The
   /// returned FActorView has some information about the @a Actor but will have
@@ -90,16 +105,14 @@ public:
   /// @{
 public:
 
-  using value_type = DatabaseType::mapped_type;
-
   auto begin() const noexcept
   {
-    return carla::iterator::make_map_values_const_iterator(ActorDatabase.begin());
+    return ActorDatabase.begin();
   }
 
   auto end() const noexcept
   {
-    return carla::iterator::make_map_values_const_iterator(ActorDatabase.end());
+    return ActorDatabase.end();
   }
 
   /// @}

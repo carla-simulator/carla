@@ -10,11 +10,15 @@
 
 #include "carla/rpc/ActorState.h"
 
+#include "ActorView.generated.h"
+
 class AActor;
 
 /// A view over an actor and its properties.
-class FActorView
+USTRUCT()
+struct FActorView
 {
+  GENERATED_BODY()
 public:
 
   using IdType = uint32;
@@ -30,12 +34,17 @@ public:
   };
 
   FActorView() = default;
-  FActorView(const FActorView &) = default;
-  FActorView(FActorView &&) = default;
+  // FActorView(const FActorView &) = default;
+  // FActorView(FActorView &&) = default;
 
   bool IsValid() const
   {
     return (TheActor != nullptr) && !TheActor->IsPendingKill();
+  }
+
+  bool IsDormant() const
+  {
+    return (carla::rpc::ActorState::Dormant == State);
   }
 
   IdType GetActorId() const
@@ -66,6 +75,11 @@ public:
   carla::rpc::ActorState GetActorState() const
   {
     return State;
+  }
+
+  void SetActorState(carla::rpc::ActorState InState)
+  {
+    State = InState;
   }
 
 private:
