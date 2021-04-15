@@ -11,54 +11,12 @@
 
 #include "Math/DVector.h"
 
+//#include <compiler/disable-ue4-macros.h>
+//#include <carla/rpc/ActorDescription.h>
+//#include <compiler/enable-ue4-macros.h>
+
 #include "LargeMapManager.generated.h"
 
-
-USTRUCT()
-struct FCarlaMapTile
-{
-  GENERATED_BODY()
-
-#if WITH_EDITOR
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
-  FString Name; // Tile_{TileID_X}_{TileID_Y}
-#endif // WITH_EDITOR
-
-  // Absolute location, does not depend on rebasing
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
-  FVector Location{0.0f};
-
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
-  ULevelStreamingDynamic* StreamingLevel = nullptr;
-
-  // Assets in tile waiting to be spawned
-  // TODO: categorize assets type and prioritize roads
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
-  TArray<FAssetData> PendingAssetsInTile;
-
-  bool TilesSpawned = false;
-};
-
-USTRUCT()
-struct FActorToConsider
-{
-  GENERATED_BODY()
-
-  FActorToConsider() {}
-
-  FActorToConsider(AActor* InActor) : Actor(InActor) {}
-
-  AActor* Actor = nullptr;
-
-  // Absolute location = Current Origin + Relative Tile Location
-  //FDVector Location;
-
-  bool operator==(const FActorToConsider& Other)
-  {
-    return Actor == Other.Actor;
-           // && Location == Other.Location;
-  }
-};
 
 /*
   Actor that was spawned or queried to be spawn at some point but it was so far away
@@ -66,6 +24,7 @@ struct FActorToConsider
   It is possible that the actor keeps receiving updates, eg, traffic manager.
   FDormantActor is a wrapper of the info and state of the actor in case it needs to be re-spawned.
 */
+/*
 struct FDormantActor
 {
   FDormantActor(
@@ -82,7 +41,54 @@ struct FDormantActor
 
   FQuat Rotation;
 };
-/**/
+*/
+
+USTRUCT()
+struct FGhostActor
+{
+  GENERATED_BODY()
+
+  FGhostActor() {}
+
+  FGhostActor(
+    const FActorView* InActorView,
+    const FTransform& InTransform)
+    : ActorView(InActorView),
+      WorldLocation(FDVector(InTransform.GetTranslation())),
+      Rotation(InTransform.GetRotation()) {}
+
+  const FActorView* ActorView;
+
+  FDVector WorldLocation;
+
+  FQuat Rotation;
+};
+
+USTRUCT()
+struct FCarlaMapTile
+{
+  GENERATED_BODY()
+
+#if WITH_EDITOR
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
+  FString Name; // Tile_{TileID_X}_{TileID_Y}
+#endif // WITH_EDITOR
+
+  // Absolute location, does not depend on rebasing
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
+  FVector Location{0.0f};
+  // TODO: not FVector
+
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
+  ULevelStreamingDynamic* StreamingLevel = nullptr;
+
+  // Assets in tile waiting to be spawned
+  // TODO: categorize assets type and prioritize roads
+  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
+  TArray<FAssetData> PendingAssetsInTile;
+
+  bool TilesSpawned = false;
+};
 
 UCLASS()
 class CARLA_API ALargeMapManager : public AActor
@@ -109,7 +115,7 @@ public:
 
   void OnActorSpawned(const FActorView& ActorView, const FTransform& Transform);
 
-  // UFUNCTION(BlueprintAssignable, Category="Large Map Manager")
+  UFUNCTION(Category="Large Map Manager")
   void OnActorDestroyed(AActor* DestroyedActor);
 
   // Called every frame
@@ -160,10 +166,12 @@ protected:
 
   void DiscardPendingActorsToRemove();
 
+  void CheckGhostActors();
+
   void CheckIfRebaseIsNeeded();
 
   void GetTilesToConsider(
-    const FActorToConsider& ActorToConsider,
+    const AActor* ActorToConsider,
     TSet<uint64>& OutTilesToConsider);
 
   void GetTilesThatNeedToChangeState(
@@ -189,11 +197,16 @@ protected:
 
   // TMap<AActor*, FActorView> GhostActors;
 
-  // TODO: support more than one hero vehicle
-  // All actors to be consider for tile loading
-  TArray<FActorToConsider> ActorsToConsider;
+  TMap<FActorView::IdType, AActor*> GhostActors;
 
-  TArray<FActorToConsider> ActorsToRemove;
+  // All actors to be consider for tile loading (all hero vehicles)
+  // The first actor in the array is the one selected for rebase
+  // TODO: support rebase in more than one hero vehicle
+  TArray<AActor*> ActorsToConsider;
+
+  // Temporal sets. Helpers to remove Actors from one array to another.
+  TSet<AActor*> ActorsToRemove;
+  TSet<AActor*> GhostToDormantActors;
 
   TSet<uint64> CurrentTilesLoaded;
 
@@ -208,8 +221,13 @@ protected:
   float LayerStreamingDistance = 3.0f * 1000.0f * 100.0f;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  float ActorStreamingDistance = 2.0f * 1000.0f * 100.0f;
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float RebaseOriginDistance = 2.0f * 1000.0f * 100.0f;
 
+  float LayerStreamingDistanceSquared = LayerStreamingDistance * LayerStreamingDistance;
+  float ActorStreamingDistanceSquared = ActorStreamingDistance * ActorStreamingDistance;
   float RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
@@ -255,5 +273,4 @@ protected:
   bool bPrintErrors = false;
 
 #endif // WITH_EDITOR
-
 };

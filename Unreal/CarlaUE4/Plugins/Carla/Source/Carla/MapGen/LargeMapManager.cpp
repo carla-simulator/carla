@@ -33,7 +33,7 @@ ALargeMapManager::ALargeMapManager()
 
 ALargeMapManager::~ALargeMapManager()
 {
-  /* Remove delegates */
+  /// Remove delegates
   // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.RemoveAll(this);
   FCoreDelegates::PostWorldOriginOffset.RemoveAll(this);
@@ -49,7 +49,7 @@ void ALargeMapManager::BeginPlay()
   Super::BeginPlay();
 
   UWorld* World = GetWorld();
-  /* Setup delegates */
+  /// Setup delegates
   // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.AddUObject(this, &ALargeMapManager::PreWorldOriginOffset);
   FCoreDelegates::PostWorldOriginOffset.AddUObject(this, &ALargeMapManager::PostWorldOriginOffset);
@@ -104,7 +104,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
-  //FDebug::DumpStackTraceToLog(/*ELogVerbosity::Log*/);
+  //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   SpawnAssetsInTile(Tile);
 }
@@ -112,12 +112,14 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelRemovedFromWorld");
-  //FDebug::DumpStackTraceToLog(/*ELogVerbosity::Log*/);
+  //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   Tile.TilesSpawned = false;
 }
 
-void ALargeMapManager::OnActorSpawned(const FActorView& ActorView, const FTransform& Transform)
+void ALargeMapManager::OnActorSpawned(
+    const FActorView& ActorView,
+    const FTransform& Transform)
 {
   UWorld* World = GetWorld();
   const FActorInfo* ActorInfo = ActorView.GetActorInfo();
@@ -152,15 +154,22 @@ void ALargeMapManager::OnActorSpawned(const FActorView& ActorView, const FTransf
     }
   }
 
+  // Any other actor that its role is not "hero"
   if(!IsHeroVehicle)
   {
     UCarlaEpisode* CurrentEpisode = UCarlaStatics::GetCurrentEpisode(World);
     const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
 
+    // Any actor that is not the hero vehicle could possible be destroyed at some point
+    // we need to store the ActorView information to be able to spawn it again if needed
+
+
     if(IsValid(Actor))
     { // Actor was spwaned succesfully
       // TODO: not dormant but not hero => GhostActor
       //       LM: Map<AActor* FGhostActor>  maybe per tile and in a tile sublevel?
+
+      GhostActors.Add(ActorView.GetActorId(), Actor);
 
     }
     else
@@ -192,13 +201,17 @@ void ALargeMapManager::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
+  // First we check if ghost actors have to be spawn or removed
+  CheckGhostActors();
+
+  // Update map tiles, load/unload based on actors to consider (heros) position
+  // Also, to avoid looping over the heros again, it checks if any actor to consider has been removed
   UpdateTilesState();
 
+  // Remove the hero actors that doesn't exits any more from the ActorsToConsider vector
   DiscardPendingActorsToRemove();
 
   CheckIfRebaseIsNeeded();
-
-  /**/
 
 #if WITH_EDITOR
   if (bPrintMapInfo) PrintMapInfo();
@@ -214,13 +227,13 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   AssetsPath = InAssetsPath;
 #endif // WITH_EDITOR
 
-  /* Retrive all the assets in the path */
+  /// Retrive all the assets in the path
   TArray<FAssetData> AssetsData;
   UObjectLibrary* ObjectLibrary = UObjectLibrary::CreateLibrary(UStaticMesh::StaticClass(), true, true);
   ObjectLibrary->LoadAssetDataFromPath(InAssetsPath);
   ObjectLibrary->GetAssetDataList(AssetsData);
 
-  /* Generate tiles based on mesh positions */
+  /// Generate tiles based on mesh positions
   UWorld* World = GetWorld();
   MapTiles.Reset();
   for (const FAssetData& AssetData : AssetsData)
@@ -255,7 +268,7 @@ void ALargeMapManager::AddActorToUnloadedList(const FActorView& ActorView, const
 
 void ALargeMapManager::AddActorToConsider(AActor* InActor)
 {
-  ActorsToConsider.Add(FActorToConsider(InActor));
+  ActorsToConsider.Add(InActor);
 }
 
 void ALargeMapManager::RemoveActorToConsider(AActor* InActor)
@@ -263,10 +276,10 @@ void ALargeMapManager::RemoveActorToConsider(AActor* InActor)
   int Index = 0;
   for (int i = 0; i < ActorsToConsider.Num(); i++)
   {
-    const FActorToConsider& ActorToConsider = ActorsToConsider[i];
-    if (ActorToConsider.Actor == InActor)
+    AActor* Actor = ActorsToConsider[i];
+    if (Actor == InActor)
     {
-      ActorsToConsider.Remove(ActorToConsider);
+      ActorsToConsider.Remove(Actor);
       Index = i;
       break;
     }
@@ -463,16 +476,15 @@ void ALargeMapManager::UpdateTilesState()
 
   // Loop over ActorsToConsider to update the state of the map tiles
   // if the actor is not valid will be removed
-  for (FActorToConsider& ActorToConsider : ActorsToConsider)
+  for (AActor* Actor : ActorsToConsider)
   {
-    AActor* Actor = ActorToConsider.Actor;
     if (IsValid(Actor))
     {
-      GetTilesToConsider(ActorToConsider, TilesToConsider);
+      GetTilesToConsider(Actor, TilesToConsider);
     }
     else
     {
-      ActorsToRemove.Add(ActorToConsider);
+      ActorsToRemove.Add(Actor);
     }
   }
 
@@ -491,10 +503,11 @@ void ALargeMapManager::UpdateTilesState()
 void ALargeMapManager::DiscardPendingActorsToRemove()
 {
   // Discard removed actors
-  for (const FActorToConsider& ActorToRemove : ActorsToRemove)
+  for (AActor* ActorToRemove : ActorsToRemove)
   {
     ActorsToConsider.Remove(ActorToRemove);
   }
+  ActorsToRemove.Reset();
 }
 
 void ALargeMapManager::CheckIfRebaseIsNeeded()
@@ -504,7 +517,7 @@ void ALargeMapManager::CheckIfRebaseIsNeeded()
     UWorld* World = GetWorld();
     UWorldComposition* WorldComposition = World->WorldComposition;
     // TODO: consider multiple hero vehicles for rebasing
-    AActor* ActorToConsider = ActorsToConsider[0].Actor;
+    AActor* ActorToConsider = ActorsToConsider[0];
     if( IsValid(ActorToConsider) )
     {
       FVector ActorLocation = ActorToConsider->GetActorLocation();
@@ -519,12 +532,35 @@ void ALargeMapManager::CheckIfRebaseIsNeeded()
   }
 }
 
-void ALargeMapManager::GetTilesToConsider(const FActorToConsider& ActorToConsider,
+void ALargeMapManager::CheckGhostActors()
+{
+  UWorld* World = GetWorld();
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
+  // Check if they have to be destroyed
+  for(auto& It : GhostActors)
+  {
+    AActor* Actor = It.Value;
+    check(Actor);
+
+    FVector ActorLocation = Actor->GetActorLocation();
+
+    if( ActorLocation.SizeSquared() > ActorStreamingDistanceSquared)
+    {
+      // To dormant state
+      CarlaEpisode->ConvertActorDormant(Actor);
+      // Save to temporal container. Later will be included with dormant actors
+      GhostToDormantActors.Add(Actor);
+    }
+  }
+}
+
+void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
                                           TSet<uint64>& OutTilesToConsider)
 {
-  AActor* Actor = ActorToConsider.Actor;
-  // Relative location to the current origin
-  FDVector ActorLocation = CurrentOriginD + Actor->GetActorLocation();
+  check(ActorToConsider);
+  // World location
+  FDVector ActorLocation = CurrentOriginD + ActorToConsider->GetActorLocation();
 
   // Calculate Current Tile
   FIntVector CurrentTile = GetTileVectorID(ActorLocation);
@@ -547,10 +583,10 @@ void ALargeMapManager::GetTilesToConsider(const FActorToConsider& ActorToConside
       }
 
       // Calculate distance between actor and tile
-      float Distance = FDVector::Dist(Tile->Location, ActorLocation);
+      float Distance2 = FDVector::DistSquared(Tile->Location, ActorLocation);
 
       // Load level if we are in range
-      if (Distance < LayerStreamingDistance)
+      if (Distance2 < LayerStreamingDistanceSquared)
       {
         OutTilesToConsider.Add(TileID);
       }
@@ -741,10 +777,11 @@ void ALargeMapManager::PrintMapInfo()
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("Origin: %s km"), *(FDVector(CurrentOriginInt) / (1000.0 * 100.0)).ToString()) );
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
+     FString::Printf(TEXT("Num ghost actors (%d)"), GhostActors.Num()) );
+  GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("Actors To Consider (%d)"), ActorsToConsider.Num()) );
-  for (const FActorToConsider& ActorToConsider : ActorsToConsider)
+  for (const AActor* Actor : ActorsToConsider)
   {
-    AActor* Actor = ActorToConsider.Actor;
     if (IsValid(Actor))
     {
       Output = "";
@@ -763,3 +800,4 @@ void ALargeMapManager::PrintMapInfo()
 }
 
 #endif // WITH_EDITOR
+
