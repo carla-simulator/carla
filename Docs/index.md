@@ -65,10 +65,7 @@ CARLA forum</a>
 [__carlaviz — web visualizer__](plugins_carlaviz.md) — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.  
 
 ## ROS bridge
-[__ROS bridge installation__](ros_installation.md) — The different ways to install the ROS bridge.  
-[__CARLA messages reference__](ros_msgs.md) — Contains explanations and fields for every type of CARLA message available in ROS.  
-[__Launchfiles reference__](ros_launchs.md) — Lists the launchfiles and nodes provided, and the topics being consumed and published.  
-
+[__ROS bridge documentation__](ros_documentation.md) — Brief overview of the ROS bridge and a link to the full documentation
 ## Tutorials — General
 [__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define dynamic box triggers for wheels.  
 [__Control vehicle physics__](tuto_G_control_vehicle_physics.md) — Set runtime changes on a vehicle physics.  

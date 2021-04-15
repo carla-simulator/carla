@@ -44,9 +44,7 @@ nav:
 - Plugins:
   - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
 - ROS bridge:
-  - 'ROS bridge installation': 'ros_installation.md'
-  - 'CARLA messages reference': 'ros_msgs.md'
-  - 'Launchfiles reference': 'ros_launchs.md'
+  - 'ROS bridge documentation': 'ros_documentation.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
