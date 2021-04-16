@@ -274,6 +274,7 @@ void export_world() {
     .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")))
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
     .def("get_actors", &GetActorsById, (arg("actor_ids")))
+    .def("get_actors_in_range", CONST_CALL_WITHOUT_GIL_3(cc::World, GetActorsInRange, cg::Location, float, std::string), (arg("location"), arg("range"), arg("actor_type")="*"))
     .def("spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(SpawnActor))
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))

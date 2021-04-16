@@ -108,6 +108,28 @@ namespace client {
                                   _episode.Lock()->GetActorsById(actor_ids)}};
   }
 
+  SharedPtr<ActorList> World::GetActorsInRange(
+    geom::Location position,
+    float range,
+    std::string actor_type) const
+  {
+    SharedPtr<ActorList> actors = GetActors();
+    SharedPtr<ActorList> filtered (new ActorList(_episode, {}));
+    float range2 = range * range;
+
+    actors = actors->Filter(actor_type);
+
+    for (size_t i = 0; i < actors->size(); i++) {
+      SharedPtr<Actor> actor = actors->at(i);
+      float actor_distance2 = (actor->GetLocation() - position).SquaredLength();
+      if(actor_distance2 <= range2)
+      {
+        filtered->_actors.emplace_back(actor);
+      }
+    }
+    return filtered;
+  }
+
   SharedPtr<Actor> World::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,

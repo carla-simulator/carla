@@ -101,6 +101,12 @@ namespace client {
     /// Return a list with the actors requested by ActorId.
     SharedPtr<ActorList> GetActors(const std::vector<ActorId> &actor_ids) const;
 
+    /// Return a list with the actors in the requested range
+    SharedPtr<ActorList> GetActorsInRange(
+        geom::Location position,
+        float range,
+        std::string actor_type = "*") const;
+
     /// Spawn an actor into the world based on the @a blueprint provided at @a
     /// transform. If a @a parent is provided, the actor is attached to
     /// @a parent.
