@@ -1,0 +1,11 @@
+{
+   "maps": [
+      {
+         "source": "./Tmp2/Tmp2.fbx",
+         "use_carla_materials": false,
+         "name": "Tmp2",
+         "xodr": "./Tmp2/Tmp2.xodr"
+      }
+   ],
+   "props": []
+}

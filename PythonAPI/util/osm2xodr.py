@@ -37,15 +37,24 @@ class Osm2Xodr:
         f.write(data)
         f.close()
 
-    def save_xodr(self):
-        self.save_data_to_file(self.xodr_data(), self.xodr_path)
+    def save_xodr(self, args):
+        self.save_data_to_file(self.xodr_data(args), self.xodr_path)
 
-    def xodr_data(self):
-        return carla.Osm2Odr.convert(self.osm_data(), carla.Osm2OdrSettings())
+    def xodr_data(self, args):
+        setting = carla.Osm2OdrSettings()
 
-def main(osm_path, xodr_path, carla_host):
+        setting.use_offsets = args.use_offsets
+        setting.offset_x = args.offset_x
+        setting.offset_y = args.offset_y
+
+        return carla.Osm2Odr.convert(
+            self.osm_data(),
+            setting
+        )
+
+def main(osm_path, xodr_path, carla_host, args):
     osm_2_xodr = Osm2Xodr(osm_path, xodr_path, carla_host)
-    osm_2_xodr.save_xodr()
+    osm_2_xodr.save_xodr(args)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='This script is a middleware for Carla-Veins synchronization.')
@@ -53,5 +62,9 @@ if __name__ == '__main__':
     parser.add_argument('--xodr_path')
     parser.add_argument('--carla_host', default='127.0.0.1')
 
+    parser.add_argument('--use_offsets', action='store_true')
+    parser.add_argument('--offset_x', type=float, default=0.0)
+    parser.add_argument('--offset_y', type=float, default=0.0)
+
     args = parser.parse_args()
-    main(args.osm_path, args.xodr_path, args.carla_host)
+    main(args.osm_path, args.xodr_path, args.carla_host, args)

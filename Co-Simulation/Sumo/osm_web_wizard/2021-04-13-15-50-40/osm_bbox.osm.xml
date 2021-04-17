@@ -1,0 +1,1101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API 0.7.56.9 76e5016d">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="2021-04-13T06:49:09Z"/>
+
+  <node id="1420950698" lat="36.0509680" lon="136.2135140">
+    <tag k="KSJ2:ADS" v="みのり2-3-44"/>
+    <tag k="KSJ2:AdminArea" v="福井県福井市"/>
+    <tag k="KSJ2:PubFacAdmin" v="民間"/>
+    <tag k="amenity" v="kindergarten"/>
+    <tag k="name" v="鹿苑第一保育園"/>
+    <tag k="note" v="National-Land Numerical Information (Public Facility) 2006, MLIT Japan"/>
+    <tag k="note:ja" v="国土数値情報（公共施設データ）平成19年　国土交通省"/>
+    <tag k="source" v="KSJ2"/>
+    <tag k="source_ref" v="http://nlftp.mlit.go.jp/ksj/jpgis/datalist/KsjTmplt-P02-v2_0.html"/>
+  </node>
+  <node id="1420950701" lat="36.0509680" lon="136.2135140">
+    <tag k="KSJ2:ADS" v="みのり2-3-44"/>
+    <tag k="KSJ2:AdminArea" v="福井県福井市"/>
+    <tag k="KSJ2:PubFacAdmin" v="民間"/>
+    <tag k="amenity" v="kindergarten"/>
+    <tag k="name" v="鹿苑第二保育園"/>
+    <tag k="note" v="National-Land Numerical Information (Public Facility) 2006, MLIT Japan"/>
+    <tag k="note:ja" v="国土数値情報（公共施設データ）平成19年　国土交通省"/>
+    <tag k="source" v="KSJ2"/>
+    <tag k="source_ref" v="http://nlftp.mlit.go.jp/ksj/jpgis/datalist/KsjTmplt-P02-v2_0.html"/>
+  </node>
+  <node id="1669704498" lat="36.0394917" lon="136.2140964"/>
+  <node id="1669705873" lat="36.0405519" lon="136.2142409"/>
+  <node id="1669706857" lat="36.0415883" lon="136.2145418"/>
+  <node id="1669707749" lat="36.0428389" lon="136.2149947"/>
+  <node id="1669708468" lat="36.0437252" lon="136.2152021"/>
+  <node id="1669709156" lat="36.0445600" lon="136.2151918"/>
+  <node id="1669710604" lat="36.0457044" lon="136.2152565"/>
+  <node id="1669711858" lat="36.0469447" lon="136.2147926"/>
+  <node id="1669713297" lat="36.0481423" lon="136.2120189"/>
+  <node id="1669713305" lat="36.0481496" lon="136.2112302"/>
+  <node id="1669713306" lat="36.0481098" lon="136.2146619"/>
+  <node id="1669713316" lat="36.0481580" lon="136.2104086"/>
+  <node id="1669713318" lat="36.0481177" lon="136.2151930"/>
+  <node id="1669713332" lat="36.0481708" lon="136.2095831"/>
+  <node id="1669713364" lat="36.0481828" lon="136.2079992">
+    <tag k="highway" v="traffic_signals"/>
+    <tag k="name" v="みのり"/>
+    <tag k="traffic_signals" v="signal"/>
+  </node>
+  <node id="1669713376" lat="36.0481845" lon="136.2172910"/>
+  <node id="1669713568" lat="36.0483350" lon="136.2155382"/>
+  <node id="1669713595" lat="36.0483690" lon="136.2151965"/>
+  <node id="1669714145" lat="36.0489744" lon="136.2160735"/>
+  <node id="1669714784" lat="36.0497821" lon="136.2161161"/>
+  <node id="1669714877" lat="36.0498379" lon="136.2155942"/>
+  <node id="1669715086" lat="36.0500984" lon="136.2151521"/>
+  <node id="1669715314" lat="36.0504134" lon="136.2151434"/>
+  <node id="1669715324" lat="36.0504022" lon="136.2156232"/>
+  <node id="1669715337" lat="36.0503693" lon="136.2161477"/>
+  <node id="1669715339" lat="36.0503954" lon="136.2168653"/>
+  <node id="1669717034" lat="36.0519342" lon="136.2157041"/>
+  <node id="1669717078" lat="36.0519465" lon="136.2150508"/>
+  <node id="1669717609" lat="36.0525342" lon="136.2150233">
+    <tag k="highway" v="traffic_signals"/>
+    <tag k="name" v="新木田"/>
+    <tag k="name:en" v="Shinkida"/>
+  </node>
+  <node id="1669717634" lat="36.0525798" lon="136.2112476"/>
+  <node id="3393758395" lat="36.0482254" lon="136.2165823">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="3393758397" lat="36.0503659" lon="136.2165208">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="3393758398" lat="36.0508010" lon="136.2156443"/>
+  <node id="3393758399" lat="36.0508170" lon="136.2161744"/>
+  <node id="3393758400" lat="36.0508195" lon="136.2164765"/>
+  <node id="3757611892" lat="36.0408326" lon="136.2143026"/>
+  <node id="3757611893" lat="36.0410952" lon="136.2143756"/>
+  <node id="3757611895" lat="36.0413285" lon="136.2144492"/>
+  <node id="3757611899" lat="36.0433902" lon="136.2151505"/>
+  <node id="3757611900" lat="36.0435127" lon="136.2151808"/>
+  <node id="4358268307" lat="36.0477329" lon="136.2164164"/>
+  <node id="4358268308" lat="36.0477535" lon="136.2159296"/>
+  <node id="4358268309" lat="36.0477676" lon="136.2155889"/>
+  <node id="4358268310" lat="36.0479596" lon="136.2159618"/>
+  <node id="4358268311" lat="36.0479703" lon="136.2151967"/>
+  <node id="4358268312" lat="36.0480127" lon="136.2155031"/>
+  <node id="4358268313" lat="36.0481417" lon="136.2155125"/>
+  <node id="4358268314" lat="36.0481764" lon="136.2151938"/>
+  <node id="4358268315" lat="36.0481916" lon="136.2167973"/>
+  <node id="4358268316" lat="36.0481987" lon="136.2167537"/>
+  <node id="4358268318" lat="36.0482368" lon="136.2164843"/>
+  <node id="4358268320" lat="36.0482851" lon="136.2160190"/>
+  <node id="4358268321" lat="36.0485321" lon="136.2155795"/>
+  <node id="4358268323" lat="36.0489072" lon="136.2164848"/>
+  <node id="4358268324" lat="36.0490377" lon="136.2157634"/>
+  <node id="4358268325" lat="36.0490829" lon="136.2155420"/>
+  <node id="4358268326" lat="36.0491074" lon="136.2155038"/>
+  <node id="4358268327" lat="36.0491664" lon="136.2154119"/>
+  <node id="4358268329" lat="36.0492084" lon="136.2151691"/>
+  <node id="4358268331" lat="36.0494234" lon="136.2164834"/>
+  <node id="4358268332" lat="36.0494656" lon="136.2160994"/>
+  <node id="4358268334" lat="36.0495227" lon="136.2155610"/>
+  <node id="4358268336" lat="36.0498368" lon="136.2156043"/>
+  <node id="4358268337" lat="36.0498701" lon="136.2151535"/>
+  <node id="4358268338" lat="36.0500772" lon="136.2164821"/>
+  <node id="4358268339" lat="36.0500880" lon="136.2161325"/>
+  <node id="4358268340" lat="36.0501035" lon="136.2156078"/>
+  <node id="4358268562" lat="36.0500956" lon="136.2146730"/>
+  <node id="4358268563" lat="36.0501531" lon="136.2134297"/>
+  <node id="4358268564" lat="36.0501780" lon="136.2146730"/>
+  <node id="4358268565" lat="36.0504740" lon="136.2145348"/>
+  <node id="4358268566" lat="36.0505348" lon="136.2145321"/>
+  <node id="4358268567" lat="36.0506790" lon="136.2134686"/>
+  <node id="4358268568" lat="36.0506887" lon="136.2146260"/>
+  <node id="4358268569" lat="36.0507332" lon="136.2146354"/>
+  <node id="4358268570" lat="36.0507766" lon="136.2134606"/>
+  <node id="4358268571" lat="36.0507830" lon="136.2151211"/>
+  <node id="4358268572" lat="36.0507921" lon="136.2146280"/>
+  <node id="4358268573" lat="36.0508720" lon="136.2146180"/>
+  <node id="4358268574" lat="36.0509891" lon="136.2145697"/>
+  <node id="4358268575" lat="36.0511918" lon="136.2145563"/>
+  <node id="4358268576" lat="36.0513165" lon="136.2150889"/>
+  <node id="4358268577" lat="36.0513328" lon="136.2146166"/>
+  <node id="4358268578" lat="36.0515236" lon="136.2146502"/>
+  <node id="4358268579" lat="36.0515269" lon="136.2130891"/>
+  <node id="4358268580" lat="36.0515301" lon="136.2133251"/>
+  <node id="4358268581" lat="36.0515540" lon="136.2126385"/>
+  <node id="4358268582" lat="36.0516602" lon="136.2122295"/>
+  <node id="4358268583" lat="36.0516646" lon="136.2146475"/>
+  <node id="4358268584" lat="36.0517578" lon="136.2142277"/>
+  <node id="4358268585" lat="36.0517773" lon="136.2144155"/>
+  <node id="4358268586" lat="36.0517806" lon="136.2146099"/>
+  <node id="4358268587" lat="36.0518175" lon="136.2115991"/>
+  <node id="4358276589" lat="36.0518944" lon="136.2112733"/>
+  <node id="4358276590" lat="36.0518987" lon="136.2142089"/>
+  <node id="4358276592" lat="36.0519443" lon="136.2112344"/>
+  <node id="4358276597" lat="36.0522880" lon="136.2112384"/>
+  <node id="4358337714" lat="36.0469549" lon="136.2152218"/>
+  <node id="4358337729" lat="36.0476360" lon="136.2152049"/>
+  <node id="4358337732" lat="36.0477556" lon="136.2158797"/>
+  <node id="4358337734" lat="36.0482146" lon="136.2166560">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358337735" lat="36.0482199" lon="136.2166203">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358337736" lat="36.0482295" lon="136.2165543">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358337746" lat="36.0488579" lon="136.2167389">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358337747" lat="36.0488627" lon="136.2167013">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358337748" lat="36.0488763" lon="136.2165954">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358337759" lat="36.0503689" lon="136.2165559">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358569544" lat="36.0458523" lon="136.2152524"/>
+  <node id="4358569556" lat="36.0460962" lon="136.2119739"/>
+  <node id="4358569560" lat="36.0461850" lon="136.2103539"/>
+  <node id="4358569562" lat="36.0462355" lon="136.2152418"/>
+  <node id="4358569571" lat="36.0463678" lon="136.2151081"/>
+  <node id="4358569582" lat="36.0467110" lon="136.2119875"/>
+  <node id="4358569585" lat="36.0467807" lon="136.2103704"/>
+  <node id="4358569594" lat="36.0470400" lon="136.2147353"/>
+  <node id="4358569601" lat="36.0471528" lon="136.2146951"/>
+  <node id="4358569602" lat="36.0471729" lon="136.2119976"/>
+  <node id="4358569603" lat="36.0471970" lon="136.2103820"/>
+  <node id="4358569611" lat="36.0474109" lon="136.2146870"/>
+  <node id="4358569612" lat="36.0475935" lon="136.2120068"/>
+  <node id="4358569613" lat="36.0476108" lon="136.2103934"/>
+  <node id="4358569625" lat="36.0477687" lon="136.2147165"/>
+  <node id="4358569627" lat="36.0481113" lon="136.2147648"/>
+  <node id="4358569628" lat="36.0481185" lon="136.2139534"/>
+  <node id="4358569629" lat="36.0481306" lon="136.2129703"/>
+  <node id="4358569630" lat="36.0481338" lon="136.2127075"/>
+  <node id="4358569631" lat="36.0481369" lon="136.2124608"/>
+  <node id="4358569632" lat="36.0481472" lon="136.2114871"/>
+  <node id="4358569635" lat="36.0484507" lon="136.2139561"/>
+  <node id="4358569636" lat="36.0484583" lon="136.2124688"/>
+  <node id="4358569637" lat="36.0484583" lon="136.2129771"/>
+  <node id="4358569638" lat="36.0484713" lon="136.2114965"/>
+  <node id="4358569639" lat="36.0485873" lon="136.2112368"/>
+  <node id="4358569640" lat="36.0485914" lon="136.2109668"/>
+  <node id="4358569641" lat="36.0486080" lon="136.2112371"/>
+  <node id="4358569642" lat="36.0486123" lon="136.2095875"/>
+  <node id="4358569643" lat="36.0486166" lon="136.2084107"/>
+  <node id="4358569644" lat="36.0486229" lon="136.2127101"/>
+  <node id="4358569645" lat="36.0486231" lon="136.2127357"/>
+  <node id="4358569651" lat="36.0488427" lon="136.2169693"/>
+  <node id="4358569652" lat="36.0488728" lon="136.2166231">
+    <tag k="railway" v="level_crossing"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </node>
+  <node id="4358569653" lat="36.0488812" lon="136.2144912"/>
+  <node id="4358569654" lat="36.0489344" lon="136.2109641"/>
+  <node id="4358569655" lat="36.0489420" lon="136.2112328"/>
+  <node id="4358569656" lat="36.0489441" lon="136.2140996"/>
+  <node id="4358569657" lat="36.0489474" lon="136.2095908"/>
+  <node id="4358569658" lat="36.0489565" lon="136.2131274"/>
+  <node id="4358569659" lat="36.0489615" lon="136.2127371"/>
+  <node id="4358569660" lat="36.0489661" lon="136.2079181"/>
+  <node id="4358569661" lat="36.0489692" lon="136.2083777"/>
+  <node id="4358569665" lat="36.0491393" lon="136.2137335"/>
+  <node id="4358569666" lat="36.0491414" lon="136.2131327"/>
+  <node id="4358569667" lat="36.0492748" lon="136.2109614"/>
+  <node id="4358569668" lat="36.0492857" lon="136.2095941"/>
+  <node id="4358569669" lat="36.0492911" lon="136.2112339"/>
+  <node id="4358569670" lat="36.0492998" lon="136.2127361"/>
+  <node id="4358569671" lat="36.0492999" lon="136.2083467"/>
+  <node id="4358569672" lat="36.0493388" lon="136.2144805"/>
+  <node id="4358569673" lat="36.0494126" lon="136.2144854"/>
+  <node id="4358569674" lat="36.0494298" lon="136.2141379"/>
+  <node id="4358569676" lat="36.0494456" lon="136.2137571"/>
+  <node id="4358569677" lat="36.0494559" lon="136.2135082"/>
+  <node id="4358569678" lat="36.0495079" lon="136.2150196"/>
+  <node id="4358569679" lat="36.0495318" lon="136.2133768"/>
+  <node id="4358569680" lat="36.0495817" lon="136.2144966"/>
+  <node id="4358569681" lat="36.0496326" lon="136.2095976"/>
+  <node id="4358569682" lat="36.0496337" lon="136.2112350"/>
+  <node id="4358569683" lat="36.0496381" lon="136.2127352"/>
+  <node id="4358569684" lat="36.0496424" lon="136.2101112"/>
+  <node id="4358569685" lat="36.0496453" lon="136.2083144"/>
+  <node id="4358569686" lat="36.0497161" lon="136.2150840"/>
+  <node id="4358569687" lat="36.0497899" lon="136.2145395"/>
+  <node id="4358569893" lat="36.0500045" lon="136.2098215"/>
+  <node id="4358569894" lat="36.0500093" lon="136.2101029"/>
+  <node id="4358569895" lat="36.0500166" lon="136.2078238"/>
+  <node id="4358569896" lat="36.0500209" lon="136.2082792"/>
+  <node id="4358569897" lat="36.0500266" lon="136.2096015"/>
+  <node id="4358569898" lat="36.0500283" lon="136.2112362"/>
+  <node id="4358569899" lat="36.0500306" lon="136.2113718"/>
+  <node id="4358569900" lat="36.0500327" lon="136.2095359"/>
+  <node id="4358569901" lat="36.0500501" lon="136.2119056"/>
+  <node id="4358569902" lat="36.0500935" lon="136.2125976"/>
+  <node id="4358569903" lat="36.0501040" lon="136.2127340"/>
+  <node id="4358569904" lat="36.0501086" lon="136.2127934"/>
+  <node id="4358569905" lat="36.0501152" lon="136.2141919"/>
+  <node id="4358569906" lat="36.0501343" lon="136.2138087"/>
+  <node id="4358569907" lat="36.0501607" lon="136.2130992"/>
+  <node id="4358569908" lat="36.0501611" lon="136.2131258"/>
+  <node id="4358569909" lat="36.0501614" lon="136.2131449"/>
+  <node id="4358569910" lat="36.0502388" lon="136.2098859"/>
+  <node id="4358569911" lat="36.0502583" lon="136.2109346"/>
+  <node id="4358569912" lat="36.0502691" lon="136.2115220"/>
+  <node id="4358569913" lat="36.0503412" lon="136.2129275"/>
+  <node id="4358569914" lat="36.0503515" lon="136.2131287"/>
+  <node id="4358569916" lat="36.0504057" lon="136.2131448"/>
+  <node id="4358569922" lat="36.0505922" lon="136.2102909"/>
+  <node id="4358569923" lat="36.0505951" lon="136.2109346"/>
+  <node id="4358569924" lat="36.0505963" lon="136.2112238"/>
+  <node id="4358569925" lat="36.0506093" lon="136.2115073"/>
+  <node id="4358569927" lat="36.0506551" lon="136.2125091"/>
+  <node id="4358569930" lat="36.0509327" lon="136.2110003"/>
+  <node id="4358569931" lat="36.0509327" lon="136.2110513"/>
+  <node id="4358569932" lat="36.0509327" lon="136.2113919"/>
+  <node id="4358569933" lat="36.0509327" lon="136.2116575"/>
+  <node id="4358569934" lat="36.0509381" lon="136.2107053"/>
+  <node id="4358569935" lat="36.0509381" lon="136.2107938"/>
+  <node id="4358569936" lat="36.0509392" lon="136.2116360"/>
+  <node id="4358569937" lat="36.0509435" lon="136.2131099"/>
+  <node id="4358569938" lat="36.0509446" lon="136.2112927"/>
+  <node id="4358569939" lat="36.0509446" lon="136.2113276"/>
+  <node id="4358569940" lat="36.0509511" lon="136.2106530"/>
+  <node id="4358569941" lat="36.0509555" lon="136.2108917"/>
+  <node id="4358569942" lat="36.0509555" lon="136.2109266"/>
+  <node id="4358569943" lat="36.0509587" lon="136.2111264"/>
+  <node id="4358569944" lat="36.0509587" lon="136.2116012"/>
+  <node id="4358569945" lat="36.0509609" lon="136.2116695"/>
+  <node id="4358569946" lat="36.0509620" lon="136.2118224"/>
+  <node id="4358569947" lat="36.0509621" lon="136.2112158"/>
+  <node id="4358569948" lat="36.0509630" lon="136.2112873"/>
+  <node id="4358569949" lat="36.0509685" lon="136.2119230"/>
+  <node id="4358569950" lat="36.0509823" lon="136.2128700"/>
+  <node id="4358569951" lat="36.0509858" lon="136.2115797"/>
+  <node id="4358569952" lat="36.0509934" lon="136.2120035"/>
+  <node id="4358569953" lat="36.0510118" lon="136.2102884"/>
+  <node id="4358569954" lat="36.0510129" lon="136.2126807"/>
+  <node id="4358569955" lat="36.0510140" lon="136.2105202"/>
+  <node id="4358569956" lat="36.0510194" lon="136.2115757"/>
+  <node id="4358569957" lat="36.0510281" lon="136.2096190"/>
+  <node id="4358569958" lat="36.0510292" lon="136.2086018"/>
+  <node id="4358569959" lat="36.0510498" lon="136.2102882"/>
+  <node id="4358569960" lat="36.0510530" lon="136.2115877"/>
+  <node id="4358569961" lat="36.0510541" lon="136.2120813"/>
+  <node id="4358569962" lat="36.0510542" lon="136.2098966"/>
+  <node id="4358569963" lat="36.0510574" lon="136.2096158"/>
+  <node id="4358569964" lat="36.0510693" lon="136.2094252"/>
+  <node id="4358569965" lat="36.0510758" lon="136.2124769"/>
+  <node id="4358569966" lat="36.0510834" lon="136.2114402"/>
+  <node id="4358569967" lat="36.0510834" lon="136.2116253"/>
+  <node id="4358569968" lat="36.0510888" lon="136.2112900"/>
+  <node id="4358569969" lat="36.0510899" lon="136.2083349"/>
+  <node id="4358569970" lat="36.0510921" lon="136.2116763"/>
+  <node id="4358569971" lat="36.0511013" lon="136.2116749"/>
+  <node id="4358569972" lat="36.0511018" lon="136.2114402"/>
+  <node id="4358569973" lat="36.0511029" lon="136.2116548"/>
+  <node id="4358569974" lat="36.0511279" lon="136.2131179"/>
+  <node id="4358569978" lat="36.0512020" lon="136.2121742"/>
+  <node id="4358569980" lat="36.0512222" lon="136.2095975"/>
+  <node id="4358569983" lat="36.0512580" lon="136.2131179"/>
+  <node id="4358569985" lat="36.0514271" lon="136.2098591"/>
+  <node id="4358569986" lat="36.0514531" lon="136.2095667"/>
+  <node id="4358569988" lat="36.0514640" lon="136.2115462"/>
+  <node id="4358569989" lat="36.0514835" lon="136.2106342"/>
+  <node id="4358569990" lat="36.0514858" lon="136.2109149"/>
+  <node id="4358569991" lat="36.0514878" lon="136.2114469"/>
+  <node id="4358569992" lat="36.0514909" lon="136.2112216"/>
+  <node id="4358569993" lat="36.0514911" lon="136.2112042"/>
+  <node id="4358569997" lat="36.0517325" lon="136.2095098"/>
+  <node id="4358569998" lat="36.0517695" lon="136.2097741"/>
+  <node id="4358570001" lat="36.0519280" lon="136.2109051"/>
+  <node id="4358570020" lat="36.0523021" lon="136.2093937"/>
+  <node id="4358653280" lat="36.0511443" lon="136.2131179"/>
+  <node id="4358653281" lat="36.0511844" lon="136.2129177"/>
+  <node id="4358653282" lat="36.0512213" lon="136.2126804"/>
+  <node id="4358653283" lat="36.0513622" lon="136.2123236"/>
+  <node id="4358653284" lat="36.0514587" lon="136.2121225"/>
+  <node id="4358653285" lat="36.0515433" lon="136.2118462"/>
+  <node id="4358653286" lat="36.0516105" lon="136.2116249"/>
+  <node id="4358653287" lat="36.0516994" lon="136.2114103"/>
+  <node id="4358653288" lat="36.0517254" lon="136.2112201"/>
+  <node id="5315593261" lat="36.0494925" lon="136.2131619"/>
+  <node id="5315593262" lat="36.0491527" lon="136.2131538"/>
+  <node id="5315593263" lat="36.0491527" lon="136.2137072"/>
+  <node id="5315593264" lat="36.0492084" lon="136.2137048"/>
+  <node id="5315593265" lat="36.0493944" lon="136.2134258"/>
+  <node id="5315593266" lat="36.0494803" lon="136.2133382"/>
+  <node id="5315593480" lat="36.0488906" lon="136.2164851"/>
+  <node id="5315593481" lat="36.0486059" lon="136.2164649"/>
+  <node id="5315593482" lat="36.0484271" lon="136.2164553"/>
+  <node id="5315593483" lat="36.0485157" lon="136.2156265"/>
+  <node id="5315593484" lat="36.0487318" lon="136.2156765"/>
+  <node id="5315593485" lat="36.0486681" lon="136.2161438"/>
+  <node id="5315593486" lat="36.0489309" lon="136.2161918"/>
+  <node id="5315595938" lat="36.0492648" lon="136.2096290"/>
+  <node id="5315595939" lat="36.0489811" lon="136.2096168"/>
+  <node id="5315595940" lat="36.0489652" lon="136.2101810"/>
+  <node id="5315595941" lat="36.0492489" lon="136.2101932"/>
+  <node id="5315596332" lat="36.0514430" lon="136.2104323"/>
+  <node id="5315596333" lat="36.0514595" lon="136.2106799"/>
+  <node id="5315596334" lat="36.0509821" lon="136.2106890"/>
+  <node id="5315596335" lat="36.0509729" lon="136.2108934"/>
+  <node id="5315596336" lat="36.0509142" lon="136.2108798"/>
+  <node id="5315596337" lat="36.0509013" lon="136.2106958"/>
+  <node id="5315596338" lat="36.0507801" lon="136.2106981"/>
+  <node id="5315596339" lat="36.0507838" lon="136.2105027"/>
+  <node id="5315596340" lat="36.0509380" lon="136.2105005"/>
+  <node id="5315596341" lat="36.0509325" lon="136.2103279"/>
+  <node id="5315596342" lat="36.0510555" lon="136.2103256"/>
+  <node id="5315596343" lat="36.0510647" lon="136.2104528"/>
+  <node id="7824910464" lat="36.0512475" lon="136.2145801"/>
+  <node id="7839475552" lat="36.0514363" lon="136.2112645"/>
+  <node id="7839475553" lat="36.0500666" lon="136.2112821"/>
+  <node id="7839475554" lat="36.0501282" lon="136.2125190"/>
+  <node id="7839475555" lat="36.0501946" lon="136.2130818"/>
+  <node id="7839475556" lat="36.0514268" lon="136.2111473"/>
+  <node id="7839475557" lat="36.0500713" lon="136.2111824"/>
+  <node id="7839475558" lat="36.0500571" lon="136.2097755"/>
+  <node id="7839475559" lat="36.0499671" lon="136.2096700"/>
+  <node id="7839475560" lat="36.0499623" lon="136.2100217"/>
+  <node id="7839475561" lat="36.0499718" lon="136.2101566"/>
+  <node id="7839475562" lat="36.0499860" lon="136.2111707"/>
+  <node id="7839475563" lat="36.0482087" lon="136.2111707"/>
+  <node id="7839475564" lat="36.0501092" lon="136.2130759"/>
+  <node id="7839475565" lat="36.0500713" lon="136.2127945"/>
+  <node id="7839475566" lat="36.0500476" lon="136.2124838"/>
+  <node id="7839475567" lat="36.0500097" lon="136.2118214"/>
+  <node id="7839475568" lat="36.0499860" lon="136.2112938"/>
+  <node id="7839475569" lat="36.0490808" lon="136.2112880"/>
+  <node id="7839475570" lat="36.0482039" lon="136.2112938"/>
+  <node id="8404127860" lat="36.0498276" lon="136.2106526">
+    <tag k="name" v="みのり三丁目"/>
+    <tag k="name:en" v="Minori 3-chome"/>
+    <tag k="name:ja" v="みのり三丁目"/>
+    <tag k="name:ja-Hira" v="みのり3ちょうめ"/>
+    <tag k="place" v="neighbourhood"/>
+  </node>
+  <node id="8404127861" lat="36.0503838" lon="136.2141730">
+    <tag k="name" v="みのり二丁目"/>
+    <tag k="name:en" v="Minori 2-chome"/>
+    <tag k="name:ja" v="みのり二丁目"/>
+    <tag k="name:ja-Hira" v="みのり2ちょうめ"/>
+    <tag k="place" v="neighbourhood"/>
+  </node>
+  <way id="154436045">
+    <nd ref="1669713376"/>
+    <nd ref="4358268315"/>
+    <nd ref="4358268316"/>
+    <nd ref="4358337734"/>
+    <nd ref="4358337735"/>
+    <nd ref="3393758395"/>
+    <nd ref="4358337736"/>
+    <nd ref="4358268318"/>
+    <nd ref="4358268320"/>
+    <nd ref="1669713568"/>
+    <nd ref="1669713595"/>
+    <tag k="highway" v="secondary"/>
+    <tag k="name" v="福井新停車場線"/>
+    <tag k="ref" v="129"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154436314">
+    <nd ref="1669717609"/>
+    <nd ref="1669717078"/>
+    <nd ref="4358268576"/>
+    <nd ref="4358268571"/>
+    <nd ref="1669715314"/>
+    <nd ref="1669715086"/>
+    <nd ref="4358268337"/>
+    <nd ref="4358268329"/>
+    <nd ref="1669713595"/>
+    <nd ref="4358268314"/>
+    <nd ref="1669713318"/>
+    <nd ref="4358268311"/>
+    <nd ref="4358337729"/>
+    <nd ref="4358337714"/>
+    <nd ref="4358569562"/>
+    <nd ref="4358569544"/>
+    <nd ref="1669710604"/>
+    <nd ref="1669709156"/>
+    <nd ref="1669708468"/>
+    <nd ref="3757611900"/>
+    <nd ref="3757611899"/>
+    <nd ref="1669707749"/>
+    <nd ref="1669706857"/>
+    <nd ref="3757611895"/>
+    <nd ref="3757611893"/>
+    <nd ref="3757611892"/>
+    <nd ref="1669705873"/>
+    <nd ref="1669704498"/>
+    <tag k="highway" v="secondary"/>
+    <tag k="name" v="福井鯖江線"/>
+    <tag k="ref" v="229"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154440346">
+    <nd ref="1669715339"/>
+    <nd ref="4358337759"/>
+    <nd ref="3393758397"/>
+    <nd ref="1669715337"/>
+    <nd ref="1669715324"/>
+    <nd ref="1669715314"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154445409">
+    <nd ref="1669713306"/>
+    <nd ref="4358569627"/>
+    <nd ref="1669713318"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154446819">
+    <nd ref="1669713305"/>
+    <nd ref="4358569632"/>
+    <nd ref="1669713297"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154446911">
+    <nd ref="1669713316"/>
+    <nd ref="1669713305"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:STRUCTURE" v="地上"/>
+    <tag k="yh:TOTYUMONO" v="供用中"/>
+    <tag k="yh:TYPE" v="その他一般道"/>
+    <tag k="yh:WIDTH" v="5.5m〜13.0m"/>
+    <tag k="yh:WIDTH_RANK" v="2"/>
+  </way>
+  <way id="154451001">
+    <nd ref="1669713297"/>
+    <nd ref="4358569631"/>
+    <nd ref="4358569630"/>
+    <nd ref="4358569629"/>
+    <nd ref="4358569628"/>
+    <nd ref="1669713306"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154451370">
+    <nd ref="1669713332"/>
+    <nd ref="1669713316"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:WIDTH" v="5.5m〜13.0m"/>
+  </way>
+  <way id="154453222">
+    <nd ref="1669715324"/>
+    <nd ref="4358268340"/>
+    <nd ref="1669714877"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154454992">
+    <nd ref="1669713364"/>
+    <nd ref="1669713332"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:WIDTH" v="5.5m〜13.0m"/>
+  </way>
+  <way id="154461563">
+    <nd ref="1669714877"/>
+    <nd ref="4358268336"/>
+    <nd ref="1669714784"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154464015">
+    <nd ref="1669717034"/>
+    <nd ref="3393758398"/>
+    <nd ref="1669715324"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="332261602">
+    <nd ref="3393758398"/>
+    <nd ref="3393758399"/>
+    <nd ref="3393758400"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="438085926">
+    <nd ref="4358268313"/>
+    <nd ref="4358268314"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438085939">
+    <nd ref="1669714877"/>
+    <nd ref="4358268337"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438085944">
+    <nd ref="4358268340"/>
+    <nd ref="4358268339"/>
+    <nd ref="4358268338"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438085947">
+    <nd ref="4358268334"/>
+    <nd ref="4358268332"/>
+    <nd ref="4358268331"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438085949">
+    <nd ref="4358268336"/>
+    <nd ref="4358268334"/>
+    <nd ref="4358268326"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438085956">
+    <nd ref="4358268311"/>
+    <nd ref="4358268309"/>
+    <nd ref="4358337732"/>
+    <nd ref="4358268308"/>
+    <nd ref="4358268307"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438085961">
+    <nd ref="4358268324"/>
+    <nd ref="4358268321"/>
+    <nd ref="1669713568"/>
+    <nd ref="4358268313"/>
+    <nd ref="4358268312"/>
+    <nd ref="4358268310"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438085966">
+    <nd ref="4358268329"/>
+    <nd ref="4358268327"/>
+    <nd ref="4358268326"/>
+    <nd ref="4358268325"/>
+    <nd ref="4358268324"/>
+    <nd ref="1669714145"/>
+    <nd ref="4358268323"/>
+    <nd ref="4358337748"/>
+    <nd ref="4358569652"/>
+    <nd ref="4358337747"/>
+    <nd ref="4358337746"/>
+    <nd ref="4358569651"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438086717">
+    <nd ref="1669717634"/>
+    <nd ref="4358276597"/>
+    <nd ref="4358276592"/>
+    <nd ref="4358276589"/>
+    <nd ref="4358268587"/>
+    <nd ref="4358268582"/>
+    <nd ref="4358268581"/>
+    <nd ref="4358268579"/>
+    <nd ref="4358268580"/>
+    <nd ref="4358268570"/>
+    <nd ref="4358268567"/>
+    <nd ref="4358268563"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438086718">
+    <nd ref="4358276590"/>
+    <nd ref="4358268584"/>
+    <nd ref="4358268585"/>
+    <nd ref="4358268586"/>
+    <nd ref="4358268583"/>
+    <nd ref="4358268578"/>
+    <nd ref="4358268577"/>
+    <nd ref="7824910464"/>
+    <nd ref="4358268575"/>
+    <nd ref="4358268574"/>
+    <nd ref="4358268573"/>
+    <nd ref="4358268572"/>
+    <nd ref="4358268569"/>
+    <nd ref="4358268568"/>
+    <nd ref="4358268566"/>
+    <nd ref="4358268565"/>
+    <nd ref="4358268564"/>
+    <nd ref="4358268562"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438086720">
+    <nd ref="4358268572"/>
+    <nd ref="4358268571"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438086722">
+    <nd ref="4358268577"/>
+    <nd ref="4358268576"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103534">
+    <nd ref="4358569562"/>
+    <nd ref="4358569571"/>
+    <nd ref="1669711858"/>
+    <nd ref="4358569594"/>
+    <nd ref="4358569601"/>
+    <nd ref="4358569611"/>
+    <nd ref="4358569625"/>
+    <nd ref="4358569627"/>
+    <nd ref="4358569678"/>
+    <nd ref="4358569686"/>
+    <nd ref="4358268337"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103535">
+    <nd ref="1669713305"/>
+    <nd ref="4358569639"/>
+    <nd ref="4358569641"/>
+    <nd ref="4358569655"/>
+    <nd ref="4358569669"/>
+    <nd ref="4358569682"/>
+    <nd ref="4358569898"/>
+    <nd ref="4358569924"/>
+    <nd ref="4358569947"/>
+    <nd ref="4358569993"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103536">
+    <nd ref="4358569963"/>
+    <nd ref="4358569962"/>
+    <nd ref="4358569959"/>
+    <nd ref="4358569953"/>
+    <nd ref="4358569922"/>
+    <nd ref="4358569923"/>
+    <nd ref="4358569924"/>
+    <nd ref="4358569925"/>
+    <nd ref="4358569927"/>
+    <nd ref="4358569965"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103542">
+    <nd ref="4358569953"/>
+    <nd ref="4358569955"/>
+    <nd ref="4358569940"/>
+    <nd ref="4358569934"/>
+    <nd ref="4358569935"/>
+    <nd ref="4358569941"/>
+    <nd ref="4358569942"/>
+    <nd ref="4358569930"/>
+    <nd ref="4358569931"/>
+    <nd ref="4358569943"/>
+    <nd ref="4358569947"/>
+    <nd ref="4358569948"/>
+    <tag k="highway" v="pedestrian"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103544">
+    <nd ref="4358569998"/>
+    <nd ref="4358569985"/>
+    <nd ref="4358569989"/>
+    <nd ref="4358569990"/>
+    <nd ref="4358569993"/>
+    <nd ref="4358569992"/>
+    <nd ref="4358569991"/>
+    <nd ref="4358569988"/>
+    <nd ref="4358569978"/>
+    <nd ref="4358569965"/>
+    <nd ref="4358569954"/>
+    <nd ref="4358569950"/>
+    <nd ref="4358569937"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103547">
+    <nd ref="4358569970"/>
+    <nd ref="4358569967"/>
+    <nd ref="4358569960"/>
+    <nd ref="4358569956"/>
+    <nd ref="4358569951"/>
+    <nd ref="4358569944"/>
+    <nd ref="4358569936"/>
+    <nd ref="4358569933"/>
+    <nd ref="4358569932"/>
+    <nd ref="4358569939"/>
+    <nd ref="4358569938"/>
+    <nd ref="4358569948"/>
+    <nd ref="4358569968"/>
+    <nd ref="4358569966"/>
+    <nd ref="4358569972"/>
+    <nd ref="4358569973"/>
+    <nd ref="4358569971"/>
+    <nd ref="4358569970"/>
+    <tag k="area" v="yes"/>
+    <tag k="highway" v="pedestrian"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103550">
+    <nd ref="4358569895"/>
+    <nd ref="4358569896"/>
+    <nd ref="4358569900"/>
+    <nd ref="4358569897"/>
+    <nd ref="4358569893"/>
+    <nd ref="4358569894"/>
+    <nd ref="4358569898"/>
+    <nd ref="4358569899"/>
+    <nd ref="4358569901"/>
+    <nd ref="4358569902"/>
+    <nd ref="4358569903"/>
+    <nd ref="4358569904"/>
+    <nd ref="4358569907"/>
+    <nd ref="4358569908"/>
+    <nd ref="4358569909"/>
+    <nd ref="4358268563"/>
+    <nd ref="4358569906"/>
+    <nd ref="4358569905"/>
+    <nd ref="4358268562"/>
+    <nd ref="1669715086"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103566">
+    <nd ref="4358569669"/>
+    <nd ref="4358569670"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103568">
+    <nd ref="4358569685"/>
+    <nd ref="4358569681"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103574">
+    <nd ref="4358569644"/>
+    <nd ref="4358569630"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103581">
+    <nd ref="4358569950"/>
+    <nd ref="4358569913"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103588">
+    <nd ref="4358569658"/>
+    <nd ref="4358569666"/>
+    <nd ref="4358569908"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103593">
+    <nd ref="4358569660"/>
+    <nd ref="4358569661"/>
+    <nd ref="4358569657"/>
+    <nd ref="4358569654"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103595">
+    <nd ref="4358569894"/>
+    <nd ref="4358569684"/>
+    <nd ref="4358569682"/>
+    <nd ref="4358569683"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103597">
+    <nd ref="4358569629"/>
+    <nd ref="4358569637"/>
+    <nd ref="4358569635"/>
+    <nd ref="4358569628"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103598">
+    <nd ref="4358569632"/>
+    <nd ref="4358569638"/>
+    <nd ref="4358569636"/>
+    <nd ref="4358569631"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103599">
+    <nd ref="4358569906"/>
+    <nd ref="4358569676"/>
+    <nd ref="4358569665"/>
+    <nd ref="4358569666"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103601">
+    <nd ref="4358569969"/>
+    <nd ref="4358569958"/>
+    <nd ref="4358569964"/>
+    <nd ref="4358569963"/>
+    <tag k="highway" v="track"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103602">
+    <nd ref="4358569925"/>
+    <nd ref="4358569912"/>
+    <nd ref="4358569913"/>
+    <nd ref="4358569914"/>
+    <nd ref="4358569909"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103604">
+    <nd ref="1669713316"/>
+    <nd ref="4358569613"/>
+    <nd ref="4358569603"/>
+    <nd ref="4358569585"/>
+    <nd ref="4358569560"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103606">
+    <nd ref="4358569671"/>
+    <nd ref="4358569668"/>
+    <nd ref="4358569667"/>
+    <nd ref="4358569654"/>
+    <nd ref="4358569640"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103607">
+    <nd ref="1669713297"/>
+    <nd ref="4358569612"/>
+    <nd ref="4358569602"/>
+    <nd ref="4358569582"/>
+    <nd ref="4358569556"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103615">
+    <nd ref="4358569978"/>
+    <nd ref="4358569961"/>
+    <nd ref="4358569952"/>
+    <nd ref="4358569949"/>
+    <nd ref="4358569946"/>
+    <nd ref="4358569945"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103616">
+    <nd ref="4358268563"/>
+    <nd ref="4358569679"/>
+    <nd ref="4358569677"/>
+    <nd ref="4358569676"/>
+    <nd ref="4358569674"/>
+    <nd ref="4358569673"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103617">
+    <nd ref="4358268579"/>
+    <nd ref="4358569983"/>
+    <nd ref="4358653280"/>
+    <nd ref="4358569974"/>
+    <nd ref="4358569937"/>
+    <nd ref="4358569916"/>
+    <nd ref="4358569914"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103618">
+    <nd ref="4358569655"/>
+    <nd ref="4358569659"/>
+    <nd ref="4358569658"/>
+    <nd ref="4358569656"/>
+    <nd ref="4358569674"/>
+    <nd ref="4358569905"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103619">
+    <nd ref="1669713332"/>
+    <nd ref="4358569642"/>
+    <nd ref="4358569657"/>
+    <nd ref="4358569668"/>
+    <nd ref="4358569681"/>
+    <nd ref="4358569897"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103620">
+    <nd ref="4358570020"/>
+    <nd ref="4358569997"/>
+    <nd ref="4358569986"/>
+    <nd ref="4358569980"/>
+    <nd ref="4358569963"/>
+    <nd ref="4358569957"/>
+    <nd ref="4358569897"/>
+    <tag k="highway" v="tertiary"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103621">
+    <nd ref="4358268562"/>
+    <nd ref="4358569687"/>
+    <nd ref="4358569680"/>
+    <nd ref="4358569673"/>
+    <nd ref="4358569672"/>
+    <nd ref="4358569653"/>
+    <nd ref="1669713306"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103622">
+    <nd ref="4358569903"/>
+    <nd ref="4358569683"/>
+    <nd ref="4358569670"/>
+    <nd ref="4358569659"/>
+    <nd ref="4358569645"/>
+    <nd ref="4358569644"/>
+    <nd ref="4358569641"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103627">
+    <nd ref="4358569896"/>
+    <nd ref="4358569685"/>
+    <nd ref="4358569671"/>
+    <nd ref="4358569661"/>
+    <nd ref="4358569643"/>
+    <nd ref="4358569642"/>
+    <nd ref="4358569640"/>
+    <nd ref="4358569639"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438103633">
+    <nd ref="4358569962"/>
+    <nd ref="4358569910"/>
+    <nd ref="4358569911"/>
+    <nd ref="4358569923"/>
+    <nd ref="4358569942"/>
+    <nd ref="4358569990"/>
+    <nd ref="4358570001"/>
+    <nd ref="4358569998"/>
+    <nd ref="4358569997"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="438123794">
+    <nd ref="4358653288"/>
+    <nd ref="4358653287"/>
+    <nd ref="4358653286"/>
+    <nd ref="4358653285"/>
+    <nd ref="4358653284"/>
+    <nd ref="4358653283"/>
+    <nd ref="4358653282"/>
+    <nd ref="4358653281"/>
+    <nd ref="4358653280"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="550340285">
+    <nd ref="5315593480"/>
+    <nd ref="5315593481"/>
+    <nd ref="5315593482"/>
+    <nd ref="5315593483"/>
+    <nd ref="5315593484"/>
+    <nd ref="5315593485"/>
+    <nd ref="5315593486"/>
+    <nd ref="5315593480"/>
+    <tag k="leisure" v="park"/>
+    <tag k="name" v="昭和公園"/>
+  </way>
+  <way id="550340329">
+    <nd ref="5315593261"/>
+    <nd ref="5315593262"/>
+    <nd ref="5315593263"/>
+    <nd ref="5315593264"/>
+    <nd ref="5315593265"/>
+    <nd ref="5315593266"/>
+    <nd ref="5315593261"/>
+    <tag k="leisure" v="park"/>
+    <tag k="name" v="みのり2丁目公園"/>
+  </way>
+  <way id="550340449">
+    <nd ref="5315595938"/>
+    <nd ref="5315595939"/>
+    <nd ref="5315595940"/>
+    <nd ref="5315595941"/>
+    <nd ref="5315595938"/>
+    <tag k="leisure" v="park"/>
+    <tag k="name" v="みのり公園"/>
+  </way>
+  <way id="550340485">
+    <nd ref="5315596332"/>
+    <nd ref="5315596333"/>
+    <nd ref="5315596334"/>
+    <nd ref="5315596335"/>
+    <nd ref="5315596336"/>
+    <nd ref="5315596337"/>
+    <nd ref="5315596338"/>
+    <nd ref="5315596339"/>
+    <nd ref="5315596340"/>
+    <nd ref="5315596341"/>
+    <nd ref="5315596342"/>
+    <nd ref="5315596343"/>
+    <nd ref="5315596332"/>
+    <tag k="leisure" v="park"/>
+    <tag k="name" v="パークアベニューみのり公園"/>
+  </way>
+  <way id="840111564">
+    <nd ref="7839475552"/>
+    <nd ref="7839475553"/>
+    <nd ref="7839475554"/>
+    <nd ref="7839475555"/>
+    <tag k="natural" v="tree_row"/>
+  </way>
+  <way id="840111565">
+    <nd ref="7839475556"/>
+    <nd ref="7839475557"/>
+    <nd ref="7839475558"/>
+    <tag k="natural" v="tree_row"/>
+  </way>
+  <way id="840111566">
+    <nd ref="7839475559"/>
+    <nd ref="7839475560"/>
+    <tag k="natural" v="tree_row"/>
+  </way>
+  <way id="840111567">
+    <nd ref="7839475561"/>
+    <nd ref="7839475562"/>
+    <nd ref="7839475563"/>
+    <tag k="natural" v="tree_row"/>
+  </way>
+  <way id="840111568">
+    <nd ref="7839475564"/>
+    <nd ref="7839475565"/>
+    <nd ref="7839475566"/>
+    <nd ref="7839475567"/>
+    <nd ref="7839475568"/>
+    <nd ref="7839475569"/>
+    <tag k="natural" v="tree_row"/>
+  </way>
+  <way id="840111569">
+    <nd ref="7839475569"/>
+    <nd ref="7839475570"/>
+    <tag k="natural" v="tree_row"/>
+  </way>
+
+</osm>

@@ -30,7 +30,8 @@ class TracisSyncronizer:
             tmp_traci.setOrder(order)
 
     def start(self):
-        while self.check_sumo_finish is not False:
+        while self.check_sumo_finish() is False:
+            self.manupulate_traci(self.main_traci)
             self.main_traci.simulationStep()
 
             for o_traci in self.other_tracis:
@@ -38,17 +39,19 @@ class TracisSyncronizer:
                 o_traci.simulationStep()
 
     def check_sumo_finish(self):
-        try:
-            for tmp_traci in self.tracis:
-                if traci.simulation.getMinExpectedNumber() <= 0:
-                    return True
-                else:
-                    continue
-            return False
+        return False
 
-        except Exception as e:
-            logging.log(e)
-            return True
+        # try:
+        #     for tmp_traci in self.tracis:
+        #         if traci.simulation.getMinExpectedNumber() <= 0:
+        #             return True
+        #         else:
+        #             continue
+        #     return False
+        #
+        # except Exception as e:
+        #     logging.log(e)
+        #     return True
 
     def close_tracis(self):
         try:
@@ -118,12 +121,11 @@ def start_tracis_syncronizer(main_sumo_host_port, other_sumo_host_ports, order):
 
     try:
         tracis_syncronizer.start()
-        tracis_syncronizer.close_tracis()
     except KeyboardInterrupt:
         logging.info(CTRL_C_PRESSED_MESSAGE)
-        tracis_syncronizer.close_tracis()
     except Exception as e:
         logging.error(e)
+    finally:
         tracis_syncronizer.close_tracis()
 
 # ----- main -----

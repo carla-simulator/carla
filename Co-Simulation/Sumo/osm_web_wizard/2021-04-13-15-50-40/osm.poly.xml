@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Tue Apr 13 15:50:46 2021 by Eclipse SUMO polyconvert Version 1.7.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/polyconvertConfiguration.xsd">
+
+    <input>
+        <net-file value="osm.net.xml"/>
+        <osm-files value="osm_bbox.osm.xml"/>
+        <osm.keep-full-type value="true"/>
+        <type-file value="/usr/local/share/sumo/data/typemap/osmPolyconvert.typ.xml"/>
+    </input>
+
+    <output>
+        <output-file value="osm.poly.xml"/>
+    </output>
+
+    <processing>
+        <poi-layer-offset value="5"/>
+    </processing>
+
+    <report>
+        <verbose value="true"/>
+    </report>
+
+</configuration>
+-->
+
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/additional_file.xsd">
+    <location netOffset="-608792.01,-3989010.50" convBoundary="-0.00,-0.00,855.32,1448.58" origBoundary="136.207824,36.039492,136.217291,36.052580" projParameter="+proj=utm +zone=53 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"/>
+
+    <poly id="550340285" type="leisure.park" color="207,245,201" fill="1" layer="-2.00" shape="781.740305,1045.242005 780.315345,1013.639411 779.698420,993.795524 704.918405,1002.690743 709.122999,1026.717503 751.304921,1020.177451 755.264505,1049.382103 781.740305,1045.242005"/>
+    <poly id="550340329" type="leisure.park" color="207,245,201" fill="1" layer="-2.00" shape="481.560267,1108.271100 481.300357,1070.570289 531.149482,1071.191653 530.856264,1077.367383 505.467367,1097.685807 497.457804,1107.115759 481.560267,1108.271100"/>
+    <poly id="550340449" type="leisure.park" color="207,245,201" fill="1" layer="-2.00" shape="163.639246,1079.053744 162.931321,1047.571178 213.775302,1046.439144 214.483046,1077.921718 163.639246,1079.053744"/>
+    <poly id="550340485" type="leisure.park" color="207,245,201" fill="1" layer="-2.00" shape="232.994390,1321.566145 255.274267,1323.673735 256.752569,1270.729173 275.176759,1269.937687 274.032722,1263.411254 257.476555,1261.774193 257.850936,1248.332873 240.244974,1248.524399 239.834108,1265.626298 224.294600,1264.822901 223.917788,1278.463883 235.362731,1279.626844 232.994390,1321.566145"/>
+    <poly id="840111564" type="natural.tree_row" color="140,196,107" fill="0" layer="-4.00" shape="307.964293,1321.755399 311.440148,1169.843557 422.771119,1178.063498 473.374563,1186.060400"/>
+    <poly id="840111565" type="natural.tree_row" color="140,196,107" fill="0" layer="-4.00" shape="297.420579,1320.570272 302.452999,1170.253153 175.743455,1167.102187"/>
+    <poly id="840111566" type="natural.tree_row" color="140,196,107" fill="0" layer="-4.00" shape="166.364401,1157.001002 198.051087,1156.862300"/>
+    <poly id="840111567" type="natural.tree_row" color="140,196,107" fill="0" layer="-4.00" shape="210.189370,1158.067122 301.516822,1160.778289 303.969619,963.634460"/>
+    <poly id="840111568" type="natural.tree_row" color="140,196,107" fill="0" layer="-4.00" shape="472.961156,1176.580931 447.665912,1172.061106 419.711772,1169.083591 360.097172,1164.136626 312.605295,1160.916258 313.332222,1060.502055"/>
+    <poly id="840111569" type="natural.tree_row" color="140,196,107" fill="0" layer="-4.00" shape="313.332222,1060.502055 315.064966,963.239995"/>
+    <poi id="1420950698" type="amenity.kindergarten" color="237,199,199" layer="4.00" x="511.24" y="1272.33"/>
+    <poi id="1420950701" type="amenity.kindergarten" color="237,199,199" layer="4.00" x="511.24" y="1272.33"/>
+</additional>
