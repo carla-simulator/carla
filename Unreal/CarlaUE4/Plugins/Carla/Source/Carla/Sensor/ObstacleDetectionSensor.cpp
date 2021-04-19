@@ -52,6 +52,7 @@ void AObstacleDetectionSensor::Set(const FActorDescription &Description)
 
 void AObstacleDetectionSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AObstacleDetectionSensor::PostPhysTick);
   const FVector &Start = GetActorLocation();
   const FVector &End = Start + (GetActorForwardVector() * Distance);
   UWorld* CurrentWorld = GetWorld();

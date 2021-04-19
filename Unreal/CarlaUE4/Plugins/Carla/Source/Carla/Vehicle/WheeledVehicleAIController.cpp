@@ -128,6 +128,7 @@ void AWheeledVehicleAIController::OnUnPossess()
 
 void AWheeledVehicleAIController::Tick(const float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AWheeledVehicleAIController::Tick);
   Super::Tick(DeltaTime);
 
   if (!IsPossessingAVehicle())

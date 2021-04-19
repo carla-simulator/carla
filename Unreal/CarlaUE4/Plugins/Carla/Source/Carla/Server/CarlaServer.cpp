@@ -219,6 +219,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
+    TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
     ++TickCuesReceived;
     return FCarlaEngine::GetFrameCounter();
   };
@@ -1447,14 +1448,16 @@ void FCarlaServer::FPimpl::BindActions()
       std::string name,
       double start,
       double duration,
-      uint32_t follow_id) -> R<std::string>
+      uint32_t follow_id,
+      bool replay_sensors) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
         name,
         start,
         duration,
-        follow_id));
+        follow_id,
+        replay_sensors));
   };
 
   BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>
@@ -1662,14 +1665,31 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
   check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
-  auto RPCThreads = NumberOfWorkerThreads / 2u;
-  auto StreamingThreads = NumberOfWorkerThreads - RPCThreads;
-  Pimpl->Server.AsyncRun(std::max(2u, RPCThreads));
-  Pimpl->StreamingServer.AsyncRun(std::max(2u, StreamingThreads));
+  int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+  int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+
+  UE_LOG(LogCarla, Error, TEXT("FCommandLine %s"), FCommandLine::Get());
+
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
+  {
+    RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+  }
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-StreamingThreads="), StreamingThreads))
+  {
+    StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+  }
+
+  UE_LOG(LogCarla, Error, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
+        NumberOfWorkerThreads, RPCThreads, StreamingThreads);
+
+  Pimpl->Server.AsyncRun(RPCThreads);
+  Pimpl->StreamingServer.AsyncRun(StreamingThreads);
+
 }
 
 void FCarlaServer::RunSome(uint32 Milliseconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 

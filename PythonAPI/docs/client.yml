@@ -140,6 +140,10 @@
         type: int
         doc: >
           ID of the actor to follow. If this is 0 then camera is disabled.
+      - param_name: replay_sensors
+        type: bool
+        doc: >
+          Flag to enable or disable the spawn of sensors during playback.
       doc: >
         Load a new world with default settings using `map_name` map. All actors
         present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
