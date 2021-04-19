@@ -9,6 +9,8 @@
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
+#include "JsonObject.h"
+#include "JsonSerializer.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
@@ -33,10 +35,48 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 #if WITH_EDITORONLY_DATA
 
+void ULoadAssetMaterialsCommandlet::GenerateJsonInfoFile(const FString &MapName) {
+
+  //This function is needed to generate a json in the imported maps sub-directory "Config"
+  //for detecting if textures have to be created on construction
+  //and variables need to be set for road painter object.
+  //Also check if we need to render textures in runtime
+
+  //We have to find the sub-directory where the json has been created
+  //We can look up any of the .json we have generated
+  //and then go back 1 in the file path (.../map_package/Config/roadpainter_decals.json)
+  //We can't assume the root directory name is "map_package", because the user can change it
+  TArray<FString> FileList;
+  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
+    *(FString("roadpainter_decals.json")), true, false, false);
+
+  //Get the absolute path to that file
+  FString JsonFilePath = *(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]));
+  FString InfoFilePath = JsonFilePath.LeftChop((JsonFilePath.GetCharArray().Num() - 1) - JsonFilePath.Find("/", ESearchCase::Type::IgnoreCase, ESearchDir::FromEnd));
+  //We give it a unique name
+  InfoFilePath += "/roadpainter_info_" + World->GetMapName() + ".json";
+  UE_LOG(LogTemp, Warning, TEXT("%s"), *InfoFilePath);
+
+  //We write our variables
+  TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+  //Does the roadpainter need to generate new textures and apply changes on construction?
+  RootObject->SetBoolField("prepared_roadpainter", false);
+  //Are the roads rendered to texture already?
+  RootObject->SetBoolField("painted_roads", false);
+  //The name of the texture that will be used for rendering the roads to
+  RootObject->SetStringField("texture_name", " ");
+
+  FString JsonString;
+  TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
+  FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+  //Save JSON file
+  FFileHelper::SaveStringToFile(JsonString, *InfoFilePath);
+}
+
 void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &LoadedMapName)
 {
+  GenerateJsonInfoFile(LoadedMapName);
 	ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
-  UE_LOG(LogTemp, Log, TEXT("The name of the world where I'm spawning the blueprint is : %s"), *World->GetFullName());
 	if (RoadPainterBp)
 	{
 		//Needed to call events in editor-mode

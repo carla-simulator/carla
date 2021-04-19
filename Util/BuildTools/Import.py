@@ -34,10 +34,19 @@ def get_packages_json_list(folder):
 
     for root, _, filenames in os.walk(folder):
         for filename in fnmatch.filter(filenames, "*.json"):
-            json_files.append([root, filename])
+            if filename != "roadpainter_decals.json":
+                json_files.append([root, filename])
 
     return json_files
 
+def get_decals_json_file(folder):
+    
+    for root, _, filenames in os.walk(folder):
+        for filename in fnmatch.filter(filenames, "roadpainter_decals.json"):
+            return filename
+            
+    return ""
+                               
 def generate_json_package(folder, package_name, use_carla_materials):
     """Generate a .json file with all the maps it founds on the folder
     and subfolders. A map is a .fbx and a .xodr with the same name.
@@ -443,20 +452,26 @@ def main():
         '--no-carla-materials',
         action='store_false',
         help='user Carla materials')
+    argparser.add_argument(
+        '--json-only',
+        action='store_true',
+        help='Create JSON files only')
+        
     args = argparser.parse_known_args()[0]
 
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
     json_list = get_packages_json_list(import_folder)
-    
-    #If we only gather one file or none from the json file search
-    #we need to create the missing files, 
-    #so might as well create them all again
-    if (len(json_list) < 2):
+    decals_json = get_decals_json_file(import_folder)
+        
+    if len(json_list) == 0:
         json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
+    
+    if len(decals_json) == 0:
         decals_json_file = generate_decals_file(import_folder)
         
-    copy_roadpainter_config_files(args.package)
-    import_assets_from_json_list(json_list)
+    if args.json_only == False:
+        copy_roadpainter_config_files(args.package)
+        import_assets_from_json_list(json_list)
 
 if __name__ == '__main__':
     main()

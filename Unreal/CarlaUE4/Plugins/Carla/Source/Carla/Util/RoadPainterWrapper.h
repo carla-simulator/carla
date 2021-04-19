@@ -138,7 +138,15 @@ private:
 
   /// Create a procedural texture for painting the road maps
   /// and save it to disk.
-  void GenerateTexture();
+  const FString GenerateTexture();
+
+  /// Read the Json info file to determine if we have to
+  /// generate textures and prepare variables on construction
+  void ReadJsonAndPrepareRoadPainter();
+
+  /// Read the Json info file to determine if we have to
+  /// paint the roads at runtime or it has already been done
+  void ReadJsonAndPaintRoads();
 
   /// Function to read 3D vectors from a JSON file
   FVector ReadVectorFromJsonObject(TSharedPtr<FJsonObject> JsonObject);

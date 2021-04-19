@@ -88,49 +88,164 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
 #endif
 }
 
+void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter(){
+
+  //Get road painter info file
+  FString JsonInfoFile;
+
+  TArray<FString> FileList;
+  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
+    *(FString("roadpainter_info_" + GetWorld()->GetMapName() + ".json")), true, false, false);
+
+  if (FileList.Num() == 0) return;
+  
+  FString AbsolutePathToFile = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]);
+  if (FFileHelper::LoadFileToString(JsonInfoFile, *AbsolutePathToFile)) {
+    
+    TSharedPtr<FJsonObject> JsonParsed;
+    TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonInfoFile);
+    if (FJsonSerializer::Deserialize(JsonReader, JsonParsed))
+    {
+      ZSizeEvent();
+
+      FString TextureString;
+      //Get the string we need
+      bool IsRoadPainterReady = JsonParsed->GetBoolField(TEXT("prepared_roadpainter"));
+      if(IsRoadPainterReady == false){
+        
+        //Generate the texture we need and save the name.
+        //This will be written into a .json file so we can look it up later
+        TextureString = GenerateTexture();
+      }
+
+      TArray<AActor*> FoundActors;
+      UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), FoundActors);
+      AStaticMeshActor *RoadMeshActor = nullptr;
+
+      for (int32 i = 0; i < FoundActors.Num(); ++i)
+      {
+        RoadMeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
+        if (RoadMeshActor)
+        {
+          if (RoadMeshActor->GetName().Contains("Roads_Road", ESearchCase::Type::CaseSensitive) == true)
+          {
+            //Create the dynamic material instance for the road (which will hold the map size and road texture)
+            UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
+            MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
+            MI->SetScalarParameterValue(FName("Map units (CM)"), MapSize);
+            MI->SetTextureParameterValue(FName("Texture Mask"), RoadTexture);
+            RoadMeshActor->GetStaticMeshComponent()->SetMaterial(0, MI);
+          }
+        }
+      }
+      
+      //We write our variables
+      TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+      //Are the textures ready?
+      RootObject->SetBoolField("prepared_roadpainter", true);
+      //Are the roads rendered to texture already?
+      RootObject->SetBoolField("painted_roads", false);
+      if (IsRoadPainterReady == false) {
+        
+        //We set the name of the newly generated texture into the json file
+        RootObject->SetStringField("texture_name", TextureString);
+      }
+      else {
+        
+        TextureString = JsonParsed->GetStringField("texture_name");
+        RootObject->SetStringField("texture_name", TextureString);
+      }
+
+      FString JsonString;
+      TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
+      FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+      //Save JSON file
+      FFileHelper::SaveStringToFile(JsonString, *AbsolutePathToFile);
+    }
+  }
+}
+
+void ARoadPainterWrapper::ReadJsonAndPaintRoads() {
+
+  //Get road painter info file
+  FString JsonInfoFile;
+
+  FString MapName = GetWorld()->GetMapName();
+  MapName = MapName.RightChop((MapName.GetCharArray().Num() - 1) - (MapName.Find("_", ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromEnd) - 1));
+
+  TArray<FString> FileList;
+  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
+    *(FString("roadpainter_info_" + MapName + ".json")), true, false, false);
+  
+  UE_LOG(LogTemp, Warning, TEXT("%s"), *MapName);
+
+  if (FileList.Num() == 0) return;
+
+  FString AbsolutePathToFile = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]);
+  if (FFileHelper::LoadFileToString(JsonInfoFile, *AbsolutePathToFile)) {
+
+    TSharedPtr<FJsonObject> JsonParsed;
+    TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonInfoFile);
+    if (FJsonSerializer::Deserialize(JsonReader, JsonParsed))
+    {
+      //Get the boolean we need
+      bool AreRoadsPainted = JsonParsed->GetBoolField(TEXT("painted_roads"));
+      if (AreRoadsPainted == false) {
+        
+        PaintAllRoadsEvent();
+        //We write our variables
+        TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
+        //Are the textures already loaded?
+        RootObject->SetBoolField("prepared_roadpainter", true);
+        //Are the roads rendered to texture already?
+        RootObject->SetBoolField("painted_roads", true);
+        //Does the roadpainter need to generate new textures and apply changes on construction?
+        RootObject->SetStringField("texture_name", JsonParsed->GetStringField("texture_name"));
+
+        FString JsonString;
+        TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
+        FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
+        //Save JSON file
+        FFileHelper::SaveStringToFile(JsonString, *AbsolutePathToFile);
+      }
+
+      bIsRenderedToTexture = true;
+    }
+  }
+}
+
 void ARoadPainterWrapper::BeginPlay()
 {
   Super::BeginPlay();
   
-  if(bIsRenderedToTexture == false)
-  {
-    PaintAllRoadsEvent();
-    bIsRenderedToTexture = true;
+  if (bIsRenderedToTexture == false) {
+    
+    ReadJsonAndPaintRoads();
   }
 }
 
 void ARoadPainterWrapper::GenerateDynamicAssets()
 {
-  ZSizeEvent();
-
-  if(RoadTexture == nullptr) GenerateTexture();
-
-  TArray<AActor*> FoundActors;
-  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), FoundActors);
-  AStaticMeshActor *RoadMeshActor = nullptr;
-
-  for (int32 i = 0; i < FoundActors.Num(); ++i)
-  {
-  	RoadMeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
-  	if (RoadMeshActor)
-  	{
-  		if (RoadMeshActor->GetName().Contains("Roads_Road", ESearchCase::Type::CaseSensitive) == true)
-  		{
-        //Create the dynamic material instance for the road (which will hold the map size and road texture)
-        UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
-        MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
-        MI->SetScalarParameterValue(FName("Map units (CM)"), MapSize);
-        MI->SetTextureParameterValue(FName("Texture Mask"), RoadTexture);
-        RoadMeshActor->GetStaticMeshComponent()->SetMaterial(0, MI);
-  		}
-  	}
-  }
+  ReadJsonAndPrepareRoadPainter();
 }
 
-void ARoadPainterWrapper::GenerateTexture()
+const FString ARoadPainterWrapper::GenerateTexture()
 {
+  //We have to find the directory where the maps have been imported
+  //For this, we can track any of the .json files we have generated
+  //and then go back 2 in the file path (.../map_package/Config/roadpainter_decals.json)
+  //We can't assume the directory name is "map_package", because the user can change it
+  TArray<FString> FileList;
+  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
+    *(FString("roadpainter_decals.json")), true, false, false);
+
+  //Get the absolute path to that file
+  FString JsonFilePath = *(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]));
+  FString Path = JsonFilePath.LeftChop((JsonFilePath.GetCharArray().Num() - 1) - JsonFilePath.Find("/Config/", ESearchCase::Type::CaseSensitive, ESearchDir::FromEnd));
+  FString ImportPackageName = Path.RightChop(Path.Find("/", ESearchCase::IgnoreCase, ESearchDir::FromEnd) + 1);
+
   //Create a string containing the texture's path
-  FString PackageName = TEXT("/Game/map_package/RoadPainterTextures/");
+  FString PackageName = TEXT("/Game/" + ImportPackageName + "/RoadPainterTextures/");
   FString BaseTextureName = FString("RoadMapTexture");
   PackageName += BaseTextureName;
 
@@ -140,6 +255,7 @@ void ARoadPainterWrapper::GenerateTexture()
   //Create a unique name for our asset. For example, if a texture named RoadMapTexture already exists the editor
   //will name the new texture as "RoadMapTexture_1"
   const FName TextureName = MakeUniqueObjectName(Package, UTextureRenderTarget2D::StaticClass(), FName(*BaseTextureName));
+  FString TextureString = TextureName.ToString();
   Package->FullyLoad();
 
   RoadTexture = NewObject<UTextureRenderTarget2D>(Package, TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
@@ -151,6 +267,8 @@ void ARoadPainterWrapper::GenerateTexture()
     RoadTexture->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
     RoadTexture->SizeX = 2048;
     RoadTexture->SizeY = 2048;
+    RoadTexture->AddressX = TextureAddress::TA_Wrap;
+    RoadTexture->AddressY = TextureAddress::TA_Wrap;
     
     //Initialize the platform data to store necessary information regarding our texture asset
     InternalTexture2D->AddToRoot();
@@ -159,9 +277,19 @@ void ARoadPainterWrapper::GenerateTexture()
     InternalTexture2D->PlatformData->SizeY = 2048;
     InternalTexture2D->AddressX = TextureAddress::TA_Wrap;
     InternalTexture2D->AddressY = TextureAddress::TA_Wrap;
-    
+
+#if WITH_EDITORONLY_DATA
+    InternalTexture2D->Source.Init(2048, 2048, 1, 1, ETextureSourceFormat::TSF_RGBA8);
+#endif
+    InternalTexture2D->UpdateResource();
+
+
     //Set the texture render target internal texture
     RoadTexture->UpdateTexture2D(InternalTexture2D, ETextureSourceFormat::TSF_RGBA8);
+#if WITH_EDITORONLY_DATA
+    RoadTexture->Source.Init(2048, 2048, 1, 1, ETextureSourceFormat::TSF_RGBA8);
+#endif
+    RoadTexture->UpdateResource();
     Package->MarkPackageDirty();
     
     //Notify the editor we created a new asset
@@ -170,7 +298,10 @@ void ARoadPainterWrapper::GenerateTexture()
     //Auto-save the new asset
     FString PackageFilename = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
     UPackage::SavePackage(Package, RoadTexture, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFilename, GError, nullptr, true, true, SAVE_NoError);
+    return TextureString;
   }
+
+  return TextureString;
 }
 
 void ARoadPainterWrapper::ReadConfigFile(const FString &CurrentMapName)
