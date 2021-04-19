@@ -52,7 +52,7 @@ We recommend that you divide the vehicle into the following materials:
 - __Lights__: Headlights, indicator lights, etc.
 - __LightGlass_Ext__: A layer of glass that allows visibility from the outside to the inside of the light.
 - __LightGlass_Int__: A layer of glass that allows visibility from the inside to the outside of the light.
-- __LicensePlate__: A rectangular plane of 29x12 cm. The texture will be assigned automatically in Unreal Engine.
+- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
 - __Interior__: Any other details that don't fit in the above sections can go into _Interior_.
 
 Materials should be named using the format `M_CarPart_CarName`, e.g., `M_Bodywork_Mustang`.
@@ -176,7 +176,7 @@ __6. Prepare the vehicle and wheel blueprints.__
 __7. Configure the wheel blueprints.__
 
 >1. In your vehicle blueprint folder, open all four of the wheel blueprints.
-- In the **_Class Defaults_** panel, set **_Collision Mesh_** to `Wheel_Shape`.
+- In the **_Class Defaults_** panel, set **_Collision Mesh_** to `Wheel_Shape`. __Omitting this step will cause the vehicle wheels to sink into the ground__.
 - Adjust the values for wheel shape radius, width, mass, and damping rate according to your vehicle specifications.
 - Set **_Tire Config_** to `CommonTireConfig`
 - On the front wheels set **_Steer Angle_** according to your preferences (default is `70`). Uncheck **_Affected by Handbrake_**.
