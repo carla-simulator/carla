@@ -18,6 +18,7 @@
   * Fix bug in carla.Transform.get_up_vector()
   * Fix bug in lidar channel point count
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
+  * Added Optical Flow camera
   * API extensions:
   - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
   - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee
