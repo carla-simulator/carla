@@ -40,6 +40,14 @@ namespace data {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const Image16bit &image) {
+    out << "Image16bit(frame=" << std::to_string(image.GetFrame())
+        << ", timestamp=" << std::to_string(image.GetTimestamp())
+        << ", size=" << std::to_string(image.GetWidth()) << 'x' << std::to_string(image.GetHeight())
+        << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
     out << "LidarMeasurement(frame=" << std::to_string(meas.GetFrame())
         << ", timestamp=" << std::to_string(meas.GetTimestamp())
@@ -267,6 +275,24 @@ void export_sensor_data() {
       return self.at(pos);
     })
     .def("__setitem__", +[](csd::Image &self, size_t pos, csd::Color color) {
+      self.at(pos) = color;
+    })
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::Image16bit, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::Image16bit>>("Image16bit", no_init)
+    .add_property("width", &csd::Image16bit::GetWidth)
+    .add_property("height", &csd::Image16bit::GetHeight)
+    .add_property("fov", &csd::Image16bit::GetFOVAngle)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::Image16bit>)
+    // .def("convert", &ConvertImage<csd::Image>, (arg("color_converter"))) unimplemented
+    // .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::Raw)) unimplemented
+    .def("__len__", &csd::Image16bit::size)
+    .def("__iter__", iterator<csd::Image16bit>())
+    .def("__getitem__", +[](const csd::Image16bit &self, size_t pos) -> csd::Color16bit {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::Image16bit &self, size_t pos, csd::Color16bit color) {
       self.at(pos) = color;
     })
     .def(self_ns::str(self_ns::self))
