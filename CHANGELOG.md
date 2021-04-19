@@ -19,8 +19,9 @@
   * Fix bug in lidar channel point count
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
   * API extensions:
-  - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
-  - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee
+    - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
+    - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee
+    - Added `world.get_actors_in_range()` function to retrieve all the actors in range from a position filtered by type.
 
 ## CARLA 0.9.11
 
