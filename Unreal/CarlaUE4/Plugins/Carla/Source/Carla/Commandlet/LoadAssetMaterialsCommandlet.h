@@ -43,6 +43,8 @@ public:
 	
 private:
 
+  void GenerateJsonInfoFile(const FString &MapName);
+
 	/// Loaded assets from any object library
 	UPROPERTY()
   TArray<FAssetData> AssetDatas;
