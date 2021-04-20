@@ -156,6 +156,11 @@ private:
   UPROPERTY()
   TMap<FString, UMaterialInstance*> DecalNamesMap;
 
+  /// Array for acquiring the different decals num elements
+  /// from the JSON file, by using it's name
+  UPROPERTY()
+  TArray<FString> DecalNamesArray;
+
   /// Master material of the roads (necessary for creating material instances)
   UPROPERTY()
   UMaterial *RoadNodeMasterMaterial;
