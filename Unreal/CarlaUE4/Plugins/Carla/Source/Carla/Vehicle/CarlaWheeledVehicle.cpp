@@ -108,12 +108,6 @@ void ACarlaWheeledVehicle::BeginPlay()
   {
     UVehicleWheel *Wheel = WheelSetup.WheelClass.GetDefaultObject();
     check(Wheel != nullptr);
-
-    // Assigning new tire config
-    //Wheel->TireConfig = NewObjectNewObject<UTireConfig>();
-
-    // Setting a new value to friction
-    Wheel->TireConfig->SetFrictionScale(FrictionScale);
   }
 
   Vehicle4W->WheelSetups = NewWheelSetups;
@@ -384,8 +378,6 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   Vehicle4W->TransmissionSetup.ForwardGears = ForwardGears;
 
-
-
   // Vehicle Setup
   Vehicle4W->Mass = PhysicsControl.Mass;
   Vehicle4W->DragCoefficient = PhysicsControl.DragCoefficient;
@@ -409,6 +401,22 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Change, if required, the collision mode for wheels
   SetWheelCollision(Vehicle4W, PhysicsControl);
+
+  TArray<FWheelSetup> NewWheelSetups = Vehicle4W->WheelSetups;
+
+  for (int32 i = 0; i < PhysicsWheelsNum; ++i)
+  {
+    UVehicleWheel *Wheel = NewWheelSetups[i].WheelClass.GetDefaultObject();
+    check(Wheel != nullptr);
+
+    // Assigning new tire config
+    Wheel->TireConfig = DuplicateObject<UTireConfig>(Wheel->TireConfig, nullptr);
+
+    // Setting a new value to friction
+    Wheel->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
+  }
+
+  Vehicle4W->WheelSetups = NewWheelSetups;
 
   for (int32 i = 0; i < PhysicsWheelsNum; ++i)
   {
