@@ -343,7 +343,7 @@ void ACarlaGameModeBase::CheckForEmptyMeshes()
 {
   TArray<AActor*> WorldActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), WorldActors);
-  
+
   for(AActor *Actor : WorldActors)
   {
     AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
@@ -358,7 +358,7 @@ void ACarlaGameModeBase::EnableOverlapEvents()
 {
   TArray<AActor*> WorldActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), WorldActors);
-  
+
   for(AActor *Actor : WorldActors)
   {
     AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
