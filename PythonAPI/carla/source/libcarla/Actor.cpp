@@ -136,7 +136,7 @@ void export_actor() {
     .value("Front_Wheel", cr::VehicleWheelLocation::Front_Wheel)
     .value("Back_Wheel", cr::VehicleWheelLocation::Back_Wheel)
   ;
-  
+
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
@@ -205,6 +205,9 @@ void export_actor() {
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
       .def("reset_group", &cc::TrafficLight::ResetGroup)
+      .def("get_effect_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetEffectPositions))
+      .def("get_light_boxes", CALL_RETURNING_LIST(cc::TrafficLight, GetLightBoxes))
+      .def("get_opendrive_id", &cc::TrafficLight::GetOpenDRIVEID)
       .def(self_ns::str(self_ns::self))
   ;
 }

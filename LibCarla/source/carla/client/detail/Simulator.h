@@ -632,6 +632,8 @@ namespace detail {
 
   private:
 
+    bool ShouldUpdateMap(rpc::MapInfo& map_info);
+
     Client _client;
 
     SharedPtr<LightManager> _light_manager;
@@ -639,6 +641,8 @@ namespace detail {
     std::shared_ptr<Episode> _episode;
 
     const GarbageCollectionPolicy _gc_policy;
+
+    SharedPtr<Map> _cached_map;
   };
 
 } // namespace detail
