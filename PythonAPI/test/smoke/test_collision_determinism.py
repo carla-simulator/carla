@@ -64,10 +64,10 @@ class Scenario():
 
     def wait(self, frames=100):
         for _i in range(0, frames):
-            self.world.tick(300.0)
+            self.world.tick(1500.0)
             if self.active:
                 for _s in self.sensor_list:
-                    self.sensor_queue.get(True, 1.0)
+                    self.sensor_queue.get(True, 15.0)
 
     def clear_scene(self):
         for sensor in self.sensor_list:
@@ -127,7 +127,7 @@ class Scenario():
 
         t_start = time.perf_counter()
         for _i in range(0, tics):
-            self.world.tick(300.0)
+            self.world.tick(1500.0)
             self.sensor_syncronization()
             self.save_snapshots()
         t_end = time.perf_counter()
@@ -191,7 +191,7 @@ class Scenario():
         # Sensor Syncronization
         w_frame = self.world.get_snapshot().frame
         for sensor in self.sensor_list:
-            s_frame = self.sensor_queue.get(True, 1.0)[0]
+            s_frame = self.sensor_queue.get(True, 15.0)[0]
             if w_frame != s_frame:
                 raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d" % (sensor[0], w_frame, s_frame))
 
@@ -400,12 +400,12 @@ class TestCollisionDeterminism(SmokeTest):
             synchronous_mode=True,
             fixed_delta_seconds=0.05)
         self.world.apply_settings(settings)
-        self.world.tick(300.0)
+        self.world.tick(1500.0)
 
     def tearDown(self):
         self.settings.synchronous_mode = False
         self.world.apply_settings(self.settings)
-        self.world.tick(300.0)
+        self.world.tick(1500.0)
         self.settings = None
         self.world = None
         super(TestCollisionDeterminism, self).tearDown()
