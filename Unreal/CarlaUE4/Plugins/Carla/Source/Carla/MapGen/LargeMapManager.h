@@ -94,6 +94,9 @@ class CARLA_API ALargeMapManager : public AActor
   GENERATED_BODY()
 
 public:
+
+  using TileID = uint64;
+
   // Sets default values for this actor's properties
   ALargeMapManager();
 
@@ -125,19 +128,25 @@ public:
   void AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  void AddActorToConsider(AActor* InActor);
-
-  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
-  void RemoveActorToConsider(AActor* InActor);
-
-  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FIntVector GetNumTilesInXY() const;
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   bool IsLevelOfTileLoaded(FIntVector InTileID) const;
 
-  // TODO: IsTileLoaded(FDVector Location)
-  // TODO: IsTileLoaded(FVector Location)
+  bool IsTileLoaded(TileID TileId) const
+  {
+    return CurrentTilesLoaded.Contains(TileId);
+  }
+
+  bool IsTileLoaded(FVector Location) const
+  {
+    return IsTileLoaded(GetTileID(Location));
+  }
+
+  bool IsTileLoaded(FDVector Location) const
+  {
+    return IsTileLoaded(GetTileID(Location));
+  }
 
 protected:
 
@@ -145,12 +154,14 @@ protected:
 
   FIntVector GetTileVectorID(FDVector TileLocation) const;
 
-  FIntVector GetTileVectorID(uint64 TileID) const;
+  FIntVector GetTileVectorID(TileID TileID) const;
 
   /// From a given location it retrieves the TileID that covers that area
-  uint64 GetTileID(FVector TileLocation) const;
+  TileID GetTileID(FVector TileLocation) const;
 
-  uint64 GetTileID(FIntVector TileVectorID) const;
+  TileID GetTileID(FDVector TileLocation) const;
+
+  TileID GetTileID(FIntVector TileVectorID) const;
 
   FCarlaMapTile& GetCarlaMapTile(FVector Location);
 
@@ -184,26 +195,26 @@ protected:
 
   void GetTilesToConsider(
     const AActor* ActorToConsider,
-    TSet<uint64>& OutTilesToConsider);
+    TSet<TileID>& OutTilesToConsider);
 
   void GetTilesThatNeedToChangeState(
-    const TSet<uint64>& InTilesToConsider,
-    TSet<uint64>& OutTilesToBeVisible,
-    TSet<uint64>& OutTilesToHidde);
+    const TSet<TileID>& InTilesToConsider,
+    TSet<TileID>& OutTilesToBeVisible,
+    TSet<TileID>& OutTilesToHidde);
 
   void UpdateTileState(
-    const TSet<uint64>& InTilesToUpdate,
+    const TSet<TileID>& InTilesToUpdate,
     bool InShouldBlockOnLoad,
     bool InShouldBeLoaded,
     bool InShouldBeVisible);
 
   void UpdateCurrentTilesLoaded(
-    const TSet<uint64>& InTilesToBeVisible,
-    const TSet<uint64>& InTilesToHidde);
+    const TSet<TileID>& InTilesToBeVisible,
+    const TSet<TileID>& InTilesToHidde);
 
   void SpawnAssetsInTile(FCarlaMapTile& Tile);
 
-  TMap<uint64, FCarlaMapTile> MapTiles;
+  TMap<TileID, FCarlaMapTile> MapTiles;
 
   // All actors to be consider for tile loading (all hero vehicles)
   // The first actor in the array is the one selected for rebase
@@ -214,12 +225,15 @@ protected:
 
   TArray<FActorView::IdType> DormantActors;
 
-  // Temporal sets. Helpers to remove Actors from one array to another.
+  // Temporal sets to remove actors. Just to avoid removing them in the update loop
   TSet<AActor*> ActorsToRemove;
+  TSet<AActor*> GhostsToRemove;
+  // TODO: detect dormant actor destruction from client
+  // Helpers to move Actors from one array to another.
   TSet<AActor*> GhostToDormantActors;
   TSet<FActorView::IdType> DormantToGhostActors;
 
-  TSet<uint64> CurrentTilesLoaded;
+  TSet<TileID> CurrentTilesLoaded;
 
   // Current Origin after rebase
   FIntVector CurrentOriginInt{ 0 };
@@ -255,7 +269,9 @@ protected:
     if (!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
   }
 
-  FString GenerateTileName(uint64 TileID);
+  FString GenerateTileName(TileID TileID);
+
+  FString TileIDToString(TileID TileID);
 
   void DumpTilesTable() const;
 

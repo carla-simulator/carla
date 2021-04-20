@@ -126,7 +126,7 @@ void ALargeMapManager::OnActorSpawned(
   AActor* Actor = const_cast<AActor*>(ActorView.GetActor());
   bool IsHeroVehicle = false;
 
-  LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s", *Actor->GetName());
+  LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s %s", *Actor->GetName(), *Transform.GetTranslation().ToString());
 
   if (IsValid(Actor) && ActorView.GetActorType() == FActorView::ActorType::Vehicle)
   { // Check if is hero vehicle
@@ -140,7 +140,7 @@ void ALargeMapManager::OnActorSpawned(
     {
       LM_LOG(Error, "HERO VEHICLE DETECTED");
 
-      AddActorToConsider(Actor);
+      ActorsToConsider.Add(Actor);
 
       CheckIfRebaseIsNeeded();
 
@@ -163,12 +163,13 @@ void ALargeMapManager::OnActorSpawned(
     // Any actor that is not the hero vehicle could possible be destroyed at some point
     // we need to store the ActorView information to be able to spawn it again if needed
 
-
+    LM_LOG(Error, "... not hero vehicle ...");
     if(IsValid(Actor))
     { // Actor was spwaned succesfully
       // TODO: not dormant but not hero => GhostActor
       //       LM: Map<AActor* FGhostActor>  maybe per tile and in a tile sublevel?
 
+      LM_LOG(Error, "GHOST VEHICLE DETECTED");
       GhostActors.Add(Actor);
 
     }
@@ -177,6 +178,7 @@ void ALargeMapManager::OnActorSpawned(
       // TODO: dormant => no actor so Actorview stored per tile
       //       LM: Map<ActorId, TileID> , Tile: Map<ActorID, FDormantActor>
       //       In case of update: update Tile Map, update LM Map
+      LM_LOG(Error, "DORMANT VEHICLE DETECTED");
     }
 
     //GhostActors.Add(ActorView.GetActorId(),
@@ -195,21 +197,30 @@ void ALargeMapManager::OnActorSpawned(
 void ALargeMapManager::OnActorDestroyed(AActor* DestroyedActor)
 {
   LM_LOG(Warning, "ALargeMapManager::OnActorDestroyed %s", *DestroyedActor->GetName());
+
+  UWorld* World = GetWorld();
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+  FActorView ActorView = CarlaEpisode->FindActor(DestroyedActor);
+  const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+
+  // Hero has been removed?
+  //
+
 }
 
 void ALargeMapManager::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
 
-  // First we check if ghost actors are still in range or have to be converted to dormant
+  // Update map tiles, load/unload based on actors to consider (heros) position
+  // Also, to avoid looping over the heros again, it checks if any actor to consider has been removed
+  UpdateTilesState();
+
+  // Check if ghost actors are still in range and inside a loaded tile or have to be converted to dormant
   CheckGhostActors();
 
   // Check if dormant actors have been moved to the load range
   CheckDormantActors();
-
-  // Update map tiles, load/unload based on actors to consider (heros) position
-  // Also, to avoid looping over the heros again, it checks if any actor to consider has been removed
-  UpdateTilesState();
 
   // Remove the hero actors that doesn't exits any more from the ActorsToConsider vector
   RemovePendingActorsToRemove();
@@ -266,29 +277,10 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 #endif // WITH_EDITOR
 }
 
+// TODO: maybe remove this, I think I will not need it any more
 void ALargeMapManager::AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform)
 {
   // GhostActors.Add(ActorView.GetActorId(), {Transform, ActorView});
-}
-
-void ALargeMapManager::AddActorToConsider(AActor* InActor)
-{
-  ActorsToConsider.Add(InActor);
-}
-
-void ALargeMapManager::RemoveActorToConsider(AActor* InActor)
-{
-  int Index = 0;
-  for (int i = 0; i < ActorsToConsider.Num(); i++)
-  {
-    AActor* Actor = ActorsToConsider[i];
-    if (Actor == InActor)
-    {
-      ActorsToConsider.Remove(Actor);
-      Index = i;
-      break;
-    }
-  }
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -311,7 +303,7 @@ FIntVector ALargeMapManager::GetNumTilesInXY() const
 
 bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
 {
-  uint64 TileID = GetTileID(InTileID);
+  TileID TileID = GetTileID(InTileID);
 
   const FCarlaMapTile* Tile = MapTiles.Find(TileID);
   if (!Tile)
@@ -338,7 +330,7 @@ FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
   return (TileLocation / TileSide).ToFIntVector();
 }
 
-FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID) const
+FIntVector ALargeMapManager::GetTileVectorID(TileID TileID) const
 {
   return FIntVector{
     (int32)(TileID >> 32),
@@ -347,14 +339,20 @@ FIntVector ALargeMapManager::GetTileVectorID(uint64 TileID) const
   };
 }
 
-uint64 ALargeMapManager::GetTileID(FIntVector TileVectorID) const
+ALargeMapManager::TileID ALargeMapManager::GetTileID(FIntVector TileVectorID) const
 {
   int64 X = ((int64)(TileVectorID.X) << 32);
   int64 Y = (int64)(TileVectorID.Y) & 0x00000000FFFFFFFF;
   return (X | Y);
 }
 
-uint64 ALargeMapManager::GetTileID(FVector TileLocation) const
+ALargeMapManager::TileID ALargeMapManager::GetTileID(FVector TileLocation) const
+{
+  FIntVector TileID = GetTileVectorID(TileLocation);
+  return GetTileID(TileID);
+}
+
+ALargeMapManager::TileID ALargeMapManager::GetTileID(FDVector TileLocation) const
 {
   FIntVector TileID = GetTileVectorID(TileLocation);
   return GetTileID(TileID);
@@ -363,7 +361,7 @@ uint64 ALargeMapManager::GetTileID(FVector TileLocation) const
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
 {
   // Asset Location -> TileID
-  uint64 TileID = GetTileID(Location);
+  TileID TileID = GetTileID(Location);
 
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
   if (Tile) return *Tile; // Tile founded
@@ -403,7 +401,7 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
 
 FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
 {
-  uint64 TileID = GetTileID(TileVectorID);
+  TileID TileID = GetTileID(TileVectorID);
   FCarlaMapTile* Tile = MapTiles.Find(TileID);
   return Tile;
 }
@@ -477,7 +475,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 
 void ALargeMapManager::UpdateTilesState()
 {
-  TSet<uint64> TilesToConsider;
+  TSet<TileID> TilesToConsider;
 
   // Loop over ActorsToConsider to update the state of the map tiles
   // if the actor is not valid will be removed
@@ -493,8 +491,8 @@ void ALargeMapManager::UpdateTilesState()
     }
   }
 
-  TSet<uint64> TilesToBeVisible;
-  TSet<uint64> TilesToHidde;
+  TSet<TileID> TilesToBeVisible;
+  TSet<TileID> TilesToHidde;
   GetTilesThatNeedToChangeState(TilesToConsider, TilesToBeVisible, TilesToHidde);
 
   UpdateTileState(TilesToBeVisible, true, true, true);
@@ -507,12 +505,24 @@ void ALargeMapManager::UpdateTilesState()
 
 void ALargeMapManager::RemovePendingActorsToRemove()
 {
-  // Discard removed actors
+
+  if(ActorsToRemove.Num() > 0 || GhostsToRemove.Num() > 0)
+  {
+    LM_LOG(Error, "ActorsToRemove %d GhostsToRemove %d", ActorsToRemove.Num(), GhostsToRemove.Num());
+  }
+
   for (AActor* ActorToRemove : ActorsToRemove)
   {
     ActorsToConsider.Remove(ActorToRemove);
   }
   ActorsToRemove.Reset();
+
+
+  for (AActor* ActorToRemove : GhostsToRemove)
+  {
+    GhostActors.Remove(ActorToRemove);
+  }
+  GhostsToRemove.Reset();
 }
 
 void ALargeMapManager::CheckGhostActors()
@@ -520,14 +530,28 @@ void ALargeMapManager::CheckGhostActors()
   // Check if they have to be destroyed
   for(AActor* Actor : GhostActors)
   {
-    check(Actor);
-
-    FVector ActorLocation = Actor->GetActorLocation();
-
-    if( ActorLocation.SizeSquared() > ActorStreamingDistanceSquared)
+    if (IsValid(Actor) )
     {
-      // Save to temporal container. Later will be converted to dormant
-      GhostToDormantActors.Add(Actor);
+      // Little cheap hack to avoid destroying an actor in the first frame
+      // because the location of the actor in the first frame could be not valid
+      //if(Actor->GetLastRenderTime() <= 0.0f) continue;
+
+      FVector ActorLocation = Actor->GetActorLocation();
+      FDVector WorldLocation = CurrentOriginD + ActorLocation;
+
+      if (ActorLocation.SizeSquared() > ActorStreamingDistanceSquared || !IsTileLoaded(WorldLocation))
+      {
+        LM_LOG(Warning, "CheckGhostActors Tile not loaded %s %s-> Ghost To Dormant %s", \
+          *TileIDToString(GetTileID(WorldLocation)), *WorldLocation.ToString(), *Actor->GetName());
+
+        // Save to temporal container. Later will be converted to dormant
+        GhostToDormantActors.Add(Actor);
+      }
+    }
+    else
+    {
+      LM_LOG(Warning, "CheckGhostActors Actor does not exist -> Remove actor");
+      GhostsToRemove.Add(Actor);
     }
   }
 }
@@ -542,6 +566,8 @@ void ALargeMapManager::ConvertGhostToDormantActors()
   for(AActor* Actor : GhostToDormantActors)
   {
     check(IsValid(Actor));
+
+    LM_LOG(Warning, "Converting Ghost To Dormant... %s", *Actor->GetName());
 
     // To dormant state
     FActorView ActorView = CarlaEpisode->FindActor(Actor);
@@ -567,10 +593,12 @@ void ALargeMapManager::CheckDormantActors()
 {
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
-
+  return;// TODO: remove
   for(FActorView::IdType Id : DormantActors)
   {
     FActorView ActorView = CarlaEpisode->FindActor(Id);
+
+    LM_LOG(Warning, "CheckDormantActors -> %d", ActorView.GetActorId());
 
     check(ActorView.IsDormant());// if is not Dormant something is very wrong
     const FActorInfo* ActorInfo = ActorView.GetActorInfo();
@@ -627,7 +655,7 @@ void ALargeMapManager::CheckIfRebaseIsNeeded()
 }
 
 void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
-                                          TSet<uint64>& OutTilesToConsider)
+                                          TSet<TileID>& OutTilesToConsider)
 {
   check(ActorToConsider);
   // World location
@@ -646,7 +674,7 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
       // I just simply discard it
       FIntVector TileToCheck = CurrentTile + FIntVector(X, Y, 0);
 
-      uint64 TileID = GetTileID(TileToCheck);
+      TileID TileID = GetTileID(TileToCheck);
       FCarlaMapTile* Tile = MapTiles.Find(TileID);
       if (!Tile)
       {
@@ -666,16 +694,16 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
 }
 
 void ALargeMapManager::GetTilesThatNeedToChangeState(
-  const TSet<uint64>& InTilesToConsider,
-  TSet<uint64>& OutTilesToBeVisible,
-  TSet<uint64>& OutTilesToHidde)
+  const TSet<TileID>& InTilesToConsider,
+  TSet<TileID>& OutTilesToBeVisible,
+  TSet<TileID>& OutTilesToHidde)
 {
   OutTilesToBeVisible = InTilesToConsider.Difference(CurrentTilesLoaded);
   OutTilesToHidde = CurrentTilesLoaded.Difference(InTilesToConsider);
 }
 
 void ALargeMapManager::UpdateTileState(
-  const TSet<uint64>& InTilesToUpdate,
+  const TSet<TileID>& InTilesToUpdate,
   bool InShouldBlockOnLoad,
   bool InShouldBeLoaded,
   bool InShouldBeVisible)
@@ -684,7 +712,7 @@ void ALargeMapManager::UpdateTileState(
   UWorldComposition* WorldComposition = World->WorldComposition;
 
   // Gather all the locations of the levels to load
-  for (const uint64 TileID : InTilesToUpdate)
+  for (const TileID TileID : InTilesToUpdate)
   {
       FCarlaMapTile* CarlaTile = MapTiles.Find(TileID);
       check(CarlaTile); // If an invalid ID reach here, we did something very wrong
@@ -696,15 +724,15 @@ void ALargeMapManager::UpdateTileState(
 }
 
 void ALargeMapManager::UpdateCurrentTilesLoaded(
-  const TSet<uint64>& InTilesToBeVisible,
-  const TSet<uint64>& InTilesToHidde)
+  const TSet<TileID>& InTilesToBeVisible,
+  const TSet<TileID>& InTilesToHidde)
 {
-  for (const uint64 TileID : InTilesToHidde)
+  for (const TileID TileID : InTilesToHidde)
   {
     CurrentTilesLoaded.Remove(TileID);
   }
 
-  for (const uint64 TileID : InTilesToBeVisible)
+  for (const TileID TileID : InTilesToBeVisible)
   {
     CurrentTilesLoaded.Add(TileID);
   }
@@ -775,11 +803,18 @@ void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
 }
 
 #if WITH_EDITOR
-FString ALargeMapManager::GenerateTileName(uint64 TileID)
+FString ALargeMapManager::GenerateTileName(TileID TileID)
 {
   int32 X = (int32)(TileID >> 32);
   int32 Y = (int32)(TileID);
   return FString::Printf(TEXT("Tile_%d_%d"), X, Y);
+}
+
+FString ALargeMapManager::TileIDToString(TileID TileID)
+{
+  int32 X = (int32)(TileID >> 32);
+  int32 Y = (int32)(TileID);
+  return FString::Printf(TEXT("%d_%d"), X, Y);
 }
 
 void ALargeMapManager::DumpTilesTable() const
@@ -823,7 +858,14 @@ void ALargeMapManager::PrintMapInfo()
 
   FString Output = "";
   Output += FString::Printf(TEXT("Num levels in world composition: %d\n"), World->WorldComposition->TilesStreaming.Num());
-  Output += FString::Printf(TEXT("Num levels loaded: %d\n"), Levels.Num(), World->GetNumLevels());
+  Output += FString::Printf(TEXT("Num levels loaded: %d\n"), Levels.Num() );
+  Output += FString::Printf(TEXT("Num tiles loaded: %d\n"), CurrentTilesLoaded.Num() );
+  Output += FString::Printf(TEXT("Tiles loaded: [ "));
+  for(TileID& TileId : CurrentTilesLoaded)
+  {
+    Output += FString::Printf(TEXT("%s, "), *TileIDToString(TileId));
+  }
+  Output += FString::Printf(TEXT("]\n"));
   GEngine->AddOnScreenDebugMessage(0, MsgTime, FColor::Cyan, Output);
 
   int LastMsgIndex = TilesDistMsgIndex;
@@ -846,7 +888,7 @@ void ALargeMapManager::PrintMapInfo()
 
   LastMsgIndex = ClientLocMsgIndex;
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
-    FString::Printf(TEXT("Origin: %s km"), *(FDVector(CurrentOriginInt) / (1000.0 * 100.0)).ToString()) );
+    FString::Printf(TEXT("\nOrigin: %s km"), *(FDVector(CurrentOriginInt) / (1000.0 * 100.0)).ToString()) );
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
      FString::Printf(TEXT("Num ghost actors (%d)"), GhostActors.Num()) );
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
