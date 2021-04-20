@@ -55,7 +55,6 @@ void ULoadAssetMaterialsCommandlet::GenerateJsonInfoFile(const FString &MapName)
   FString InfoFilePath = JsonFilePath.LeftChop((JsonFilePath.GetCharArray().Num() - 1) - JsonFilePath.Find("/", ESearchCase::Type::IgnoreCase, ESearchDir::FromEnd));
   //We give it a unique name
   InfoFilePath += "/roadpainter_info_" + World->GetMapName() + ".json";
-  UE_LOG(LogTemp, Warning, TEXT("%s"), *InfoFilePath);
 
   //We write our variables
   TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
@@ -85,7 +84,7 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
     RoadPainterBp->ReadConfigFile(LoadedMapName);
     RoadPainterBp->SetBlueprintVariables();
 
-    //Spawn the decals indicated in the JSON file
+    //Spawn the decals loaded in via the JSON file
     RoadPainterBp->SpawnDecalsEvent();
 	}
 }
