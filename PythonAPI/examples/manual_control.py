@@ -1009,7 +1009,6 @@ class CameraManager(object):
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {}],
-            ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
             ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)', {}],
             ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)', {}],
             ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)', {}],
@@ -1022,7 +1021,9 @@ class CameraManager(object):
                 {'lens_circle_multiplier': '3.0',
                 'lens_circle_falloff': '3.0',
                 'chromatic_aberration_intensity': '0.5',
-                'chromatic_aberration_offset': '0'}]]
+                'chromatic_aberration_offset': '0'}],
+            ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
+        ]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
@@ -1113,6 +1114,13 @@ class CameraManager(object):
             array = np.frombuffer(image.raw_data, dtype=np.uint16)
             array = np.reshape(array, (image.height, image.width, 4))
             if OPENCV_INSTALLED:
+                # The x and y optical flow values are stored as `uint16`s each
+                # which maps the integer range of [0, 65535] to represent a floating-point range of [0, 1]
+                # The code below converts this range of [0, 1] to the originally computed optical flow range of [-2, 2]
+                # where the units are in terms of the viewport's dimensions.
+                # For example for a viewport of size 800x600, the maximum optical flow that can be represented is:
+                # [-1600, 1600] in the x axis and
+                # [-1200, 1200] in the y axis
                 data_array = np.array(array[:, :, 0:2], dtype=np.float32)
                 data_array[:, :, 0] = (data_array[:, :, 0] - 32767) * (2 * image.width / 65535)
                 data_array[:, :, 1] = (32767 - data_array[:, :, 1]) * (2 * image.height / 65535)
