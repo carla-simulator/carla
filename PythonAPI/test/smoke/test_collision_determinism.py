@@ -25,7 +25,7 @@ except ImportError:
 class DeterminismError(Exception):
     pass
 
-class Scenario():
+class Scenario(object):
     def __init__(self, client, world, save_snapshots_mode=False):
         self.world = world
         self.client = client
@@ -125,18 +125,14 @@ class Scenario():
 
         self.init_scene(prefix, run_settings, spectator_tr)
 
-        t_start = time.perf_counter()
         for _i in range(0, tics):
             self.world.tick(1500.0)
             self.sensor_syncronization()
             self.save_snapshots()
-        t_end = time.perf_counter()
 
         self.world.apply_settings(original_settings)
         self.save_snapshots_to_disk()
         self.clear_scene()
-
-        return t_end - t_start
 
     def add_sensor(self, sensor, sensor_type):
         sen_idx = len(self.sensor_list)
@@ -198,7 +194,7 @@ class Scenario():
 
 class TwoCarsHighSpeedCollision(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
+        super(TwoCarsHighSpeedCollision, self).init_scene(prefix, settings, spectator_tr)
 
         blueprint_library = self.world.get_blueprint_library()
 
@@ -220,7 +216,7 @@ class TwoCarsHighSpeedCollision(Scenario):
 
 class ThreeCarsSlowSpeedCollision(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
+        super(ThreeCarsSlowSpeedCollision, self).init_scene(prefix, settings, spectator_tr)
 
         blueprint_library = self.world.get_blueprint_library()
 
@@ -248,7 +244,7 @@ class ThreeCarsSlowSpeedCollision(Scenario):
 
 class CarBikeCollision(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
+        super(CarBikeCollision, self).init_scene(prefix, settings, spectator_tr)
 
         blueprint_library = self.world.get_blueprint_library()
 
@@ -270,7 +266,7 @@ class CarBikeCollision(Scenario):
 
 class CarWalkerCollision(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super().init_scene(prefix, settings, spectator_tr)
+        super(CarWalkerCollision, self).init_scene(prefix, settings, spectator_tr)
 
         blueprint_library = self.world.get_blueprint_library()
 
@@ -377,11 +373,10 @@ class CollisionScenarioTester():
 
         spectator_tr = carla.Transform(carla.Location(120, -256, 10), carla.Rotation(yaw=180))
 
-        t_comp = 0
         sim_prefixes = []
         for i in range(0, repetitions):
             prefix_rep = prefix + "_rep" + str(i)
-            t_comp += self.scene.run_simulation(prefix_rep, config_settings, spectator_tr, tics=sim_tics)
+            self.scene.run_simulation(prefix_rep, config_settings, spectator_tr, tics=sim_tics)
             sim_prefixes.append(prefix_rep)
 
         determ_repet = self.check_simulations(sim_prefixes, prefix)
