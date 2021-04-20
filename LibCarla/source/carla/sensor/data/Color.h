@@ -47,7 +47,7 @@ namespace data {
   static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
 
 #pragma pack(push, 1)
-  /// A 64-bit PF_FloatRGBA color [16bit / channel]. (still uses uint16 types to transport 16bit floats)
+  /// A 64-bit color [16 bits per channel (R, G, B, and A each)]
   struct Color16bit {
     Color16bit() = default;
     Color16bit(const Color16bit &) = default;
@@ -64,10 +64,6 @@ namespace data {
     bool operator!=(const Color16bit &rhs) const  {
       return !(*this == rhs);
     }
-
-//    operator rpc::Color16bit() const {
-//      return {r, g, b};
-//    }
 
     uint16_t b = 0u;
     uint16_t g = 0u;
