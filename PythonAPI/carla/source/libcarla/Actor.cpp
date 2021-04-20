@@ -214,6 +214,9 @@ void export_actor() {
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
       .def("reset_group", &cc::TrafficLight::ResetGroup)
+      .def("get_effect_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetEffectPositions))
+      .def("get_light_boxes", CALL_RETURNING_LIST(cc::TrafficLight, GetLightBoxes))
+      .def("get_opendrive_id", &cc::TrafficLight::GetOpenDRIVEID)
       .def(self_ns::str(self_ns::self))
   ;
 }

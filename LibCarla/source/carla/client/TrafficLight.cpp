@@ -75,5 +75,37 @@ namespace client {
     GetEpisode().Lock()->ResetTrafficLightGroup(*this);
   }
 
+  std::vector<SharedPtr<Waypoint>> TrafficLight::GetEffectPositions() const {
+    std::vector<SharedPtr<Waypoint>> result;
+    SharedPtr<Map> carla_map = GetEpisode().Lock()->GetCurrentMap();
+    std::vector<SharedPtr<Landmark>> landmarks = carla_map->GetLandmarksFromId(GetOpenDRIVEID());
+    for (auto& landmark : landmarks) {
+      for (const road::LaneValidity& validity : landmark->GetValidities()) {
+        if (validity._from_lane < validity._to_lane) {
+          for (int lane_id = validity._from_lane; lane_id <= validity._to_lane; ++lane_id) {
+            result.emplace_back(
+                carla_map->GetWaypointXODR(
+                landmark->GetRoadId(), lane_id, landmark->GetS()));
+          }
+        } else {
+          for (int lane_id = validity._from_lane; lane_id >= validity._to_lane; --lane_id) {
+            result.emplace_back(
+                carla_map->GetWaypointXODR(
+                landmark->GetRoadId(), lane_id, landmark->GetS()));
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  std::vector<geom::BoundingBox> TrafficLight::GetLightBoxes() const {
+    return {};
+  }
+
+  road::SignId TrafficLight::GetOpenDRIVEID() const {
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.traffic_light_data.sign_id;
+  }
+
 } // namespace client
 } // namespace carla
