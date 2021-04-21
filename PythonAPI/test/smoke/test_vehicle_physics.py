@@ -416,4 +416,68 @@ class TestVehicleFriction(SyncSmokeTest):
             vehicle_01.destroy()
             friction_trigger.destroy()
 
+    def test_vehicle_friction_values(self):
+        print("TestVehicleFriction.test_vehicle_friction_values")
+
+        self.client.load_world("Town05_Opt")
+
+        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+
+        for bp_veh in bp_vehicles:
+            veh_transf = carla.Transform(carla.Location(36, -200, 0.3), carla.Rotation(yaw=90))
+
+            vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_00.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            veh_transf.location.x -= 4
+            vehicle_01 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_01.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            veh_transf.location.x -= 4
+            vehicle_02 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_02.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            self.wait(10)
+
+            vel_ref = 100.0 / 3.6
+            vehicle_00.apply_physics_control(change_physics_control(vehicle_00, tire_friction=0.0, drag=0.0))
+            vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=0.5, drag=0.0))
+            vehicle_02.apply_physics_control(change_physics_control(vehicle_02, tire_friction=3.0, drag=0.0))
+            self.wait(1)
+            vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+            vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+            vehicle_02.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+
+            self.wait(50)
+
+            vel_veh_00 = vehicle_00.get_velocity().y
+            loc_veh_00 = vehicle_00.get_location().y
+            loc_veh_01 = vehicle_01.get_location().y
+            loc_veh_02 = vehicle_02.get_location().y
+
+            for _i in range(0, 300):
+                self.world.tick()
+                vehicle_00.apply_control(carla.VehicleControl(brake=1.0))
+                vehicle_01.apply_control(carla.VehicleControl(brake=1.0))
+                vehicle_02.apply_control(carla.VehicleControl(brake=1.0))
+
+            curr_vel_veh_00 = vehicle_00.get_velocity().y
+            dist_veh_00 = vehicle_00.get_location().y - loc_veh_00
+            dist_veh_01 = vehicle_01.get_location().y - loc_veh_01
+            dist_veh_02 = vehicle_02.get_location().y - loc_veh_02
+
+            err_veh_00 = not equal_tol(vel_veh_00, curr_vel_veh_00, 1e-3) and False # Fix when content is updated
+            err_veh_01 = dist_veh_01 > 0.75 * dist_veh_00
+            err_veh_02 = dist_veh_02 > 0.75 * dist_veh_01
+
+            print(dist_veh_01 / dist_veh_00, dist_veh_02 / dist_veh_01)
+
+            if err_veh_00 or err_veh_01 or err_veh_02:
+                self.fail("%s: Friction test failed: ErrVeh00: %r ErrVeh01: %r ErrVeh02: %r."
+                    % (bp_veh.id, err_veh_00, err_veh_01, err_veh_02))
+
+            vehicle_00.destroy()
+            vehicle_01.destroy()
+            vehicle_02.destroy()
+
 
