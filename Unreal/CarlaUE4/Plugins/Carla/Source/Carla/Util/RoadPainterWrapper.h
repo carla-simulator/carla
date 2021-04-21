@@ -61,50 +61,56 @@ public:
 
   /// Event used for setting the size of the map via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void ZSizeEvent();
+  void ZSizeEvent();
 
   /// Event used for painting by actor points
   /// generated on the road (created during the import process) via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void PaintByActorEvent();
+  void PaintByActorEvent();
 
   /// Event used for painting as a whole square via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void PaintOverSquareEvent();
+  void PaintOverSquareEvent();
 
   /// Event used for painting as a whole circle via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void PaintOverCircleEvent();
+  void PaintOverCircleEvent();
 
   /// Event used for painting the road map to the selected texture via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void PaintAllRoadsEvent();
+  void PaintAllRoadsEvent();
 
   /// Event used for spawning meshes by actor points
   /// generated on the road (created during the import process) via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void SpawnMeshesByActorEvent();
+  void SpawnMeshesByActorEvent();
 
   /// Event used for spawning meshes via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void SpawnMeshesEvent();
+  void SpawnMeshesEvent();
 
   /// Event used for spawning decals via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void SpawnDecalsEvent();
+  void SpawnDecalsEvent();
+
+  /// Change the material mask for painting the roads as RGB format
+  /// This is used for multitexturing (blending different materials with one another)
+  /// R = 1, G = 2, B = 3
+  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
+  void SwitchMaterialMaskEvent(int MaskType);
 
   /// Event for clearing the materials on the road via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void ClearMaterialEvent();
+  void ClearMaterialEvent();
 
   /// Event for clearing the materials close to the actor points
   /// generated on the road (created during the import process) via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void ClearMaterialByActorEvent();
+  void ClearMaterialByActorEvent();
 
   /// Event for clearing all the materials on the road via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-	void ClearAllEvent();
+  void ClearAllEvent();
 
   /// Event for setting the necessary variables in blueprint in order to paint the roads 
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
