@@ -227,8 +227,8 @@ class TestVehicleFriction(SyncSmokeTest):
             self.wait(1)
 
             vel_veh_00 = vehicle_00.get_velocity().y
-            vel_veh_01 = vehicle_00.get_velocity().y
-            vel_veh_02 = vehicle_00.get_velocity().y
+            vel_veh_01 = vehicle_01.get_velocity().y
+            vel_veh_02 = vehicle_02.get_velocity().y
 
             if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01, vel_veh_02], 1e-3):
                 vehicle_00.destroy()
@@ -240,8 +240,8 @@ class TestVehicleFriction(SyncSmokeTest):
             self.wait(200)
 
             vel_veh_00 = vehicle_00.get_velocity().y
-            vel_veh_01 = vehicle_00.get_velocity().y
-            vel_veh_02 = vehicle_00.get_velocity().y
+            vel_veh_01 = vehicle_01.get_velocity().y
+            vel_veh_02 = vehicle_02.get_velocity().y
             if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01, vel_veh_02], 1e-3):
                 vehicle_00.destroy()
                 vehicle_01.destroy()
@@ -250,8 +250,8 @@ class TestVehicleFriction(SyncSmokeTest):
                   % (bp_veh.id, vel_ref, vel_veh_00, vel_veh_01, vel_veh_02))
 
             loc_veh_00 = vehicle_00.get_location().y
-            loc_veh_01 = vehicle_00.get_location().y
-            loc_veh_02 = vehicle_00.get_location().y
+            loc_veh_01 = vehicle_01.get_location().y
+            loc_veh_02 = vehicle_02.get_location().y
             if not list_equal_tol([loc_veh_00, loc_veh_01, loc_veh_02], 1e-3):
                 vehicle_00.destroy()
                 vehicle_01.destroy()
@@ -295,7 +295,7 @@ class TestVehicleFriction(SyncSmokeTest):
             self.wait(200)
 
             vel_veh_00 = vehicle_00.get_velocity().y
-            vel_veh_01 = vehicle_00.get_velocity().y
+            vel_veh_01 = vehicle_01.get_velocity().y
 
             if not list_equal_tol([vel_veh_00, vel_veh_01], 0.1):
                 vehicle_00.destroy()
