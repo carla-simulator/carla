@@ -150,8 +150,9 @@ namespace detail {
   }
 
   SharedPtr<Map> Simulator::GetCurrentMap() {
-    rpc::MapInfo map_info = _client.GetMapInfo();
-    if (ShouldUpdateMap(map_info)) {
+    DEBUG_ASSERT(_episode != nullptr);
+    if (!_cached_map || _episode->HasMapChangedSinceLastCall()) {
+      rpc::MapInfo map_info = _client.GetMapInfo();
       _cached_map = MakeShared<Map>(map_info);
     }
     return _cached_map;

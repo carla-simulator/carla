@@ -275,6 +275,9 @@ namespace detail {
 
     void FreezeAllTrafficLights(bool frozen);
 
+    std::vector<geom::BoundingBox> GetLightBoxes(
+        rpc::ActorId traffic_light) const;
+
     /// Returns a list of pairs where the firts element is the vehicle ID
     /// and the second one is the light state
     rpc::VehicleLightStateList GetVehiclesLightStates();

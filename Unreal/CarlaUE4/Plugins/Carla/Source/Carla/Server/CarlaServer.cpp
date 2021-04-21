@@ -1556,6 +1556,24 @@ void FCarlaServer::FPimpl::BindActions()
     }
   };
 
+  BIND_SYNC(get_light_boxes) << [this](
+      const cr::ActorId ActorId) -> R<std::vector<cg::BoundingBox>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
+    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    {
+      RESPOND_ERROR("unable to get group traffic lights: actor not found");
+    }
+    ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
+    TArray<FBoundingBox> Result;
+    TArray<uint8> OutTag;
+    UBoundingBoxCalculator::GetTrafficLightBoundingBox(
+        TrafficLight, Result, OutTag,
+         static_cast<uint8>(carla::rpc::CityObjectLabel::TrafficLight));
+    return MakeVectorFromTArray<cg::BoundingBox>(Result);
+  };
+
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData) -> R<std::string>
