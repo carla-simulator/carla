@@ -568,6 +568,10 @@ namespace detail {
       _client.ResetAllTrafficLights();
     }
 
+    std::vector<geom::BoundingBox> GetLightBoxes(const TrafficLight &trafficLight) const {
+      return _client.GetLightBoxes(trafficLight.GetId());
+    }
+
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
       return _client.GetGroupTrafficLights(trafficLight.GetId());
     }

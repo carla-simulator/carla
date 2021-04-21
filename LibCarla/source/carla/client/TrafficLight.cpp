@@ -83,12 +83,14 @@ namespace client {
       for (const road::LaneValidity& validity : landmark->GetValidities()) {
         if (validity._from_lane < validity._to_lane) {
           for (int lane_id = validity._from_lane; lane_id <= validity._to_lane; ++lane_id) {
+            if(lane_id == 0) continue;
             result.emplace_back(
                 carla_map->GetWaypointXODR(
                 landmark->GetRoadId(), lane_id, landmark->GetS()));
           }
         } else {
           for (int lane_id = validity._from_lane; lane_id >= validity._to_lane; --lane_id) {
+            if(lane_id == 0) continue;
             result.emplace_back(
                 carla_map->GetWaypointXODR(
                 landmark->GetRoadId(), lane_id, landmark->GetS()));
@@ -100,7 +102,7 @@ namespace client {
   }
 
   std::vector<geom::BoundingBox> TrafficLight::GetLightBoxes() const {
-    return {};
+    return GetEpisode().Lock()->GetLightBoxes(*this);
   }
 
   road::SignId TrafficLight::GetOpenDRIVEID() const {

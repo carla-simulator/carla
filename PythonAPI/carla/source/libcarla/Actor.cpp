@@ -64,6 +64,14 @@ static void ApplyControl(carla::client::Walker &self, const ControlT &control) {
   self.ApplyControl(control);
 }
 
+static auto GetLightBoxes(const carla::client::TrafficLight &self) {
+  boost::python::list result;
+  for (const auto &bb : self.GetLightBoxes()) {
+    result.append(bb);
+  }
+  return result;
+}
+
 void export_actor() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -206,7 +214,7 @@ void export_actor() {
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
       .def("reset_group", &cc::TrafficLight::ResetGroup)
       .def("get_effect_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetEffectPositions))
-      .def("get_light_boxes", CALL_RETURNING_LIST(cc::TrafficLight, GetLightBoxes))
+      .def("get_light_boxes", &GetLightBoxes)
       .def("get_opendrive_id", &cc::TrafficLight::GetOpenDRIVEID)
       .def(self_ns::str(self_ns::self))
   ;
