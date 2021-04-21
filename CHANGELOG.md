@@ -13,6 +13,8 @@
   * Improved manual_control: now cameras are set in relation with car size
   * Added CHRONO library for vehicle dynamics simulation (https://projectchrono.org/)
   * Added performance benchmarking section to documentation
+  * Added API functions to traffic light actor `get_effect_waypoints()`, `get_light_boxes()` and `get_opendrive_id()`
+  * Added API functions to world `get_traffic_lights_from_waypoint()` and `get_traffic_lights_in_junction`
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Fix bug in carla.Transform.get_up_vector()
