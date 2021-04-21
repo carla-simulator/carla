@@ -6,6 +6,7 @@
 
 #include <cmath>
 
+// Ideally, this could be included in unreal directly but it would be slow to work with
 struct FDVector
 {
 
@@ -76,6 +77,14 @@ struct FDVector
   FDVector operator+(const FDVector& V) const
   {
     return FDVector(X + V.X, Y + V.Y, Z + V.Z);
+  }
+
+  FDVector& operator-=(const FIntVector& V)
+  {
+    this->X -= V.X;
+    this->Y -= V.Y;
+    this->Z -= V.Z;
+    return *this;
   }
 
   FDVector operator/(float Scale) const

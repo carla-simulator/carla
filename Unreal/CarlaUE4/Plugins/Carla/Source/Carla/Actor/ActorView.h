@@ -39,7 +39,7 @@ public:
 
   bool IsValid() const
   {
-    return (TheActor != nullptr) && !TheActor->IsPendingKill();
+    return IsDormant() || ((TheActor != nullptr) && !TheActor->IsPendingKill());
   }
 
   bool IsDormant() const

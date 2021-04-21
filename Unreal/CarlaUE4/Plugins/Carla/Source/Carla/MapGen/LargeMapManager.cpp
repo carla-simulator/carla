@@ -567,21 +567,22 @@ void ALargeMapManager::ConvertGhostToDormantActors()
   {
     check(IsValid(Actor));
 
+    // To dormant state
+    FActorRegistry& ActorRegistry = const_cast<FActorRegistry&>(CarlaEpisode->GetActorRegistry());
+    FActorView* ActorView = ActorRegistry.FindPtr(Actor);
+    ActorView->SetActorState(carla::rpc::ActorState::Dormant);
+
     LM_LOG(Warning, "Converting Ghost To Dormant... %s", *Actor->GetName());
 
-    // To dormant state
-    FActorView ActorView = CarlaEpisode->FindActor(Actor);
-    ActorView.SetActorState(carla::rpc::ActorState::Dormant);
-
     // Save current location and rotation
-    FActorInfo* ActorInfo = const_cast<FActorInfo*>(ActorView.GetActorInfo());
+    FActorInfo* ActorInfo = const_cast<FActorInfo*>(ActorView->GetActorInfo());
     ActorInfo->Location = CurrentOriginD + Actor->GetActorLocation();
     ActorInfo->Rotation = Actor->GetActorQuat();
 
     CarlaEpisode->DestroyActor(Actor);
 
     // Need the ID of the dormant actor and save it
-    DormantActors.Add(ActorView.GetActorId());
+    DormantActors.Add(ActorView->GetActorId());
 
     GhostActors.Remove(Actor);
   }

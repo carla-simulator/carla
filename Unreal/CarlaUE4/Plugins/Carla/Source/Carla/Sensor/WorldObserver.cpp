@@ -198,14 +198,16 @@ static carla::Buffer FWorldObserver_Serialize(
     current_size += sizeof(data);
   };
 
+  constexpr float TO_METERS = 1e-2;
+
   // Write header.
   Serializer::Header header;
   header.episode_id = Episode.GetId();
   header.platform_timestamp = FPlatformTime::Seconds();
   header.delta_seconds = DeltaSeconds;
   FIntVector MapOrigin = Episode.GetCurrentMapOrigin();
-  MapOrigin /= 100; // to meters
-  header.map_origin = carla::geom::Vector3DInt{ MapOrigin.X, MapOrigin.Y, MapOrigin.Z };
+  FIntVector MapOriginInMeters = MapOrigin / 100;
+  header.map_origin = carla::geom::Vector3DInt{ MapOriginInMeters.X, MapOriginInMeters.Y, MapOriginInMeters.Z };
 
   uint8_t simulation_state = (SimulationState::MapChange * MapChange);
   simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);
@@ -215,23 +217,50 @@ static carla::Buffer FWorldObserver_Serialize(
   write_data(header);
 
   // Write every actor.
-    for (auto& It : Registry)
+  for (auto& It : Registry)
   {
     const FActorView& View = It.Value;
+    const FActorInfo* ActorInfo = View.GetActorInfo();
+
+    FTransform ActorTransform;
+    FVector Velocity(0.0f);
+    carla::geom::Vector3D AngularVelocity(0.0f, 0.0f, 0.0f);
+    carla::geom::Vector3D Acceleration(0.0f, 0.0f, 0.0f);
+    carla::sensor::data::ActorDynamicState::TypeDependentState State{};
+
+
+    check(View.IsValid())
+
+    if(!View.IsDormant())
+    {
+      UE_LOG(LogCarla, Log, TEXT("  %s %d %s"), \
+        *(View.GetActor()->GetName()), View.GetActorId(), *(View.GetActor()->GetActorLocation().ToString()));
+      ActorTransform = View.GetActor()->GetActorTransform();
+      Velocity = TO_METERS * View.GetActor()->GetVelocity();
+      AngularVelocity = FWorldObserver_GetAngularVelocity(*View.GetActor());
+      Acceleration = FWorldObserver_GetAcceleration(View, Velocity, DeltaSeconds);
+      State = FWorldObserver_GetActorState(View, Registry);
+    }
+    else
+    {
+      FDVector ActorLocation = ActorInfo->Location;
+      ActorLocation -= MapOrigin;
 
     check(View.IsValid());
     constexpr float TO_METERS = 1e-2;
     const auto Velocity = TO_METERS * View.GetActor()->GetVelocity();
 
+      ActorTransform = FTransform(ActorInfo->Rotation, ActorLocation.ToFVector());
+    }
+
     ActorDynamicState info = {
       View.GetActorId(),
       View.GetActorState(),
-      // TODO: View.GetActorTransform() { AActor? Actor->GetActorTransform(): LastSavedTransform}
-      View.GetActor()->GetActorTransform(),
-      carla::geom::Vector3D{Velocity.X, Velocity.Y, Velocity.Z},
-      FWorldObserver_GetAngularVelocity(*View.GetActor()),
-      FWorldObserver_GetAcceleration(View, Velocity, DeltaSeconds),
-      FWorldObserver_GetActorState(View, Registry),
+      carla::geom::Transform(ActorTransform),
+      carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
+      AngularVelocity,
+      Acceleration,
+      State,
     };
     write_data(info);
   }
