@@ -153,17 +153,17 @@ def generate_decals_file(folder):
                 'crack7': '5',
                 'crack8': '5',
                 'decal_scale' : {
-                'x_axis' : '1.0',
-                'y_axis' : '1.0',
-                'z_axis' : '1.0'},
+                'x_axis' : '0.7',
+                'y_axis' : '0.7',
+                'z_axis' : '0.7'},
                 'fixed_decal_offset': {
-                'x_axis' : '0.0',
-                'y_axis' : '0.0',
-                'z_axis' : '0.0'},
-                'decal_min_scale' : '1.0',
+                'x_axis' : '30.0',
+                'y_axis' : '30.0',
+                'z_axis' : '30.0'},
+                'decal_min_scale' : '0.5',
                 'decal_max_scale' : '1.0',
-                'decal_random_yaw' : '360.0',
-                'random_offset' : '0.0'
+                'decal_random_yaw' : '180.0',
+                'random_offset' : '15.0'
             });
             
         # build and write the .json

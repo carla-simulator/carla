@@ -81,6 +81,7 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   DecalNamesMap.Add("crack7", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_RoadCrack15.DI_RoadCrack15'")).Object);
   DecalNamesMap.Add("crack8", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_RoadCrack16.DI_RoadCrack16'")).Object);
 
+  //Decal names array
   DecalNamesArray = {"drip1", "drip2", "drip3",
   "dirt1", "dirt2", "dirt3", "dirt4", "dirt5",
   "roadline1", "roadline2", "roadline3", "roadline4", "roadline5",
@@ -136,12 +137,15 @@ void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter(){
         {
           if (RoadMeshActor->GetName().Contains("Roads_Road", ESearchCase::Type::CaseSensitive) == true)
           {
-            //Create the dynamic material instance for the road (which will hold the map size and road texture)
-            UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
-            MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
-            MI->SetScalarParameterValue(FName("Map units (CM)"), MapSize);
-            MI->SetTextureParameterValue(FName("Texture Mask"), RoadTexture);
-            RoadMeshActor->GetStaticMeshComponent()->SetMaterial(0, MI);
+            if (RoadMeshActor->GetStaticMeshComponent()->GetMaterial(0)->GetName().Contains("MaterialInstance", ESearchCase::Type::CaseSensitive) == false) {
+
+              //Create the dynamic material instance for the road (which will hold the map size and road texture)
+              UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
+              MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
+              MI->SetScalarParameterValue(FName("Map units (CM)"), MapSize);
+              MI->SetTextureParameterValue(FName("Texture Mask"), RoadTexture);
+              RoadMeshActor->GetStaticMeshComponent()->SetMaterial(0, MI);
+            }
           }
         }
       }
@@ -196,9 +200,23 @@ void ARoadPainterWrapper::ReadJsonAndPaintRoads() {
       //Get the boolean we need
       bool AreRoadsPainted = JsonParsed->GetBoolField(TEXT("painted_roads"));
       if (AreRoadsPainted == false) {
-        
+         
+        //Switch the material mask to R(ed) channel.
+        //This means rendering the roads to texture only using the R mask
+        SwitchMaterialMaskEvent(0);
         //Render all roads to texture
         PaintAllRoadsEvent();
+
+        //Switch the material mask to G(reen) channel.
+        SwitchMaterialMaskEvent(1);
+        PaintAllRoadsEvent();
+
+        //Switch the material mask to B(lue) channel.
+        SwitchMaterialMaskEvent(2);
+        PaintAllRoadsEvent();
+
+        //Set back to default
+        SwitchMaterialMaskEvent(0);
 
         //We write our variables
         TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
@@ -269,24 +287,24 @@ const FString ARoadPainterWrapper::GenerateTexture()
   UTexture2D *InternalTexture2D = NewObject<UTexture2D>(UTexture2D::StaticClass());
   if (RoadTexture)
   {
-    //Prevent the object and all its descedants from being deleted during garbage collecion
+    //Prevent the object and all its descendants from being deleted during garbage collection
     RoadTexture->AddToRoot();
     RoadTexture->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-    RoadTexture->SizeX = 2048;
-    RoadTexture->SizeY = 2048;
+    RoadTexture->SizeX = 4096;
+    RoadTexture->SizeY = 4096;
     RoadTexture->AddressX = TextureAddress::TA_Wrap;
     RoadTexture->AddressY = TextureAddress::TA_Wrap;
-    
+
     //Initialize the platform data to store necessary information regarding our texture asset
     InternalTexture2D->AddToRoot();
     InternalTexture2D->PlatformData = new FTexturePlatformData();
-    InternalTexture2D->PlatformData->SizeX = 2048;
-    InternalTexture2D->PlatformData->SizeY = 2048;
+    InternalTexture2D->PlatformData->SizeX = 4096;
+    InternalTexture2D->PlatformData->SizeY = 4096;
     InternalTexture2D->AddressX = TextureAddress::TA_Wrap;
     InternalTexture2D->AddressY = TextureAddress::TA_Wrap;
 
 #if WITH_EDITORONLY_DATA
-    InternalTexture2D->Source.Init(2048, 2048, 1, 1, ETextureSourceFormat::TSF_RGBA8);
+    InternalTexture2D->Source.Init(4096, 4096, 1, 1, ETextureSourceFormat::TSF_RGBA8);
 #endif
     InternalTexture2D->UpdateResource();
 
@@ -294,14 +312,14 @@ const FString ARoadPainterWrapper::GenerateTexture()
     //Set the texture render target internal texture
     RoadTexture->UpdateTexture2D(InternalTexture2D, ETextureSourceFormat::TSF_RGBA8);
 #if WITH_EDITORONLY_DATA
-    RoadTexture->Source.Init(2048, 2048, 1, 1, ETextureSourceFormat::TSF_RGBA8);
+    RoadTexture->Source.Init(4096, 4096, 1, 1, ETextureSourceFormat::TSF_RGBA8);
 #endif
     RoadTexture->UpdateResource();
     Package->MarkPackageDirty();
-    
+
     //Notify the editor we created a new asset
     FAssetRegistryModule::AssetCreated(RoadTexture);
-    
+
     //Auto-save the new asset
     FString PackageFilename = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
     UPackage::SavePackage(Package, RoadTexture, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFilename, GError, nullptr, true, true, SAVE_NoError);

@@ -17,19 +17,19 @@
 
 ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 {
-	// Set necessary flags to run commandlet
-	IsClient = false;
-	IsEditor = true;
-	IsServer = false;
-	LogToConsole = true;
+  // Set necessary flags to run commandlet
+  IsClient = false;
+  IsEditor = true;
+  IsServer = false;
+  LogToConsole = true;
 
 #if WITH_EDITORONLY_DATA
 
-	static ConstructorHelpers::FObjectFinder<UBlueprint> RoadPainterBlueprint(TEXT(
-		"Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset'"));
+  static ConstructorHelpers::FObjectFinder<UBlueprint> RoadPainterBlueprint(TEXT(
+    "Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset'"));
 
-	RoadPainterSubclass = (UClass*)RoadPainterBlueprint.Object->GeneratedClass;
-	
+  RoadPainterSubclass = (UClass*)RoadPainterBlueprint.Object->GeneratedClass;
+  
 #endif
 }
 
@@ -75,18 +75,18 @@ void ULoadAssetMaterialsCommandlet::GenerateJsonInfoFile(const FString &MapName)
 void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &LoadedMapName)
 {
   GenerateJsonInfoFile(LoadedMapName);
-	ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
-	if (RoadPainterBp)
-	{
-		//Needed to call events in editor-mode
-		FEditorScriptExecutionGuard ScriptGuard;
+  ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
+  if (RoadPainterBp)
+  {
+    //Needed to call events in editor-mode
+    FEditorScriptExecutionGuard ScriptGuard;
     RoadPainterBp->ClearAllEvent();
     RoadPainterBp->ReadConfigFile(LoadedMapName);
     RoadPainterBp->SetBlueprintVariables();
 
     //Spawn the decals loaded in via the JSON file
     RoadPainterBp->SpawnDecalsEvent();
-	}
+  }
 }
 
 FString ULoadAssetMaterialsCommandlet::GetFirstPackagePath(const FString &PackageName) const
@@ -149,11 +149,11 @@ FPackageParams ULoadAssetMaterialsCommandlet::ParseParams(const FString &InParam
   TArray<FString> Tokens;
   TArray<FString> Params;
   TMap<FString, FString> ParamVals;
-  
+
   ParseCommandLine(*InParams, Tokens, Params);
-  
+
   FPackageParams PackageParams;
-  
+
   // Parse and store Package name
   FParse::Value(*InParams, TEXT("PackageName="), PackageParams.Name);
 
@@ -213,12 +213,12 @@ int32 ULoadAssetMaterialsCommandlet::Main(const FString &Params)
   FAssetsPaths AssetsPaths = GetAssetsPathFromPackage(PackageParams.Name);
 
   LoadAssetsMaterials(PackageParams.Name, AssetsPaths.MapsPaths);
-	
+  
 #if WITH_EDITOR
-	UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif
 
-	return 0;
+  return 0;
 }
 
 #endif
