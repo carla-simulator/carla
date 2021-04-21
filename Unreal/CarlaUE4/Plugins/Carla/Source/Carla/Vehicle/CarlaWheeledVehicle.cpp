@@ -309,14 +309,16 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     FWheelPhysicsControl PhysicsWheel;
 
     PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
-
-    PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
     PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
     PhysicsWheel.MaxSteerAngle = FMath::RadiansToDegrees(PWheelData.mMaxSteer);
     PhysicsWheel.Radius = PWheelData.mRadius;
     PhysicsWheel.MaxBrakeTorque = Cm2ToM2(PWheelData.mMaxBrakeTorque);
     PhysicsWheel.MaxHandBrakeTorque = Cm2ToM2(PWheelData.mMaxHandBrakeTorque);
 
+    PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
+    PhysicsWheel.LatStiffMaxLoad = Vehicle4W->Wheels[i]->LatStiffMaxLoad;
+    PhysicsWheel.LatStiffValue = Vehicle4W->Wheels[i]->LatStiffValue;
+    PhysicsWheel.LongStiffValue = Vehicle4W->Wheels[i]->LongStiffValue;
     PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
 
     Wheels.Add(PhysicsWheel);
@@ -408,6 +410,10 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   {
     UVehicleWheel *Wheel = NewWheelSetups[i].WheelClass.GetDefaultObject();
     check(Wheel != nullptr);
+
+    Wheel->LatStiffMaxLoad = PhysicsControl.Wheels[i].LatStiffMaxLoad;
+    Wheel->LatStiffValue   = PhysicsControl.Wheels[i].LatStiffValue;
+    Wheel->LongStiffValue  = PhysicsControl.Wheels[i].LongStiffValue;
 
     // Assigning new tire config
     Wheel->TireConfig = DuplicateObject<UTireConfig>(Wheel->TireConfig, nullptr);
