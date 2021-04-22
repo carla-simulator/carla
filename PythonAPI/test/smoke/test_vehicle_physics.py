@@ -63,7 +63,7 @@ def equal_physics_control(pc_a, pc_b):
 
     return True, error_msg
 
-def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_sweep = None):
+def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_sweep = None, long_stiff = None):
     # Change Vehicle Physics Control parameters of the vehicle
     physics_control = vehicle.get_physics_control()
 
@@ -72,7 +72,7 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
 
     if wheel_sweep is not None:
         physics_control.use_sweep_wheel_collision = wheel_sweep
-    
+
     front_left_wheel = physics_control.wheels[0]
     rear_left_wheel = physics_control.wheels[2]
     front_right_wheel = physics_control.wheels[1]
@@ -83,6 +83,12 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
         front_right_wheel.tire_friction = tire_friction
         rear_left_wheel.tire_friction = tire_friction
         rear_right_wheel.tire_friction = tire_friction
+
+    if long_stiff is not None:
+        front_left_wheel.long_stiff_value = long_stiff
+        front_right_wheel.long_stiff_value = long_stiff
+        rear_left_wheel.long_stiff_value = long_stiff
+        rear_right_wheel.long_stiff_value = long_stiff
 
     wheels = [front_left_wheel, front_right_wheel, rear_left_wheel, rear_right_wheel]
     physics_control.wheels = wheels
@@ -97,6 +103,7 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
 
     def check_single_physics_control(self, bp_vehicle):
         veh_tranf = self.world.get_map().get_spawn_points()[0]
+
         vehicle = self.world.spawn_actor(bp_vehicle, veh_tranf)
 
         # Checking the setting of car variables (drag coefficient)
@@ -112,7 +119,7 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         self.wait(2)
 
         # Checking the setting of wheel variables (tire friction)
-        pc_a = change_physics_control(vehicle, tire_friction=5)
+        pc_a = change_physics_control(vehicle, tire_friction=5, long_stiff=987)
         vehicle.apply_physics_control(pc_a)
         self.wait(2)
         pc_b = vehicle.get_physics_control()
@@ -150,7 +157,8 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         pc_b = []
         for i in range(0, num_veh):
             friction = 1.0 + 0.1*i
-            pc_a.append(change_physics_control(vehicles[i], tire_friction=friction))
+            lstiff = 500 + 100*i
+            pc_a.append(change_physics_control(vehicles[i], tire_friction=friction, long_stiff=lstiff))
             vehicles[i].apply_physics_control(pc_a[i])
 
         self.wait(2)
@@ -183,7 +191,6 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         self.check_multiple_physics_control(bp_vehicles)
 
-
 class TestVehicleFriction(SyncSmokeTest):
     def wait(self, frames=100):
         for _i in range(0, frames):
@@ -192,7 +199,7 @@ class TestVehicleFriction(SyncSmokeTest):
     def _test_vehicle_zero_friction(self):
         print("TestVehicleFriction.test_vehicle_zero_friction")
 
-        self.client.load_world("Town05_Opt")
+        self.client.load_world("Town05_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         for bp_veh in bp_vehicles:
@@ -262,63 +269,10 @@ class TestVehicleFriction(SyncSmokeTest):
             vehicle_01.destroy()
             vehicle_02.destroy()
 
-
-    def test_vehicle_wheel_collision(self):
-        print("TestVehicleFriction.test_vehicle_wheel_collision")
-
-        self.client.load_world("Town05_Opt")
-
-        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
-        bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
-
-        for bp_veh in bp_vehicles:
-            veh_transf = carla.Transform(carla.Location(35, -200, 1), carla.Rotation(yaw=90))
-
-            vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
-            vehicle_00.set_target_velocity(carla.Vector3D(0, 0, 0))
-
-            veh_transf.location.x -= 4
-            vehicle_01 = self.world.spawn_actor(bp_veh, veh_transf)
-            vehicle_01.set_target_velocity(carla.Vector3D(0, 0, 0))
-
-            self.wait(10)
-
-            vel_ref = 100.0 / 3.6
-            vehicle_00.apply_physics_control(change_physics_control(vehicle_00, tire_friction=10.0, wheel_sweep = False))
-            vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=10.0, wheel_sweep = False))
-            self.wait(1)
-
-            vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            self.wait(1)
-
-            self.wait(200)
-
-            vel_veh_00 = vehicle_00.get_velocity().y
-            vel_veh_01 = vehicle_01.get_velocity().y
-
-            if not list_equal_tol([vel_veh_00, vel_veh_01], 0.1):
-                vehicle_00.destroy()
-                vehicle_01.destroy()
-                self.fail("%s: Velocities are not equal after simulation. [%.3f, %.3f]"
-                  % (bp_veh.id, vel_veh_00, vel_veh_01))
-
-            loc_veh_00 = vehicle_00.get_location().y
-            loc_veh_01 = vehicle_01.get_location().y
-
-            if not list_equal_tol([loc_veh_00, loc_veh_01], 1):
-                vehicle_00.destroy()
-                vehicle_01.destroy()
-                self.fail("%s: Locations are not equal after simulation. [%.3f, %.3f]"
-                  % (bp_veh.id, loc_veh_00, loc_veh_01))
-
-            vehicle_00.destroy()
-            vehicle_01.destroy()
-
     def _test_vehicle_volume_trigger(self):
         print("TestVehicleFriction.test_vehicle_volume_trigger")
 
-        self.client.load_world("Town05_Opt")
+        self.client.load_world("Town05_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
@@ -419,7 +373,7 @@ class TestVehicleFriction(SyncSmokeTest):
     def test_vehicle_friction_values(self):
         print("TestVehicleFriction.test_vehicle_friction_values")
 
-        self.client.load_world("Town05_Opt")
+        self.client.load_world("Town05_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
 
@@ -470,8 +424,6 @@ class TestVehicleFriction(SyncSmokeTest):
             err_veh_01 = dist_veh_01 > 0.75 * dist_veh_00
             err_veh_02 = dist_veh_02 > 0.75 * dist_veh_01
 
-            print(dist_veh_01 / dist_veh_00, dist_veh_02 / dist_veh_01)
-
             if err_veh_00 or err_veh_01 or err_veh_02:
                 self.fail("%s: Friction test failed: ErrVeh00: %r ErrVeh01: %r ErrVeh02: %r."
                     % (bp_veh.id, err_veh_00, err_veh_01, err_veh_02))
@@ -481,3 +433,112 @@ class TestVehicleFriction(SyncSmokeTest):
             vehicle_02.destroy()
 
 
+class TestVehicleTireConfig(SyncSmokeTest):
+    def wait(self, frames=100):
+        for _i in range(0, frames):
+            self.world.tick()
+
+    def test_vehicle_wheel_collision(self):
+        print("TestVehicleTireConfig.test_vehicle_wheel_collision")
+
+        self.client.load_world("Town05_Opt", False)
+
+        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
+
+        for bp_veh in bp_vehicles:
+            veh_transf = carla.Transform(carla.Location(35, -200, 1), carla.Rotation(yaw=90))
+
+            vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_00.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            veh_transf.location.x -= 4
+            vehicle_01 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_01.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            self.wait(10)
+
+            vel_ref = 100.0 / 3.6
+            vehicle_00.apply_physics_control(change_physics_control(vehicle_00, tire_friction=10.0, wheel_sweep = False))
+            vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=10.0, wheel_sweep = False))
+            self.wait(1)
+
+            vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+            vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+            self.wait(200)
+
+            vel_veh_00 = vehicle_00.get_velocity().y
+            vel_veh_01 = vehicle_01.get_velocity().y
+
+            if not list_equal_tol([vel_veh_00, vel_veh_01], 0.1):
+                vehicle_00.destroy()
+                vehicle_01.destroy()
+                self.fail("%s: Velocities are not equal after simulation. [%.3f, %.3f]"
+                  % (bp_veh.id, vel_veh_00, vel_veh_01))
+
+            loc_veh_00 = vehicle_00.get_location().y
+            loc_veh_01 = vehicle_01.get_location().y
+
+            if not list_equal_tol([loc_veh_00, loc_veh_01], 1):
+                vehicle_00.destroy()
+                vehicle_01.destroy()
+                self.fail("%s: Locations are not equal after simulation. [%.3f, %.3f]"
+                  % (bp_veh.id, loc_veh_00, loc_veh_01))
+
+            vehicle_00.destroy()
+            vehicle_01.destroy()
+
+    def test_vehicle_tire_long_stiff(self):
+        print("TestVehicleTireConfig.test_vehicle_tire_long_stiff")
+
+        self.client.load_world("Town05_Opt", False)
+
+        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+
+        for bp_veh in bp_vehicles:
+            ref_pos = -200
+            veh_transf = carla.Transform(carla.Location(36, ref_pos, 0.2), carla.Rotation(yaw=90))
+
+            vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_00.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            veh_transf.location.x -= 4
+            vehicle_01 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_01.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            veh_transf.location.x -= 4
+            vehicle_02 = self.world.spawn_actor(bp_veh, veh_transf)
+            vehicle_02.set_target_velocity(carla.Vector3D(0, 0, 0))
+
+            self.wait(10)
+
+            vehicle_00.apply_physics_control(change_physics_control(vehicle_00, drag=0.0, long_stiff = 100))
+            vehicle_01.apply_physics_control(change_physics_control(vehicle_01, drag=0.0, long_stiff = 500))
+            vehicle_02.apply_physics_control(change_physics_control(vehicle_02, drag=0.0, long_stiff = 2000))
+
+            self.wait(1)
+
+            for _i in range(0, 100):
+                self.world.tick()
+                vehicle_00.apply_control(carla.VehicleControl(throttle=1.0))
+                vehicle_01.apply_control(carla.VehicleControl(throttle=1.0))
+                vehicle_02.apply_control(carla.VehicleControl(throttle=1.0))
+
+            vel_veh_00 = vehicle_00.get_velocity().y
+            vel_veh_01 = vehicle_01.get_velocity().y
+            vel_veh_02 = vehicle_02.get_velocity().y
+            loc_veh_00 = vehicle_00.get_location().y
+            loc_veh_01 = vehicle_01.get_location().y
+            loc_veh_02 = vehicle_02.get_location().y
+
+            dist_veh_00 = loc_veh_00 - ref_pos
+            dist_veh_01 = loc_veh_01 - ref_pos
+            dist_veh_02 = loc_veh_02 - ref_pos
+
+            if dist_veh_01 < dist_veh_00 or dist_veh_02 < dist_veh_01 or vel_veh_01 < vel_veh_00 or vel_veh_01 < vel_veh_01:
+                self.fail("%s: Longitudinal stiffness test failed, check that please. Veh00: [%f, %f] Veh01: [%f, %f] Veh02: [%f, %f]"
+                    % (bp_veh.id, dist_veh_00, vel_veh_00, dist_veh_01, vel_veh_01, dist_veh_02, vel_veh_02))
+
+            vehicle_00.destroy()
+            vehicle_01.destroy()
+            vehicle_02.destroy()
