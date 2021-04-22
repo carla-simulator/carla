@@ -79,6 +79,16 @@ struct FDVector
     return FDVector(X + V.X, Y + V.Y, Z + V.Z);
   }
 
+  FDVector operator-(const FDVector& V) const
+  {
+    return FDVector(X - V.X, Y - V.Y, Z - V.Z);
+  }
+
+  FDVector operator-=(const FIntVector& V) const
+  {
+    return FDVector(X - V.X, Y - V.Y, Z - V.Z);
+  }
+
   FDVector& operator-=(const FIntVector& V)
   {
     this->X -= V.X;
