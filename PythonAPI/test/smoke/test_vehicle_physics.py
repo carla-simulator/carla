@@ -494,6 +494,7 @@ class TestVehicleTireConfig(SyncSmokeTest):
         self.client.load_world("Town05_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
 
         for bp_veh in bp_vehicles:
             ref_pos = -200
