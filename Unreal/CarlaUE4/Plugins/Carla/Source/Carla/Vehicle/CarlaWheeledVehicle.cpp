@@ -433,15 +433,25 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     PWheelData.mDampingRate = M2ToCm2(PhysicsControl.Wheels[i].DampingRate);
     PWheelData.mMaxBrakeTorque = M2ToCm2(PhysicsControl.Wheels[i].MaxBrakeTorque);
     PWheelData.mMaxHandBrakeTorque = M2ToCm2(PhysicsControl.Wheels[i].MaxHandBrakeTorque);
-
     Vehicle4W->PVehicle->mWheelsSimData.setWheelData(i, PWheelData);
+
     Vehicle4W->Wheels[i]->TireConfig->SetFrictionScale(PhysicsControl.Wheels[i].TireFriction);
+    Vehicle4W->Wheels[i]->LatStiffMaxLoad = PhysicsControl.Wheels[i].LatStiffMaxLoad;
+    Vehicle4W->Wheels[i]->LatStiffValue   = PhysicsControl.Wheels[i].LatStiffValue;
+    Vehicle4W->Wheels[i]->LongStiffValue  = PhysicsControl.Wheels[i].LongStiffValue;
   }
 
   // Recreate Physics State for vehicle setup
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();
   Vehicle4W->RecreatePhysicsState();
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockWrite();
+
+  for (int32 i = 0; i < PhysicsWheelsNum; ++i)
+  {
+    Vehicle4W->Wheels[i]->LatStiffMaxLoad = PhysicsControl.Wheels[i].LatStiffMaxLoad;
+    Vehicle4W->Wheels[i]->LatStiffValue   = PhysicsControl.Wheels[i].LatStiffValue;
+    Vehicle4W->Wheels[i]->LongStiffValue  = PhysicsControl.Wheels[i].LongStiffValue;
+  }
 
   auto * Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
