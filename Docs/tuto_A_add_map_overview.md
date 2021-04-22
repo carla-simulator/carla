@@ -49,11 +49,11 @@ We provide a section that details alternative methods of importing maps to CARLA
 
 ## Summary
 
-If you have any questions about the process to create and import a new map into CARLA, feel free to post these in the [forum](https://forum.carla.org/). 
+If you have any questions about the process to create and import a new map into CARLA, feel free to post these in the forum. 
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

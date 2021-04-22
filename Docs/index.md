@@ -10,7 +10,7 @@ This home page contains an index with a brief description of the different secti
 
 The CARLA forum is available to post any doubts or suggestions that may arise during the reading.
 <div class="build-buttons">
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 CARLA forum</a>
 </div>
 
