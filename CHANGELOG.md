@@ -4,16 +4,20 @@
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
+  * Enabling the **no_delay** option to RPC and stream sockets
   * Improved performance bencharmark script: sync, map and sensor selection, ...
   * Improved performance, destroyed PhysX state for vehicles when physics are disable
+  * Improved parallelism of raycast sensors in system with large number of cores
   * Added 'visualize_multiple_sensors' example
   * Added 'check_lidar_bb' util script
+  * Added optional flag to `client.replay_file()` `replay_sensors` to enable or disable the replaying the sensors
   * Improved manual_control: now cameras are set in relation with car size
   * Added CHRONO library for vehicle dynamics simulation (https://projectchrono.org/)
   * Added performance benchmarking section to documentation
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Fix bug in carla.Transform.get_up_vector()
+  * Fix bug in lidar channel point count
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
   * API extensions:
   - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle

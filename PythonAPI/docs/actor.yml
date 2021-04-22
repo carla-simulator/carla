@@ -316,6 +316,27 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+    - def_name: set_wheel_steer_direction
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+        - param_name: angle_in_deg
+          type: float
+      doc: >
+        Sets the angle of a vehicle's wheel visually.
+      warning: >
+        Does not affect the physics of the vehicle.
+    # --------------------------------------
+    - def_name: get_wheel_steer_angle
+      return: float
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+      doc: >
+        Returns the physics angle in degrees of a vehicle's wheel.
+      note: >
+        Returns the angle based on the physics of the wheel, not the visual angle.
+    # --------------------------------------
 
   - class_name: Walker
     parent: carla.Actor
@@ -520,5 +541,30 @@
         Sets a given time for the yellow light to be active.
     # --------------------------------------
     - def_name: __str__
+    # --------------------------------------
+  - class_name: VehicleWheelLocation
+    doc: >
+      `enum` representing the position of each wheel on a vehicle. 
+      Used to identify the target wheel when setting an angle in carla.Vehicle.set_wheel_steer_direction or carla.Vehicle.get_wheel_steer_angle.
+  # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: FL_Wheel
+      doc: >
+        Front left wheel of a 4 wheeled vehicle.
+    - var_name: FR_Wheel
+      doc: >
+        Front right wheel of a 4 wheeled vehicle.
+    - var_name: BL_Wheel
+      doc: >
+        Back left wheel of a 4 wheeled vehicle.
+    - var_name: BR_Wheel
+      doc: >
+        Back right wheel of a 4 wheeled vehicle.
+    - var_name: Front_Wheel
+      doc: >
+        Front wheel of a 2 wheeled vehicle.
+    - var_name: Back_Wheel
+      doc: >
+        Back wheel of a 2 wheeled vehicle.
     # --------------------------------------
 ...

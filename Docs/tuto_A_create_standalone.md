@@ -19,7 +19,7 @@ make package ARGS="--packages=Package1,Package2"
 This will create a standalone package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
 
 !!! Note
-    As an alternative, the [Docker method](tuto_A_add_map.md#via-docker) will create the standalone package without the need of having Unreal Engine in the system.  
+    As an alternative, the [Docker method](tuto_A_add_map/add_map_package.md) will create the standalone package without the need of having Unreal Engine in the system.  
 
 ---
 ## Import assets into a CARLA package
@@ -35,7 +35,7 @@ cd Import
 ```
 
 !!! Note
-    Standalone packages cannot be directly imported into a CARLA build. Follow the tutorials to import [props](tuto_A_add_props.md), [maps](tuto_A_add_map.md) or [vehicles](tuto_A_add_vehicle.md).
+    Standalone packages cannot be directly imported into a CARLA build. Follow the tutorials to import [props](tuto_A_add_props.md), [maps](tuto_A_add_map_overview.md) or [vehicles](tuto_A_add_vehicle.md).
 
 ---
 
@@ -43,7 +43,7 @@ That sumps up how to create and use standalone packages in CARLA. If there is an
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>
