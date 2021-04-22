@@ -1,0 +1,2096 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="Overpass API 0.7.56.9 76e5016d">
+<note>The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.</note>
+<meta osm_base="2021-04-14T08:41:02Z"/>
+
+  <bounds minlat="36.0682487" minlon="136.2189941" maxlat="36.0698586" maxlon="136.2217255"/>
+
+  <node id="1420949858" lat="36.0696050" lon="136.2200410" version="1" timestamp="2011-09-02T13:48:16Z" changeset="9193186" uid="393606" user="watao">
+    <tag k="KSJ2:ADS" v="宝永4-15-7"/>
+    <tag k="KSJ2:AdminArea" v="福井県福井市"/>
+    <tag k="KSJ2:PubFacAdmin" v="民間"/>
+    <tag k="amenity" v="hospital"/>
+    <tag k="name" v="藤田記念病院"/>
+    <tag k="note" v="National-Land Numerical Information (Public Facility) 2006, MLIT Japan"/>
+    <tag k="note:ja" v="国土数値情報（公共施設データ）平成19年　国土交通省"/>
+    <tag k="source" v="KSJ2"/>
+    <tag k="source_ref" v="http://nlftp.mlit.go.jp/ksj/jpgis/datalist/KsjTmplt-P02-v2_0.html"/>
+  </node>
+  <node id="1669734650" lat="36.0677042" lon="136.2191305" version="2" timestamp="2016-08-12T04:03:34Z" changeset="41402187" uid="631141" user="Ryo-a"/>
+  <node id="1669734685" lat="36.0677806" lon="136.2212877" version="3" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669734687" lat="36.0677600" lon="136.2206890" version="1" timestamp="2012-03-11T05:47:20Z" changeset="10939137" uid="563872" user="mds878"/>
+  <node id="1669735509" lat="36.0686757" lon="136.2223141" version="3" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669735528" lat="36.0687258" lon="136.2191453" version="4" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669735560" lat="36.0687215" lon="136.2187706" version="3" timestamp="2019-05-15T15:43:59Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669735568" lat="36.0686761" lon="136.2212700" version="4" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669735601" lat="36.0686947" lon="136.2206529" version="3" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669735639" lat="36.0687063" lon="136.2199432" version="3" timestamp="2019-05-15T15:43:59Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669735646" lat="36.0688234" lon="136.2198773" version="3" timestamp="2019-05-15T15:43:59Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669735681" lat="36.0688380" lon="136.2192902" version="3" timestamp="2019-05-15T15:43:59Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669736142" lat="36.0693405" lon="136.2212663" version="3" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669736148" lat="36.0693607" lon="136.2222868" version="2" timestamp="2016-08-12T04:03:35Z" changeset="41402187" uid="631141" user="Ryo-a"/>
+  <node id="1669736189" lat="36.0693949" lon="136.2206501" version="3" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669736285" lat="36.0694234" lon="136.2198457" version="5" timestamp="2019-05-19T10:58:39Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669736406" lat="36.0694430" lon="136.2188445" version="3" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669736445" lat="36.0695230" lon="136.2181376" version="3" timestamp="2016-08-09T23:41:44Z" changeset="41356937" uid="631141" user="Ryo-a"/>
+  <node id="1669736770" lat="36.0701137" lon="136.2212620" version="3" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669736777" lat="36.0701063" lon="136.2206503" version="2" timestamp="2016-08-12T04:03:35Z" changeset="41402187" uid="631141" user="Ryo-a"/>
+  <node id="1669736801" lat="36.0701065" lon="136.2197989" version="3" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1669737455" lat="36.0707106" lon="136.2197639" version="4" timestamp="2019-05-19T06:42:26Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="1912548255" lat="36.0682726" lon="136.2192859" version="1" timestamp="2012-09-13T09:01:08Z" changeset="13093068" uid="651065" user="futurumspes"/>
+  <node id="1912548257" lat="36.0685610" lon="136.2195729" version="1" timestamp="2012-09-13T09:01:08Z" changeset="13093068" uid="651065" user="futurumspes">
+    <tag k="amenity" v="place_of_worship"/>
+    <tag k="name" v="神明神社"/>
+    <tag k="name:ja" v="神明神社"/>
+    <tag k="religion" v="shinto"/>
+    <tag k="source" v="Bing 2010"/>
+  </node>
+  <node id="1912548267" lat="36.0682453" lon="136.2191961" version="2" timestamp="2019-05-15T15:43:59Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="1912548268" lat="36.0682757" lon="136.2194502" version="1" timestamp="2012-09-13T09:01:08Z" changeset="13093068" uid="651065" user="futurumspes"/>
+  <node id="1912548269" lat="36.0677640" lon="136.2195307" version="1" timestamp="2012-09-13T09:01:08Z" changeset="13093068" uid="651065" user="futurumspes"/>
+  <node id="1912548270" lat="36.0682404" lon="136.2195153" version="2" timestamp="2019-05-15T15:43:59Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="1912548271" lat="36.0677510" lon="136.2191941" version="2" timestamp="2019-05-15T15:43:59Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="3513915358" lat="36.0689168" lon="136.2223045" version="3" timestamp="2019-05-19T06:42:27Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="3513915359" lat="36.0689167" lon="136.2212687" version="3" timestamp="2019-05-19T06:42:28Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="4346755910" lat="36.0693757" lon="136.2212661" version="2" timestamp="2019-05-19T06:42:28Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="4346755911" lat="36.0697541" lon="136.2198187" version="2" timestamp="2019-05-19T06:42:28Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="4346755912" lat="36.0697723" lon="136.2188668" version="2" timestamp="2019-05-19T06:42:28Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="4350344945" lat="36.0682264" lon="136.2212794" version="1" timestamp="2016-08-14T23:17:37Z" changeset="41456392" uid="631141" user="Ryo-a"/>
+  <node id="4350351736" lat="36.0687488" lon="136.2188518" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351737" lat="36.0688821" lon="136.2224098" version="2" timestamp="2019-05-15T15:44:01Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="4350351738" lat="36.0688897" lon="136.2205443" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351739" lat="36.0688962" lon="136.2238381" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351740" lat="36.0689027" lon="136.2244335" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351742" lat="36.0690046" lon="136.2203539" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351743" lat="36.0690242" lon="136.2246722" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351744" lat="36.0690393" lon="136.2188760" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351747" lat="36.0690654" lon="136.2249834" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351749" lat="36.0690838" lon="136.2256405" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351750" lat="36.0690925" lon="136.2259530" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351752" lat="36.0691065" lon="136.2267054" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351756" lat="36.0697134" lon="136.2212642" version="2" timestamp="2019-05-19T06:42:28Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="4350351757" lat="36.0697569" lon="136.2226482" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351758" lat="36.0697914" lon="136.2237006" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351759" lat="36.0698056" lon="136.2241812" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="4350351760" lat="36.0698306" lon="136.2250293" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a"/>
+  <node id="5646717021" lat="36.0688236" lon="136.2201069" version="2" timestamp="2019-05-19T10:58:41Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <tag k="amenity" v="place_of_worship"/>
+    <tag k="name" v="普観寺天満宮"/>
+    <tag k="religion" v="shinto"/>
+  </node>
+  <node id="6475738361" lat="36.0686516" lon="136.2194975" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738362" lat="36.0686518" lon="136.2196185" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738363" lat="36.0685174" lon="136.2196438" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738364" lat="36.0685170" lon="136.2194642" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738365" lat="36.0686296" lon="136.2196434" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738366" lat="36.0686292" lon="136.2194638" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738367" lat="36.0687579" lon="136.2196181" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738368" lat="36.0687576" lon="136.2194971" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738369" lat="36.0686515" lon="136.2194637" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738370" lat="36.0686519" lon="136.2196433" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738371" lat="36.0684929" lon="136.2196439" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738372" lat="36.0684925" lon="136.2194643" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738373" lat="36.0685168" lon="136.2194256" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738374" lat="36.0685175" lon="136.2196806" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738375" lat="36.0686297" lon="136.2196802" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738376" lat="36.0686290" lon="136.2194252" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738377" lat="36.0681276" lon="136.2186211" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738378" lat="36.0681735" lon="136.2190660" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738379" lat="36.0685476" lon="136.2190730" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738380" lat="36.0685531" lon="136.2186292" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738381" lat="36.0688310" lon="136.2189315" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738382" lat="36.0688264" lon="136.2192499" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738383" lat="36.0689752" lon="136.2192532" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475738384" lat="36.0689798" lon="136.2189349" version="2" timestamp="2019-05-19T06:42:29Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739085" lat="36.0687858" lon="136.2198787" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739086" lat="36.0683745" lon="136.2197238" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739087" lat="36.0683705" lon="136.2195591" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739088" lat="36.0684763" lon="136.2195552" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739089" lat="36.0682568" lon="136.2198499" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739090" lat="36.0682839" lon="136.2198506" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739091" lat="36.0686534" lon="136.2201565" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739092" lat="36.0683158" lon="136.2201564" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739093" lat="36.0683228" lon="136.2199068" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739094" lat="36.0686535" lon="136.2196892" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739095" lat="36.0687006" lon="136.2202188" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739096" lat="36.0682844" lon="136.2202093" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739097" lat="36.0682590" lon="136.2195631" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739098" lat="36.0677204" lon="136.2195829" version="1" timestamp="2019-05-15T15:43:38Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739634" lat="36.0684344" lon="136.2217482" version="1" timestamp="2019-05-15T15:43:43Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739635" lat="36.0683082" lon="136.2217479" version="1" timestamp="2019-05-15T15:43:43Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739636" lat="36.0683082" lon="136.2216952" version="1" timestamp="2019-05-15T15:43:43Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6475739637" lat="36.0684345" lon="136.2216956" version="1" timestamp="2019-05-15T15:43:43Z" changeset="70281830" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170767" lat="36.0685077" lon="136.2215115" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170768" lat="36.0685332" lon="136.2215115" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170769" lat="36.0685332" lon="136.2214961" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170770" lat="36.0685603" lon="136.2214961" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170771" lat="36.0685982" lon="136.2216711" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170772" lat="36.0685982" lon="136.2215135" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170773" lat="36.0685603" lon="136.2214773" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170774" lat="36.0685077" lon="136.2216711" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170775" lat="36.0686302" lon="136.2215135" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170776" lat="36.0686302" lon="136.2214773" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170777" lat="36.0684974" lon="136.2214136" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170778" lat="36.0684974" lon="136.2214565" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170779" lat="36.0685278" lon="136.2214565" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170780" lat="36.0685278" lon="136.2214136" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170781" lat="36.0686378" lon="136.2213720" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170782" lat="36.0685695" lon="136.2214579" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170783" lat="36.0685695" lon="136.2214022" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170784" lat="36.0685001" lon="136.2213419" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170785" lat="36.0685001" lon="136.2214022" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170786" lat="36.0686378" lon="136.2214579" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170787" lat="36.0686183" lon="136.2213419" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170788" lat="36.0684129" lon="136.2214518" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170789" lat="36.0684129" lon="136.2214391" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170790" lat="36.0683906" lon="136.2213425" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170791" lat="36.0683906" lon="136.2214391" version="1" timestamp="2019-05-18T09:18:23Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170792" lat="36.0684351" lon="136.2214518" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170793" lat="36.0684351" lon="136.2213425" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170794" lat="36.0684421" lon="136.2213425" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170795" lat="36.0684421" lon="136.2214559" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170796" lat="36.0684839" lon="136.2214559" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170797" lat="36.0684839" lon="136.2213425" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170798" lat="36.0682554" lon="136.2200008" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170799" lat="36.0681871" lon="136.2200008" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170800" lat="36.0681871" lon="136.2199518" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170801" lat="36.0682554" lon="136.2199518" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170812" lat="36.0681738" lon="136.2200759" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170813" lat="36.0681836" lon="136.2200759" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170814" lat="36.0682356" lon="136.2201496" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170815" lat="36.0682356" lon="136.2201225" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170816" lat="36.0682587" lon="136.2200427" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170817" lat="36.0682540" lon="136.2200427" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170818" lat="36.0681738" lon="136.2201496" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170819" lat="36.0681836" lon="136.2200665" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170820" lat="36.0682586" lon="136.2201225" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170821" lat="36.0681779" lon="136.2200665" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170822" lat="36.0681779" lon="136.2200276" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170823" lat="36.0682540" lon="136.2200276" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170824" lat="36.0682630" lon="136.2202432" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170825" lat="36.0681898" lon="136.2202432" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170826" lat="36.0681898" lon="136.2201576" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170827" lat="36.0682630" lon="136.2201577" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170828" lat="36.0682567" lon="136.2203498" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170829" lat="36.0681944" lon="136.2203498" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170830" lat="36.0681944" lon="136.2202579" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170831" lat="36.0682568" lon="136.2202579" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170832" lat="36.0683462" lon="136.2203575" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170833" lat="36.0682963" lon="136.2203575" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170834" lat="36.0682963" lon="136.2202639" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170835" lat="36.0683462" lon="136.2202640" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170836" lat="36.0683597" lon="136.2202680" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170837" lat="36.0683755" lon="136.2202680" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170838" lat="36.0684253" lon="136.2203649" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170839" lat="36.0683597" lon="136.2203649" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170840" lat="36.0683755" lon="136.2202452" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170841" lat="36.0684253" lon="136.2202452" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170842" lat="36.0686489" lon="136.2207166" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170843" lat="36.0684809" lon="136.2206965" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170844" lat="36.0684809" lon="136.2207414" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170845" lat="36.0686489" lon="136.2207414" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170846" lat="36.0686294" lon="136.2206965" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170847" lat="36.0685909" lon="136.2209090" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170848" lat="36.0685909" lon="136.2209506" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170849" lat="36.0686283" lon="136.2209506" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170850" lat="36.0686283" lon="136.2209090" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170851" lat="36.0685202" lon="136.2209563" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170852" lat="36.0685202" lon="136.2209932" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170853" lat="36.0686486" lon="136.2209932" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170854" lat="36.0686486" lon="136.2209563" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170855" lat="36.0685226" lon="136.2210042" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170856" lat="36.0685226" lon="136.2210371" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170857" lat="36.0685812" lon="136.2210371" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170858" lat="36.0685812" lon="136.2210042" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170859" lat="36.0685790" lon="136.2210421" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170860" lat="36.0685898" lon="136.2210421" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170861" lat="36.0685898" lon="136.2210046" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170862" lat="36.0685790" lon="136.2210904" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170863" lat="36.0686337" lon="136.2210904" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170864" lat="36.0686337" lon="136.2210046" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170865" lat="36.0686175" lon="136.2212108" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170866" lat="36.0686175" lon="136.2211870" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170867" lat="36.0685798" lon="136.2211005" version="1" timestamp="2019-05-18T09:18:24Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170868" lat="36.0685798" lon="136.2212108" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170869" lat="36.0686440" lon="136.2211870" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170870" lat="36.0686440" lon="136.2211005" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170871" lat="36.0685373" lon="136.2210398" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170872" lat="36.0685373" lon="136.2212135" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170873" lat="36.0685763" lon="136.2212135" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170874" lat="36.0685763" lon="136.2210398" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170875" lat="36.0689121" lon="136.2202898" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170876" lat="36.0689153" lon="136.2202140" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170877" lat="36.0689809" lon="136.2203253" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170878" lat="36.0689121" lon="136.2203253" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170879" lat="36.0689809" lon="136.2202140" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170880" lat="36.0688920" lon="136.2202898" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170881" lat="36.0688920" lon="136.2201972" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170882" lat="36.0689153" lon="136.2201972" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170883" lat="36.0688568" lon="136.2202039" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170884" lat="36.0688568" lon="136.2203220" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170885" lat="36.0687408" lon="136.2203220" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170886" lat="36.0687408" lon="136.2202039" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170887" lat="36.0688125" lon="136.2200151" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170888" lat="36.0688130" lon="136.2200707" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170889" lat="36.0688310" lon="136.2200149" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170890" lat="36.0688315" lon="136.2200705" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170891" lat="36.0688308" lon="136.2199861" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170892" lat="36.0688319" lon="136.2201115" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170893" lat="36.0689419" lon="136.2201101" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170894" lat="36.0689408" lon="136.2199847" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170895" lat="36.0685328" lon="136.2192717" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170896" lat="36.0685332" lon="136.2193464" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170897" lat="36.0685529" lon="136.2192715" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170898" lat="36.0685532" lon="136.2193463" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170899" lat="36.0686944" lon="136.2194516" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170900" lat="36.0686942" lon="136.2194004" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170901" lat="36.0687768" lon="136.2192701" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170902" lat="36.0687156" lon="136.2192705" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170903" lat="36.0686557" lon="136.2194099" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170904" lat="36.0686557" lon="136.2194006" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170905" lat="36.0687776" lon="136.2194511" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170906" lat="36.0685535" lon="136.2194105" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170907" lat="36.0685526" lon="136.2192058" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170908" lat="36.0687153" lon="136.2192048" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170909" lat="36.0684725" lon="136.2198549" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170910" lat="36.0683969" lon="136.2198549" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170911" lat="36.0683969" lon="136.2199069" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170912" lat="36.0684725" lon="136.2199069" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170913" lat="36.0683419" lon="136.2201835" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170914" lat="36.0684684" lon="136.2201835" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170915" lat="36.0684684" lon="136.2201565" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170916" lat="36.0683419" lon="136.2201564" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170917" lat="36.0683158" lon="136.2199984" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170918" lat="36.0683228" lon="136.2199984" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170919" lat="36.0685272" lon="136.2196892" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170920" lat="36.0685272" lon="136.2199069" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170921" lat="36.0688711" lon="136.2205442" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170922" lat="36.0688443" lon="136.2206086" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170923" lat="36.0687451" lon="136.2206086" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170924" lat="36.0687451" lon="136.2205198" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170925" lat="36.0688711" lon="136.2205198" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170926" lat="36.0688541" lon="136.2205114" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170927" lat="36.0688541" lon="136.2204846" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170928" lat="36.0688909" lon="136.2204846" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170929" lat="36.0687495" lon="136.2205114" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170930" lat="36.0687495" lon="136.2204440" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170931" lat="36.0688909" lon="136.2204440" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170932" lat="36.0690576" lon="136.2204859" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170933" lat="36.0690747" lon="136.2204859" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170934" lat="36.0691107" lon="136.2205764" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170935" lat="36.0690576" lon="136.2205764" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170936" lat="36.0690747" lon="136.2204333" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170937" lat="36.0691107" lon="136.2204333" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170938" lat="36.0691551" lon="136.2207726" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170939" lat="36.0690646" lon="136.2207726" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170940" lat="36.0690646" lon="136.2206881" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170941" lat="36.0691551" lon="136.2206881" version="1" timestamp="2019-05-18T09:18:25Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170942" lat="36.0690698" lon="136.2208115" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170943" lat="36.0690698" lon="136.2208493" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170944" lat="36.0690798" lon="136.2208115" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170945" lat="36.0690798" lon="136.2208493" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170946" lat="36.0691232" lon="136.2209493" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170947" lat="36.0691232" lon="136.2209033" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170948" lat="36.0691538" lon="136.2209493" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170949" lat="36.0690798" lon="136.2209033" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170950" lat="36.0690798" lon="136.2207934" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170951" lat="36.0691538" lon="136.2207934" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170952" lat="36.0690579" lon="136.2211159" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170953" lat="36.0690703" lon="136.2211159" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170954" lat="36.0690579" lon="136.2212004" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170955" lat="36.0690703" lon="136.2210877" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170956" lat="36.0690974" lon="136.2212004" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170957" lat="36.0690600" lon="136.2210877" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170958" lat="36.0690600" lon="136.2209690" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170959" lat="36.0690974" lon="136.2209690" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170960" lat="36.0689782" lon="136.2210549" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170961" lat="36.0689782" lon="136.2210368" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170962" lat="36.0690508" lon="136.2209925" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170963" lat="36.0689760" lon="136.2209925" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170964" lat="36.0690508" lon="136.2210549" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170965" lat="36.0689121" lon="136.2210368" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170966" lat="36.0689121" lon="136.2209784" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170967" lat="36.0689760" lon="136.2209784" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170968" lat="36.0690058" lon="136.2209442" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170969" lat="36.0690058" lon="136.2208389" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170970" lat="36.0689581" lon="136.2207142" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170971" lat="36.0689831" lon="136.2207142" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170972" lat="36.0690486" lon="136.2209442" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170973" lat="36.0689581" lon="136.2208389" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170974" lat="36.0689831" lon="136.2206928" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170975" lat="36.0690486" lon="136.2206928" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170976" lat="36.0688107" lon="136.2207786" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170977" lat="36.0688107" lon="136.2207665" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170978" lat="36.0688600" lon="136.2207665" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170979" lat="36.0687397" lon="136.2207786" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170980" lat="36.0687397" lon="136.2206988" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170981" lat="36.0688600" lon="136.2206988" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170982" lat="36.0688476" lon="136.2209073" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170983" lat="36.0687630" lon="136.2209073" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170984" lat="36.0687630" lon="136.2207880" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170985" lat="36.0688476" lon="136.2207880" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170986" lat="36.0687429" lon="136.2209469" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170987" lat="36.0687771" lon="136.2209469" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170988" lat="36.0688551" lon="136.2210193" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170989" lat="36.0687429" lon="136.2210193" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170990" lat="36.0687771" lon="136.2209208" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170991" lat="36.0688551" lon="136.2209208" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170992" lat="36.0689684" lon="136.2212004" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170993" lat="36.0689093" lon="136.2212004" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170994" lat="36.0689093" lon="136.2210468" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170995" lat="36.0689684" lon="136.2210468" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170996" lat="36.0687462" lon="136.2214471" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170997" lat="36.0686996" lon="136.2214471" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170998" lat="36.0686996" lon="136.2213942" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482170999" lat="36.0687462" lon="136.2213942" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171000" lat="36.0687906" lon="136.2214478" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171001" lat="36.0687554" lon="136.2214478" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171002" lat="36.0687554" lon="136.2213372" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171003" lat="36.0687906" lon="136.2213372" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171004" lat="36.0688562" lon="136.2214424" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171005" lat="36.0687988" lon="136.2214424" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171006" lat="36.0687988" lon="136.2213365" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171007" lat="36.0688562" lon="136.2213365" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171008" lat="36.0687782" lon="136.2215947" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171009" lat="36.0687782" lon="136.2215618" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171010" lat="36.0688064" lon="136.2215947" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171011" lat="36.0688064" lon="136.2215403" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171012" lat="36.0688541" lon="136.2215403" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171013" lat="36.0687077" lon="136.2215618" version="1" timestamp="2019-05-18T09:18:26Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171014" lat="36.0687077" lon="136.2214673" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171015" lat="36.0688541" lon="136.2214673" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171016" lat="36.0688064" lon="136.2216711" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171017" lat="36.0687148" lon="136.2216711" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171018" lat="36.0687148" lon="136.2216027" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171019" lat="36.0688064" lon="136.2216027" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171020" lat="36.0688546" lon="136.2217563" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171021" lat="36.0687500" lon="136.2217563" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171022" lat="36.0687500" lon="136.2216852" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171023" lat="36.0688546" lon="136.2216852" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171064" lat="36.0684676" lon="136.2216892" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171065" lat="36.0684676" lon="136.2217764" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171066" lat="36.0686091" lon="136.2217764" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171067" lat="36.0686091" lon="136.2216892" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171068" lat="36.0682619" lon="136.2216248" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171069" lat="36.0682619" lon="136.2216835" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171070" lat="36.0682947" lon="136.2216835" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171071" lat="36.0682947" lon="136.2216248" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171072" lat="36.0683001" lon="136.2215722" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171073" lat="36.0683001" lon="136.2216798" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171074" lat="36.0683896" lon="136.2216798" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171075" lat="36.0683896" lon="136.2215722" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171076" lat="36.0682771" lon="136.2214347" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171077" lat="36.0682771" lon="136.2215256" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171078" lat="36.0682890" lon="136.2215256" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171079" lat="36.0682890" lon="136.2214347" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171080" lat="36.0682890" lon="136.2213449" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171081" lat="36.0682890" lon="136.2215417" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171082" lat="36.0683351" lon="136.2215417" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171083" lat="36.0683351" lon="136.2213449" version="1" timestamp="2019-05-18T09:18:27Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171211" lat="36.0687478" lon="136.2212074" version="1" timestamp="2019-05-18T09:18:29Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171212" lat="36.0687294" lon="136.2211823" version="1" timestamp="2019-05-18T09:18:29Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171213" lat="36.0687294" lon="136.2210894" version="1" timestamp="2019-05-18T09:18:29Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171214" lat="36.0687495" lon="136.2210894" version="1" timestamp="2019-05-18T09:18:29Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171215" lat="36.0687857" lon="136.2212074" version="1" timestamp="2019-05-18T09:18:29Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171216" lat="36.0687495" lon="136.2210367" version="1" timestamp="2019-05-18T09:18:29Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171217" lat="36.0687858" lon="136.2210368" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171218" lat="36.0688505" lon="136.2212055" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171219" lat="36.0687925" lon="136.2212055" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171220" lat="36.0687926" lon="136.2210343" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171221" lat="36.0688505" lon="136.2210343" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171222" lat="36.0684337" lon="136.2204645" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171223" lat="36.0684340" lon="136.2204350" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171224" lat="36.0684415" lon="136.2203962" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171225" lat="36.0684417" lon="136.2203827" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171226" lat="36.0683755" lon="136.2204637" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171227" lat="36.0684423" lon="136.2204351" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171228" lat="36.0684420" lon="136.2204667" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171229" lat="36.0684570" lon="136.2204669" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171230" lat="36.0686334" lon="136.2206217" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171231" lat="36.0686336" lon="136.2206002" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171232" lat="36.0686339" lon="136.2205684" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171233" lat="36.0685833" lon="136.2205676" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171234" lat="36.0685839" lon="136.2205031" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171235" lat="36.0685640" lon="136.2205029" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171236" lat="36.0683762" lon="136.2203952" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171237" lat="36.0684555" lon="136.2206191" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171238" lat="36.0685652" lon="136.2203846" version="1" timestamp="2019-05-18T09:18:30Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171287" lat="36.0682692" lon="136.2207022" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171288" lat="36.0682692" lon="136.2208208" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171289" lat="36.0682985" lon="136.2208208" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171290" lat="36.0682985" lon="136.2207022" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171291" lat="36.0683088" lon="136.2207692" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171292" lat="36.0683088" lon="136.2208953" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171293" lat="36.0683901" lon="136.2208953" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171294" lat="36.0683901" lon="136.2207692" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171295" lat="36.0685055" lon="136.2207504" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171296" lat="36.0685055" lon="136.2208188" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171297" lat="36.0686308" lon="136.2208188" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171298" lat="36.0686308" lon="136.2207504" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171299" lat="36.0684877" lon="136.2208343" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171300" lat="36.0684877" lon="136.2209047" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171301" lat="36.0686405" lon="136.2209047" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171302" lat="36.0686405" lon="136.2208343" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171303" lat="36.0684638" lon="136.2211756" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171304" lat="36.0684638" lon="136.2211454" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171305" lat="36.0684245" lon="136.2211756" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171306" lat="36.0684245" lon="136.2210938" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171307" lat="36.0684725" lon="136.2211454" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171308" lat="36.0684725" lon="136.2210428" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171309" lat="36.0684169" lon="136.2209395" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171310" lat="36.0684169" lon="136.2210938" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171311" lat="36.0684985" lon="136.2210428" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171312" lat="36.0684985" lon="136.2209395" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171313" lat="36.0683364" lon="136.2210995" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171314" lat="36.0683364" lon="136.2212114" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171315" lat="36.0684148" lon="136.2212114" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171316" lat="36.0684148" lon="136.2210995" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171317" lat="36.0682803" lon="136.2210877" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171318" lat="36.0682990" lon="136.2210877" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171319" lat="36.0682990" lon="136.2210482" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171320" lat="36.0682803" lon="136.2212135" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171321" lat="36.0683332" lon="136.2212135" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171322" lat="36.0683332" lon="136.2210482" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171323" lat="36.0682180" lon="136.2210911" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171324" lat="36.0682419" lon="136.2210911" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171325" lat="36.0682419" lon="136.2210193" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171326" lat="36.0682180" lon="136.2212135" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171327" lat="36.0682698" lon="136.2212135" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6482171328" lat="36.0682698" lon="136.2210193" version="1" timestamp="2019-05-18T09:18:31Z" changeset="70382428" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372560" lat="36.0689405" lon="136.2213452" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372561" lat="36.0689598" lon="136.2213167" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372562" lat="36.0693099" lon="136.2213432" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372563" lat="36.0692961" lon="136.2213188" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372564" lat="36.0689398" lon="136.2219213" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372565" lat="36.0691255" lon="136.2219225" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372566" lat="36.0691262" lon="136.2217530" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372567" lat="36.0693082" lon="136.2217541" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372568" lat="36.0692294" lon="136.2213184" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372569" lat="36.0692284" lon="136.2215613" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372570" lat="36.0690656" lon="136.2215603" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372571" lat="36.0690664" lon="136.2213823" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372572" lat="36.0691176" lon="136.2213826" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372573" lat="36.0691179" lon="136.2213177" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372574" lat="36.0693045" lon="136.2212014" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372575" lat="36.0693243" lon="136.2211736" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372576" lat="36.0692671" lon="136.2212014" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372577" lat="36.0693243" lon="136.2210673" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372578" lat="36.0692671" lon="136.2210673" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372579" lat="36.0693272" lon="136.2207994" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372580" lat="36.0692492" lon="136.2207994" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372581" lat="36.0692492" lon="136.2207293" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372582" lat="36.0693272" lon="136.2207293" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372583" lat="36.0691652" lon="136.2208487" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372584" lat="36.0691744" lon="136.2208487" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372585" lat="36.0692321" lon="136.2207897" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372586" lat="36.0692321" lon="136.2208118" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372587" lat="36.0692836" lon="136.2208899" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372588" lat="36.0691652" lon="136.2208899" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372589" lat="36.0691744" lon="136.2207897" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372590" lat="36.0692836" lon="136.2208118" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372591" lat="36.0693226" lon="136.2209710" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372592" lat="36.0691633" lon="136.2209710" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372593" lat="36.0691633" lon="136.2209006" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372594" lat="36.0693226" lon="136.2209006" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372595" lat="36.0693275" lon="136.2210565" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372596" lat="36.0692053" lon="136.2210565" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372597" lat="36.0692053" lon="136.2209821" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372598" lat="36.0693275" lon="136.2209821" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372599" lat="36.0691630" lon="136.2210938" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372600" lat="36.0691850" lon="136.2210938" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372601" lat="36.0692107" lon="136.2212010" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372602" lat="36.0691630" lon="136.2212010" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372603" lat="36.0691850" lon="136.2210700" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372604" lat="36.0692107" lon="136.2210700" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372605" lat="36.0692592" lon="136.2212021" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372606" lat="36.0692161" lon="136.2212021" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372607" lat="36.0692161" lon="136.2210686" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372608" lat="36.0692592" lon="136.2210686" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372613" lat="36.0698898" lon="136.2207260" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372614" lat="36.0698430" lon="136.2207260" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372615" lat="36.0698430" lon="136.2206830" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372616" lat="36.0698898" lon="136.2206830" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372617" lat="36.0698516" lon="136.2209754" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372618" lat="36.0698516" lon="136.2209204" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372619" lat="36.0698207" lon="136.2209204" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372620" lat="36.0698207" lon="136.2208554" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372621" lat="36.0698877" lon="136.2209754" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372622" lat="36.0697963" lon="136.2208554" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372623" lat="36.0697963" lon="136.2207310" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372624" lat="36.0698877" lon="136.2207310" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372625" lat="36.0697787" lon="136.2210220" version="1" timestamp="2019-05-19T06:42:02Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372626" lat="36.0697641" lon="136.2210220" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372627" lat="36.0697641" lon="136.2209974" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372628" lat="36.0697787" lon="136.2209974" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372629" lat="36.0697310" lon="136.2209835" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372630" lat="36.0696995" lon="136.2209835" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372631" lat="36.0696995" lon="136.2209489" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372632" lat="36.0697310" lon="136.2209489" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372633" lat="36.0697568" lon="136.2209657" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372634" lat="36.0697393" lon="136.2209657" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372635" lat="36.0697393" lon="136.2208788" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372636" lat="36.0697568" lon="136.2208788" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372637" lat="36.0697439" lon="136.2208478" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372638" lat="36.0697439" lon="136.2208366" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372639" lat="36.0697615" lon="136.2208366" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372640" lat="36.0697095" lon="136.2208478" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372641" lat="36.0697095" lon="136.2207246" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372642" lat="36.0697615" lon="136.2207246" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372643" lat="36.0697757" lon="136.2211965" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372644" lat="36.0697434" lon="136.2211965" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372645" lat="36.0697434" lon="136.2211417" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372646" lat="36.0697757" lon="136.2211417" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372647" lat="36.0697432" lon="136.2211380" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372648" lat="36.0697432" lon="136.2211263" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372649" lat="36.0697755" lon="136.2211380" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372650" lat="36.0697102" lon="136.2211263" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372651" lat="36.0697102" lon="136.2210301" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372652" lat="36.0697755" lon="136.2210301" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372653" lat="36.0696920" lon="136.2211923" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372654" lat="36.0696516" lon="136.2211923" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372655" lat="36.0696516" lon="136.2209794" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372656" lat="36.0696920" lon="136.2209794" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372657" lat="36.0697262" lon="136.2208631" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372658" lat="36.0696988" lon="136.2208631" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372659" lat="36.0696267" lon="136.2209402" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372660" lat="36.0696267" lon="136.2208788" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372661" lat="36.0697262" lon="136.2209402" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372662" lat="36.0695308" lon="136.2208788" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372663" lat="36.0695308" lon="136.2207937" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372664" lat="36.0696988" lon="136.2207937" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372665" lat="36.0695961" lon="136.2207836" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372666" lat="36.0695400" lon="136.2207836" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372667" lat="36.0695400" lon="136.2207028" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372668" lat="36.0695961" lon="136.2207028" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372669" lat="36.0695379" lon="136.2206068" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372670" lat="36.0695220" lon="136.2206068" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372671" lat="36.0695220" lon="136.2205791" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372672" lat="36.0695379" lon="136.2205791" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372673" lat="36.0695831" lon="136.2205908" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372674" lat="36.0695421" lon="136.2205908" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372675" lat="36.0695421" lon="136.2205201" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372676" lat="36.0695831" lon="136.2205201" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372677" lat="36.0695533" lon="136.2205090" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372678" lat="36.0695533" lon="136.2204712" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372679" lat="36.0695790" lon="136.2204712" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372680" lat="36.0694660" lon="136.2205090" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372681" lat="36.0694660" lon="136.2204427" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372682" lat="36.0695790" lon="136.2204427" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372683" lat="36.0695690" lon="136.2204356" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372684" lat="36.0695690" lon="136.2203729" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372685" lat="36.0696402" lon="136.2203729" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372686" lat="36.0694625" lon="136.2204356" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372687" lat="36.0694625" lon="136.2203377" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372688" lat="36.0696402" lon="136.2203377" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372689" lat="36.0697318" lon="136.2204356" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372690" lat="36.0696473" lon="136.2204356" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372691" lat="36.0696473" lon="136.2203421" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372692" lat="36.0697318" lon="136.2203421" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372693" lat="36.0697649" lon="136.2205105" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372694" lat="36.0697123" lon="136.2205105" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372695" lat="36.0697123" lon="136.2204505" version="1" timestamp="2019-05-19T06:42:03Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372696" lat="36.0697649" lon="136.2204505" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372697" lat="36.0698344" lon="136.2205691" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372698" lat="36.0698344" lon="136.2204512" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372699" lat="36.0697675" lon="136.2205691" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372700" lat="36.0697675" lon="136.2204453" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372701" lat="36.0698435" lon="136.2204512" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372702" lat="36.0697557" lon="136.2204453" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372703" lat="36.0697557" lon="136.2203488" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372704" lat="36.0698435" lon="136.2203488" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372719" lat="36.0697244" lon="136.2199632" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372720" lat="36.0696526" lon="136.2199610" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372721" lat="36.0696522" lon="136.2199821" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372722" lat="36.0697240" lon="136.2199844" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372723" lat="36.0697374" lon="136.2198817" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372724" lat="36.0697353" lon="136.2199847" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372725" lat="36.0698534" lon="136.2200087" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372726" lat="36.0697464" lon="136.2200054" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372727" lat="36.0697450" lon="136.2200739" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372728" lat="36.0697335" lon="136.2200736" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372729" lat="36.0694950" lon="136.2202627" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372730" lat="36.0694666" lon="136.2202618" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372731" lat="36.0694679" lon="136.2201973" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372732" lat="36.0694964" lon="136.2201982" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372733" lat="36.0695540" lon="136.2203120" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372734" lat="36.0695544" lon="136.2202965" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372735" lat="36.0694589" lon="136.2202687" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372736" lat="36.0695303" lon="136.2202710" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372737" lat="36.0695363" lon="136.2199785" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372738" lat="36.0694581" lon="136.2203090" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372739" lat="36.0697289" lon="136.2203020" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372740" lat="36.0698559" lon="136.2198854" version="1" timestamp="2019-05-19T06:42:04Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372968" lat="36.0691582" lon="136.2213599" version="1" timestamp="2019-05-19T06:42:07Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372969" lat="36.0691354" lon="136.2213594" version="1" timestamp="2019-05-19T06:42:07Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372970" lat="36.0691348" lon="136.2213982" version="1" timestamp="2019-05-19T06:42:07Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372971" lat="36.0691575" lon="136.2213987" version="1" timestamp="2019-05-19T06:42:07Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372972" lat="36.0692164" lon="136.2215539" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372973" lat="36.0690755" lon="136.2215506" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372974" lat="36.0690779" lon="136.2213968" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372975" lat="36.0692188" lon="136.2214002" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372976" lat="36.0691460" lon="136.2194860" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372977" lat="36.0690519" lon="136.2194818" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372978" lat="36.0690548" lon="136.2193830" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372979" lat="36.0691489" lon="136.2193872" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372980" lat="36.0692531" lon="136.2193758" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372981" lat="36.0691045" lon="136.2193691" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372982" lat="36.0691070" lon="136.2192813" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372983" lat="36.0692557" lon="136.2192880" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372984" lat="36.0693721" lon="136.2194777" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372985" lat="36.0692991" lon="136.2194744" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372986" lat="36.0693024" lon="136.2193605" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372987" lat="36.0693755" lon="136.2193637" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372988" lat="36.0691698" lon="136.2192651" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372989" lat="36.0691712" lon="136.2192191" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372990" lat="36.0692916" lon="136.2192706" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372991" lat="36.0691066" lon="136.2192162" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372992" lat="36.0691090" lon="136.2191361" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372993" lat="36.0692953" lon="136.2191445" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372994" lat="36.0693786" lon="136.2191112" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372995" lat="36.0692828" lon="136.2191069" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372996" lat="36.0692873" lon="136.2189537" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372997" lat="36.0693831" lon="136.2189580" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372998" lat="36.0691246" lon="136.2196034" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483372999" lat="36.0690650" lon="136.2197449" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373000" lat="36.0690443" lon="136.2197439" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373001" lat="36.0690512" lon="136.2195105" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373002" lat="36.0691272" lon="136.2195139" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373003" lat="36.0692721" lon="136.2195752" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373004" lat="36.0691536" lon="136.2195699" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373005" lat="36.0691589" lon="136.2193913" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373006" lat="36.0692774" lon="136.2193966" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373007" lat="36.0692560" lon="136.2197616" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373008" lat="36.0692590" lon="136.2196577" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373009" lat="36.0692344" lon="136.2197607" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373010" lat="36.0692375" lon="136.2196568" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373011" lat="36.0690633" lon="136.2198040" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373012" lat="36.0692329" lon="136.2198117" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373013" lat="36.0692389" lon="136.2196085" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373014" lat="36.0689831" lon="136.2195893" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373015" lat="36.0688785" lon="136.2195870" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373016" lat="36.0688790" lon="136.2195512" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373017" lat="36.0689836" lon="136.2195535" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373018" lat="36.0688692" lon="136.2197367" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373019" lat="36.0689250" lon="136.2197379" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373020" lat="36.0689889" lon="136.2198221" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373021" lat="36.0688680" lon="136.2198195" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373022" lat="36.0689261" lon="136.2196600" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373023" lat="36.0689912" lon="136.2196615" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373024" lat="36.0689838" lon="136.2194859" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373025" lat="36.0688887" lon="136.2194838" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373026" lat="36.0688907" lon="136.2193462" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373027" lat="36.0689858" lon="136.2193483" version="1" timestamp="2019-05-19T06:42:08Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373042" lat="36.0681267" lon="136.2186912" version="1" timestamp="2019-05-19T06:42:09Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483373043" lat="36.0681782" lon="136.2186922" version="1" timestamp="2019-05-19T06:42:09Z" changeset="70402221" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628361" lat="36.0696944" lon="136.2213488" version="1" timestamp="2019-05-19T10:58:10Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628362" lat="36.0696384" lon="136.2213322" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628363" lat="36.0696392" lon="136.2214763" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628364" lat="36.0696951" lon="136.2214758" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628365" lat="36.0696804" lon="136.2213318" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628366" lat="36.0694728" lon="136.2213666" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628367" lat="36.0694730" lon="136.2214113" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628368" lat="36.0695055" lon="136.2214110" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628369" lat="36.0695053" lon="136.2213663" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628370" lat="36.0694763" lon="136.2214223" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628371" lat="36.0694766" lon="136.2214642" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628372" lat="36.0695104" lon="136.2214640" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628373" lat="36.0695102" lon="136.2214220" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628374" lat="36.0694153" lon="136.2213309" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628375" lat="36.0694011" lon="136.2213570" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628376" lat="36.0693943" lon="136.2213936" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628377" lat="36.0694013" lon="136.2213935" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628378" lat="36.0694182" lon="136.2214729" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628379" lat="36.0694180" lon="136.2214393" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628380" lat="36.0694410" lon="136.2214767" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628381" lat="36.0694408" lon="136.2214391" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628382" lat="36.0693948" lon="136.2214731" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628383" lat="36.0694663" lon="136.2214765" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628384" lat="36.0694654" lon="136.2213305" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628485" lat="36.0693974" lon="136.2214879" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628486" lat="36.0693977" lon="136.2215420" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628487" lat="36.0694557" lon="136.2215415" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628488" lat="36.0694554" lon="136.2214874" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628489" lat="36.0694909" lon="136.2216484" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628490" lat="36.0694909" lon="136.2216596" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628491" lat="36.0694075" lon="136.2216870" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628492" lat="36.0694229" lon="136.2216869" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628493" lat="36.0695407" lon="136.2216448" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628494" lat="36.0695411" lon="136.2217144" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628495" lat="36.0695593" lon="136.2217142" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628496" lat="36.0695589" lon="136.2216446" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628497" lat="36.0694848" lon="136.2216529" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628498" lat="36.0694847" lon="136.2216359" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628499" lat="36.0694038" lon="136.2216047" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628500" lat="36.0694040" lon="136.2216536" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628501" lat="36.0695158" lon="136.2216356" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628502" lat="36.0695156" lon="136.2216037" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628503" lat="36.0694026" lon="136.2215534" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628504" lat="36.0694028" lon="136.2215933" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628505" lat="36.0695573" lon="136.2215920" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628506" lat="36.0695570" lon="136.2215521" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628507" lat="36.0694649" lon="136.2214861" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628508" lat="36.0694652" lon="136.2215400" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628509" lat="36.0695568" lon="136.2215392" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628510" lat="36.0695565" lon="136.2214854" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628511" lat="36.0695915" lon="136.2213315" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628512" lat="36.0695923" lon="136.2214699" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628513" lat="36.0696332" lon="136.2214696" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628514" lat="36.0696324" lon="136.2213311" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628515" lat="36.0695654" lon="136.2214983" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628516" lat="36.0695657" lon="136.2215619" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628517" lat="36.0696685" lon="136.2215610" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628518" lat="36.0696682" lon="136.2214974" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628519" lat="36.0694074" lon="136.2216603" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628520" lat="36.0694230" lon="136.2217220" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628521" lat="36.0695350" lon="136.2217211" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483628522" lat="36.0695346" lon="136.2216480" version="1" timestamp="2019-05-19T10:58:11Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629242" lat="36.0683657" lon="136.2204507" version="1" timestamp="2019-05-19T10:58:17Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629243" lat="36.0683619" lon="136.2204795" version="1" timestamp="2019-05-19T10:58:17Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629244" lat="36.0684248" lon="136.2204789" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629245" lat="36.0684351" lon="136.2204976" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629246" lat="36.0684340" lon="136.2206110" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629247" lat="36.0682530" lon="136.2206116" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629248" lat="36.0682535" lon="136.2205573" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629249" lat="36.0682405" lon="136.2205043" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629250" lat="36.0682687" lon="136.2204427" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629251" lat="36.0683202" lon="136.2204125" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629252" lat="36.0683608" lon="136.2204111" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita"/>
+  <node id="6483629283" lat="36.0684719" lon="136.2196856" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <tag k="natural" v="tree"/>
+  </node>
+  <node id="6483629284" lat="36.0682866" lon="136.2193859" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <tag k="natural" v="tree"/>
+  </node>
+  <node id="6483629285" lat="36.0682839" lon="136.2193289" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <tag k="natural" v="tree"/>
+  </node>
+  <node id="6483629286" lat="36.0683234" lon="136.2192222" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <tag k="natural" v="tree"/>
+  </node>
+  <node id="6483629287" lat="36.0684513" lon="136.2192377" version="1" timestamp="2019-05-19T10:58:18Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <tag k="natural" v="tree"/>
+  </node>
+  <node id="8405239103" lat="36.0688785" lon="136.2196393" version="1" timestamp="2021-02-08T14:15:39Z" changeset="98915364" uid="10163840" user="okadatsuneo">
+    <tag k="name" v="宝永四丁目"/>
+    <tag k="name:en" v="Hoei 4-chome"/>
+    <tag k="name:ja" v="宝永四丁目"/>
+    <tag k="name:ja-Hira" v="ほうえい4ちょうめ"/>
+    <tag k="place" v="neighbourhood"/>
+  </node>
+  <way id="154438488" version="1" timestamp="2012-03-11T07:08:43Z" changeset="10939347" uid="563872" user="mds878">
+    <nd ref="1669735601"/>
+    <nd ref="1669736189"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:STRUCTURE" v="地上"/>
+    <tag k="yh:TOTYUMONO" v="供用中"/>
+    <tag k="yh:TYPE" v="その他一般道"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+    <tag k="yh:WIDTH_RANK" v="3"/>
+  </way>
+  <way id="154438909" version="1" timestamp="2012-03-11T07:10:58Z" changeset="10939347" uid="563872" user="mds878">
+    <nd ref="1669735560"/>
+    <nd ref="1669735528"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:STRUCTURE" v="地上"/>
+    <tag k="yh:TOTYUMONO" v="供用中"/>
+    <tag k="yh:TYPE" v="その他一般道"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+    <tag k="yh:WIDTH_RANK" v="3"/>
+  </way>
+  <way id="154439043" version="2" timestamp="2016-08-12T04:03:29Z" changeset="41402187" uid="631141" user="Ryo-a">
+    <nd ref="1669736189"/>
+    <nd ref="4346755910"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154439624" version="1" timestamp="2012-03-11T07:14:51Z" changeset="10939347" uid="563872" user="mds878">
+    <nd ref="1669735601"/>
+    <nd ref="1669735568"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:STRUCTURE" v="地上"/>
+    <tag k="yh:TOTYUMONO" v="供用中"/>
+    <tag k="yh:TYPE" v="その他一般道"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+    <tag k="yh:WIDTH_RANK" v="3"/>
+  </way>
+  <way id="154442781" version="2" timestamp="2016-08-14T23:17:42Z" changeset="41456392" uid="631141" user="Ryo-a">
+    <nd ref="1669734685"/>
+    <nd ref="4350344945"/>
+    <nd ref="1669735568"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154444083" version="3" timestamp="2016-08-14T23:31:57Z" changeset="41456495" uid="631141" user="Ryo-a">
+    <nd ref="1669736142"/>
+    <nd ref="4346755910"/>
+    <nd ref="4350351756"/>
+    <nd ref="1669736770"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154445255" version="2" timestamp="2015-03-11T13:19:14Z" changeset="29405272" uid="1502046" user="Human65536">
+    <nd ref="1669736189"/>
+    <nd ref="1669736285"/>
+    <nd ref="1669736406"/>
+    <nd ref="1669736445"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+  </way>
+  <way id="154450496" version="2" timestamp="2015-05-13T04:42:49Z" changeset="31075187" uid="643374" user="friedbunny">
+    <nd ref="1669735568"/>
+    <nd ref="3513915359"/>
+    <nd ref="1669736142"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+  </way>
+  <way id="154453242" version="2" timestamp="2016-08-12T04:03:30Z" changeset="41402187" uid="631141" user="Ryo-a">
+    <nd ref="1669734650"/>
+    <nd ref="1669735528"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154454784" version="2" timestamp="2015-05-13T04:42:49Z" changeset="31075187" uid="643374" user="friedbunny">
+    <nd ref="1669735509"/>
+    <nd ref="1669735568"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+  </way>
+  <way id="154455969" version="2" timestamp="2019-05-15T15:44:01Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="1669735601"/>
+    <nd ref="6475739095"/>
+    <nd ref="1669735639"/>
+    <nd ref="6475739085"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="154460514" version="4" timestamp="2019-05-15T15:44:01Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="1669735646"/>
+    <nd ref="1669736285"/>
+    <nd ref="4346755911"/>
+    <nd ref="1669736801"/>
+    <nd ref="1669737455"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="154460878" version="2" timestamp="2015-05-13T04:42:49Z" changeset="31075187" uid="643374" user="friedbunny">
+    <nd ref="1669735601"/>
+    <nd ref="1669734687"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+  </way>
+  <way id="154461280" version="2" timestamp="2015-05-13T04:37:49Z" changeset="31074835" uid="643374" user="friedbunny">
+    <nd ref="1669736148"/>
+    <nd ref="1669736142"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+    <tag k="yh:WIDTH" v="3.0m〜5.5m"/>
+  </way>
+  <way id="154464283" version="2" timestamp="2016-08-12T04:03:29Z" changeset="41402187" uid="631141" user="Ryo-a">
+    <nd ref="1669736189"/>
+    <nd ref="1669736777"/>
+    <tag k="highway" v="unclassified"/>
+    <tag k="source" v="YahooJapan/ALPSMAP"/>
+  </way>
+  <way id="154469566" version="3" timestamp="2019-05-15T15:44:02Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="1669735646"/>
+    <nd ref="1669735681"/>
+    <nd ref="1669735528"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="180790024" version="1" timestamp="2012-09-13T09:01:09Z" changeset="13093068" uid="651065" user="futurumspes">
+    <nd ref="1912548267"/>
+    <nd ref="1912548255"/>
+    <nd ref="1912548268"/>
+    <nd ref="1912548270"/>
+    <nd ref="1912548269"/>
+    <nd ref="1912548271"/>
+    <nd ref="1912548267"/>
+    <tag k="leisure" v="park"/>
+    <tag k="name" v="神明公園"/>
+    <tag k="name:ja" v="神明公園"/>
+    <tag k="source" v="Bing 2010"/>
+  </way>
+  <way id="344635361" version="2" timestamp="2019-05-19T10:58:44Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="3513915358"/>
+    <nd ref="3513915359"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="436813055" version="1" timestamp="2016-08-12T04:03:25Z" changeset="41402187" uid="631141" user="Ryo-a">
+    <nd ref="4346755912"/>
+    <nd ref="4346755911"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="437219283" version="2" timestamp="2020-09-08T01:56:53Z" changeset="90552572" uid="11638868" user="リッキー0219">
+    <nd ref="4350351752"/>
+    <nd ref="4350351750"/>
+    <nd ref="4350351749"/>
+    <nd ref="4350351747"/>
+    <nd ref="4350351743"/>
+    <nd ref="4350351740"/>
+    <nd ref="4350351739"/>
+    <nd ref="4350351737"/>
+    <nd ref="4350351738"/>
+    <nd ref="4350351742"/>
+    <nd ref="4350351744"/>
+    <nd ref="4350351736"/>
+    <tag k="layer" v="-1"/>
+    <tag k="source" v="GSImaps/ort"/>
+    <tag k="waterway" v="stream"/>
+  </way>
+  <way id="437219293" version="1" timestamp="2016-08-14T23:31:54Z" changeset="41456495" uid="631141" user="Ryo-a">
+    <nd ref="4350351756"/>
+    <nd ref="4350351757"/>
+    <nd ref="4350351758"/>
+    <nd ref="4350351759"/>
+    <nd ref="4350351760"/>
+    <tag k="highway" v="residential"/>
+    <tag k="source" v="GSImaps/ort"/>
+  </way>
+  <way id="690244571" version="1" timestamp="2019-05-15T15:43:51Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475738363"/>
+    <nd ref="6475738371"/>
+    <nd ref="6475738372"/>
+    <nd ref="6475738364"/>
+    <nd ref="6475738373"/>
+    <nd ref="6475738376"/>
+    <nd ref="6475738366"/>
+    <nd ref="6475738369"/>
+    <nd ref="6475738361"/>
+    <nd ref="6475738368"/>
+    <nd ref="6475738367"/>
+    <nd ref="6475738362"/>
+    <nd ref="6475738370"/>
+    <nd ref="6475738365"/>
+    <nd ref="6475738375"/>
+    <nd ref="6475738374"/>
+    <nd ref="6475738363"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690244572" version="2" timestamp="2019-05-19T06:42:33Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475738380"/>
+    <nd ref="6475738379"/>
+    <nd ref="6475738378"/>
+    <nd ref="6483373043"/>
+    <nd ref="6483373042"/>
+    <nd ref="6475738377"/>
+    <nd ref="6475738380"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690244573" version="1" timestamp="2019-05-15T15:43:51Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475738384"/>
+    <nd ref="6475738383"/>
+    <nd ref="6475738382"/>
+    <nd ref="6475738381"/>
+    <nd ref="6475738384"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690244574" version="1" timestamp="2019-05-15T15:43:51Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475739085"/>
+    <nd ref="1669735646"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="690244575" version="1" timestamp="2019-05-15T15:43:51Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475739087"/>
+    <nd ref="6475739086"/>
+    <tag k="highway" v="footway"/>
+  </way>
+  <way id="690244576" version="1" timestamp="2019-05-15T15:43:51Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475739098"/>
+    <nd ref="6475739097"/>
+    <nd ref="6475739087"/>
+    <nd ref="6475739088"/>
+    <tag k="highway" v="footway"/>
+  </way>
+  <way id="690244577" version="2" timestamp="2019-05-18T09:18:48Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475739094"/>
+    <nd ref="6475739091"/>
+    <nd ref="6482170915"/>
+    <nd ref="6482170914"/>
+    <nd ref="6482170913"/>
+    <nd ref="6482170916"/>
+    <nd ref="6475739092"/>
+    <nd ref="6482170917"/>
+    <nd ref="6482170918"/>
+    <nd ref="6475739093"/>
+    <nd ref="6482170911"/>
+    <nd ref="6482170910"/>
+    <nd ref="6482170909"/>
+    <nd ref="6482170912"/>
+    <nd ref="6482170920"/>
+    <nd ref="6482170919"/>
+    <nd ref="6475739094"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690244578" version="1" timestamp="2019-05-15T15:43:51Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475739097"/>
+    <nd ref="6475739089"/>
+    <nd ref="6475739090"/>
+    <nd ref="6475739096"/>
+    <nd ref="6475739095"/>
+    <tag k="highway" v="residential"/>
+  </way>
+  <way id="690244637" version="1" timestamp="2019-05-15T15:43:54Z" changeset="70281830" uid="389520" user="K_Sakanoshita">
+    <nd ref="6475739637"/>
+    <nd ref="6475739634"/>
+    <nd ref="6475739635"/>
+    <nd ref="6475739636"/>
+    <nd ref="6475739637"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869328" version="1" timestamp="2019-05-18T09:18:39Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170776"/>
+    <nd ref="6482170775"/>
+    <nd ref="6482170772"/>
+    <nd ref="6482170771"/>
+    <nd ref="6482170774"/>
+    <nd ref="6482170767"/>
+    <nd ref="6482170768"/>
+    <nd ref="6482170769"/>
+    <nd ref="6482170770"/>
+    <nd ref="6482170773"/>
+    <nd ref="6482170776"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869329" version="1" timestamp="2019-05-18T09:18:39Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170780"/>
+    <nd ref="6482170779"/>
+    <nd ref="6482170778"/>
+    <nd ref="6482170777"/>
+    <nd ref="6482170780"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869330" version="1" timestamp="2019-05-18T09:18:39Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170787"/>
+    <nd ref="6482170781"/>
+    <nd ref="6482170786"/>
+    <nd ref="6482170782"/>
+    <nd ref="6482170783"/>
+    <nd ref="6482170785"/>
+    <nd ref="6482170784"/>
+    <nd ref="6482170787"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869331" version="1" timestamp="2019-05-18T09:18:39Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170793"/>
+    <nd ref="6482170792"/>
+    <nd ref="6482170788"/>
+    <nd ref="6482170789"/>
+    <nd ref="6482170791"/>
+    <nd ref="6482170790"/>
+    <nd ref="6482170793"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869332" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170797"/>
+    <nd ref="6482170796"/>
+    <nd ref="6482170795"/>
+    <nd ref="6482170794"/>
+    <nd ref="6482170797"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869333" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170801"/>
+    <nd ref="6482170798"/>
+    <nd ref="6482170799"/>
+    <nd ref="6482170800"/>
+    <nd ref="6482170801"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869336" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170823"/>
+    <nd ref="6482170817"/>
+    <nd ref="6482170816"/>
+    <nd ref="6482170820"/>
+    <nd ref="6482170815"/>
+    <nd ref="6482170814"/>
+    <nd ref="6482170818"/>
+    <nd ref="6482170812"/>
+    <nd ref="6482170813"/>
+    <nd ref="6482170819"/>
+    <nd ref="6482170821"/>
+    <nd ref="6482170822"/>
+    <nd ref="6482170823"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869337" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170827"/>
+    <nd ref="6482170824"/>
+    <nd ref="6482170825"/>
+    <nd ref="6482170826"/>
+    <nd ref="6482170827"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869338" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170831"/>
+    <nd ref="6482170828"/>
+    <nd ref="6482170829"/>
+    <nd ref="6482170830"/>
+    <nd ref="6482170831"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869339" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170835"/>
+    <nd ref="6482170832"/>
+    <nd ref="6482170833"/>
+    <nd ref="6482170834"/>
+    <nd ref="6482170835"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869340" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170841"/>
+    <nd ref="6482170838"/>
+    <nd ref="6482170839"/>
+    <nd ref="6482170836"/>
+    <nd ref="6482170837"/>
+    <nd ref="6482170840"/>
+    <nd ref="6482170841"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869341" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170846"/>
+    <nd ref="6482170842"/>
+    <nd ref="6482170845"/>
+    <nd ref="6482170844"/>
+    <nd ref="6482170843"/>
+    <nd ref="6482170846"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869342" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170850"/>
+    <nd ref="6482170849"/>
+    <nd ref="6482170848"/>
+    <nd ref="6482170847"/>
+    <nd ref="6482170850"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869343" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170854"/>
+    <nd ref="6482170853"/>
+    <nd ref="6482170852"/>
+    <nd ref="6482170851"/>
+    <nd ref="6482170854"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869344" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170858"/>
+    <nd ref="6482170857"/>
+    <nd ref="6482170856"/>
+    <nd ref="6482170855"/>
+    <nd ref="6482170858"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869345" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170864"/>
+    <nd ref="6482170863"/>
+    <nd ref="6482170862"/>
+    <nd ref="6482170859"/>
+    <nd ref="6482170860"/>
+    <nd ref="6482170861"/>
+    <nd ref="6482170864"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869346" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170870"/>
+    <nd ref="6482170869"/>
+    <nd ref="6482170866"/>
+    <nd ref="6482170865"/>
+    <nd ref="6482170868"/>
+    <nd ref="6482170867"/>
+    <nd ref="6482170870"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869348" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170874"/>
+    <nd ref="6482170873"/>
+    <nd ref="6482170872"/>
+    <nd ref="6482170871"/>
+    <nd ref="6482170874"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869350" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170875"/>
+    <nd ref="6482170880"/>
+    <nd ref="6482170881"/>
+    <nd ref="6482170882"/>
+    <nd ref="6482170876"/>
+    <nd ref="6482170879"/>
+    <nd ref="6482170877"/>
+    <nd ref="6482170878"/>
+    <nd ref="6482170875"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869352" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170886"/>
+    <nd ref="6482170883"/>
+    <nd ref="6482170884"/>
+    <nd ref="6482170885"/>
+    <nd ref="6482170886"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869353" version="1" timestamp="2019-05-18T09:18:40Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170894"/>
+    <nd ref="6482170893"/>
+    <nd ref="6482170892"/>
+    <nd ref="6482170890"/>
+    <nd ref="6482170888"/>
+    <nd ref="6482170887"/>
+    <nd ref="6482170889"/>
+    <nd ref="6482170891"/>
+    <nd ref="6482170894"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869355" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170908"/>
+    <nd ref="6482170902"/>
+    <nd ref="6482170901"/>
+    <nd ref="6482170905"/>
+    <nd ref="6482170899"/>
+    <nd ref="6482170900"/>
+    <nd ref="6482170904"/>
+    <nd ref="6482170903"/>
+    <nd ref="6482170906"/>
+    <nd ref="6482170898"/>
+    <nd ref="6482170896"/>
+    <nd ref="6482170895"/>
+    <nd ref="6482170897"/>
+    <nd ref="6482170907"/>
+    <nd ref="6482170908"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869356" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170925"/>
+    <nd ref="6482170921"/>
+    <nd ref="6482170922"/>
+    <nd ref="6482170923"/>
+    <nd ref="6482170924"/>
+    <nd ref="6482170925"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869357" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170931"/>
+    <nd ref="6482170928"/>
+    <nd ref="6482170927"/>
+    <nd ref="6482170926"/>
+    <nd ref="6482170929"/>
+    <nd ref="6482170930"/>
+    <nd ref="6482170931"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869358" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170937"/>
+    <nd ref="6482170934"/>
+    <nd ref="6482170935"/>
+    <nd ref="6482170932"/>
+    <nd ref="6482170933"/>
+    <nd ref="6482170936"/>
+    <nd ref="6482170937"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869359" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170941"/>
+    <nd ref="6482170938"/>
+    <nd ref="6482170939"/>
+    <nd ref="6482170940"/>
+    <nd ref="6482170941"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869360" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170951"/>
+    <nd ref="6482170948"/>
+    <nd ref="6482170946"/>
+    <nd ref="6482170947"/>
+    <nd ref="6482170949"/>
+    <nd ref="6482170945"/>
+    <nd ref="6482170943"/>
+    <nd ref="6482170942"/>
+    <nd ref="6482170944"/>
+    <nd ref="6482170950"/>
+    <nd ref="6482170951"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869361" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170959"/>
+    <nd ref="6482170956"/>
+    <nd ref="6482170954"/>
+    <nd ref="6482170952"/>
+    <nd ref="6482170953"/>
+    <nd ref="6482170955"/>
+    <nd ref="6482170957"/>
+    <nd ref="6482170958"/>
+    <nd ref="6482170959"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869362" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170967"/>
+    <nd ref="6482170963"/>
+    <nd ref="6482170962"/>
+    <nd ref="6482170964"/>
+    <nd ref="6482170960"/>
+    <nd ref="6482170961"/>
+    <nd ref="6482170965"/>
+    <nd ref="6482170966"/>
+    <nd ref="6482170967"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869363" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170975"/>
+    <nd ref="6482170972"/>
+    <nd ref="6482170968"/>
+    <nd ref="6482170969"/>
+    <nd ref="6482170973"/>
+    <nd ref="6482170970"/>
+    <nd ref="6482170971"/>
+    <nd ref="6482170974"/>
+    <nd ref="6482170975"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869364" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170981"/>
+    <nd ref="6482170978"/>
+    <nd ref="6482170977"/>
+    <nd ref="6482170976"/>
+    <nd ref="6482170979"/>
+    <nd ref="6482170980"/>
+    <nd ref="6482170981"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869365" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170985"/>
+    <nd ref="6482170982"/>
+    <nd ref="6482170983"/>
+    <nd ref="6482170984"/>
+    <nd ref="6482170985"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869366" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170991"/>
+    <nd ref="6482170988"/>
+    <nd ref="6482170989"/>
+    <nd ref="6482170986"/>
+    <nd ref="6482170987"/>
+    <nd ref="6482170990"/>
+    <nd ref="6482170991"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869367" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170995"/>
+    <nd ref="6482170992"/>
+    <nd ref="6482170993"/>
+    <nd ref="6482170994"/>
+    <nd ref="6482170995"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869368" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482170999"/>
+    <nd ref="6482170996"/>
+    <nd ref="6482170997"/>
+    <nd ref="6482170998"/>
+    <nd ref="6482170999"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869369" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171003"/>
+    <nd ref="6482171000"/>
+    <nd ref="6482171001"/>
+    <nd ref="6482171002"/>
+    <nd ref="6482171003"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869370" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171007"/>
+    <nd ref="6482171004"/>
+    <nd ref="6482171005"/>
+    <nd ref="6482171006"/>
+    <nd ref="6482171007"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869371" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171015"/>
+    <nd ref="6482171012"/>
+    <nd ref="6482171011"/>
+    <nd ref="6482171010"/>
+    <nd ref="6482171008"/>
+    <nd ref="6482171009"/>
+    <nd ref="6482171013"/>
+    <nd ref="6482171014"/>
+    <nd ref="6482171015"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869372" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171019"/>
+    <nd ref="6482171016"/>
+    <nd ref="6482171017"/>
+    <nd ref="6482171018"/>
+    <nd ref="6482171019"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869373" version="1" timestamp="2019-05-18T09:18:41Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171023"/>
+    <nd ref="6482171020"/>
+    <nd ref="6482171021"/>
+    <nd ref="6482171022"/>
+    <nd ref="6482171023"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869381" version="1" timestamp="2019-05-18T09:18:42Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171067"/>
+    <nd ref="6482171066"/>
+    <nd ref="6482171065"/>
+    <nd ref="6482171064"/>
+    <nd ref="6482171067"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869382" version="1" timestamp="2019-05-18T09:18:42Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171071"/>
+    <nd ref="6482171070"/>
+    <nd ref="6482171069"/>
+    <nd ref="6482171068"/>
+    <nd ref="6482171071"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869383" version="1" timestamp="2019-05-18T09:18:42Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171075"/>
+    <nd ref="6482171074"/>
+    <nd ref="6482171073"/>
+    <nd ref="6482171072"/>
+    <nd ref="6482171075"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869384" version="1" timestamp="2019-05-18T09:18:42Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171083"/>
+    <nd ref="6482171082"/>
+    <nd ref="6482171081"/>
+    <nd ref="6482171078"/>
+    <nd ref="6482171077"/>
+    <nd ref="6482171076"/>
+    <nd ref="6482171079"/>
+    <nd ref="6482171080"/>
+    <nd ref="6482171083"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869411" version="1" timestamp="2019-05-18T09:18:43Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171217"/>
+    <nd ref="6482171215"/>
+    <nd ref="6482171211"/>
+    <nd ref="6482171212"/>
+    <nd ref="6482171213"/>
+    <nd ref="6482171214"/>
+    <nd ref="6482171216"/>
+    <nd ref="6482171217"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869412" version="1" timestamp="2019-05-18T09:18:43Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171221"/>
+    <nd ref="6482171218"/>
+    <nd ref="6482171219"/>
+    <nd ref="6482171220"/>
+    <nd ref="6482171221"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869413" version="1" timestamp="2019-05-18T09:18:43Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171238"/>
+    <nd ref="6482171235"/>
+    <nd ref="6482171234"/>
+    <nd ref="6482171233"/>
+    <nd ref="6482171232"/>
+    <nd ref="6482171231"/>
+    <nd ref="6482171230"/>
+    <nd ref="6482171237"/>
+    <nd ref="6482171229"/>
+    <nd ref="6482171228"/>
+    <nd ref="6482171227"/>
+    <nd ref="6482171223"/>
+    <nd ref="6482171222"/>
+    <nd ref="6482171226"/>
+    <nd ref="6482171236"/>
+    <nd ref="6482171224"/>
+    <nd ref="6482171225"/>
+    <nd ref="6482171238"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869422" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171290"/>
+    <nd ref="6482171289"/>
+    <nd ref="6482171288"/>
+    <nd ref="6482171287"/>
+    <nd ref="6482171290"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869423" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171294"/>
+    <nd ref="6482171293"/>
+    <nd ref="6482171292"/>
+    <nd ref="6482171291"/>
+    <nd ref="6482171294"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869424" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171298"/>
+    <nd ref="6482171297"/>
+    <nd ref="6482171296"/>
+    <nd ref="6482171295"/>
+    <nd ref="6482171298"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869425" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171302"/>
+    <nd ref="6482171301"/>
+    <nd ref="6482171300"/>
+    <nd ref="6482171299"/>
+    <nd ref="6482171302"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869426" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171312"/>
+    <nd ref="6482171311"/>
+    <nd ref="6482171308"/>
+    <nd ref="6482171307"/>
+    <nd ref="6482171304"/>
+    <nd ref="6482171303"/>
+    <nd ref="6482171305"/>
+    <nd ref="6482171306"/>
+    <nd ref="6482171310"/>
+    <nd ref="6482171309"/>
+    <nd ref="6482171312"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869427" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171316"/>
+    <nd ref="6482171315"/>
+    <nd ref="6482171314"/>
+    <nd ref="6482171313"/>
+    <nd ref="6482171316"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869428" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171322"/>
+    <nd ref="6482171321"/>
+    <nd ref="6482171320"/>
+    <nd ref="6482171317"/>
+    <nd ref="6482171318"/>
+    <nd ref="6482171319"/>
+    <nd ref="6482171322"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690869429" version="1" timestamp="2019-05-18T09:18:44Z" changeset="70382428" uid="389520" user="K_Sakanoshita">
+    <nd ref="6482171328"/>
+    <nd ref="6482171327"/>
+    <nd ref="6482171326"/>
+    <nd ref="6482171323"/>
+    <nd ref="6482171324"/>
+    <nd ref="6482171325"/>
+    <nd ref="6482171328"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990785" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372573"/>
+    <nd ref="6483372572"/>
+    <nd ref="6483372571"/>
+    <nd ref="6483372570"/>
+    <nd ref="6483372569"/>
+    <nd ref="6483372568"/>
+    <nd ref="6483372563"/>
+    <nd ref="6483372562"/>
+    <nd ref="6483372567"/>
+    <nd ref="6483372566"/>
+    <nd ref="6483372565"/>
+    <nd ref="6483372564"/>
+    <nd ref="6483372560"/>
+    <nd ref="6483372561"/>
+    <nd ref="6483372573"/>
+    <tag k="amenity" v="parking"/>
+  </way>
+  <way id="690990786" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372578"/>
+    <nd ref="6483372577"/>
+    <nd ref="6483372575"/>
+    <nd ref="6483372574"/>
+    <nd ref="6483372576"/>
+    <nd ref="6483372578"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990787" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372582"/>
+    <nd ref="6483372579"/>
+    <nd ref="6483372580"/>
+    <nd ref="6483372581"/>
+    <nd ref="6483372582"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990788" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372590"/>
+    <nd ref="6483372587"/>
+    <nd ref="6483372588"/>
+    <nd ref="6483372583"/>
+    <nd ref="6483372584"/>
+    <nd ref="6483372589"/>
+    <nd ref="6483372585"/>
+    <nd ref="6483372586"/>
+    <nd ref="6483372590"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990789" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372594"/>
+    <nd ref="6483372591"/>
+    <nd ref="6483372592"/>
+    <nd ref="6483372593"/>
+    <nd ref="6483372594"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990790" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372598"/>
+    <nd ref="6483372595"/>
+    <nd ref="6483372596"/>
+    <nd ref="6483372597"/>
+    <nd ref="6483372598"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990791" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372604"/>
+    <nd ref="6483372601"/>
+    <nd ref="6483372602"/>
+    <nd ref="6483372599"/>
+    <nd ref="6483372600"/>
+    <nd ref="6483372603"/>
+    <nd ref="6483372604"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990792" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372608"/>
+    <nd ref="6483372605"/>
+    <nd ref="6483372606"/>
+    <nd ref="6483372607"/>
+    <nd ref="6483372608"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990794" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372616"/>
+    <nd ref="6483372613"/>
+    <nd ref="6483372614"/>
+    <nd ref="6483372615"/>
+    <nd ref="6483372616"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990795" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372624"/>
+    <nd ref="6483372621"/>
+    <nd ref="6483372617"/>
+    <nd ref="6483372618"/>
+    <nd ref="6483372619"/>
+    <nd ref="6483372620"/>
+    <nd ref="6483372622"/>
+    <nd ref="6483372623"/>
+    <nd ref="6483372624"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990796" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372628"/>
+    <nd ref="6483372625"/>
+    <nd ref="6483372626"/>
+    <nd ref="6483372627"/>
+    <nd ref="6483372628"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990797" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372632"/>
+    <nd ref="6483372629"/>
+    <nd ref="6483372630"/>
+    <nd ref="6483372631"/>
+    <nd ref="6483372632"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990798" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372636"/>
+    <nd ref="6483372633"/>
+    <nd ref="6483372634"/>
+    <nd ref="6483372635"/>
+    <nd ref="6483372636"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990799" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372642"/>
+    <nd ref="6483372639"/>
+    <nd ref="6483372638"/>
+    <nd ref="6483372637"/>
+    <nd ref="6483372640"/>
+    <nd ref="6483372641"/>
+    <nd ref="6483372642"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990800" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372646"/>
+    <nd ref="6483372643"/>
+    <nd ref="6483372644"/>
+    <nd ref="6483372645"/>
+    <nd ref="6483372646"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990801" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372652"/>
+    <nd ref="6483372649"/>
+    <nd ref="6483372647"/>
+    <nd ref="6483372648"/>
+    <nd ref="6483372650"/>
+    <nd ref="6483372651"/>
+    <nd ref="6483372652"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990802" version="1" timestamp="2019-05-19T06:42:18Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372656"/>
+    <nd ref="6483372653"/>
+    <nd ref="6483372654"/>
+    <nd ref="6483372655"/>
+    <nd ref="6483372656"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990803" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372664"/>
+    <nd ref="6483372658"/>
+    <nd ref="6483372657"/>
+    <nd ref="6483372661"/>
+    <nd ref="6483372659"/>
+    <nd ref="6483372660"/>
+    <nd ref="6483372662"/>
+    <nd ref="6483372663"/>
+    <nd ref="6483372664"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990804" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372668"/>
+    <nd ref="6483372665"/>
+    <nd ref="6483372666"/>
+    <nd ref="6483372667"/>
+    <nd ref="6483372668"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990805" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372672"/>
+    <nd ref="6483372669"/>
+    <nd ref="6483372670"/>
+    <nd ref="6483372671"/>
+    <nd ref="6483372672"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990806" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372676"/>
+    <nd ref="6483372673"/>
+    <nd ref="6483372674"/>
+    <nd ref="6483372675"/>
+    <nd ref="6483372676"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990807" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372682"/>
+    <nd ref="6483372679"/>
+    <nd ref="6483372678"/>
+    <nd ref="6483372677"/>
+    <nd ref="6483372680"/>
+    <nd ref="6483372681"/>
+    <nd ref="6483372682"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990808" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372688"/>
+    <nd ref="6483372685"/>
+    <nd ref="6483372684"/>
+    <nd ref="6483372683"/>
+    <nd ref="6483372686"/>
+    <nd ref="6483372687"/>
+    <nd ref="6483372688"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990809" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372692"/>
+    <nd ref="6483372689"/>
+    <nd ref="6483372690"/>
+    <nd ref="6483372691"/>
+    <nd ref="6483372692"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990810" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372696"/>
+    <nd ref="6483372693"/>
+    <nd ref="6483372694"/>
+    <nd ref="6483372695"/>
+    <nd ref="6483372696"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990811" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372704"/>
+    <nd ref="6483372701"/>
+    <nd ref="6483372698"/>
+    <nd ref="6483372697"/>
+    <nd ref="6483372699"/>
+    <nd ref="6483372700"/>
+    <nd ref="6483372702"/>
+    <nd ref="6483372703"/>
+    <nd ref="6483372704"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990813" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372732"/>
+    <nd ref="6483372729"/>
+    <nd ref="6483372730"/>
+    <nd ref="6483372731"/>
+    <nd ref="6483372732"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990814" version="1" timestamp="2019-05-19T06:42:19Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372740"/>
+    <nd ref="6483372725"/>
+    <nd ref="6483372726"/>
+    <nd ref="6483372727"/>
+    <nd ref="6483372728"/>
+    <nd ref="6483372739"/>
+    <nd ref="6483372734"/>
+    <nd ref="6483372733"/>
+    <nd ref="6483372738"/>
+    <nd ref="6483372735"/>
+    <nd ref="6483372736"/>
+    <nd ref="6483372737"/>
+    <nd ref="6483372721"/>
+    <nd ref="6483372720"/>
+    <nd ref="6483372719"/>
+    <nd ref="6483372722"/>
+    <nd ref="6483372724"/>
+    <nd ref="6483372723"/>
+    <nd ref="6483372740"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990861" version="1" timestamp="2019-05-19T06:42:21Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372975"/>
+    <nd ref="6483372972"/>
+    <nd ref="6483372973"/>
+    <nd ref="6483372974"/>
+    <nd ref="6483372970"/>
+    <nd ref="6483372969"/>
+    <nd ref="6483372968"/>
+    <nd ref="6483372971"/>
+    <nd ref="6483372975"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990862" version="1" timestamp="2019-05-19T06:42:21Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372979"/>
+    <nd ref="6483372976"/>
+    <nd ref="6483372977"/>
+    <nd ref="6483372978"/>
+    <nd ref="6483372979"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990863" version="1" timestamp="2019-05-19T06:42:21Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372983"/>
+    <nd ref="6483372980"/>
+    <nd ref="6483372981"/>
+    <nd ref="6483372982"/>
+    <nd ref="6483372983"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990864" version="1" timestamp="2019-05-19T06:42:21Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372987"/>
+    <nd ref="6483372984"/>
+    <nd ref="6483372985"/>
+    <nd ref="6483372986"/>
+    <nd ref="6483372987"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990865" version="1" timestamp="2019-05-19T06:42:22Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372993"/>
+    <nd ref="6483372990"/>
+    <nd ref="6483372988"/>
+    <nd ref="6483372989"/>
+    <nd ref="6483372991"/>
+    <nd ref="6483372992"/>
+    <nd ref="6483372993"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990866" version="1" timestamp="2019-05-19T06:42:22Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483372997"/>
+    <nd ref="6483372994"/>
+    <nd ref="6483372995"/>
+    <nd ref="6483372996"/>
+    <nd ref="6483372997"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990867" version="1" timestamp="2019-05-19T06:42:22Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483373002"/>
+    <nd ref="6483372998"/>
+    <nd ref="6483373013"/>
+    <nd ref="6483373010"/>
+    <nd ref="6483373008"/>
+    <nd ref="6483373007"/>
+    <nd ref="6483373009"/>
+    <nd ref="6483373012"/>
+    <nd ref="6483373011"/>
+    <nd ref="6483372999"/>
+    <nd ref="6483373000"/>
+    <nd ref="6483373001"/>
+    <nd ref="6483373002"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990868" version="1" timestamp="2019-05-19T06:42:22Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483373006"/>
+    <nd ref="6483373003"/>
+    <nd ref="6483373004"/>
+    <nd ref="6483373005"/>
+    <nd ref="6483373006"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990869" version="1" timestamp="2019-05-19T06:42:22Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483373017"/>
+    <nd ref="6483373014"/>
+    <nd ref="6483373015"/>
+    <nd ref="6483373016"/>
+    <nd ref="6483373017"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990870" version="1" timestamp="2019-05-19T06:42:22Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483373023"/>
+    <nd ref="6483373020"/>
+    <nd ref="6483373021"/>
+    <nd ref="6483373018"/>
+    <nd ref="6483373019"/>
+    <nd ref="6483373022"/>
+    <nd ref="6483373023"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="690990871" version="1" timestamp="2019-05-19T06:42:22Z" changeset="70402221" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483373027"/>
+    <nd ref="6483373024"/>
+    <nd ref="6483373025"/>
+    <nd ref="6483373026"/>
+    <nd ref="6483373027"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016621" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628365"/>
+    <nd ref="6483628361"/>
+    <nd ref="6483628364"/>
+    <nd ref="6483628363"/>
+    <nd ref="6483628362"/>
+    <nd ref="6483628365"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016623" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628369"/>
+    <nd ref="6483628368"/>
+    <nd ref="6483628367"/>
+    <nd ref="6483628366"/>
+    <nd ref="6483628369"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016625" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628373"/>
+    <nd ref="6483628372"/>
+    <nd ref="6483628371"/>
+    <nd ref="6483628370"/>
+    <nd ref="6483628373"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016627" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628384"/>
+    <nd ref="6483628383"/>
+    <nd ref="6483628380"/>
+    <nd ref="6483628381"/>
+    <nd ref="6483628379"/>
+    <nd ref="6483628378"/>
+    <nd ref="6483628382"/>
+    <nd ref="6483628376"/>
+    <nd ref="6483628377"/>
+    <nd ref="6483628375"/>
+    <nd ref="6483628374"/>
+    <nd ref="6483628384"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016629" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628488"/>
+    <nd ref="6483628487"/>
+    <nd ref="6483628486"/>
+    <nd ref="6483628485"/>
+    <nd ref="6483628488"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016631" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628496"/>
+    <nd ref="6483628495"/>
+    <nd ref="6483628494"/>
+    <nd ref="6483628493"/>
+    <nd ref="6483628496"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016633" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628502"/>
+    <nd ref="6483628501"/>
+    <nd ref="6483628498"/>
+    <nd ref="6483628497"/>
+    <nd ref="6483628500"/>
+    <nd ref="6483628499"/>
+    <nd ref="6483628502"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016635" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628506"/>
+    <nd ref="6483628505"/>
+    <nd ref="6483628504"/>
+    <nd ref="6483628503"/>
+    <nd ref="6483628506"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016636" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628510"/>
+    <nd ref="6483628509"/>
+    <nd ref="6483628508"/>
+    <nd ref="6483628507"/>
+    <nd ref="6483628510"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016637" version="1" timestamp="2019-05-19T10:58:28Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628514"/>
+    <nd ref="6483628513"/>
+    <nd ref="6483628512"/>
+    <nd ref="6483628511"/>
+    <nd ref="6483628514"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016638" version="1" timestamp="2019-05-19T10:58:29Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628518"/>
+    <nd ref="6483628517"/>
+    <nd ref="6483628516"/>
+    <nd ref="6483628515"/>
+    <nd ref="6483628518"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016639" version="1" timestamp="2019-05-19T10:58:29Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483628522"/>
+    <nd ref="6483628521"/>
+    <nd ref="6483628520"/>
+    <nd ref="6483628492"/>
+    <nd ref="6483628491"/>
+    <nd ref="6483628519"/>
+    <nd ref="6483628490"/>
+    <nd ref="6483628489"/>
+    <nd ref="6483628522"/>
+    <tag k="building" v="yes"/>
+  </way>
+  <way id="691016723" version="1" timestamp="2019-05-19T10:58:32Z" changeset="70407036" uid="389520" user="K_Sakanoshita">
+    <nd ref="6483629252"/>
+    <nd ref="6483629251"/>
+    <nd ref="6483629250"/>
+    <nd ref="6483629249"/>
+    <nd ref="6483629248"/>
+    <nd ref="6483629247"/>
+    <nd ref="6483629246"/>
+    <nd ref="6483629245"/>
+    <nd ref="6483629244"/>
+    <nd ref="6483629243"/>
+    <nd ref="6483629242"/>
+    <nd ref="6483629252"/>
+    <tag k="landuse" v="forest"/>
+  </way>
+
+</osm>

@@ -54,3 +54,5 @@ sumo-1.2.0
 *.deb
 *.fbx
 *.obj
+/ImportStash/*
+!/ImportStash/.gitkeep

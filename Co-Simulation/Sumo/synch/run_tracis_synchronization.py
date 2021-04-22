@@ -19,6 +19,11 @@ else:
 CTRL_C_PRESSED_MESSAGE = "ctrl-c is pressed."
 
 # ----- Class -----
+class TraciHandler:
+    def __init__(self, traci, env):
+        self.traci = traci
+
+
 class TracisSyncronizer:
     def __init__(self, main_sumo_host_port, other_sumo_host_ports, order):
         self.main_traci = traci.connect(host=main_sumo_host_port.split(":")[0], port=int(main_sumo_host_port.split(":")[1]))
@@ -31,7 +36,6 @@ class TracisSyncronizer:
 
     def start(self):
         while self.check_sumo_finish() is False:
-            self.manupulate_traci(self.main_traci)
             self.main_traci.simulationStep()
 
             for o_traci in self.other_tracis:

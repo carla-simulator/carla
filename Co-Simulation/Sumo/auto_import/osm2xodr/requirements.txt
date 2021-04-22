@@ -1,0 +1,4 @@
+pyproj
+osmread
+numpy
+PIL
