@@ -74,8 +74,8 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
         physics_control.use_sweep_wheel_collision = wheel_sweep
 
     front_left_wheel = physics_control.wheels[0]
-    rear_left_wheel = physics_control.wheels[2]
     front_right_wheel = physics_control.wheels[1]
+    rear_left_wheel = physics_control.wheels[2]
     rear_right_wheel = physics_control.wheels[3]
 
     if tire_friction is not None:
@@ -543,3 +543,58 @@ class TestVehicleTireConfig(SyncSmokeTest):
             vehicle_00.destroy()
             vehicle_01.destroy()
             vehicle_02.destroy()
+
+class TestApplyControl(SyncSmokeTest):
+    def wait(self, frames=100):
+        for _i in range(0, frames):
+            self.world.tick()
+
+    def run_scenario(self, bp_veh, veh_control, init_speed = 0, continous = False, sticky = None):
+        ref_pos = -1
+        veh_transf = carla.Transform(carla.Location(235, ref_pos, 0.2), carla.Rotation(yaw=90))
+        veh_forward = veh_transf.rotation.get_forward_vector()
+
+        #bp_veh.set_attribute("sticky_control", "False")
+        vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
+
+        vehicle_00.set_target_velocity(init_speed * veh_forward)
+        for _i in range(0, 10):
+            self.world.tick()
+
+
+        vehicle_00.apply_control(veh_control)
+
+        for _i in range(0, 150):
+            if continous:
+                vehicle_00.apply_control(veh_control)
+            self.world.tick()
+
+        loc_veh_00 = vehicle_00.get_location().y
+        vel_veh_00 = vehicle_00.get_velocity().y
+        dist_veh_00 = loc_veh_00 - ref_pos
+
+        vehicle_00.destroy()
+
+        return dist_veh_00, vel_veh_00
+
+    def test_vehicle_control(self):
+        print("TestApplyControl.test_vehicle_control")
+
+        inp_control = carla.VehicleControl(throttle=1.0)
+        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+
+        bp_veh = bp_vehicles[0]
+        d0, v0 = self.run_scenario(bp_veh, inp_control, init_speed=0, continous=False)
+        d1, v1 = self.run_scenario(bp_veh, inp_control, init_speed=0, continous=True)
+
+        if not equal_tol(d0, d1, 1e-5) or not equal_tol(v0, v1, 1e-5):
+            self.fail("%s: The input is not sticky: Continuos: [%f, %f] NotContinous: [%f, %f]"
+                % (bp_veh.id, d0, v0, d1, v1))
+
+        inp_control = carla.VehicleControl(brake=1.0)
+        d0, v0 = self.run_scenario(bp_veh, inp_control, init_speed=27, continous=False)
+        d1, v1 = self.run_scenario(bp_veh, inp_control, init_speed=27, continous=True)
+
+        if not equal_tol(d0, d1, 1e-5) or not equal_tol(v0, v1, 1e-5):
+            self.fail("%s: The input is not sticky: Continuos: [%f, %f] NotContinous: [%f, %f]"
+                % (bp_veh.id, d0, v0, d1, v1))
