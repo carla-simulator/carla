@@ -227,6 +227,8 @@ void ALargeMapManager::Tick(float DeltaTime)
 
   ConvertGhostToDormantActors();
 
+  ConvertDormantToGhostActors();
+
   CheckIfRebaseIsNeeded();
 
 #if WITH_EDITOR
@@ -523,6 +525,12 @@ void ALargeMapManager::RemovePendingActorsToRemove()
     GhostActors.Remove(ActorToRemove);
   }
   GhostsToRemove.Reset();
+
+  for(FActorView::IdType Id : DormantsToRemove)
+  {
+    DormantActors.Remove(Id);
+  }
+  DormantsToRemove.Reset();
 }
 
 void ALargeMapManager::CheckGhostActors()
@@ -532,10 +540,6 @@ void ALargeMapManager::CheckGhostActors()
   {
     if (IsValid(Actor) )
     {
-      // Little cheap hack to avoid destroying an actor in the first frame
-      // because the location of the actor in the first frame could be not valid
-      //if(Actor->GetLastRenderTime() <= 0.0f) continue;
-
       FVector ActorLocation = Actor->GetActorLocation();
       FDVector WorldLocation = CurrentOriginD + ActorLocation;
 
@@ -546,6 +550,7 @@ void ALargeMapManager::CheckGhostActors()
 
         // Save to temporal container. Later will be converted to dormant
         GhostToDormantActors.Add(Actor);
+        GhostsToRemove.Add(Actor);
       }
     }
     else
@@ -583,8 +588,6 @@ void ALargeMapManager::ConvertGhostToDormantActors()
 
     // Need the ID of the dormant actor and save it
     DormantActors.Add(ActorView->GetActorId());
-
-    GhostActors.Remove(Actor);
   }
 
   GhostToDormantActors.Reset();
@@ -594,31 +597,41 @@ void ALargeMapManager::CheckDormantActors()
 {
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
-  return;// TODO: remove
+
+
   for(FActorView::IdType Id : DormantActors)
   {
     FActorView ActorView = CarlaEpisode->FindActor(Id);
 
-    LM_LOG(Warning, "CheckDormantActors -> %d", ActorView.GetActorId());
+    // If the Ids don't match, the actor has been removed
+    if(ActorView.GetActorId() != Id)
+    {
+      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, ActorView.GetActorId());
+      DormantsToRemove.Add(Id);
+      continue;
+    }
+
+    // LM_LOG(Warning, "CheckDormantActors -> %d", ActorView.GetActorId());
 
     check(ActorView.IsDormant());// if is not Dormant something is very wrong
     const FActorInfo* ActorInfo = ActorView.GetActorInfo();
 
-    FDVector ActorLocation = ActorInfo->Location;
-
-    if(ActorLocation.SizeSquared() < ActorStreamingDistanceSquared)
+    for(AActor* Actor : ActorsToConsider)
     {
-      LM_LOG(Warning, "Need to spawn a dormant actor");
+      FVector HeroLocation = Actor->GetActorLocation();
 
-      // TODO: spawn the actor again
-      FTransform Transform(ActorInfo->Rotation, ActorLocation.ToFVector());
-      TPair<EActorSpawnResultStatus, FActorView> Result =
-        CarlaEpisode->SpawnActorWithInfo(Transform, ActorInfo->Description, Id);
-      if(EActorSpawnResultStatus::Success == Result.Key)
+      FVector ActorLocation = (ActorInfo->Location - CurrentOriginD).ToFVector();
+
+      float DistanceSquared = (ActorLocation - HeroLocation).SizeSquared();
+
+      // LM_LOG(Warning, "CheckDormantActors %d %f", Id, DistanceSquared);
+
+      if(DistanceSquared < ActorStreamingDistanceSquared)
       {
-        // Add the actor to GhostActors
-        GhostActors.Add(ActorView.GetActor());
+        LM_LOG(Warning, "Need to spawn a dormant actor with Id %d", Id);
         DormantToGhostActors.Add(Id);
+        DormantsToRemove.Add(Id);
+        break;
       }
     }
   }
@@ -626,9 +639,45 @@ void ALargeMapManager::CheckDormantActors()
 
 void ALargeMapManager::ConvertDormantToGhostActors()
 {
+  UWorld* World = GetWorld();
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
   for(FActorView::IdType Id : DormantToGhostActors)
   {
-    DormantActors.Remove(Id);
+    LM_LOG(Warning, "Converting %d Dormant To Ghost", Id);
+
+    FActorView ActorView = CarlaEpisode->FindActor(Id);
+    // If ids not much the actor was destroyed in the meantime
+    // this situation should never happen
+    check(ActorView.GetActorId() == Id);
+    check(ActorView.IsDormant());// if is not Dormant something is very wrong
+
+    const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+
+    FTransform Transform(ActorInfo->Rotation, ActorInfo->Location.ToFVector());
+
+    TPair<EActorSpawnResultStatus, FActorView> Result =
+      CarlaEpisode->SpawnActorWithInfo(Transform, ActorInfo->Description, Id);
+
+    LM_LOG(Warning, "Id %d New Id %d", Id, Result.Value.GetActorId());
+
+    if(EActorSpawnResultStatus::Success == Result.Key)
+    {
+      ActorView = Result.Value;
+
+      LM_LOG(Warning, "SUCCESS %s %d %d %s", \
+        *(ActorView.GetActor()->GetName()), \
+        ActorView.GetActorId(), \
+        ActorView.GetActorState(), \
+        *(ActorView.GetActor()->GetActorLocation().ToString()) \
+      );
+      // Add the actor to GhostActors
+      GhostActors.Add(Result.Value.GetActor());
+    }
+    else
+    {
+      LM_LOG(Warning, "FAIL %d", Result.Key);
+    }
   }
   DormantToGhostActors.Reset();
 }

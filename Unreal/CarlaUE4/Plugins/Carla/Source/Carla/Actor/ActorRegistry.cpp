@@ -62,6 +62,17 @@ static FString GetRelevantTagAsString(const TSet<crp::CityObjectLabel> &Semantic
 
 FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description, IdType DesiredId)
 {
+
+  FActorView* ActorView = FindPtr(DesiredId);
+  bool IsDormant = ActorView && (ActorView->IsDormant());
+  if(IsDormant)
+  {
+    ActorView->TheActor = &Actor;
+    Actors.Add(DesiredId, &Actor);
+    Ids.Add(&Actor, DesiredId);
+    return *ActorView;
+  }
+
   IdType Id = ++FActorRegistry::ID_COUNTER;
 
   if (DesiredId != 0 && Id != DesiredId) {
@@ -104,23 +115,35 @@ FActorView FActorRegistry::PrepareActorViewForFutureActor(const FActorDescriptio
   return View;
 }
 
-void FActorRegistry::Deregister(IdType Id)
+void FActorRegistry::Deregister(IdType Id, bool KeepId)
 {
   check(Contains(Id));
   AActor *Actor = Find(Id).GetActor();
   check(Actor != nullptr);
-  ActorDatabase.Remove(Id);
-  Actors.Remove(Id);
+
+  // If the ID will be reused again by other actor (like dormant actors)
+  // we need to keep the ID <-> FActorView relation
+  // but we need to remove all AActor pointers since they will not be valid anymore
+  if(KeepId)
+  {
+    Actors[Id] = nullptr;
+  }
+  else
+  {
+    ActorDatabase.Remove(Id);
+    Actors.Remove(Id);
+  }
+
   Ids.Remove(Actor);
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
 }
 
-void FActorRegistry::Deregister(AActor *Actor)
+void FActorRegistry::Deregister(AActor *Actor, bool KeepId)
 {
   check(Actor != nullptr);
   auto View = Find(Actor);
   check(View.GetActor() == Actor);
-  Deregister(View.GetActorId());
+  Deregister(View.GetActorId(), KeepId);
 }
 
 FActorView FActorRegistry::FindOrFake(AActor *Actor) const

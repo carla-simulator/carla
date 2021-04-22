@@ -43,9 +43,9 @@ public:
 
   FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription);
 
-  void Deregister(IdType Id);
+  void Deregister(IdType Id, bool KeepId = false);
 
-  void Deregister(AActor *Actor);
+  void Deregister(AActor *Actor, bool KeepId = false);
 
   /// @}
   // ===========================================================================

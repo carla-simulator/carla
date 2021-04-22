@@ -220,15 +220,14 @@ protected:
   // The first actor in the array is the one selected for rebase
   // TODO: support rebase in more than one hero vehicle
   TArray<AActor*> ActorsToConsider;
-
   TArray<AActor*> GhostActors;
-
   TArray<FActorView::IdType> DormantActors;
 
   // Temporal sets to remove actors. Just to avoid removing them in the update loop
   TSet<AActor*> ActorsToRemove;
   TSet<AActor*> GhostsToRemove;
-  // TODO: detect dormant actor destruction from client
+  TSet<FActorView::IdType> DormantsToRemove;
+
   // Helpers to move Actors from one array to another.
   TSet<AActor*> GhostToDormantActors;
   TSet<FActorView::IdType> DormantToGhostActors;

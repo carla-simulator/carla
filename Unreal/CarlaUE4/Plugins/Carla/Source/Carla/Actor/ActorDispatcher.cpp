@@ -62,8 +62,9 @@ TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
     Result.Status = EActorSpawnResultStatus::UnknownError;
   }
 
-  auto View = Result.IsValid() ? RegisterActor(*Result.Actor, std::move(Description), DesiredId) : FActorView();
-
+  UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor spawned DesiredId %d"), DesiredId);
+  FActorView View = Result.IsValid() ? RegisterActor(*Result.Actor, std::move(Description), DesiredId) : FActorView();
+  UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor registered with ID %d"), View.GetActorId());
   if (!View.IsValid())
   {
     UE_LOG(LogCarla, Warning, TEXT("Failed to spawn actor '%s'"), *Description.Id);
@@ -106,7 +107,8 @@ bool UActorDispatcher::DestroyActor(AActor *Actor)
   }
 
   // Destroy the actor.
-  UE_LOG(LogCarla, Log, TEXT("Destroying actor: '%s'"), *Id);
+  UE_LOG(LogCarla, Log, TEXT("UActorDispatcher::Destroying actor: '%s' %x"), *Id, Actor);
+  UE_LOG(LogCarla, Log, TEXT("            %s"), *Actor->GetName());
   if (Actor->Destroy())
   {
     return true;
@@ -133,9 +135,5 @@ FActorView UActorDispatcher::PrepareActorViewForFutureActor(const FActorDescript
 void UActorDispatcher::OnActorDestroyed(AActor *Actor)
 {
   FActorView* View = Registry.FindPtr(Actor);
-  if(View && !View->IsDormant())
-  {
-    Registry.Deregister(Actor);
-  }
-
+  Registry.Deregister(Actor, (View && View->IsDormant()));
 }
