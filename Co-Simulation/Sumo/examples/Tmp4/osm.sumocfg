@@ -24,7 +24,9 @@
         <duration-log.statistics value="true"/>
         <no-step-log value="true"/>
     </report>
+    <!--
     <gui_only>
         <gui-settings-file value="osm.view.xml"/>
     </gui_only>
+-->
 </configuration>

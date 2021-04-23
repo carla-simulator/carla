@@ -69,8 +69,8 @@ def remove_cache(cache_dir):
 
 # ----- processes -----
 def change_carla_map(args, env, sumo_files):
-    if bool(is_carla_standalone_mode):
-        return Popen(f"python config.py -p {args.carla_unrealengine_port} -x {args.map_2_sumo_files[args.carla_map_name]['xodr']} > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True)
+    if bool(args.is_carla_standalone_mode):
+        return Popen(f"python config.py -p {args.carla_unrealengine_port} -x {env['map_2_sumo_files'][args.carla_map_name]['xodr']} > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True)
     else:
         return Popen(f"python config.py -p {args.carla_unrealengine_port} -m {args.carla_map_name} > /dev/null 2>&1", cwd=args.python_api_util_path, shell=True)
 
@@ -252,7 +252,7 @@ if __name__ == '__main__':
 
 
     parser.add_argument('--is_carla_rendering', type=int, default=env["is_carla_rendering"], choices=[0, 1])
-    parser.add_argument('--is_carla_standalone_mode', type=int, default=0, choices=[0, 1])
+    parser.add_argument('--is_carla_standalone_mode', type=int, default=env["is_carla_standalone_mode"], choices=[0, 1])
     parser.add_argument('--main_mobility_handler', default=env["mobility_handler_choices"][0], choices=env["mobility_handler_choices"])
     parser.add_argument('--log_file_path', default="./log/carla_veins_logger.log")
     parser.add_argument('--result_file_path_in_veins', default=env["in_vagrant"]["result_file_path_in_veins"])
