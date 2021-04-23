@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -130,47 +130,18 @@ def generate_decals_file(folder):
             json_decals.append({
                 'map_name' : name,
                 'drip1': '5',
-                'drip2': '5',
                 'drip3': '5',
                 'dirt1': '5',
-                'dirt2': '5',
-                'dirt3': '5',
-                'dirt4': '5',
                 'dirt5': '5',
                 'roadline1': '5',
-                'roadline2': '5',
-                'roadline3': '5',
-                'roadline4': '5',
                 'roadline5': '5',
                 'tiremark1': '5',
-                'tiremark2': '5',
                 'tiremark3': '5',
                 'tarsnake1': '5',
-                'tarsnake2': '5',
-                'tarsnake3': '5',
-                'tarsnake4': '5',
-                'tarsnake5': '5',
-                'tarsnake6': '5',
-                'tarsnake7': '5',
-                'tarsnake8': '5',
-                'tarsnake9': '5',
-                'tarsnake10': '5',
                 'tarsnake11': '5',
                 'cracksbig1': '5',
-                'cracksbig2': '5',
-                'cracksbig3': '5',
-                'cracksbig4': '5',
-                'cracksbig5': '5',
-                'cracksbig6': '5',
-                'cracksbig7': '5',
                 'cracksbig8': '5',
                 'crack1': '5',
-                'crack2': '5',
-                'crack3': '5',
-                'crack4': '5',
-                'crack5': '5',
-                'crack6': '5',
-                'crack7': '5',
                 'crack8': '5',
                 'decal_scale' : {
                 'x_axis' : '0.7',
@@ -432,7 +403,7 @@ def import_assets_from_json_list(json_list):
             move_assets_commandlet(package_name, maps)
 
             # we need to build the binary file for navigation of pedestrians
-            build_binary_for_navigation(package_name, dirname, maps)
+            #build_binary_for_navigation(package_name, dirname, maps)
 
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             if len(maps) > 0:

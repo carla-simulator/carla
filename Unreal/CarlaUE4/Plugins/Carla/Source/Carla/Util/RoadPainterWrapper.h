@@ -160,12 +160,7 @@ private:
   /// Dictionary for translating the JSON file "decal_names" array
   /// to already loaded Material Instances, which are used to apply on the roads
   UPROPERTY()
-  TMap<FString, UMaterialInstance*> DecalNamesMap;
-
-  /// Array for acquiring the different decals num elements
-  /// from the JSON file, by using it's name
-  UPROPERTY()
-  TArray<FString> DecalNamesArray;
+  TMap<FString, FString> DecalNamesMap;
 
   /// Master material of the roads (necessary for creating material instances)
   UPROPERTY()

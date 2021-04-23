@@ -122,15 +122,18 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
 
     if (AssetDatas.Num() > 0)
     {
+      int32 NumMaps = AssetDatas.Num();
+      for (int32 i = 0; i < NumMaps; ++i) {
         // Extract first asset found in folder path (i.e. the imported map)
         AssetData = AssetDatas.Pop();
-        if(World != nullptr)
+        if (World != nullptr)
         {
           NewWorldToLoad = CastChecked<UWorld>(AssetData.GetAsset());
           World->DestroyWorld(true, NewWorldToLoad);
           World = NewWorldToLoad;
           NewWorldToLoad = nullptr;
-        }else
+        }
+        else
         {
           World = CastChecked<UWorld>(AssetData.GetAsset());
         }
@@ -140,6 +143,7 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
 #if WITH_EDITOR
         UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif
+      }
     }
   }
 }
