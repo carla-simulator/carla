@@ -167,7 +167,7 @@ float AInertialMeasurementUnit::ComputeCompass()
 {
   // Magnetometer: orientation with respect to the North in rad
   const FVector ForwVect = GetActorForwardVector().GetSafeNormal2D();
-  const float DotProd = FVector::DotProduct(CarlaNorthVector, ForwVect)
+  const float DotProd = FVector::DotProduct(CarlaNorthVector, ForwVect);
 
   // We check if the dot product is higher than 1.0 due to numerical error
   if (DotProd >= 1.00f)
