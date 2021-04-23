@@ -510,7 +510,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
             if os.path.exists(nav_path_source):
                 os.remove(nav_path_source)
 
-            if os.path.exists(fbx_path_target): 
+            if os.path.exists(fbx_path_target):
                 os.remove(fbx_path_target)
 
         os.remove(xodr_path_target)
