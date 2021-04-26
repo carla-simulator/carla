@@ -427,23 +427,18 @@
     - var_name: long_stiff_value
       type: float
       var_units: kg per radian
-      default: 1000
       doc: >
-        Tire longitudinal stiffness per unit gravitational acceleration.
+        Tire longitudinal stiffness per unit gravitational acceleration. __Default__ is `1000.0`.
     # --------------------------------------
     - var_name: lat_stiff_max_load
       type: float
-      var_units: kg per radian
-      default: 2
       doc: >
-        Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire.
+        Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. __Default__ is `2.0`.
     # --------------------------------------
     - var_name: lat_stiff_value
       type: float
-      var_units: kg per radian
-      default: 17
       doc: >
-        Maximum stiffness per unit of lateral slip.
+        Maximum stiffness per unit of lateral slip. __Default__ is `17.0`.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
