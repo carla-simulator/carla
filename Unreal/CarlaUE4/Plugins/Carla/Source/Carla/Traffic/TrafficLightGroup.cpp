@@ -42,6 +42,7 @@ void ATrafficLightGroup::ResetGroup()
 // Called every frame
 void ATrafficLightGroup::Tick(float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ATrafficLightGroup::Tick);
   Super::Tick(DeltaTime);
 
   // Do not update if the replayer is replaying

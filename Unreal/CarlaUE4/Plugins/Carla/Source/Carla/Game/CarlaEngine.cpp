@@ -58,6 +58,7 @@ FCarlaEngine::~FCarlaEngine()
 
 void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   if (!bIsRunning)
   {
     const auto StreamingPort = Settings.StreamingPort.Get(Settings.RPCPort + 1u);
@@ -85,6 +86,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 
 void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   Episode.EpisodeSettings.FixedDeltaSeconds = FCarlaEngine_GetFixedDeltaSeconds();
   CurrentEpisode = &Episode;
 
@@ -111,6 +113,7 @@ void FCarlaEngine::NotifyEndEpisode()
 
 void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   if (TickType == ELevelTick::LEVELTICK_All)
   {
     // update frame counter
@@ -132,6 +135,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   // tick the recorder/replayer system
   // UE_LOG(LogCarla, Error, TEXT("=================================================="));
   // Benchmark.CollectFrameStats();

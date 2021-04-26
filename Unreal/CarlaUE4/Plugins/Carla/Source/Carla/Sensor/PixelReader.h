@@ -91,6 +91,7 @@ void FPixelReader::SendPixelsInRenderThread(
     bool CaptureTexture,
     bool StreamTexture)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
 
   if (!Sensor.HasActorBegunPlay() || Sensor.IsPendingKill())
@@ -109,6 +110,8 @@ void FPixelReader::SendPixelsInRenderThread(
     [&Sensor, Stream=Sensor.GetDataStream(Sensor), CaptureTexture, StreamTexture]
     (auto &InRHICmdList) mutable
     {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
+
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())
       {
@@ -121,12 +124,12 @@ void FPixelReader::SendPixelsInRenderThread(
         if(Buffer.data())
         {
           SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
           Stream.Send(Sensor, std::move(Buffer));
         }
       }
     }
   );
-
   // Blocks until the render thread has finished all it's tasks
   Sensor.WaitForRenderThreadToFinsih();
 }

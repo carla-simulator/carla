@@ -32,6 +32,7 @@ void AGnssSensor::Set(const FActorDescription &ActorDescription)
 
 void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AGnssSensor::PostPhysTick);
   carla::geom::Location Location = GetActorLocation();
   carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
 
@@ -45,8 +46,11 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   double Longitude = CurrentLocation.longitude + LongitudeBias + LonError;
   double Altitude = CurrentLocation.altitude + AltitudeBias + AltError;
 
-  auto Stream = GetDataStream(*this);
-  Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
+    auto Stream = GetDataStream(*this);
+    Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+  }
 }
 
 void AGnssSensor::SetLatitudeDeviation(float Value)
