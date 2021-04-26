@@ -1,8 +1,7 @@
 # How to control vehicle physics
 
-Physics properties can be tuned for vehicles and its wheels.
-These changes are applied **only** on runtime, and values are set back to default ones when
-the execution ends.
+Physics properties can be tuned for vehicles and their wheels.
+These changes are applied **only** on runtime, and values are set back to default when the execution ends.
 
 These properties are controlled through a
 [carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl) object,
@@ -23,17 +22,16 @@ def main():
 
     # Get World and Actors
     world = client.get_world()
-    current_map = world.get_map()
     actors = world.get_actors()
 
     # Get a random vehicle from world (there should be one at least)
     vehicle = random.choice([actor for actor in actors if 'vehicle' in actor.type_id])
 
     # Create Wheels Physics Control
-    front_left_wheel  = carla.WheelPhysicsControl(tire_friction=4.5, damping_rate=1.0, max_steer_angle=70.0, radius=30.0)
-    front_right_wheel = carla.WheelPhysicsControl(tire_friction=2.5, damping_rate=1.5, max_steer_angle=70.0, radius=25.0)
-    rear_left_wheel   = carla.WheelPhysicsControl(tire_friction=1.0, damping_rate=0.2, max_steer_angle=0.0,  radius=15.0)
-    rear_right_wheel  = carla.WheelPhysicsControl(tire_friction=1.5, damping_rate=1.3, max_steer_angle=0.0,  radius=20.0)
+    front_left_wheel  = carla.WheelPhysicsControl(tire_friction=2.0, damping_rate=1.5, max_steer_angle=70.0, long_stiff_value=1000)
+    front_right_wheel = carla.WheelPhysicsControl(tire_friction=2.0, damping_rate=1.5, max_steer_angle=70.0, long_stiff_value=1000)
+    rear_left_wheel   = carla.WheelPhysicsControl(tire_friction=3.0, damping_rate=1.5, max_steer_angle=0.0,  long_stiff_value=1000)
+    rear_right_wheel  = carla.WheelPhysicsControl(tire_friction=3.0, damping_rate=1.5, max_steer_angle=0.0,  long_stiff_value=1000)
 
     wheels = [front_left_wheel, front_right_wheel, rear_left_wheel, rear_right_wheel]
 
@@ -50,11 +48,12 @@ def main():
     physics_control.mass = 10000
     physics_control.drag_coefficient = 0.25
     physics_control.steering_curve = [carla.Vector2D(x=0, y=1), carla.Vector2D(x=100, y=1), carla.Vector2D(x=300, y=1)]
-    physics_control.wheels = wheels
     physics_control.use_sweep_wheel_collision = True
+    physics_control.wheels = wheels
 
     # Apply Vehicle Physics Control for the vehicle
     vehicle.apply_physics_control(physics_control)
+    print(physics_control)
 
 if __name__ == '__main__':
     main()
