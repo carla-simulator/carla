@@ -136,16 +136,13 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
-  // tick the recorder/replayer system
-  // UE_LOG(LogCarla, Error, TEXT("=================================================="));
-  // Benchmark.CollectFrameStats();
-  // UE_LOG(LogCarla, Error, TEXT("=================================================="));
 
   if (GetCurrentEpisode())
   {
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
     if (EpisodeRecorder)
     {
+      // tick the recorder/replayer system
       EpisodeRecorder->Ticking(DeltaSeconds);
     }
   }
