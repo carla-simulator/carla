@@ -97,7 +97,7 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
   }
   Ids.Emplace(&Actor, Id);
 
-  FActorView View = MakeView(Id, Actor, std::move(Description));
+  FActorView View = MakeView(Id, Actor, std::move(Description), crp::ActorState::Alive);
 
   FActorView& Result = ActorDatabase.Emplace(Id, View);
 
@@ -105,21 +105,14 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
   return Result;
 }
 
-FActorView FActorRegistry::PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
-{
-  IdType Id = ++FActorRegistry::ID_COUNTER;
-  auto Info = MakeShared<FActorInfo>();
-  Info->Description = std::move(ActorDescription);
-  FActorView View = FActorView{Id, nullptr, std::move(Info)};
-  View.Type = FActorRegistry_GetActorType(View);
-  return View;
-}
-
 void FActorRegistry::Deregister(IdType Id, bool KeepId)
 {
   check(Contains(Id));
-  AActor *Actor = Find(Id).GetActor();
-  check(Actor != nullptr);
+  FActorView* ActorView = FindPtr(Id);
+
+  if(!ActorView) return;
+
+  AActor *Actor = ActorView->GetActor();
 
   // If the ID will be reused again by other actor (like dormant actors)
   // we need to keep the ID <-> FActorView relation
@@ -135,6 +128,9 @@ void FActorRegistry::Deregister(IdType Id, bool KeepId)
   }
 
   Ids.Remove(Actor);
+
+  ActorView->TheActor = nullptr;
+
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
 }
 
@@ -150,13 +146,15 @@ FActorView FActorRegistry::FindOrFake(AActor *Actor) const
 {
   auto View = Find(Actor);
   const bool bFakeActor = (View.GetActor() == nullptr) && (Actor != nullptr);
-  return bFakeActor ? MakeView(0u, *Actor, FActorDescription{}) : View;
+  // Maybe the state of this view should be Invlaid but I'm not 100% sure
+  return bFakeActor ? MakeView(0u, *Actor, FActorDescription{}, crp::ActorState::Alive) : View;
 }
 
 FActorView FActorRegistry::MakeView(
     IdType Id,
     AActor &Actor,
-    FActorDescription Description) const
+    FActorDescription Description,
+    crp::ActorState InState) const
 {
   auto Info = MakeShared<FActorInfo>();
   Info->Description = std::move(Description);
@@ -186,7 +184,7 @@ FActorView FActorRegistry::MakeView(
         std::begin(Token.data),
         std::end(Token.data));
   }
-  auto View = FActorView{Id, &Actor, std::move(Info)};
+  auto View = FActorView{Id, &Actor, std::move(Info), InState};
   View.Type = FActorRegistry_GetActorType(View);
   return View;
 }

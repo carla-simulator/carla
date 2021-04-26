@@ -540,17 +540,44 @@ void ALargeMapManager::CheckGhostActors()
   {
     if (IsValid(Actor) )
     {
-      FVector ActorLocation = Actor->GetActorLocation();
-      FDVector WorldLocation = CurrentOriginD + ActorLocation;
+      FVector RelativeLocation = Actor->GetActorLocation();
+      FDVector WorldLocation = CurrentOriginD + RelativeLocation;
 
-      if (ActorLocation.SizeSquared() > ActorStreamingDistanceSquared || !IsTileLoaded(WorldLocation))
+      if(!IsTileLoaded(WorldLocation))
       {
-        LM_LOG(Warning, "CheckGhostActors Tile not loaded %s %s-> Ghost To Dormant %s", \
-          *TileIDToString(GetTileID(WorldLocation)), *WorldLocation.ToString(), *Actor->GetName());
-
         // Save to temporal container. Later will be converted to dormant
         GhostToDormantActors.Add(Actor);
         GhostsToRemove.Add(Actor);
+        continue;
+      }
+
+      for(AActor* HeroActor : ActorsToConsider)
+      {
+        FVector HeroLocation = HeroActor->GetActorLocation();
+
+        float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
+
+        LM_LOG(Warning, "CheckGhostActors\n\t%s\n\tRelLoc: %s\n\tOrigin: %s\n\tWorldLoc: %s\n\tTile %s\n\tDist %.2f (%.2f)", \
+          *Actor->GetName(), *RelativeLocation.ToString(), \
+          *CurrentOriginD.ToString(), \
+          *WorldLocation.ToString(), \
+          *TileIDToString(GetTileID(WorldLocation)),\
+          RelativeLocation.Size(), ActorStreamingDistance \
+        );
+
+        if (DistanceSquared > ActorStreamingDistanceSquared)
+        {
+          LM_LOG(Warning, "CheckGhostActors Tile not loaded %s %s (%s)-> Ghost To Dormant %s", \
+            *TileIDToString(GetTileID(WorldLocation)),\
+            *WorldLocation.ToString(), \
+            *CurrentOriginD.ToString(), \
+            *Actor->GetName() \
+          );
+
+          // Save to temporal container. Later will be converted to dormant
+          GhostToDormantActors.Add(Actor);
+          GhostsToRemove.Add(Actor);
+        }
       }
     }
     else
@@ -601,32 +628,37 @@ void ALargeMapManager::CheckDormantActors()
 
   for(FActorView::IdType Id : DormantActors)
   {
-    FActorView ActorView = CarlaEpisode->FindActor(Id);
+    FActorView* ActorView = CarlaEpisode->FindActorPtr(Id);
 
     // If the Ids don't match, the actor has been removed
-    if(ActorView.GetActorId() != Id)
+    if(!ActorView || ActorView->GetActorId() != Id || !ActorView->IsDormant())
     {
-      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, ActorView.GetActorId());
+      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, ActorView?ActorView->GetActorId():0);
       DormantsToRemove.Add(Id);
       continue;
     }
 
-    // LM_LOG(Warning, "CheckDormantActors -> %d", ActorView.GetActorId());
-
-    check(ActorView.IsDormant());// if is not Dormant something is very wrong
-    const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+    const FActorInfo* ActorInfo = ActorView->GetActorInfo();
 
     for(AActor* Actor : ActorsToConsider)
     {
       FVector HeroLocation = Actor->GetActorLocation();
 
-      FVector ActorLocation = (ActorInfo->Location - CurrentOriginD).ToFVector();
+      FDVector WorldLocation = ActorInfo->Location;
+      FDVector RelativeLocation = WorldLocation - CurrentOriginD;
 
-      float DistanceSquared = (ActorLocation - HeroLocation).SizeSquared();
+      float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-      // LM_LOG(Warning, "CheckDormantActors %d %f", Id, DistanceSquared);
+      LM_LOG(Warning, "CheckDormantActors\n\t%d\n\tWorldLoc: %s\n\tRelLoc: %s\n\tOrigin: %s\n\tTile %s\n\tDist %.2f (%.2f)", \
+          Id,\
+          *WorldLocation.ToString(), \
+          *RelativeLocation.ToString(), \
+          *CurrentOriginD.ToString(), \
+          *TileIDToString(GetTileID(WorldLocation)),\
+          (RelativeLocation - HeroLocation).Size(), ActorStreamingDistance \
+        );
 
-      if(DistanceSquared < ActorStreamingDistanceSquared)
+      if(DistanceSquared < ActorStreamingDistanceSquared && IsTileLoaded(WorldLocation))
       {
         LM_LOG(Warning, "Need to spawn a dormant actor with Id %d", Id);
         DormantToGhostActors.Add(Id);
@@ -653,6 +685,12 @@ void ALargeMapManager::ConvertDormantToGhostActors()
     check(ActorView.IsDormant());// if is not Dormant something is very wrong
 
     const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+
+    LM_LOG(Warning, "Spawning dormant at %s\n\tOrigin: %s\n\tRel. location: %s", \
+      *(ActorInfo->Location.ToString()), \
+      *(CurrentOriginD.ToString()), \
+      *((ActorInfo->Location - CurrentOriginD).ToString()) \
+    );
 
     FTransform Transform(ActorInfo->Rotation, ActorInfo->Location.ToFVector());
 

@@ -15,6 +15,7 @@ namespace rpc {
     Invalid,
     Alive,
     Dormant,
+    PendingKill,
   };
 
 } // namespace rpc

@@ -229,12 +229,10 @@ static carla::Buffer FWorldObserver_Serialize(
     carla::sensor::data::ActorDynamicState::TypeDependentState State{};
 
 
-    check(View.IsValid())
+    check(View.IsValid() || View.IsDormant())
 
     if(!View.IsDormant())
     {
-      UE_LOG(LogCarla, Log, TEXT("  %s %d %s"), \
-        *(View.GetActor()->GetName()), View.GetActorId(), *(View.GetActor()->GetActorLocation().ToString()));
       ActorTransform = View.GetActor()->GetActorTransform();
       Velocity = TO_METERS * View.GetActor()->GetVelocity();
       AngularVelocity = FWorldObserver_GetAngularVelocity(*View.GetActor());
@@ -246,9 +244,6 @@ static carla::Buffer FWorldObserver_Serialize(
       FDVector ActorLocation = ActorInfo->Location;
       ActorLocation -= MapOrigin;
 
-    check(View.IsValid());
-    constexpr float TO_METERS = 1e-2;
-    const auto Velocity = TO_METERS * View.GetActor()->GetVelocity();
 
       ActorTransform = FTransform(ActorInfo->Rotation, ActorLocation.ToFVector());
     }

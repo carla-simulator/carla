@@ -464,23 +464,6 @@ void FCarlaServer::FPimpl::BindActions()
 
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    /*
-    // TODO: dormant spawn, I think I can remove all of this
-    if (!Result.Value.IsValid())
-    {
-      // Actor could not be spawned
-      if(LargeMap)
-      {
-        // Get Fake View from Registry forcing it to update its ID_COUNTER
-        FActorView ActorView = Episode->PrepareActorViewForFutureActor(Description);
-        // Add State to LM
-        LargeMap->AddActorToUnloadedList(ActorView, Transform);
-      }
-
-      RESPOND_ERROR("internal error: actor could not be spawned");
-    }
-
-    */
     if(LargeMap)
     {
       LargeMap->OnActorSpawned(Result.Value, Transform);
@@ -520,12 +503,16 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
-    FActorView ActorView = Episode->FindActor(ActorId);
-    if (!ActorView.IsValid())
+    FActorView* ActorView = Episode->FindActorPtr(ActorId);
+    if ( (!ActorView || !ActorView->IsValid()) && !ActorView->IsDormant() )
     {
       RESPOND_ERROR("unable to destroy actor: not found");
     }
-    if (!Episode->DestroyActor(ActorView.GetActor()))
+    UE_LOG(LogCarla, Log, TEXT("CarlaServer destroy_actor %d"), ActorId);
+    // We need to force the actor state change, since dormant actors
+    //  will ignore the FActorView destruction
+    ActorView->SetActorState(cr::ActorState::PendingKill);
+    if (!Episode->DestroyActor(ActorId))
     {
       RESPOND_ERROR("internal error: unable to destroy actor");
     }

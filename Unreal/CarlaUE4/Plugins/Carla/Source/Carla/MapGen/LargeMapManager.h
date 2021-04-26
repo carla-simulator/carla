@@ -16,31 +16,6 @@
 
 // TODO: Cache CarlaEpisode
 
-/*
-  Actor that was spawned or queried to be spawn at some point but it was so far away
-  from the origin that was removed from the level (or not spawned).
-  It is possible that the actor keeps receiving updates, eg, traffic manager.
-  FDormantActor is a wrapper of the info and state of the actor in case it needs to be re-spawned.
-*/
-/*
-struct FDormantActor
-{
-  FDormantActor(
-    const FActorView& InActorView,
-    const FDVector& InWorldLocation,
-    const FQuat& InRotation)
-    : ActorView(InActorView),
-      WorldLocation(InWorldLocation),
-      Rotation(InRotation) {}
-
-  FActorView ActorView;
-
-  FDVector WorldLocation;
-
-  FQuat Rotation;
-};
-*/
-
 USTRUCT()
 struct FGhostActor
 {

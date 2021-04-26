@@ -78,62 +78,53 @@ TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
   return MakeTuple(Result.Status, View);
 }
 
-bool UActorDispatcher::DestroyActor(AActor *Actor)
+bool UActorDispatcher::DestroyActor(FActorView::IdType ActorId)
 {
-  if (Actor == nullptr) {
-    UE_LOG(LogCarla, Error, TEXT("Trying to destroy nullptr actor"));
-    return false;
-  }
-
   // Check if the actor is in the registry.
-  FActorView View = Registry.Find(Actor);
-  if (!View.IsValid()) {
+  FActorView* View = Registry.FindPtr(ActorId);
+
+  // Invalid destruction if is not marked to PendingKill (except is dormant, dormant actors can be destroyed)
+  if (!View || (!View->IsPendingKill() && !View->IsDormant()) )
+  {
     UE_LOG(LogCarla, Warning, TEXT("Trying to destroy actor that is not in the registry"));
     return false;
   }
-  const FString &Id = View.GetActorInfo()->Description.Id;
+
+  const FString &Id = View->GetActorInfo()->Description.Id;
 
   // Destroy its controller if present.
-  APawn* Pawn = Cast<APawn>(Actor);
-  AController* Controller = (Pawn != nullptr ? Pawn->GetController() : nullptr);
-  if (Controller != nullptr)
+  AActor* Actor = View->GetActor();
+  if(Actor)
   {
-    UE_LOG(LogCarla, Log, TEXT("Destroying actor's controller: '%s'"), *Id);
-    bool Success = Controller->Destroy();
-    if (!Success)
+    APawn* Pawn = Cast<APawn>(Actor);
+    AController* Controller = (Pawn != nullptr ? Pawn->GetController() : nullptr);
+    if (Controller != nullptr)
     {
-      UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor's controller: '%s'"), *Id);
+      UE_LOG(LogCarla, Log, TEXT("Destroying actor's controller: '%s'"), *Id);
+      bool Success = Controller->Destroy();
+      if (!Success)
+      {
+        UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor's controller: '%s'"), *Id);
+      }
+    }
+
+    // Destroy the actor.
+    UE_LOG(LogCarla, Log, TEXT("UActorDispatcher::Destroying actor: '%s' %x"), *Id, Actor);
+    UE_LOG(LogCarla, Log, TEXT("            %s"), Actor?*Actor->GetName():*FString("None"));
+    if (!Actor || !Actor->Destroy())
+    {
+      UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor: '%s'"), *Id);
+      return false;
     }
   }
 
-  // Destroy the actor.
-  UE_LOG(LogCarla, Log, TEXT("UActorDispatcher::Destroying actor: '%s' %x"), *Id, Actor);
-  UE_LOG(LogCarla, Log, TEXT("            %s"), *Actor->GetName());
-  if (Actor->Destroy())
-  {
-    return true;
-  }
-  UE_LOG(LogCarla, Error, TEXT("Failed to destroy actor: '%s'"), *Id);
-  return false;
+  Registry.Deregister(ActorId, View->IsDormant());
+
+  return true;
 }
 
 FActorView UActorDispatcher::RegisterActor(AActor &Actor, FActorDescription Description, FActorRegistry::IdType DesiredId)
 {
   FActorView View = Registry.Register(Actor, std::move(Description), DesiredId);
-  if (View.IsValid())
-  {
-    Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
-  }
   return View;
-}
-
-FActorView UActorDispatcher::PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
-{
-  return Registry.PrepareActorViewForFutureActor(ActorDescription);
-}
-
-void UActorDispatcher::OnActorDestroyed(AActor *Actor)
-{
-  FActorView* View = Registry.FindPtr(Actor);
-  Registry.Deregister(Actor, (View && View->IsDormant()));
 }

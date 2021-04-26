@@ -149,6 +149,12 @@ public:
     return ActorDispatcher->GetActorRegistry().Find(ActorId);
   }
 
+  FActorView* FindActorPtr(FActorView::IdType ActorId)
+  {
+    FActorRegistry& ActorRegistry = const_cast<FActorRegistry&>(ActorDispatcher->GetActorRegistry());
+    return ActorRegistry.FindPtr(ActorId);
+  }
+
   /// Find the actor view of @a Actor.
   ///
   /// If the actor is not found or is pending kill, the returned view is
@@ -229,22 +235,20 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
-      if (Recorder->IsEnabled())
-      {
-        // recorder event
-        CarlaRecorderEventDel RecEvent
-        {
-          GetActorRegistry().Find(Actor).GetActorId()
-        };
-        Recorder->AddEvent(std::move(RecEvent));
-      }
-
-    return ActorDispatcher->DestroyActor(Actor);
+    carla::rpc::ActorId ActorId = GetActorRegistry().Find(Actor).GetActorId();
+    return DestroyActor(ActorId);
   }
 
-  FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription)
+  bool DestroyActor(carla::rpc::ActorId ActorId)
   {
-    return ActorDispatcher->PrepareActorViewForFutureActor(ActorDescription);
+    if (Recorder->IsEnabled())
+    {
+      // recorder event
+      CarlaRecorderEventDel RecEvent{ActorId};
+      Recorder->AddEvent(std::move(RecEvent));
+    }
+
+    return ActorDispatcher->DestroyActor(ActorId);
   }
 
   // ===========================================================================

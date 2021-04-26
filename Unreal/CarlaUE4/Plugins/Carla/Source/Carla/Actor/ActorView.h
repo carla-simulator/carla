@@ -39,12 +39,22 @@ public:
 
   bool IsValid() const
   {
-    return IsDormant() || ((TheActor != nullptr) && !TheActor->IsPendingKill());
+    return ::IsValid(TheActor);
+  }
+
+  bool IsAlive() const
+  {
+    return (carla::rpc::ActorState::Alive == State);
   }
 
   bool IsDormant() const
   {
     return (carla::rpc::ActorState::Dormant == State);
+  }
+
+  bool IsPendingKill() const
+  {
+    return (carla::rpc::ActorState::PendingKill == State);
   }
 
   IdType GetActorId() const
@@ -86,10 +96,15 @@ private:
 
   friend class FActorRegistry;
 
-  FActorView(IdType ActorId, AActor* Actor, TSharedPtr<const FActorInfo> Info)
+  FActorView(
+      IdType ActorId,
+      AActor* Actor,
+      TSharedPtr<const FActorInfo> Info,
+      carla::rpc::ActorState InState)
     : TheActor(Actor),
       Info(std::move(Info)),
-      Id(ActorId) {}
+      Id(ActorId),
+      State(InState) {}
 
   AActor *TheActor = nullptr;
 
@@ -97,8 +112,8 @@ private:
 
   IdType Id = 0u;
 
-  carla::rpc::ActorState State = carla::rpc::ActorState::Alive;
+  carla::rpc::ActorState State = carla::rpc::ActorState::Invalid;
 
-  ActorType Type = ActorType::Other;
+  ActorType Type = ActorType::INVALID;
 
 };

@@ -41,8 +41,6 @@ public:
   /// @warning Undefined if an actor is registered more than once.
   FActorView Register(AActor &Actor, FActorDescription Description, IdType DesiredId = 0);
 
-  FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription);
-
   void Deregister(IdType Id, bool KeepId = false);
 
   void Deregister(AActor *Actor, bool KeepId = false);
@@ -118,7 +116,11 @@ public:
   /// @}
 private:
 
-  FActorView MakeView(IdType Id, AActor &Actor, FActorDescription Description) const;
+  FActorView MakeView(
+    IdType Id,
+    AActor &Actor,
+    FActorDescription Description,
+    carla::rpc::ActorState InState) const;
 
   TMap<IdType, AActor *> Actors;
 

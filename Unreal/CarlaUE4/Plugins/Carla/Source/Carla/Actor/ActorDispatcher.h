@@ -55,13 +55,13 @@ public:
   ///
   /// Return true if the @a Actor is destroyed or already marked for
   /// destruction, false if indestructible or nullptr.
-  bool DestroyActor(AActor *Actor);
+  //bool DestroyActor(AActor *Actor);
+
+  bool DestroyActor(FActorView::IdType ActorId);
 
   /// Register an actor that was not created using "SpawnActor" function but
   /// that should be kept in the registry.
   FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription, FActorRegistry::IdType DesiredId = 0);
-
-  FActorView PrepareActorViewForFutureActor(const FActorDescription& ActorDescription);
 
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
@@ -74,9 +74,6 @@ public:
   }
 
 private:
-
-  UFUNCTION()
-  void OnActorDestroyed(AActor *Actor);
 
   TArray<FActorDefinition> Definitions;
 
