@@ -172,12 +172,6 @@
       type: bytes
       doc: >
         Received list of 4D points. Each point consists of [x,y,z] coordiantes plus the intensity computed for that point.
-    # --------------------------------------
-    - var_name: horizontal_fov
-      type: float
-      var_units: degrees, between 0 and 180
-      doc: >
-        Horizontal field of view of the image.
     # - METHODS ----------------------------
     methods:
     - def_name: save_to_disk
@@ -258,12 +252,6 @@
       type: bytes
       doc: >
         Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag.
-    # --------------------------------------
-    - var_name: horizontal_fov
-      type: float
-      var_units: degrees, between 0 and 180
-      doc: >
-        Horizontal field of view of the image.
     # - METHODS ----------------------------
     methods:
     - def_name: save_to_disk

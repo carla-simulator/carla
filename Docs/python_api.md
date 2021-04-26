@@ -1151,8 +1151,6 @@ Number of lasers shot.
 Horizontal angle the LIDAR is rotated at the time of the measurement.  
 - <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
 Received list of 4D points. Each point consists of [x,y,z] coordiantes plus the intensity computed for that point.  
-- <a name="carla.LidarMeasurement.horizontal_fov"></a>**<font color="#f8805a">horizontal_fov</font>** (_float<small> – degrees, between 0 and 180</small>_)  
-Horizontal field of view of the image.  
 
 ### Methods
 - <a name="carla.LidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
@@ -1897,8 +1895,6 @@ Number of lasers shot.
 Horizontal angle the LIDAR is rotated at the time of the measurement.  
 - <a name="carla.SemanticLidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
 Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag.  
-- <a name="carla.SemanticLidarMeasurement.horizontal_fov"></a>**<font color="#f8805a">horizontal_fov</font>** (_float<small> – degrees, between 0 and 180</small>_)  
-Horizontal field of view of the image.  
 
 ### Methods
 - <a name="carla.SemanticLidarMeasurement.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
@@ -2809,11 +2805,11 @@ Maximum handbrake torque.
 - <a name="carla.WheelPhysicsControl.position"></a>**<font color="#f8805a">position</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
 World position of the wheel. This is a read-only parameter.  
 - <a name="carla.WheelPhysicsControl.long_stiff_value"></a>**<font color="#f8805a">long_stiff_value</font>** (_float<small> – kg per radian</small>_)  
-Tire longitudinal stiffness per unit gravitational acceleration.  
-- <a name="carla.WheelPhysicsControl.lat_stiff_max_load"></a>**<font color="#f8805a">lat_stiff_max_load</font>** (_float<small> – kg per radian</small>_)  
-Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire.  
-- <a name="carla.WheelPhysicsControl.lat_stiff_value"></a>**<font color="#f8805a">lat_stiff_value</font>** (_float<small> – kg per radian</small>_)  
-Maximum stiffness per unit of lateral slip.  
+Tire longitudinal stiffness per unit gravitational acceleration. __Default__ is `1000.0`.  
+- <a name="carla.WheelPhysicsControl.lat_stiff_max_load"></a>**<font color="#f8805a">lat_stiff_max_load</font>** (_float_)  
+Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. __Default__ is `2.0`.  
+- <a name="carla.WheelPhysicsControl.lat_stiff_value"></a>**<font color="#f8805a">lat_stiff_value</font>** (_float_)  
+Maximum stiffness per unit of lateral slip. __Default__ is `17.0`.  
 
 ### Methods
 - <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**tire_friction**=2.0</font>, <font color="#00a6ed">**damping_rate**=0.25</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**radius**=30.0</font>, <font color="#00a6ed">**max_brake_torque**=1500.0</font>, <font color="#00a6ed">**max_handbrake_torque**=3000.0</font>, <font color="#00a6ed">**position**=(0.0,0.0,0.0)</font>)  
