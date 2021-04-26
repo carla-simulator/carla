@@ -79,12 +79,9 @@ namespace data {
 
     ~LidarData() = default;
 
-    virtual void ResetSerPoints(std::vector<uint32_t> points_per_channel) {
+    virtual void ResetMemory(std::vector<uint32_t> points_per_channel) {
       DEBUG_ASSERT(GetChannelCount() > points_per_channel.size());
       std::memset(_header.data() + Index::SIZE, 0, sizeof(uint32_t) * GetChannelCount());
-
-      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel)
-        _header[Index::SIZE + idxChannel] = points_per_channel[idxChannel];
 
       uint32_t total_points = static_cast<uint32_t>(
           std::accumulate(points_per_channel.begin(), points_per_channel.end(), 0));

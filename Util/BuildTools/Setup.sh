@@ -195,7 +195,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c3
+RPCLIB_PATCH=v2.2.1_c5
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
@@ -433,6 +433,7 @@ XERCESC_REPO=https://ftp.cixug.es/apache//xerces/c/3/sources/xerces-c-${XERCESC_
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
+XERCESC_LIB=${XERCESC_INSTALL_DIR}/lib/libxerces-c.a
 
 if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
   log "Xerces-c already installed."
@@ -464,6 +465,9 @@ else
   rm -Rf ${XERCESC_BASENAME}.tar.gz
   rm -Rf ${XERCESC_SRC_DIR}
 fi
+
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
 if ${USE_CHRONO} ; then
 

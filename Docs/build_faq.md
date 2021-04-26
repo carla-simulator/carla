@@ -4,7 +4,7 @@ Some of the most common issues regarding CARLA installation and builds are liste
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>
@@ -99,7 +99,7 @@ CARLA forum</a>
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
 > * __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 15GB of disk space and a dedicated GPU (or at least one with 4GB) to run.
 > 
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://forum.carla.org/) so the team can get to know more about them.   
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.   
 
 <!-- ======================================================================= -->
 
@@ -265,7 +265,7 @@ CARLA forum</a>
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
 > * __Meet system requirements.__ CARLA needs around 30-50GB of disk space and a dedicated GPU (or at least one with 4GB) to run.  
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://forum.carla.org/) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
@@ -308,7 +308,7 @@ CARLA forum</a>
 
 ###### Can't run CARLA neither binary nor source build.
 
-> NVIDIA drivers may be outdated. Make sure that this is not the case. If the issue is still unresolved, take a look at the [forum](https://forum.carla.org/) and post the specific issue. 
+> NVIDIA drivers may be outdated. Make sure that this is not the case. If the issue is still unresolved, take a look at the [forum](https://github.com/carla-simulator/carla/discussions/) and post the specific issue. 
 
 <!-- ======================================================================= -->
 

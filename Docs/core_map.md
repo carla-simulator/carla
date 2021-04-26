@@ -228,7 +228,7 @@ There are eight towns in the CARLA ecosystem and each of those towns have two ki
 Non-layered maps are shown in the table below (click the town name to see an overhead image of the layout). All of the layers are present at all times and cannot be toggled on or off in these maps. Up until CARLA 0.9.11, these were the only kinds of map available.
 
 !!! Note
-    Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_add_map.md) to be used in CARLA.  
+    Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_A_add_map_overview.md) to be used in CARLA.
 
 | Town       | Summary |
 | -----------| ------  |
@@ -270,7 +270,7 @@ Keep reading to learn more or visit the forum to post any doubts or suggestions 
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
 CARLA forum</a>
 </p>
 </div>

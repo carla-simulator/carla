@@ -62,3 +62,29 @@ void UBaseCarlaMovementComponent::DisableUE4VehiclePhysics()
     Bone->SetInstanceSimulatePhysics(false);
   }
 }
+
+void UBaseCarlaMovementComponent::EnableUE4VehiclePhysics(bool bResetVelocity)
+{
+
+  FVector CurrentVelocity(0, 0, 0);
+  if (!bResetVelocity)
+  {
+    CurrentVelocity = GetVelocity();
+  }
+  CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(CurrentVelocity, false, "Vehicle_Base");
+  CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
+  CarlaVehicle->GetVehicleMovementComponent()->Activate();
+  CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
+  auto * Bone = CarlaVehicle->GetMesh()->GetBodyInstance(NAME_None);
+  if (Bone)
+  {
+    Bone->SetInstanceSimulatePhysics(true);
+  }
+  else
+  {
+    carla::log_warning("No bone with name");
+  }
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");
+  CarlaVehicle->RestoreVehiclePhysicsControl();
+}
