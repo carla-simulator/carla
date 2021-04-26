@@ -54,36 +54,34 @@ void ABenchmarkSensor::SetQueries(FString InQueries)
     return;
   }
 
-  for(auto& It :  JsonParsed->Values)
+  for(auto& It : JsonParsed->Values)
   {
     TSet<FName> StatValues;
+    // Add the list of stats (ie: STAT_InitViewsTime) to a TSet
     FillSetOfJsonValues(It.Value, StatValues);
 
     // Convert stat comand to STATGROUP, ie: stat sceneredering -> STATGROUP_SceneRendering
     FName StatGroup = FName(*ConvertStatCommandToStatGroup(It.Key));
+    if(StatGroup == "")
+    {
+      UE_LOG(LogCarla, Error, TEXT("INVALID %s"), *(It.Key) );
+    }
+    else
+    {
+      Queries.Emplace(StatGroup, StatValues);
+    }
 
-    Queries.Emplace(StatGroup, StatValues);
-
-    // Enable command to capture it
+    // We need to execute the command to be able to capture the data
     FString Cmd = It.Key;
     GEngine->Exec(GWorld, *Cmd);
   }
-
-  for(auto& It : Queries)
-  {
-    FString Values;
-    for(auto& It2 : It.Value)
-    {
-      Values += *It2.ToString();
-      Values += " ";
-    }
-  }
-
 }
 
 void ABenchmarkSensor::BeginPlay()
 {
   Super::BeginPlay();
+
+  // Stat unit is always executed
   GEngine->Exec(GWorld, TEXT("stat unit"));
 
 #if WITH_EDITOR
@@ -96,20 +94,27 @@ void ABenchmarkSensor::BeginPlay()
 void ABenchmarkSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
+
+  // Disable all stat commands
   GEngine->Exec(GWorld, TEXT("stat none"));
 }
 
 void ABenchmarkSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   FString StatsOutput = "";
+  // I need to call this first to get the correct frame that we are capturing
   int64 Frame = CollectFrameStats(StatsOutput);
 
+  // Fill the output
   FString Output = "{";
+  // First the stat unit command
   Output += CollectStatUnit();
+  // Second the other stats left
   if(StatsOutput != "") Output += ",";
   Output += StatsOutput;
   Output += "}";
 
+  // Send back to client
   auto DataStream = GetDataStream(*this);
   DataStream.Send(*this, TCHAR_TO_UTF8(*Output));
 }
@@ -144,18 +149,17 @@ FString ABenchmarkSensor::CollectStatUnit()
 
 int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
 {
-  FString Result;
-
   // Get the reference to the stats thread
   FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState();
 
-  // Get the number of the last processed frame and check if it is valid (just for sure)
+  // Get the number of the last processed frame and check if it is valid
   int64 LastGoodGameFrame = StatsThread.GetLastFullFrameProcessed();
   if (StatsThread.IsFrameValid(LastGoodGameFrame) == false)
   {
     return LastGoodGameFrame;
   }
 
+  // Iterate and collect each STATGROUP
   int NumIt = 0;
   for(auto It : Queries)
   {
@@ -167,38 +171,6 @@ int64 ABenchmarkSensor::CollectFrameStats(FString& Output)
 
   return LastGoodGameFrame;
 }
-
-#if WITH_EDITOR
-void ABenchmarkSensor::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
-{
-  FString Output = "";
-  const TMultiMap<FName, FName>& Groups = StatsThread.Groups;
-
-  TArray<FName> Keys;
-  Groups.GetKeys(Keys);
-
-  for(const FName& Key : Keys)
-  {
-    TArray<FName> Values;
-    Groups.MultiFind(Key, Values);
-
-    Output += Key.ToString() + "\n";
-
-    for(const FName& Value : Values)
-    {
-      Output += "\t" + Value.ToString() + "\n";
-    }
-  }
-
-  FString FilePath = FPaths::ProjectSavedDir() + "StatGroups.txt";
-  FFileHelper::SaveStringToFile(
-    Output,
-    *FilePath,
-    FFileHelper::EEncodingOptions::AutoDetect,
-    &IFileManager::Get(),
-    EFileWrite::FILEWRITE_Silent);
-}
-#endif // WITH_EDITOR
 
 FString ABenchmarkSensor::CollectStatsFromGroup(
   const FStatsThreadStateOverlay& StatsThread,
@@ -218,15 +190,15 @@ FString ABenchmarkSensor::CollectStatsFromGroup(
   // Create empty stat stack node (needed by stats gathering function)
   FRawStatStackNode HierarchyInclusive;
 
-  // Prepare the array for stat messages
+  // Prepare the array for stat messages (will be the output)
   TArray<FStatMessage> NonStackStats;
 
   // COLLECT ALL STATS TO THE ARRAY HERE
   StatsThread.UncondenseStackStats(Frame, HierarchyInclusive, &Filter, &NonStackStats);
-  //StatsThread.UncondenseStackStats(Frame, HierarchyInclusive, nullptr, &NonStackStats);
+  // In case you don't want to filter:
+  // StatsThread.UncondenseStackStats(Frame, HierarchyInclusive, nullptr, &NonStackStats);
 
-  // Go through all stats
-  // There are many ways to display them, dig around the code to display it as you want :)
+  // Process all the stats and parse to the Output FString
   for (int i = 0; i < NonStackStats.Num(); i++)
   {
     const FStatMessage& Stat = NonStackStats[i];
@@ -269,24 +241,54 @@ FString ABenchmarkSensor::CollectStatsFromGroup(
 
 FString ABenchmarkSensor::ConvertStatCommandToStatGroup(FString StatCmd)
 {
-  FString StatGroupResult = "";
   // Split the command (ie: stat scenerendering)
   TArray<FString> StringCmd;
   StatCmd.ParseIntoArray(StringCmd, TEXT(" "), true);
 
+  if(StringCmd.Num() < 2) return "";
+
+  FString StatGroupResult = "STATGROUP_" + StringCmd[1];
+
   // Get all the STATGROUPs
   FStatsThreadStateOverlay& StatsThread = (FStatsThreadStateOverlay&)FStatsThreadState::GetLocalState();
+
+  // Check if the STATGROUP exists
+  if(StatsThread.Groups.Find(*StatGroupResult))
+  {
+    return StatGroupResult;
+  }
+
+  return "";
+}
+
+#if WITH_EDITOR
+void ABenchmarkSensor::DumpStatGroups(const FStatsThreadStateOverlay& StatsThread)
+{
+  FString Output = "";
+  const TMultiMap<FName, FName>& Groups = StatsThread.Groups;
+
   TArray<FName> Keys;
-  StatsThread.Groups.GetKeys(Keys);
+  Groups.GetKeys(Keys);
 
   for(const FName& Key : Keys)
   {
-    FString StatGroupStr = Key.ToString();
-    if(StatGroupStr.Contains(StringCmd[1]))
+    TArray<FName> Values;
+    Groups.MultiFind(Key, Values);
+
+    Output += Key.ToString() + "\n";
+
+    for(const FName& Value : Values)
     {
-      StatGroupResult = StatGroupStr;
-      break;
+      Output += "\t" + Value.ToString() + "\n";
     }
   }
-  return StatGroupResult;
+
+  FString FilePath = FPaths::ProjectSavedDir() + "StatGroups.txt";
+  FFileHelper::SaveStringToFile(
+    Output,
+    *FilePath,
+    FFileHelper::EEncodingOptions::AutoDetect,
+    &IFileManager::Get(),
+    EFileWrite::FILEWRITE_Silent);
 }
+#endif // WITH_EDITOR
