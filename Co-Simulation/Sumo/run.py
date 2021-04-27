@@ -187,8 +187,9 @@ class Main:
             print("Changing a carla map ...")
             if check_port_listens(args.carla_unrealengine_port) is False:
                 raise Exception("Carla server is not standed.")
-            p = change_carla_map(args, env, sumo_files)
-            p.wait()
+            if bool(args.is_carla_change_map):
+                p = change_carla_map(args, env, sumo_files)
+                p.wait()
 
             print("Starting SUMO-traci servers ...")
             procs.append(start_sumo_for_carla(args, env, sumo_files))
@@ -251,6 +252,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', default='./../Veins/carla-veins-data/')
 
 
+    parser.add_argument('--is_carla_change_map', type=int, default=env["is_carla_change_map"], choices=[0, 1])
     parser.add_argument('--is_carla_rendering', type=int, default=env["is_carla_rendering"], choices=[0, 1])
     parser.add_argument('--is_carla_standalone_mode', type=int, default=env["is_carla_standalone_mode"], choices=[0, 1])
     parser.add_argument('--main_mobility_handler', default=env["mobility_handler_choices"][0], choices=env["mobility_handler_choices"])
