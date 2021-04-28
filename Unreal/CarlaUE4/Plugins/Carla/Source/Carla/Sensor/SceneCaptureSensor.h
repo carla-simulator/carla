@@ -283,7 +283,7 @@ public:
   /// Blocks until the render thread has finished all it's tasks.
   void WaitForRenderThreadToFinsih() {
     TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::WaitForRenderThreadToFinsih);
-    FlushRenderingCommands();
+    // FlushRenderingCommands();
   }
 
 protected:
