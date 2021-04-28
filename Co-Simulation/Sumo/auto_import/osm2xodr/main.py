@@ -8,9 +8,9 @@ osmPfad = 'map.osm'
 topographieKartenPfad = 'topomap.png'
 xodrPfad = 'output.xodr'
 
-parseAll(osmPfad, bildpfad=topographieKartenPfad, minimumHeight = 163.0, maximumHeight= 192.0, curveRadius=12)
+# parseAll(osmPfad, bildpfad=topographieKartenPfad, minimumHeight = 163.0, maximumHeight= 192.0, curveRadius=12)
+parseAll(osmPfad, bildpfad=None, minimumHeight = 163.0, maximumHeight= 192.0, curveRadius=12)
 
 startBasicXODRFile(xodrPfad)
 fillNormalRoads(xodrPfad)
 fillJunctionRoads(xodrPfad)
-
