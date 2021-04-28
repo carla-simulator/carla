@@ -46,6 +46,14 @@ UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
   return HISMComp;
 }
 
+void AProceduralBuilding::FixMobility() {
+
+  for (UChildActorComponent *ChildComp : ChildActorComps) {
+
+    ChildComp->SetMobility(EComponentMobility::Type::Static);
+  }
+}
+
 void AProceduralBuilding::ConvertOldBP_ToNativeCodeObject(AActor* BP_Building)
 {
   AProceduralBuilding* ProceduralBuilding = nullptr;
