@@ -22,17 +22,7 @@ To use the Chrono integration, you must first configure the server with a tag on
 
 ### Configuring the server
 
-Chrono will only work if the CARLA server is launched/compiled with the Chrono tag.
-
-__When launching the server in a packaged version of CARLA__, run the following command:
-
-```sh
-# Linux
-./CarlaUE4.sh --chrono
-
-# Windows
-./CarlaUE4.exe --chrono
-```
+Chrono will only work if the CARLA server is compiled with the Chrono tag.
 
 __In the build from source version of CARLA__, run the following command to start the server:
 

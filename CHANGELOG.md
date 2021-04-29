@@ -11,6 +11,8 @@
   * Added optional flag to `client.replay_file()` `replay_sensors` to enable or disable the replaying the sensors
   * Improved manual_control: now cameras are set in relation with car size
   * Added CHRONO library for vehicle dynamics simulation (https://projectchrono.org/)
+    - Supported JSON vehicle definition
+    - Unsupported collision dynamics
   * Added performance benchmarking section to documentation
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
