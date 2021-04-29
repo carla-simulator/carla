@@ -86,7 +86,9 @@ def generate_json_package(folder, package_name, use_carla_materials):
             if (len(tiles) == 1):
                 map_dict['source'] = tiles[0]
             else:
+                map_dict['tile_size'] = 2000
                 map_dict['tiles'] = tiles
+
             # write
             json_maps.append(map_dict)
         # build and write the .json
@@ -207,7 +209,7 @@ def invoke_commandlet(name, arguments):
         subprocess.call([full_command], shell=True)
 
 
-def generate_import_setting_file(package_name, json_dirname, props, maps):
+def generate_import_setting_file(package_name, json_dirname, props, maps, do_tiles, tile_size):
     """Creates the PROPS and MAPS import_setting.json file needed
     as an argument for using the ImportAssets commandlet
     """
@@ -233,7 +235,9 @@ def generate_import_setting_file(package_name, json_dirname, props, maps):
                 "bRemoveDegenerates": 1,
                 "bAutoGenerateCollision": 0,
                 "bCombineMeshes": 0,
-                "bConvertSceneUnit": 1
+                "bConvertSceneUnit": 1,
+                "bForceVerticesRelativeToTile": do_tiles,
+                "TileSize": tile_size
             }
         }
 
@@ -328,12 +332,12 @@ def copy_roadpainter_config_files(package_name):
     shutil.copy(final_path, package_config_path) 
 
 
-def import_assets(package_name, json_dirname, props, maps):
+def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size):
     """Same commandlet is used for importing assets and also maps."""
     commandlet_name = "ImportAssets"
 
     # Import Props
-    import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps)
+    import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps, do_tiles, tile_size)
     commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
     invoke_commandlet(commandlet_name, commandlet_arguments)
     os.remove(import_setting_file)
@@ -387,9 +391,17 @@ def import_assets_from_json_list(json_list):
             if "props" in data:
                 props = data["props"]
 
+            if "tile_size" in maps[0]:
+                tile_size = maps[0]["tile_size"]
+            else:
+                tile_size = 2000
+
             package_name = filename.replace(".json", "")
 
-            import_assets(package_name, dirname, props, maps)
+            if ("tiles" in maps[0]):
+                import_assets(package_name, dirname, props, maps, 1, tile_size)
+            else:
+                import_assets(package_name, dirname, props, maps, 0, 0)
 
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
