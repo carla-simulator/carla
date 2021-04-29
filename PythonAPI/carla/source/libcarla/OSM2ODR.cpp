@@ -18,10 +18,10 @@ namespace osm2odr {
     return out;
   }
   void SetOsmWayTypes(OSM2ODRSettings& self, boost::python::list input) {
-    self.osm_highways_types = PythonLitstToVector<std::string>(input);
+    self.osm_highways_types = PythonListToVector<std::string>(input);
   }
   void SetTLExcludedWayTypes(OSM2ODRSettings& self, boost::python::list input) {
-    self.tl_excluded_highways_types = PythonLitstToVector<std::string>(input);
+    self.tl_excluded_highways_types = PythonListToVector<std::string>(input);
   }
 }
 

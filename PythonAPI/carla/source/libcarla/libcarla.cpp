@@ -73,7 +73,7 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
     }
 
 template<typename T>
-std::vector<T> PythonLitstToVector(boost::python::list &input) {
+std::vector<T> PythonListToVector(boost::python::list &input) {
   std::vector<T> result;
   boost::python::ssize_t list_size = boost::python::len(input);
   for (boost::python::ssize_t i = 0; i < list_size; ++i) {
