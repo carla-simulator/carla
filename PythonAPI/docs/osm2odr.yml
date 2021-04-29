@@ -38,6 +38,7 @@
       type: bool
       doc: >
         Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is __False__.
+        If enabled this setting overwrites part of the `proj_string` setting that define latitude and logitude origin. As result the OpenDRIVE will not contain the `proj_string`.
     - var_name: offset_x
       type: float
       var_units: meters
@@ -58,3 +59,39 @@
       var_units: meters
       doc: >
         Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.
+    - var_name: proj_string
+      type: str
+      doc: >
+        Sets the PROJ string to define the projection from the geographic coordinate system of Open Street Map to CARLA's cartesian system. This string is then written to the OpenDRIVE file. Default value is `"+proj=tmerc"`.
+    - var_name: center_map
+      type: bool
+      doc: >
+        This variable sets the coordinate origin in the center of the map. Default value is __False__.
+        If enabled this setting overwrites part of the `proj_string` setting that define latitude and logitude origin. As result the OpenDRIVE will not contain the `proj_string`.
+    - var_name: generate_traffic_lights
+      type: bool
+      doc: >
+        This variable enables the parsing of traffic lights from Open Street Map data. If enabled, junctions marked as controlled with traffic light will be exported to the OpenDRIVE. Default value is __True__.
+    - var_name: all_junctions_with_traffic_lights
+      type: bool
+      doc: >
+        This variable forces all junctions to be considered as being controlled with traffic lights regardless of the Open Street Map definition. Default value is __False__.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: set_osm_way_types
+      doc: >
+        Sets what Open Street Map roads will be exported to OpenDRIVE.
+      params:
+      - param_name: way_types
+        type: list(str)
+        doc: >
+          The list of Open Street Map road types that should be exported to OpenDRIVE. Default value is `["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link", "unclassified", "residential"]`.
+    - def_name: set_traffic_light_excluded_way_types
+      doc: >
+        Sets a list of Open Street Map roads that will not generate traffic lights even if `generate_traffic_lights` is enabled. This prevents link roads or high ways to generate traffic lights.
+      params:
+      - param_name: way_types
+        type: list(str)
+        doc: >
+          The list of Open Street Map road types that will not generate traffic lights. Default value is `["motorway_link", "primary_link", "secondary_link", "tertiary_link"]`.
+

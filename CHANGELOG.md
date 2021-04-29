@@ -17,6 +17,13 @@
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Fix bug in carla.Transform.get_up_vector()
+  * Added Open Street Maps to OpenDRIVE conversion parameters
+    - `proj_string` defines the projection parameters
+    - `center_map` allows automatic centering of the map
+    - `generate_traffic_lights` enables traffic light generation to OpenDRIVE
+    - `all_junctions_with_traffic_lights` forces all junctions to generate traffic lights
+    - `set_osm_way_types()` sets a list of OSM roads to export to OpenDRIVE
+    - `set_traffic_light_excluded_way_types()` sets a list of OSM roads to exclude during traffic light generation
   * Fix bug in lidar channel point count
   * Fix imu: some weird cases were given nan values
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer

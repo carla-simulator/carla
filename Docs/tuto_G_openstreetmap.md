@@ -44,6 +44,13 @@ CARLA can read a the content in the `.osm` file generated with OpenStreetMap, an
 	*   `offset_y` *(default 0.0)* — Offset in the Y axis.
 	*   `default_lane_width` *(default 4.0)* — Determines the width that lanes should have in the resulting XODR file.
 	*   `elevation_layer_height` *(default 0.0)* — Determines the height separating elements in different layers, used for overlapping elements. Read more on [layers](https://wiki.openstreetmap.org/wiki/Key:layer).
+    *   `proj_string` *(default "+proj=tmerc")* — Determines the projection algorithm used to transform geographic coordinates to cartesian coordinates.
+    *   `center_map` *(default "True")* — Centers the map. Overwrites `proj_string` settings for coordinate origin.
+    *   `generate_traffic_lights` *(default "True")* — Enables traffic light generation from Open Street Map data.
+    *   `all_junctions_traffic_lights` *(default "False")* — Forces all junctions to generate traffic lights.
+    *   `set_osm_way_types()` Sets a list of Open Street Map roads to be exported to OpenDRIVE.
+    *   `set_traffic_light_excluded_way_types()` Sets a list of Open Street Map roads to be excluded from traffic light generation.
+
 
 The input and output of the conversion are not the `.osm` and `.xodr` files itself, but their content. For said reason, the code should be similar to the following.
 ```py
@@ -54,6 +61,8 @@ f.close()
 
 # Define the desired settings. In this case, default values.
 settings = carla.Osm2OdrSettings()
+# Set OSM road types to export to OpenDRIVE
+settings.set_osm_way_types(["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link", "unclassified", "residential"])
 # Convert to .xodr
 xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 
@@ -72,7 +81,7 @@ The resulting file contains the road information in OpenDRIVE format.
 ---
 ## 3- Import into CARLA
 
-Finally, the OpenDRIVE file can be easily ingested in CARLA using the [OpenDRIVE Standalone Mode](adv_opendrive.md).
+Then, the OpenDRIVE file can be easily ingested in CARLA using the [OpenDRIVE Standalone Mode](adv_opendrive.md).
 
 __a) Using your own script__ — Call for [`client.generate_opendrive_world()`](python_api.md#carla.Client.generate_opendrive_world) through the API. This will generate the new map, and block the simulation until it is ready.  
 Use the [carla.OpendriveGenerationParameters](python_api.md#carla.OpendriveGenerationParameters) class to set the parameterization of the mesh generation.
@@ -108,6 +117,20 @@ Either way, the map should be ingested automatically in CARLA and the result sho
 
 !!! Warning
     The roads generated end abruptly in the borders of the map. This will cause the TM to crash when vehicles are not able to find the next waypoint. To avoid this, the OSM mode is set to __True__ by default ([set_osm_mode()](python_api.md#carlatrafficmanager)). This will show a warning, and destroy vehicles when necessary.  
+
+---
+## 4- Generate Traffic Lights
+Open Street Maps data can define what junctions are controlled with traffic lights. In order to export this information to OpenDRIVE we offer a few functions.
+```
+# Define the desired settings. In this case, default values.
+settings = carla.Osm2OdrSettings()
+# enable traffic light generation from OSM data
+settings.generate_traffic_lights = True
+# Convert to .xodr
+xodr_data = carla.Osm2Odr.convert(osm_data, settings)
+```
+So that the exported OpenDRIVE contains information about the lights.
+Open Street Map data quality may vary depending on the region you extract data from and traffic light information might be missing. Therefore we offer some parameters such as `settings.all_junctions_with_traffic_lights` to force all junctions to be controlled by traffic lights. In addition, we offer the function `settings.set_traffic_light_excluded_way_types(["motorway_link"])` to exclude certain roads from generating traffic lights such as highway links.
 
 ---
 
