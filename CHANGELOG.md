@@ -18,7 +18,9 @@
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Fix bug in carla.Transform.get_up_vector()
   * Fix bug in lidar channel point count
+  * Fix imu: some weird cases were given nan values
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
+  * Improved agent's vehicle detection to also take into account the actor bounding boxes
   * API extensions:
   - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
   - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee
