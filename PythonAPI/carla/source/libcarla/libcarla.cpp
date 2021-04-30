@@ -72,6 +72,16 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
       return self.fn(std::forward<T1_>(t1)); \
     }
 
+template<typename T>
+std::vector<T> PythonLitstToVector(boost::python::list &input) {
+  std::vector<T> result;
+  boost::python::ssize_t list_size = boost::python::len(input);
+  for (boost::python::ssize_t i = 0; i < list_size; ++i) {
+    result.emplace_back(boost::python::extract<T>(input[i]));
+  }
+  return result;
+}
+
 // Convenient for const requests that needs to convert the return value to a
 // Python list.
 #define CALL_RETURNING_LIST(cls, fn) +[](const cls &self) { \

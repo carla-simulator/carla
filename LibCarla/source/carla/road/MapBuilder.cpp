@@ -235,49 +235,85 @@ namespace road {
   }
 
 
-    element::RoadInfoSignal* MapBuilder::AddSignal(
-        Road* road,
-        const SignId signal_id,
-        const double s,
-        const double t,
-        const std::string name,
-        const std::string dynamic,
-        const std::string orientation,
-        const double zOffset,
-        const std::string country,
-        const std::string type,
-        const std::string subtype,
-        const double value,
-        const std::string unit,
-        const double height,
-        const double width,
-        const std::string text,
-        const double hOffset,
-        const double pitch,
-        const double roll) {
-      _temp_signal_container[signal_id] = std::make_unique<Signal>(
-          road->GetId(),
-          signal_id,
-          s,
-          t,
-          name,
-          dynamic,
-          orientation,
-          zOffset,
-          country,
-          type,
-          subtype,
-          value,
-          unit,
-          height,
-          width,
-          text,
-          hOffset,
-          pitch,
-          roll);
+  element::RoadInfoSignal* MapBuilder::AddSignal(
+      Road* road,
+      const SignId signal_id,
+      const double s,
+      const double t,
+      const std::string name,
+      const std::string dynamic,
+      const std::string orientation,
+      const double zOffset,
+      const std::string country,
+      const std::string type,
+      const std::string subtype,
+      const double value,
+      const std::string unit,
+      const double height,
+      const double width,
+      const std::string text,
+      const double hOffset,
+      const double pitch,
+      const double roll) {
+    _temp_signal_container[signal_id] = std::make_unique<Signal>(
+        road->GetId(),
+        signal_id,
+        s,
+        t,
+        name,
+        dynamic,
+        orientation,
+        zOffset,
+        country,
+        type,
+        subtype,
+        value,
+        unit,
+        height,
+        width,
+        text,
+        hOffset,
+        pitch,
+        roll);
 
-      return AddSignalReference(road, signal_id, s, t, orientation);
-    }
+    return AddSignalReference(road, signal_id, s, t, orientation);
+  }
+
+  void MapBuilder::AddSignalPositionInertial(
+      const SignId signal_id,
+      const double x,
+      const double y,
+      const double z,
+      const double hdg,
+      const double pitch,
+      const double roll) {
+    std::unique_ptr<Signal> &signal = _temp_signal_container[signal_id];
+    signal->_using_inertial_position = true;
+    geom::Location location = geom::Location(x, -y, z);
+    signal->_transform = geom::Transform (location, geom::Rotation(
+        geom::Math::ToDegrees(static_cast<float>(pitch)),
+        geom::Math::ToDegrees(static_cast<float>(-hdg)),
+        geom::Math::ToDegrees(static_cast<float>(roll))));
+  }
+
+  void MapBuilder::AddSignalPositionRoad(
+      const SignId signal_id,
+      const RoadId road_id,
+      const double s,
+      const double t,
+      const double zOffset,
+      const double hOffset,
+      const double pitch,
+      const double roll) {
+    std::unique_ptr<Signal> &signal = _temp_signal_container[signal_id];
+    signal->_road_id = road_id;
+    signal->_s = s;
+    signal->_t = t;
+    signal->_zOffset = zOffset;
+    signal->_hOffset = hOffset;
+    signal->_pitch = pitch;
+    signal->_roll = roll;
+  }
 
     element::RoadInfoSignal* MapBuilder::AddSignalReference(
         Road* road,
@@ -769,8 +805,10 @@ namespace road {
 
     for(auto& signal_pair : _temp_signal_container) {
       auto& signal = signal_pair.second;
+      if (signal->_using_inertial_position) {
+        continue;
+      }
       auto transform = ComputeSignalTransform(signal, _map_data);
-      // Hack: compensate RoadRunner displacement (25cm) due to lightbox size
       if (SignalType::IsTrafficLight(signal->GetType())) {
         transform.location = transform.location +
             geom::Location(transform.GetForwardVector()*0.25);
@@ -1007,7 +1045,8 @@ void MapBuilder::CreateController(
       // workarround to not move speed signals
       if (signal->GetName().substr(0, 6) == "Speed_" ||
           signal->GetName().substr(0, 6) == "speed_" ||
-          signal->GetName().find("Stencil_STOP") != std::string::npos) {
+          signal->GetName().find("Stencil_STOP") != std::string::npos ||
+          signal->_using_inertial_position) {
         continue;
       }
       if(closest_waypoint_to_signal) {

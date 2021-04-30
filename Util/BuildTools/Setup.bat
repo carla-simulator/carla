@@ -192,6 +192,7 @@ rem ============================================================================
 echo %FILE_N% Installing Xercesc...
 call "%INSTALLERS_DIR%install_xercesc.bat"^
  --build-dir "%INSTALLATION_DIR%"
+copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
 
 rem ============================================================================
 rem -- Download and install Sqlite3 --------------------------------------------

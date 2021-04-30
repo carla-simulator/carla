@@ -48,7 +48,10 @@ python3 config.py -x opendrive/TownBig.xodr
 ```
 
 !!! Important
-    __[client.generate_opendrive_world()](python_api.md#carla.Client.generate_opendrive_world)__ uses __content of the OpenDRIVE file parsed as string__. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__.
+    __[client.generate_opendrive_world()](python_api.md#carla.Client.generate_opendrive_world)__ uses __content of the OpenDRIVE file parsed as string__. On the contrary, __`config.py`__ script needs __the path to the `.xodr` file__. 
+
+!!! Note
+	If you experience the error	`opendrive could not be correctly parsed`, ensure that there are write permissions on the `CarlaUE4/Content/Carla/Maps/OpenDrive/` directory. This is required by the server to parse the `xodr` file correctly.
 
 ---
 ## Mesh generation
@@ -73,7 +76,7 @@ Doubts and suggestions in the forum.
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

@@ -44,9 +44,7 @@ nav:
 - Plugins:
   - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
 - ROS bridge:
-  - 'ROS bridge installation': 'ros_installation.md'
-  - 'CARLA messages reference': 'ros_msgs.md'
-  - 'Launchfiles reference': 'ros_launchs.md'
+  - 'ROS bridge documentation': 'ros_documentation.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
@@ -64,7 +62,6 @@ nav:
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
   - 'Map customization tools': 'tuto_A_map_customization.md'
   - "Material customization": 'tuto_A_material_customization.md'
-  - 'Vehicle modelling': 'tuto_A_vehicle_modelling.md'
 - Tutorials (developers):
   - 'Contribute assets': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'
