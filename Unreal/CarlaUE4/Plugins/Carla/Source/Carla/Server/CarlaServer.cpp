@@ -486,10 +486,9 @@ void FCarlaServer::FPimpl::BindActions()
     }
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    bool ActorExists = false;
     if(LargeMap)
     {
-      ActorExists = LargeMap->OnActorSpawned(Result.Value, Transform);
+      LargeMap->OnActorSpawned(Result.Value, Transform);
     }
 
     FActorView* ActorView = Episode->FindActorPtr(Result.Value.GetActorId());
@@ -510,7 +509,7 @@ void FCarlaServer::FPimpl::BindActions()
 
     // Only is possible to attach if the actor has been really spawned and
     // is not in dormant state
-    if(ActorExists && ActorView->IsAlive())
+    if(ActorView->IsAlive())
     {
       Episode->AttachActors(
           ActorView->GetActor(),
