@@ -711,6 +711,17 @@ void ALargeMapManager::ConvertDormantToGhostActors()
       );
       // Add the actor to GhostActors
       GhostActors.Add(Result.Value.GetActor());
+
+      FActorView::IdType ParentId = ActorView.GetParent();
+      if(ParentId)
+      {
+        FActorView ParentActorView = CarlaEpisode->FindActor(ParentId);
+
+        CarlaEpisode->AttachActors(
+          ActorView.GetActor(),
+          ParentActorView.GetActor(),
+          static_cast<EAttachmentType>(ActorView.GetAttachmentType()));
+      }
     }
     else
     {

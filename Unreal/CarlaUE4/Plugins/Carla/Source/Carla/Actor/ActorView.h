@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorInfo.h"
 
 #include "carla/rpc/ActorState.h"
+#include "carla/rpc/AttachmentType.h"
 
 #include "ActorView.generated.h"
 
@@ -92,6 +93,26 @@ public:
     State = InState;
   }
 
+  void SetParent(IdType InParentId)
+  {
+    ParentId = InParentId;
+  }
+
+  IdType GetParent() const
+  {
+    return ParentId;
+  }
+
+  void SetAttachmentType(carla::rpc::AttachmentType InAttachmentType)
+  {
+    Attachment = InAttachmentType;
+  }
+
+  carla::rpc::AttachmentType GetAttachmentType() const
+  {
+    return Attachment;
+  }
+
 private:
 
   friend class FActorRegistry;
@@ -112,7 +133,11 @@ private:
 
   IdType Id = 0u;
 
+  IdType ParentId = 0u;
+
   carla::rpc::ActorState State = carla::rpc::ActorState::Invalid;
+
+  carla::rpc::AttachmentType Attachment = carla::rpc::AttachmentType::INVALID;
 
   ActorType Type = ActorType::INVALID;
 

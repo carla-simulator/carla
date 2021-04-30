@@ -484,20 +484,40 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
-    if (!Result.Value.IsValid())
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    bool ActorExists = false;
+    if(LargeMap)
+    {
+      ActorExists = LargeMap->OnActorSpawned(Result.Value, Transform);
+    }
+
+    FActorView* ActorView = Episode->FindActorPtr(Result.Value.GetActorId());
+    if (!ActorView->IsValid() && !ActorView->IsDormant())
     {
       RESPOND_ERROR("internal error: actor could not be spawned");
     }
+
+    ActorView->SetParent(ParentId);
+    ActorView->SetAttachmentType(InAttachmentType);
+
     FActorView ParentActorView = Episode->FindActor(ParentId);
-    if (!ParentActorView.IsValid())
+
+    if (!ParentActorView.IsValid() && !ParentActorView.IsDormant())
     {
       RESPOND_ERROR("unable to attach actor: parent actor not found");
     }
-    Episode->AttachActors(
-        Result.Value.GetActor(),
-        ParentActorView.GetActor(),
-        static_cast<EAttachmentType>(InAttachmentType));
-    return Episode->SerializeActor(Result.Value);
+
+    // Only is possible to attach if the actor has been really spawned and
+    // is not in dormant state
+    if(ActorExists && ActorView->IsAlive())
+    {
+      Episode->AttachActors(
+          ActorView->GetActor(),
+          ParentActorView.GetActor(),
+          static_cast<EAttachmentType>(InAttachmentType));
+    }
+    return Episode->SerializeActor(*ActorView);
   };
 
   BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
