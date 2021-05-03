@@ -20,7 +20,7 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean] [--target-archive]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean] [--clean-intermediate] [--target-archive]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
@@ -37,7 +37,10 @@ if not "%1"=="" (
         set DO_TARBALL=false
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
+    )
 
+    if "%1"=="--clean-intermediate" (
+        set DO_CLEAN=true
     )
 
     if "%1"=="--no-zip" (
@@ -173,9 +176,8 @@ if %DO_COPY_FILES%==true (
     echo f | xcopy /y "!XCOPY_FROM!Docs\release_readme.md"                          "!XCOPY_TO!README"
     echo f | xcopy /y "!XCOPY_FROM!Util\Docker\Release.Dockerfile"                  "!XCOPY_TO!Dockerfile"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\dist\*.egg"                      "!XCOPY_TO!PythonAPI\carla\dist\"
-    echo f | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\data\*"                          "!XCOPY_TO!PythonAPI\carla\data\"
+    echo f | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\data\*"                       "!XCOPY_TO!PythonAPI\carla\data\"
     echo d | xcopy /y /s "!XCOPY_FROM!Co-Simulation"                                "!XCOPY_TO!Co-Simulation"
-    echo d | xcopy /y /s "!XCOPY_FROM!Plugins"                                      "!XCOPY_TO!Plugins"
     echo d | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\agents"                       "!XCOPY_TO!PythonAPI\carla\agents"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\scene_layout.py"                 "!XCOPY_TO!PythonAPI\carla\"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\requirements.txt"                "!XCOPY_TO!PythonAPI\carla\"
@@ -186,6 +188,9 @@ if %DO_COPY_FILES%==true (
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\util\requirements.txt"                 "!XCOPY_TO!PythonAPI\util\"
     echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\*.pcd"      "!XCOPY_TO!HDMaps\"
     echo f | xcopy /y "!XCOPY_FROM!Unreal\CarlaUE4\Content\Carla\HDMaps\Readme.md"  "!XCOPY_TO!HDMaps\README"
+    if exist "!XCOPY_FROM!Plugins" (
+        echo d | xcopy /y /s "!XCOPY_FROM!Plugins"                                  "!XCOPY_TO!Plugins"
+    )
 )
 
 rem ==============================================================================
@@ -268,7 +273,9 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
         pushd "%CARLAUE4_ROOT_FOLDER%"
 
+        echo   - prepare
         REM # Prepare cooking of package
+        echo call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe " "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject" -run=PrepareAssetsForCooking -PackageName=!PACKAGE_NAME! -OnlyPrepareMaps=false
         call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
         "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
         -run=PrepareAssetsForCooking^
@@ -278,7 +285,9 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
         set /p PACKAGE_FILE=<%PACKAGE_PATH_FILE%
         set /p MAPS_TO_COOK=<%MAP_LIST_FILE%
 
+        echo   - cook
         REM # Cook maps
+        echo call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe " "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject" -run=cook -map="!MAPS_TO_COOK!" -cooksinglepackage -targetplatform="WindowsNoEditor" -OutputDir="!BUILD_FOLDER!"
         call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
         "%CARLAUE4_ROOT_FOLDER%/CarlaUE4.uproject"^
         -run=cook^

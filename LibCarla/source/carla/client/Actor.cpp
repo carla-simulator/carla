@@ -101,5 +101,10 @@ namespace client {
     return _is_alive;
   }
 
+  bool Actor::IsAliveInEpisode() const
+  {
+    return GetEpisode().Lock()->GetWorldSnapshot().Find(GetId()).has_value();
+  }
+
 } // namespace client
 } // namespace carla

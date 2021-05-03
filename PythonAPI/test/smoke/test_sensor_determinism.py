@@ -4,7 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from __init__ import SyncSmokeTest
+from . import SyncSmokeTest
 
 import carla
 import time
@@ -67,7 +67,7 @@ class Scenario(object):
             self.world.tick()
             if self.active:
                 for _s in self.sensor_list:
-                    self.sensor_queue.get(True, 1.0)
+                    self.sensor_queue.get(True, 15.0)
 
     def clear_scene(self):
         for sensor in self.sensor_list:
@@ -189,7 +189,7 @@ class Scenario(object):
         # Sensor Syncronization
         w_frame = self.world.get_snapshot().frame
         for sensor in self.sensor_list:
-            s_frame = self.sensor_queue.get(True, 1.0)[0]
+            s_frame = self.sensor_queue.get(True, 15.0)[0]
             if w_frame != s_frame:
                 raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d" % (sensor[0], w_frame, s_frame))
 
@@ -335,3 +335,5 @@ class TestSensorDeterminism(SyncSmokeTest):
 
         # Remove all the output files
         shutil.rmtree(output_path)
+
+        self.client.load_world("Town03")

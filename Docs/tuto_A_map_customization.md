@@ -29,7 +29,7 @@ There are differences between them, that make them fit specific purposes. Howeve
 * __Customize the pattern__. This is where the blueprints present differences between each other.  
 
 !!! Warning
-    New props will probably interfere with the mesh navigation. If necessary, rebuild that as explained [here](tuto_A_add_map.md#generate-pedestrian-navigation) after doing these changes.
+    New props will probably interfere with the mesh navigation. If necessary, rebuild that as explained [here](tuto_A_add_map/add_map_source.md#generate-pedestrian-navigation) after doing these changes.
 
 ### BP_RepSpline
 
@@ -172,7 +172,7 @@ Open CARLA and mess around for a while. If there are any doubts, feel free to po
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

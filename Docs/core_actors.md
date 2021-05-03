@@ -1,8 +1,8 @@
 # 2nd. Actors and blueprints
 
-Actors not only include vehicles and walkers, but also sensors, traffic signs, traffic lights, and the spectator. It is crucial to have fully understanding on how to operate on them.  
+Actors not only include vehicles and walkers, but also sensors, traffic signs, traffic lights, and the spectator. It is crucial to have full understanding on how to operate on them.  
 
-This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the __tutorials__ in this documentation and share doubts and ideas in the [CARLA forum](https://forum.carla.org/).  
+This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the __tutorials__ in this documentation and share doubts and ideas in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/).  
 
 *   [__Blueprints__](#blueprints)  
 	*   [Managing the blueprint library](#managing-the-blueprint-library)  
@@ -212,37 +212,51 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
 
 ### Vehicles
 
-[__carla.Vehicle__](python_api.md#carla.Vehicle) are a special type of actor. They are remarkable for having better physics. This is achieved applying four types of different controls.  
+[__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor. It incorporates special internal components that simulate the physics of wheeled vehicles. This is achieved by applying four types of different controls:  
 
 * __[carla.VehicleControl](python_api.md#carla.VehicleControl)__ provides input for driving commands such as throttle, steering, brake, etc. 
 ```py
-vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
+    vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
-* __[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl)__ defines physical attributes of the vehicle. Besides many different attribute, this controller contains two more controllers. [carla.GearPhysicsControl](python_api.md#carla.GearPhysicsControl) for the gears. The other is a list of [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl), that provide specific control over the different wheels.  
+* __[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl)__ defines physical attributes of the vehicle and contains two more controllers:
+
+    * [carla.GearPhysicsControl](python_api.md#carla.GearPhysicsControl) which controls the gears. 
+    * [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) which provides specific control over each wheel.  
 
 ```py
-vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
+    vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-In order to apply physics and detect collisions, vehicles have a [carla.BoundingBox](python_api.md#carla.BoundingBox) encapsulating them.  
+Vehicles have a [carla.BoundingBox](python_api.md#carla.BoundingBox) encapsulating them. This bounding box allows physics to be applied to the vehicle and enables collisions to be detected.  
 
 ```py
-box = vehicle.bounding_box
-print(box.location)         # Location relative to the vehicle.
-print(box.extent)           # XYZ half-box extents in meters.
+    box = vehicle.bounding_box
+    print(box.location)         # Location relative to the vehicle.
+    print(box.extent)           # XYZ half-box extents in meters.
 ```
 
-Vehicles include other functionalities unique to them.
-
-* The __autopilot mode__ will subscribe them to the [Traffic manager](adv_traffic_manager.md), and simulate real urban conditions. This module is hard-coded, not based on machine learning.  
+The physics of vehicle wheels can be improved by enabling the [sweep wheel collision parameter][enable_sweep]. The default wheel physics uses single ray casting from the axis to the floor for each wheel but when sweep wheel collision is enabled, the full volume of the wheel is checked against collisions. It can be enabled as such:
 
 ```py
-vehicle.set_autopilot(True)
+    physics_control = vehicle.get_physics_control()
+    physics_control.use_sweep_wheel_collision = True
+    vehicle.apply_physics_control(physics_control)
 ```
-* __Vehicle lights__ have to be turned on/off by the user. Each vehicle has a set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState). So far, not all vehicles have lights integrated. Here is a list of those that are available by the time of writing.  
-	*   __Bikes.__ All of them have a front and back position light.  
-	*   __Motorcycles.__ Yamaha and Harley Davidson models.  
-	*   __Cars.__ Audi TT, Chevrolet, Dodge (the police car), Etron, Lincoln, Mustang, Tesla 3S, Wolkswagen T2 and the new guests coming to CARLA.  
+
+[enable_sweep]: https://carla.readthedocs.io/en/latest/python_api/#carla.VehiclePhysicsControl.use_sweep_wheel_collision
+
+
+Vehicles include other functionalities unique to them:
+
+* __Autopilot mode__ will subscribe a vehicle to the [Traffic Manager](adv_traffic_manager.md) to simulate real urban conditions. This module is hard-coded, not based on machine learning.  
+
+```py
+    vehicle.set_autopilot(True)
+```
+* __Vehicle lights__ have to be turned on and off by the user. Each vehicle has a set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState). Not all vehicles have lights integrated. At the time of writing, vehicles with integrated lights are as follows:  
+	*   __Bikes:__ All bikes have a front and back position light.  
+	*   __Motorcycles:__ Yamaha and Harley Davidson models.  
+	*   __Cars:__ Audi TT, Chevrolet Impala, both Dodge police cars, Dodge Charger, Audi e-tron, Lincoln 2017 and 2020, Mustang, Tesla Model 3, Tesla Cybertruck, Volkswagen T2 and the Mercedes C-Class.  
 
 The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](#python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.  
 
@@ -293,7 +307,7 @@ Keep reading to learn more or visit the forum to post any doubts or suggestions 
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
 CARLA forum</a>
 </p>
 </div>

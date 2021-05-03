@@ -115,7 +115,7 @@ def bold(buf):
 
 def snipet(name,class_key):
 
-    return join(["<button class=\"SnipetButton\" id=\"",class_key,".",name,"-snipet_button\">", "snipet &rarr;", '</button>'])
+    return join(["<button class=\"SnipetButton\" id=\"",class_key,".",name,"-snipet_button\">", "snippet &rarr;", '</button>'])
 
 def code(buf):
     return join(['`', buf, '`'])
@@ -654,7 +654,7 @@ class Documentation:
         md.first_title()
         md.textn(
         "This reference contains all the details the Python API. To consult a previous reference for a specific CARLA release, change the documentation version using the panel in the bottom right corner.<br>"
-        +"This will change the whole documentation to a previous state. Remember to go back to <i>latest</i> to get the details of the current state of CARLA.<hr>")
+        +"This will change the whole documentation to a previous state. Remember that the <i>latest</i> version is the `dev` branch and may show features not available in any packaged versions of CARLA.<hr>")
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name

@@ -19,7 +19,7 @@ pipeline
                 script
                 {
                     JOB_ID = "${env.BUILD_TAG}"
-                    jenkinsLib = load("/home/jenkins/jenkins.groovy")
+                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
 
                     jenkinsLib.CreateUbuntuBuildNode(JOB_ID)
                     jenkinsLib.CreateWindowsBuildNode(JOB_ID)
@@ -35,7 +35,7 @@ pipeline
                     agent { label "ubuntu && build && ${JOB_ID}" }
                     environment
                     {
-                        UE4_ROOT = '/home/jenkins/UnrealEngine_4.24'
+                        UE4_ROOT = '/home/jenkins/UnrealEngine_4.26'
                     }
                     stages
                     {
@@ -44,7 +44,7 @@ pipeline
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.7,2"'
+                                sh 'make setup ARGS="--python-version=3.7,2 --chrono"'
                             }
                         }
                         stage('ubuntu build')
@@ -53,7 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2"'
-                                sh 'make CarlaUE4Editor ARGS="--carsim"'
+                                sh 'make CarlaUE4Editor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
                             }
@@ -92,7 +92,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2 --carsim"'
+                                sh 'make package ARGS="--python-version=3.7,2 --chrono"'
                                 sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
@@ -111,7 +111,7 @@ pipeline
                                         script
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins.groovy")
+                                            jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
 
                                             jenkinsLib.CreateUbuntuTestNode(JOB_ID)
                                         }
@@ -128,7 +128,7 @@ pipeline
                                 unstash name: 'ubuntu_package'
                                 unstash name: 'ubuntu_examples'
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
-                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -opengl --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                                 sh 'make smoke_tests ARGS="--xml --python-version=3.7,2"'
                                 sh 'make run-examples ARGS="localhost 3654"'
                             }
@@ -144,7 +144,7 @@ pipeline
                                         script
                                         {
                                             JOB_ID = "${env.BUILD_TAG}"
-                                            jenkinsLib = load("/home/jenkins/jenkins.groovy")
+                                            jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
 
                                             jenkinsLib.DeleteUbuntuTestNode(JOB_ID)
                                         }
@@ -211,7 +211,7 @@ pipeline
                                 script
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins.groovy")
+                                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
 
                                     jenkinsLib.DeleteUbuntuBuildNode(JOB_ID)
                                 }
@@ -224,7 +224,7 @@ pipeline
                     agent { label "windows && build && ${JOB_ID}" }
                     environment
                     {
-                        UE4_ROOT = 'C:\\Program Files\\Epic Games\\UE_4.24'
+                        UE4_ROOT = 'C:\\UE_4.26'
                     }
                     stages
                     {
@@ -238,7 +238,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make setup
+                                    make setup ARGS="--chrono"
                                 """
                             }
                         }
@@ -256,7 +256,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make CarlaUE4Editor ARGS="--carsim"
+                                    make CarlaUE4Editor ARGS="--chrono"
                                 """
                                 bat """
                                     call ../setEnv64.bat
@@ -288,7 +288,7 @@ pipeline
                             {
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--carsim"
+                                    make package ARGS="--chrono"
                                 """
                                 bat """
                                     call ../setEnv64.bat
@@ -324,7 +324,7 @@ pipeline
                                 script
                                 {
                                     JOB_ID = "${env.BUILD_TAG}"
-                                    jenkinsLib = load("/home/jenkins/jenkins.groovy")
+                                    jenkinsLib = load("/home/jenkins/jenkins_426.groovy")
 
                                     jenkinsLib.DeleteWindowsBuildNode(JOB_ID)
                                 }
