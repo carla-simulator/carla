@@ -21,7 +21,6 @@ namespace Networking {
 static const uint64_t MIN_TRY_COUNT = 20u;
 static const unsigned short TM_DEFAULT_PORT = 8000u;
 static const int64_t TM_TIMEOUT = 2000; // ms
-const int64_t TM_WAIT_FOR_TICK_TIMEOUT = 1000;
 } // namespace Networking
 
 namespace VehicleRemoval {
@@ -46,9 +45,9 @@ static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
 } // namespace SpeedThreshold
 
 namespace PathBufferUpdate {
-static const float MAX_START_DISTANCE = 30.0f;
-static const float MINIMUM_HORIZON_LENGTH = 30.0f;
-static const float MAXIMUM_HORIZON_LENGTH = 60.0f;
+static const float MAX_START_DISTANCE = 20.0f;
+static const float MINIMUM_HORIZON_LENGTH = 20.0f;
+static const float MAXIMUM_HORIZON_LENGTH = 40.0f;
 static const float HORIZON_RATE = RATE(MAXIMUM_HORIZON_LENGTH,
                                        MINIMUM_HORIZON_LENGTH,
                                        SpeedThreshold::ARBITRARY_MAX_SPEED);
@@ -71,20 +70,21 @@ static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
 } // namespace LaneChange
 
 namespace Collision {
-static const float BOUNDARY_EXTENSION_MAXIMUM = 50.0f;
+static const float BOUNDARY_EXTENSION_MAXIMUM = 40.0f;
 static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
 static const float BOUNDARY_EXTENSION_RATE = RATE(BOUNDARY_EXTENSION_MAXIMUM,
                                                   BOUNDARY_EXTENSION_MINIMUM,
                                                   SpeedThreshold::ARBITRARY_MAX_SPEED);
 static const float COS_10_DEGREES = 0.9848f;
-static const float EPSILON_VELOCITY = 0.1f;
+static const float OVERLAP_THERESHOLD = 0.1f;
 static const float LOCKING_DISTANCE_PADDING = 4.0f;
-static const float MAX_COLLISION_RADIUS = 100.0f;
+static const float MAX_COLLISION_RADIUS = 30.0f;
 static const float MAX_LOCKING_EXTENSION = 10.0f;
 static const float WALKER_TIME_EXTENSION = 1.5f;
 static const float SQUARE_ROOT_OF_TWO = 1.414f;
 static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
 static const float EPSILON = 2.0f * std::numeric_limits<float>::epsilon();
+static const float MIN_REFERENCE_DISTANCE = 1.0f;
 } // namespace Collision
 
 namespace FrameMemory {
@@ -95,11 +95,9 @@ static const float INV_GROWTH_STEP_SIZE = 1.0f / static_cast<float>(GROWTH_STEP_
 
 namespace Map {
 static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
-static const float GRID_SIZE = 4.0f;
-static const float PED_GRID_SIZE = 10.0f;
 static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
-static const double MAP_RESOLUTION = 0.1;
-static const float INV_MAP_RESOLUTION = 10.0f;
+static const double MAP_RESOLUTION = 5.0;
+static const float INV_MAP_RESOLUTION = 0.2f;
 } // namespace Map
 
 namespace TrafficLight {
@@ -134,8 +132,8 @@ static const std::vector<float> LATERAL_HIGHWAY_PARAM = {7.0f, 0.02f, 1.0f};
 } // namespace PID
 
 namespace TrackTraffic {
-static const uint64_t BUFFER_STEP_THROUGH = 10;
-static const float INV_BUFFER_STEP_THROUGH = 0.1f;
+static const uint64_t BUFFER_STEP_THROUGH = 5;
+static const float INV_BUFFER_STEP_THROUGH = 0.2f;
 } // namespace TrackTraffic
 
 } // namespace constants
