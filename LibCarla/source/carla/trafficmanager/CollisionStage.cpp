@@ -381,7 +381,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
         // Check if the same vehicle is under lock.
         if (other_actor_id == lock.lead_vehicle_id) {
           // If the body of the lead vehicle is touching the reference vehicle bounding box.
-          if (geometry_comparison.other_vehicle_to_reference_geodesic < OVERLAP_THERESHOLD) {
+          if (geometry_comparison.other_vehicle_to_reference_geodesic < OVERLAP_THRESHOLD) {
             // Distance between the bodies of the vehicles.
             lock.distance_to_lead_vehicle = geometry_comparison.inter_bbox_distance;
           } else {
