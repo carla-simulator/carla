@@ -36,8 +36,7 @@ class TestCollisionSensor(SyncSmokeTest):
 
         return event_list
 
-    # Enable when changes for content are uploaded
-    def _test_single_car(self):
+    def test_single_car(self):
         print("TestCollisionSensor.test_single_car")
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
@@ -46,7 +45,7 @@ class TestCollisionSensor(SyncSmokeTest):
             event_list = self.run_collision_single_car_against_wall(bp_veh)
 
             # Check result events
-            self.assertNotEqual(event_list, 0, "The collision sensor have failed for %s"
+            self.assertNotEqual(len(event_list), 0, "The collision sensor have failed for %s"
                 % bp_veh.id)
             self.assertEqual(event_list[0].other_actor.type_id, "static.wall",
                 "The collision sensor is not working correctly for %s" % bp_veh.id)
