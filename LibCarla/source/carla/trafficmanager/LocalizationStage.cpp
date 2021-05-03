@@ -47,7 +47,6 @@ void LocalizationStage::Update(const unsigned long index) {
   if (buffer_map.find(actor_id) == buffer_map.end()) {
     buffer_map.insert({actor_id, Buffer()});
   }
-
   Buffer &waypoint_buffer = buffer_map.at(actor_id);
 
   // Clear buffer if vehicle is too far from the first waypoint in the buffer.
@@ -154,20 +153,8 @@ void LocalizationStage::Update(const unsigned long index) {
     uint64_t selection_index = 0u;
     // Pseudo-randomized path selection if found more than one choice.
     if (next_waypoints.size() > 1) {
-      // Arranging selection points from right to left.
-      std::sort(next_waypoints.begin(), next_waypoints.end(),
-                [&furthest_waypoint](const SimpleWaypointPtr &a, const SimpleWaypointPtr &b) {
-                  float a_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
-                                                            furthest_waypoint->GetForwardVector(),
-                                                            a->GetLocation());
-                  float b_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
-                                                            furthest_waypoint->GetForwardVector(),
-                                                            b->GetLocation());
-                  return a_x_product < b_x_product;
-                });
       double r_sample = random_devices.at(actor_id).next();
-      double s_bucket = 100.0 / next_waypoints.size();
-      selection_index = static_cast<uint64_t>(std::floor(r_sample/s_bucket));
+      selection_index = static_cast<uint64_t>(r_sample*next_waypoints.size()*0.01);
     } else if (next_waypoints.size() == 0) {
       if (!parameters.GetOSMMode()) {
         std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
