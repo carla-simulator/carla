@@ -76,7 +76,7 @@ static const float BOUNDARY_EXTENSION_RATE = RATE(BOUNDARY_EXTENSION_MAXIMUM,
                                                   BOUNDARY_EXTENSION_MINIMUM,
                                                   SpeedThreshold::ARBITRARY_MAX_SPEED);
 static const float COS_10_DEGREES = 0.9848f;
-static const float OVERLAP_THERESHOLD = 0.1f;
+static const float OVERLAP_THRESHOLD = 0.1f;
 static const float LOCKING_DISTANCE_PADDING = 4.0f;
 static const float MAX_COLLISION_RADIUS = 30.0f;
 static const float MAX_LOCKING_EXTENSION = 10.0f;

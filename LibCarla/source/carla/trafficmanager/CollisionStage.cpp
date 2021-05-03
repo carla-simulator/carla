@@ -347,10 +347,10 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
     GeometryComparison geometry_comparison = GetGeometryBetweenActors(reference_vehicle_id, other_actor_id);
 
     // Conditions for collision negotiation.
-    bool geodesic_path_bbox_touching = geometry_comparison.inter_geodesic_distance < OVERLAP_THERESHOLD;
-    bool vehicle_bbox_touching = geometry_comparison.inter_bbox_distance < OVERLAP_THERESHOLD;
-    bool ego_path_clear = geometry_comparison.other_vehicle_to_reference_geodesic > OVERLAP_THERESHOLD;
-    bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > OVERLAP_THERESHOLD;
+    bool geodesic_path_bbox_touching = geometry_comparison.inter_geodesic_distance < OVERLAP_THRESHOLD;
+    bool vehicle_bbox_touching = geometry_comparison.inter_bbox_distance < OVERLAP_THRESHOLD;
+    bool ego_path_clear = geometry_comparison.other_vehicle_to_reference_geodesic > OVERLAP_THRESHOLD;
+    bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > OVERLAP_THRESHOLD;
     bool ego_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic < geometry_comparison.other_vehicle_to_reference_geodesic;
     bool other_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic > geometry_comparison.other_vehicle_to_reference_geodesic;
     bool ego_angular_priority = reference_heading_to_other_dot< cg::Math::Dot(other_heading, other_to_reference);
