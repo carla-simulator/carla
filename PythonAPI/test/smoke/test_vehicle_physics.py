@@ -196,14 +196,14 @@ class TestVehicleFriction(SyncSmokeTest):
         for _i in range(0, frames):
             self.world.tick()
 
-    def _test_vehicle_zero_friction(self):
+    def test_vehicle_zero_friction(self):
         print("TestVehicleFriction.test_vehicle_zero_friction")
 
         self.client.load_world("Town05_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         for bp_veh in bp_vehicles:
-            veh_transf = carla.Transform(carla.Location(35, -200, 0.1), carla.Rotation(yaw=90))
+            veh_transf = carla.Transform(carla.Location(35, -200, 0.5), carla.Rotation(yaw=90))
 
             vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
             vehicle_00.set_target_velocity(carla.Vector3D(0, 0, 0))
@@ -249,7 +249,7 @@ class TestVehicleFriction(SyncSmokeTest):
             vel_veh_00 = vehicle_00.get_velocity().y
             vel_veh_01 = vehicle_01.get_velocity().y
             vel_veh_02 = vehicle_02.get_velocity().y
-            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01, vel_veh_02], 1e-3):
+            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01, vel_veh_02], 1e-2):
                 vehicle_00.destroy()
                 vehicle_01.destroy()
                 vehicle_02.destroy()
@@ -259,18 +259,18 @@ class TestVehicleFriction(SyncSmokeTest):
             loc_veh_00 = vehicle_00.get_location().y
             loc_veh_01 = vehicle_01.get_location().y
             loc_veh_02 = vehicle_02.get_location().y
-            if not list_equal_tol([loc_veh_00, loc_veh_01, loc_veh_02], 1e-3):
+            if not list_equal_tol([loc_veh_00, loc_veh_01, loc_veh_02], 1e-2):
                 vehicle_00.destroy()
                 vehicle_01.destroy()
                 vehicle_02.destroy()
-                self.fail("%s: Locations are not equal after simulation" % bp_veh.id)
+                self.fail("%s: Locations are not equal after simulation: %f %f %f" % (bp_veh.id, loc_veh_00, loc_veh_01, loc_veh_02))
 
             vehicle_00.destroy()
             vehicle_01.destroy()
             vehicle_02.destroy()
 
-    def _test_vehicle_volume_trigger(self):
-        print("TestVehicleFriction.test_vehicle_volume_trigger")
+    def test_vehicle_friction_volume(self):
+        print("TestVehicleFriction.test_vehicle_friction_volume")
 
         self.client.load_world("Town05_Opt", False)
 
@@ -302,14 +302,10 @@ class TestVehicleFriction(SyncSmokeTest):
             vehicle_01 = self.world.spawn_actor(bp_veh, veh_transf)
             vehicle_01.set_target_velocity(carla.Vector3D(0, 0, 0))
             vehicle_01.set_enable_gravity(True)
-            
-            spectator_transform = carla.Transform(veh_transf.location, veh_transf.rotation)
-            spectator_transform.location.z += 3
-            self.world.get_spectator().set_transform(spectator_transform)
 
-            self.wait(100)
+            self.wait(20)
 
-            vel_ref = 100.0 / 3.6
+            vel_ref = 50.0 / 3.6
             friction_ref = 0.0
             vehicle_00.apply_physics_control(change_physics_control(vehicle_00, tire_friction=friction_ref, drag=0.0))
             vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=friction_ref, drag=0.0))
@@ -329,12 +325,10 @@ class TestVehicleFriction(SyncSmokeTest):
                 self.fail("%s: Reference vehicle has changed before trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
                   % (bp_veh.id, bef_vel_veh_00, vel_ref, bef_tire_fr_00, friction_ref))
             if not equal_tol(bef_vel_veh_01, vel_ref, 1e-3) or not equal_tol(bef_tire_fr_01, friction_ref, 1e-3):
-                self.fail("%s: Check vehicle has changed before trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
+                self.fail("%s: Test vehicle has changed before trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
                   % (bp_veh.id, bef_vel_veh_01, vel_ref, bef_tire_fr_01, friction_ref))
 
-
-            self.wait(120)
-
+            self.wait(100)
 
             # Inside trigger
             ins_vel_veh_00 = vehicle_00.get_velocity().y
@@ -342,16 +336,17 @@ class TestVehicleFriction(SyncSmokeTest):
             ins_tire_fr_00 = vehicle_00.get_physics_control().wheels[0].tire_friction
             ins_tire_fr_01 = vehicle_01.get_physics_control().wheels[0].tire_friction
 
+            #extent = carla.Location(100.0, 100.0, 200.0)
+            #self.world.debug.draw_box(box=carla.BoundingBox(vehicle_01.get_location(), extent * 1e-2), rotation=vol_transf.rotation, life_time=2, thickness=0.5, color=carla.Color(r=255,g=0,b=0))
+
             if not equal_tol(ins_vel_veh_00, vel_ref, 1e-3) or not equal_tol(ins_tire_fr_00, friction_ref, 1e-3):
                 self.fail("%s: Reference vehicle has changed inside trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
                   % (bp_veh.id, ins_vel_veh_00, vel_ref, ins_tire_fr_00, friction_ref))
             if ins_vel_veh_01 > vel_ref or not equal_tol(ins_tire_fr_01, value_vol_friction, 1e-3):
-                self.fail("%s: Check vehicle is not correct inside trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
+                self.fail("%s: Test vehicle is not correct inside trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
                   % (bp_veh.id, ins_vel_veh_01, vel_ref, ins_tire_fr_01, value_vol_friction))
 
-
             self.wait(200)
-
 
             # Outside trigger
             out_vel_veh_00 = vehicle_00.get_velocity().y
@@ -363,12 +358,13 @@ class TestVehicleFriction(SyncSmokeTest):
                 self.fail("%s: Reference vehicle has changed after trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
                   % (bp_veh.id, ins_vel_veh_00, vel_ref, out_tire_fr_00, friction_ref))
             if out_vel_veh_01 > vel_ref or not equal_tol(out_tire_fr_01, friction_ref, 1e-3):
-                self.fail("%s: Check vehicle is not correct after trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
+                self.fail("%s: Test vehicle is not correct after trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
                   % (bp_veh.id, out_vel_veh_01, vel_ref, out_tire_fr_01, friction_ref))
 
             vehicle_00.destroy()
             vehicle_01.destroy()
-            friction_trigger.destroy()
+
+        friction_trigger.destroy()
 
     def test_vehicle_friction_values(self):
         print("TestVehicleFriction.test_vehicle_friction_values")
