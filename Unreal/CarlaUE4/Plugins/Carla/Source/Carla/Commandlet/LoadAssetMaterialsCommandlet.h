@@ -13,15 +13,15 @@
 
 UCLASS()
 class CARLA_API ULoadAssetMaterialsCommandlet
-	: public UCommandlet
+  : public UCommandlet
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 public:
 
-	/// Default constructor.
-	ULoadAssetMaterialsCommandlet();
-	
+  /// Default constructor.
+  ULoadAssetMaterialsCommandlet();
+  
 #if WITH_EDITORONLY_DATA
 
   /// Gets the Path of all the Assets contained in the package to cook with name
@@ -31,37 +31,37 @@ public:
   /// Parses the command line parameters provided through @a InParams
   FPackageParams ParseParams(const FString& InParams) const;
 
-	void LoadAssetsMaterials(const FString &PackageName, const TArray<FMapData> &MapsPaths);
+  void LoadAssetsMaterials(const FString &PackageName, const TArray<FMapData> &MapsPaths);
 
   void ApplyRoadPainterMaterials(const FString &LoadedMapName);
-	
-	/// Main method and entry of the commandlet, taking as input parameters @a
-	/// Params.
-	virtual int32 Main(const FString &Params) override;
+ 
+  /// Main method and entry of the commandlet, taking as input parameters @a
+  /// Params.
+  virtual int32 Main(const FString &Params) override;
 
 #endif // WITH_EDITORONLY_DATA
-	
+
 private:
 
   void GenerateJsonInfoFile(const FString &MapName);
 
-	/// Loaded assets from any object library
-	UPROPERTY()
+  /// Loaded assets from any object library
+  UPROPERTY()
   TArray<FAssetData> AssetDatas;
 
-	UPROPERTY()
+  UPROPERTY()
   UWorld *World;
 
   UPROPERTY()
   UWorld *NewWorldToLoad;
-	
-	/// Used for loading maps in object library. Loaded Data is stored in
-	/// AssetDatas.
-	UPROPERTY()
-	UObjectLibrary *MapObjectLibrary;
+  
+  /// Used for loading maps in object library. Loaded Data is stored in
+  /// AssetDatas.
+  UPROPERTY()
+  UObjectLibrary *MapObjectLibrary;
 
-	/// Subclass for acquiring the RoadPainter blueprint
-	UPROPERTY()
+  /// Subclass for acquiring the RoadPainter blueprint
+  UPROPERTY()
   TSubclassOf<ARoadPainterWrapper> RoadPainterSubclass;
 
   /// Gets the first .Package.json file found in Unreal Content Directory with

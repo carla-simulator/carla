@@ -29,7 +29,7 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
     "Blueprint'/Game/Carla/Blueprints/LevelDesign/RoadPainterPreset.RoadPainterPreset'"));
 
   RoadPainterSubclass = (UClass*)RoadPainterBlueprint.Object->GeneratedClass;
-  
+
 #endif
 }
 
@@ -37,32 +37,32 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 void ULoadAssetMaterialsCommandlet::GenerateJsonInfoFile(const FString &MapName) {
 
-  //This function is needed to generate a json in the imported maps sub-directory "Config"
-  //for detecting if textures have to be created on construction
-  //and variables need to be set for road painter object.
-  //Also check if we need to render textures in runtime
+  // This function is needed to generate a json in the imported maps sub-directory "Config"
+  // for detecting if textures have to be created on construction
+  // and variables need to be set for road painter object.
+  // Also check if we need to render textures in runtime
 
-  //We have to find the sub-directory where the json has been created
-  //We can look up any of the .json we have generated
-  //and then go back 1 in the file path (.../map_package/Config/roadpainter_decals.json)
-  //We can't assume the root directory name is "map_package", because the user can change it
+  // We have to find the sub-directory where the json has been created
+  // We can look up any of the .json we have generated
+  // and then go back 1 in the file path (.../map_package/Config/roadpainter_decals.json)
+  // We can't assume the root directory name is "map_package", because the user can change it
   TArray<FString> FileList;
   IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
     *(FString("roadpainter_decals.json")), true, false, false);
 
-  //Get the absolute path to that file
+  // Get the absolute path to that file
   FString JsonFilePath = *(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]));
   FString InfoFilePath = JsonFilePath.LeftChop((JsonFilePath.GetCharArray().Num() - 1) - JsonFilePath.Find("/", ESearchCase::Type::IgnoreCase, ESearchDir::FromEnd));
-  //We give it a unique name
+  // We give it a unique name
   InfoFilePath += "/roadpainter_info_" + World->GetMapName() + ".json";
 
-  //We write our variables
+  // We write our variables
   TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-  //Does the roadpainter need to generate new textures and apply changes on construction?
+  // Does the roadpainter need to generate new textures and apply changes on construction?
   RootObject->SetBoolField("prepared_roadpainter", false);
-  //Are the roads rendered to texture already?
+  // Are the roads rendered to texture already?
   RootObject->SetBoolField("painted_roads", false);
-  //The name of the texture that will be used for rendering the roads to
+  // The name of the texture that will be used for rendering the roads to
   RootObject->SetStringField("texture_name", " ");
 
   FString JsonString;
@@ -78,13 +78,13 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
   ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
   if (RoadPainterBp)
   {
-    //Needed to call events in editor-mode
+    // Needed to call events in editor-mode
     FEditorScriptExecutionGuard ScriptGuard;
     RoadPainterBp->ClearAllEvent();
     RoadPainterBp->ReadConfigFile(LoadedMapName);
     RoadPainterBp->SetBlueprintVariables();
 
-    //Spawn the decals loaded in via the JSON file
+    // Spawn the decals loaded in via the JSON file
     RoadPainterBp->SpawnDecalsEvent();
   }
 }
