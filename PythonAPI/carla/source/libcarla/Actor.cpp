@@ -222,9 +222,10 @@ void export_actor() {
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
       .def("reset_group", &cc::TrafficLight::ResetGroup)
-      .def("get_effect_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetEffectPositions))
+      .def("get_affected_lane_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetAffectedLaneWaypoints))
       .def("get_light_boxes", &GetLightBoxes)
       .def("get_opendrive_id", &cc::TrafficLight::GetOpenDRIVEID)
+      .def("get_stop_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetStopWaypoints))
       .def(self_ns::str(self_ns::self))
   ;
 }
