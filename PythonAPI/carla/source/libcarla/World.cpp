@@ -295,7 +295,6 @@ void export_world() {
     .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
-
     .def(self_ns::str(self_ns::self))
   ;
 

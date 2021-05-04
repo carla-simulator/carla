@@ -14,6 +14,7 @@
 #include "carla/StringUtil.h"
 #include "carla/road/SignalType.h"
 #include "carla/road/Junction.h"
+#include "carla/client/TrafficLight.h"
 
 #include <exception>
 
@@ -251,10 +252,10 @@ namespace client {
     std::set<std::string> added_signals;
     for (auto& landmark : landmarks) {
       if (road::SignalType::IsTrafficLight(landmark->GetType())) {
-        SharedPtr<Actor> TrafficLight = GetTrafficLight(*(landmark.get()));
-        if (TrafficLight) {
+        SharedPtr<Actor> traffic_light = GetTrafficLight(*(landmark.get()));
+        if (traffic_light) {
           if(added_signals.count(landmark->GetId()) == 0) {
-            Result.emplace_back(TrafficLight);
+            Result.emplace_back(traffic_light);
             added_signals.insert(landmark->GetId());
           }
         }
@@ -272,9 +273,9 @@ namespace client {
       const std::unique_ptr<road::Controller>& controller =
           map->GetMap().GetControllers().at(cont_id);
       for (road::SignId sign_id : controller->GetSignals()) {
-        SharedPtr<Actor> TrafficLight = GetTrafficLightFromOpenDRIVE(sign_id);
-        if (TrafficLight) {
-          Result.emplace_back(TrafficLight);
+        SharedPtr<Actor> traffic_light = GetTrafficLightFromOpenDRIVE(sign_id);
+        if (traffic_light) {
+          Result.emplace_back(traffic_light);
         }
       }
     }

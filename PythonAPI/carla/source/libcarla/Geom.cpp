@@ -189,6 +189,10 @@ void export_geom() {
       self.TransformPoint(location);
       return location;
     }, arg("in_point"))
+    .def("transform_vector", +[](const cg::Transform &self, cg::Vector3D &vector) {
+      self.TransformVector(vector);
+      return vector;
+    }, arg("in_point"))
     .def("get_forward_vector", &cg::Transform::GetForwardVector)
     .def("get_right_vector", &cg::Transform::GetRightVector)
     .def("get_up_vector", &cg::Transform::GetUpVector)

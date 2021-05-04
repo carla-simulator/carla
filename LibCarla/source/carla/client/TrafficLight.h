@@ -68,11 +68,13 @@ namespace client {
     // resets the timers and states of all groups
     void ResetGroup();
 
-    std::vector<SharedPtr<Waypoint>> GetEffectPositions() const;
+    std::vector<SharedPtr<Waypoint>> GetAffectedLaneWaypoints() const;
 
     std::vector<geom::BoundingBox> GetLightBoxes() const;
 
     road::SignId GetOpenDRIVEID() const;
+
+    std::vector<SharedPtr<Waypoint>> GetStopWaypoints() const;
 
   };
 
