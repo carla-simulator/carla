@@ -128,9 +128,36 @@ pipeline
                                 unstash name: 'ubuntu_package'
                                 unstash name: 'ubuntu_examples'
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
+
                                 sh 'DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                                sh 'make smoke_tests ARGS="--xml --python-version=3.7,2"'
+                                sh 'SCRIPT_PID=$!'
+                                sh 'sleep 5'
+                                sh 'CARLA_PID=`pgrep -P ${SCRIPT_PID}'
+                                sh 'echo "Carla Port"'
+                                sh 'echo ${CARLA_PID}'
+                                sh 'make smoke_tests ARGS="--xml --python-version=3.7"'
+                                sh 'kill $CARLA_PID'
+                                sh 'sleep 5'
+
+                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'SCRIPT_PID=$!'
+                                sh 'sleep 5'
+                                sh 'CARLA_PID=`pgrep -P ${SCRIPT_PID}'
+                                sh 'echo "Carla Port"'
+                                sh 'echo ${CARLA_PID}'
+                                sh 'make smoke_tests ARGS="--xml --python-version=2"'
+                                sh 'kill $CARLA_PID'
+                                sh 'sleep 5'
+
+                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'SCRIPT_PID=$!'
+                                sh 'sleep 10'
+                                sh 'CARLA_PID=`pgrep -P ${SCRIPT_PID}'
+                                sh 'echo "Carla Port"'
+                                sh 'echo ${CARLA_PID}'
                                 sh 'make run-examples ARGS="localhost 3654"'
+                                sh 'kill $CARLA_PID'
+                                sh 'sleep 2'
                             }
                             post
                             {
