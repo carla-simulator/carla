@@ -13,6 +13,7 @@ using namespace constants::SpeedThreshold;
 
 using constants::HybridMode::HYBRID_MODE_DT;
 using constants::HybridMode::HYBRID_MODE_DT_FL;
+using constants::Collision::EPSILON;
 
 MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -149,18 +150,46 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // Target displacement magnitude to achieve target velocity.
       const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
-      const SimpleWaypointPtr teleport_target_waypoint = GetTargetWaypoint(waypoint_buffer, target_displacement).first;
+      // std::cout << "target displacement " << target_displacement << std::endl;
+      const SimpleWaypointPtr teleport_target_waypoint = waypoint_buffer.front(); //GetTargetWaypoint(waypoint_buffer, target_displacement).first;
 
       // Construct target transform to accurately achieve desired velocity.
       float missing_displacement = 0.0f;
       const float base_displacement = teleport_target_waypoint->Distance(ego_location);
+      // std::cout << "base displacement " << base_displacement << std::endl;
       if (base_displacement < target_displacement) {
         missing_displacement = target_displacement - base_displacement;
       }
       cg::Transform target_base_transform = teleport_target_waypoint->GetTransform();
       cg::Location target_base_location = target_base_transform.location;
       cg::Vector3D target_heading = target_base_transform.GetForwardVector();
-      cg::Location teleportation_location = target_base_location + cg::Location(target_heading * missing_displacement);
+      cg::Vector3D current_heading = ego_heading.MakeSafeUnitVector(EPSILON);
+      // float location_distance = cg::Math::Distance(ego_location, target_base_location);
+      // float z_axis_diff = target_heading.z - current_heading.z;
+      // float percentage_displacement = 100.0f*target_displacement/location_distance;
+
+      float dot_product_a = DeviationDotProduct(ego_location, ego_heading, target_base_location);
+      float cross_product_a = DeviationCrossProduct(ego_location, ego_heading, target_base_location);
+      dot_product_a = 1.0f - dot_product_a;
+      if (cross_product_a < 0.0f) {
+        dot_product_a *= -1.0f;
+      }
+      const float current_deviation_a = dot_product_a;
+      // if (percentage_displacement > 100.0f) {
+      //   percentage_displacement = 100.0f;
+      // }
+      // float dot = current_heading.x * target_heading.x + current_heading.y * target_heading.y;
+      // float det = current_heading.x * target_heading.y + current_heading.y * target_heading.x;
+      // float angle = atan2(det, dot);
+      // float perc_deviation = current_deviation_a * target_displacement / location_distance;
+      // float perc_z_axis = z_axis_diff * target_displacement / location_distance;
+      // double cos_t = cos(current_deviation);
+      // double sin_t = sin(current_deviation);
+      // cg::Vector3D rotated = (v * cos_theta) + (glm::cross(k, v) * sin_theta) + (k * glm::dot(k, v)) * (1 - cos_theta);
+      cg::Vector3D new_heading = cg::Vector3D(current_heading.x * cos(current_deviation_a) - current_heading.y * sin(current_deviation_a),
+                                  current_heading.y * cos(current_deviation_a) + current_heading.x * sin(current_deviation_a),
+                                  target_heading.z); //current_heading.z - target_heading.z);
+      cg::Location teleportation_location = ego_location + cg::Location(new_heading * target_displacement);
       teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
     }
     // In case of an emergency stop, stay in the same location.
