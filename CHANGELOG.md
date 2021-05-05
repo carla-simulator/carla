@@ -25,6 +25,7 @@
   * Fix bug in lidar channel point count
   * Fix imu: some weird cases were given nan values
   * Fix bugs in apply_physics_control and friction trigger
+  * Exposed tire parameters for longitudinal and lateral stiffness in the PhysicsControl. 
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
   * Improved agent's vehicle detection to also take into account the actor bounding boxes
   * API extensions:
