@@ -434,7 +434,7 @@ class TestVehicleTireConfig(SyncSmokeTest):
         for _i in range(0, frames):
             self.world.tick()
 
-    def test_vehicle_wheel_collision(self):
+    def _test_vehicle_wheel_collision(self):
         print("TestVehicleTireConfig.test_vehicle_wheel_collision")
 
         self.client.load_world("Town05_Opt", False)
@@ -455,14 +455,16 @@ class TestVehicleTireConfig(SyncSmokeTest):
             self.wait(10)
 
             vel_ref = 100.0 / 3.6
-            vehicle_00.apply_physics_control(change_physics_control(vehicle_00, tire_friction=10.0, wheel_sweep = False))
-            vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=10.0, wheel_sweep = False))
+            vehicle_00.apply_physics_control(change_physics_control(vehicle_00, wheel_sweep = False))
+            vehicle_01.apply_physics_control(change_physics_control(vehicle_01, wheel_sweep = True))
             self.wait(1)
 
             vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
             vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
             self.wait(200)
 
+            loc_veh_00 = vehicle_00.get_location().y
+            loc_veh_01 = vehicle_01.get_location().y
             vel_veh_00 = vehicle_00.get_velocity().y
             vel_veh_01 = vehicle_01.get_velocity().y
 
@@ -472,8 +474,6 @@ class TestVehicleTireConfig(SyncSmokeTest):
                 self.fail("%s: Velocities are not equal after simulation. [%.3f, %.3f]"
                   % (bp_veh.id, vel_veh_00, vel_veh_01))
 
-            loc_veh_00 = vehicle_00.get_location().y
-            loc_veh_01 = vehicle_01.get_location().y
 
             if not list_equal_tol([loc_veh_00, loc_veh_01], 1):
                 vehicle_00.destroy()
