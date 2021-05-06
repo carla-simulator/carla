@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -138,7 +138,6 @@ void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter(){
           if (RoadMeshActor->GetName().Contains("Roads_Road", ESearchCase::Type::CaseSensitive) == true)
           {
             if (RoadMeshActor->GetStaticMeshComponent()->GetMaterial(0)->GetName().Contains("MaterialInstance", ESearchCase::Type::CaseSensitive) == false) {
-
               // Create the dynamic material instance for the road (which will hold the map size and road texture)
               UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
               MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
@@ -157,12 +156,10 @@ void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter(){
       // Are the roads rendered to texture already?
       RootObject->SetBoolField("painted_roads", false);
       if (IsRoadPainterReady == false) {
-
         // We set the name of the newly generated texture into the json file
         RootObject->SetStringField("texture_name", TextureString);
       }
       else {
-
         TextureString = JsonParsed->GetStringField("texture_name");
         RootObject->SetStringField("texture_name", TextureString);
       }
@@ -233,7 +230,6 @@ void ARoadPainterWrapper::ReadJsonAndPaintRoads() {
         // Save JSON file
         FFileHelper::SaveStringToFile(JsonString, *AbsolutePathToFile);
       }
-
       bIsRenderedToTexture = true;
     }
   }
@@ -244,7 +240,6 @@ void ARoadPainterWrapper::BeginPlay()
   Super::BeginPlay();
 
   if (bIsRenderedToTexture == false) {
-
     ReadJsonAndPaintRoads();
   }
 }
@@ -358,7 +353,6 @@ void ARoadPainterWrapper::ReadConfigFile(const FString &CurrentMapName)
           // With the decal name array we created earlier, we traverse it 
           // and look up it's name in the .json file
           for (int32 i = 0; i < DecalNamesArray.Num(); ++i) {
-            
             DecalPropertiesConfig.DecalMaterials.Add(*DecalNamesMap.Find(DecalNamesArray[i]));
             DecalPropertiesConfig.DecalNumToSpawn.Add(DecalJsonObject->GetIntegerField(DecalNamesArray[i]));
           }

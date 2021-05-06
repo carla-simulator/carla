@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -213,7 +213,7 @@ int32 ULoadAssetMaterialsCommandlet::Main(const FString &Params)
   FAssetsPaths AssetsPaths = GetAssetsPathFromPackage(PackageParams.Name);
 
   LoadAssetsMaterials(PackageParams.Name, AssetsPaths.MapsPaths);
-  
+
 #if WITH_EDITOR
   UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif

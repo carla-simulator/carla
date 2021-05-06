@@ -183,7 +183,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
         }
         else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
         {
-		  MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
+          MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
         }
         else if (AssetName.Contains(SSTags::R_TERRAIN))
         {
