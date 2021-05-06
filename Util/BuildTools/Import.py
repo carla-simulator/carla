@@ -165,7 +165,7 @@ def generate_decals_file(folder):
                 'decal_random_yaw' : '180.0',
                 'random_offset' : '15.0'
             });
-            
+
         # build and write the .json
         f = open("%s/%s.json" % (folder, 'roadpainter_decals'), "w")
         my_json = {'decals': json_decals}
@@ -310,7 +310,7 @@ def copy_roadpainter_config_files(package_name):
             os.makedirs(package_config_path)
         except OSError as exc:
             if exc.errno != errno.EEXIST:
-                raise      
+                raise
     shutil.copy(final_path, package_config_path) 
 
 
@@ -390,7 +390,7 @@ def import_assets_from_json_list(json_list):
 
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
-            
+
             # We apply the carla materials to the imported maps
             load_asset_materials_commandlet(package_name)
 
@@ -496,7 +496,7 @@ def main():
         '--json-only',
         action='store_true',
         help='Create JSON files only')
-        
+
     args = argparser.parse_known_args()[0]
 
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
