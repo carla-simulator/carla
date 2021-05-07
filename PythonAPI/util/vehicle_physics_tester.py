@@ -367,14 +367,13 @@ def main(arg):
         if world.get_map().name != "Town05":
             client.load_world("Town05", False)
 
-        bp_veh = world.get_blueprint_library().filter("vehicle.*prius*")[0]
+        bp_veh = world.get_blueprint_library().filter(args.filter)[0]
 
         veh_transf = carla.Transform()
         veh_transf.location.z = 100
         vehicle = world.spawn_actor(bp_veh, veh_transf)
         print(vehicle.get_physics_control())
-        print("BlueprintWheels: ", bp_veh.get_attribute('number_of_wheels'))
-        print("PhysicsControlWheels: ", len(vehicle.get_physics_control().wheels))
+        print("Id: %s  BlueprintWheels %s PhysicsControlWheels: %d" % (bp_veh.id, bp_veh.get_attribute('number_of_wheels'), len(vehicle.get_physics_control().wheels)))
         wait(world, 4)
         vehicle.destroy()
         
