@@ -134,89 +134,55 @@ pipeline
                                     SCRIPT_PID=$!
                                     echo "Script PID: ${SCRIPT_PID}"
 
-                                    for i in $(seq 1 1 10)
-                                    do
-                                        sleep 5
-                                        CARLA_PID=`pgrep -P ${SCRIPT_PID}`
-                                        if [ -z "${CARLA_PID}" ];
-                                        then
-                                            echo "Attempt $i failed. Carla server is not running"
-                                        else
-                                            break
-                                        fi
-                                    done
-
+                                    sleep 30
+                                    CARLA_PID=`pgrep -P ${SCRIPT_PID}`
                                     if [ -z "${CARLA_PID}" ];
                                     then
-                                        echo "Carla server could not be initiated. Smoke test for Python 3 failed"
+                                        echo "Carla server could not be initiated. Smoke tests for Python 3 failed"
                                         nvidia-smi
                                         exit 1
-                                    else
-                                        echo "Carla server is running with PID: ${CARLA_PID}"
-                                        make smoke_tests ARGS="--xml --python-version=3.7"
-                                        kill $CARLA_PID
-                                        sleep 10
                                     fi
-                                '''
 
-                                sh '''
+                                    echo "Carla server is running with PID: ${CARLA_PID}"
+                                    make smoke_tests ARGS="--xml --python-version=3.7"
+                                    kill $CARLA_PID
+                                    sleep 30
+
                                     DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
                                     SCRIPT_PID=$!
                                     echo "Script PID: ${SCRIPT_PID}"
 
-                                    for i in $(seq 1 1 10)
-                                    do
-                                        sleep 5
-                                        CARLA_PID=`pgrep -P ${SCRIPT_PID}`
-                                        if [ -z "${CARLA_PID}" ];
-                                        then
-                                            echo "Attempt $i failed. Carla server is not running"
-                                        else
-                                            break
-                                        fi
-                                    done
-
+                                    sleep 30
+                                    CARLA_PID=`pgrep -P ${SCRIPT_PID}`
                                     if [ -z "${CARLA_PID}" ];
                                     then
-                                        echo "Carla server could not be initiated. Smoke test for Python 2 failed."
+                                        echo "Carla server could not be initiated. Smoke tests for Python 2 failed"
                                         nvidia-smi
                                         exit 1
-                                    else
-                                        echo "Carla server is running with PID: ${CARLA_PID}"
-                                        make smoke_tests ARGS="--xml --python-version=2"
-                                        kill $CARLA_PID
-                                        sleep 10
                                     fi
-                                '''
 
-                                sh '''
+                                    echo "Carla server is running with PID: ${CARLA_PID}"
+                                    make smoke_tests ARGS="--xml --python-version=2"
+                                    kill $CARLA_PID
+                                    sleep 30
+
                                     DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
                                     SCRIPT_PID=$!
                                     echo "Script PID: ${SCRIPT_PID}"
 
-                                    for i in $(seq 1 1 10)
-                                    do
-                                        sleep 5
-                                        CARLA_PID=`pgrep -P ${SCRIPT_PID}`
-                                        if [ -z "${CARLA_PID}" ];
-                                        then
-                                            echo "Attempt $i failed. Carla server is not running"
-                                        else
-                                            break
-                                        fi
-                                    done
-
+                                    sleep 30
+                                    CARLA_PID=`pgrep -P ${SCRIPT_PID}`
                                     if [ -z "${CARLA_PID}" ];
                                     then
                                         echo "Carla server could not be initiated. Run examples failed."
                                         nvidia-smi
                                         exit 1
-                                    else
-                                        echo "Carla server is running with PID: ${CARLA_PID}"
-                                        make run-examples ARGS="localhost 3654
-                                        kill $CARLA_PID
-                                        sleep 10
                                     fi
+
+                                    echo "Carla server is running with PID: ${CARLA_PID}"
+                                    make run-examples ARGS="localhost 3654"
+                                    kill $CARLA_PID
+                                    sleep 30
                                 '''
                             }
                             post
