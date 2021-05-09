@@ -128,62 +128,9 @@ pipeline
                                 unstash name: 'ubuntu_package'
                                 unstash name: 'ubuntu_examples'
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
-
-                                sh '''
-                                    DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
-                                    SCRIPT_PID=$!
-                                    echo "Script PID: ${SCRIPT_PID}"
-
-                                    sleep 30
-                                    CARLA_PID=`pgrep -P ${SCRIPT_PID}`
-                                    if [ -z "${CARLA_PID}" ];
-                                    then
-                                        echo "Carla server could not be initiated. Smoke tests for Python 3 failed"
-                                        nvidia-smi
-                                        exit 1
-                                    fi
-
-                                    echo "Carla server is running with PID: ${CARLA_PID}"
-                                    make smoke_tests ARGS="--xml --python-version=3.7"
-                                    kill $CARLA_PID
-                                    sleep 30
-
-                                    DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
-                                    SCRIPT_PID=$!
-                                    echo "Script PID: ${SCRIPT_PID}"
-
-                                    sleep 30
-                                    CARLA_PID=`pgrep -P ${SCRIPT_PID}`
-                                    if [ -z "${CARLA_PID}" ];
-                                    then
-                                        echo "Carla server could not be initiated. Smoke tests for Python 2 failed"
-                                        nvidia-smi
-                                        exit 1
-                                    fi
-
-                                    echo "Carla server is running with PID: ${CARLA_PID}"
-                                    make smoke_tests ARGS="--xml --python-version=2"
-                                    kill $CARLA_PID
-                                    sleep 30
-
-                                    DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
-                                    SCRIPT_PID=$!
-                                    echo "Script PID: ${SCRIPT_PID}"
-
-                                    sleep 30
-                                    CARLA_PID=`pgrep -P ${SCRIPT_PID}`
-                                    if [ -z "${CARLA_PID}" ];
-                                    then
-                                        echo "Carla server could not be initiated. Run examples failed."
-                                        nvidia-smi
-                                        exit 1
-                                    fi
-
-                                    echo "Carla server is running with PID: ${CARLA_PID}"
-                                    make run-examples ARGS="localhost 3654"
-                                    kill $CARLA_PID
-                                    sleep 30
-                                '''
+                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'make smoke_tests ARGS="--xml --python-version=3.7,2"'
+                                sh 'make run-examples ARGS="localhost 3654"'
                             }
                             post
                             {
