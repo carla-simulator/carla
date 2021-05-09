@@ -63,27 +63,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
   void ZSizeEvent();
 
-  /// Event used for painting by actor points
-  /// generated on the road (created during the import process) via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void PaintByActorEvent();
-
-  /// Event used for painting as a whole square via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void PaintOverSquareEvent();
-
-  /// Event used for painting as a whole circle via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void PaintOverCircleEvent();
-
   /// Event used for painting the road map to the selected texture via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
   void PaintAllRoadsEvent();
-
-  /// Event used for spawning meshes by actor points
-  /// generated on the road (created during the import process) via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void SpawnMeshesByActorEvent();
 
   /// Event used for spawning meshes via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
@@ -99,18 +81,12 @@ public:
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
   void SwitchMaterialMaskEvent(int MaskType);
 
-  /// Event for clearing the materials on the road via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void ClearMaterialEvent();
-
-  /// Event for clearing the materials close to the actor points
-  /// generated on the road (created during the import process) via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void ClearMaterialByActorEvent();
-
   /// Event for clearing all the materials on the road via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
   void ClearAllEvent();
+
+  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
+  void PaintSequenceFromCommandletEvent();
 
   /// Event for setting the necessary variables in blueprint in order to paint the roads 
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
@@ -126,19 +102,29 @@ public:
   UFUNCTION(BlueprintCallable, Category = "RoadPainter Wrapper")
   void GenerateDynamicAssets();
 
-  /// The size of the whole map
-  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RoadPainter Wrapper")
-  float MapSize;
+  UFUNCTION(BlueprintCallable, Category = "RoadPainter Wrapper")
+  void StoreRoadWaypointForRender(FVector2D WaypointLocation, float StencilSize);
+
+  UFUNCTION(BlueprintCallable, Category = "RoadPainter Wrapper")
+  void RenderWaypointsToTexture();
 
   /// Texture used for painting the whole road map into it.
   /// This is later used for spawning the different decals and meshes.
   UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
-  UTextureRenderTarget2D *RoadTexture; 
+  UTexture2D *RoadTexture;
+
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RoadPainter Wrapper")
+  FLinearColor MaterialMaskEmissiveValue;
 
   /// Variable used for storing the JSON values of the decals
   /// so it can be later used by the blueprint (Road Painter Preset)
   UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
   FDecalsProperties DecalPropertiesConfig;
+
+
+  /// The size of the whole map
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RoadPainter Wrapper")
+  float MapSize;
 
 private:
 
@@ -170,8 +156,17 @@ private:
   UPROPERTY()
   UMaterialInstanceConstant *RoadNodePresetMaterial;
 
+  UPROPERTY()
+  UPackage *TexturePackage;
+
   /// Variable to know if the map has already being rendered
   /// to our generated texture
   UPROPERTY()
   bool bIsRenderedToTexture;
+
+  int RoadTextureSizeX;
+
+  int RoadTextureSizeY;
+
+  TArray<FVector2D> RoadWaypointsForTex;
 };

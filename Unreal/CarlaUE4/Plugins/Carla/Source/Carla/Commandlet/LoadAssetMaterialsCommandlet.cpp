@@ -81,6 +81,9 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
     // Needed to call events in editor-mode
     FEditorScriptExecutionGuard ScriptGuard;
     RoadPainterBp->ClearAllEvent();
+    RoadPainterBp->PaintSequenceFromCommandletEvent();
+
+    // Prepare roadpainter for spawning decals
     RoadPainterBp->ReadConfigFile(LoadedMapName);
     RoadPainterBp->SetBlueprintVariables();
 
