@@ -498,7 +498,13 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
       // Load World
       FAssetData AssetData;
       LoadWorld(AssetData);
-      World = CastChecked<UWorld>(AssetData.GetAsset());
+      UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(AssetData.GetAsset());
+      if (BaseMapRedirector != nullptr) {
+        World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+      }
+      else {
+        World = CastChecked<UWorld>(AssetData.GetAsset());
+      }
       // try to cook the whole map (no tiles)
       TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials, -1, -1);
       // Save the World in specified path
