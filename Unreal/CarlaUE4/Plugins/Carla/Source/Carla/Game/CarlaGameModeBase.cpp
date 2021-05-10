@@ -63,20 +63,13 @@ void ACarlaGameModeBase::InitGame(
   checkf(
       Episode != nullptr,
       TEXT("Missing episode, can't continue without an episode!"));
-  bool IsLargeMap = InMapName.Contains("LargeMap");
-  if(IsLargeMap)
-  {
-    LMManager = World->SpawnActor<ALargeMapManager>(
-        ALargeMapManager::StaticClass(),
-        FTransform());
-    check(LMManager);
-    // TODO: parameters
-    FString MapsPath = "/Game/Carla/Maps/";
-    FString LargeMapName = "Map99x99_2km";
-    InMapName = LargeMapName;
-    LMManager->GenerateMap(MapsPath + InMapName);
-    /*
-    */
+
+  AActor* LMManagerActor =
+      UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
+  LMManager = Cast<ALargeMapManager>(LMManagerActor);
+  if (LMManager) {
+    LMManager->GenerateLargeMap();
+    InMapName = LMManager->LargeMapName;
   }
 
 #if WITH_EDITOR

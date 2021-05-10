@@ -100,6 +100,9 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateMap(FString InAssetsPath);
 
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
+  void GenerateLargeMap();
+
   void AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
@@ -123,6 +126,17 @@ public:
     return IsTileLoaded(GetTileID(Location));
   }
 
+  FTransform GlobalToLocalTransform(const FTransform& InTransform) const;
+  FVector GlobalToLocalLocation(const FVector& InLocation) const;
+
+  FTransform LocalToGlobalTransform(const FTransform& InTransform) const;
+  FVector LocalToGlobalLocation(const FVector& InLocation) const;
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  FString LargeMapTilePath = "/Game/Carla/Maps/testmap";
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  FString LargeMapName = "testmap";
+
 protected:
 
   FIntVector GetTileVectorID(FVector TileLocation) const;
@@ -130,6 +144,14 @@ protected:
   FIntVector GetTileVectorID(FDVector TileLocation) const;
 
   FIntVector GetTileVectorID(TileID TileID) const;
+
+  FVector GetTileLocation(TileID TileID) const;
+
+  FVector GetTileLocation(FIntVector TileVectorID) const;
+
+  FDVector GetTileLocationD(TileID TileID) const;
+
+  FDVector GetTileLocationD(FIntVector TileVectorID) const;
 
   /// From a given location it retrieves the TileID that covers that area
   TileID GetTileID(FVector TileLocation) const;
@@ -145,6 +167,8 @@ protected:
   FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
 
   ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
+
+  FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
 
   void UpdateTilesState();
 
@@ -189,12 +213,15 @@ protected:
 
   void SpawnAssetsInTile(FCarlaMapTile& Tile);
 
-  TMap<TileID, FCarlaMapTile> MapTiles;
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  TMap<uint64, FCarlaMapTile> MapTiles;
 
   // All actors to be consider for tile loading (all hero vehicles)
   // The first actor in the array is the one selected for rebase
   // TODO: support rebase in more than one hero vehicle
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> ActorsToConsider;
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> GhostActors;
   TArray<FActorView::IdType> DormantActors;
 
@@ -210,8 +237,13 @@ protected:
   TSet<TileID> CurrentTilesLoaded;
 
   // Current Origin after rebase
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   FIntVector CurrentOriginInt{ 0 };
+
   FDVector CurrentOriginD;
+
+  UPROPERTY(EditAnywhere, Category = "Large Map Manager")
+  FVector Tile0Offset = FVector(0,0,0);
 
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   float TickInterval = 0.0f;
@@ -240,7 +272,7 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
     void GenerateMap_Editor()
   {
-    if (!AssetsPath.IsEmpty()) GenerateMap(AssetsPath);
+    if (!LargeMapTilePath.IsEmpty()) GenerateMap(LargeMapTilePath);
   }
 
   FString GenerateTileName(TileID TileID);

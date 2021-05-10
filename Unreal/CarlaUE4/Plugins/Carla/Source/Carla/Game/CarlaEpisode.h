@@ -190,7 +190,7 @@ public:
       FActorView::IdType DesiredId = 0)
   {
     FTransform NewTransform = Transform;
-    NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
+    // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
     auto result = ActorDispatcher->SpawnActor(NewTransform, thisActorDescription, DesiredId);
     if (Recorder->IsEnabled())
     {

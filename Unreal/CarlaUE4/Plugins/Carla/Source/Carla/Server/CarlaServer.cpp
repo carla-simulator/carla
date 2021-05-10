@@ -235,6 +235,8 @@ void FCarlaServer::FPimpl::BindActions()
         continue;
       if (MapName.Contains("/BaseMap/"))
         continue;
+      if (MapName.Contains("_Tile_"))
+        continue;
 
       result.emplace_back(cr::FromFString(MapName));
     }
@@ -369,6 +371,14 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to find CARLA game mode");
     }
     Result = GameMode->GetAllBBsOfLevel(QueriedTag);
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      for(auto& Box : Result)
+      {
+        Box.Origin = LargeMap->LocalToGlobalLocation(Box.Origin);
+      }
+    }
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
   };
 
@@ -381,6 +391,14 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to find CARLA game mode");
     }
     TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects(QueriedTag);
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      for(auto& Object : Result)
+      {
+        Object.Transform = LargeMap->LocalToGlobalTransform(Object.Transform);
+      }
+    }
     return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
   };
 
@@ -454,7 +472,16 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+
+    FTransform UETransform = Transform;
+    if(LargeMap)
+    {
+      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
+    }
+
+    auto Result = Episode->SpawnActorWithInfo(UETransform, std::move(Description));
 
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
@@ -462,8 +489,6 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
 
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
     if(LargeMap)
     {
       LargeMap->OnActorSpawned(Result.Value, Transform);
@@ -479,13 +504,22 @@ void FCarlaServer::FPimpl::BindActions()
       cr::AttachmentType InAttachmentType) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
-    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
+
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+
+    FTransform UETransform = Transform;
+    if(LargeMap)
+    {
+      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
+    }
+
+    auto Result = Episode->SpawnActorWithInfo(UETransform, std::move(Description));
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+
     if(LargeMap)
     {
       LargeMap->OnActorSpawned(Result.Value, Transform);
@@ -550,8 +584,16 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set actor location: actor not found");
     }
+    FVector UELocation = Location;
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
+    }
+
     ActorView.GetActor()->SetActorRelativeLocation(
-        Location,
+        UELocation,
         false,
         nullptr,
         ETeleportType::TeleportPhysics);
@@ -568,8 +610,17 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to set actor transform: actor not found");
     }
+
+    FTransform UETransform = Transform;
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
+    }
+
     ActorView.GetActor()->SetActorRelativeTransform(
-        Transform,
+        UETransform,
         false,
         nullptr,
         ETeleportType::TeleportPhysics);
@@ -596,6 +647,12 @@ void FCarlaServer::FPimpl::BindActions()
 
     // apply walker transform
     FTransform NewTransform = Transform;
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      NewTransform = LargeMap->GlobalToLocalTransform(NewTransform);
+    }
     FVector NewLocation = NewTransform.GetLocation();
 
     FTransform CurrentTransform = ActorView.GetActor()->GetTransform();
@@ -764,9 +821,17 @@ void FCarlaServer::FPimpl::BindActions()
 
     UE_LOG(LogCarla, Warning, TEXT("AddImpulseAtLocation: Experimental feature, use carefully."));
 
+    FVector UELocation = location.ToCentimeters().ToFVector();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
+    }
+
     RootComponent->AddImpulseAtLocation(
         impulse.ToCentimeters().ToFVector(),
-        location.ToCentimeters().ToFVector(),
+        UELocation,
         "None");
     return R<void>::Success();
   };
@@ -812,9 +877,18 @@ void FCarlaServer::FPimpl::BindActions()
 
     UE_LOG(LogCarla, Warning, TEXT("AddImpulseAtLocation: Experimental feature, use carefully."));
 
+
+    FVector UELocation = location.ToCentimeters().ToFVector();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
+    }
+
     RootComponent->AddForceAtLocation(
         force.ToCentimeters().ToFVector(),
-        location.ToCentimeters().ToFVector(),
+        UELocation,
         "None");
     return R<void>::Success();
   };
