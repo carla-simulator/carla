@@ -188,7 +188,6 @@ class Agent(object):
 
     def _is_vehicle_hazard(self, vehicle_list):
         """
-
         :param vehicle_list: list of potential obstacle to check
         :return: a tuple given by (bool_flag, vehicle), where
                  - bool_flag is True if there is a vehicle ahead blocking us
@@ -196,22 +195,40 @@ class Agent(object):
                  - vehicle is the blocker object itself
         """
 
-        ego_vehicle_location = self._vehicle.get_location()
-        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
+        ego_vehicle_transform = self._vehicle.get_transform()
+        ego_vehicle_forward_vector = ego_vehicle_transform.get_forward_vector()
+        ego_vehicle_extent = self._vehicle.bounding_box.extent.x
+        ego_vehicle_waypoint = self._map.get_waypoint(self._vehicle.get_location())
 
+        # Get the transform of the front of the ego
+        ego_vehicle_front_transform = ego_vehicle_transform
+        ego_vehicle_front_transform.location += carla.Location(
+            x=ego_vehicle_extent * ego_vehicle_forward_vector.x,
+            y=ego_vehicle_extent * ego_vehicle_forward_vector.y,
+        )
         for target_vehicle in vehicle_list:
             # do not account for the ego vehicle
             if target_vehicle.id == self._vehicle.id:
                 continue
 
             # if the object is not in our lane it's not an obstacle
+            target_vehicle_transform = target_vehicle.get_transform()
+            target_vehicle_forward_vector = target_vehicle_transform.get_forward_vector()
+            target_vehicle_extent = target_vehicle.bounding_box.extent.x
             target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
             if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
                     target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
                 continue
 
-            if is_within_distance_ahead(target_vehicle.get_transform(),
-                                        self._vehicle.get_transform(),
+            # Get the transofrm of the back of the vehicle
+            target_vehicle_rear_transform = target_vehicle_transform
+            target_vehicle_rear_transform.location -= carla.Location(
+                x=target_vehicle_extent * target_vehicle_forward_vector.x,
+                y=target_vehicle_extent * target_vehicle_forward_vector.y,
+            )
+
+            if is_within_distance_ahead(target_vehicle_rear_transform,
+                                        ego_vehicle_front_transform,
                                         self._proximity_vehicle_threshold):
                 return (True, target_vehicle)
 

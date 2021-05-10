@@ -149,4 +149,4 @@ build.utils: PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
 
 osm2odr:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build $(ARGS)

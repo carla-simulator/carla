@@ -11,6 +11,7 @@
 #endif
 #include "HAL/PlatformFilemanager.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 static bool ValidateStaticMesh(UStaticMesh *Mesh)
 {
@@ -48,20 +49,20 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 #if WITH_EDITORONLY_DATA
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
-  static ConstructorHelpers::FObjectFinder<UMaterial> MarkingNode(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_W.M_MarkingLane_W'"));
-  static ConstructorHelpers::FObjectFinder<UMaterial> RoadNode(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/Masters/LowComplexity/M_Road1.M_Road1'"));
-  static ConstructorHelpers::FObjectFinder<UMaterial> RoadNodeAux(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/LaneMarking/M_MarkingLane_Y.M_MarkingLane_Y'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03.M_Road_03'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNodeAux(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMY.M_Road_03_LMY'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/Grass/M_Grass01.M_Grass01'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> SidewalkNode(TEXT(
       "Material'/Game/Carla/Static/GenericMaterials/CheapMaterials/M_SideWalkCheap01'"));
 
-  MarkingNodeMaterial = (UMaterial *) MarkingNode.Object;
-  RoadNodeMaterial = (UMaterial *) RoadNode.Object;
-  MarkingNodeMaterialAux = (UMaterial *) RoadNodeAux.Object;
+  MarkingNodeMaterial = (UMaterialInstance *) MarkingNode.Object;
+  RoadNodeMaterial = (UMaterialInstance *) RoadNode.Object;
+  MarkingNodeMaterialAux = (UMaterialInstance *) RoadNodeAux.Object;
   SidewalkNodeMaterial = (UMaterial *) SidewalkNode.Object;
 #endif
 }

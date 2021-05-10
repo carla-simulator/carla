@@ -54,6 +54,7 @@ void ACarlaGameModeBase::InitGame(
     const FString &Options,
     FString &ErrorMessage)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaGameModeBase::InitGame);
   Super::InitGame(MapName, Options, ErrorMessage);
 
   UWorld* World = GetWorld();

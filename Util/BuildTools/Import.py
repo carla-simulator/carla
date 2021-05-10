@@ -34,9 +34,18 @@ def get_packages_json_list(folder):
 
     for root, _, filenames in os.walk(folder):
         for filename in fnmatch.filter(filenames, "*.json"):
-            json_files.append([root, filename])
+            if filename != "roadpainter_decals.json":
+                json_files.append([root, filename])
 
     return json_files
+
+def get_decals_json_file(folder):
+
+    for root, _, filenames in os.walk(folder):
+        for filename in fnmatch.filter(filenames, "roadpainter_decals.json"):
+            return filename
+
+    return ""
 
 def generate_json_package(folder, package_name, use_carla_materials):
     """Generate a .json file with all the maps it founds on the folder
@@ -78,6 +87,91 @@ def generate_json_package(folder, package_name, use_carla_materials):
 
     return json_files
 
+def generate_decals_file(folder):
+
+    # search for all .fbx and .xodr pair of files
+    maps = []
+    for root, _, filenames in os.walk(folder):
+        files = fnmatch.filter(filenames, "*.fbx")
+        for file_name in files:
+            fbx = file_name[:-4]
+            # check if exist the .xodr file
+            if os.path.exists("%s/%s.xodr" % (root, fbx)):
+                maps.append([os.path.relpath(root, folder), fbx])
+
+    if (len(maps) > 0):
+        # build all the maps in .json format
+        json_decals = []
+        for map_name in maps:
+
+            name = map_name[1]
+
+            #create the decals default config file
+            json_decals.append({
+                'map_name' : name,
+                'drip1': '5',
+                'drip2': '5',
+                'drip3': '5',
+                'dirt1': '5',
+                'dirt2': '5',
+                'dirt3': '5',
+                'dirt4': '5',
+                'dirt5': '5',
+                'roadline1': '5',
+                'roadline2': '5',
+                'roadline3': '5',
+                'roadline4': '5',
+                'roadline5': '5',
+                'tiremark1': '5',
+                'tiremark2': '5',
+                'tiremark3': '5',
+                'tarsnake1': '5',
+                'tarsnake2': '5',
+                'tarsnake3': '5',
+                'tarsnake4': '5',
+                'tarsnake5': '5',
+                'tarsnake6': '5',
+                'tarsnake7': '5',
+                'tarsnake8': '5',
+                'tarsnake9': '5',
+                'tarsnake10': '5',
+                'tarsnake11': '5',
+                'cracksbig1': '5',
+                'cracksbig2': '5',
+                'cracksbig3': '5',
+                'cracksbig4': '5',
+                'cracksbig5': '5',
+                'cracksbig6': '5',
+                'cracksbig7': '5',
+                'cracksbig8': '5',
+                'crack1': '5',
+                'crack2': '5',
+                'crack3': '5',
+                'crack4': '5',
+                'crack5': '5',
+                'crack6': '5',
+                'crack7': '5',
+                'crack8': '5',
+                'decal_scale' : {
+                'x_axis' : '0.7',
+                'y_axis' : '0.7',
+                'z_axis' : '0.7'},
+                'fixed_decal_offset': {
+                'x_axis' : '30.0',
+                'y_axis' : '30.0',
+                'z_axis' : '30.0'},
+                'decal_min_scale' : '0.5',
+                'decal_max_scale' : '1.0',
+                'decal_random_yaw' : '180.0',
+                'random_offset' : '15.0'
+            });
+
+        # build and write the .json
+        f = open("%s/%s.json" % (folder, 'roadpainter_decals'), "w")
+        my_json = {'decals': json_decals}
+        serialized = json.dumps(my_json, sort_keys=False, indent=3)
+        f.write(serialized)
+        f.close()
 
 def invoke_commandlet(name, arguments):
     """Generic function for running a commandlet with its arguments."""
@@ -205,6 +299,21 @@ def generate_package_file(package_name, props, maps):
         json.dump(output_json, fh, indent=4)
 
 
+def copy_roadpainter_config_files(package_name):
+    """Copies roadpainter configuration files into Unreal content folder"""
+
+    two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")      
+    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    if not os.path.exists(package_config_path):
+        try:
+            os.makedirs(package_config_path)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
+    shutil.copy(final_path, package_config_path) 
+
+
 def import_assets(package_name, json_dirname, props, maps):
     """Same commandlet is used for importing assets and also maps."""
     commandlet_name = "ImportAssets"
@@ -282,6 +391,15 @@ def import_assets_from_json_list(json_list):
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
 
+            # We apply the carla materials to the imported maps
+            load_asset_materials_commandlet(package_name)
+
+
+def load_asset_materials_commandlet(package_name):
+    commandlet_name = "LoadAssetMaterials"
+    commandlet_arguments = ["-PackageName=%s" % package_name]
+    invoke_commandlet(commandlet_name, commandlet_arguments)
+
 
 def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
@@ -300,6 +418,7 @@ def move_assets_commandlet(package_name, maps):
     commandlet_arguments.append("-Maps=%s" % umap_names)
 
     invoke_commandlet(commandlet_name, commandlet_arguments)
+
 
 # build the binary file for navigation of pedestrians for that map
 def build_binary_for_navigation(package_name, dirname, maps):
@@ -373,13 +492,26 @@ def main():
         '--no-carla-materials',
         action='store_false',
         help='user Carla materials')
+    argparser.add_argument(
+        '--json-only',
+        action='store_true',
+        help='Create JSON files only')
+
     args = argparser.parse_known_args()[0]
 
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
     json_list = get_packages_json_list(import_folder)
-    if (len(json_list) == 0):
+    decals_json = get_decals_json_file(import_folder)
+
+    if len(json_list) == 0:
         json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
-    import_assets_from_json_list(json_list)
+
+    if len(decals_json) == 0:
+        decals_json_file = generate_decals_file(import_folder)
+
+    if args.json_only == False:
+        copy_roadpainter_config_files(args.package)
+        import_assets_from_json_list(json_list)
 
 if __name__ == '__main__':
     main()

@@ -68,7 +68,7 @@ __Open `World.cpp`__ in `carla/PythonAPI/carla/sourc/libcarla` and add the new t
 
 ---
 
-Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://forum.carla.org/c/installation-issues/linux) for any issues, doubts or suggestions.  
+Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues, doubts or suggestions.  
 
 <p style="font-size: 20px">What's next?</p>
 

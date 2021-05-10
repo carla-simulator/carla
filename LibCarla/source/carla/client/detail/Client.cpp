@@ -228,6 +228,19 @@ namespace detail {
     return _pimpl->AsyncCall("set_vehicle_light_state", vehicle, light_state);
   }
 
+  void Client::SetWheelSteerDirection(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg){
+    return _pimpl->AsyncCall("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
+  }
+
+  float Client::GetWheelSteerAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location){
+    return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
+  }
+
   rpc::Actor Client::SpawnActor(
       const rpc::ActorDescription &description,
       const geom::Transform &transform) {
@@ -427,8 +440,10 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("show_recorder_actors_blocked", name, min_time, min_distance);
   }
 
-  std::string Client::ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
-    return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration, follow_id);
+  std::string Client::ReplayFile(std::string name, double start, double duration,
+      uint32_t follow_id, bool replay_sensors) {
+    return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration,
+        follow_id, replay_sensors);
   }
 
   void Client::StopReplayer(bool keep_actors) {

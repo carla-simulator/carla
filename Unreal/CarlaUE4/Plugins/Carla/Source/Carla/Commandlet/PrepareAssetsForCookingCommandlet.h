@@ -9,7 +9,6 @@
 #include "Carla/OpenDrive/OpenDriveActor.h"
 #include "Commandlets/Commandlet.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-
 #include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
@@ -151,15 +150,15 @@ private:
 
   /// Workaround material for MarkingNodes mesh
   UPROPERTY()
-  UMaterial *MarkingNodeMaterial;
+  UMaterialInstance *MarkingNodeMaterial;
 
   /// Workaround material for the RoadNode mesh
   UPROPERTY()
-  UMaterial *RoadNodeMaterial;
+  UMaterialInstance *RoadNodeMaterial;
 
   /// Workaround material for the second material for the MarkingNodes
   UPROPERTY()
-  UMaterial *MarkingNodeMaterialAux;
+  UMaterialInstance *MarkingNodeMaterialAux;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()

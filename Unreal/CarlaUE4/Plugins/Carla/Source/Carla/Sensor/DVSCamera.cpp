@@ -122,6 +122,7 @@ void ADVSCamera::Set(const FActorDescription &Description)
 
 void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ADVSCamera::PostPhysTick);
   check(CaptureRenderTarget != nullptr);
   if (!HasActorBegunPlay() || IsPendingKill())
   {
@@ -152,6 +153,7 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
 
   if (events.size() > 0)
   {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
     /** Send the events **/
     auto Stream = GetDataStream(*this);
     auto Buffer = Stream.PopBufferFromPool();

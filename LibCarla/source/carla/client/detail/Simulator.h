@@ -24,6 +24,7 @@
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/VehicleWheels.h"
 
 #include <boost/optional.hpp>
 
@@ -450,6 +451,14 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
+    void SetWheelSteerDirection(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelSteerDirection(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelSteerAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }
@@ -500,8 +509,9 @@ namespace detail {
       return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
-      return _client.ReplayFile(std::move(name), start, duration, follow_id);
+    std::string ReplayFile(std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors);
     }
 
     void SetReplayerTimeFactor(double time_factor) {
