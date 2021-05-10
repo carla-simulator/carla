@@ -14,7 +14,7 @@ This process is only available for Linux systems. The import process involves ru
 - You will need to fulfill the following system requirements:
     - 64-bit version of [Docker](https://docs.docker.com/engine/install/) in Ubuntu 16.04+
     - Minimum 8GB of RAM
-    - Minimum 600 GB available disk space for building container images
+    - Minimum 700 GB available disk space for building container images
     - [Git](https://git-scm.com/downloads) version control
 - Ensure you are using a package (binary) version of CARLA. If you are using a version of CARLA that has been built from source to ingest maps then follow the guidelines [here][source_ingest] instead.
 - You should have at least two files, `<mapName>.xodr` and `<mapName>.fbx` that have been [generated][rr_generate_map] from a map editor such as RoadRunner. 
@@ -44,7 +44,7 @@ __3.__ Create an `input_folder`.  This is where you will put the files to be imp
 ```
 
 > !!! Note
-    This is not necessary if the package is prepared manually, and contains a `.json` file already. 
+    This is not necessary if the package is [prepared manually](tuto_M_manual_map_package.md), and contains a `.json` file already. 
 
 __4.__ Create an `output_folder`. This is where the Docker image will write the output files after it has cooked the map. 
 
