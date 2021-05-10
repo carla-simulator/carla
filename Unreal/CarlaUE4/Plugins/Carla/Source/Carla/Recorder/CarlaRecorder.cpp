@@ -54,17 +54,17 @@ std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, doubl
   return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, ReplaySensors);
 }
 
-inline void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
+void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
 {
   Replayer.SetTimeFactor(TimeFactor);
 }
 
-inline void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
+void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
 {
   Replayer.SetIgnoreHero(IgnoreHero);
 }
 
-inline void ACarlaRecorder::StopReplayer(bool KeepActors)
+void ACarlaRecorder::StopReplayer(bool KeepActors)
 {
   Replayer.Stop(KeepActors);
 }

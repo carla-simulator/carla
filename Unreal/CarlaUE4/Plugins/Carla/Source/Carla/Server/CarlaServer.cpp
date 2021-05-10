@@ -6,6 +6,8 @@
 
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
+#include "EngineUtils.h"
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -18,6 +20,7 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>

@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Util/NavigationMesh.h"
+#include "Misc/FileHelper.h"
 
 TArray<uint8> FNavigationMesh::Load(FString MapName)
 {
@@ -37,7 +38,7 @@ TArray<uint8> FNavigationMesh::Load(FString MapName)
       true,
       false,
       false);
-    if (FilesFound.Num() > 0) 
+    if (FilesFound.Num() > 0)
       FilePath = FilesFound[0u];
   }
 
