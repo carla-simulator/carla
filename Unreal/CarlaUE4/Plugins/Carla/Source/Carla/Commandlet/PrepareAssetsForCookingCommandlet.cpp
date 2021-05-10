@@ -198,19 +198,17 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           }
           else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
           {
-      		  if (RoadNodeMaterialInstance != NULL) {
-      		    MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterialInstance);
-      		  } else {
-        			MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
-      		  }
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, RoadNodeMaterial);
           }
           else if (AssetName.Contains(SSTags::R_TERRAIN))
           {
             MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
+            MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
           else if (AssetName.Contains(SSTags::R_SIDEWALK1) || AssetName.Contains(SSTags::R_SIDEWALK2))
           {
             MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterial);
+            MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
         }
       }
