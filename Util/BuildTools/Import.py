@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/env python
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -129,32 +129,44 @@ def generate_decals_file(folder):
             #create the decals default config file
             json_decals.append({
                 'map_name' : name,
-                'drip1': '5',
-                'drip3': '5',
-                'dirt1': '5',
-                'dirt5': '5',
-                'roadline1': '5',
-                'roadline5': '5',
-                'tiremark1': '5',
-                'tiremark3': '5',
-                'tarsnake1': '5',
-                'tarsnake11': '5',
-                'cracksbig1': '5',
-                'cracksbig8': '5',
-                'crack1': '5',
-                'crack8': '5',
+                'drip1': '10',
+                'drip3': '10',
+                'dirt1': '10',
+                'dirt5': '10',
+                'roadline1': '20',
+                'roadline5': '20',
+                'tiremark1': '20',
+                'tiremark3': '20',
+                'tarsnake1': '10',
+                'tarsnake11': '10',
+                'cracksbig1': '10',
+                'cracksbig8': '10',
+                'mud1' : '10',
+                'mud5' : '10',
+                'manhole1' : '10',
+                'manhole2' : '10',
+                'manhole3' : '10',
+                'oilsplat1' : '20',
+                'oilsplat2' : '20',
+                'oilsplat3' : '20',
+                'oilsplat4' : '20',
+                'oilsplat5' : '20',
+                'gum' : '30',
+                'grate' : '10',
+                'crack1': '10',
+                'crack8': '10',
                 'decal_scale' : {
-                'x_axis' : '0.7',
-                'y_axis' : '0.7',
-                'z_axis' : '0.7'},
+                'x_axis' : '1.0',
+                'y_axis' : '1.0',
+                'z_axis' : '1.0'},
                 'fixed_decal_offset': {
-                'x_axis' : '30.0',
-                'y_axis' : '30.0',
-                'z_axis' : '30.0'},
-                'decal_min_scale' : '0.5',
-                'decal_max_scale' : '1.0',
-                'decal_random_yaw' : '180.0',
-                'random_offset' : '15.0'
+                'x_axis' : '15.0',
+                'y_axis' : '15.0',
+                'z_axis' : '0.0'},
+                'decal_min_scale' : '1.0',
+                'decal_max_scale' : '1.5',
+                'decal_random_yaw' : '360.0',
+                'random_offset' : '20.0'
             });
 
         # build and write the .json

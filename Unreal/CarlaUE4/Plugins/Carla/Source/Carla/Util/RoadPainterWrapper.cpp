@@ -22,36 +22,39 @@
 ARoadPainterWrapper::ARoadPainterWrapper(){
 
   MapSize = 0.0f;
+  RoadTextureSizeX = 1024;
+  RoadTextureSizeY = 1024;
   bIsRenderedToTexture = false;
 
 #if WITH_EDITORONLY_DATA
 
-  static ConstructorHelpers::FObjectFinder<UMaterial> RoadMasterMaterial(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_RoadMaster.M_RoadMaster'"));
-  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadPresetMaterial(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03.M_Road_03'"));
+  // Initialization of map for translating from the JSON "decal_names" to MaterialInstance
 
-  // Initialization of map for translating from the JSON decal_names as a MaterialInstance
-  DecalNamesMap.Add("dirt1", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_01.DI_RoadDirt_01'")).Object);
-  DecalNamesMap.Add("dirt2", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_02.DI_RoadDirt_02'")).Object);
-  DecalNamesMap.Add("dirt3", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_03.DI_RoadDirt_03'")).Object);
-  DecalNamesMap.Add("dirt4", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_04.DI_RoadDirt_04'")).Object);
-  DecalNamesMap.Add("dirt5", ConstructorHelpers::FObjectFinder<UMaterialInstance>(TEXT("MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_05.DI_RoadDirt_05'")).Object);
+  // Dirt
+  DecalNamesMap.Add("dirt1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_01.DI_RoadDirt_01'");
+  DecalNamesMap.Add("dirt2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_02.DI_RoadDirt_02'");
+  DecalNamesMap.Add("dirt3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_03.DI_RoadDirt_03'");
+  DecalNamesMap.Add("dirt4", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_04.DI_RoadDirt_04'");
+  DecalNamesMap.Add("dirt5", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDirt_05.DI_RoadDirt_05'");
 
+  // Drip
   DecalNamesMap.Add("drip1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDrip_01.DI_RoadDrip_01'");
   DecalNamesMap.Add("drip2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDrip_02.DI_RoadDrip_02'");
   DecalNamesMap.Add("drip3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadDrip_03.DI_RoadDrip_03'");
 
+  // Road lines
   DecalNamesMap.Add("roadline1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadLine_01.DI_RoadLine_01'");
   DecalNamesMap.Add("roadline2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadLine_02.DI_RoadLine_02'");
   DecalNamesMap.Add("roadline3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadLine_03.DI_RoadLine_03'");
   DecalNamesMap.Add("roadline4", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadLine_04.DI_RoadLine_04'");
   DecalNamesMap.Add("roadline5", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_RoadLine_05.DI_RoadLine_05'");
 
+  // Tiremarks
   DecalNamesMap.Add("tiremark1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_TireMark_01.DI_TireMark_01'");
   DecalNamesMap.Add("tiremark2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_TireMark_02.DI_TireMark_02'");
   DecalNamesMap.Add("tiremark3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/RoadDirt/DI_TireMark_03.DI_TireMark_03'");
 
+  // Tarsnakes
   DecalNamesMap.Add("tarsnake1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/TarSnakes/DI_tarsnake1.DI_tarsnake1'");
   DecalNamesMap.Add("tarsnake2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/TarSnakes/DI_tarsnake2.DI_tarsnake2'");
   DecalNamesMap.Add("tarsnake3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/TarSnakes/DI_tarsnake3.DI_tarsnake3'");
@@ -64,6 +67,7 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   DecalNamesMap.Add("tarsnake10", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/TarSnakes/DI_tarsnake10.DI_tarsnake10'");
   DecalNamesMap.Add("tarsnake11", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/TarSnakes/DI_tarsnake11.DI_tarsnake11'");
 
+  // Cracks big
   DecalNamesMap.Add("cracksbig1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_cracksBig1.DI_cracksBig1'");
   DecalNamesMap.Add("cracksbig2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_cracksBig2.DI_cracksBig2'");
   DecalNamesMap.Add("cracksbig3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_cracksBig3.DI_cracksBig3'");
@@ -73,6 +77,7 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   DecalNamesMap.Add("cracksbig7", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_cracksBig7.DI_cracksBig7'");
   DecalNamesMap.Add("cracksbig8", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_cracksBig8.DI_cracksBig8'");
 
+  // Cracks
   DecalNamesMap.Add("crack1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_RoadCrack01.DI_RoadCrack01'");
   DecalNamesMap.Add("crack2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_RoadCrack02.DI_RoadCrack02'");
   DecalNamesMap.Add("crack3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_RoadCrack05.DI_RoadCrack05'");
@@ -82,128 +87,69 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   DecalNamesMap.Add("crack7", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_RoadCrack15.DI_RoadCrack15'");
   DecalNamesMap.Add("crack8", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Cracks/DI_RoadCrack16.DI_RoadCrack16'");
 
-  // Decal names array
-  DecalNamesArray = {"drip1", "drip2", "drip3",
-  "dirt1", "dirt2", "dirt3", "dirt4", "dirt5",
-  "roadline1", "roadline2", "roadline3", "roadline4", "roadline5",
-  "tiremark1", "tiremark2", "tiremark3", 
-  "tarsnake1", "tarsnake2", "tarsnake3", "tarsnake4", "tarsnake5", "tarsnake6", "tarsnake7", "tarsnake8", "tarsnake9", "tarsnake10", "tarsnake11",
-  "cracksbig1", "cracksbig2", "cracksbig3", "cracksbig4", "cracksbig5", "cracksbig6", "cracksbig7", "cracksbig8",
-  "crack1", "crack2", "crack3", "crack4", "crack5", "crack6", "crack7", "crack8" };
+  // Manholes
+  DecalNamesMap.Add("manhole1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Manhole/DI_Manhole01.DI_Manhole01'");
+  DecalNamesMap.Add("manhole2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Manhole/DI_Manhole02.DI_Manhole02'");
+  DecalNamesMap.Add("manhole3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Manhole/DI_Manhole03.DI_Manhole03'");
 
-  RoadNodeMasterMaterial = RoadMasterMaterial.Object;
-  RoadNodePresetMaterial = RoadPresetMaterial.Object;
+  // Mud
+  DecalNamesMap.Add("mud1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/MudDecal/DI_Mud_1.DI_Mud_1'");
+  DecalNamesMap.Add("mud2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/MudDecal/DI_Mud_2.DI_Mud_2'");
+  DecalNamesMap.Add("mud3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/MudDecal/DI_Mud_3.DI_Mud_3'");
+  DecalNamesMap.Add("mud4", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/MudDecal/DI_Mud_4.DI_Mud_4'");
+  DecalNamesMap.Add("mud5", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/MudDecal/DI_Mud_5.DI_Mud_5'");
 
-#endif
-}
-
-void ARoadPainterWrapper::ReadJsonAndPaintRoads() {
+  // Oil splats
+  DecalNamesMap.Add("oilsplat1", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_OilSplat1.DI_OilSplat1'");
+  DecalNamesMap.Add("oilsplat2", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_OilSplat2.DI_OilSplat2'");
+  DecalNamesMap.Add("oilsplat3", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_OilSplat3.DI_OilSplat3'");
+  DecalNamesMap.Add("oilsplat4", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_OilSplat4.DI_OilSplat4'");
+  DecalNamesMap.Add("oilsplat5", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_OilSplat5.DI_OilSplat5'");
 
   // Get road painter info file
   FString JsonInfoFile;
+  // Misc
+  DecalNamesMap.Add("gum", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_Gum.DI_Gum'");
+  DecalNamesMap.Add("grate", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Manhole/DI_Grate_01_v2.DI_Grate_01_v2'");
 
-  FString MapName = GetWorld()->GetMapName();
-  //Get the map name from the string "UEPIE_0_mapname"
-  MapName = MapName.RightChop(MapName.GetCharArray().Num() - MapName.Find("_", ESearchCase::Type::IgnoreCase, ESearchDir::Type::FromEnd));
-  UE_LOG(LogTemp, Warning, TEXT("The name of the map is %s"), *MapName);
+  RoadMasterMaterialName = "Material'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_RoadMasterTiled.M_RoadMasterTiled'";
+  RoadInstanceMaterialName = "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled.M_Road_03_Tiled'";
 
-  TArray<FString> FileList;
-  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
-    *(FString("roadpainter_info_" + MapName + ".json")), true, false, false);
+  RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/Tiles/HDTiles/M_SquareTile_v4_d.M_SquareTile_v4_d'");
+  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/Decals/Road/OilSplats/Textures/GroundSplatter/T_GroundSplatter_d.T_GroundSplatter_d'");
+  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/RoadStencil/Alphas/splat1.splat1'");
+  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/RoadStencil/Alphas/splat2.splat2'");
+  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/RoadStencil/Alphas/splat3.splat3'");
 
-  if (FileList.Num() == 0) return;
-
-  FString AbsolutePathToFile = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]);
-  if (FFileHelper::LoadFileToString(JsonInfoFile, *AbsolutePathToFile)) {
-
-    TSharedPtr<FJsonObject> JsonParsed;
-    TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonInfoFile);
-    if (FJsonSerializer::Deserialize(JsonReader, JsonParsed))
-    {
-      //Get the boolean we need
-      bool AreRoadsPainted = JsonParsed->GetBoolField(TEXT("painted_roads"));
-      if (AreRoadsPainted == false) {
-
-        //Switch the material mask to R(ed) channel.
-        //This means rendering the roads to texture only using the R mask
-        SwitchMaterialMaskEvent(0);
-        //Render all roads to texture
-        PaintAllRoadsEvent();
-
-        //Switch the material mask to G(reen) channel.
-        SwitchMaterialMaskEvent(1);
-        PaintAllRoadsEvent();
-
-        //Switch the material mask to B(lue) channel.
-        SwitchMaterialMaskEvent(2);
-        PaintAllRoadsEvent();
-
-        //Set back to default
-        SwitchMaterialMaskEvent(0);
-
-        //We write our variables
-        TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-        //Are the textures already loaded?
-        RootObject->SetBoolField("prepared_roadpainter", true);
-        //Are the roads rendered to texture already?
-        RootObject->SetBoolField("painted_roads", true);
-        //Does the roadpainter need to generate new textures and apply changes on construction?
-        RootObject->SetStringField("texture_name", JsonParsed->GetStringField("texture_name"));
-
-        FString JsonString;
-        TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
-        FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
-        //Save JSON file
-        FFileHelper::SaveStringToFile(JsonString, *AbsolutePathToFile);
-      }
-
-      bIsRenderedToTexture = true;
-    }
-  }
+#endif
 }
 
 void ARoadPainterWrapper::BeginPlay()
 {
   Super::BeginPlay();
 
-  //if (bIsRenderedToTexture == false) {
-  //
-  //  ReadJsonAndPaintRoads();
-  //}
 }
 
 void ARoadPainterWrapper::GenerateDynamicAssets()
 {
-  ReadJsonAndPrepareRoadPainter();
-}
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), FoundActors);
+  AStaticMeshActor *RoadMeshActor = nullptr;
 
-void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter() {
-
-  //Get road painter info file
-  FString JsonInfoFile;
-
-  TArray<FString> FileList;
-  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
-    *(FString("roadpainter_info_" + GetWorld()->GetMapName() + ".json")), true, false, false);
-
-  if (FileList.Num() == 0) return;
-
-  FString AbsolutePathToFile = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]);
-  if (FFileHelper::LoadFileToString(JsonInfoFile, *AbsolutePathToFile)) {
-
-    TSharedPtr<FJsonObject> JsonParsed;
-    TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonInfoFile);
-    if (FJsonSerializer::Deserialize(JsonReader, JsonParsed))
+  for (int32 i = 0; i < FoundActors.Num(); ++i)
+  {
+    RoadMeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
+    if (RoadMeshActor)
     {
       ZSizeEvent();
 
       FString TextureString;
-      // Get the string we need
+      //Get the string we need
       bool IsRoadPainterReady = JsonParsed->GetBoolField(TEXT("prepared_roadpainter"));
       if (IsRoadPainterReady == false) {
 
-        // Generate the texture we need and save the name.
-        // This will be written into a .json file so we can look it up later
+        //Generate the texture we need and save the name.
+        //This will be written into a .json file so we can look it up later
         TextureString = GenerateTexture();
       }
 
@@ -219,7 +165,7 @@ void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter() {
           if (RoadMeshActor->GetName().Contains("Roads_Road", ESearchCase::Type::CaseSensitive) == true)
           {
             if (RoadMeshActor->GetStaticMeshComponent()->GetMaterial(0)->GetName().Contains("MaterialInstance", ESearchCase::Type::CaseSensitive) == false) {
-              // Create the dynamic material instance for the road (which will hold the map size and road texture)
+              //Create the dynamic material instance for the road (which will hold the map size and road texture)
               UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
               MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
               MI->SetScalarParameterValue(FName("Map units (CM)"), MapSize);
@@ -230,17 +176,19 @@ void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter() {
         }
       }
 
-      // We write our variables
+      //We write our variables
       TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-      // Are the textures ready?
+      //Are the textures ready?
       RootObject->SetBoolField("prepared_roadpainter", true);
-      // Are the roads rendered to texture already?
+      //Are the roads rendered to texture already?
       RootObject->SetBoolField("painted_roads", false);
       if (IsRoadPainterReady == false) {
-        // We set the name of the newly generated texture into the json file
+
+        //We set the name of the newly generated texture into the json file
         RootObject->SetStringField("texture_name", TextureString);
       }
       else {
+
         TextureString = JsonParsed->GetStringField("texture_name");
         RootObject->SetStringField("texture_name", TextureString);
       }
@@ -248,7 +196,7 @@ void ARoadPainterWrapper::ReadJsonAndPrepareRoadPainter() {
       FString JsonString;
       TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
       FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
-      // Save JSON file
+      //Save JSON file
       FFileHelper::SaveStringToFile(JsonString, *AbsolutePathToFile);
     }
   }
@@ -261,8 +209,8 @@ const FString ARoadPainterWrapper::GenerateTexture()
   FString BaseTextureName = FString("RoadMapTexture");
   TexturePackageName += BaseTextureName;
 
-  // Get road painter info file
-  FString JsonInfoFile;
+  // Create the package that will store our texture
+  TexturePackage = CreatePackage(*TexturePackageName);
 
   // Create a unique name for our asset. For example, if a texture named RoadMapTexture already exists the editor
   // will name the new texture as "RoadMapTexture_1"
@@ -285,130 +233,82 @@ const FString ARoadPainterWrapper::GenerateTexture()
 
     RoadTexture->UpdateResource();
 
-    TSharedPtr<FJsonObject> JsonParsed;
-    TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonInfoFile);
-    if (FJsonSerializer::Deserialize(JsonReader, JsonParsed))
-    {
-      // Get the boolean we need
-      bool AreRoadsPainted = JsonParsed->GetBoolField(TEXT("painted_roads"));
-      if (AreRoadsPainted == false) {
+    // Notify the editor we created a new asset
+    FAssetRegistryModule::AssetCreated(RoadTexture);
 
-        // Switch the material mask to R(ed) channel.
-        // This means rendering the roads to texture only using the R mask
-        SwitchMaterialMaskEvent(0);
-        // Render all roads to texture
-        PaintAllRoadsEvent();
-
-        // Switch the material mask to G(reen) channel.
-        SwitchMaterialMaskEvent(1);
-        PaintAllRoadsEvent();
-
-        // Switch the material mask to B(lue) channel.
-        SwitchMaterialMaskEvent(2);
-        PaintAllRoadsEvent();
-
-        // Set back to default
-        SwitchMaterialMaskEvent(0);
-
-        // We write our variables
-        TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-        // Are the textures already loaded?
-        RootObject->SetBoolField("prepared_roadpainter", true);
-        // Are the roads rendered to texture already?
-        RootObject->SetBoolField("painted_roads", true);
-        // Does the roadpainter need to generate new textures and apply changes on construction?
-        RootObject->SetStringField("texture_name", JsonParsed->GetStringField("texture_name"));
-
-        FString JsonString;
-        TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
-        FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
-        // Save JSON file
-        FFileHelper::SaveStringToFile(JsonString, *AbsolutePathToFile);
-      }
-      bIsRenderedToTexture = true;
-    }
+    return TextureString;
   }
+
+  return TextureString;
+}
+
+void ARoadPainterWrapper::StoreRoadWaypointForRender(FVector2D WaypointLocation, float StencilSize) {
+
+  FVector2D TexLocation;
+  float TempX, TempY = 0.0f;
+  TempX = RoadTextureSizeX / MapSize;
+  TempX = WaypointLocation.X * TempX;
+  TempX = TempX + (RoadTextureSizeX / 2.0f);
+
+  TempY = RoadTextureSizeY / MapSize;
+  TempY = WaypointLocation.Y * TempY;
+  TempY = TempY + (RoadTextureSizeY / 2.0f);
+
+  TexLocation.X = TempX;
+  TexLocation.Y = TempY;
+
+  RoadWaypointsForTex.Add(TexLocation);
 }
 
 void ARoadPainterWrapper::RenderWaypointsToTexture() {
 
-  if (bIsRenderedToTexture == false) {
-    ReadJsonAndPaintRoads();
+  TArray<uint8> Pixels;
+  Pixels.Init(0, RoadTextureSizeX * RoadTextureSizeY * 4);
+
+  for (int32 i = 0; i < RoadWaypointsForTex.Num(); i += 4) {
+
+    Pixels[i] = 0;
+    Pixels[i + 1] = 0;
+    Pixels[i + 2] = 0;
+    Pixels[i + 3] = 255;
   }
 
   int Row, Column = 0;
   for (int32 i = 0; i < RoadWaypointsForTex.Num(); ++i) {
 
-const FString ARoadPainterWrapper::GenerateTexture()
-{
-  // We have to find the directory where the maps have been imported
-  // For this, we can track any of the .json files we have generated
-  // and then go back 2 in the file path (.../map_package/Config/roadpainter_decals.json)
-  // We can't assume the directory name is "map_package", because the user can change it
-  TArray<FString> FileList;
-  IFileManager::Get().FindFilesRecursive(FileList, *(FPaths::ProjectContentDir()),
-    *(FString("roadpainter_decals.json")), true, false, false);
-
-  // Get the absolute path to that file
-  FString JsonFilePath = *(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FileList[0]));
-  FString Path = JsonFilePath.LeftChop((JsonFilePath.GetCharArray().Num() - 1) - JsonFilePath.Find("/Config/", ESearchCase::Type::CaseSensitive, ESearchDir::FromEnd));
-  FString ImportPackageName = Path.RightChop(Path.Find("/", ESearchCase::IgnoreCase, ESearchDir::FromEnd) + 1);
-
-  // Create a string containing the texture's path
-  FString PackageName = TEXT("/Game/" + ImportPackageName + "/RoadPainterTextures/");
-  FString BaseTextureName = FString("RoadMapTexture");
-  PackageName += BaseTextureName;
-
-  // Create the package that will store our texture
-  UPackage *Package = CreatePackage(*PackageName);
-
-  // Create a unique name for our asset. For example, if a texture named RoadMapTexture already exists the editor
-  // will name the new texture as "RoadMapTexture_1"
-  const FName TextureName = MakeUniqueObjectName(Package, UTextureRenderTarget2D::StaticClass(), FName(*BaseTextureName));
-  FString TextureString = TextureName.ToString();
-  Package->FullyLoad();
-
-  RoadTexture = NewObject<UTextureRenderTarget2D>(Package, TextureName, RF_Public | RF_Standalone | RF_MarkAsRootSet);
-  if (RoadTexture)
-  {
-    // Prevent the object and all its descendants from being deleted during garbage collection
-    RoadTexture->AddToRoot();
-    RoadTexture->RenderTargetFormat = ETextureRenderTargetFormat::RTF_RGBA8;
-    RoadTexture->SizeX = 2048;
-    RoadTexture->SizeY = 2048;
-    RoadTexture->AddressX = TextureAddress::TA_Wrap;
-    RoadTexture->AddressY = TextureAddress::TA_Wrap;
-
-    // Initialize the platform data to store necessary information regarding our texture asset
-    InternalTexture2D->AddToRoot();
-    InternalTexture2D->PlatformData = new FTexturePlatformData();
-    InternalTexture2D->PlatformData->SizeX = 4096;
-    InternalTexture2D->PlatformData->SizeY = 4096;
-    InternalTexture2D->AddressX = TextureAddress::TA_Wrap;
-    InternalTexture2D->AddressY = TextureAddress::TA_Wrap;
+    Row = FMath::RoundToInt(RoadWaypointsForTex[i].Y) * RoadTextureSizeX;
+    Column = FMath::RoundToInt(RoadWaypointsForTex[i].X);
+    int PixelLocation = FMath::Abs((Row + Column) * 4);
+    Pixels[PixelLocation] = 127;
+    Pixels[PixelLocation + 1] = 127;
+    Pixels[PixelLocation + 2] = 127;
+    Pixels[PixelLocation + 3] = 255;
+  }
+  
+  FTexture2DMipMap *Mip = new FTexture2DMipMap();
+  RoadTexture->PlatformData->Mips.Add(Mip);
+  Mip->SizeX = RoadTextureSizeX;
+  Mip->SizeY = RoadTextureSizeY;
+  
+  Mip->BulkData.Lock(LOCK_READ_WRITE);
+  uint8 *TextureData = (uint8*)Mip->BulkData.Realloc(RoadTextureSizeX * RoadTextureSizeY * 4);
+  FMemory::Memcpy(TextureData, Pixels.GetData(), RoadTextureSizeX * RoadTextureSizeY * 4);
+  Mip->BulkData.Unlock();
 
 #if WITH_EDITORONLY_DATA
   RoadTexture->Source.Init(RoadTextureSizeX, RoadTextureSizeY, 1, 1, ETextureSourceFormat::TSF_BGRA8, Pixels.GetData());
 #endif
-    InternalTexture2D->UpdateResource();
 
+  RoadTexture->UpdateResource();
+  TexturePackage->MarkPackageDirty();
 
-    // Set the texture render target internal texture
-    RoadTexture->UpdateTexture2D(InternalTexture2D, ETextureSourceFormat::TSF_RGBA8);
-#if WITH_EDITORONLY_DATA
-    RoadTexture->Source.Init(4096, 4096, 1, 1, ETextureSourceFormat::TSF_RGBA8);
+  // Notify the editor we created a new asset
+  FAssetRegistryModule::AssetCreated(RoadTexture);
+  
+  // Save the new asset
+#if WITH_EDITOR
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif
-    RoadTexture->UpdateResource();
-    Package->MarkPackageDirty();
-
-    // Notify the editor we created a new asset
-    FAssetRegistryModule::AssetCreated(RoadTexture);
-
-    // Auto-save the new asset
-    FString PackageFilename = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-    UPackage::SavePackage(Package, RoadTexture, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFilename, GError, nullptr, true, true, SAVE_NoError);
-    return TextureString;
-  }
 
   RoadWaypointsForTex.Empty();
 }
