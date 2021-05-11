@@ -132,14 +132,21 @@ def generate_decals_file(folder):
                 'drip1': '10',
                 'drip3': '10',
                 'dirt1': '10',
+                'dirt3' : '10',
+                'dirt4' : '10',
                 'dirt5': '10',
                 'roadline1': '20',
                 'roadline5': '20',
                 'tiremark1': '20',
                 'tiremark3': '20',
                 'tarsnake1': '10',
-                'tarsnake11': '10',
+                'tarsnake3': '20',
+                'tarsnake4': '10',
+                'tarsnake5': '20',
+                'tarsnake11': '20',
                 'cracksbig1': '10',
+                'cracksbig3': '10',
+                'cracksbig5': '10',
                 'cracksbig8': '10',
                 'mud1' : '10',
                 'mud5' : '10',
@@ -150,6 +157,9 @@ def generate_decals_file(folder):
                 'oilsplat5' : '20',
                 'gum' : '30',
                 'crack1': '10',
+                'crack3' : '10',
+                'crack4' : '10',
+                'crack5' : '10',
                 'crack8': '10',
                 'decal_scale' : {
                 'x_axis' : '1.0',
@@ -411,7 +421,7 @@ def import_assets_from_json_list(json_list):
             move_assets_commandlet(package_name, maps)
 
             # we need to build the binary file for navigation of pedestrians
-            #build_binary_for_navigation(package_name, dirname, maps)
+            build_binary_for_navigation(package_name, dirname, maps)
 
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             if len(maps) > 0:
