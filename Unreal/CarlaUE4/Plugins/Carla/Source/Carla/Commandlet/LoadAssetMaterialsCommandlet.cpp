@@ -78,7 +78,7 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
   for (const auto &Map : MapsPaths)
   {
     AssetDatas.Empty();
-    const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
+    const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/");
     MapObjectLibrary->LoadAssetDataFromPath(*DefaultPath);
     MapObjectLibrary->LoadAssetsFromAssetData();
     MapObjectLibrary->GetAssetDataList(AssetDatas);
