@@ -52,7 +52,7 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03.M_Road_03'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled.M_Road_03_Tiled'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNodeAux(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMY.M_Road_03_LMY'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
