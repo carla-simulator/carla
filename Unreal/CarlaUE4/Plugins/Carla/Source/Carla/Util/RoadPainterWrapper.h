@@ -80,9 +80,6 @@ public:
   UFUNCTION(BlueprintCallable, Category = "RoadPainter Wrapper")
   void GenerateDynamicAssets();
 
-  UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
-  UTexture2D *RoadBrushTexture;
-
   /// Variable used for storing the JSON values of the decals
   /// so it can be later used by the blueprint (Road Painter Preset)
   UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
@@ -98,14 +95,4 @@ private:
   UPROPERTY()
   TMap<FString, FString> DecalNamesMap;
 
-  UPROPERTY()
-  TArray<FString> RoadTextureBrushes;
-
-  /// Master material of the roads (necessary for creating material instances)
-  UPROPERTY()
-  FString RoadMasterMaterialName;
-
-  /// Material instance that copies 
-  UPROPERTY()
-  FString RoadInstanceMaterialName;
 };

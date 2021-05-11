@@ -112,15 +112,6 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   DecalNamesMap.Add("gum", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_Gum.DI_Gum'");
   DecalNamesMap.Add("grate", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Manhole/DI_Grate_01_v2.DI_Grate_01_v2'");
 
-  RoadMasterMaterialName = "Material'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_RoadMasterTiled.M_RoadMasterTiled'";
-  RoadInstanceMaterialName = "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled.M_Road_03_Tiled'";
-
-  RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/Tiles/HDTiles/M_SquareTile_v4_d.M_SquareTile_v4_d'");
-  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/Decals/Road/OilSplats/Textures/GroundSplatter/T_GroundSplatter_d.T_GroundSplatter_d'");
-  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/RoadStencil/Alphas/splat1.splat1'");
-  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/RoadStencil/Alphas/splat2.splat2'");
-  //RoadTextureBrushes.Add("Texture2D'/Game/Carla/Static/GenericMaterials/RoadStencil/Alphas/splat3.splat3'");
-
 #endif
 }
 
@@ -132,74 +123,7 @@ void ARoadPainterWrapper::BeginPlay()
 
 void ARoadPainterWrapper::GenerateDynamicAssets()
 {
-  TArray<AActor*> FoundActors;
-  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), FoundActors);
-  AStaticMeshActor *RoadMeshActor = nullptr;
 
-  for (int32 i = 0; i < FoundActors.Num(); ++i)
-  {
-    RoadMeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
-    if (RoadMeshActor)
-    {
-      ZSizeEvent();
-
-      FString TextureString;
-      //Get the string we need
-      bool IsRoadPainterReady = JsonParsed->GetBoolField(TEXT("prepared_roadpainter"));
-      if (IsRoadPainterReady == false) {
-
-        //Generate the texture we need and save the name.
-        //This will be written into a .json file so we can look it up later
-        TextureString = GenerateTexture();
-      }
-
-      TArray<AActor*> FoundActors;
-      UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), FoundActors);
-      AStaticMeshActor *RoadMeshActor = nullptr;
-
-      for (int32 i = 0; i < FoundActors.Num(); ++i)
-      {
-        RoadMeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
-        if (RoadMeshActor)
-        {
-          if (RoadMeshActor->GetName().Contains("Roads_Road", ESearchCase::Type::CaseSensitive) == true)
-          {
-            if (RoadMeshActor->GetStaticMeshComponent()->GetMaterial(0)->GetName().Contains("MaterialInstance", ESearchCase::Type::CaseSensitive) == false) {
-              //Create the dynamic material instance for the road (which will hold the map size and road texture)
-              UMaterialInstanceDynamic* MI = UMaterialInstanceDynamic::Create(RoadNodeMasterMaterial, NULL);
-              MI->CopyParameterOverrides((UMaterialInstance*)RoadNodePresetMaterial);
-              MI->SetScalarParameterValue(FName("Map units (CM)"), MapSize);
-              MI->SetTextureParameterValue(FName("Texture Mask"), RoadTexture);
-              RoadMeshActor->GetStaticMeshComponent()->SetMaterial(0, MI);
-            }
-          }
-        }
-      }
-
-      //We write our variables
-      TSharedPtr<FJsonObject> RootObject = MakeShareable(new FJsonObject());
-      //Are the textures ready?
-      RootObject->SetBoolField("prepared_roadpainter", true);
-      //Are the roads rendered to texture already?
-      RootObject->SetBoolField("painted_roads", false);
-      if (IsRoadPainterReady == false) {
-
-        //We set the name of the newly generated texture into the json file
-        RootObject->SetStringField("texture_name", TextureString);
-      }
-      else {
-
-        TextureString = JsonParsed->GetStringField("texture_name");
-        RootObject->SetStringField("texture_name", TextureString);
-      }
-
-      FString JsonString;
-      TSharedRef<TJsonWriter<TCHAR>> JsonWriter = TJsonWriterFactory<TCHAR>::Create(&JsonString);
-      FJsonSerializer::Serialize(RootObject.ToSharedRef(), JsonWriter);
-      //Save JSON file
-      FFileHelper::SaveStringToFile(JsonString, *AbsolutePathToFile);
-    }
-  }
 }
 
 const FString ARoadPainterWrapper::GenerateTexture()
