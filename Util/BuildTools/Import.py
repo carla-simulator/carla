@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -143,16 +143,12 @@ def generate_decals_file(folder):
                 'cracksbig8': '10',
                 'mud1' : '10',
                 'mud5' : '10',
-                'manhole1' : '10',
-                'manhole2' : '10',
-                'manhole3' : '10',
                 'oilsplat1' : '20',
                 'oilsplat2' : '20',
                 'oilsplat3' : '20',
                 'oilsplat4' : '20',
                 'oilsplat5' : '20',
                 'gum' : '30',
-                'grate' : '10',
                 'crack1': '10',
                 'crack8': '10',
                 'decal_scale' : {
