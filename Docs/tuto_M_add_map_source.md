@@ -8,8 +8,7 @@ The ingestion process involves importing the relevant map files by compiling the
 
 - [__Before you begin__](#before-you-begin)
 - [__Map ingestion__](#map-ingestion)
-    - [Customize the map](#customize-the-map)
-    - [Generate pedestrian navigation](#generate-pedestrian-navigation)
+- [__Next steps__](#next-steps)
 
 ---
 
@@ -31,15 +30,30 @@ __1.__ Place the map files to be imported in the `Import` folder found in the CA
 __2.__ Run the command below to ingest the files:
 
 ```sh
-    make import ARGS="--package <package_name> --no-carla-materials"
+    make import ARGS="--package=<package_name> --no-carla-materials"
 ```
 
 __Note that there are two parameter flags that can be set__:
 
 - `--package <package_name>` specifies the name of the package. By default, this is set to `map_package`. Two packages cannot have the same name, so using the default value will lead to errors on a subsequent ingestion. __It is highly recommended to change the name of the package__. 
-- `--no-carla-materials` specifies that you do not want to use the default CARLA materials (road textures etc). You will use the RoadRunner materials instead. This flag is only required if you are not providing your own [`.json` file](tuto_M_custom_map_overview.md#ingest-the-map-in-carla). Any value in the `.json` file will override this flag.
+- `--no-carla-materials` specifies that you do not want to use the default CARLA materials (road textures etc). You will use the RoadRunner materials instead. This flag is __only required if you are not__ providing your own [`.json` file](tuto_M_manual_map_package.md). Any value in the `.json` file will override this flag.
 
+---
 
+## Next steps
 
+You will now be able to open your map in the Unreal Editor. From here, you will be able to customize the map and generate the pedestrian navigation data. We recommend generating the pedestrian navigation after all customization has finished, so there is no chance of obstacles blocking the pedestrian paths.
 
-Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the [forum](https://forum.carla.org/) or you can try running some of our [example scripts](https://github.com/carla-simulator/carla/tree/master/PythonAPI/examples) on your new map to test it out.
+CARLA provides several tools and guides to help with the customization of your maps:
+
+- [Add and configure traffic lights.](tuto_M_custom_add_tl.md)
+- [Add buildings with the procedural building tool.](tuto_M_custom_buildings.md)
+- [Customize the road with the road painter tool.](tuto_M_custom_road_painter.md)
+- [Customize the weather](tuto_M_custom_weather_landscape.md#weather-customization)
+- [Customize the landscape with serial meshes.](tuto_M_custom_weather_landscape.md#add-serial-meshes)
+
+Once you have finished with the customization, you can [generate the pedestrian navigation information](tuto_M_generate_pedestrian_navigation.md).
+
+---
+
+If you have any questions about the process then you can ask in the [forum](https://forum.carla.org/).
