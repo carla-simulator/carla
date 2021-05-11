@@ -1,11 +1,9 @@
 # Alternative methods to import maps
 
-This section describes how to prepare a map package manually and details methods to import maps alternative to the processes described in the guides [__Import into source build version of CARLA__](tuto_M_add_map_source.md) and [__Import into package version of CARLA__](tuto_M_add_map_package.md). The methods described in this section involve more manual steps than the processes explained in those guides. 
+This guide describes alternative methods to import maps into CARLA. These methods involve more manual steps than the processes described in the [package](tuto_M_add_map_package.md) and [source](tuto_M_add_map_source.md) import guides. First we will describe the RoadRuner plugin and then the manual import method.
 
 - [__RoadRunner plugin import__](#roadrunner-plugin-import)
 - [__Manual import__](#manual-import)
-- [__Set traffic and pedestrian behaviour__](#set-traffic-and-pedestrian-behaviour)
-- [__Manual package preparation__](#manual-package-preparation)
 
 ---
 
@@ -26,13 +24,13 @@ __3.__ Rebuild the plugin following the instructions below:
 	* In the root folder of CARLA, run the command:
 
 ```sh
-        make launch
+make launch
 ```
 
 *   __On Linux.__  
 	* Run the following command:  
 ```sh
-        UE4_ROOT/GenerateProjectFiles.sh -project="carla/Unreal/CarlaUE4/CarlaUE4.uproject" -game -engine
+UE4_ROOT/GenerateProjectFiles.sh -project="carla/Unreal/CarlaUE4/CarlaUE4.uproject" -game -engine
 ```
 
 __4.__ In the Unreal Engine window, make sure the checkbox is selected for both plugins `Edit > Plugins`. 
@@ -156,73 +154,6 @@ __15.__ In the _Details_ panel, check `Add Spawners` and then click on the box b
 __18.__ To add pedestrian navigation capabilities, see the section [Add pedestrian navigation](#add-pedestrian-navigation).
 
 __17.__ Save your map and press _Play_ to run a simulation on your new map.
-
-#### Traffic lights and signs
-
-To add traffic lights and signs to your new map:
-
-__1.__ From the _Content Browser_, navigate to `Content/Carla/Static` to find the folders that contain traffic lights and traffic signs.
-
-__2.__ Drag the signs and/or lights into the scene. 
-
-__3.__ Adjust the [`trigger volume`][triggerlink] for each of them by selecting the _BoxTrigger_ component and adjusting the values of _Scale_ in the _Transform_ section of the _Details_ menu. This will determine their area of influence.  
-
->>![ue_trafficlight](img/ue_trafficlight.jpg)
-
-__4.__ For junctions, drag a traffic light group actor into the level. Assign all the traffic lights involved to it and configure their timing. Make sure to understand [how traffic lights work](core_actors.md#traffic-signs-and-traffic-lights).  
-
->>![ue_tl_group](img/ue_tl_group.jpg)
-
-__5.__ Test traffic light timing and traffic trigger volumes. This may require some trial and error to get right.
-
->>![ue_tlsigns_example](img/ue_tlsigns_example.jpg)
-
-> _Example: Traffic Signs, Traffic lights and Turn based stop._
-
-[triggerlink]: python_api.md#carla.TrafficSign.trigger_volume
-
-#### Add pedestrian navigation
-
-To allow pedestrians to navigate the new map, you will need to generate a pedestrian navigation file. Follow the steps below to generate the file:  
-
-__1.__ Generate new crosswalks if needed. Avoid doing this if the crosswalk is already defined in the `.xodr` file as this will lead to duplication:
-
-- Create a plane mesh that extends a bit over two sidewalks that you want to connect.
-- Place the mesh overlapping the ground and disable it's physics and rendering.
-
->>![disable_rendering](img/disable_rendering.png)
-
-- Change the name of the mesh to `Road_Crosswalk` or `Roads_Crosswalk`.
-
-__2.__ To prevent the map being too large to export, select the __BP_Sky object__ and add a tag `NoExport` to it. If you have any other particularly large meshes that are not involved in the pedestrian navigation, add the `NoExport` tag to them as well. 
-
->>![ue_skybox_no_export](img/ue_noexport.png) 
-
-__3.__ Double check your mesh names. Mesh names should start with any of the appropriate formats listed below in order to be recognized as areas where pedestrians can walk. By default, pedestrians will be able to walk over sidewalks, crosswalks, and grass (with minor influence over the rest):  
-
-*   Sidewalk = `Road_Sidewalk` or `Roads_Sidewalk` 
-*   Crosswalk = `Road_Crosswalk` or `Roads_Crosswalk` 
-*   Grass = `Road_Grass` or `Roads_Grass`
-
->>![ue_meshes](img/ue_meshes.jpg) 
-
-__4.__ Press `ctrl + A` to select everything and export the map by selecting `File` -> `Carla Exporter`. A `<mapName>.obj` file will be created in `Unreal/CarlaUE4/Saved`.
-
-__5.__ Copy the `<mapName>.obj` and the `<mapName>.xodr` to `Util/DockerUtils/dist`.  
-
-__6.__ Run the following command to generate the navigation file:  
-
-*   __Windows__ 
-```sh
-build.bat <mapName> # <mapName> has no extension
-```
-*   __Linux__
-```sh
-./build.sh <mapName> # <mapName> has no extension
-```
-
-__7.__ A `<mapName>.bin` file will be created. This file contains the information for pedestrian navigation on your map. Move this file to the `Nav` folder of the package that contains your map.  
-
 
 ---
 
