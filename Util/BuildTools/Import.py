@@ -107,12 +107,17 @@ def generate_decals_file(folder):
     # search for all .fbx and .xodr pair of files
     maps = []
     for root, _, filenames in os.walk(folder):
-        files = fnmatch.filter(filenames, "*.fbx")
+        files = fnmatch.filter(filenames, "*.xodr")
         for file_name in files:
-            fbx = file_name[:-4]
-            # check if exist the .xodr file
-            if os.path.exists("%s/%s.xodr" % (root, fbx)):
-                maps.append([os.path.relpath(root, folder), fbx])
+            xodr = file_name[:-5]
+            # check if exist the .fbx file
+            if os.path.exists("%s/%s.fbx" % (root, xodr)):
+                maps.append([os.path.relpath(root, folder), xodr, ["%s.fbx" % xodr]])
+            else:
+                # check if exist the map by tiles
+                tiles = fnmatch.filter(filenames, "*_Tile_*.fbx")
+                if (len(tiles) > 0):
+                    maps.append([os.path.relpath(root, folder), xodr, tiles])
 
     if (len(maps) > 0):
         # build all the maps in .json format
@@ -419,8 +424,7 @@ def import_assets_from_json_list(json_list):
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
 
                 # We apply the carla materials to the imported maps
-                load_asset_materials_commandlet(package_name)
-
+                # load_asset_materials_commandlet(package_name)
 
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
@@ -444,7 +448,6 @@ def move_assets_commandlet(package_name, maps):
     commandlet_arguments.append("-Maps=%s" % umap_names)
 
     invoke_commandlet(commandlet_name, commandlet_arguments)
-
 
 # build the binary file for navigation of pedestrians for that map
 def build_binary_for_navigation(package_name, dirname, maps):
@@ -512,8 +515,11 @@ def build_binary_for_navigation(package_name, dirname, maps):
                 shutil.copy2(nav_path_source, nav_path_target)
 
             # remove files
-            os.remove(nav_path_source)
-            os.remove(fbx_path_target)
+            if os.path.exists(nav_path_source):
+                os.remove(nav_path_source)
+
+            if os.path.exists(fbx_path_target): 
+                os.remove(fbx_path_target)
 
         os.remove(xodr_path_target)
 
@@ -539,7 +545,7 @@ def main():
     json_list = get_packages_json_list(import_folder)
     decals_json = get_decals_json_file(import_folder)
 
-    if len(json_list) == 0:
+    if len(json_list) < 1:
         json_list = generate_json_package(import_folder, args.package, args.no_carla_materials)
 
     if len(decals_json) == 0:
