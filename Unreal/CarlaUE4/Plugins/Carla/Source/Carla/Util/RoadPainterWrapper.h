@@ -75,11 +75,6 @@ public:
   UFUNCTION(Category = "RoadPainter Wrapper")
   void ReadConfigFile(const FString &CurrentMapName);
 
-  /// Generate the assets necessary for painting the roads.
-  /// This function MUST only be called right after the construction script (in blueprint) has finished.
-  UFUNCTION(BlueprintCallable, Category = "RoadPainter Wrapper")
-  void GenerateDynamicAssets();
-
   /// Variable used for storing the JSON values of the decals
   /// so it can be later used by the blueprint (Road Painter Preset)
   UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
