@@ -112,6 +112,20 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   DecalNamesMap.Add("gum", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_Gum.DI_Gum'");
   DecalNamesMap.Add("grate", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Manhole/DI_Grate_01_v2.DI_Grate_01_v2'");
 
+  TArray<AActor*> MeshActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), MeshActors);
+  for (int32 i = 0; i < MeshActors.Num(); ++i) {
+
+    AStaticMeshActor *StaticMeshActor = Cast<AStaticMeshActor>(MeshActors[i]);
+    if (StaticMeshActor) {
+
+      if (StaticMeshActor->GetName().Contains("Curb", ESearchCase::Type::IgnoreCase) || StaticMeshActor->GetName().Contains("Gutter", ESearchCase::Type::IgnoreCase)) {
+
+        StaticMeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
+      }
+    }
+  }
+
 #endif
 }
 
@@ -119,122 +133,6 @@ void ARoadPainterWrapper::BeginPlay()
 {
   Super::BeginPlay();
 
-}
-
-void ARoadPainterWrapper::GenerateDynamicAssets()
-{
-
-}
-
-const FString ARoadPainterWrapper::GenerateTexture()
-{
-  // Get the path, where the map is, to generate the texture
-  FString TexturePackageName = GetWorld()->GetPathName().LeftChop((GetWorld()->GetPathName().GetCharArray().Num() - 1) - (GetWorld()->GetPathName().Find("/", ESearchCase::IgnoreCase, ESearchDir::Type::FromEnd) + 1));
-  FString BaseTextureName = FString("RoadMapTexture");
-  TexturePackageName += BaseTextureName;
-
-  // Create the package that will store our texture
-  TexturePackage = CreatePackage(*TexturePackageName);
-
-  // Create a unique name for our asset. For example, if a texture named RoadMapTexture already exists the editor
-  // will name the new texture as "RoadMapTexture_1"
-  const FName TextureName = MakeUniqueObjectName(TexturePackage, UTexture2D::StaticClass(), FName(*BaseTextureName));
-  FString TextureString = TextureName.ToString();
-  TexturePackage->FullyLoad();
-
-  RoadTexture = NewObject<UTexture2D>(TexturePackage, TextureName, RF_Standalone | RF_Public | RF_MarkAsRootSet);
-  //UE_LOG(LogTemp, Warning, TEXT("The value of the material is : %f %f %f %f"), MaterialMaskEmissiveValue.R, MaterialMaskEmissiveValue.G, MaterialMaskEmissiveValue.B, MaterialMaskEmissiveValue.A);
-
-  if (RoadTexture)
-  {
-    // Prevent the object and all its descendants from being deleted during garbage collection
-    RoadTexture->AddToRoot();
-    RoadTexture->PlatformData = new FTexturePlatformData();
-    RoadTexture->PlatformData->SizeX = RoadTextureSizeX;
-    RoadTexture->PlatformData->SizeY = RoadTextureSizeY;
-    RoadTexture->PlatformData->SetNumSlices(1);
-    RoadTexture->PlatformData->PixelFormat = EPixelFormat::PF_B8G8R8A8;
-
-    RoadTexture->UpdateResource();
-
-    // Notify the editor we created a new asset
-    FAssetRegistryModule::AssetCreated(RoadTexture);
-
-    return TextureString;
-  }
-
-  return TextureString;
-}
-
-void ARoadPainterWrapper::StoreRoadWaypointForRender(FVector2D WaypointLocation, float StencilSize) {
-
-  FVector2D TexLocation;
-  float TempX, TempY = 0.0f;
-  TempX = RoadTextureSizeX / MapSize;
-  TempX = WaypointLocation.X * TempX;
-  TempX = TempX + (RoadTextureSizeX / 2.0f);
-
-  TempY = RoadTextureSizeY / MapSize;
-  TempY = WaypointLocation.Y * TempY;
-  TempY = TempY + (RoadTextureSizeY / 2.0f);
-
-  TexLocation.X = TempX;
-  TexLocation.Y = TempY;
-
-  RoadWaypointsForTex.Add(TexLocation);
-}
-
-void ARoadPainterWrapper::RenderWaypointsToTexture() {
-
-  TArray<uint8> Pixels;
-  Pixels.Init(0, RoadTextureSizeX * RoadTextureSizeY * 4);
-
-  for (int32 i = 0; i < RoadWaypointsForTex.Num(); i += 4) {
-
-    Pixels[i] = 0;
-    Pixels[i + 1] = 0;
-    Pixels[i + 2] = 0;
-    Pixels[i + 3] = 255;
-  }
-
-  int Row, Column = 0;
-  for (int32 i = 0; i < RoadWaypointsForTex.Num(); ++i) {
-
-    Row = FMath::RoundToInt(RoadWaypointsForTex[i].Y) * RoadTextureSizeX;
-    Column = FMath::RoundToInt(RoadWaypointsForTex[i].X);
-    int PixelLocation = FMath::Abs((Row + Column) * 4);
-    Pixels[PixelLocation] = 127;
-    Pixels[PixelLocation + 1] = 127;
-    Pixels[PixelLocation + 2] = 127;
-    Pixels[PixelLocation + 3] = 255;
-  }
-  
-  FTexture2DMipMap *Mip = new FTexture2DMipMap();
-  RoadTexture->PlatformData->Mips.Add(Mip);
-  Mip->SizeX = RoadTextureSizeX;
-  Mip->SizeY = RoadTextureSizeY;
-  
-  Mip->BulkData.Lock(LOCK_READ_WRITE);
-  uint8 *TextureData = (uint8*)Mip->BulkData.Realloc(RoadTextureSizeX * RoadTextureSizeY * 4);
-  FMemory::Memcpy(TextureData, Pixels.GetData(), RoadTextureSizeX * RoadTextureSizeY * 4);
-  Mip->BulkData.Unlock();
-
-#if WITH_EDITORONLY_DATA
-  RoadTexture->Source.Init(RoadTextureSizeX, RoadTextureSizeY, 1, 1, ETextureSourceFormat::TSF_BGRA8, Pixels.GetData());
-#endif
-
-  RoadTexture->UpdateResource();
-  TexturePackage->MarkPackageDirty();
-
-  // Notify the editor we created a new asset
-  FAssetRegistryModule::AssetCreated(RoadTexture);
-  
-  // Save the new asset
-#if WITH_EDITOR
-  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
-#endif
-
-  RoadWaypointsForTex.Empty();
 }
 
 void ARoadPainterWrapper::ReadConfigFile(const FString &CurrentMapName)
