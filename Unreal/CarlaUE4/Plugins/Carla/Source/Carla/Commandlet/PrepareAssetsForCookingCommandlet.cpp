@@ -236,7 +236,7 @@ bool UPrepareAssetsForCookingCommandlet::IsMapInTiles(const TArray<FString> &Ass
   AssetsObjectLibrary->GetAssetDataList(MapContents);
 
   UStaticMesh *MeshAsset;
- 
+
   FString AssetName;
   bool Found = false;
   for (auto MapAsset : MapContents)
@@ -256,7 +256,7 @@ bool UPrepareAssetsForCookingCommandlet::IsMapInTiles(const TArray<FString> &Ass
       }
     }
   }
-  
+
   // Clear loaded assets in library
   AssetsObjectLibrary->ClearLoaded();
 
