@@ -172,7 +172,7 @@ def generate_decals_file(folder):
                 'decal_min_scale' : '1.0',
                 'decal_max_scale' : '1.5',
                 'decal_random_yaw' : '360.0',
-                'random_offset' : '20.0'
+                'random_offset' : '50.0'
             });
 
         # build and write the .json

@@ -21,11 +21,6 @@
 
 ARoadPainterWrapper::ARoadPainterWrapper(){
 
-  MapSize = 0.0f;
-  RoadTextureSizeX = 1024;
-  RoadTextureSizeY = 1024;
-  bIsRenderedToTexture = false;
-
 #if WITH_EDITORONLY_DATA
 
   // Initialization of map for translating from the JSON "decal_names" to MaterialInstance
@@ -106,8 +101,6 @@ ARoadPainterWrapper::ARoadPainterWrapper(){
   DecalNamesMap.Add("oilsplat4", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_OilSplat4.DI_OilSplat4'");
   DecalNamesMap.Add("oilsplat5", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_OilSplat5.DI_OilSplat5'");
 
-  // Get road painter info file
-  FString JsonInfoFile;
   // Misc
   DecalNamesMap.Add("gum", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/OilSplats/DI_Gum.DI_Gum'");
   DecalNamesMap.Add("grate", "MaterialInstanceConstant'/Game/Carla/Static/Decals/Road/Manhole/DI_Grate_01_v2.DI_Grate_01_v2'");
@@ -163,9 +156,11 @@ void ARoadPainterWrapper::ReadConfigFile(const FString &CurrentMapName)
         {
           // With the decal name array we created earlier, we traverse it 
           // and look up it's name in the .json file
-          for (int32 i = 0; i < DecalNamesArray.Num(); ++i) {
-            DecalPropertiesConfig.DecalMaterials.Add(*DecalNamesMap.Find(DecalNamesArray[i]));
-            DecalPropertiesConfig.DecalNumToSpawn.Add(DecalJsonObject->GetIntegerField(DecalNamesArray[i]));
+          for (const TPair<FString, FString>& Pair : DecalNamesMap) {
+            if (DecalJsonObject->HasField(Pair.Key) == true) {
+              DecalPropertiesConfig.DecalMaterials.Add(LoadObject<UMaterialInstanceConstant>(nullptr, *Pair.Value));
+              DecalPropertiesConfig.DecalNumToSpawn.Add(DecalJsonObject->GetIntegerField(Pair.Key));
+            }
           }
 
           // Prepare the decal properties struct variable inside the class
