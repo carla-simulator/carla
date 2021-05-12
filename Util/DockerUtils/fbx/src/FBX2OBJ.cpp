@@ -70,12 +70,12 @@ void SetMaterials(FbxNode* pNode)
             mat = gMatRoad;
         else if (Find(name, "Road_Gutter") || Find(name, "Roads_Gutter"))
             mat = gMatRoad;
-		else if (Find(name, "Road_Sidewalk") || Find(name, "Roads_Sidewalk"))
-			mat = gMatSidewalk;
-		else if (Find(name, "Road_Crosswalk") || Find(name, "Roads_Crosswalk"))
-			mat = gMatCross;
-		else if (Find(name, "Road_Grass") || Find(name, "Roads_Grass"))
-			mat = gMatGrass;
+        else if (Find(name, "Road_Sidewalk") || Find(name, "Roads_Sidewalk"))
+            mat = gMatSidewalk;
+        else if (Find(name, "Road_Crosswalk") || Find(name, "Roads_Crosswalk"))
+            mat = gMatCross;
+        else if (Find(name, "Road_Grass") || Find(name, "Roads_Grass"))
+            mat = gMatGrass;
 
         printf("Node %s : %s\n", name, mat->GetName());
         pNode->AddMaterial(mat);

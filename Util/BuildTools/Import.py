@@ -309,28 +309,28 @@ def generate_package_file(package_name, props, maps):
 
     with open(os.path.join(package_config_path, package_name + ".Package.json"), "w+") as fh:
         json.dump(output_json, fh, indent=4)
-        
+
 
 def copy_roadpainter_config_files(package_name):
     """Copies roadpainter configuration files into Unreal content folder"""
-    
+
     two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")      
+    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")
     package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
     if not os.path.exists(package_config_path):
         try:
             os.makedirs(package_config_path)
         except OSError as exc:
             if exc.errno != errno.EEXIST:
-                raise      
+                raise
     shutil.copy(final_path, package_config_path) 
-    
+
 
 def copy_roadpainter_config_files(package_name):
     """Copies roadpainter configuration files into Unreal content folder"""
 
     two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")      
+    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")
     package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
     if not os.path.exists(package_config_path):
         try:
@@ -470,7 +470,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
         if ("source" in umap):
             tiles = [umap["source"]]
         elif ("tiles" in umap):
-            tiles = umap["tiles"]       
+            tiles = umap["tiles"]
         else:
             continue
 
@@ -486,7 +486,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
             # copy
             print('Copying "' + xodr_path_source + '" to "' + xodr_path_target + '"')
             shutil.copy2(xodr_path_source, xodr_path_target)
-        
+
         for tile in tiles:
 
             fbx_filename = os.path.basename(tile)
