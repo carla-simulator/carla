@@ -37,18 +37,21 @@ ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 
 void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &LoadedMapName)
 {
-  ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
-  if (RoadPainterBp)
-  {
-    // Needed to call events in editor-mode
-    FEditorScriptExecutionGuard ScriptGuard;
+  AActor* ExistingRoadPainter = UGameplayStatics::GetActorOfClass(World, ARoadPainterWrapper::StaticClass());
 
-    // Prepare roadpainter for spawning decals
-    RoadPainterBp->ReadConfigFile(LoadedMapName);
-    RoadPainterBp->SetBlueprintVariables();
+  if (Cast<ARoadPainterWrapper>(ExistingRoadPainter) == nullptr) {
 
-    // Spawn the decals loaded in via the JSON file
-    RoadPainterBp->SpawnDecalsEvent();
+    ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
+    if (RoadPainterBp)
+    {
+      // Needed to call events in editor-mode
+      FEditorScriptExecutionGuard ScriptGuard;
+      // Prepare roadpainter for spawning decals
+      RoadPainterBp->ReadConfigFile(LoadedMapName);
+      RoadPainterBp->SetBlueprintVariables();
+      // Spawn the decals loaded in via the JSON file
+      RoadPainterBp->SpawnDecalsEvent();
+    }
   }
 }
 
