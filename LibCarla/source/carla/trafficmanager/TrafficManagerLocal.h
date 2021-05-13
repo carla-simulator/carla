@@ -12,7 +12,6 @@
 #include <thread>
 #include <vector>
 
-#include "carla/client/DebugHelper.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/World.h"
@@ -71,8 +70,6 @@ private:
   LocalMapPtr local_map;
   /// Structures to hold waypoint buffers for all vehicles.
   BufferMap buffer_map;
-  /// Carla's debug helper object.
-  cc::DebugHelper debug_helper;
   /// Object for tracking paths of the traffic vehicles.
   TrackTraffic track_traffic;
   /// Type containing the current state of all actors involved in the simulation.
@@ -136,7 +133,7 @@ public:
   virtual ~TrafficManagerLocal();
 
   /// Method to setup InMemoryMap.
-  void SetupLocalMap(cc::DebugHelper &debug_helper);
+  void SetupLocalMap();
 
   /// To start the TrafficManager.
   void Start();

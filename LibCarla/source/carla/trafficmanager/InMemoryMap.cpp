@@ -64,7 +64,7 @@ namespace traffic_manager {
     return result;
   }
 
-  void InMemoryMap::SetUp(cc::DebugHelper &debug_helper) {
+  void InMemoryMap::SetUp() {
 
     // 1. Building segment topology (i.e., defining set of segment predecessors and successors)
     assert(_world_map != nullptr && "No map reference found.");
@@ -162,14 +162,12 @@ namespace traffic_manager {
 
           float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
           if (angle(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation()) > 0.12f) { // 7 deg
-            debug_helper.DrawPoint(segment_waypoints.at(i)->GetLocation(), 0.15f, {0u, 0u, 255u}, 556.05f);
             auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
             i++;
             segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
           } else if (distance > MAX_WPT_DISTANCE) {
             auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
             i++;
-            debug_helper.DrawPoint(segment_waypoints.at(i)->GetLocation(), 0.15f, {0u, 255u, 255u}, 556.05f);
             segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
           }
       }
@@ -209,7 +207,6 @@ namespace traffic_manager {
     for (auto &simple_waypoint: dense_topology) {
       if (simple_waypoint != nullptr) {
         const cg::Location loc = simple_waypoint->GetLocation();
-        debug_helper.DrawPoint(loc, 0.1f, {255u, 0u, 0u}, 555.05f);
         Point3D point(loc.x, loc.y, loc.z);
         rtree.insert(std::make_pair(point, simple_waypoint));
       }

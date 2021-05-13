@@ -31,7 +31,6 @@ TrafficManagerLocal::TrafficManagerLocal(
 
     episode_proxy(episode_proxy),
     world(cc::World(episode_proxy)),
-    debug_helper(world.MakeDebugHelper()),
 
     localization_stage(LocalizationStage(vehicle_id_list,
                                          buffer_map,
@@ -41,7 +40,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          parameters,
                                          marked_for_removal,
                                          localization_frame,
-                                         debug_helper,
                                          random_devices)),
 
     collision_stage(CollisionStage(vehicle_id_list,
@@ -50,7 +48,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   debug_helper,
                                    random_devices)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
@@ -74,8 +71,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       collision_frame,
                                       tl_frame,
                                       world,
-                                      control_frame,
-                                      debug_helper)),
+                                      control_frame)),
 
     alsm(ALSM(registered_vehicles,
               buffer_map,
@@ -97,7 +93,7 @@ TrafficManagerLocal::TrafficManagerLocal(
 
   registered_vehicles_state = -1;
 
-  SetupLocalMap(debug_helper);
+  SetupLocalMap();
 
   Start();
 }
@@ -107,10 +103,10 @@ TrafficManagerLocal::~TrafficManagerLocal() {
   Release();
 }
 
-void TrafficManagerLocal::SetupLocalMap(cc::DebugHelper &debug_helper) {
+void TrafficManagerLocal::SetupLocalMap() {
   const carla::SharedPtr<cc::Map> world_map = world.GetMap();
   local_map = std::make_shared<InMemoryMap>(world_map);
-  local_map->SetUp(debug_helper);
+  local_map->SetUp();
 }
 
 void TrafficManagerLocal::Start() {

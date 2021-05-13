@@ -22,7 +22,6 @@ CollisionStage::CollisionStage(
   const TrackTraffic &track_traffic,
   const Parameters &parameters,
   CollisionFrame &output_array,
-  cc::DebugHelper &debug_helper,
   RandomGeneratorMap &random_devices)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
@@ -30,7 +29,6 @@ CollisionStage::CollisionStage(
     track_traffic(track_traffic),
     parameters(parameters),
     output_array(output_array),
-    debug_helper(debug_helper),
     random_devices(random_devices) {}
 
 void CollisionStage::Update(const unsigned long index) {
@@ -413,16 +411,6 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
 void CollisionStage::ClearCycleCache() {
   geodesic_boundary_map.clear();
   geometry_cache.clear();
-}
-
-void CollisionStage::DrawBoundary(const LocationVector &boundary) {
-  cg::Location one_meter_up(0.0f, 0.0f, 1.0f);
-  for (uint64_t i = 0u; i < boundary.size(); ++i) {
-    debug_helper.DrawLine(
-        boundary[i] + one_meter_up,
-        boundary[i+1 == boundary.size()? 0: i+1] + one_meter_up,
-        0.1f, {255u, 255u, 0u}, 0.05f);
-  }
 }
 
 } // namespace traffic_manager
