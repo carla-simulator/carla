@@ -133,7 +133,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
   TArray<AStaticMeshActor *> SpawnedMeshes;
 
   // Create default Transform for all assets to spawn
-  const FTransform zeroTransform = FTransform();
+  const FTransform ZeroTransform = FTransform();
 
   // Load assets specified in AssetsPaths by using an object library
   // for building map world
@@ -168,7 +168,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       // check to ignore meshes from other tiles
       if (i == -1 || (i != -1 && AssetName.Contains(TileName)))
       {
-        MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), zeroTransform);
+        MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), ZeroTransform);
         UStaticMeshComponent *MeshComponent = MeshActor->GetStaticMeshComponent();
         MeshComponent->SetStaticMesh(CastChecked<UStaticMesh>(MeshAsset));
         MeshActor->SetActorLabel(AssetName, true);
