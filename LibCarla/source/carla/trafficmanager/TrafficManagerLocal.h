@@ -136,7 +136,7 @@ public:
   virtual ~TrafficManagerLocal();
 
   /// Method to setup InMemoryMap.
-  void SetupLocalMap();
+  void SetupLocalMap(cc::DebugHelper &debug_helper);
 
   /// To start the TrafficManager.
   void Start();

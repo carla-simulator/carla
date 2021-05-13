@@ -74,7 +74,8 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       collision_frame,
                                       tl_frame,
                                       world,
-                                      control_frame)),
+                                      control_frame,
+                                      debug_helper)),
 
     alsm(ALSM(registered_vehicles,
               buffer_map,
@@ -96,7 +97,7 @@ TrafficManagerLocal::TrafficManagerLocal(
 
   registered_vehicles_state = -1;
 
-  SetupLocalMap();
+  SetupLocalMap(debug_helper);
 
   Start();
 }
@@ -106,10 +107,10 @@ TrafficManagerLocal::~TrafficManagerLocal() {
   Release();
 }
 
-void TrafficManagerLocal::SetupLocalMap() {
+void TrafficManagerLocal::SetupLocalMap(cc::DebugHelper &debug_helper) {
   const carla::SharedPtr<cc::Map> world_map = world.GetMap();
   local_map = std::make_shared<InMemoryMap>(world_map);
-  local_map->SetUp();
+  local_map->SetUp(debug_helper);
 }
 
 void TrafficManagerLocal::Start() {
@@ -288,7 +289,7 @@ void TrafficManagerLocal::Reset() {
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
-  SetupLocalMap();
+  //SetupLocalMap();
   Start();
 }
 
