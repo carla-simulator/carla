@@ -64,7 +64,7 @@ namespace traffic_manager {
     return result;
   }
 
-  void InMemoryMap::SetUp() {
+  void InMemoryMap::SetUp(cc::DebugHelper &debug_helper) {
 
     // 1. Building segment topology (i.e., defining set of segment predecessors and successors)
     assert(_world_map != nullptr && "No map reference found.");
@@ -139,6 +139,9 @@ namespace traffic_manager {
     auto compare_s = [](const SimpleWaypointPtr &swp1, const SimpleWaypointPtr &swp2) {
       return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
     };
+    auto angle = [](cg::Location l1, cg::Location l2) {
+      return cg::Math::GetVectorAngle(l1, l2);
+    };
 
     GeoGridId geodesic_grid_id_counter = -1;
     for (auto &segment: segment_map) {
@@ -152,6 +155,23 @@ namespace traffic_manager {
       auto lane_id = segment_waypoints.front()->GetWaypoint()->GetLaneId();
       if (lane_id > 0) {
         std::reverse(segment_waypoints.begin(), segment_waypoints.end());
+      }
+
+      // Adding more waypoints if the angle is too tight or if they are too distant,
+      for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
+
+          float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
+          if (angle(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation()) > 0.12f) { // 7 deg
+            debug_helper.DrawPoint(segment_waypoints.at(i)->GetLocation(), 0.15f, {0u, 0u, 255u}, 556.05f);
+            auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
+            i++;
+            segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
+          } else if (distance > MAX_WPT_DISTANCE) {
+            auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
+            i++;
+            debug_helper.DrawPoint(segment_waypoints.at(i)->GetLocation(), 0.15f, {0u, 255u, 255u}, 556.05f);
+            segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
+          }
       }
 
       // Placing intra-segment connections.
@@ -189,6 +209,7 @@ namespace traffic_manager {
     for (auto &simple_waypoint: dense_topology) {
       if (simple_waypoint != nullptr) {
         const cg::Location loc = simple_waypoint->GetLocation();
+        debug_helper.DrawPoint(loc, 0.1f, {255u, 0u, 0u}, 555.05f);
         Point3D point(loc.x, loc.y, loc.z);
         rtree.insert(std::make_pair(point, simple_waypoint));
       }

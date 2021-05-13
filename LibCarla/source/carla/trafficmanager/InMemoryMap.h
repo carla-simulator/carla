@@ -68,7 +68,7 @@ namespace bgi = boost::geometry::index;
 
     /// This method constructs the local map with a resolution of
     /// sampling_resolution.
-    void SetUp();
+    void SetUp(cc::DebugHelper &debug_helper);
 
     /// This method returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const cg::Location loc) const;

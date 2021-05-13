@@ -11,6 +11,8 @@
 #include "carla/trafficmanager/Stage.h"
 #include "carla/trafficmanager/TrackTraffic.h"
 
+#include "carla/client/DebugHelper.h"
+
 namespace carla {
 namespace traffic_manager {
 
@@ -36,6 +38,7 @@ private:
   // in hybrid physics mode.
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
   ControlFrame &output_array;
+  cc::DebugHelper debug_helper;
   cc::Timestamp current_timestamp;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
@@ -62,7 +65,8 @@ public:
                   const CollisionFrame &collision_frame,
                   const TLFrame &tl_frame,
                   const cc::World &world,
-                  ControlFrame &output_array);
+                  ControlFrame &output_array,
+                  cc::DebugHelper &debug_helper);
 
   void Update(const unsigned long index);
 

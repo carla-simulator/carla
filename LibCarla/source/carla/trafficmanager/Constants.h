@@ -54,8 +54,8 @@ static const float HORIZON_RATE = RATE(MAXIMUM_HORIZON_LENGTH,
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 0.3f;
-static const float TARGET_WAYPOINT_HORIZON_LENGTH = 0.8f;
+static const float TARGET_WAYPOINT_TIME_HORIZON = 0.1f;
+static const float TARGET_WAYPOINT_HORIZON_LENGTH = 0.6f;
 static const float JUNCTION_LOOK_AHEAD = 6.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 6.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
@@ -97,6 +97,7 @@ namespace Map {
 static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
 static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 static const double MAP_RESOLUTION = 5.0;
+static const double MAX_WPT_DISTANCE = MAP_RESOLUTION/2.0 + SQUARE(MAP_RESOLUTION);
 static const float INV_MAP_RESOLUTION = 0.2f;
 } // namespace Map
 
