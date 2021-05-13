@@ -19,7 +19,6 @@ LocalizationStage::LocalizationStage(
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  cc::DebugHelper &debug_helper,
   RandomGeneratorMap &random_devices)
   : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
@@ -29,7 +28,6 @@ LocalizationStage::LocalizationStage(
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
-    debug_helper(debug_helper),
     random_devices(random_devices) {}
 
 void LocalizationStage::Update(const unsigned long index) {
@@ -402,22 +400,6 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   }
 
   return change_over_point;
-}
-
-void LocalizationStage::DrawBuffer(Buffer &buffer) {
-  uint64_t buffer_size = buffer.size();
-  uint64_t step_size = std::max(buffer_size/20u, static_cast<uint64_t>(1));
-  cc::DebugHelper::Color color {0u, 0u, 0u};
-  cg::Location two_meters_up = cg::Location(0.0f, 0.0f, 2.0f);
-  for (uint64_t i = 0u; i + step_size < buffer_size; i += step_size) {
-    if (!buffer.at(i)->CheckJunction() && !buffer.at(i + step_size)->CheckJunction()) {
-      color.g = 255u;
-    }
-    debug_helper.DrawLine(buffer.at(i)->GetLocation() + two_meters_up,
-                          buffer.at(i + step_size)->GetLocation() + two_meters_up,
-                          0.2f, color, 0.05f);
-    color = {0u, 0u, 0u};
-  }
 }
 
 } // namespace traffic_manager

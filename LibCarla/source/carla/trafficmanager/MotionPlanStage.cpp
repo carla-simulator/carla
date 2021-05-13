@@ -29,8 +29,7 @@ MotionPlanStage::MotionPlanStage(
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
   const cc::World &world,
-  ControlFrame &output_array,
-  cc::DebugHelper &debug_helper)
+  ControlFrame &output_array)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -44,8 +43,7 @@ MotionPlanStage::MotionPlanStage(
     collision_frame(collision_frame),
     tl_frame(tl_frame),
     world(world),
-    output_array(output_array),
-    debug_helper(debug_helper) {}
+    output_array(output_array) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -87,7 +85,6 @@ void MotionPlanStage::Update(const unsigned long index) {
                                                 TARGET_WAYPOINT_HORIZON_LENGTH);
     const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
     const cg::Location target_location = target_waypoint->GetLocation();
-    debug_helper.DrawPoint(target_location + cg::Location(0,0,0.5), 0.2f, {0u, 255u, 0u}, .1f);
     float dot_product = DeviationDotProduct(ego_location, ego_heading, target_location);
     float cross_product = DeviationCrossProduct(ego_location, ego_heading, target_location);
     dot_product = 1.0f - dot_product;
