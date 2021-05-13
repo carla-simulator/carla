@@ -61,7 +61,6 @@ class TestSynchronousMode(SyncSmokeTest):
 
     def test_sensor_transform_on_synchronous_mode(self):
         print("TestSynchronousMode.test_sensor_transform_on_synchronous_mode")
-        print("--- ", self.world.get_map())
         bp_lib = self.world.get_blueprint_library()
 
         spawn_points = self.world.get_map().get_spawn_points()
