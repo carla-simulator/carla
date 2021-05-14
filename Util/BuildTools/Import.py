@@ -17,6 +17,7 @@ import os
 import shutil
 import subprocess
 import argparse
+import threading
 
 # Global variables
 IMPORT_SETTING_FILENAME = "importsetting.json"
@@ -407,6 +408,10 @@ def import_assets_from_json_list(json_list):
 
             package_name = filename.replace(".json", "")
 
+            # we need to build the binary file for navigation of pedestrians
+            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
+            thr.start()
+
             if ("tiles" in maps[0]):
                 import_assets(package_name, dirname, props, maps, 1, tile_size)
             else:
@@ -416,12 +421,8 @@ def import_assets_from_json_list(json_list):
                 print("No Packages JSONs found, nothing to import. Skipping package.")
                 continue
 
-            # First we only move the meshes to the tagged folders for semantic
-            # segmentation
+            # First we only move the meshes to the tagged folders for semantic segmentation
             move_assets_commandlet(package_name, maps)
-
-            # we need to build the binary file for navigation of pedestrians
-            build_binary_for_navigation(package_name, dirname, maps)
 
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             if len(maps) > 0:
@@ -429,6 +430,7 @@ def import_assets_from_json_list(json_list):
 
                 # We apply the carla materials to the imported maps
                 load_asset_materials_commandlet(package_name)
+            thr.join()
 
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
@@ -502,17 +504,17 @@ def build_binary_for_navigation(package_name, dirname, maps):
                 shutil.copy2(fbx_path_source, fbx_path_target)
 
             # rename the xodr with the same name of the source/tile
-            os.rename(os.path.join(folder, xodr_filename), os.path.join(folder, "%s.xodr" % fbx_name_no_ext))
+            # os.rename(os.path.join(folder, xodr_filename), os.path.join(folder, "%s.xodr" % fbx_name_no_ext))
 
             # make the conversion
             if os.name == "nt":
-                subprocess.call(["build.bat", fbx_name_no_ext], cwd=folder, shell=True)
+                subprocess.call(["build.bat", fbx_name_no_ext, xodr_filename], cwd=folder, shell=True)
             else:
                 subprocess.call(["chmod +x build.sh"], cwd=folder, shell=True)
-                subprocess.call("./build.sh %s" % fbx_name_no_ext, cwd=folder, shell=True)
+                subprocess.call("./build.sh %s %s" % (fbx_name_no_ext, xodr_filename), cwd=folder, shell=True)
 
             # rename the xodr with the original name
-            os.rename(os.path.join(folder, "%s.xodr" % fbx_name_no_ext), os.path.join(folder, xodr_filename))
+            # os.rename(os.path.join(folder, "%s.xodr" % fbx_name_no_ext), os.path.join(folder, xodr_filename))
 
             # copy the binary file
             nav_path_source = os.path.join(folder, "%s.bin" % fbx_name_no_ext)
