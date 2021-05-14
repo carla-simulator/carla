@@ -11,6 +11,7 @@
 #include "Traffic/RoutePlanner.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/CityMapGenerator.h"
+#include "Carla/Util/RandomEngine.h"
 
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
