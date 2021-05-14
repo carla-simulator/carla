@@ -14,6 +14,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 
 AActor* FActorData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)
@@ -105,6 +106,28 @@ void FVehicleData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
   Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
   Vehicle->SetVehicleLightState(LightState);
   Vehicle->SetSimulatePhysics(bSimulatePhysics);
+}
+
+void FWalkerData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+{
+  FActorData::RecordActorData(Actor, CarlaEpisode);
+  auto Walker = Cast<APawn>(Actor);
+  auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
+  if (Controller != nullptr)
+  {
+    WalkerControl = carla::rpc::WalkerControl{Controller->GetWalkerControl()};
+  }
+}
+
+void FWalkerData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+{
+  FActorData::RestoreActorData(Actor, CarlaEpisode);
+  auto Walker = Cast<APawn>(Actor);
+  auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
+  if (Controller != nullptr)
+  {
+    Controller->ApplyWalkerControl(WalkerControl);
+  }
 }
 
 AActor* FTrafficSignData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)

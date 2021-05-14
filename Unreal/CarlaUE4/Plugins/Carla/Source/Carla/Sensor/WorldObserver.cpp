@@ -176,6 +176,7 @@ static auto FWorldObserver_GetDormantActorState(const FActorView &View, const FA
     // {
     //   state.walker_control = carla::rpc::WalkerControl{Controller->GetWalkerControl()};
     // }
+    state.walker_control = ActorData->WalkerControl;
   }
   else if (AType::TrafficLight == View.GetActorType())
   {

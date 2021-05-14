@@ -11,6 +11,9 @@
 #include "Carla/Vehicle/VehicleLightState.h"
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/WalkerControl.h>
+#include <compiler/enable-ue4-macros.h>
 
 class UCarlaEpisode;
 class UTrafficLightController;
@@ -57,7 +60,15 @@ public:
 
 class FWalkerData : public FActorData
 {
+public:
 
+  carla::rpc::WalkerControl WalkerControl;
+
+  bool bAlive = true;
+
+  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+
+  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
 };
 
 class FTrafficSignData : public FActorData
