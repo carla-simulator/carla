@@ -35,14 +35,17 @@ FbxSurfacePhong* CreateMaterial(FbxScene* pScene, char *name)
     return lMaterial;
 }
 
-bool StartsWith(const char *name, const char *str)
+bool Find(const char *name, const char *str)
 {
     size_t lenName = strlen(name);
     size_t lenStr = strlen(str);
 
     if (lenName == 0 || lenStr == 0 || lenStr > lenName) return false;
 
-    return (memcmp(name, str, lenStr) == 0);
+    std::string strName(name);
+    std::string strSub(str);
+
+    return (strName.find(strSub) != std::string::npos);
 }
 
 void SetMaterials(FbxNode* pNode)
@@ -59,19 +62,19 @@ void SetMaterials(FbxNode* pNode)
         pNode->RemoveAllMaterials();
         // check nomenclature
         const char *name = pNode->GetName();
-        if (StartsWith(name, "Road_Road") || StartsWith(name, "Roads_Road"))
+        if (Find(name, "Road_Road") || Find(name, "Roads_Road"))
             mat = gMatRoad;
-        else if (StartsWith(name, "Road_Marking") || StartsWith(name, "Roads_Marking"))
+        else if (Find(name, "Road_Marking") || Find(name, "Roads_Marking"))
             mat = gMatRoad;
-        else if (StartsWith(name, "Road_Curb") || StartsWith(name, "Roads_Curb"))
+        else if (Find(name, "Road_Curb") || Find(name, "Roads_Curb"))
             mat = gMatRoad;
-        else if (StartsWith(name, "Road_Gutter") || StartsWith(name, "Roads_Gutter"))
+        else if (Find(name, "Road_Gutter") || Find(name, "Roads_Gutter"))
             mat = gMatRoad;
-		else if (StartsWith(name, "Road_Sidewalk") || StartsWith(name, "Roads_Sidewalk"))
+		else if (Find(name, "Road_Sidewalk") || Find(name, "Roads_Sidewalk"))
 			mat = gMatSidewalk;
-		else if (StartsWith(name, "Road_Crosswalk") || StartsWith(name, "Roads_Crosswalk"))
+		else if (Find(name, "Road_Crosswalk") || Find(name, "Roads_Crosswalk"))
 			mat = gMatCross;
-		else if (StartsWith(name, "Road_Grass") || StartsWith(name, "Roads_Grass"))
+		else if (Find(name, "Road_Grass") || Find(name, "Roads_Grass"))
 			mat = gMatGrass;
 
         printf("Node %s : %s\n", name, mat->GetName());
@@ -226,11 +229,11 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    gMatRoad = CreateMaterial(lScene, "road");
+    gMatRoad     = CreateMaterial(lScene, "road");
     gMatSidewalk = CreateMaterial(lScene, "sidewalk");
-    gMatCross = CreateMaterial(lScene, "crosswalk");
-    gMatGrass = CreateMaterial(lScene, "grass");
-    gMatBlock = CreateMaterial(lScene, "block");
+    gMatCross    = CreateMaterial(lScene, "crosswalk");
+    gMatGrass    = CreateMaterial(lScene, "grass");
+    gMatBlock    = CreateMaterial(lScene, "block");
 
     // export
     r = SaveScene(gSdkManager, lScene, argv[2], -1,	false);
