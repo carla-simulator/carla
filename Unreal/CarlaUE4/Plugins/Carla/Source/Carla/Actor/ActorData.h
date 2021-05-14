@@ -25,6 +25,10 @@ public:
 
   FVector Scale;
 
+  FVector Velocity;
+
+  FVector AngularVelocity = FVector(0,0,0);
+
   bool bSimulatePhysics = false;
 
   virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode);
@@ -81,6 +85,8 @@ public:
   FString SignId;
 
   TSubclassOf<AActor> Model;
+
+  int PoleIndex;
 
   virtual AActor* RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info) override;
 

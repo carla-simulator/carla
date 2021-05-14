@@ -13,6 +13,8 @@
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Carla/Walker/WalkerBase.h"
 
 AActor* FActorData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)
 {
@@ -32,7 +34,9 @@ void FActorData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
   if (Component)
   {
     bSimulatePhysics = Component->IsSimulatingPhysics();
+    AngularVelocity = Component->GetPhysicsAngularVelocityInDegrees();
   }
+  Velocity = Actor->GetVelocity();
 }
 
 void FActorData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
@@ -41,7 +45,40 @@ void FActorData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
   UPrimitiveComponent* Component = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
   if (Component)
   {
-    Component->SetSimulatePhysics(bSimulatePhysics);
+    Component->SetPhysicsLinearVelocity(
+        Velocity, false, "None");
+    Component->SetPhysicsAngularVelocityInDegrees(
+        AngularVelocity, false, "None");
+  }
+  auto* Character = Cast<ACharacter>(Actor);
+  auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(Actor);
+  // The physics in the vehicles works in a different way so to disable them.
+  if (CarlaVehicle != nullptr){
+    CarlaVehicle->SetSimulatePhysics(bSimulatePhysics);
+  }
+  // The physics in the walkers also works in a different way so to disable them,
+  // we need to do it in the UCharacterMovementComponent.
+  else if (Character != nullptr)
+  {
+    auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
+
+    if(bSimulatePhysics) {
+      CharacterMovement->SetDefaultMovementMode();
+    }
+    else {
+      CharacterMovement->DisableMovement();
+    }
+  }
+  // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
+  // that for disable it.
+  else
+  {
+    auto RootComponent = Component;
+    if (RootComponent != nullptr)
+    {
+      RootComponent->SetSimulatePhysics(bSimulatePhysics);
+      RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    }
   }
 }
 
@@ -84,8 +121,8 @@ AActor* FTrafficSignData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActor
 
 void FTrafficSignData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
 {
-  Model = Actor->GetClass();
   FActorData::RecordActorData(Actor, CarlaEpisode);
+  Model = Actor->GetClass();
   ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
   USignComponent* TrafficSignComponent =
         Cast<USignComponent>(TrafficSign->FindComponentByClass<USignComponent>());
@@ -127,13 +164,14 @@ AActor* FTrafficLightData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActo
 
 void FTrafficLightData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
 {
-  Model = Actor->GetClass();
   FActorData::RecordActorData(Actor, CarlaEpisode);
+  Model = Actor->GetClass();
   ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
   UTrafficLightComponent* Component = TrafficLight->GetTrafficLightComponent();
   SignId = Component->GetSignId();
   Controller = Component->GetController();
   Controller->RemoveTrafficLight(Component);
+  PoleIndex = TrafficLight->GetPoleIndex();
 }
 
 void FTrafficLightData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
@@ -146,4 +184,5 @@ void FTrafficLightData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpis
   ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CarlaEpisode->GetWorld());
   Component->InitializeSign(GameMode->GetMap().get());
   Component->SetLightState(Controller->GetCurrentState().State);
+  TrafficLight->SetPoleIndex(PoleIndex);
 }
