@@ -58,10 +58,7 @@ namespace bgi = boost::geometry::index;
     /// sparse topology.
     NodeList dense_topology;
     /// Spatial quadratic R-tree for indexing and querying waypoints.
-    bgi::rtree<SpatialTreeEntry, bgi::quadratic<32>> rtree;
-
-    /// Geodesic grid topology.
-    std::unordered_map<GeoGridId, cg::Location> geodesic_grid_center;
+    bgi::rtree<SpatialTreeEntry, bgi::rstar<16>> rtree;
 
   public:
 

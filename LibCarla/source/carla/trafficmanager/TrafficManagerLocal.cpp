@@ -31,7 +31,6 @@ TrafficManagerLocal::TrafficManagerLocal(
 
     episode_proxy(episode_proxy),
     world(cc::World(episode_proxy)),
-    debug_helper(world.MakeDebugHelper()),
 
     localization_stage(LocalizationStage(vehicle_id_list,
                                          buffer_map,
@@ -41,7 +40,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          parameters,
                                          marked_for_removal,
                                          localization_frame,
-                                         debug_helper,
                                          random_devices)),
 
     collision_stage(CollisionStage(vehicle_id_list,
@@ -50,7 +48,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   debug_helper,
                                    random_devices)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
@@ -288,7 +285,7 @@ void TrafficManagerLocal::Reset() {
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
-  SetupLocalMap();
+  //SetupLocalMap();
   Start();
 }
 

@@ -139,6 +139,9 @@ namespace traffic_manager {
     auto compare_s = [](const SimpleWaypointPtr &swp1, const SimpleWaypointPtr &swp2) {
       return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
     };
+    auto angle = [](cg::Location l1, cg::Location l2) {
+      return cg::Math::GetVectorAngle(l1, l2);
+    };
 
     GeoGridId geodesic_grid_id_counter = -1;
     for (auto &segment: segment_map) {
@@ -152,6 +155,21 @@ namespace traffic_manager {
       auto lane_id = segment_waypoints.front()->GetWaypoint()->GetLaneId();
       if (lane_id > 0) {
         std::reverse(segment_waypoints.begin(), segment_waypoints.end());
+      }
+
+      // Adding more waypoints if the angle is too tight or if they are too distant,
+      for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
+
+          float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
+          if (angle(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation()) > 0.12f) { // 7 deg
+            auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
+            i++;
+            segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
+          } else if (distance > MAX_WPT_DISTANCE) {
+            auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
+            i++;
+            segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
+          }
       }
 
       // Placing intra-segment connections.
