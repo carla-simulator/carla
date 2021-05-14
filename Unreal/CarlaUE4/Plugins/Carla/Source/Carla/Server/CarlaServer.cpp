@@ -532,7 +532,7 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     FActorView* ActorView = Episode->FindActorPtr(Result.Value.GetActorId());
-    if (!ActorView->IsValid() && !ActorView->IsDormant())
+    if (!ActorView)
     {
       RESPOND_ERROR("internal error: actor could not be spawned");
     }
@@ -540,9 +540,14 @@ void FCarlaServer::FPimpl::BindActions()
     ActorView->SetParent(ParentId);
     ActorView->SetAttachmentType(InAttachmentType);
 
-    FActorView ParentActorView = Episode->FindActor(ParentId);
+    FActorView* ParentActorView = Episode->FindActorPtr(ParentId);
+    carla::log_warning(ActorView->GetActorId(), ParentId);
+    if (ParentActorView)
+    {
+      carla::log_warning("Parent lives");
+    }
 
-    if (!ParentActorView.IsValid() && !ParentActorView.IsDormant())
+    if (!ParentActorView || ParentActorView->IsDormant())
     {
       RESPOND_ERROR("unable to attach actor: parent actor not found");
     }
@@ -553,7 +558,7 @@ void FCarlaServer::FPimpl::BindActions()
     {
       Episode->AttachActors(
           ActorView->GetActor(),
-          ParentActorView.GetActor(),
+          ParentActorView->GetActor(),
           static_cast<EAttachmentType>(InAttachmentType));
     }
     return Episode->SerializeActor(*ActorView);
@@ -726,6 +731,8 @@ void FCarlaServer::FPimpl::BindActions()
     }
     if (ActorView->IsDormant())
     {
+      FActorData* ActorData = ActorView->GetActorData();
+      ActorData->Velocity = vector.ToCentimeters().ToFVector();
     }
     else
     {
@@ -754,6 +761,8 @@ void FCarlaServer::FPimpl::BindActions()
     }
     if (ActorView->IsDormant())
     {
+      FActorData* ActorData = ActorView->GetActorData();
+      ActorData->AngularVelocity = vector.ToFVector();
     }
     else
     {
@@ -779,6 +788,10 @@ void FCarlaServer::FPimpl::BindActions()
     if (!ActorView)
     {
       RESPOND_ERROR("unable to set actor velocity: actor not found");
+    }
+    if (ActorView->GetActorType() != FActorView::ActorType::Vehicle)
+    {
+      RESPOND_ERROR("unable to set actor velocity: not supported by actor");
     }
     if (ActorView->IsDormant())
     {
@@ -1142,7 +1155,7 @@ void FCarlaServer::FPimpl::BindActions()
         RESPOND_ERROR("unable to apply actor wheel steer : actor is not a vehicle");
       }
 
-      Vehicle->SetWheelSteerDirection((VehicleWheelLocation)WheelLocation, AngleInDeg);
+      Vehicle->SetWheelSteerDirection(static_cast<EVehicleWheelLocation>(WheelLocation), AngleInDeg);
     }
     return R<void>::Success();
   };
@@ -1168,7 +1181,7 @@ void FCarlaServer::FPimpl::BindActions()
         RESPOND_ERROR("unable to get actor wheel angle : actor is not a vehicle");
       }
 
-      return Vehicle->GetWheelSteerAngle((VehicleWheelLocation)WheelLocation);
+      return Vehicle->GetWheelSteerAngle(static_cast<EVehicleWheelLocation>(WheelLocation));
     }
   };
 
