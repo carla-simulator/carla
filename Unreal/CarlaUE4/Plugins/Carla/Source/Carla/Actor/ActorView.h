@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorInfo.h"
+#include "Carla/Actor/ActorData.h"
 
 #include "carla/rpc/ActorState.h"
 #include "carla/rpc/AttachmentType.h"
@@ -40,7 +41,7 @@ public:
 
   bool IsValid() const
   {
-    return ::IsValid(TheActor);
+    return (carla::rpc::ActorState::Invalid != State);
   }
 
   bool IsAlive() const
@@ -113,6 +114,34 @@ public:
     return Attachment;
   }
 
+  void BuildActorData();
+
+  void PutActorToSleep(UCarlaEpisode* CarlaEpisode);
+
+  void WakeActorUp(UCarlaEpisode* CarlaEpisode);
+
+  FActorData* GetActorData()
+  {
+    return ActorData.Get();
+  }
+
+  const FActorData* GetActorData() const
+  {
+    return ActorData.Get();
+  }
+
+  template<typename T>
+  T* GetActorData()
+  {
+    return dynamic_cast<T*>(ActorData.Get());
+  }
+
+  template<typename T>
+  const T* GetActorData() const
+  {
+    return dynamic_cast<T*>(ActorData.Get());
+  }
+
 private:
 
   friend class FActorRegistry;
@@ -140,5 +169,7 @@ private:
   carla::rpc::AttachmentType Attachment = carla::rpc::AttachmentType::INVALID;
 
   ActorType Type = ActorType::INVALID;
+
+  TSharedPtr<FActorData> ActorData = nullptr;
 
 };

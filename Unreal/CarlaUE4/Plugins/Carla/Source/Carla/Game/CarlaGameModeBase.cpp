@@ -195,6 +195,10 @@ void ACarlaGameModeBase::BeginPlay()
   {
     RegisterEnvironmentObjects();
   }
+
+  if (LMManager) {
+    LMManager->RegisterInitialObjects();
+  }
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)

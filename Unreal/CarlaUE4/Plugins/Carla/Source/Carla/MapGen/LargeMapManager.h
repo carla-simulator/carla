@@ -55,11 +55,6 @@ struct FCarlaMapTile
   UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   ULevelStreamingDynamic* StreamingLevel = nullptr;
 
-  // Assets in tile waiting to be spawned
-  // TODO: categorize assets type and prioritize roads
-  UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
-  TArray<FAssetData> PendingAssetsInTile;
-
   bool TilesSpawned = false;
 };
 
@@ -89,7 +84,9 @@ protected:
 
 public:
 
-  void OnActorSpawned(const FActorView& ActorView, const FTransform& Transform);
+  void RegisterInitialObjects();
+
+  void OnActorSpawned(const FActorView& ActorView);
 
   UFUNCTION(Category="Large Map Manager")
   void OnActorDestroyed(AActor* DestroyedActor);
@@ -211,8 +208,6 @@ protected:
     const TSet<TileID>& InTilesToBeVisible,
     const TSet<TileID>& InTilesToHidde);
 
-  void SpawnAssetsInTile(FCarlaMapTile& Tile);
-
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TMap<uint64, FCarlaMapTile> MapTiles;
 
@@ -221,17 +216,17 @@ protected:
   // TODO: support rebase in more than one hero vehicle
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> ActorsToConsider;
-  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
-  TArray<AActor*> GhostActors;
+  //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  TArray<FActorView::IdType> GhostActors;
   TArray<FActorView::IdType> DormantActors;
 
   // Temporal sets to remove actors. Just to avoid removing them in the update loop
   TSet<AActor*> ActorsToRemove;
-  TSet<AActor*> GhostsToRemove;
+  TSet<FActorView::IdType> GhostsToRemove;
   TSet<FActorView::IdType> DormantsToRemove;
 
   // Helpers to move Actors from one array to another.
-  TSet<AActor*> GhostToDormantActors;
+  TSet<FActorView::IdType> GhostToDormantActors;
   TSet<FActorView::IdType> DormantToGhostActors;
 
   TSet<TileID> CurrentTilesLoaded;

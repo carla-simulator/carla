@@ -90,6 +90,10 @@ public:
     return PtrToId ? FindPtr(*PtrToId) : nullptr;
   }
 
+  void PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode);
+
+  void WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode);
+
 
   /// If the actor is not found in the registry, create a fake actor view. The
   /// returned FActorView has some information about the @a Actor but will have

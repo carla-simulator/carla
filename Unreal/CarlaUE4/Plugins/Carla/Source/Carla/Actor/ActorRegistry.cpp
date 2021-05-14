@@ -186,5 +186,20 @@ FActorView FActorRegistry::MakeView(
   }
   auto View = FActorView{Id, &Actor, std::move(Info), InState};
   View.Type = FActorRegistry_GetActorType(View);
+  View.BuildActorData();
   return View;
+}
+
+void FActorRegistry::PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+{
+  FActorView* ActorView = FindPtr(Id);
+  ActorView->PutActorToSleep(CarlaEpisode);
+  // TODO: update id maps
+}
+
+void FActorRegistry::WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+{
+  FActorView* ActorView = FindPtr(Id);
+  ActorView->WakeActorUp(CarlaEpisode);
+  // TODO: update id maps
 }

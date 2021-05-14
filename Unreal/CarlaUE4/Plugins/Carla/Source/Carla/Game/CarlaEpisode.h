@@ -208,6 +208,23 @@ public:
     return result;
   }
 
+  /// Spawns an actor based on @a ActorDescription at @a Transform.
+  ///
+  /// @return the actor to be spawned
+  AActor* ReSpawnActorWithInfo(
+      const FTransform &Transform,
+      FActorDescription thisActorDescription)
+  {
+    FTransform NewTransform = Transform;
+    auto result = ActorDispatcher->ReSpawnActor(NewTransform, thisActorDescription);
+    if (Recorder->IsEnabled())
+    {
+      // do something?
+    }
+
+    return result;
+  }
+
   /// Spawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
   ///
@@ -249,6 +266,16 @@ public:
     }
 
     return ActorDispatcher->DestroyActor(ActorId);
+  }
+
+  void PutActorToSleep(carla::rpc::ActorId ActorId)
+  {
+    ActorDispatcher->PutActorToSleep(ActorId, this);
+  }
+
+  void WakeActorUp(carla::rpc::ActorId ActorId)
+  {
+    ActorDispatcher->WakeActorUp(ActorId, this);
   }
 
   // ===========================================================================

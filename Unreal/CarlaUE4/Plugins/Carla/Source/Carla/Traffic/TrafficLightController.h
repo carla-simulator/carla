@@ -73,6 +73,9 @@ public:
   void AddTrafficLight(UTrafficLightComponent * TrafficLight);
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  void RemoveTrafficLight(UTrafficLightComponent * TrafficLight);
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   bool IsCycleFinished() const;
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)

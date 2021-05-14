@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/WorldObserver.h"
+#include "Carla/Actor/ActorData.h"
 
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/TrafficLightComponent.h"
@@ -31,26 +32,38 @@ static auto FWorldObserver_GetActorState(const FActorView &View, const FActorReg
 
   if (AType::Vehicle == View.GetActorType())
   {
-    auto Vehicle = Cast<ACarlaWheeledVehicle>(View.GetActor());
-    if (Vehicle != nullptr)
+    if (View.IsDormant())
     {
-      state.vehicle_data.control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
-      auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
-      if (Controller != nullptr)
+      const FVehicleData* ActorData = View.GetActorData<FVehicleData>();
+      state.vehicle_data.control = carla::rpc::VehicleControl{ActorData->Control};
+      using TLS = carla::rpc::TrafficLightState;
+      state.vehicle_data.traffic_light_state = TLS::Green;
+      state.vehicle_data.speed_limit = 0;
+      state.vehicle_data.has_traffic_light = false;
+    }
+    else
+    {
+      auto Vehicle = Cast<ACarlaWheeledVehicle>(View.GetActor());
+      if (Vehicle != nullptr)
       {
-        using TLS = carla::rpc::TrafficLightState;
-        state.vehicle_data.traffic_light_state = static_cast<TLS>(Controller->GetTrafficLightState());
-        state.vehicle_data.speed_limit = Controller->GetSpeedLimit();
-        auto TrafficLight = Controller->GetTrafficLight();
-        if (TrafficLight != nullptr)
+        state.vehicle_data.control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+        auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+        if (Controller != nullptr)
         {
-          state.vehicle_data.has_traffic_light = true;
-          auto TrafficLightView = Registry.Find(TrafficLight);
-          state.vehicle_data.traffic_light_id = TrafficLightView.GetActorId();
-        }
-        else
-        {
-          state.vehicle_data.has_traffic_light = false;
+          using TLS = carla::rpc::TrafficLightState;
+          state.vehicle_data.traffic_light_state = static_cast<TLS>(Controller->GetTrafficLightState());
+          state.vehicle_data.speed_limit = Controller->GetSpeedLimit();
+          auto TrafficLight = Controller->GetTrafficLight();
+          if (TrafficLight != nullptr)
+          {
+            state.vehicle_data.has_traffic_light = true;
+            auto TrafficLightView = Registry.Find(TrafficLight);
+            state.vehicle_data.traffic_light_id = TrafficLightView.GetActorId();
+          }
+          else
+          {
+            state.vehicle_data.has_traffic_light = false;
+          }
         }
       }
     }
@@ -241,11 +254,12 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     else
     {
-      FDVector ActorLocation = ActorInfo->Location;
+      const FActorData* ActorData = View.GetActorData();
+      FDVector ActorLocation = ActorData->Location;
       ActorLocation -= MapOrigin;
 
 
-      ActorTransform = FTransform(ActorInfo->Rotation, ActorLocation.ToFVector());
+      ActorTransform = FTransform(ActorData->Rotation, ActorLocation.ToFVector());
     }
 
     ActorDynamicState info = {

@@ -106,8 +106,6 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
-  FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
-  SpawnAssetsInTile(Tile);
 }
 
 void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
@@ -118,16 +116,26 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
   Tile.TilesSpawned = false;
 }
 
+void ALargeMapManager::RegisterInitialObjects()
+{
+  UWorld* World = GetWorld();
+  UCarlaEpisode* CurrentEpisode = UCarlaStatics::GetCurrentEpisode(World);
+  const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
+  for (const auto& ViewPair : ActorRegistry)
+  {
+    OnActorSpawned(ViewPair.Value);
+  }
+}
+
 void ALargeMapManager::OnActorSpawned(
-    const FActorView& ActorView,
-    const FTransform& Transform)
+    const FActorView& ActorView)
 {
   UWorld* World = GetWorld();
   const FActorInfo* ActorInfo = ActorView.GetActorInfo();
   AActor* Actor = const_cast<AActor*>(ActorView.GetActor());
   bool IsHeroVehicle = false;
 
-  LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s %s", *Actor->GetName(), *Transform.GetTranslation().ToString());
+  // LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s %s", *Actor->GetName(), *Actor->GetTranslation().ToString());
 
   if (IsValid(Actor) && ActorView.GetActorType() == FActorView::ActorType::Vehicle)
   { // Check if is hero vehicle
@@ -171,8 +179,7 @@ void ALargeMapManager::OnActorSpawned(
       //       LM: Map<AActor* FGhostActor>  maybe per tile and in a tile sublevel?
 
       LM_LOG(Error, "GHOST VEHICLE DETECTED");
-      GhostActors.Add(Actor);
-
+      GhostActors.Add(ActorView.GetActorId());
     }
     else
     { // Actor was spawned as dormant
@@ -180,11 +187,8 @@ void ALargeMapManager::OnActorSpawned(
       //       LM: Map<ActorId, TileID> , Tile: Map<ActorID, FDormantActor>
       //       In case of update: update Tile Map, update LM Map
       LM_LOG(Error, "DORMANT VEHICLE DETECTED");
+      DormantActors.Add(ActorView.GetActorId());
     }
-
-    //GhostActors.Add(ActorView.GetActorId(),bPrintErrors
-    //                  FDVector(Transform.GetTranslation()),
-    //                  Transform.GetRotation() ));
   }
 
   if (IsValid(Actor)) {
@@ -286,8 +290,8 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   for (const FAssetData& AssetData : AssetsData)
   {
     #if WITH_EDITOR
-      LM_LOG(Warning, "Asset name: %s", *(AssetData.AssetName.ToString()));
-      LM_LOG(Warning, "Asset class: %s", *(AssetData.AssetClass.ToString()));
+      // LM_LOG(Warning, "Asset name: %s", *(AssetData.AssetName.ToString()));
+      // LM_LOG(Warning, "Asset class: %s", *(AssetData.AssetClass.ToString()));
     #endif
     FString TileName = AssetData.AssetName.ToString();
     FString TileName_X = "";
@@ -310,7 +314,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
     }
     FIntVector TileVectorID = FIntVector(FCString::Atoi(*TileName_X), FCString::Atoi(*TileName_Y), 0);
     #if WITH_EDITOR
-      LM_LOG(Warning, "Tile: %d, %d", TileVectorID.X, TileVectorID.Y);
+      // LM_LOG(Warning, "Tile: %d, %d", TileVectorID.X, TileVectorID.Y);
     #endif
     TileID TileId = GetTileID(TileVectorID);
     LoadCarlaMapTile(InAssetsPath + "/" + AssetData.AssetName.ToString(), TileId);
@@ -559,8 +563,8 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
 #if WITH_EDITOR
   // 2 - Generate Tile name
   NewTile.Name = GenerateTileName(TileId);
-  LM_LOG(Warning, "Tile idd: %d, %d", VTileID.X, VTileID.Y);
-  LM_LOG(Warning, "Tile location: %f, %f", NewTile.Location.X, NewTile.Location.Y);
+  // LM_LOG(Warning, "Tile idd: %d, %d", VTileID.X, VTileID.Y);
+  // LM_LOG(Warning, "Tile location: %f, %f", NewTile.Location.X, NewTile.Location.Y);
 #endif // WITH_EDITOR
 
   // 3 - Generate the StreamLevel
@@ -681,7 +685,7 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   ActorsToRemove.Reset();
 
 
-  for (AActor* ActorToRemove : GhostsToRemove)
+  for (FActorView::IdType ActorToRemove : GhostsToRemove)
   {
     GhostActors.Remove(ActorToRemove);
   }
@@ -696,19 +700,23 @@ void ALargeMapManager::RemovePendingActorsToRemove()
 
 void ALargeMapManager::CheckGhostActors()
 {
+  UWorld* World = GetWorld();
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
   // Check if they have to be destroyed
-  for(AActor* Actor : GhostActors)
+  for(FActorView::IdType Id : GhostActors)
   {
-    if (IsValid(Actor) )
+    FActorView* View = CarlaEpisode->FindActorPtr(Id);
+    if (View)
     {
+      AActor * Actor = View->GetActor();
       FVector RelativeLocation = Actor->GetActorLocation();
       FDVector WorldLocation = CurrentOriginD + RelativeLocation;
 
       if(!IsTileLoaded(WorldLocation))
       {
         // Save to temporal container. Later will be converted to dormant
-        GhostToDormantActors.Add(Actor);
-        GhostsToRemove.Add(Actor);
+        GhostToDormantActors.Add(Id);
+        GhostsToRemove.Add(Id);
         continue;
       }
 
@@ -736,15 +744,15 @@ void ALargeMapManager::CheckGhostActors()
           );
 
           // Save to temporal container. Later will be converted to dormant
-          GhostToDormantActors.Add(Actor);
-          GhostsToRemove.Add(Actor);
+          GhostToDormantActors.Add(Id);
+          GhostsToRemove.Add(Id);
         }
       }
     }
     else
     {
       LM_LOG(Warning, "CheckGhostActors Actor does not exist -> Remove actor");
-      GhostsToRemove.Add(Actor);
+      GhostsToRemove.Add(Id);
     }
   }
 }
@@ -756,26 +764,15 @@ void ALargeMapManager::ConvertGhostToDormantActors()
 
   // These actors are on dormant state so remove them from ghost actors
   // But save them on the dormant array first
-  for(AActor* Actor : GhostToDormantActors)
+  for(FActorView::IdType Id : GhostToDormantActors)
   {
-    check(IsValid(Actor));
-
     // To dormant state
-    FActorRegistry& ActorRegistry = const_cast<FActorRegistry&>(CarlaEpisode->GetActorRegistry());
-    FActorView* ActorView = ActorRegistry.FindPtr(Actor);
-    ActorView->SetActorState(carla::rpc::ActorState::Dormant);
+    CarlaEpisode->PutActorToSleep(Id);
 
-    LM_LOG(Warning, "Converting Ghost To Dormant... %s", *Actor->GetName());
-
-    // Save current location and rotation
-    FActorInfo* ActorInfo = const_cast<FActorInfo*>(ActorView->GetActorInfo());
-    ActorInfo->Location = CurrentOriginD + Actor->GetActorLocation();
-    ActorInfo->Rotation = Actor->GetActorQuat();
-
-    CarlaEpisode->DestroyActor(Actor);
+    LM_LOG(Warning, "Converting Ghost To Dormant... %d", Id);
 
     // Need the ID of the dormant actor and save it
-    DormantActors.Add(ActorView->GetActorId());
+    DormantActors.Add(Id);
   }
 
   GhostToDormantActors.Reset();
@@ -799,13 +796,13 @@ void ALargeMapManager::CheckDormantActors()
       continue;
     }
 
-    const FActorInfo* ActorInfo = ActorView->GetActorInfo();
+    const FActorData* ActorData = ActorView->GetActorData();
 
     for(AActor* Actor : ActorsToConsider)
     {
       FVector HeroLocation = Actor->GetActorLocation();
 
-      FDVector WorldLocation = ActorInfo->Location;
+      FDVector WorldLocation = ActorData->Location;
       FDVector RelativeLocation = WorldLocation - CurrentOriginD;
 
       float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
@@ -839,54 +836,22 @@ void ALargeMapManager::ConvertDormantToGhostActors()
   {
     LM_LOG(Warning, "Converting %d Dormant To Ghost", Id);
 
-    FActorView ActorView = CarlaEpisode->FindActor(Id);
-    // If ids not much the actor was destroyed in the meantime
-    // this situation should never happen
-    check(ActorView.GetActorId() == Id);
-    check(ActorView.IsDormant());// if is not Dormant something is very wrong
+    CarlaEpisode->WakeActorUp(Id);
 
-    const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+    FActorView* View = CarlaEpisode->FindActorPtr(Id);
 
-    LM_LOG(Warning, "Spawning dormant at %s\n\tOrigin: %s\n\tRel. location: %s", \
-      *(ActorInfo->Location.ToString()), \
-      *(CurrentOriginD.ToString()), \
-      *((ActorInfo->Location - CurrentOriginD).ToString()) \
-    );
-
-    FTransform Transform(ActorInfo->Rotation, ActorInfo->Location.ToFVector());
-
-    TPair<EActorSpawnResultStatus, FActorView> Result =
-      CarlaEpisode->SpawnActorWithInfo(Transform, ActorInfo->Description, Id);
-
-    LM_LOG(Warning, "Id %d New Id %d", Id, Result.Value.GetActorId());
-
-    if(EActorSpawnResultStatus::Success == Result.Key)
-    {
-      ActorView = Result.Value;
-
-      LM_LOG(Warning, "SUCCESS %s %d %d %s", \
-        *(ActorView.GetActor()->GetName()), \
-        ActorView.GetActorId(), \
-        ActorView.GetActorState(), \
-        *(ActorView.GetActor()->GetActorLocation().ToString()) \
+    if (View->GetActor()){
+      LM_LOG(Warning, "Spawning dormant at %s\n\tOrigin: %s\n\tRel. location: %s", \
+        *((CurrentOriginD + View->GetActor()->GetActorLocation()).ToString()), \
+        *(CurrentOriginD.ToString()), \
+        *((View->GetActor()->GetActorLocation()).ToString()) \
       );
-      // Add the actor to GhostActors
-      GhostActors.Add(Result.Value.GetActor());
-
-      FActorView::IdType ParentId = ActorView.GetParent();
-      if(ParentId)
-      {
-        FActorView ParentActorView = CarlaEpisode->FindActor(ParentId);
-
-        CarlaEpisode->AttachActors(
-          ActorView.GetActor(),
-          ParentActorView.GetActor(),
-          static_cast<EAttachmentType>(ActorView.GetAttachmentType()));
-      }
+      GhostActors.Add(Id);
     }
     else
     {
-      LM_LOG(Warning, "FAIL %d", Result.Key);
+      LM_LOG(Warning, "FAIL Actor %d could not be woken up", Id);
+      CarlaEpisode->DestroyActor(Id);
     }
   }
   DormantToGhostActors.Reset();
@@ -1001,69 +966,6 @@ void ALargeMapManager::UpdateCurrentTilesLoaded(
   }
 }
 
-void ALargeMapManager::SpawnAssetsInTile(FCarlaMapTile& Tile)
-{
-  if (Tile.TilesSpawned) return;
-
-  FVector CurrentWorldOrigin(CurrentOriginInt);
-  FVector TileLocation = Tile.Location - CurrentWorldOrigin;
-
-  ULevel* LoadedLevel = Tile.StreamingLevel->GetLoadedLevel();
-  UWorld* World = GetWorld();
-
-#if WITH_EDITOR
-  FString Output = "";
-  Output += FString::Printf(TEXT("SpawnAssetsInTile %s %d\n"), *Tile.Name, Tile.PendingAssetsInTile.Num());
-  Output += FString::Printf(TEXT("  Tile.Loc = %s -> %s\n"), *Tile.Location.ToString(), *TileLocation.ToString());
-#endif // WITH_EDITOR
-
-  for (const FAssetData& AssetData : Tile.PendingAssetsInTile)
-  {
-    UStaticMesh* Mesh = Cast<UStaticMesh>(AssetData.GetAsset());
-    if (!Mesh)
-    {
-      LM_LOG(Error, "Mesh %s could not be loaded in %s", *AssetData.ObjectPath.ToString(), *Tile.Name);
-      continue;
-    }
-    FBox BoundingBox = Mesh->GetBoundingBox();
-    FVector CenterBB = BoundingBox.GetCenter();
-
-    // Recalculate asset location based on tile position
-    FTransform Transform(FRotator(0.0f), CenterBB - TileLocation - CurrentWorldOrigin, FVector(1.0f));
-
-    // Create intermediate actor (AUncenteredPivotPointMesh) to paliate not centered pivot point of the mesh
-    FActorSpawnParameters SpawnParams;
-    SpawnParams.Name = *FString::Printf(TEXT("UPPM_%s_%s"), *Mesh->GetName(), *Tile.Name);
-    SpawnParams.OverrideLevel = LoadedLevel;
-
-    AUncenteredPivotPointMesh* SMActor =
-      World->SpawnActor<AUncenteredPivotPointMesh>(
-        AUncenteredPivotPointMesh::StaticClass(),
-        Transform,
-        SpawnParams);
-
-    if (SMActor)
-    {
-      UStaticMeshComponent* SMComp = SMActor->GetMeshComp();
-      if (SMComp)
-      {
-        SMComp->SetStaticMesh(Mesh);
-        SMComp->SetRelativeLocation(CenterBB * -1.0f); // The pivot point does not get affected by Tile location
-      }
-#if WITH_EDITOR
-      Output += FString::Printf(TEXT("    MeshName = %s -> %s\n"), *Mesh->GetName(), *SMActor->GetName());
-      Output += FString::Printf(TEXT("      CenterBB = %s\n"), *CenterBB.ToString());
-      Output += FString::Printf(TEXT("      ActorLoc = %s\n"), *(CenterBB - TileLocation).ToString());
-      Output += FString::Printf(TEXT("      SMRelLoc = %s\n"), *SMComp->GetRelativeLocation().ToString());
-#endif // WITH_EDITOR
-    }
-  }
-  LM_LOG(Warning, "%s", *Output);
-
-
-  Tile.TilesSpawned = true;
-}
-
 #if WITH_EDITOR
 FString ALargeMapManager::GenerateTileName(TileID TileID)
 {
@@ -1085,11 +987,11 @@ void ALargeMapManager::DumpTilesTable() const
   FileContent += FString::Printf(TEXT("LargeMapManager state\n"));
 
   FileContent += FString::Printf(TEXT("Tile:\n"));
-  FileContent += FString::Printf(TEXT("ID\tName\tLocation\tAssetsInTile\n"));
+  FileContent += FString::Printf(TEXT("ID\tName\tLocation\n"));
   for (auto& It : MapTiles)
   {
     const FCarlaMapTile& Tile = It.Value;
-    FileContent += FString::Printf(TEXT("  %ld\t%s\t%s\t%d\n"), It.Key, *Tile.Name, *Tile.Location.ToString(), Tile.PendingAssetsInTile.Num());
+    FileContent += FString::Printf(TEXT("  %ld\t%s\t%s\n"), It.Key, *Tile.Name, *Tile.Location.ToString());
   }
   FileContent += FString::Printf(TEXT("\nNum generated tiles: %d\n"), MapTiles.Num());
 

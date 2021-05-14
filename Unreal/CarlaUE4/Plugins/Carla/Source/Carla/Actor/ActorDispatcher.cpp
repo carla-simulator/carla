@@ -78,13 +78,44 @@ TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
   return MakeTuple(Result.Status, View);
 }
 
+AActor* UActorDispatcher::ReSpawnActor(
+    const FTransform &Transform,
+    FActorDescription Description)
+{
+  if ((Description.UId == 0u) || (Description.UId > static_cast<uint32>(SpawnFunctions.Num())))
+  {
+    UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription '%s' (UId=%d)"), *Description.Id, Description.UId);
+    return nullptr;
+  }
+
+  UE_LOG(LogCarla, Log, TEXT("Spawning actor '%s'"), *Description.Id);
+
+  Description.Class = Classes[Description.UId - 1];
+  FActorSpawnResult Result = SpawnFunctions[Description.UId - 1](Transform, Description);
+
+  if ((Result.Status == EActorSpawnResultStatus::Success) && (Result.Actor == nullptr))
+  {
+    UE_LOG(LogCarla, Warning, TEXT("ActorSpawnResult: Trying to spawn '%s'"), *Description.Id);
+    UE_LOG(LogCarla, Warning, TEXT("ActorSpawnResult: Reported success but did not return an actor"));
+    Result.Status = EActorSpawnResultStatus::UnknownError;
+    return nullptr;
+  }
+
+  if (Result.Status == EActorSpawnResultStatus::Success)
+  {
+    return Result.Actor;
+  }
+
+  return nullptr;
+}
+
 bool UActorDispatcher::DestroyActor(FActorView::IdType ActorId)
 {
   // Check if the actor is in the registry.
   FActorView* View = Registry.FindPtr(ActorId);
 
   // Invalid destruction if is not marked to PendingKill (except is dormant, dormant actors can be destroyed)
-  if (!View || (!View->IsPendingKill() && !View->IsDormant()) )
+  if (!View)
   {
     UE_LOG(LogCarla, Warning, TEXT("Trying to destroy actor that is not in the registry"));
     return false;
@@ -126,5 +157,20 @@ bool UActorDispatcher::DestroyActor(FActorView::IdType ActorId)
 FActorView UActorDispatcher::RegisterActor(AActor &Actor, FActorDescription Description, FActorRegistry::IdType DesiredId)
 {
   FActorView View = Registry.Register(Actor, std::move(Description), DesiredId);
+  if (View.IsValid())
+  {
+    // TODO: support external actor destruction
+    // Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
+  }
   return View;
+}
+
+void UActorDispatcher::PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+{
+  Registry.PutActorToSleep(Id, CarlaEpisode);
+}
+
+void UActorDispatcher::WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+{
+  Registry.WakeActorUp(Id, CarlaEpisode);
 }

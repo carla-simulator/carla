@@ -34,7 +34,4 @@ public:
   /// @todo To be used solely by the FWorldObserver.
   mutable FVector Velocity = {0.0f, 0.0f, 0.0f};
 
-  FDVector Location;
-
-  FQuat Rotation;
 };
