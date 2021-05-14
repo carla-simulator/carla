@@ -183,10 +183,6 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
 
         SpawnedMeshes.Add(MeshActor);
 
-  	    ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
-  	    RoadPainterBp->PaintAllRoadsEvent();
-  	    RoadPainterBp->Destroy();
-
         if (bUseCarlaMaterials)
         {
           // Set Carla Materials depending on RoadRunner's Semantic Segmentation
