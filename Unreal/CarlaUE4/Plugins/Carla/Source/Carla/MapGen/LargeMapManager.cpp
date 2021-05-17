@@ -10,9 +10,10 @@
 
 #include "Walker/WalkerBase.h"
 
-#if WITH_EDITOR
 #include "FileHelper.h"
 #include "Paths.h"
+
+#if WITH_EDITOR
 #define LARGEMAP_LOGS 1
 #else
 #define LARGEMAP_LOGS 0
@@ -274,9 +275,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
   LM_LOG(Warning, "Generating Map %s ...", *InAssetsPath);
 
-#if WITH_EDITOR
   AssetsPath = InAssetsPath;
-#endif // WITH_EDITOR
 
   /// Retrive all the assets in the path
   TArray<FAssetData> AssetsData;
@@ -966,7 +965,6 @@ void ALargeMapManager::UpdateCurrentTilesLoaded(
   }
 }
 
-#if WITH_EDITOR
 FString ALargeMapManager::GenerateTileName(TileID TileID)
 {
   int32 X = (int32)(TileID >> 32);
@@ -1082,6 +1080,3 @@ void ALargeMapManager::PrintMapInfo()
     }
   }
 }
-
-#endif // WITH_EDITOR
-
