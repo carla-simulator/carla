@@ -17,6 +17,7 @@ import os
 import shutil
 import subprocess
 import argparse
+import threading
 
 # Global variables
 IMPORT_SETTING_FILENAME = "importsetting.json"
@@ -129,61 +130,50 @@ def generate_decals_file(folder):
             #create the decals default config file
             json_decals.append({
                 'map_name' : name,
-                'drip1': '5',
-                'drip2': '5',
-                'drip3': '5',
-                'dirt1': '5',
-                'dirt2': '5',
-                'dirt3': '5',
-                'dirt4': '5',
-                'dirt5': '5',
-                'roadline1': '5',
-                'roadline2': '5',
-                'roadline3': '5',
-                'roadline4': '5',
-                'roadline5': '5',
-                'tiremark1': '5',
-                'tiremark2': '5',
-                'tiremark3': '5',
-                'tarsnake1': '5',
-                'tarsnake2': '5',
-                'tarsnake3': '5',
-                'tarsnake4': '5',
-                'tarsnake5': '5',
-                'tarsnake6': '5',
-                'tarsnake7': '5',
-                'tarsnake8': '5',
-                'tarsnake9': '5',
-                'tarsnake10': '5',
-                'tarsnake11': '5',
-                'cracksbig1': '5',
-                'cracksbig2': '5',
-                'cracksbig3': '5',
-                'cracksbig4': '5',
-                'cracksbig5': '5',
-                'cracksbig6': '5',
-                'cracksbig7': '5',
-                'cracksbig8': '5',
-                'crack1': '5',
-                'crack2': '5',
-                'crack3': '5',
-                'crack4': '5',
-                'crack5': '5',
-                'crack6': '5',
-                'crack7': '5',
-                'crack8': '5',
+                'drip1': '10',
+                'drip3': '10',
+                'dirt1': '10',
+                'dirt3' : '10',
+                'dirt4' : '10',
+                'dirt5': '10',
+                'roadline1': '20',
+                'roadline5': '20',
+                'tiremark1': '20',
+                'tiremark3': '20',
+                'tarsnake1': '10',
+                'tarsnake3': '20',
+                'tarsnake4': '10',
+                'tarsnake5': '20',
+                'tarsnake11': '20',
+                'cracksbig1': '10',
+                'cracksbig3': '10',
+                'cracksbig5': '10',
+                'cracksbig8': '10',
+                'mud1' : '10',
+                'mud5' : '10',
+                'oilsplat1' : '20',
+                'oilsplat2' : '20',
+                'oilsplat3' : '20',
+                'oilsplat4' : '20',
+                'oilsplat5' : '20',
+                'gum' : '30',
+                'crack1': '10',
+                'crack3' : '10',
+                'crack4' : '10',
+                'crack5' : '10',
+                'crack8': '10',
                 'decal_scale' : {
-                'x_axis' : '0.7',
-                'y_axis' : '0.7',
-                'z_axis' : '0.7'},
+                'x_axis' : '1.0',
+                'y_axis' : '1.0',
+                'z_axis' : '1.0'},
                 'fixed_decal_offset': {
-                'x_axis' : '30.0',
-                'y_axis' : '30.0',
-                'z_axis' : '30.0'},
-                'decal_min_scale' : '0.5',
-                'decal_max_scale' : '1.0',
-                'decal_random_yaw' : '180.0',
-                'random_offset' : '15.0'
+                'x_axis' : '15.0',
+                'y_axis' : '15.0',
+                'z_axis' : '0.0'},
+                'decal_min_scale' : '1.0',
+                'decal_max_scale' : '1.5',
+                'decal_random_yaw' : '360.0',
+                'random_offset' : '50.0'
             });
 
         # build and write the .json
@@ -326,7 +316,22 @@ def copy_roadpainter_config_files(package_name):
     """Copies roadpainter configuration files into Unreal content folder"""
 
     two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")      
+    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")
+    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    if not os.path.exists(package_config_path):
+        try:
+            os.makedirs(package_config_path)
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
+    shutil.copy(final_path, package_config_path) 
+
+
+def copy_roadpainter_config_files(package_name):
+    """Copies roadpainter configuration files into Unreal content folder"""
+
+    two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")
     package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
     if not os.path.exists(package_config_path):
         try:
@@ -403,6 +408,10 @@ def import_assets_from_json_list(json_list):
 
             package_name = filename.replace(".json", "")
 
+            # we need to build the binary file for navigation of pedestrians
+            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
+            thr.start()
+
             if ("tiles" in maps[0]):
                 import_assets(package_name, dirname, props, maps, 1, tile_size)
             else:
@@ -412,25 +421,28 @@ def import_assets_from_json_list(json_list):
                 print("No Packages JSONs found, nothing to import. Skipping package.")
                 continue
 
-            # First we only move the meshes to the tagged folders for semantic
-            # segmentation
+            # First we only move the meshes to the tagged folders for semantic segmentation
             move_assets_commandlet(package_name, maps)
-
-            # we need to build the binary file for navigation of pedestrians
-            build_binary_for_navigation(package_name, dirname, maps)
 
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             if len(maps) > 0:
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
 
                 # We apply the carla materials to the imported maps
-                # load_asset_materials_commandlet(package_name)
+                load_asset_materials_commandlet(package_name)
+            thr.join()
 
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
     commandlet_arguments = ["-PackageName=%s" % package_name]
     invoke_commandlet(commandlet_name, commandlet_arguments)
 
+
+def load_asset_materials_commandlet(package_name):
+    commandlet_name = "LoadAssetMaterials"
+    commandlet_arguments = ["-PackageName=%s" % package_name]
+    invoke_commandlet(commandlet_name, commandlet_arguments)
+    
 def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = ["-PackageName=%s" % package_name]
@@ -460,7 +472,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
         if ("source" in umap):
             tiles = [umap["source"]]
         elif ("tiles" in umap):
-            tiles = umap["tiles"]       
+            tiles = umap["tiles"]
         else:
             continue
 
@@ -476,7 +488,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
             # copy
             print('Copying "' + xodr_path_source + '" to "' + xodr_path_target + '"')
             shutil.copy2(xodr_path_source, xodr_path_target)
-        
+
         for tile in tiles:
 
             fbx_filename = os.path.basename(tile)
@@ -492,17 +504,17 @@ def build_binary_for_navigation(package_name, dirname, maps):
                 shutil.copy2(fbx_path_source, fbx_path_target)
 
             # rename the xodr with the same name of the source/tile
-            os.rename(os.path.join(folder, xodr_filename), os.path.join(folder, "%s.xodr" % fbx_name_no_ext))
+            # os.rename(os.path.join(folder, xodr_filename), os.path.join(folder, "%s.xodr" % fbx_name_no_ext))
 
             # make the conversion
             if os.name == "nt":
-                subprocess.call(["build.bat", fbx_name_no_ext], cwd=folder, shell=True)
+                subprocess.call(["build.bat", fbx_name_no_ext, xodr_filename], cwd=folder, shell=True)
             else:
                 subprocess.call(["chmod +x build.sh"], cwd=folder, shell=True)
-                subprocess.call("./build.sh %s" % fbx_name_no_ext, cwd=folder, shell=True)
+                subprocess.call("./build.sh %s %s" % (fbx_name_no_ext, xodr_filename), cwd=folder, shell=True)
 
             # rename the xodr with the original name
-            os.rename(os.path.join(folder, "%s.xodr" % fbx_name_no_ext), os.path.join(folder, xodr_filename))
+            # os.rename(os.path.join(folder, "%s.xodr" % fbx_name_no_ext), os.path.join(folder, xodr_filename))
 
             # copy the binary file
             nav_path_source = os.path.join(folder, "%s.bin" % fbx_name_no_ext)
@@ -518,7 +530,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
             if os.path.exists(nav_path_source):
                 os.remove(nav_path_source)
 
-            if os.path.exists(fbx_path_target): 
+            if os.path.exists(fbx_path_target):
                 os.remove(fbx_path_target)
 
         os.remove(xodr_path_target)
