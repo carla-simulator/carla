@@ -46,7 +46,7 @@ You will now be able to open your map in the Unreal Editor. From here, you will 
 
 CARLA provides several tools and guides to help with the customization of your maps:
 
-- [Add and configure traffic lights.](tuto_M_custom_add_tl.md)
+- [Add and configure traffic lights and signs.](tuto_M_custom_add_tl.md)
 - [Add buildings with the procedural building tool.](tuto_M_custom_buildings.md)
 - [Customize the road with the road painter tool.](tuto_M_custom_road_painter.md)
 - [Customize the weather](tuto_M_custom_weather_landscape.md#weather-customization)
@@ -56,4 +56,4 @@ Once you have finished with the customization, you can [generate the pedestrian 
 
 ---
 
-If you have any questions about the process then you can ask in the [forum](https://forum.carla.org/).
+If you have any questions about the process, then you can ask in the [forum](https://forum.carla.org/).
