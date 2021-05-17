@@ -50,9 +50,9 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V3.M_Road_03_Tiled_V3'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled.M_Road_03_Tiled'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V2.M_Road_03_Tiled_V2'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNodeAux(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMY.M_Road_03_LMY'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(

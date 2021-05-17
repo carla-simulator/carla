@@ -429,14 +429,8 @@ def import_assets_from_json_list(json_list):
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
 
                 # We apply the carla materials to the imported maps
-                load_asset_materials_commandlet(package_name)
+                # load_asset_materials_commandlet(package_name)
             thr.join()
-
-def load_asset_materials_commandlet(package_name):
-    commandlet_name = "LoadAssetMaterials"
-    commandlet_arguments = ["-PackageName=%s" % package_name]
-    invoke_commandlet(commandlet_name, commandlet_arguments)
-
 
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
