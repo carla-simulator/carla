@@ -41,6 +41,8 @@ public:
   virtual AActor* RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info);
 
   FTransform GetLocalTransform(UCarlaEpisode* CarlaEpisode) const;
+
+  virtual ~FActorData(){};
 };
 
 class FVehicleData : public FActorData
