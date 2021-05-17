@@ -194,6 +194,8 @@ void ALargeMapManager::OnActorSpawned(
 
   if (IsValid(Actor)) {
     Actor->OnDestroyed.AddDynamic(this, &ALargeMapManager::OnActorDestroyed);
+    FVector GlobalPosition = LocalToGlobalLocation(Actor->GetActorLocation());
+    LM_LOG(Warning, "Actor Spawned at %s", *GlobalPosition.ToString());
   }
 
 }
@@ -374,17 +376,22 @@ bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
 
 FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
 {
-  return FIntVector(
+  FIntVector VectorId = FIntVector(
       (TileLocation -
-      (Tile0Offset - FVector(0.5*TileSide,0.5*TileSide, 0)))
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
       / TileSide);
+  VectorId.Y *= -1;
+  return VectorId;
 }
 
 FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
 {
-  return ((TileLocation -
-      (Tile0Offset - FVector(0.5*TileSide,0.5*TileSide, 0)))
+  FIntVector VectorId = (
+      (TileLocation -
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
       / TileSide).ToFIntVector();
+  VectorId.Y *= -1;
+  return VectorId;
 }
 
 FIntVector ALargeMapManager::GetTileVectorID(TileID TileID) const
@@ -404,6 +411,7 @@ FVector ALargeMapManager::GetTileLocation(TileID TileID) const
 
 FVector ALargeMapManager::GetTileLocation(FIntVector TileVectorID) const
 {
+  TileVectorID.Y *= -1;
   return FVector(TileVectorID)* TileSide + Tile0Offset;
 }
 
@@ -415,6 +423,7 @@ FDVector ALargeMapManager::GetTileLocationD(TileID TileID) const
 
 FDVector ALargeMapManager::GetTileLocationD(FIntVector TileVectorID) const
 {
+  TileVectorID.Y *= -1;
   return FDVector(TileVectorID) * TileSide + Tile0Offset;
 }
 
