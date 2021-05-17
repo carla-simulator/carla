@@ -415,7 +415,7 @@ FDVector ALargeMapManager::GetTileLocationD(TileID TileID) const
 
 FDVector ALargeMapManager::GetTileLocationD(FIntVector TileVectorID) const
 {
-  return FDVector(TileVectorID)* TileSide + Tile0Offset;
+  return FDVector(TileVectorID) * TileSide + Tile0Offset;
 }
 
 ALargeMapManager::TileID ALargeMapManager::GetTileID(FIntVector TileVectorID) const
