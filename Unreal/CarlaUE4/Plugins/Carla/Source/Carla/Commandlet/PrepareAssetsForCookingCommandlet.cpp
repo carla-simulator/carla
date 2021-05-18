@@ -52,7 +52,7 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03.M_Road_03'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled.M_Road_03_Tiled'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNodeAux(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMY.M_Road_03_LMY'"));
   static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
@@ -199,10 +199,12 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           else if (AssetName.Contains(SSTags::R_TERRAIN))
           {
             MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
+            MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
           else if (AssetName.Contains(SSTags::R_SIDEWALK1) || AssetName.Contains(SSTags::R_SIDEWALK2))
           {
             MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterial);
+            MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
         }
       }
@@ -230,7 +232,7 @@ bool UPrepareAssetsForCookingCommandlet::IsMapInTiles(const TArray<FString> &Ass
   AssetsObjectLibrary->GetAssetDataList(MapContents);
 
   UStaticMesh *MeshAsset;
- 
+
   FString AssetName;
   bool Found = false;
   for (auto MapAsset : MapContents)
@@ -250,7 +252,7 @@ bool UPrepareAssetsForCookingCommandlet::IsMapInTiles(const TArray<FString> &Ass
       }
     }
   }
-  
+
   // Clear loaded assets in library
   AssetsObjectLibrary->ClearLoaded();
 
@@ -490,7 +492,13 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
       // Load World
       FAssetData AssetData;
       LoadWorld(AssetData);
-      World = CastChecked<UWorld>(AssetData.GetAsset());
+      UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(AssetData.GetAsset());
+      if (BaseMapRedirector != nullptr) {
+        World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+      }
+      else {
+        World = CastChecked<UWorld>(AssetData.GetAsset());
+      }
       // try to cook the whole map (no tiles)
       TArray<AStaticMeshActor *> SpawnedActors = SpawnMeshesToWorld(DataPath, Map.bUseCarlaMapMaterials, -1, -1);
       // Save the World in specified path

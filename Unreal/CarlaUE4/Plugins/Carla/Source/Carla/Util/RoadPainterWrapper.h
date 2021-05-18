@@ -59,32 +59,6 @@ public:
 
   void BeginPlay() override;
 
-  /// Event used for setting the size of the map via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void ZSizeEvent();
-
-  /// Event used for painting by actor points
-  /// generated on the road (created during the import process) via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void PaintByActorEvent();
-
-  /// Event used for painting as a whole square via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void PaintOverSquareEvent();
-
-  /// Event used for painting as a whole circle via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void PaintOverCircleEvent();
-
-  /// Event used for painting the road map to the selected texture via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void PaintAllRoadsEvent();
-
-  /// Event used for spawning meshes by actor points
-  /// generated on the road (created during the import process) via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void SpawnMeshesByActorEvent();
-
   /// Event used for spawning meshes via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
   void SpawnMeshesEvent();
@@ -92,25 +66,6 @@ public:
   /// Event used for spawning decals via blueprint
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
   void SpawnDecalsEvent();
-
-  /// Change the material mask for painting the roads as RGB format
-  /// This is used for multitexturing (blending different materials with one another)
-  /// R = 1, G = 2, B = 3
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void SwitchMaterialMaskEvent(int MaskType);
-
-  /// Event for clearing the materials on the road via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void ClearMaterialEvent();
-
-  /// Event for clearing the materials close to the actor points
-  /// generated on the road (created during the import process) via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void ClearMaterialByActorEvent();
-
-  /// Event for clearing all the materials on the road via blueprint
-  UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
-  void ClearAllEvent();
 
   /// Event for setting the necessary variables in blueprint in order to paint the roads 
   UFUNCTION(BlueprintImplementableEvent, Category = "RoadPainter Wrapper")
@@ -120,21 +75,6 @@ public:
   UFUNCTION(Category = "RoadPainter Wrapper")
   void ReadConfigFile(const FString &CurrentMapName);
 
-  /// Generate the assets necessary for painting the roads.
-  /// This function MUST only be called right after the construction script
-  /// in blueprint has finished.
-  UFUNCTION(BlueprintCallable, Category = "RoadPainter Wrapper")
-  void GenerateDynamicAssets();
-
-  /// The size of the whole map
-  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "RoadPainter Wrapper")
-  float MapSize;
-
-  /// Texture used for painting the whole road map into it.
-  /// This is later used for spawning the different decals and meshes.
-  UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
-  UTextureRenderTarget2D *RoadTexture; 
-
   /// Variable used for storing the JSON values of the decals
   /// so it can be later used by the blueprint (Road Painter Preset)
   UPROPERTY(BlueprintReadOnly, Category = "RoadPainter Wrapper")
@@ -142,41 +82,12 @@ public:
 
 private:
 
-  /// Create a procedural texture for painting the road maps
-  /// and save it to disk.
-  const FString GenerateTexture();
-
-  /// Read the Json info file to determine if we have to
-  /// generate textures and prepare variables on construction
-  void ReadJsonAndPrepareRoadPainter();
-
-  /// Read the Json info file to determine if we have to
-  /// paint the roads at runtime or it has already been done
-  void ReadJsonAndPaintRoads();
-
   /// Function to read 3D vectors from a JSON file
   FVector ReadVectorFromJsonObject(TSharedPtr<FJsonObject> JsonObject);
 
   /// Dictionary for translating the JSON file "decal_names" array
   /// to already loaded Material Instances, which are used to apply on the roads
   UPROPERTY()
-  TMap<FString, UMaterialInstance*> DecalNamesMap;
+  TMap<FString, FString> DecalNamesMap;
 
-  /// Array for acquiring the different decals num elements
-  /// from the JSON file, by using it's name
-  UPROPERTY()
-  TArray<FString> DecalNamesArray;
-
-  /// Master material of the roads (necessary for creating material instances)
-  UPROPERTY()
-  UMaterial *RoadNodeMasterMaterial;
-
-  /// Material instance that copies 
-  UPROPERTY()
-  UMaterialInstanceConstant *RoadNodePresetMaterial;
-
-  /// Variable to know if the map has already being rendered
-  /// to our generated texture
-  UPROPERTY()
-  bool bIsRenderedToTexture;
 };
