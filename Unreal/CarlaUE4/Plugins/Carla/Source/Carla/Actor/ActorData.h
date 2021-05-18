@@ -11,6 +11,8 @@
 #include "Carla/Vehicle/VehicleLightState.h"
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
+#include "Carla/Sensor/DataStream.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WalkerControl.h>
 #include <compiler/enable-ue4-macros.h>
@@ -107,4 +109,15 @@ public:
 
   virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
 
+};
+
+class FActorSensorData : public FActorData
+{
+public:
+
+  FDataStream Stream;
+
+  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+
+  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
 };

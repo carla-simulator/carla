@@ -32,6 +32,7 @@ public:
     Walker,
     TrafficLight,
     TrafficSign,
+    Sensor,
     INVALID
   };
 

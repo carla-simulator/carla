@@ -12,6 +12,7 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Sensor/Sensor.h"
 
 namespace crp = carla::rpc;
 
@@ -40,6 +41,10 @@ static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
   else if (nullptr != Cast<ATrafficSignBase>(Actor))
   {
     return FActorView::ActorType::TrafficSign;
+  }
+  else if (nullptr != Cast<ASensor>(Actor))
+  {
+    return FActorView::ActorType::Sensor;
   }
   else
   {

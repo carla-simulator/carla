@@ -291,7 +291,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   for (const FAssetData& AssetData : AssetsData)
   {
     #if WITH_EDITOR
-      // LM_LOG(Warning, "Asset name: %s", *(AssetData.AssetName.ToString()));
+      // LM_LOG(Warning, "Loading asset name: %s", *(AssetData.AssetName.ToString()));
       // LM_LOG(Warning, "Asset class: %s", *(AssetData.AssetClass.ToString()));
     #endif
     FString TileName = AssetData.AssetName.ToString();

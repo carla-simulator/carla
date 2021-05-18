@@ -16,6 +16,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
+#include "Carla/Sensor/Sensor.h"
 
 AActor* FActorData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)
 {
@@ -208,4 +209,18 @@ void FTrafficLightData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpis
   Component->InitializeSign(GameMode->GetMap().get());
   Component->SetLightState(Controller->GetCurrentState().State);
   TrafficLight->SetPoleIndex(PoleIndex);
+}
+
+void FActorSensorData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+{
+  FActorData::RecordActorData(Actor, CarlaEpisode);
+  ASensor* Sensor = Cast<ASensor>(Actor);
+  Stream = Sensor->MoveDataStream();
+}
+
+void FActorSensorData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+{
+  FActorData::RestoreActorData(Actor, CarlaEpisode);
+  ASensor* Sensor = Cast<ASensor>(Actor);
+  Sensor->SetDataStream(std::move(Stream));
 }
