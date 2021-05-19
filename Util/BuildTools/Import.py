@@ -427,7 +427,7 @@ def import_assets_from_json_list(json_list):
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             if len(maps) > 0:
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
-                load_asset_materials_commandlet(package_name)            
+                load_asset_materials_commandlet(package_name)
             thr.join()
 
 def load_asset_materials_commandlet(package_name):
