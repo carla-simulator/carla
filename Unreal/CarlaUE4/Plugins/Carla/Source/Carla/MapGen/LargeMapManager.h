@@ -42,10 +42,8 @@ struct FCarlaMapTile
 {
   GENERATED_BODY()
 
-#if WITH_EDITOR
   UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
   FString Name; // Tile_{TileID_X}_{TileID_Y}
-#endif // WITH_EDITOR
 
   // Absolute location, does not depend on rebasing
   UPROPERTY(VisibleAnywhere, Category = "Carla Map Tile")
@@ -262,8 +260,6 @@ protected:
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool ShouldTilesBlockOnLoad = false;
 
-#if WITH_EDITOR
-
   UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
     void GenerateMap_Editor()
   {
@@ -300,5 +296,4 @@ protected:
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   bool bPrintErrors = false;
 
-#endif // WITH_EDITOR
 };

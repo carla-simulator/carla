@@ -244,3 +244,18 @@ table tbody td{
 	top: 70px;
 	left: 1100px;
 }
+
+/************************* LATEST WARNING BANNER **************************/
+
+.dev-version-warning {
+	padding-top: 15px;
+	padding-bottom: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+	margin-bottom: 8px;
+	color: #404040;
+	font-weight: bold;
+	background-color: #f55c47;
+	text-align: center;
+	border-radius: 5px;
+}

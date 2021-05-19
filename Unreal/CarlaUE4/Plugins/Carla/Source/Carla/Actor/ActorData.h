@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,6 +11,11 @@
 #include "Carla/Vehicle/VehicleLightState.h"
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
+#include "Carla/Sensor/DataStream.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/WalkerControl.h>
+#include <compiler/enable-ue4-macros.h>
 
 class UCarlaEpisode;
 class UTrafficLightController;
@@ -38,6 +43,8 @@ public:
   virtual AActor* RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info);
 
   FTransform GetLocalTransform(UCarlaEpisode* CarlaEpisode) const;
+
+  virtual ~FActorData(){};
 };
 
 class FVehicleData : public FActorData
@@ -57,7 +64,15 @@ public:
 
 class FWalkerData : public FActorData
 {
+public:
 
+  carla::rpc::WalkerControl WalkerControl;
+
+  bool bAlive = true;
+
+  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+
+  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
 };
 
 class FTrafficSignData : public FActorData
@@ -94,4 +109,15 @@ public:
 
   virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
 
+};
+
+class FActorSensorData : public FActorData
+{
+public:
+
+  FDataStream Stream;
+
+  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+
+  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
 };

@@ -10,9 +10,10 @@
 
 #include "Walker/WalkerBase.h"
 
-#if WITH_EDITOR
 #include "FileHelper.h"
 #include "Paths.h"
+
+#if WITH_EDITOR
 #define LARGEMAP_LOGS 1
 #else
 #define LARGEMAP_LOGS 0
@@ -193,6 +194,8 @@ void ALargeMapManager::OnActorSpawned(
 
   if (IsValid(Actor)) {
     Actor->OnDestroyed.AddDynamic(this, &ALargeMapManager::OnActorDestroyed);
+    FVector GlobalPosition = LocalToGlobalLocation(Actor->GetActorLocation());
+    LM_LOG(Warning, "Actor Spawned at %s", *GlobalPosition.ToString());
   }
 
 }
@@ -274,9 +277,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
   LM_LOG(Warning, "Generating Map %s ...", *InAssetsPath);
 
-#if WITH_EDITOR
   AssetsPath = InAssetsPath;
-#endif // WITH_EDITOR
 
   /// Retrive all the assets in the path
   TArray<FAssetData> AssetsData;
@@ -290,7 +291,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   for (const FAssetData& AssetData : AssetsData)
   {
     #if WITH_EDITOR
-      // LM_LOG(Warning, "Asset name: %s", *(AssetData.AssetName.ToString()));
+      // LM_LOG(Warning, "Loading asset name: %s", *(AssetData.AssetName.ToString()));
       // LM_LOG(Warning, "Asset class: %s", *(AssetData.AssetClass.ToString()));
     #endif
     FString TileName = AssetData.AssetName.ToString();
@@ -375,17 +376,22 @@ bool ALargeMapManager::IsLevelOfTileLoaded(FIntVector InTileID) const
 
 FIntVector ALargeMapManager::GetTileVectorID(FVector TileLocation) const
 {
-  return FIntVector(
+  FIntVector VectorId = FIntVector(
       (TileLocation -
-      (Tile0Offset - FVector(0.5*TileSide,0.5*TileSide, 0)))
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
       / TileSide);
+  VectorId.Y *= -1;
+  return VectorId;
 }
 
 FIntVector ALargeMapManager::GetTileVectorID(FDVector TileLocation) const
 {
-  return ((TileLocation -
-      (Tile0Offset - FVector(0.5*TileSide,0.5*TileSide, 0)))
+  FIntVector VectorId = (
+      (TileLocation -
+      (Tile0Offset - FVector(0.5f*TileSide,-0.5f*TileSide, 0)))
       / TileSide).ToFIntVector();
+  VectorId.Y *= -1;
+  return VectorId;
 }
 
 FIntVector ALargeMapManager::GetTileVectorID(TileID TileID) const
@@ -405,6 +411,7 @@ FVector ALargeMapManager::GetTileLocation(TileID TileID) const
 
 FVector ALargeMapManager::GetTileLocation(FIntVector TileVectorID) const
 {
+  TileVectorID.Y *= -1;
   return FVector(TileVectorID)* TileSide + Tile0Offset;
 }
 
@@ -416,7 +423,8 @@ FDVector ALargeMapManager::GetTileLocationD(TileID TileID) const
 
 FDVector ALargeMapManager::GetTileLocationD(FIntVector TileVectorID) const
 {
-  return FDVector(TileVectorID)* TileSide + Tile0Offset;
+  TileVectorID.Y *= -1;
+  return FDVector(TileVectorID) * TileSide + Tile0Offset;
 }
 
 ALargeMapManager::TileID ALargeMapManager::GetTileID(FIntVector TileVectorID) const
@@ -966,7 +974,6 @@ void ALargeMapManager::UpdateCurrentTilesLoaded(
   }
 }
 
-#if WITH_EDITOR
 FString ALargeMapManager::GenerateTileName(TileID TileID)
 {
   int32 X = (int32)(TileID >> 32);
@@ -1082,6 +1089,3 @@ void ALargeMapManager::PrintMapInfo()
     }
   }
 }
-
-#endif // WITH_EDITOR
-

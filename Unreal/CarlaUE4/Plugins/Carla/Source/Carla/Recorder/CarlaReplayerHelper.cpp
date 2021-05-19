@@ -14,6 +14,19 @@
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Lights/CarlaLight.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
+#include "Carla/Actor/ActorSpawnResult.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Engine/StaticMeshActor.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/VehicleLightState.h>
+#include <compiler/enable-ue4-macros.h>
+
+
+#include "EngineUtils.h"
 
 // create or reuse an actor for replaying
 std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(

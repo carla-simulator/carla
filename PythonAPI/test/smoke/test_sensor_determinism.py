@@ -4,7 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from . import SyncSmokeTest
+from . import SmokeTest
 
 import carla
 import time
@@ -79,11 +79,12 @@ class Scenario(object):
         self.active = False
 
     def reload_world(self, settings = None, spectator_tr = None):
-        self.client.reload_world()
         if settings is not None:
             self.world.apply_settings(settings)
         if spectator_tr is not None:
             self.reset_spectator(spectator_tr)
+
+        self.client.reload_world(False)
 
     def reset_spectator(self, spectator_tr):
         spectator = self.world.get_spectator()
@@ -190,8 +191,13 @@ class Scenario(object):
         w_frame = self.world.get_snapshot().frame
         for sensor in self.sensor_list:
             s_frame = self.sensor_queue.get(True, 15.0)[0]
+
+            while s_frame < w_frame:
+                s_frame = self.sensor_queue.get(True, 15.0)[0]
+
             if w_frame != s_frame:
-                raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d" % (sensor[0], w_frame, s_frame))
+                raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d"
+                                       % (sensor[0], w_frame, s_frame))
 
 class SpawnAllRaycastSensors(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
@@ -311,18 +317,17 @@ class SensorScenarioTester():
             raise DeterminismError("SensorOutputError: Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet[0], repetitions))
 
 
-class TestSensorDeterminism(SyncSmokeTest):
+class TestSensorDeterminism(SmokeTest):
     def test_all_sensors(self):
         print("TestSensorDeterminism.test_all_sensors")
+
+        orig_settings = self.world.get_settings()
 
         # Setting output temporal folder
         output_path = os.path.dirname(os.path.realpath(__file__))
         output_path = os.path.join(output_path, "_sensors") + os.path.sep
         if not os.path.exists(output_path):
             os.mkdir(output_path)
-
-        # Loading Town03 for test
-        self.client.load_world("Town03")
 
         try:
             test_sensors = SensorScenarioTester(SpawnAllRaycastSensors(self.client, self.world), output_path)
@@ -333,7 +338,7 @@ class TestSensorDeterminism(SyncSmokeTest):
             shutil.rmtree(output_path)
             self.fail(err)
 
+        self.world.apply_settings(orig_settings)
+
         # Remove all the output files
         shutil.rmtree(output_path)
-
-        self.client.load_world("Town03")

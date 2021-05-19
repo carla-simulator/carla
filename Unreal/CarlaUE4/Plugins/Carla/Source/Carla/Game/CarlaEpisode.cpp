@@ -232,13 +232,10 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
   if (ActorView.IsValid())
   {
     Actor = ActorView.GetActorInfo()->SerializedData;
-    if(!ActorView.IsDormant())
+    auto ParentId = ActorView.GetParent();
+    if (ParentId)
     {
-      auto Parent = ActorView.GetActor()->GetOwner();
-      if (Parent != nullptr)
-      {
-        Actor.parent_id = FindActor(Parent).GetActorId();
-      }
+      Actor.parent_id = ParentId;
     }
   }
   else

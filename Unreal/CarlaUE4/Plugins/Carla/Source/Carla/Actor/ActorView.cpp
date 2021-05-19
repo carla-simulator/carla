@@ -21,7 +21,10 @@ void FActorView::BuildActorData()
     ActorData = MakeShared<FVehicleData>();
     break;
   case ActorType::Walker:
-  ActorData = MakeShared<FWalkerData>();
+    ActorData = MakeShared<FWalkerData>();
+    break;
+  case ActorType::Sensor:
+    ActorData = MakeShared<FActorSensorData>();
     break;
   default:
     ActorData = MakeShared<FActorData>();

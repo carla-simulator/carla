@@ -526,41 +526,38 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
 
-    if(LargeMap)
-    {
-      LargeMap->OnActorSpawned(Result.Value);
-    }
-
     FActorView* ActorView = Episode->FindActorPtr(Result.Value.GetActorId());
     if (!ActorView)
     {
       RESPOND_ERROR("internal error: actor could not be spawned");
     }
 
-    ActorView->SetParent(ParentId);
-    ActorView->SetAttachmentType(InAttachmentType);
-
     FActorView* ParentActorView = Episode->FindActorPtr(ParentId);
     carla::log_warning(ActorView->GetActorId(), ParentId);
-    if (ParentActorView)
-    {
-      carla::log_warning("Parent lives");
-    }
 
-    if (!ParentActorView || ParentActorView->IsDormant())
+    if (!ParentActorView)
     {
       RESPOND_ERROR("unable to attach actor: parent actor not found");
     }
 
+    ActorView->SetParent(ParentId);
+    ActorView->SetAttachmentType(InAttachmentType);
+    ParentActorView->AddChildren(ActorView->GetActorId());
+
     // Only is possible to attach if the actor has been really spawned and
     // is not in dormant state
-    if(ActorView->IsAlive())
+    if(!ParentActorView->IsDormant())
     {
       Episode->AttachActors(
           ActorView->GetActor(),
           ParentActorView->GetActor(),
           static_cast<EAttachmentType>(InAttachmentType));
     }
+    else
+    {
+      Episode->PutActorToSleep(ActorView->GetActorId());
+    }
+
     return Episode->SerializeActor(*ActorView);
   };
 
@@ -662,16 +659,10 @@ void FCarlaServer::FPimpl::BindActions()
       float Speed) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    FActorView ActorView = Episode->FindActor(ActorId);
-    if (!ActorView.IsValid())
+    FActorView* ActorView = Episode->FindActorPtr(ActorId);
+    if (!ActorView)
     {
       RESPOND_ERROR("unable to set walker state: actor not found");
-    }
-
-    auto * Walker = Cast<AWalkerBase>(ActorView.GetActor());
-    if (Walker && !Walker->bAlive)
-    {
-      RESPOND_ERROR("unable to set actor state: walker is dead");
     }
 
     // apply walker transform
@@ -684,7 +675,7 @@ void FCarlaServer::FPimpl::BindActions()
     }
     FVector NewLocation = NewTransform.GetLocation();
 
-    FTransform CurrentTransform = ActorView.GetActor()->GetTransform();
+    FTransform CurrentTransform = ActorView->GetActor()->GetTransform();
     FVector CurrentLocation = CurrentTransform.GetLocation();
     NewLocation.Z += 90.0f; // move point up because in Unreal walker is centered in the middle height
 
@@ -695,26 +686,42 @@ void FCarlaServer::FPimpl::BindActions()
 
     NewTransform.SetLocation(NewLocation);
 
-    ActorView.GetActor()->SetActorRelativeTransform(
-    NewTransform,
-    false,
-    nullptr,
-    ETeleportType::TeleportPhysics);
-
-    // apply walker speed
-    auto Pawn = Cast<APawn>(ActorView.GetActor());
-    if (Pawn == nullptr)
+    if (ActorView->IsDormant())
     {
-      RESPOND_ERROR("unable to set walker state: actor is not a walker");
+      FWalkerData* ActorData = ActorView->GetActorData<FWalkerData>();
+      cr::WalkerControl Control(Transform.GetForwardVector(), Speed, false);
+      ActorData->WalkerControl = Control;
+      ActorData->Location = FDVector(Transform.location);
+      ActorData->Rotation = NewTransform.GetRotation();
+      ActorData->Scale = NewTransform.GetScale3D();
     }
-    auto Controller = Cast<AWalkerController>(Pawn->GetController());
-    if (Controller == nullptr)
+    else
     {
-      RESPOND_ERROR("unable to set walker state: walker has an incompatible controller");
-    }
-    cr::WalkerControl Control(Transform.GetForwardVector(), Speed, false);
-    Controller->ApplyWalkerControl(Control);
+      auto * Walker = Cast<AWalkerBase>(ActorView->GetActor());
+      if (Walker && !Walker->bAlive)
+      {
+        RESPOND_ERROR("unable to set actor state: walker is dead");
+      }
+      ActorView->GetActor()->SetActorRelativeTransform(
+          NewTransform,
+          false,
+          nullptr,
+          ETeleportType::TeleportPhysics);
 
+      // apply walker speed
+      auto Pawn = Cast<APawn>(ActorView->GetActor());
+      if (Pawn == nullptr)
+      {
+        RESPOND_ERROR("unable to set walker state: actor is not a walker");
+      }
+      auto Controller = Cast<AWalkerController>(Pawn->GetController());
+      if (Controller == nullptr)
+      {
+        RESPOND_ERROR("unable to set walker state: walker has an incompatible controller");
+      }
+      cr::WalkerControl Control(Transform.GetForwardVector(), Speed, false);
+      Controller->ApplyWalkerControl(Control);
+    }
     return R<void>::Success();
   };
 
@@ -1325,6 +1332,8 @@ void FCarlaServer::FPimpl::BindActions()
     }
     if (ActorView->IsDormant())
     {
+      FWalkerData* ActorData = ActorView->GetActorData<FWalkerData>();
+      ActorData->WalkerControl = Control;
     }
     else
     {
