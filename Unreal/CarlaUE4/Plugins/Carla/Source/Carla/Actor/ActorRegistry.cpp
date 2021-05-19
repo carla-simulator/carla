@@ -199,6 +199,10 @@ void FActorRegistry::PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* Carla
 {
   FActorView* ActorView = FindPtr(Id);
   ActorView->PutActorToSleep(CarlaEpisode);
+  for (const FActorView::IdType& ChildId : ActorView->GetChildren())
+  {
+    PutActorToSleep(ChildId, CarlaEpisode);
+  }
   // TODO: update id maps
 }
 
@@ -206,5 +210,26 @@ void FActorRegistry::WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpis
 {
   FActorView* ActorView = FindPtr(Id);
   ActorView->WakeActorUp(CarlaEpisode);
+  if (ActorView->GetParent())
+  {
+    AActor* Actor = ActorView->GetActor();
+    FActorView* ParentView = FindPtr(ActorView->GetParent());
+    if (ParentView && !ParentView->IsDormant() && ParentView->GetActor())
+    {
+      AActor* ParentActor = ParentView->GetActor();
+      CarlaEpisode->AttachActors(
+          Actor,
+          ParentActor,
+          static_cast<EAttachmentType>(ActorView->GetAttachmentType()));
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("Failed to attach actor %d to %d during wake up"), Id, ActorView->GetParent());
+    }
+  }
+  for (const FActorView::IdType& ChildId : ActorView->GetChildren())
+  {
+    WakeActorUp(ChildId, CarlaEpisode);
+  }
   // TODO: update id maps
 }

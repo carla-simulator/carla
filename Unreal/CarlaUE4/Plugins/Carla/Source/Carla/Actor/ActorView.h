@@ -105,6 +105,21 @@ public:
     return ParentId;
   }
 
+  void AddChildren(IdType ChildId)
+  {
+    Children.Add(ChildId);
+  }
+
+  void RemoveChildren(IdType ChildId)
+  {
+    Children.Remove(ChildId);
+  }
+
+  const TArray<IdType>& GetChildren() const
+  {
+    return Children;
+  }
+
   void SetAttachmentType(carla::rpc::AttachmentType InAttachmentType)
   {
     Attachment = InAttachmentType;
@@ -168,6 +183,8 @@ private:
   carla::rpc::ActorState State = carla::rpc::ActorState::Invalid;
 
   carla::rpc::AttachmentType Attachment = carla::rpc::AttachmentType::INVALID;
+
+  TArray<IdType> Children;
 
   ActorType Type = ActorType::INVALID;
 
