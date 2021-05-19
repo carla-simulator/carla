@@ -1,6 +1,6 @@
 # Manual package preparation
 
-A map package needs to follow a certain folder structure and must contain a `.json` file describing that folder structure. These steps can be saved under certain circumstances, but doing it manually will always work. 
+A map package follows a certain folder structure and must contain a `.json` file describing that structure. Our automatic map import processes create this `.json` file automatically, but you also have the option to prepare it yourself. Including your own `.json` file will overwrite any arguments passed to the `make import` command.
 
 - [__Create the folder structure__](#create-the-folder-structure)
 - [__Create the JSON description__](#create-the-json-description)
@@ -42,6 +42,8 @@ Import
       └── Map02.fbx
 ```
 
+---
+
 ## Create the JSON description
 
 Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
@@ -79,3 +81,14 @@ The resulting `.json` file should resemble the following:
 ```
 </details>
 <br>
+
+---
+
+If you have any questions about the process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+
+<div class="build-buttons">
+<p>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>
