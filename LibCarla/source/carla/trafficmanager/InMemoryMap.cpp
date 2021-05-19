@@ -139,8 +139,11 @@ namespace traffic_manager {
     auto compare_s = [](const SimpleWaypointPtr &swp1, const SimpleWaypointPtr &swp2) {
       return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
     };
-    auto angle = [](cg::Location l1, cg::Location l2) {
+    auto wpt_angle = [](cg::Location l1, cg::Location l2) {
       return cg::Math::GetVectorAngle(l1, l2);
+    };
+    auto max = [](int16_t x, int16_t y) {
+      return x ^ ((x ^ y) & -(x < y));
     };
 
     GeoGridId geodesic_grid_id_counter = -1;
@@ -157,20 +160,28 @@ namespace traffic_manager {
         std::reverse(segment_waypoints.begin(), segment_waypoints.end());
       }
 
-      // Adding more waypoints if the angle is too tight or if they are too distant,
+      // Adding more waypoints if the angle is too tight or if they are too distant.
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
-
           float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
-          if (angle(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation()) > 0.12f) { // 7 deg
-            auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
-            i++;
-            segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
-          } else if (distance > MAX_WPT_DISTANCE) {
-            auto new_waypoint = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/2.0f).front();
-            i++;
-            segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
+          double angle = wpt_angle(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
+          int16_t angle_splits = static_cast<int16_t>(angle/SEVEN_DEG_TO_RAD);
+          int16_t distance_splits = static_cast<int16_t>(distance/MAX_WPT_DISTANCE);
+          auto max_splits = max(angle_splits, distance_splits);
+          if (max_splits >= 1) {
+            // Compute how many waypoints do we need to generate.
+            for (auto j = 0; j < max_splits; ++j) {
+              auto next_waypoints = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/(max_splits+1));
+              if (next_waypoints.size() != 0) {
+                auto new_waypoint = next_waypoints.front();
+                i++;
+                segment_waypoints.insert(segment_waypoints.begin()+static_cast<int64_t>(i), std::make_shared<SimpleWaypoint>(new_waypoint));
+              } else {
+                // Reached end of the road.
+                break;
+              }
+            }
           }
-      }
+        }
 
       // Placing intra-segment connections.
       cg::Location grid_edge_location = segment_waypoints.front()->GetLocation();
