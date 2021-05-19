@@ -200,8 +200,12 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
         }
       }
     }
+
     bool enable_physics = hybrid_physics_mode ? in_range_of_hero_actor : true;
-    vehicle->SetSimulatePhysics(enable_physics);
+    if (!has_physics_enabled.count(actor_id) || has_physics_enabled[actor_id] != enable_physics) {
+      vehicle->SetSimulatePhysics(enable_physics);
+      has_physics_enabled[actor_id] = enable_physics;
+    }
 
     bool state_entry_present = simulation_state.ContainsActor(actor_id);
     // If physics is disabled, calculate velocity based on change in position.
