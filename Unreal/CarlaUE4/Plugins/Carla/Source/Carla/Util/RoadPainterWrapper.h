@@ -73,7 +73,7 @@ public:
 
   /// Function for reading the decals configuration file (in JSON format)
   UFUNCTION(Category = "RoadPainter Wrapper")
-  void ReadConfigFile(const FString &CurrentMapName);
+  void ReadConfigFile(const FString &CurrentMapName, const TMap<FString, FString> &DecalNamesMap);
 
   /// Variable used for storing the JSON values of the decals
   /// so it can be later used by the blueprint (Road Painter Preset)
@@ -84,10 +84,4 @@ private:
 
   /// Function to read 3D vectors from a JSON file
   FVector ReadVectorFromJsonObject(TSharedPtr<FJsonObject> JsonObject);
-
-  /// Dictionary for translating the JSON file "decal_names" array
-  /// to already loaded Material Instances, which are used to apply on the roads
-  UPROPERTY()
-  TMap<FString, FString> DecalNamesMap;
-
 };
