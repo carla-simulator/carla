@@ -1,6 +1,6 @@
 # Customizing Maps: Layered Maps
 
-Utilizing levels in your custom map enables multiple people to work on a single map concurrently. They also allow you to use the Python API to load and unload layers on your map during a simulation, just like the [layered CARLA maps](core_map.md#layered-maps).
+Utilizing levels in your custom map enables multiple people to work on a single map concurrently. It also allows you to use the Python API to load and unload layers on your map during a simulation, just like the [layered CARLA maps](core_map.md#layered-maps).
 
 This guide will explain how to add a new level, how to add assets to a level, and how to configure a level to be always loaded or not.
 
@@ -34,7 +34,7 @@ __2. Create a new level.__
 
 __1. Select the level to which you want to add assets__.
 
-In the __Levels__ panel, double-click the level to which you would like to add assets. Make sure the level is unlocked by toggling the lock icon.
+In the _Levels_ panel, double-click the level to which you would like to add assets. Make sure the level is unlocked by toggling the lock icon.
 
 __2. Select the assets to add.__
 
@@ -46,11 +46,13 @@ __3. Save the level.__
 
 If a level has pending changes to save, you will see a pencil icon next to it in the _Levels_ panel. Click this to save the changes.
 
+![moving assets](/img/move_assets.png)
+
 ---
 
 ## Configure level loading options
 
-Levels can be configured to be able to be toggled or to be always loaded. To configure the level for either one:
+Levels can be configured to be able to be toggled or to be always loaded. To configure the level for either option:
 
 1. Right-click the level in the _Levels_ panel and go to _Change Streaming Method_.
 2. Choose the desired setting:

@@ -74,4 +74,4 @@ __7.__ To run a simulation with the new map, run CARLA and then change the map u
 ---
 
 
-Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the [forum](https://forum.carla.org/) or you can try running some of our [example scripts](https://github.com/carla-simulator/carla/tree/master/PythonAPI/examples) on your new map to test it out.
+Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions) or you can try running some of our [example scripts](https://github.com/carla-simulator/carla/tree/master/PythonAPI/examples) on your new map to test it out.

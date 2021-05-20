@@ -52,7 +52,7 @@ __3. Configure your default weather parameters.__
 
 For each weather parameter, set your desired value. When you are finished, press _Compile_ then _Save_ and close.
 
->>>>>![bp_weather_pic](img/map_customization/BP_Weather.jpg)<br>
+>>>>>![bp_weather_pic](../img/map_customization/BP_Weather.jpg)<br>
 <div style="text-align: right">
 <i>Array containing default weather parameters for every CARLA map. Town01 opened.</i></div>
 <br>
@@ -90,7 +90,7 @@ The serialization is customized via the following values:
 - _EndPoint_ — If selected, an element will be added at the end node of the curve.
 - _Collision enabled_ — Set the type of collisions enabled for the meshes.
 
-![bp_repspline_pic](img/map_customization/BP_Repspline.jpg)
+![bp_repspline_pic](../img/map_customization/BP_Repspline.jpg)
 <div style="text-align: right"><i>BP_RepSpline example.</i></div>
 
 ### BP_Spline
@@ -101,7 +101,7 @@ The blueprint can be customized using the following value:
 
 - _Gap distance_ — Add a separation between elements.  
 
-![bp_spline_pic](img/map_customization/BP_Spline.jpg)
+![bp_spline_pic](../img/map_customization/BP_Spline.jpg)
 <div style="text-align: right"><i>BP_Spline example.</i></div>
 
 ### BP_Wall
@@ -112,7 +112,7 @@ The `BP_Wall` blueprint is found in `Carla/Blueprints/LevelDesign`. It adds __co
 - _Vertically aligned_ — If selected, the elements will be vertically aligned regarding the world axis.
 - _Scale offset_ — Scale the length of the mesh to round out the connection between elements.
 
-![bp_wall_pic](img/map_customization/BP_Wall.jpg)
+![bp_wall_pic](../img/map_customization/BP_Wall.jpg)
 <div style="text-align: right"><i>BP_Wall example.</i></div>
 
 ### BP_SplinePoweLine
@@ -126,7 +126,7 @@ To provide variety, you can provide the blueprint with an array of powerline mes
 3. Expand the _Array Meshes_ and add to or change it according to your needs.
 4. Press _Compile_, then save and close the window.
 
-![bp_splinepowerline_pic](img/map_customization/BP_Splinepowerline.jpg)
+![bp_splinepowerline_pic](../img/map_customization/BP_Splinepowerline.jpg)
 <div style="text-align: right"><i>BP_SplinePowerLine example.</i></div>
 
 To alter the line tension of the power lines:
@@ -141,7 +141,7 @@ To increase the amount of wires:
 2. Go to the _Socket Manager_ panel.
 3. Configure existing sockets or add new ones by clicking _Create Socket_. Sockets are empty meshes that represent the connection points of the power line. A wire is created form socket to socket between poles.
 
-![bp_powerline_socket_pic](img/map_customization/BP_Splinepowerline_Sockets.jpg)
+![bp_powerline_socket_pic](../img/map_customization/BP_Splinepowerline_Sockets.jpg)
 <div style="text-align: right"><i>Visualization of the sockets for BP_SplinePowerLine.</i></div>
 <br>
 
@@ -154,6 +154,7 @@ To increase the amount of wires:
 
 Continue customizing your map using the tools and guides below:
 
+- [Implement sub-levels in your map.](tuto_M_custom_layers.md)
 - [Add and configure traffic lights and signs.](tuto_M_custom_add_tl.md)
 - [Add buildings with the procedural building tool.](tuto_M_custom_buildings.md)
 - [Customize the road with the road painter tool.](tuto_M_custom_road_painter.md)

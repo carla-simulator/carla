@@ -1,59 +1,80 @@
 # Add a new map
 
-Users of CARLA can create custom maps and use them to run simulations. There are several ways to import custom maps in CARLA. The method to be used will depend on if the map is destined to be used in a packaged version of CARLA or in a version built from source. This section serves as a guide to direct you to the correct method.
+Users of CARLA can create custom maps and use them to run simulations. There are several ways to import custom maps in CARLA. The method to be used will depend on whether you are using a packaged version of CARLA or a version built from source. This section gives an overview of what you need to start the process, the different options available to import, and customization and pedestrian navigation tools available.
 
 - [__Overview__](#overview)
-	- [Export from RoadRunner](#export-from-roadrunner)
-	- [Ingest the map in CARLA](#ingest-the-map-in-carla)
-- [__Alternative import methods__](#alternative-import-methods)
-- [__Summary__](#summary)
+- [__Generation__](#generation)
+- [__Importation__](#importation)
+- [__Customization__](#customization)
+- [__Generate pedestrian navigation__](#generate-pedestrian-navigation)
 
 ---
 
 ## Overview
 
-Follow the links to go directly to the relevant guide or read on futher for a brief summary of the steps involved in the ingestion process:
+Using custom maps in CARLA involves four main processes:
 
-1. [__Export from RoadRunner__](tuto_M_generate_map.md)
-2. [__Import into source build version of CARLA__](tuto_M_add_map_source.md)
-3. [__Import into package version of CARLA__](tuto_M_add_map_package.md)
-4. [__Alternative methods to import maps__](tuto_M_add_map_alternative.md)
+1. Generation
+2. Importation
+3. Customization
+4. Pedestrian Navigation
 
-You can also watch the following video to see an explanation of the various methods:
+Read on further for additional general information on each process.
+
+---
+
+## Generation
+
+CARLA requires map geometry information in `.fbx` format and OpenDRIVE information in `.xodr` format. The current recommended software to generate these files is RoadRunner.
+
+__[This guide](tuto_M_generate_map.md) explains how to use RoadRunner to generate the map information.__
+
+---
+
+## Importation
+
+There are several ways to import your map into CARLA. 
+
+If you are using a __package version__ of CARLA, you will import your map using Docker. This option is only available in Linux, and you will not have the ability to customize the map using the Unreal Editor. __You will find the guide [here](tuto_M_add_map_package.md).__
+
+If you are using a __source build__ version of CARLA, there are three methods available to import your map:
+
+1. Using the automatic `make import` process (recommended). __You will find the guide [here](tuto_M_add_map_source.md).__
+2. Using the RoadRunner plugin. __You will find the guide [here](tuto_M_add_map_alternative.md#roadrunner-plugin-import).__
+3. Manually importing the map into Unreal Engine. __You will find the guide [here](tuto_M_add_map_alternative.md#manual-import).__
+
+The following video explains some of the methods available to import maps into CARLA:
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/mHiUUZ4xC9o" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 <br>
-### Export from RoadRunner
-
-RoadRunner is the recommended software to create a map due to its simplicity. We provide a [__guide__](tuto_M_generate_map.md) on how to export maps made in RoadRunner so they are ready for import into CARLA.
-
-### Ingest the map in CARLA
-
-This is where the route splits in two:
-
- - __If you are using CARLA built from source__, follow the guide [__here__](tuto_M_add_map_source.md).
- - __If you are using a packaged (binary) version of CARLA__, follow the guide [__here__](tuto_M_add_map_package.md).
-
-Regardless of the method used, there are some common themes involved in the ingestion process:
-	
-- __Package `.json` file and folder structure__. Map packages have a particular folder structure and this structure is described in a `.json` file. This file is automatically created during the import process if it is not provided by the user. If you prefer to provide the `.json` file yourself, check the [alternative methods guide](tuto_M_add_map_alternative.md#manual-package-preparation) for an outline on how to do this.
-- __Traffic signs and traffic lights.__ The simulator will generate the traffic lights, stops and yields automatically when running. These will be created according to their `.xodr` definition. Any other landmarks present in the map will not be physically on scene, but they can be queried using the API.  
-*   __Pedestrian navigation.__ The ingestion process will generate a `.bin` file describing the pedestrian navigation. It is based on the sidewalks and crosswalks that appear in the `.xodr` definition. This can only be modified if working in a build from source.  
-
-### Alternative import methods
-
-We provide a section that details alternative methods of importing maps to CARLA that involve the use of plugins or performing each step manually. You will find those methods [here](tuto_M_add_map_alternative.md).
 
 ---
 
-## Summary
+## Customization
 
-If you have any questions about the process to create and import a new map into CARLA, feel free to post these in the [forum](https://forum.carla.org/). 
+As well as hundreds of static meshes ready to be added to the landscape, CARLA provides several tools and guides to help you customize your map:
+
+- __Add sub-levels:__ Sub-levels will allow multiple people to work on the same map at the same time. They will also allow you to toggle layers of your map with the Python API, just like the CARLA layered maps. __You will find the guide [here](tuto_M_custom_layers.md).__
+- __Set default weather:__ Experiment with different weather presets, and when you find the right combination, set the default weather for your map. __You will find the guide [here](tuto_M_custom_weather_landscape.md#weather-customization).__
+- __Populate landscape:__ Use blueprints to populate the landscape with repeating meshes such as street lights, power lines, and walls. __You will find the guide [here](tuto_M_custom_weather_landscape.md#add-serial-meshes).__
+- __Paint the roads:__ Paint the roads with a master material that blends different textures. Add decals and meshes such as fallen leaves, cracks, or manholes. __You will find the guide [here](tuto_M_custom_road_painter.md).__
+- __Add procedural buildings:__ Add buildings with a custom size, amount of floors, and variable mesh combinations using the procedural building blueprint. __You will find the guide [here](tuto_M_custom_buildings.md).__
+- __Add traffic lights and signs:__ Add traffic lights and signs and configure their area of influence. Group traffic lights at junctions. __You will find the guide [here](tuto_M_custom_add_tl.md).__
+
+---
+
+## Generate pedestrian navigation
+
+For pedestrians to be spawned and navigate the map, you need to generate the pedestrian navigation information using the tool provided by CARLA. Pedestrian navigation should be generated after you complete the customization of your map so that obstacles are not created over the top of navigation paths. __You can find the guide [here](tuto_M_generate_pedestrian_navigation.md).__
+
+---
+
+If you have any questions about the above process, feel free to post these in the [forum](https://github.com/carla-simulator/carla/discussions).
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

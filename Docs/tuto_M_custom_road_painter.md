@@ -122,10 +122,10 @@ There are a variety of stencils to choose from in `GenericMaterials/RoadStencil/
 - _Stencil_ — The brush to use.
 - _Rotation_ — Rotation applied to the stroke.
 
->>>>>>![materials_roadpaint_brushes](img/material_customization/Materials_Brush.jpg)
+>>>>>>![materials_roadpaint_brushes](../img/material_customization/Materials_Brush.jpg)
 <div style="text-align: right"><i>Brush panel.</i></div>
 <br>
-![materials_roadpaint_typesofbrushes](img/material_customization/Materials_Road_Typesofbrushes.jpg)
+![materials_roadpaint_typesofbrushes](../img/material_customization/Materials_Road_Typesofbrushes.jpg)
 <div style="text-align: right"><i>Different types of brushes.</i></div>
 <br>
 __4. Apply each material to the desired portions of the road.__
@@ -143,7 +143,7 @@ This section also contains options to erase the applied changes.
 * _Clear materials_ — Remove the currently active materials.
 * _Clear material by actor_ — Remove the material closest to the selected actor.
 
->>>>>>![materials_roadpaint_brushes](img/material_customization/Materials_RoadPainter_Default.jpg)
+>>>>>>![materials_roadpaint_brushes](../img/material_customization/Materials_RoadPainter_Default.jpg)
 <div style="text-align: right"><i>Different painting and erasing options.</i></div>
 <br>
 __5. Add decals and meshes.__
@@ -158,7 +158,7 @@ You can explore the available decals and meshes in `Content/Carla/Static/Decals`
 - _Decal/Mesh Min Scale_ — Minimum random scale applied to the decal/mesh.
 - _Decal/Mesh Max Scale_ — Max random scale applied to the decal/mesh.
 
->>>>>>![materials_](img/decals_meshes.png)
+>>>>>>![materials_](../img/decals_meshes.png)
 <div style="text-align: right"><i>Decals and Meshes panels.</i></div>
 <br>
 
@@ -171,22 +171,22 @@ __7. Experiment to get your desired appearance.__
 
 Experiment with different materials, textures, settings, decals, and meshes to get your desired look. Below are some example images of how the appearance of the road changes during the process of painting each material.
 
-![materials_roadpaint_mat00](img/material_customization/Materials_Road_MaterialBase.jpg)
+![materials_roadpaint_mat00](../img/material_customization/Materials_Road_MaterialBase.jpg)
 <div style="text-align: right"><i>Example of base road material.</i></div>
 <br>
-![materials_roadpaint_mat01](img/material_customization/Materials_Road_Material1.jpg)
+![materials_roadpaint_mat01](../img/material_customization/Materials_Road_Material1.jpg)
 <div style="text-align: right"><i>Example after material 1 is applied.</i></div>
 <br>
-![materials_roadpaint_mat02](img/material_customization/Materials_Road_Material2.jpg)
+![materials_roadpaint_mat02](../img/material_customization/Materials_Road_Material2.jpg)
 <div style="text-align: right"><i>Example after material 2 is applied.</i></div>
 <br>
-![materials_roadpaint_mat03](img/material_customization/Materials_Road_Material3.jpg)
+![materials_roadpaint_mat03](../img/material_customization/Materials_Road_Material3.jpg)
 <div style="text-align: right"><i>Example after material 3 is applied.</i></div>
 <br>
-![materials_roadpaint_mat03](img/material_customization/Materials_Road_Decals.jpg)
+![materials_roadpaint_mat03](../img/material_customization/Materials_Road_Decals.jpg)
 <div style="text-align: right"><i>Example after decals are applied.</i></div>
 <br>
-![materials_roadpaint_mat03](img/material_customization/Materials_Road_Meshes.jpg)
+![materials_roadpaint_mat03](../img/material_customization/Materials_Road_Meshes.jpg)
 <div style="text-align: right"><i>Example after meshes are applied.</i></div>
 <br>
 
@@ -220,6 +220,7 @@ Drag the material onto the lane markings you wish to color. Repeat the whole pro
 
 Continue customizing your map using the tools and guides below:
 
+- [Implement sub-levels in your map.](tuto_M_custom_layers.md)
 - [Add and configure traffic lights and signs.](tuto_M_custom_add_tl.md)
 - [Add buildings with the procedural building tool.](tuto_M_custom_buildings.md)
 - [Customize the weather](tuto_M_custom_weather_landscape.md#weather-customization)

@@ -53,11 +53,11 @@ Once you have made your map in RoadRunner you will be able to export it. Be awar
 - The map validation is correct, paying close attention to connections and geometries.
 
 
->>>>![CheckGeometry](img/check_geometry.jpg)
+>>>>![CheckGeometry](../img/check_geometry.jpg)
 
 Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize the OpenDRIVE road network and give everything one last check.
 
->>>>![checkopen](img/check_open.jpg)
+>>>>![checkopen](../img/check_open.jpg)
 
 !!! note
     _OpenDrive Preview Tool_ makes it easier to test the integrity of the map. If there are any errors with junctions, click on `Maneuver Tool`, and `Rebuild Maneuver Roads`.
@@ -94,3 +94,14 @@ You are now ready to import your map into CARLA. The next step will depend upon 
 
 * __For users of CARLA built from source__, follow the guide [__here__](tuto_M_add_map_source.md).
 * __For users of a packaged (binary) version of CARLA__, follow the guide [__here__](tuto_M_add_map_package.md).
+
+---
+
+If you have any questions about the process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+
+<div class="build-buttons">
+<p>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+CARLA forum</a>
+</p>
+</div>

@@ -18,15 +18,15 @@ __2.__ Drag the traffic lights into the scene and position them in the desired l
 
 __3.__ Adjust the [`trigger volume`][triggerlink] for each traffic light by selecting the _BoxTrigger_ component in the _Details_ panel and adjusting the values in the _Transform_ section. This will determine the traffic light's area of influence.
 
->>![ue_trafficlight](img/ue_trafficlight.jpg)
+>>![ue_trafficlight](../img/ue_trafficlight.jpg)
 
 __4.__ For junctions, drag the `BP_TrafficLightGroup` actor into the level. Assign all the traffic lights in the junction to the traffic light group by adding them to the _Traffic Lights_ array in the _Details_ panel.
 
->>![ue_tl_group](img/ue_tl_group.jpg)
+>>![ue_tl_group](../img/ue_tl_group.jpg)
 
 __5.__ Traffic light timing is only configurable through the Python API. See the documentation [here](core_actors.md#traffic-signs-and-traffic-lights) for more information.
 
->>![ue_tlsigns_example](img/ue_tlsigns_example.jpg)
+>>![ue_tlsigns_example](../img/ue_tlsigns_example.jpg)
 
 > _Example: Traffic Signs, Traffic lights and Turn based stop._
 
@@ -50,6 +50,7 @@ __3.__ Adjust the [`trigger volume`][triggerlink] for each traffic sign by selec
 
 Continue customizing your map using the tools and guides below:
 
+- [Implement sub-levels in your map.](tuto_M_custom_layers.md)
 - [Add buildings with the procedural building tool.](tuto_M_custom_buildings.md)
 - [Customize the road with the road painter tool.](tuto_M_custom_road_painter.md)
 - [Customize the weather](tuto_M_custom_weather_landscape.md#weather-customization)

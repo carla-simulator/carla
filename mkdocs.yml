@@ -63,9 +63,10 @@ nav:
   - 'Import map in CARLA source build': 'tuto_M_add_map_source.md'
   - 'Alternative ways to import maps': 'tuto_M_add_map_alternative.md'
   - 'Manually prepare map package': 'tuto_M_manual_map_package.md'
+  - 'Customizing maps: Layered maps': 'tuto_M_custom_layers.md'
   - 'Customizing maps: Traffic lights and signs': 'tuto_M_custom_add_tl.md'
   - 'Customizing maps: Road painter': 'tuto_M_custom_road_painter.md'
-  - 'Customizing maps: Buildings': 'tuto_M_custom_buildings.md'
+  - 'Customizing maps: Procedural Buildings': 'tuto_M_custom_buildings.md'
   - 'Customizing maps: Weather and landscape': 'tuto_M_custom_weather_landscape.md'
   - 'Generate pedestrian navigation': 'tuto_M_generate_pedestrian_navigation.md'
 - Tutorials (assets):
