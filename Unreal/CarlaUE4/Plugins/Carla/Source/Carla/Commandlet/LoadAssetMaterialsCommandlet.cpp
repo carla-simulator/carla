@@ -129,10 +129,9 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
       TileData.XODRName = LoadedMapName.LeftChop((LoadedMapName.GetCharArray().Num() - 1) - LoadedMapName.Find("_", ESearchCase::IgnoreCase, ESearchDir::Type::FromStart));
       // As the OpenDrive file has the same name as level, build the path to the
-      // xodr file using the lavel name and the game content directory.
+      // xodr file using the label name and the game content directory.
       const FString XodrContent = UOpenDrive::LoadXODR(TileData.XODRName);
       XODRMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromLongFString(XodrContent));
-      XODRMap->GenerateWaypointsOnRoadEntries();
 
       // Acquire the TilesInfo.txt file for storing the tile data (offset and size)
       TArray<FString> FileList;
@@ -157,9 +156,11 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
       FilledData = true;
     }
 
-    // From the loaded map name (in style mymap_Tile_2_4) get the X and the Y (Tile_2_4 -> X = 2, Y = 4)
-    int32 XIndex = FCString::Atoi(&LoadedMapName.GetCharArray()[LoadedMapName.Find("Tile_", ESearchCase::CaseSensitive, ESearchDir::FromStart) + 5]);
-    int32 YIndex = FCString::Atoi(&LoadedMapName.GetCharArray()[LoadedMapName.GetCharArray().Num() - 2]);
+    TArray<FString> StringArray = {};
+    LoadedMapName.ParseIntoArray(StringArray, TEXT("_"), false);
+    // From the loaded map name (in style mymap_Tile_200_400) get the X and the Y (Tile_200_400 -> X = 200, Y = 400)
+    int32 XIndex = FCString::Atoi(*StringArray[StringArray.Num() - 2]);
+    int32 YIndex = FCString::Atoi(*StringArray[StringArray.Num() - 1]);
 
     FVector TilePosition;
     // This means it's the initial tile (mymap_Tile_0_0)
@@ -358,7 +359,7 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
           World = CastChecked<UWorld>(AssetData.GetAsset());
         }
         World->InitWorld();
-        bool IsTiledMap = World->GetName().Contains("Tile", ESearchCase::Type::CaseSensitive);
+        bool IsTiledMap = World->GetName().Contains("_Tile_", ESearchCase::Type::CaseSensitive);
         ApplyRoadPainterMaterials(World->GetName(), IsTiledMap);
 
 #if WITH_EDITOR
