@@ -68,6 +68,11 @@ void UTrafficLightController::AddTrafficLight(UTrafficLightComponent * TrafficLi
   TrafficLight->SetController(this);
 }
 
+void UTrafficLightController::RemoveTrafficLight(UTrafficLightComponent * TrafficLight)
+{
+  TrafficLights.Remove(TrafficLight);
+}
+
 const FString &UTrafficLightController::GetControllerId() const
 {
   return ControllerId;

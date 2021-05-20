@@ -461,7 +461,7 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
   BaseMovementComponent = MovementComponent;
 }
 
-void ACarlaWheeledVehicle::SetWheelSteerDirection(VehicleWheelLocation WheelLocation, float AngleInDeg) {
+void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
 
   check((uint8)WheelLocation >= 0)
   check((uint8)WheelLocation < 4)
@@ -470,7 +470,7 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(VehicleWheelLocation WheelLoca
   VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
 }
 
-float ACarlaWheeledVehicle::GetWheelSteerAngle(VehicleWheelLocation WheelLocation) {
+float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
 
   check((uint8)WheelLocation >= 0)
   check((uint8)WheelLocation < 4)

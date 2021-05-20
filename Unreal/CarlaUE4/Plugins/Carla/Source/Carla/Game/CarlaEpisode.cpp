@@ -55,7 +55,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
 }
 
-bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool reset_settings)
+bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
   FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
   bool bIsFileFound = false;
@@ -104,7 +104,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool reset_settings
   {
     UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
-    if (reset_settings)
+    if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
   }
   return bIsFileFound;
@@ -221,12 +221,9 @@ void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
-  TArray<FTransform> SpawnPoints;
-  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It)
-  {
-    SpawnPoints.Add(It->GetActorTransform());
-  }
-  return SpawnPoints;
+  ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
+
+  return GM->GetSpawnPointsTransforms();
 }
 
 carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
@@ -235,10 +232,10 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
   if (ActorView.IsValid())
   {
     Actor = ActorView.GetActorInfo()->SerializedData;
-    auto Parent = ActorView.GetActor()->GetOwner();
-    if (Parent != nullptr)
+    auto ParentId = ActorView.GetParent();
+    if (ParentId)
     {
-      Actor.parent_id = FindActor(Parent).GetActorId();
+      Actor.parent_id = ParentId;
     }
   }
   else
@@ -253,6 +250,8 @@ void UCarlaEpisode::AttachActors(
     AActor *Parent,
     EAttachmentType InAttachmentType)
 {
+  Child->AddActorWorldOffset(FVector(CurrentMapOrigin));
+
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
 
   // recorder event

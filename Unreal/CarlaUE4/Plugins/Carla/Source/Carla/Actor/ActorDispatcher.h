@@ -51,11 +51,32 @@ public:
       FActorDescription ActorDescription,
       FActorView::IdType DesiredId = 0);
 
+  /// ReSpawns an actor based on @a ActorDescription at @a Transform. To properly
+  /// despawn an actor created with this function call DestroyActor.
+  /// Used to respawn dormant actors.
+  ///
+  /// @return The actor to be respawned
+  AActor* ReSpawnActor(
+      const FTransform &Transform,
+      FActorDescription ActorDescription);
+
+  void PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode);
+
+  void WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode);
+
   /// Destroys an actor, properly removing it from the registry.
   ///
   /// Return true if the @a Actor is destroyed or already marked for
   /// destruction, false if indestructible or nullptr.
-  bool DestroyActor(AActor *Actor);
+  //bool DestroyActor(AActor *Actor);
+
+  bool DestroyActor(FActorView::IdType ActorId);
+
+  UFUNCTION()
+  void OnActorDestroyed(AActor *Actor)
+  {
+    Registry.Deregister(Actor);
+  }
 
   /// Register an actor that was not created using "SpawnActor" function but
   /// that should be kept in the registry.
@@ -72,12 +93,6 @@ public:
   }
 
 private:
-
-  UFUNCTION()
-  void OnActorDestroyed(AActor *Actor)
-  {
-    Registry.Deregister(Actor);
-  }
 
   TArray<FActorDefinition> Definitions;
 

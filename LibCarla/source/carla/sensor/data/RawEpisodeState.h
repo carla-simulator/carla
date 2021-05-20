@@ -57,6 +57,10 @@ namespace data {
       return GetHeader().delta_seconds;
     }
 
+    geom::Vector3DInt GetMapOrigin() const {
+      return GetHeader().map_origin;
+    }
+
     /// Simulation state flags
     Serializer::SimulationState GetSimulationState() const {
       return GetHeader().simulation_state;

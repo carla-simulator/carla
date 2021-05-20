@@ -12,8 +12,11 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Sensor/Sensor.h"
 
 namespace crp = carla::rpc;
+
+FActorRegistry::IdType FActorRegistry::ID_COUNTER = 0u;
 
 static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
 {
@@ -21,21 +24,27 @@ static FActorView::ActorType FActorRegistry_GetActorType(const FActorView &View)
   {
     return FActorView::ActorType::INVALID;
   }
-  else if (nullptr != Cast<ACarlaWheeledVehicle>(View.GetActor()))
+
+  const AActor* Actor = View.GetActor();
+  if (nullptr != Cast<ACarlaWheeledVehicle>(Actor))
   {
     return FActorView::ActorType::Vehicle;
   }
-  else if (nullptr != Cast<ACharacter>(View.GetActor()))
+  else if (nullptr != Cast<ACharacter>(Actor))
   {
     return FActorView::ActorType::Walker;
   }
-  else if (nullptr != Cast<ATrafficLightBase>(View.GetActor()))
+  else if (nullptr != Cast<ATrafficLightBase>(Actor))
   {
     return FActorView::ActorType::TrafficLight;
   }
-  else if (nullptr != Cast<ATrafficSignBase>(View.GetActor()))
+  else if (nullptr != Cast<ATrafficSignBase>(Actor))
   {
     return FActorView::ActorType::TrafficSign;
+  }
+  else if (nullptr != Cast<ASensor>(Actor))
+  {
+    return FActorView::ActorType::Sensor;
   }
   else
   {
@@ -58,8 +67,18 @@ static FString GetRelevantTagAsString(const TSet<crp::CityObjectLabel> &Semantic
 
 FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description, IdType DesiredId)
 {
-  static IdType ID_COUNTER = 0u;
-  auto Id = ++ID_COUNTER;
+
+  FActorView* ActorView = FindPtr(DesiredId);
+  bool IsDormant = ActorView && (ActorView->IsDormant());
+  if(IsDormant)
+  {
+    ActorView->TheActor = &Actor;
+    Actors.Add(DesiredId, &Actor);
+    Ids.Add(&Actor, DesiredId);
+    return *ActorView;
+  }
+
+  IdType Id = ++FActorRegistry::ID_COUNTER;
 
   if (DesiredId != 0 && Id != DesiredId) {
     // check if the desired Id is free, then use it instead
@@ -83,44 +102,64 @@ FActorView FActorRegistry::Register(AActor &Actor, FActorDescription Description
   }
   Ids.Emplace(&Actor, Id);
 
-  auto View = MakeView(Id, Actor, std::move(Description));
+  FActorView View = MakeView(Id, Actor, std::move(Description), crp::ActorState::Alive);
 
-  auto Result = ActorDatabase.emplace(Id, View);
-  check(Result.second);
-  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
-  return Result.first->second;
+  FActorView& Result = ActorDatabase.Emplace(Id, View);
+
+  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
+  return Result;
 }
 
-void FActorRegistry::Deregister(IdType Id)
+void FActorRegistry::Deregister(IdType Id, bool KeepId)
 {
   check(Contains(Id));
-  AActor *Actor = Find(Id).GetActor();
-  check(Actor != nullptr);
-  ActorDatabase.erase(Id);
-  Actors.Remove(Id);
+  FActorView* ActorView = FindPtr(Id);
+
+  if(!ActorView) return;
+
+  AActor *Actor = ActorView->GetActor();
+
+  // If the ID will be reused again by other actor (like dormant actors)
+  // we need to keep the ID <-> FActorView relation
+  // but we need to remove all AActor pointers since they will not be valid anymore
+  if(KeepId)
+  {
+    Actors[Id] = nullptr;
+  }
+  else
+  {
+    ActorDatabase.Remove(Id);
+    Actors.Remove(Id);
+  }
+
   Ids.Remove(Actor);
-  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.size());
+
+  ActorView->TheActor = nullptr;
+
+  check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
 }
 
-void FActorRegistry::Deregister(AActor *Actor)
+void FActorRegistry::Deregister(AActor *Actor, bool KeepId)
 {
   check(Actor != nullptr);
   auto View = Find(Actor);
   check(View.GetActor() == Actor);
-  Deregister(View.GetActorId());
+  Deregister(View.GetActorId(), KeepId);
 }
 
 FActorView FActorRegistry::FindOrFake(AActor *Actor) const
 {
   auto View = Find(Actor);
   const bool bFakeActor = (View.GetActor() == nullptr) && (Actor != nullptr);
-  return bFakeActor ? MakeView(0u, *Actor, FActorDescription{}) : View;
+  // Maybe the state of this view should be Invlaid but I'm not 100% sure
+  return bFakeActor ? MakeView(0u, *Actor, FActorDescription{}, crp::ActorState::Alive) : View;
 }
 
 FActorView FActorRegistry::MakeView(
     IdType Id,
     AActor &Actor,
-    FActorDescription Description) const
+    FActorDescription Description,
+    crp::ActorState InState) const
 {
   auto Info = MakeShared<FActorInfo>();
   Info->Description = std::move(Description);
@@ -150,7 +189,47 @@ FActorView FActorRegistry::MakeView(
         std::begin(Token.data),
         std::end(Token.data));
   }
-  auto View = FActorView{Id, Actor, std::move(Info)};
+  auto View = FActorView{Id, &Actor, std::move(Info), InState};
   View.Type = FActorRegistry_GetActorType(View);
+  View.BuildActorData();
   return View;
+}
+
+void FActorRegistry::PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+{
+  FActorView* ActorView = FindPtr(Id);
+  ActorView->PutActorToSleep(CarlaEpisode);
+  for (const FActorView::IdType& ChildId : ActorView->GetChildren())
+  {
+    PutActorToSleep(ChildId, CarlaEpisode);
+  }
+  // TODO: update id maps
+}
+
+void FActorRegistry::WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+{
+  FActorView* ActorView = FindPtr(Id);
+  ActorView->WakeActorUp(CarlaEpisode);
+  if (ActorView->GetParent())
+  {
+    AActor* Actor = ActorView->GetActor();
+    FActorView* ParentView = FindPtr(ActorView->GetParent());
+    if (ParentView && !ParentView->IsDormant() && ParentView->GetActor())
+    {
+      AActor* ParentActor = ParentView->GetActor();
+      CarlaEpisode->AttachActors(
+          Actor,
+          ParentActor,
+          static_cast<EAttachmentType>(ActorView->GetAttachmentType()));
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("Failed to attach actor %d to %d during wake up"), Id, ActorView->GetParent());
+    }
+  }
+  for (const FActorView::IdType& ChildId : ActorView->GetChildren())
+  {
+    WakeActorUp(ChildId, CarlaEpisode);
+  }
+  // TODO: update id maps
 }
