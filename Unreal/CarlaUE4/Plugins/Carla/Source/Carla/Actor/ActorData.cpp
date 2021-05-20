@@ -94,7 +94,10 @@ void FVehicleData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
 {
   FActorData::RecordActorData(Actor, CarlaEpisode);
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
-  PhysicsControl = Vehicle->GetVehiclePhysicsControl();
+  if (bSimulatePhysics)
+  {
+    PhysicsControl = Vehicle->GetVehiclePhysicsControl();
+  }
   Control = Vehicle->GetVehicleControl();
   LightState = Vehicle->GetVehicleLightState();
 }
@@ -103,10 +106,13 @@ void FVehicleData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
 {
   FActorData::RestoreActorData(Actor, CarlaEpisode);
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
-  Vehicle->ApplyVehiclePhysicsControl(PhysicsControl);
+  Vehicle->SetSimulatePhysics(bSimulatePhysics);
+  if (bSimulatePhysics)
+  {
+    Vehicle->ApplyVehiclePhysicsControl(PhysicsControl);
+  }
   Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
   Vehicle->SetVehicleLightState(LightState);
-  Vehicle->SetSimulatePhysics(bSimulatePhysics);
 }
 
 void FWalkerData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
