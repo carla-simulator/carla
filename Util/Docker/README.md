@@ -68,6 +68,33 @@ Finally create the actual Carla image, it will search for `carla-prerequisites:l
 docker build -t carla -f Carla.Dockerfile .
 ```
 
+## Building the Release Docker image
+
+Based on the docker image from the last step or a local build you can build a smaller image of the release version. 
+First you need to create the packaged version of carla:
+**Note:** Dont forget to add the carla content before this.
+```
+make package
+```
+**Note:** For isulated enviroments it is possible to work with local copys for the required packages (boost, libpng, xerces-c) for the build enviroment. The default location for those would be the `/Local` directory in the base carla dir. If you need to use another location change the `LOCAL_PACKAGES` variable in `Util/BuildTools/Vars.mk`.
+
+use this package to create the docker file:
+```
+make docker
+```
+
+alternativly you can use the package frome the `Dist` directory to create the docker image manuall:
+```
+mkdir -p (temp build dir)
+tar -xyzf Dist/(Packagename) -C (temp build dir)/
+cd (temp build dir)
+
+docker build -t (container name) -f Dockerfile .
+```
+Now you can delete the temp directory after a successfull build.
+
+**Notes:** The whole process can be influenced from your firewall settings and may require some workarounds (Like moving the package file and building it in a different less restricted enviroment and use `docker save` and `docker load` to move the image back).
+
 ---
 
 ## Other useful information

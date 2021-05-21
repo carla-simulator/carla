@@ -128,7 +128,11 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     rm -Rf ${BOOST_BASENAME}-source
 
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
-
+# check for local copy
+  if [[ -f ${LOCAL_PACKAGES}/${BOOST_PACKAGE_BASENAME}.tar.gz ]] ; then
+    log "Using local copy of  boost."
+    cp ${LOCAL_PACKAGES}/${BOOST_PACKAGE_BASENAME}.tar.gz .
+  else
     log "Retrieving boost."
     wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     # try to use the backup boost we have in Jenkins
@@ -136,6 +140,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
       log "Using boost backup"
       wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     fi
+  fi
 
     log "Extracting boost for Python ${PY_VERSION}."
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
@@ -403,8 +408,14 @@ LIBPNG_LIBPATH=${PWD}/${LIBPNG_BASENAME}-install/lib
 if [[ -d ${LIBPNG_INSTALL} ]] ; then
   log "Libpng already installed."
 else
-  log "Retrieving libpng."
-  wget ${LIBPNG_REPO}
+  # check if a local copy of package is provided
+  if [[ -f ${LOCAL_PACKAGES}/libpng-${LIBPNG_VERSION}.tar.xz ]] ; then
+    log "Using local copy of the libpng package."
+    cp ${LOCAL_PACKAGES}/libpng-${LIBPNG_VERSION}.tar.xz .
+  else
+    log "Retrieving libpng."
+    wget ${LIBPNG_REPO}
+  fi
 
   log "Extracting libpng."
   tar -xf libpng-${LIBPNG_VERSION}.tar.xz
@@ -438,8 +449,14 @@ XERCESC_LIB=${XERCESC_INSTALL_DIR}/lib/libxerces-c.a
 if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
   log "Xerces-c already installed."
 else
-  log "Retrieving xerces-c."
-  wget ${XERCESC_REPO}
+  # check if a local copy of package is provided
+  if [[ -f ${LOCAL_PACKAGES}/xerces-c-${XERCESC_VERSION}.tar.gz ]] ; then
+    log "Using local copy xcerces-c."
+    cp ${LOCAL_PACKAGES}/xerces-c-${XERCESC_VERSION}.tar.gz .
+  else
+    log "Retrieving xerces-c."
+    wget ${XERCESC_REPO}
+  fi
 
   log "Extracting xerces-c."
   tar -xzf ${XERCESC_BASENAME}.tar.gz
