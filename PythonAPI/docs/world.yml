@@ -609,6 +609,15 @@
         If the layer is already unloaded the call has no effect.
       warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
     # --------------------------------------
+    - def_name: set_pedestrians_cross_factor
+      params:
+      - param_name: percentage
+        type: float
+        doc: >
+          Sets the percentage of pedestrians that can walk on the road or cross at any point on the road. Value should be between `0.0` and `1.0`. For example, a value of `0.1` would allow 10% of pedestrians to walk on the road. __Default is `0.0`__.
+      note: >
+        Should be set before pedestrians are spawned.
+    # --------------------------------------
     - def_name: __str__
       return:
         string
