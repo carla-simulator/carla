@@ -194,6 +194,10 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
     carla::geom::Location DecalLocation;
 
+    float TileSizeCm = TileData.Size * 100.0f;
+    float TileWorldLocationX = TileData.FirstTileCenterX * 100.0f;
+    float TileWorldLocationY = TileData.FirstTileCenterY * 100.0f;
+
     for (int32 i = 0; i < DecalsProperties.DecalMaterials.Num(); ++i) {
 
       for (int32 j = 0; j < DecalsProperties.DecalNumToSpawn[i]; ++j) {
@@ -205,10 +209,11 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
         // Get the closest road waypoint from the random location calculated
         auto Wp = XODRMap->GetClosestWaypointOnRoad(DecalLocation);
         FVector FinalLocation(XODRMap->ComputeTransform(Wp.get()).location);
+        FRotator FinalRotation(XODRMap->ComputeTransform(Wp.get()).rotation);
 
         // Transform the location from relative coords to world coordinates.
-        FinalLocation.X += (-TileData.FirstTileCenterX * 100.0f) - (XIndex * (TileData.Size * 100.0f));
-        FinalLocation.Y += (-TileData.FirstTileCenterY * 100.0f) + (YIndex * (TileData.Size * 100.0f));
+        FinalLocation.X += TileWorldLocationX + (XIndex * TileSizeCm);
+        FinalLocation.Y += TileWorldLocationY - (YIndex * TileSizeCm);
 
         FActorSpawnParameters SpawnParams;
         SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -226,13 +231,9 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
         // Calculate random yaw for decal
         float RandomYaw = FMath::RandRange(0.0f, DecalsProperties.DecalRandomYaw);
-        FRotator DecalRotation(0.0f, RandomYaw, 0.0f);
-        Decal->SetActorRotation(DecalRotation);
-
-        // Create unique name so it's saved to the world properly
-        const FName DecalName = MakeUniqueObjectName(nullptr, ADecalActor::StaticClass(), FName("RoadDecal"));
-        FString DecalString = DecalName.ToString();
-        Decal->SetActorLabel(DecalString, true);
+        FinalRotation.Yaw += RandomYaw;
+        Decal->SetActorRotation(FinalRotation);
+        Decal->SetActorLabel("RoadDecal", true);
       }
     }
 
@@ -342,29 +343,20 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
     if (AssetDatas.Num() > 0)
     {
       //If the map is tiled, there will be several umaps in the same folder
-      int32 NumMaps = AssetDatas.Num();
-      for (int32 i = 0; i < NumMaps; ++i) {
+      for (int32 i = 0; i < AssetDatas.Num(); ++i) {
 
         // Extract first asset found in folder path (i.e. the imported map)
         AssetData = AssetDatas.Pop();
-        if (World != nullptr)
-        {
-          NewWorldToLoad = CastChecked<UWorld>(AssetData.GetAsset());
-          World->DestroyWorld(true, NewWorldToLoad);
-          World = NewWorldToLoad;
-          NewWorldToLoad = nullptr;
-        }
-        else
-        {
-          World = CastChecked<UWorld>(AssetData.GetAsset());
-        }
-        World->InitWorld();
-        bool IsTiledMap = World->GetName().Contains("_Tile_", ESearchCase::Type::CaseSensitive);
-        ApplyRoadPainterMaterials(World->GetName(), IsTiledMap);
+        World = Cast<UWorld>(AssetData.GetAsset());
+        if (World != nullptr) {
 
+          World->InitWorld();
+          bool IsTiledMap = World->GetName().Contains("_Tile_", ESearchCase::Type::CaseSensitive);
+          ApplyRoadPainterMaterials(World->GetName(), IsTiledMap);
 #if WITH_EDITOR
-        UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+          UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif
+        }
       }
     }
   }
