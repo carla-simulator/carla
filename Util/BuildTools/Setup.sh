@@ -584,7 +584,7 @@ if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
 else
   # check if a local copy of package is provided
   if [[ -f ${LOCAL_PACKAGES}/${SQLITE_VERSION}.tar.gz ]] ; then
-    log "Using local copy xcerces-c."
+    log "Using local copy Sqlite3."
     cp ${LOCAL_PACKAGES}/${SQLITE_VERSION}.tar.gz .
   else
     log "Retrieving Sqlite3"
