@@ -628,9 +628,15 @@ PROJ_LIB=${PROJ_INSTALL_DIR_FULL}/lib/libproj.a
 if [[ -d ${PROJ_INSTALL_DIR} ]] ; then
   log "PROJ already installed."
 else
-  log "Retrieving PROJ"
-  wget ${PROJ_REPO}
-
+  # check if a local copy of package is provided
+  if [[ -f ${LOCAL_PACKAGES}/${PROJ_VERSION}.tar.gz ]] ; then
+    log "Using local PROJ."
+    cp ${LOCAL_PACKAGES}/${PROJ_VERSION}.tar.gz .
+  else
+    log "Retrieving PROJ"
+    wget ${PROJ_REPO}
+  fi
+  
   log "Extracting PROJ"
   tar -xzf ${PROJ_TAR}
   mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
