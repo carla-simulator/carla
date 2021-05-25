@@ -582,9 +582,14 @@ SQLITE_EXE=${PWD}/${SQLITE_INSTALL_DIR}/bin/sqlite3
 if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
   log "Sqlite already installed."
 else
-  log "Retrieving Sqlite3"
-  wget ${SQLITE_REPO}
-
+  # check if a local copy of package is provided
+  if [[ -f ${LOCAL_PACKAGES}/${SQLITE_VERSION}.tar.gz ]] ; then
+    log "Using local copy xcerces-c."
+    cp ${LOCAL_PACKAGES}/${SQLITE_VERSION}.tar.gz .
+  else
+    log "Retrieving Sqlite3"
+    wget ${SQLITE_REPO}
+  fi
   log "Extracting Sqlite3"
   tar -xzf ${SQLITE_TAR}
   mv ${SQLITE_VERSION} ${SQLITE_SOURCE_DIR}
