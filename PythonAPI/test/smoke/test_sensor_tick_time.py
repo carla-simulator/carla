@@ -31,6 +31,9 @@ class TestSensorTickTime(SyncSmokeTest):
     bp_lib = self.world.get_blueprint_library()
 
     sensor_exception = {
+      "sensor.camera.depth",
+      "sensor.camera.rgb",
+      "sensor.camera.semantic_segmentation",
       "sensor.camera.dvs",
       "sensor.other.obstacle"
     }

@@ -62,6 +62,9 @@ namespace rpc {
         << ", radius=" << std::to_string(control.radius)
         << ", max_brake_torque=" << std::to_string(control.max_brake_torque)
         << ", max_handbrake_torque=" << std::to_string(control.max_handbrake_torque)
+        << ", lat_stiff_max_load=" << std::to_string(control.lat_stiff_max_load)
+        << ", lat_stiff_value=" << std::to_string(control.lat_stiff_value)
+        << ", long_stiff_value=" << std::to_string(control.long_stiff_value)
         << ", position=" << control.position << ')';
     return out;
   }
@@ -332,13 +335,16 @@ void export_control() {
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, float, float, float, cg::Vector3D>(
+    .def(init<float, float, float, float, float, float, float, float, float, cg::Vector3D>(
         (arg("tire_friction")=2.0f,
          arg("damping_rate")=0.25f,
          arg("max_steer_angle")=70.0f,
          arg("radius")=30.0f,
          arg("max_brake_torque")=1500.0f,
          arg("max_handbrake_torque")=3000.0f,
+         arg("lat_stiff_max_load")=2.0f,
+         arg("lat_stiff_value")=17.0f,
+         arg("long_stiff_value")=1000.0f,
          arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
@@ -346,6 +352,9 @@ void export_control() {
     .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
     .def_readwrite("max_brake_torque", &cr::WheelPhysicsControl::max_brake_torque)
     .def_readwrite("max_handbrake_torque", &cr::WheelPhysicsControl::max_handbrake_torque)
+    .def_readwrite("lat_stiff_max_load", &cr::WheelPhysicsControl::lat_stiff_max_load)
+    .def_readwrite("lat_stiff_value", &cr::WheelPhysicsControl::lat_stiff_value)
+    .def_readwrite("long_stiff_value", &cr::WheelPhysicsControl::long_stiff_value)
     .def_readwrite("position", &cr::WheelPhysicsControl::position)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)

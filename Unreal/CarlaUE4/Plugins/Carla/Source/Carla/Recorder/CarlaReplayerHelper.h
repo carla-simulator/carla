@@ -6,8 +6,18 @@
 
 #pragma once
 
+#include "CarlaRecorderEventAdd.h"
+#include "CarlaRecorderPosition.h"
+#include "CarlaRecorderState.h"
+#include "CarlaRecorderAnimWalker.h"
+#include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderLightVehicle.h"
+#include "CarlaRecorderLightScene.h"
+
+#include <unordered_map>
+
 class UCarlaEpisode;
-class FActorView;
+struct FActorView;
 struct FActorDescription;
 
 class CarlaReplayerHelper

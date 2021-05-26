@@ -6,6 +6,7 @@
 
 #include "CarlaReplayer.h"
 #include "CarlaRecorder.h"
+#include "Carla/Game/CarlaEpisode.h"
 
 #include <ctime>
 #include <sstream>

@@ -161,11 +161,13 @@
       type: int
       doc: >
         Number of lasers shot.
+    # --------------------------------------
     - var_name: horizontal_angle
       type: float
       var_units: radians
       doc: >
         Horizontal angle the LIDAR is rotated at the time of the measurement.
+    # --------------------------------------
     - var_name: raw_data
       type: bytes
       doc: >
@@ -239,11 +241,13 @@
       type: int
       doc: >
         Number of lasers shot.
+    # --------------------------------------
     - var_name: horizontal_angle
       type: float
       var_units: radians
       doc: >
         Horizontal angle the LIDAR is rotated at the time of the measurement.
+    # --------------------------------------
     - var_name: raw_data
       type: bytes
       doc: >
