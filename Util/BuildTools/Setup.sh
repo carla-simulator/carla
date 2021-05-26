@@ -129,18 +129,18 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 # check for local copy
-  if [[ -f ${LOCAL_PACKAGES}/${BOOST_PACKAGE_BASENAME}.tar.gz ]] ; then
-    log "Using local copy of  boost."
-    cp ${LOCAL_PACKAGES}/${BOOST_PACKAGE_BASENAME}.tar.gz .
-  else
-    log "Retrieving boost."
-    wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    if [[ -f ${LOCAL_PACKAGES}/${BOOST_PACKAGE_BASENAME}.tar.gz ]] ; then
+      log "Using local copy of  boost."
+      cp ${LOCAL_PACKAGES}/${BOOST_PACKAGE_BASENAME}.tar.gz .
+    else
+      log "Retrieving boost."
+      wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     # try to use the backup boost we have in Jenkins
-    if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
-      log "Using boost backup"
-      wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+      if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
+        log "Using boost backup"
+        wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+      fi
     fi
-  fi
 
     log "Extracting boost for Python ${PY_VERSION}."
     tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
