@@ -63,6 +63,9 @@ void ALargeMapManager::BeginPlay()
   WorldComposition->bRebaseOriginIn3DSpace = true;
   WorldComposition->RebaseOriginDistance = RebaseOriginDistance;
 
+  LayerStreamingDistanceSquared = LayerStreamingDistance * LayerStreamingDistance;
+  ActorStreamingDistanceSquared = ActorStreamingDistance * ActorStreamingDistance;
+  RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -72,6 +75,7 @@ void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOri
 
 void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::PostWorldOriginOffset);
   CurrentOriginInt = InDstOrigin;
   CurrentOriginD = FDVector(InDstOrigin);
 
@@ -119,6 +123,7 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 
 void ALargeMapManager::RegisterInitialObjects()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::RegisterInitialObjects);
   UWorld* World = GetWorld();
   UCarlaEpisode* CurrentEpisode = UCarlaStatics::GetCurrentEpisode(World);
   const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
@@ -131,6 +136,7 @@ void ALargeMapManager::RegisterInitialObjects()
 void ALargeMapManager::OnActorSpawned(
     const FActorView& ActorView)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::OnActorSpawned);
   UWorld* World = GetWorld();
   const FActorInfo* ActorInfo = ActorView.GetActorInfo();
   AActor* Actor = const_cast<AActor*>(ActorView.GetActor());
@@ -240,6 +246,8 @@ FVector ALargeMapManager::LocalToGlobalLocation(const FVector& InLocation) const
   return CurrentOriginD.ToFVector() + InLocation;
 }
 
+float tick_execution_time = 0;
+uint64_t num_ticks = 0;
 void ALargeMapManager::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
@@ -275,6 +283,7 @@ void ALargeMapManager::GenerateLargeMap() {
 
 void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GenerateMap);
   LM_LOG(Warning, "Generating Map %s ...", *InAssetsPath);
 
   AssetsPath = InAssetsPath;
@@ -561,6 +570,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 }
 
 FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID TileId) {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::LoadCarlaMapTile);
   // Need to generate a new Tile
   FCarlaMapTile NewTile;
   // 1 - Calculate the Tile position
@@ -650,6 +660,7 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
 
 void ALargeMapManager::UpdateTilesState()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::UpdateTilesState);
   TSet<TileID> TilesToConsider;
 
   // Loop over ActorsToConsider to update the state of the map tiles
@@ -680,7 +691,7 @@ void ALargeMapManager::UpdateTilesState()
 
 void ALargeMapManager::RemovePendingActorsToRemove()
 {
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::RemovePendingActorsToRemove);
   if(ActorsToRemove.Num() > 0 || GhostsToRemove.Num() > 0)
   {
     LM_LOG(Error, "ActorsToRemove %d GhostsToRemove %d", ActorsToRemove.Num(), GhostsToRemove.Num());
@@ -708,6 +719,7 @@ void ALargeMapManager::RemovePendingActorsToRemove()
 
 void ALargeMapManager::CheckGhostActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckGhostActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
   // Check if they have to be destroyed
@@ -734,14 +746,6 @@ void ALargeMapManager::CheckGhostActors()
 
         float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-        // LM_LOG(Warning, "CheckGhostActors\n\t%s\n\tRelLoc: %s\n\tOrigin: %s\n\tWorldLoc: %s\n\tTile %s\n\tDist %.2f (%.2f)", \
-        //   *Actor->GetName(), *RelativeLocation.ToString(), \
-        //   *CurrentOriginD.ToString(), \
-        //   *WorldLocation.ToString(), \
-        //   *TileIDToString(GetTileID(WorldLocation)),\
-        //   RelativeLocation.Size(), ActorStreamingDistance \
-        // );
-
         if (DistanceSquared > ActorStreamingDistanceSquared)
         {
           LM_LOG(Warning, "CheckGhostActors Tile not loaded %s %s (%s)-> Ghost To Dormant %s", \
@@ -767,6 +771,7 @@ void ALargeMapManager::CheckGhostActors()
 
 void ALargeMapManager::ConvertGhostToDormantActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertGhostToDormantActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
@@ -788,6 +793,7 @@ void ALargeMapManager::ConvertGhostToDormantActors()
 
 void ALargeMapManager::CheckDormantActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckDormantActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
@@ -837,6 +843,7 @@ void ALargeMapManager::CheckDormantActors()
 
 void ALargeMapManager::ConvertDormantToGhostActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertDormantToGhostActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
@@ -867,6 +874,7 @@ void ALargeMapManager::ConvertDormantToGhostActors()
 
 void ALargeMapManager::CheckIfRebaseIsNeeded()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckIfRebaseIsNeeded);
   if(ActorsToConsider.Num() > 0)
   {
     UWorld* World = GetWorld();
@@ -893,6 +901,7 @@ void ALargeMapManager::CheckIfRebaseIsNeeded()
 void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
                                           TSet<TileID>& OutTilesToConsider)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GetTilesToConsider);
   check(ActorToConsider);
   // World location
   FDVector ActorLocation = CurrentOriginD + ActorToConsider->GetActorLocation();
@@ -914,6 +923,7 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
       FCarlaMapTile* Tile = MapTiles.Find(TileID);
       if (!Tile)
       {
+        LM_LOG(Warning, "Requested tile %d, %d  but tile was not found", TileToCheck.X, TileToCheck.Y);
         continue; // Tile does not exist, discard
       }
 
@@ -934,6 +944,7 @@ void ALargeMapManager::GetTilesThatNeedToChangeState(
   TSet<TileID>& OutTilesToBeVisible,
   TSet<TileID>& OutTilesToHidde)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GetTilesThatNeedToChangeState);
   OutTilesToBeVisible = InTilesToConsider.Difference(CurrentTilesLoaded);
   OutTilesToHidde = CurrentTilesLoaded.Difference(InTilesToConsider);
 }
@@ -944,6 +955,7 @@ void ALargeMapManager::UpdateTileState(
   bool InShouldBeLoaded,
   bool InShouldBeVisible)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::UpdateTileState);
   UWorld* World = GetWorld();
   UWorldComposition* WorldComposition = World->WorldComposition;
 
@@ -963,6 +975,7 @@ void ALargeMapManager::UpdateCurrentTilesLoaded(
   const TSet<TileID>& InTilesToBeVisible,
   const TSet<TileID>& InTilesToHidde)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::UpdateCurrentTilesLoaded);
   for (const TileID TileID : InTilesToHidde)
   {
     CurrentTilesLoaded.Remove(TileID);
