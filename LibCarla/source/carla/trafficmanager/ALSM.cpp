@@ -171,7 +171,7 @@ ALSM::DestroyeddActors ALSM::IdentifyDestroyedActors(const ActorList &actor_list
 void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::IdleInfo &max_idle_time) {
 
   std::vector<ActorPtr> vehicle_list = registered_vehicles.GetList();
-  bool hero_actor_present = hybrid_physics_mode && hero_actors.size() != 0u;
+  bool hero_actor_present = hero_actors.size() != 0u;
   float physics_radius = parameters.GetHybridPhysicsRadius();
   float physics_radius_square = SQUARE(physics_radius);
   for (const Actor &vehicle : vehicle_list) {
@@ -188,7 +188,7 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
 
     // Check if current actor is in range of hero actor and enable physics in hybrid mode.
     bool in_range_of_hero_actor = false;
-    if (hero_actor_present) {
+    if (hero_actor_present && hybrid_physics_mode) {
       for (auto &hero_actor_info: hero_actors) {
         const ActorId &hero_actor_id =  hero_actor_info.first;
         if (simulation_state.ContainsActor(hero_actor_id)) {
@@ -220,10 +220,22 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
       vehicle_velocity = displacement * INV_HYBRID_DT;
     }
 
+    // If hero actor is present, add its location.
+    cg::Location hero_location = cg::Location(0,0,0);
+    if (hero_actor_present) {
+      // For now, just get one hero.
+      for (auto &hero_actor_info: hero_actors) {
+        const ActorId &hero_actor_id =  hero_actor_info.first;
+        hero_location = simulation_state.GetLocation(hero_actor_id);
+        std::cout << " ALSM hero loc x " << hero_location.x << ", y " << hero_location.y << ", z " << hero_location.z << std::endl;
+      }
+    }
     // Updated kinematic state object.
     auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
     KinematicState kinematic_state{vehicle_location, vehicle_rotation,
-                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit(), enable_physics};
+                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit(),
+                                   enable_physics, vehicle->IsDormant(),
+                                   hero_location};
 
     // Updated traffic light state object.
     TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
@@ -256,7 +268,8 @@ void ALSM::UpdateUnregisteredActorsData() {
     const cg::Location actor_location = actor_transform.location;
     const cg::Rotation actor_rotation = actor_transform.rotation;
     const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
-    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true};
+    std::cout << "UpdateUnregisteredActorsData" << std::endl;
+    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, false, cg::Location(0,0,0)};
 
     TrafficLightState tl_state;
     ActorType actor_type = ActorType::Any;

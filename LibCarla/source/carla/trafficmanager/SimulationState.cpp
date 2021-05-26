@@ -66,6 +66,14 @@ bool SimulationState::IsPhysicsEnabled(ActorId actor_id) const {
   return kinematic_state_map.at(actor_id).physics_enabled;
 }
 
+bool SimulationState::IsDormant(ActorId actor_id) const {
+  return kinematic_state_map.at(actor_id).is_dormant;
+}
+
+cg::Location SimulationState::GetHeroLocation(ActorId actor_id) const {
+  return kinematic_state_map.at(actor_id).hero_location;
+}
+
 TrafficLightState SimulationState::GetTLS(ActorId actor_id) const {
   return tl_state_map.at(actor_id);
 }

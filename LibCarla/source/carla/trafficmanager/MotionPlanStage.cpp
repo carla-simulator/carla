@@ -29,8 +29,10 @@ MotionPlanStage::MotionPlanStage(
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
   const cc::World &world,
-  ControlFrame &output_array)
-  : vehicle_id_list(vehicle_id_list),
+  ControlFrame &output_array,
+  RandomGeneratorMap &random_devices,
+  const LocalMapPtr &local_map)
+    : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
     buffer_map(buffer_map),
@@ -43,7 +45,9 @@ MotionPlanStage::MotionPlanStage(
     collision_frame(collision_frame),
     tl_frame(tl_frame),
     world(world),
-    output_array(output_array) {}
+    output_array(output_array),
+    random_devices(random_devices),
+    local_map(local_map) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -58,133 +62,151 @@ void MotionPlanStage::Update(const unsigned long index) {
   const bool &tl_hazard = tl_frame.at(index);
   current_timestamp = world.GetSnapshot().GetTimestamp();
   StateEntry current_state;
-    
+
   // Instanciating teleportation transform.
   cg::Transform teleportation_transform;
-  
-  // Target velocity for vehicle.
-  const float ego_speed_limit = simulation_state.GetSpeedLimit(actor_id);
-  float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, ego_speed_limit) / 3.6f;
 
-  // Collision handling and target velocity correction.
-  std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, ego_velocity,
-                                                                ego_heading, max_target_velocity);
-  bool collision_emergency_stop = collision_response.first;
-  float dynamic_target_velocity = collision_response.second;
-
-  // Don't enter junction if there isn't enough free space after the junction.
-  bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
-
-  // In case of collision or traffic light hazard.
-  bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
-
-  if (ego_physics_enabled) {
-    ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
-
-    const float target_point_distance = std::max(ego_speed * TARGET_WAYPOINT_TIME_HORIZON,
-                                                TARGET_WAYPOINT_HORIZON_LENGTH);
-    const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
-    const cg::Location target_location = target_waypoint->GetLocation();
-    float dot_product = DeviationDotProduct(ego_location, ego_heading, target_location);
-    float cross_product = DeviationCrossProduct(ego_location, ego_heading, target_location);
-    dot_product = 1.0f - dot_product;
-    if (cross_product < 0.0f) {
-      dot_product *= -1.0f;
-    }
-    const float current_deviation = dot_product;
-    // If previous state for vehicle not found, initialize state entry.
-    if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-      const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f, 0.0f};
-      pid_state_map.insert({actor_id, initial_state});
-    }
-
-    // Retrieving the previous state.
-    traffic_manager::StateEntry previous_state;
-    previous_state = pid_state_map.at(actor_id);
-
-    // Select PID parameters.
-    std::vector<float> longitudinal_parameters;
-    std::vector<float> lateral_parameters;
-    if (ego_speed > HIGHWAY_SPEED) {
-      longitudinal_parameters = highway_longitudinal_parameters;
-      lateral_parameters = highway_lateral_parameters;
-    } else {
-      longitudinal_parameters = urban_longitudinal_parameters;
-      lateral_parameters = urban_lateral_parameters;
-    }
-
-    // If physics is enabled for the vehicle, use PID controller.
-    // State update for vehicle.
-    current_state = PID::StateUpdate(previous_state, ego_speed, dynamic_target_velocity,
-                                     current_deviation, current_timestamp);
-
-    // Controller actuation.
-    actuation_signal = PID::RunStep(current_state, previous_state,
-                                    longitudinal_parameters, lateral_parameters);
-
-    if (emergency_stop) {
-
-      current_state.deviation_integral = 0.0f;
-      current_state.velocity_integral = 0.0f;
-      actuation_signal.throttle = 0.0f;
-      actuation_signal.brake = 1.0f;
-    }
-
-    // Constructing the actuation signal.
-
-    carla::rpc::VehicleControl vehicle_control;
-    vehicle_control.throttle = actuation_signal.throttle;
-    vehicle_control.brake = actuation_signal.brake;
-    vehicle_control.steer = actuation_signal.steer;
-
-    output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
-
-    // Updating PID state.
-    StateEntry &state = pid_state_map.at(actor_id);
-    state = current_state;
-
+  if (simulation_state.IsDormant(actor_id)) {
+    cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
+    std::cout << "hero loc x " << hero_location.x << ", y " << hero_location.y << ", z " << hero_location.z << std::endl;
+    if (hero_location != cg::Location(0,0,0)) {
+      double twice_physics_radius = parameters.GetHybridPhysicsRadius()*2.0;
+      double r_sample = random_devices.at(actor_id).next() + twice_physics_radius;
+      cg::Location teleport_location = hero_location + cg::Location(r_sample, r_sample, 0.0);
+      SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
+      teleportation_transform = teleport_waypoint->GetTransform();
+      output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+      std::cout << "ML Stage" << std::endl;
+    } // else {
+    //   // teleportation_transform = waypoint_buffer.front()->GetTransform();
+    //   // output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+    // }
   }
-  // For physics-less vehicles, determine position and orientation for teleportation.
   else {
-    // Flushing controller state for vehicle.
-    current_state = {current_timestamp,
-                     0.0f, 0.0f,
-                     0.0f, 0.0f};
+    // Target velocity for vehicle.
+    const float ego_speed_limit = simulation_state.GetSpeedLimit(actor_id);
+    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, ego_speed_limit) / 3.6f;
 
-    // Add entry to teleportation duration clock table if not present.
-    if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
-      teleportation_instance.insert({actor_id, current_timestamp});
-    }
+    // Collision handling and target velocity correction.
+    std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, ego_velocity,
+                                                                  ego_heading, max_target_velocity);
+    bool collision_emergency_stop = collision_response.first;
+    float dynamic_target_velocity = collision_response.second;
 
-    // Measuring time elapsed since last teleportation for the vehicle.
-    double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
+    // Don't enter junction if there isn't enough free space after the junction.
+    bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
 
-    // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-    if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
+    // In case of collision or traffic light hazard.
+    bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
 
-      // Target displacement magnitude to achieve target velocity.
-      const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
-      SimpleWaypointPtr teleport_target = waypoint_buffer.front();
-      cg::Transform target_base_transform = teleport_target->GetTransform();
-      cg::Location target_base_location = target_base_transform.location;
-      cg::Vector3D target_heading = target_base_transform.GetForwardVector();
-      cg::Vector3D correct_heading = (target_base_location - ego_location).MakeSafeUnitVector(EPSILON);
+    if (ego_physics_enabled) {
+      ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
-      if (ego_location.Distance(target_base_location) < target_displacement) {
-        cg::Location teleportation_location = ego_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
-        teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+      const float target_point_distance = std::max(ego_speed * TARGET_WAYPOINT_TIME_HORIZON,
+                                                  TARGET_WAYPOINT_HORIZON_LENGTH);
+      const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
+      const cg::Location target_location = target_waypoint->GetLocation();
+      float dot_product = DeviationDotProduct(ego_location, ego_heading, target_location);
+      float cross_product = DeviationCrossProduct(ego_location, ego_heading, target_location);
+      dot_product = 1.0f - dot_product;
+      if (cross_product < 0.0f) {
+        dot_product *= -1.0f;
       }
-      else {
-        cg::Location teleportation_location = ego_location + cg::Location(correct_heading * target_displacement);
-        teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+      const float current_deviation = dot_product;
+      // If previous state for vehicle not found, initialize state entry.
+      if (pid_state_map.find(actor_id) == pid_state_map.end()) {
+        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f, 0.0f};
+        pid_state_map.insert({actor_id, initial_state});
       }
-    // In case of an emergency stop, stay in the same location.
-    // Also, teleport only once every dt in asynchronous mode.
-    } else {
-      teleportation_transform = cg::Transform(ego_location, simulation_state.GetRotation(actor_id));
+
+      // Retrieving the previous state.
+      traffic_manager::StateEntry previous_state;
+      previous_state = pid_state_map.at(actor_id);
+
+      // Select PID parameters.
+      std::vector<float> longitudinal_parameters;
+      std::vector<float> lateral_parameters;
+      if (ego_speed > HIGHWAY_SPEED) {
+        longitudinal_parameters = highway_longitudinal_parameters;
+        lateral_parameters = highway_lateral_parameters;
+      } else {
+        longitudinal_parameters = urban_longitudinal_parameters;
+        lateral_parameters = urban_lateral_parameters;
+      }
+
+      // If physics is enabled for the vehicle, use PID controller.
+      // State update for vehicle.
+      current_state = PID::StateUpdate(previous_state, ego_speed, dynamic_target_velocity,
+                                      current_deviation, current_timestamp);
+
+      // Controller actuation.
+      actuation_signal = PID::RunStep(current_state, previous_state,
+                                      longitudinal_parameters, lateral_parameters);
+
+      if (emergency_stop) {
+
+        current_state.deviation_integral = 0.0f;
+        current_state.velocity_integral = 0.0f;
+        actuation_signal.throttle = 0.0f;
+        actuation_signal.brake = 1.0f;
+      }
+
+      // Constructing the actuation signal.
+
+      carla::rpc::VehicleControl vehicle_control;
+      vehicle_control.throttle = actuation_signal.throttle;
+      vehicle_control.brake = actuation_signal.brake;
+      vehicle_control.steer = actuation_signal.steer;
+
+      output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+
+      // Updating PID state.
+      StateEntry &state = pid_state_map.at(actor_id);
+      state = current_state;
+
     }
-    // Constructing the actuation signal.
-    output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+    // For physics-less vehicles, determine position and orientation for teleportation.
+    else {
+      // Flushing controller state for vehicle.
+      current_state = {current_timestamp,
+                      0.0f, 0.0f,
+                      0.0f, 0.0f};
+
+      // Add entry to teleportation duration clock table if not present.
+      if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
+        teleportation_instance.insert({actor_id, current_timestamp});
+      }
+
+      // Measuring time elapsed since last teleportation for the vehicle.
+      double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
+
+      // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
+      if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
+
+        // Target displacement magnitude to achieve target velocity.
+        const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
+        SimpleWaypointPtr teleport_target = waypoint_buffer.front();
+        cg::Transform target_base_transform = teleport_target->GetTransform();
+        cg::Location target_base_location = target_base_transform.location;
+        cg::Vector3D target_heading = target_base_transform.GetForwardVector();
+        cg::Vector3D correct_heading = (target_base_location - ego_location).MakeSafeUnitVector(EPSILON);
+
+        if (ego_location.Distance(target_base_location) < target_displacement) {
+          cg::Location teleportation_location = ego_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
+          teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+        }
+        else {
+          cg::Location teleportation_location = ego_location + cg::Location(correct_heading * target_displacement);
+          teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+        }
+      // In case of an emergency stop, stay in the same location.
+      // Also, teleport only once every dt in asynchronous mode.
+      } else {
+        teleportation_transform = cg::Transform(ego_location, simulation_state.GetRotation(actor_id));
+      }
+      // Constructing the actuation signal.
+      output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+    }
   }
 }
 

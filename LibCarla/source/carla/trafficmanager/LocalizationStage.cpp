@@ -33,139 +33,158 @@ LocalizationStage::LocalizationStage(
 void LocalizationStage::Update(const unsigned long index) {
 
   const ActorId actor_id = vehicle_id_list.at(index);
-  const cg::Location vehicle_location = simulation_state.GetLocation(actor_id);
-  const cg::Vector3D heading_vector = simulation_state.GetHeading(actor_id);
-  const cg::Vector3D vehicle_velocity_vector = simulation_state.GetVelocity(actor_id);
-  const float vehicle_speed = vehicle_velocity_vector.Length();
-
-  // Speed dependent waypoint horizon length.
-  float horizon_length = std::min(vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, MAXIMUM_HORIZON_LENGTH);
-  const float horizon_square = SQUARE(horizon_length);
-
+  bool is_at_junction_entrance = false;
   if (buffer_map.find(actor_id) == buffer_map.end()) {
     buffer_map.insert({actor_id, Buffer()});
   }
   Buffer &waypoint_buffer = buffer_map.at(actor_id);
 
-  // Clear buffer if vehicle is too far from the first waypoint in the buffer.
-  if (!waypoint_buffer.empty() &&
-      cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(),
-                                vehicle_location) > SQUARE(MAX_START_DISTANCE)) {
+  if (!simulation_state.IsDormant(actor_id)) {
+    std::cout << "Loc dorm" << std::endl;
+    const cg::Location vehicle_location = simulation_state.GetLocation(actor_id);
+    const cg::Vector3D heading_vector = simulation_state.GetHeading(actor_id);
+    const cg::Vector3D vehicle_velocity_vector = simulation_state.GetVelocity(actor_id);
+    const float vehicle_speed = vehicle_velocity_vector.Length();
 
-    auto number_of_pops = waypoint_buffer.size();
-    for (uint64_t j = 0u; j < number_of_pops; ++j) {
-      PopWaypoint(actor_id, track_traffic, waypoint_buffer);
-    }
-  }
+    // Speed dependent waypoint horizon length.
+    float horizon_length = std::min(vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, MAXIMUM_HORIZON_LENGTH);
+    const float horizon_square = SQUARE(horizon_length);
 
-  bool is_at_junction_entrance = false;
+    // Clear buffer if vehicle is too far from the first waypoint in the buffer.
+    if (!waypoint_buffer.empty() &&
+        cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(),
+                                  vehicle_location) > SQUARE(MAX_START_DISTANCE)) {
 
-  if (!waypoint_buffer.empty()) {
-    // Purge passed waypoints.
-    float dot_product = DeviationDotProduct(vehicle_location, heading_vector, waypoint_buffer.front()->GetLocation());
-    while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
-
-      PopWaypoint(actor_id, track_traffic, waypoint_buffer);
-      if (!waypoint_buffer.empty()) {
-        dot_product = DeviationDotProduct(vehicle_location, heading_vector, waypoint_buffer.front()->GetLocation());
-      }
-    }
-
-    if (!waypoint_buffer.empty()) {
-      // Determine if the vehicle is at the entrance of a junction.
-      SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
-      is_at_junction_entrance = !waypoint_buffer.front()->CheckJunction() && look_ahead_point->CheckJunction();
-      if (is_at_junction_entrance
-          // Exception for roundabout in Town03.
-          && local_map->GetMapName() == "Town03"
-          && vehicle_location.SquaredLength() < SQUARE(30)) {
-        is_at_junction_entrance = false;
-      }
-    }
-
-    // Purge waypoints too far from the front of the buffer.
-    while (!is_at_junction_entrance
-           && !waypoint_buffer.empty()
-           && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square) {
-      PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
-    }
-  }
-
-  // Initializing buffer if it is empty.
-  if (waypoint_buffer.empty()) {
-    SimpleWaypointPtr closest_waypoint = local_map->GetWaypoint(vehicle_location);
-    PushWaypoint(actor_id, track_traffic, waypoint_buffer, closest_waypoint);
-  }
-
-  // Assign a lane change.
-  const ChangeLaneInfo lane_change_info = parameters.GetForceLaneChange(actor_id);
-  bool force_lane_change = lane_change_info.change_lane;
-  bool lane_change_direction = lane_change_info.direction;
-
-  if (!force_lane_change) {
-    float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
-    if (perc_keep_right >= 0.0f && perc_keep_right >= random_devices.at(actor_id).next()) {
-      force_lane_change = true;
-      lane_change_direction = true;
-    }
-  }
-
-  const SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
-  const float lane_change_distance = SQUARE(std::max(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
-
-  bool recently_not_executed_lane_change = last_lane_change_location.find(actor_id) == last_lane_change_location.end();
-  bool done_with_previous_lane_change = true;
-  if (!recently_not_executed_lane_change) {
-    float distance_frm_previous = cg::Math::DistanceSquared(last_lane_change_location.at(actor_id), vehicle_location);
-    done_with_previous_lane_change = distance_frm_previous > lane_change_distance;
-  }
-  bool auto_or_force_lane_change = parameters.GetAutoLaneChange(actor_id) || force_lane_change;
-  bool front_waypoint_not_junction = !front_waypoint->CheckJunction();
-
-  if (auto_or_force_lane_change
-      && front_waypoint_not_junction
-      && (recently_not_executed_lane_change || done_with_previous_lane_change)) {
-
-    SimpleWaypointPtr change_over_point = AssignLaneChange(actor_id, vehicle_location, vehicle_speed,
-                                                           force_lane_change, lane_change_direction);
-
-    if (change_over_point != nullptr) {
-      if (last_lane_change_location.find(actor_id) != last_lane_change_location.end()) {
-        last_lane_change_location.at(actor_id) = vehicle_location;
-      } else {
-        last_lane_change_location.insert({actor_id, vehicle_location});
-      }
       auto number_of_pops = waypoint_buffer.size();
       for (uint64_t j = 0u; j < number_of_pops; ++j) {
         PopWaypoint(actor_id, track_traffic, waypoint_buffer);
       }
-      PushWaypoint(actor_id, track_traffic, waypoint_buffer, change_over_point);
     }
-  }
 
-  // Populating the buffer.
-  while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
+    if (!waypoint_buffer.empty()) {
+      // Purge passed waypoints.
+      float dot_product = DeviationDotProduct(vehicle_location, heading_vector, waypoint_buffer.front()->GetLocation());
+      while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
 
-    SimpleWaypointPtr furthest_waypoint = waypoint_buffer.back();
-    std::vector<SimpleWaypointPtr> next_waypoints = furthest_waypoint->GetNextWaypoint();
-    uint64_t selection_index = 0u;
-    // Pseudo-randomized path selection if found more than one choice.
-    if (next_waypoints.size() > 1) {
-      double r_sample = random_devices.at(actor_id).next();
-      selection_index = static_cast<uint64_t>(r_sample*next_waypoints.size()*0.01);
-    } else if (next_waypoints.size() == 0) {
-      if (!parameters.GetOSMMode()) {
-        std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
+        PopWaypoint(actor_id, track_traffic, waypoint_buffer);
+        if (!waypoint_buffer.empty()) {
+          dot_product = DeviationDotProduct(vehicle_location, heading_vector, waypoint_buffer.front()->GetLocation());
+        }
       }
-      marked_for_removal.push_back(actor_id);
-      break;
+
+      if (!waypoint_buffer.empty()) {
+        // Determine if the vehicle is at the entrance of a junction.
+        SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
+        is_at_junction_entrance = !waypoint_buffer.front()->CheckJunction() && look_ahead_point->CheckJunction();
+        if (is_at_junction_entrance
+            // Exception for roundabout in Town03.
+            && local_map->GetMapName() == "Town03"
+            && vehicle_location.SquaredLength() < SQUARE(30)) {
+          is_at_junction_entrance = false;
+        }
+      }
+
+      // Purge waypoints too far from the front of the buffer.
+      while (!is_at_junction_entrance
+            && !waypoint_buffer.empty()
+            && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square) {
+        PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
+      }
     }
-    SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
-    PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+
+    // Initializing buffer if it is empty.
+    if (waypoint_buffer.empty()) {
+      SimpleWaypointPtr closest_waypoint = local_map->GetWaypoint(vehicle_location);
+      PushWaypoint(actor_id, track_traffic, waypoint_buffer, closest_waypoint);
+    }
+
+    // Assign a lane change.
+    const ChangeLaneInfo lane_change_info = parameters.GetForceLaneChange(actor_id);
+    bool force_lane_change = lane_change_info.change_lane;
+    bool lane_change_direction = lane_change_info.direction;
+
+    if (!force_lane_change) {
+      float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
+      if (perc_keep_right >= 0.0f && perc_keep_right >= random_devices.at(actor_id).next()) {
+        force_lane_change = true;
+        lane_change_direction = true;
+      }
+    }
+
+    const SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
+    const float lane_change_distance = SQUARE(std::max(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
+
+    bool recently_not_executed_lane_change = last_lane_change_location.find(actor_id) == last_lane_change_location.end();
+    bool done_with_previous_lane_change = true;
+    if (!recently_not_executed_lane_change) {
+      float distance_frm_previous = cg::Math::DistanceSquared(last_lane_change_location.at(actor_id), vehicle_location);
+      done_with_previous_lane_change = distance_frm_previous > lane_change_distance;
+    }
+    bool auto_or_force_lane_change = parameters.GetAutoLaneChange(actor_id) || force_lane_change;
+    bool front_waypoint_not_junction = !front_waypoint->CheckJunction();
+
+    if (auto_or_force_lane_change
+        && front_waypoint_not_junction
+        && (recently_not_executed_lane_change || done_with_previous_lane_change)) {
+
+      SimpleWaypointPtr change_over_point = AssignLaneChange(actor_id, vehicle_location, vehicle_speed,
+                                                            force_lane_change, lane_change_direction);
+
+      if (change_over_point != nullptr) {
+        if (last_lane_change_location.find(actor_id) != last_lane_change_location.end()) {
+          last_lane_change_location.at(actor_id) = vehicle_location;
+        } else {
+          last_lane_change_location.insert({actor_id, vehicle_location});
+        }
+        auto number_of_pops = waypoint_buffer.size();
+        for (uint64_t j = 0u; j < number_of_pops; ++j) {
+          PopWaypoint(actor_id, track_traffic, waypoint_buffer);
+        }
+        PushWaypoint(actor_id, track_traffic, waypoint_buffer, change_over_point);
+      }
+    }
+
+    // Populating the buffer.
+    // auto i = 0;
+    while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
+
+      SimpleWaypointPtr furthest_waypoint = waypoint_buffer.back();
+      std::vector<SimpleWaypointPtr> next_waypoints = furthest_waypoint->GetNextWaypoint();
+      uint64_t selection_index = 0u;
+      // Pseudo-randomized path selection if found more than one choice.
+      // if (i > 100) {
+      //   std::cout << "vehicle loc" << vehicle_location.x << ", " << vehicle_location.y << ", " << vehicle_location.z << std::endl;
+      //   auto raw_wpt = furthest_waypoint->GetWaypoint();
+      //   auto furth_loc = furthest_waypoint->GetTransform().location;
+      //   if (next_waypoints.size() == 1) {
+      //     auto next_w_raw = next_waypoints.front()->GetWaypoint();
+      //     auto next_loc = next_waypoints.front()->GetTransform().location;
+      //     std::cout << "next_waypoints loc " << next_loc.x << ", " << next_loc.y << ", " << next_loc.z << std::endl;
+      //     std::cout << "next_waypoints road id " << next_w_raw->GetRoadId() << " lane id, " << next_w_raw->GetLaneId() << " section id, " << next_w_raw->GetSectionId() << std::endl;
+      //   }
+      //   std::cout << "furthest_waypoint loc " << furth_loc.x << ", " << furth_loc.y << ", " << furth_loc.z << std::endl;
+      //   std::cout << "furthest_waypoint road id " << raw_wpt->GetRoadId() << " lane id, " << raw_wpt->GetLaneId() << " section id, " << raw_wpt->GetSectionId() << std::endl;
+      //   std::cout << i << std::endl;
+      // }
+      if (next_waypoints.size() > 1) {
+        // std::cout << "<1" << std::endl;
+        double r_sample = random_devices.at(actor_id).next();
+        selection_index = static_cast<uint64_t>(r_sample*next_waypoints.size()*0.01);
+      } else if (next_waypoints.size() == 0) {
+        // std::cout << "==0" << std::endl;
+        if (!parameters.GetOSMMode()) {
+          std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
+        }
+        marked_for_removal.push_back(actor_id);
+        break;
+      }
+      SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
+      // i++;
+      PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+    }
+
+    ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
   }
-
-  ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
-
   // Editing output array
   LocalizationData &output = output_array.at(index);
   output.is_at_junction_entrance = is_at_junction_entrance;
@@ -178,7 +197,6 @@ void LocalizationStage::Update(const unsigned long index) {
     output.junction_end_point = nullptr;
     output.safe_point = nullptr;
   }
-
   // Updating geodesic grid position for actor.
   track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
 }

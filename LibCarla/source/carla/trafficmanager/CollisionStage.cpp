@@ -37,7 +37,8 @@ void CollisionStage::Update(const unsigned long index) {
   float available_distance_margin = std::numeric_limits<float>::infinity();
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
-  if (simulation_state.ContainsActor(ego_actor_id)) {
+  if (simulation_state.ContainsActor(ego_actor_id) && !simulation_state.IsDormant(ego_actor_id)) {
+    std::cout << "Coll dorm" << std::endl;
     const cg::Location ego_location = simulation_state.GetLocation(ego_actor_id);
     const Buffer &ego_buffer = buffer_map.at(ego_actor_id);
     const unsigned long look_ahead_index = GetTargetWaypoint(ego_buffer, JUNCTION_LOOK_AHEAD).second;
