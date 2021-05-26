@@ -238,7 +238,7 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
     }
 
 #if WITH_EDITOR
-    UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif
   }
   else {
