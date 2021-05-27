@@ -29,8 +29,10 @@ MotionPlanStage::MotionPlanStage(
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
   const cc::World &world,
-  ControlFrame &output_array)
-  : vehicle_id_list(vehicle_id_list),
+  ControlFrame &output_array,
+  RandomGeneratorMap &random_devices,
+  const LocalMapPtr &local_map)
+    : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
     buffer_map(buffer_map),
@@ -43,7 +45,9 @@ MotionPlanStage::MotionPlanStage(
     collision_frame(collision_frame),
     tl_frame(tl_frame),
     world(world),
-    output_array(output_array) {}
+    output_array(output_array),
+    random_devices(random_devices),
+    local_map(local_map) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -58,10 +62,10 @@ void MotionPlanStage::Update(const unsigned long index) {
   const bool &tl_hazard = tl_frame.at(index);
   current_timestamp = world.GetSnapshot().GetTimestamp();
   StateEntry current_state;
-    
+
   // Instanciating teleportation transform.
   cg::Transform teleportation_transform;
-  
+
   // Target velocity for vehicle.
   const float ego_speed_limit = simulation_state.GetSpeedLimit(actor_id);
   float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, ego_speed_limit) / 3.6f;
@@ -116,7 +120,7 @@ void MotionPlanStage::Update(const unsigned long index) {
     // If physics is enabled for the vehicle, use PID controller.
     // State update for vehicle.
     current_state = PID::StateUpdate(previous_state, ego_speed, dynamic_target_velocity,
-                                     current_deviation, current_timestamp);
+                                    current_deviation, current_timestamp);
 
     // Controller actuation.
     actuation_signal = PID::RunStep(current_state, previous_state,
@@ -148,8 +152,8 @@ void MotionPlanStage::Update(const unsigned long index) {
   else {
     // Flushing controller state for vehicle.
     current_state = {current_timestamp,
-                     0.0f, 0.0f,
-                     0.0f, 0.0f};
+                    0.0f, 0.0f,
+                    0.0f, 0.0f};
 
     // Add entry to teleportation duration clock table if not present.
     if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
@@ -159,8 +163,29 @@ void MotionPlanStage::Update(const unsigned long index) {
     // Measuring time elapsed since last teleportation for the vehicle.
     double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
 
+    if (simulation_state.IsDormant(actor_id) && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) { // && RELOC PARAM, OTHERWISE DO NORMAL HYBRID
+      cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
+      std::cout << "hero loc x " << hero_location.x << ", y " << hero_location.y << ", z " << hero_location.z << std::endl;
+      cg::Location vehicle_location = simulation_state.GetLocation(actor_id);
+      std::cout << "vehicle_location x " << vehicle_location.x << ", y " << vehicle_location.y << ", z " << vehicle_location.z << std::endl;
+      if (hero_location != cg::Location(0,0,0)) {
+        double twice_physics_radius = parameters.GetHybridPhysicsRadius();
+        double r_sample = random_devices.at(actor_id).next()*2.0f + twice_physics_radius;
+        int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+        int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+        cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
+        SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
+        cg::Location wpt_loc = teleport_waypoint->GetLocation();
+        std::cout << r_sample << std::endl;
+        std::cout << "teleport_waypoint x " << wpt_loc.x << ", y " << wpt_loc.y << ", z " << wpt_loc.z << std::endl;
+        teleportation_transform = teleport_waypoint->GetTransform();
+        output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+        std::cout << "ML Stage" << std::endl;
+      }
+    }
+
     // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-    if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
+    else if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
 
       // Target displacement magnitude to achieve target velocity.
       const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
