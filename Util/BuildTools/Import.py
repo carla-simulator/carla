@@ -170,8 +170,8 @@ def generate_decals_file(folder):
                 'x_axis' : '15.0',
                 'y_axis' : '15.0',
                 'z_axis' : '0.0'},
-                'decal_min_scale' : '1.0',
-                'decal_max_scale' : '1.5',
+                'decal_min_scale' : '0.3',
+                'decal_max_scale' : '0.7',
                 'decal_random_yaw' : '360.0',
                 'random_offset' : '50.0'
             });
