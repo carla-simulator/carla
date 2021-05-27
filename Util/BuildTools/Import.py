@@ -228,7 +228,7 @@ def generate_import_setting_file(package_name, json_dirname, props, maps, do_til
             "TextureImportData": {},
             "StaticMeshImportData": {
                 "bRemoveDegenerates": 1,
-                "bAutoGenerateCollision": 0,
+                "bAutoGenerateCollision": 1,
                 "bCombineMeshes": 0,
                 "bConvertSceneUnit": 1,
                 "bForceVerticesRelativeToTile": do_tiles,
