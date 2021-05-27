@@ -64,6 +64,7 @@ private:
   cc::Timestamp current_timestamp;
   // Random devices.
   RandomGeneratorMap &random_devices;
+  std::unordered_map<ActorId, bool> has_physics_enabled;
 
   // Updates the duration for which a registered vehicle is stuck at a location.
   void UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id);

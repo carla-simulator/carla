@@ -288,12 +288,10 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
 
 void LocalizationStage::RemoveActor(ActorId actor_id) {
     last_lane_change_location.erase(actor_id);
-    vehicles_at_junction.erase(actor_id);
 }
 
 void LocalizationStage::Reset() {
   last_lane_change_location.clear();
-  vehicles_at_junction.clear();
 }
 
 SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,

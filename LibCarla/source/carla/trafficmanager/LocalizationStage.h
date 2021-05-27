@@ -39,7 +39,6 @@ private:
   LocalizationFrame &output_array;
   cc::DebugHelper &debug_helper;
   LaneChangeLocationMap last_lane_change_location;
-  ActorIdSet vehicles_at_junction;
   using SimpleWaypointPair = std::pair<SimpleWaypointPtr, SimpleWaypointPtr>;
   std::unordered_map<ActorId, SimpleWaypointPair> vehicles_at_junction_entrance;
   RandomGeneratorMap &random_devices;
