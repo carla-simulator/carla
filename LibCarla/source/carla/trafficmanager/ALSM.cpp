@@ -227,7 +227,6 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
       auto it = hero_actors.begin();
       const ActorId &hero_actor_id = it->first;
       hero_location = simulation_state.GetLocation(hero_actor_id);
-      std::cout << " ALSM hero loc x " << hero_location.x << ", y " << hero_location.y << ", z " << hero_location.z << std::endl;
       }
     // Updated kinematic state object.
     auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
