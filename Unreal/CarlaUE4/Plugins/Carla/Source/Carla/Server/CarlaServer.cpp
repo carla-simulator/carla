@@ -241,6 +241,8 @@ void FCarlaServer::FPimpl::BindActions()
         continue;
       if (MapName.Contains("/BaseMap/"))
         continue;
+      if (MapName.Contains("/LargeMap/"))
+        continue;
       if (MapName.Contains("_Tile_"))
         continue;
 

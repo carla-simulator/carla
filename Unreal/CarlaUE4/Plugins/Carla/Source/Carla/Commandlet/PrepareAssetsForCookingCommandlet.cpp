@@ -512,7 +512,13 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
       // Load World
       FAssetData AssetData;
       LoadWorldTile(AssetData);
-      World = CastChecked<UWorld>(AssetData.GetAsset());
+      UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(AssetData.GetAsset());
+      if (BaseMapRedirector != nullptr) {
+        World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+      }
+      else {
+        World = CastChecked<UWorld>(AssetData.GetAsset());
+      }
       // try to create each possible tile of the map
       int  i, j;
       bool Res;
@@ -556,7 +562,13 @@ void UPrepareAssetsForCookingCommandlet::PreparePropsForCooking(
   FAssetData AssetData;
   // Loads the BaseMap
   LoadWorld(AssetData);
-  World = CastChecked<UWorld>(AssetData.GetAsset());
+  UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(AssetData.GetAsset());
+  if (BaseMapRedirector != nullptr) {
+    World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+  }
+  else {
+    World = CastChecked<UWorld>(AssetData.GetAsset());
+  }
 
   // Remove the meshes names from the original path for props, so we can load
   // props inside folder
