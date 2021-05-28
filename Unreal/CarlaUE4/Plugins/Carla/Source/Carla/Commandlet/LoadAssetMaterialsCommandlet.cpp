@@ -183,8 +183,8 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
     float MinXSize = (TilePosition.X - HalfSize);
     float MaxXSize = (TilePosition.X + HalfSize);
 
-    float MinYSize = (TilePosition.Y + HalfSize);
-    float MaxYSize = (TilePosition.Y - HalfSize);
+    float MinYSize = (TilePosition.Y - HalfSize);
+    float MaxYSize = (TilePosition.Y + HalfSize);
 
     if (ReadConfigFile == true) {
 
@@ -193,6 +193,16 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
     }
 
     carla::geom::Location DecalLocation;
+
+    //Store results for avoiding excessive calculations
+    float MinXSizeCm = MinXSize * 100.0f;
+    float MaxXSizeCm = MaxXSize * 100.0f;
+    float MinYSizeCm = MinYSize * 100.0f;
+    float MaxYSizeCm = MaxYSize * 100.0f;
+
+    float TileSizeCm = TileData.Size * 100.0f;
+    float TileWorldLocationX = TileData.FirstTileCenterX * 100.0f;
+    float TileWorldLocationY = TileData.FirstTileCenterY * 100.0f;
 
     for (int32 i = 0; i < DecalsProperties.DecalMaterials.Num(); ++i) {
 
@@ -206,38 +216,46 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
         auto Wp = XODRMap->GetClosestWaypointOnRoad(DecalLocation);
         FVector FinalLocation(XODRMap->ComputeTransform(Wp.get()).location);
 
-        // Transform the location from relative coords to world coordinates.
-        FinalLocation.X += (-TileData.FirstTileCenterX * 100.0f) - (XIndex * (TileData.Size * 100.0f));
-        FinalLocation.Y += (-TileData.FirstTileCenterY * 100.0f) + (YIndex * (TileData.Size * 100.0f));
+        // Check we don't exceed the map boundaries
+        if (FinalLocation.X > MinXSizeCm && FinalLocation.X < MaxXSizeCm) {
 
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        SpawnParams.bNoFail = true;
-        ADecalActor* Decal = World->SpawnActor<ADecalActor>(FinalLocation, FRotator(), SpawnParams);
-        Decal->SetDecalMaterial(DecalsProperties.DecalMaterials[i]);
+          if (FinalLocation.Y > MinYSizeCm && FinalLocation.Y < MaxYSizeCm) {
 
-        // Calculate random scale for decal
-        float RandScale = FMath::RandRange(DecalsProperties.DecalMinScale, DecalsProperties.DecalMaxScale);
-        FVector FinalDecalScale;
-        FinalDecalScale.X = DecalsProperties.DecalScale.X + RandScale;
-        FinalDecalScale.Y = DecalsProperties.DecalScale.Y + RandScale;
-        FinalDecalScale.Z = 1.0f;
-        Decal->SetActorScale3D(FinalDecalScale);
+            FRotator FinalRotation(XODRMap->ComputeTransform(Wp.get()).rotation);
 
-        // Calculate random yaw for decal
-        float RandomYaw = FMath::RandRange(0.0f, DecalsProperties.DecalRandomYaw);
-        FRotator DecalRotation(0.0f, RandomYaw, 0.0f);
-        Decal->SetActorRotation(DecalRotation);
+            // Transform the location from world coords to tile coordinates.
+            // The location we get is the location of the XODR waypoint, which is in WORLD coordinates
+            // The Y coordinates are reversed! -Y = Y and Y = -Y
+            FinalLocation.X -= TileWorldLocationX + (XIndex * TileSizeCm);
+            FinalLocation.Y -= TileWorldLocationY - (YIndex * TileSizeCm);
 
-        // Create unique name so it's saved to the world properly
-        const FName DecalName = MakeUniqueObjectName(nullptr, ADecalActor::StaticClass(), FName("RoadDecal"));
-        FString DecalString = DecalName.ToString();
-        Decal->SetActorLabel(DecalString, true);
+            FActorSpawnParameters SpawnParams;
+            SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            SpawnParams.bNoFail = true;
+            ADecalActor* Decal = World->SpawnActor<ADecalActor>(FinalLocation, FRotator(), SpawnParams);
+            Decal->SetDecalMaterial(DecalsProperties.DecalMaterials[i]);
+
+            // Calculate random scale for decal
+            float RandScale = FMath::RandRange(DecalsProperties.DecalMinScale, DecalsProperties.DecalMaxScale);
+            FVector FinalDecalScale;
+            FinalDecalScale.X = DecalsProperties.DecalScale.X + RandScale;
+            FinalDecalScale.Y = DecalsProperties.DecalScale.Y + RandScale;
+            FinalDecalScale.Z = 1.0f;
+            Decal->SetActorScale3D(FinalDecalScale);
+
+            // Calculate random yaw for decal
+            float RandomYaw = FMath::RandRange(0.0f, DecalsProperties.DecalRandomYaw);
+            FinalRotation.Yaw += RandomYaw;
+            FinalRotation.Pitch = -90.0f;
+            Decal->SetActorRotation(FinalRotation);
+            Decal->SetActorLabel("RoadDecal", true);
+          }
+        }
       }
     }
 
 #if WITH_EDITOR
-    UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif
   }
   else {
@@ -297,6 +315,7 @@ FDecalsProperties ULoadAssetMaterialsCommandlet::ReadDecalsConfigurationFile() {
         DecalScale.X = (float)VectorObject->GetNumberField(TEXT("x_axis"));
         DecalScale.Y = (float)VectorObject->GetNumberField(TEXT("y_axis"));
         DecalScale.Z = (float)VectorObject->GetNumberField(TEXT("z_axis"));
+        DecalConfiguration.DecalScale = DecalScale;
         DecalConfiguration.FixedDecalOffset = DecalScale;
         DecalConfiguration.DecalMinScale = (float)DecalJsonObject->GetNumberField(TEXT("decal_min_scale"));
         DecalConfiguration.DecalMaxScale = (float)DecalJsonObject->GetNumberField(TEXT("decal_max_scale"));
@@ -329,38 +348,43 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
   // Load World
   FAssetData AssetData;
   MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
+  const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/");
   MapObjectLibrary->AddToRoot();
+  MapObjectLibrary->LoadAssetDataFromPath(*DefaultPath);
+  MapObjectLibrary->LoadAssetsFromAssetData();
+  MapObjectLibrary->GetAssetDataList(AssetDatas);
 
-  for (const auto &Map : MapsPaths)
+  if (AssetDatas.Num() > 0)
   {
-    AssetDatas.Empty();
-    const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/");
-    MapObjectLibrary->LoadAssetDataFromPath(*DefaultPath);
-    MapObjectLibrary->LoadAssetsFromAssetData();
-    MapObjectLibrary->GetAssetDataList(AssetDatas);
+    int32 NumAssets = AssetDatas.Num();
+    //If the map is tiled, there will be several umaps in the same folder
+    for (int32 i = 0; i < NumAssets; ++i) {
 
-    if (AssetDatas.Num() > 0)
-    {
-      //If the map is tiled, there will be several umaps in the same folder
-      int32 NumMaps = AssetDatas.Num();
-      for (int32 i = 0; i < NumMaps; ++i) {
+      // Extract first asset found in folder path (i.e. the imported map)
+      AssetData = AssetDatas.Pop();
+      World = Cast<UWorld>(AssetData.GetAsset());
+      if (World != nullptr) {
 
-        // Extract first asset found in folder path (i.e. the imported map)
-        AssetData = AssetDatas.Pop();
-        if (World != nullptr)
-        {
-          NewWorldToLoad = CastChecked<UWorld>(AssetData.GetAsset());
-          World->DestroyWorld(true, NewWorldToLoad);
-          World = NewWorldToLoad;
-          NewWorldToLoad = nullptr;
-        }
-        else
-        {
-          World = CastChecked<UWorld>(AssetData.GetAsset());
-        }
         World->InitWorld();
-        bool IsTiledMap = World->GetName().Contains("_Tile_", ESearchCase::Type::CaseSensitive);
-        ApplyRoadPainterMaterials(World->GetName(), IsTiledMap);
+
+        // Check if there's any road meshes in the world for spawning the decals.
+        TArray<AActor*> FoundActors;
+        UGameplayStatics::GetAllActorsOfClass(World, AStaticMeshActor::StaticClass(), FoundActors);
+        bool HasRoadMesh = false;
+        for (int32 i = 0; i < FoundActors.Num() && HasRoadMesh == false; ++i) {
+
+          AStaticMeshActor *MeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
+          if (MeshActor->GetName().Contains("Roads") || MeshActor->GetName().Contains("Road")){
+
+            HasRoadMesh = true;
+          }
+        }
+
+        if (HasRoadMesh == true) {
+
+          bool IsTiledMap = World->GetName().Contains("_Tile_", ESearchCase::Type::CaseSensitive);
+          ApplyRoadPainterMaterials(World->GetName(), IsTiledMap);
+        }
 
 #if WITH_EDITOR
         UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);

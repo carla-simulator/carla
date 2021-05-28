@@ -33,19 +33,19 @@ struct CARLA_API FDecalsProperties
 
   /// Maximum scale to be applied to the decals
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
-  float DecalMaxScale;
+  float DecalMaxScale = 1.0f;
 
   /// Min scale to be applied to the decals
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
-  float DecalMinScale;
+  float DecalMinScale = 1.0f;
 
   /// The decal yaw to be applied randomly
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
-  float DecalRandomYaw;
+  float DecalRandomYaw = 90.0f;
 
   /// Random offset from one decal to another
   UPROPERTY(BlueprintReadOnly, Category = "Decals Properties")
-  float RandomOffset;
+  float RandomOffset = 3.0f;
 };
 
 UCLASS()
