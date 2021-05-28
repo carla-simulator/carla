@@ -37,7 +37,7 @@ CARLA forum</a>
 * ["make launch" is not working on Windows.](#make-launch-is-not-working-on-windows)
 * [Make is missing libintl3.dll or/and libiconv2.dll.](#make-is-missing-libintl3dll-orand-libiconv2dll)
 * [Modules are missing or built with a different engine version.](#modules-are-missing-or-built-with-a-different-engine-version)
-* [There is no `dist` folder in `carla/PythonAPI` despite a successful output message.](#there-is-no-dist-folder-in-carlapythonapi-despite-a-successful-output-message)
+* [There is no `dist` folder in `PythonAPI/carla` despite a successful output message.](#there-is-no-dist-folder-in-pythonapicarla-despite-a-successful-output-message)
 
 ---
 
@@ -282,9 +282,9 @@ CARLA forum</a>
 
 <!-- ======================================================================= -->
 
-###### There is no `dist` folder in `carla/PythonAPI` despite a successful output message.
+###### There is no `dist` folder in `PythonAPI/carla` despite a successful output message.
 
->The `make PythonAPI` command can sometimes return a message that the Python API was installed successfully when it actually wasn't. If there is no `dist` folder created in the `carla/PythonAPI` directory after you see this output, then look at the command output higher up. It is likely an error occurred and the build needs to be retried after correcting the error and running `make clean`.
+>In Windows, the `make PythonAPI` command can return a message that the Python API was installed successfully when it actually wasn't. If there is no `dist` folder created in the `PythonAPI/carla` directory after you see this output, then look at the command output higher up. It is likely an error occurred and the build needs to be retried after correcting the error and running `make clean`.
 
 ---
 
