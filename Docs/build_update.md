@@ -13,7 +13,7 @@ To post unexpected issues, doubts or suggestions, feel free to login in the CARL
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 CARLA forum</a>
 </p>
 </div>

@@ -197,7 +197,7 @@ If you have any questions regarding the performance benchmarks then don't hesita
 <div class="build-buttons">
 <!-- Latest release button -->
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 CARLA forum</a>
 </p>
 </div>

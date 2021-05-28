@@ -48,7 +48,6 @@ namespace SSTags {
   static const FString R_CURB2     = TEXT("Roads_Curb");
   static const FString R_GUTTER1   = TEXT("Road_Gutter");
   static const FString R_GUTTER2   = TEXT("Roads_Gutter");
-
   static const FString R_TERRAIN   = TEXT("Terrain");
 }
 
@@ -138,10 +137,8 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   for (const auto &MapAsset : MapContents)
   {
     // Get AssetName
-    UStaticMesh *MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
-    FString ObjectName = MeshAsset->GetName();
-
     FString AssetName;
+    UStaticMesh *MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
     MapAsset.AssetName.ToString(AssetName);
 
     if (SrcPath.Len())
@@ -179,6 +176,10 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
       else if (AssetName.Contains(SSTags::R_GUTTER1) || AssetName.Contains(SSTags::R_GUTTER2))
       {
         AssetDataMap[SSTags::GUTTER].Add(MeshAsset);
+      }
+      else
+      {
+        AssetDataMap[SSTags::TERRAIN].Add(MeshAsset);
       }
     }
   }

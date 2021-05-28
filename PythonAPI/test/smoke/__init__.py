@@ -28,16 +28,17 @@ class SmokeTest(unittest.TestCase):
         self.testing_address = TESTING_ADDRESS
         self.client = carla.Client(*TESTING_ADDRESS)
         self.client.set_timeout(120.0)
+        self.world = self.client.get_world()
 
     def tearDown(self):
         self.client.load_world("Town03")
+        self.world = None
         self.client = None
 
 
 class SyncSmokeTest(SmokeTest):
     def setUp(self):
         super(SyncSmokeTest, self).setUp()
-        self.world = self.client.get_world()
         self.settings = self.world.get_settings()
         settings = carla.WorldSettings(
             no_rendering_mode=False,
@@ -48,7 +49,6 @@ class SyncSmokeTest(SmokeTest):
 
     def tearDown(self):
         self.world.apply_settings(self.settings)
-        self.world.tick()
+        self.world.tick(120)
         self.settings = None
-        self.world = None
         super(SyncSmokeTest, self).tearDown()

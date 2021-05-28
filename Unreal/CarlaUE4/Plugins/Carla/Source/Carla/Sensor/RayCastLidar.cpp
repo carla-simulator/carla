@@ -125,13 +125,18 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-    LidarData.ResetSerPoints(PointsPerChannel);
+
+    LidarData.ResetMemory(PointsPerChannel);
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
       for (auto& hit : RecordedHits[idxChannel]) {
         FDetection Detection = ComputeDetection(hit, SensorTransform);
         if (PostprocessDetection(Detection))
           LidarData.WritePointSync(Detection);
+        else
+          PointsPerChannel[idxChannel]--;
       }
     }
+
+    LidarData.WriteChannelCount(PointsPerChannel);
   }

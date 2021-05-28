@@ -31,7 +31,7 @@
 class UBoxComponent;
 
 UENUM()
-enum class VehicleWheelLocation : uint8 {
+enum class EVehicleWheelLocation : uint8 {
 
   FL_Wheel = 0,
   FR_Wheel = 1,
@@ -277,10 +277,10 @@ public:
   /// An enum could be used, but this is something situational. An uint8 does the trick just fine
   ///NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void SetWheelSteerDirection(VehicleWheelLocation WheelLocation, float AngleInDeg);
-  
+  void SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg);
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  float GetWheelSteerAngle(VehicleWheelLocation WheelLocation);
+  float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
 
   virtual FVector GetVelocity() const override;
 

@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"

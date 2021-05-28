@@ -1338,7 +1338,7 @@ Visit the forum to post any doubts or suggestions that have come to mind during 
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
 CARLA forum</a>
 </p>
 </div>

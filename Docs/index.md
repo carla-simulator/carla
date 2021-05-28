@@ -1,16 +1,16 @@
 # CARLA Documentation
 
-Welcome to the CARLA documentation. 
+Welcome to the CARLA documentation.
 
-This home page contains an index with a brief description of the different sections in the documentation. Feel free to read in whatever order preferred. In any case, here are a few suggestions for newcomers.  
+This home page contains an index with a brief description of the different sections in the documentation. Feel free to read in whatever order preferred. In any case, here are a few suggestions for newcomers.
 
-* __Install CARLA.__ Either follow the [Quick start installation](start_quickstart.md) to get a CARLA release or [make the build](build_linux.md) for a desired platform.  
-* __Start using CARLA.__ The section titled [First steps](core_concepts.md) is an introduction to the most important concepts.  
-* __Check the API.__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.  
+* __Install CARLA.__ Either follow the [Quick start installation](start_quickstart.md) to get a CARLA release or [make the build](build_linux.md) for a desired platform.
+* __Start using CARLA.__ The section titled [First steps](core_concepts.md) is an introduction to the most important concepts.
+* __Check the API.__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
 
-The CARLA forum is available to post any doubts or suggestions that may arise during the reading.  
+The CARLA forum is available to post any doubts or suggestions that may arise during the reading.
 <div class="build-buttons">
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 CARLA forum</a>
 </div>
 
@@ -55,7 +55,7 @@ CARLA forum</a>
 [__Traffic Manager__](adv_traffic_manager.md) — Simulate urban traffic by setting vehicles to autopilot mode.  
 
 ## References
-[__Python API reference__](python_api.md) — Classes and methods in the Python API.   
+[__Python API reference__](python_api.md) — Classes and methods in the Python API.  
 [__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.  
 [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.  
 [__Recorder binary file format__](ref_recorder_binary_file_format.md) — Detailed explanation of the recorder file format.  
@@ -65,15 +65,16 @@ CARLA forum</a>
 [__carlaviz — web visualizer__](plugins_carlaviz.md) — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.  
 
 ## ROS bridge
-[__ROS bridge installation__](ros_installation.md) — The different ways to install the ROS bridge.  
-[__CARLA messages reference__](ros_msgs.md) — Contains explanations and fields for every type of CARLA message available in ROS.  
-[__Launchfiles reference__](ros_launchs.md) — Lists the launchfiles and nodes provided, and the topics being consumed and published.  
-
+[__ROS bridge documentation__](ros_documentation.md) — Brief overview of the ROS bridge and a link to the full documentation
 ## Tutorials — General
 [__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define dynamic box triggers for wheels.  
 [__Control vehicle physics__](tuto_G_control_vehicle_physics.md) — Set runtime changes on a vehicle physics.  
 [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons.  
+[__Generate maps with OpenStreetMap__](tuto_G_openstreetmap.md) — Use OpenStreetMap to generate maps for use in simulations.  
 [__Retrieve simulation data__](tuto_G_retrieve_data.md) — A step by step guide to properly gather data using the recorder.  
+[__CarSim Integration (Beta)__](tuto_G_carsim_integration.md) — Tutorial on how to run a simulation using the CarSim vehicle dynamics engine.  
+[__RLlib Integration__](tuto_G_rllib_integration.md) — Find out how to run your own experiment using the RLlib library.  
+[__Scenic__](tuto_G_scenic.md) — Follow an example of defining different scenarios using the Scenic library.  
 
 ## Tutorials — Maps
 [__Overview of custom maps__](tuto_M_custom_map_overview.md)  
@@ -90,13 +91,12 @@ CARLA forum</a>
 [__Create standalone packages__](tuto_A_create_standalone.md) — Generate and handle standalone packages for assets.  
 [__Map customization__](tuto_A_map_customization.md) — Edit an existing map.  
 [__Material customization__](tuto_A_material_customization.md) — Edit vehicle and building materials.  
-[__Vehicle modelling__](tuto_A_vehicle_modelling.md) — Create a new vehicle for CARLA.  
 
 ## Tutorials — Developers
 [__Contribute with new assets__](tuto_D_contribute_assets.md) — Add new content to CARLA.  
 [__Create a sensor__](tuto_D_create_sensor.md) — Develop a new sensor to be used in CARLA.  
+[__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define customized tags for semantic segmentation.  
 [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Modify the suspension system of a vehicle.  
-[__Make a release__](tuto_D_make_release.md) — For developers who want to publish a release.  
 [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Create detailed colliders for vehicles.  
 
 ## Contributing
