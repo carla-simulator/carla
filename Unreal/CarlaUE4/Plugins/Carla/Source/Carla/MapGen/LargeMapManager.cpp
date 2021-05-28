@@ -127,24 +127,24 @@ void ALargeMapManager::RegisterInitialObjects()
   UWorld* World = GetWorld();
   UCarlaEpisode* CurrentEpisode = UCarlaStatics::GetCurrentEpisode(World);
   const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
-  for (const auto& ViewPair : ActorRegistry)
+  for (const auto& CarlaActorPair : ActorRegistry)
   {
-    OnActorSpawned(ViewPair.Value);
+    OnActorSpawned(*CarlaActorPair.Value.Get());
   }
 }
 
 void ALargeMapManager::OnActorSpawned(
-    const FActorView& ActorView)
+    const FCarlaActor& CarlaActor)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::OnActorSpawned);
   UWorld* World = GetWorld();
-  const FActorInfo* ActorInfo = ActorView.GetActorInfo();
-  AActor* Actor = const_cast<AActor*>(ActorView.GetActor());
+  const FActorInfo* ActorInfo = CarlaActor.GetActorInfo();
+  AActor* Actor = const_cast<AActor*>(CarlaActor.GetActor());
   bool IsHeroVehicle = false;
 
   // LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s %s", *Actor->GetName(), *Actor->GetTranslation().ToString());
 
-  if (IsValid(Actor) && ActorView.GetActorType() == FActorView::ActorType::Vehicle)
+  if (Actor && CarlaActor.GetActorType() == FCarlaActor::ActorType::Vehicle)
   { // Check if is hero vehicle
 
     assert(ActorInfo);
@@ -177,7 +177,7 @@ void ALargeMapManager::OnActorSpawned(
     const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
 
     // Any actor that is not the hero vehicle could possible be destroyed at some point
-    // we need to store the ActorView information to be able to spawn it again if needed
+    // we need to store the CarlaActor information to be able to spawn it again if needed
 
     LM_LOG(Error, "... not hero vehicle ...");
     if(IsValid(Actor))
@@ -186,7 +186,7 @@ void ALargeMapManager::OnActorSpawned(
       //       LM: Map<AActor* FGhostActor>  maybe per tile and in a tile sublevel?
 
       LM_LOG(Error, "GHOST VEHICLE DETECTED");
-      GhostActors.Add(ActorView.GetActorId());
+      GhostActors.Add(CarlaActor.GetActorId());
     }
     else
     { // Actor was spawned as dormant
@@ -194,7 +194,7 @@ void ALargeMapManager::OnActorSpawned(
       //       LM: Map<ActorId, TileID> , Tile: Map<ActorID, FDormantActor>
       //       In case of update: update Tile Map, update LM Map
       LM_LOG(Error, "DORMANT VEHICLE DETECTED");
-      DormantActors.Add(ActorView.GetActorId());
+      DormantActors.Add(CarlaActor.GetActorId());
     }
   }
 
@@ -212,8 +212,9 @@ void ALargeMapManager::OnActorDestroyed(AActor* DestroyedActor)
 
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
-  FActorView ActorView = CarlaEpisode->FindActor(DestroyedActor);
-  const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+  FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(DestroyedActor);
+  if (CarlaActor)
+    const FActorInfo* ActorInfo = CarlaActor->GetActorInfo();
 
   // Hero has been removed?
   //
@@ -341,9 +342,9 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 }
 
 // TODO: maybe remove this, I think I will not need it any more
-void ALargeMapManager::AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform)
+void ALargeMapManager::AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform)
 {
-  // GhostActors.Add(ActorView.GetActorId(), {Transform, ActorView});
+  // GhostActors.Add(CarlaActor.GetActorId(), {Transform, CarlaActor});
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -704,13 +705,13 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   ActorsToRemove.Reset();
 
 
-  for (FActorView::IdType ActorToRemove : GhostsToRemove)
+  for (FCarlaActor::IdType ActorToRemove : GhostsToRemove)
   {
     GhostActors.Remove(ActorToRemove);
   }
   GhostsToRemove.Reset();
 
-  for(FActorView::IdType Id : DormantsToRemove)
+  for(FCarlaActor::IdType Id : DormantsToRemove)
   {
     DormantActors.Remove(Id);
   }
@@ -723,9 +724,9 @@ void ALargeMapManager::CheckGhostActors()
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
   // Check if they have to be destroyed
-  for(FActorView::IdType Id : GhostActors)
+  for(FCarlaActor::IdType Id : GhostActors)
   {
-    FActorView* View = CarlaEpisode->FindActorPtr(Id);
+    FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
     if (View)
     {
       AActor * Actor = View->GetActor();
@@ -777,7 +778,7 @@ void ALargeMapManager::ConvertGhostToDormantActors()
 
   // These actors are on dormant state so remove them from ghost actors
   // But save them on the dormant array first
-  for(FActorView::IdType Id : GhostToDormantActors)
+  for(FCarlaActor::IdType Id : GhostToDormantActors)
   {
     // To dormant state
     CarlaEpisode->PutActorToSleep(Id);
@@ -798,19 +799,19 @@ void ALargeMapManager::CheckDormantActors()
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
 
-  for(FActorView::IdType Id : DormantActors)
+  for(FCarlaActor::IdType Id : DormantActors)
   {
-    FActorView* ActorView = CarlaEpisode->FindActorPtr(Id);
+    FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(Id);
 
     // If the Ids don't match, the actor has been removed
-    if(!ActorView || ActorView->GetActorId() != Id || !ActorView->IsDormant())
+    if(!CarlaActor || CarlaActor->GetActorId() != Id || !CarlaActor->IsDormant())
     {
-      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, ActorView?ActorView->GetActorId():0);
+      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, CarlaActor?CarlaActor->GetActorId():0);
       DormantsToRemove.Add(Id);
       continue;
     }
 
-    const FActorData* ActorData = ActorView->GetActorData();
+    const FActorData* ActorData = CarlaActor->GetActorData();
 
     for(AActor* Actor : ActorsToConsider)
     {
@@ -847,13 +848,13 @@ void ALargeMapManager::ConvertDormantToGhostActors()
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
-  for(FActorView::IdType Id : DormantToGhostActors)
+  for(FCarlaActor::IdType Id : DormantToGhostActors)
   {
     LM_LOG(Warning, "Converting %d Dormant To Ghost", Id);
 
     CarlaEpisode->WakeActorUp(Id);
 
-    FActorView* View = CarlaEpisode->FindActorPtr(Id);
+    FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
 
     if (View->GetActor()){
       LM_LOG(Warning, "Spawning dormant at %s\n\tOrigin: %s\n\tRel. location: %s", \
