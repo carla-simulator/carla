@@ -48,31 +48,27 @@ namespace data {
 
 #pragma pack(push, 1)
   /// A 64-bit color [16 bits per channel (R, G, B, and A each)]
-  struct Color16bit {
-    Color16bit() = default;
-    Color16bit(const Color16bit &) = default;
+  struct OpticalFlowPixel {
+    OpticalFlowPixel() = default;
+    OpticalFlowPixel(const OpticalFlowPixel &) = default;
 
-    Color16bit(uint16_t r, uint16_t g, uint16_t b, uint16_t a = 255u)
-      : b(b), g(g), r(r), a(a) {}
+    OpticalFlowPixel(float x, float y)
+      : x(x), y(y) {}
 
-    Color16bit &operator=(const Color16bit &) = default;
+    OpticalFlowPixel &operator=(const OpticalFlowPixel &) = default;
 
-    bool operator==(const Color16bit &rhs) const  {
-      return (r == rhs.r) && (g == rhs.g) && (b == rhs.b) && (a == rhs.a);
+    bool operator==(const OpticalFlowPixel &rhs) const  {
+      return (x == rhs.x) && (y == rhs.y);
     }
 
-    bool operator!=(const Color16bit &rhs) const  {
+    bool operator!=(const OpticalFlowPixel &rhs) const  {
       return !(*this == rhs);
     }
 
-    uint16_t b = 0u;
-    uint16_t g = 0u;
-    uint16_t r = 0u;
-    uint16_t a = 0u;
+    float x = 0;
+    float y = 0;
   };
 #pragma pack(pop)
-
-  static_assert(sizeof(Color16bit) == sizeof(uint64_t), "Invalid 16bit color size!");
 
 } // namespace data
 } // namespace sensor

@@ -63,13 +63,6 @@ import glob
 import os
 import sys
 
-OPENCV_INSTALLED = True
-try:
-    import cv2
-except ImportError:
-    OPENCV_INSTALLED = False
-    pass
-
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -160,28 +153,6 @@ def find_weather_presets():
 def get_actor_display_name(actor, truncate=250):
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
-
-
-def render_optical_flow_data(data):
-    intensity = np.linalg.norm(data, axis=2)
-    angle = np.arctan2(data[:, :, 0], data[:, :, 1])
-    max_intensity = 100
-    # N.B.: an intensity of exactly 1.0 makes the output black (perhaps showing the over-saturation), so keep it < 1
-    intensity = np.clip(intensity, 0, max_intensity - 1) / max_intensity
-    # log scaling
-    basis = 30
-    intensity = np.log1p((basis - 1) * intensity) / np.log1p(basis - 1)
-    # for the angle they use 360° scale, see https://stackoverflow.com/a/57203497/14467327
-    angle = (np.pi + angle) * 360 / (2 * np.pi)
-    # print(F"Ranges, angle: [{np.min(angle)}, {np.max(angle)}], "
-    #       F"intensity: [{np.min(intensity)}, {np.max(intensity)}]")
-    intensity = intensity[:, :, np.newaxis]
-    angle = angle[:, :, np.newaxis]
-    hsv_img = np.concatenate((angle, np.ones_like(intensity), intensity), axis=2)
-    img_out = np.array(cv2.cvtColor(np.array(hsv_img, dtype=np.float32), cv2.COLOR_HSV2RGB) * 256,
-                       dtype=np.dtype("uint8"))
-    return img_out
-
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
@@ -1113,28 +1084,12 @@ class CameraManager(object):
             dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
             self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
-            # print(image)
-            array = np.frombuffer(image.raw_data, dtype=np.uint16)
+            array = image.get_color_coded_flow()
+            array = np.frombuffer(array, dtype=np.dtype("uint8"))
             array = np.reshape(array, (image.height, image.width, 4))
-            if OPENCV_INSTALLED:
-                # The x and y optical flow values are stored as `uint16`s each
-                # which maps the integer range of [0, 65535] to represent a floating-point range of [0, 1]
-                # The code below converts this range of [0, 1] to the originally computed optical flow range of [-2, 2]
-                # where the units are in terms of the viewport's dimensions.
-                # For example for a viewport of size 800x600, the maximum optical flow that can be represented is:
-                # [-1600, 1600] in the x axis and
-                # [-1200, 1200] in the y axis
-                data_array = np.array(array[:, :, 0:2], dtype=np.float32)
-                data_array[:, :, 0] = (data_array[:, :, 0] - 32767) * (2 * image.width / 65535)
-                data_array[:, :, 1] = (32767 - data_array[:, :, 1]) * (2 * image.height / 65535)
-
-                img_out = render_optical_flow_data(data_array)
-
-                self.surface = pygame.surfarray.make_surface(img_out.swapaxes(0, 1))
-            else:
-                array = array[:, :, :3]
-                array = array[:, :, ::-1]
-                self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
+            array = array[:, :, :3]
+            array = array[:, :, ::-1]
+            self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         else:
             image.convert(self.sensors[self.index][1])
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))

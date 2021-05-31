@@ -210,6 +210,8 @@ static auto MakeCallback(boost::python::object callback) {
   };
 }
 
+#include <boost/python/numpy.hpp>
+
 #include "Geom.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"
@@ -236,6 +238,7 @@ BOOST_PYTHON_MODULE(libcarla) {
 #if PY_MAJOR_VERSION < 3 || PY_MINOR_VERSION < 7
   PyEval_InitThreads();
 #endif
+  boost::python::numpy::initialize();
   scope().attr("__path__") = "libcarla";
   export_geom();
   export_control();
