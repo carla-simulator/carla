@@ -81,20 +81,7 @@ void ALSM::Update() {
   }
 
   // Scan for new unregistered actors.
-  ALSM::ActorVector new_actors = IdentifyNewActors(world_actors);
-  for (const ActorPtr &actor: new_actors) {
-    unregistered_actors.insert({actor->GetId(), actor});
-
-    // Identify any new hero vehicle if the system is in hybrid physics mode.
-    if (actor->GetTypeId().front() == 'v') {
-      ActorId hero_actor_id = actor->GetId();
-      for (auto&& attribute: actor->GetAttributes()) {
-        if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
-          hero_actors.insert({hero_actor_id, actor});
-        }
-      }
-    }
-  }
+  IdentifyNewActors(world_actors);
 
   // Update dynamic state and static attributes for all registered vehicles.
   ALSM::IdleInfo max_idle_time = std::make_pair(0u, current_timestamp.elapsed_seconds);
@@ -121,17 +108,26 @@ void ALSM::Update() {
   UpdateUnregisteredActorsData();
 }
 
-std::vector<ActorPtr> ALSM::IdentifyNewActors(const ActorList &actor_list) {
-  std::vector<ActorPtr> new_actors;
+void ALSM::IdentifyNewActors(const ActorList &actor_list) {
   for (auto iter = actor_list->begin(); iter != actor_list->end(); ++iter) {
     ActorPtr actor = *iter;
     ActorId actor_id = actor->GetId();
-    if (!registered_vehicles.Contains(actor_id)
-        && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
-      new_actors.push_back(actor);
+    // Identify any new hero vehicle if the system is in hybrid physics mode.
+    if (actor->GetTypeId().front() == 'v') {
+     if (hero_actors.size() == 0u || hero_actors.find(actor_id) == hero_actors.end()) {
+      for (auto&& attribute: actor->GetAttributes()) {
+        if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
+          hero_actors.insert({actor_id, actor});
+        }
+      }
+    }
+      if (!registered_vehicles.Contains(actor_id)
+          && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
+
+        unregistered_actors.insert({actor_id, actor});
+      }
     }
   }
-  return new_actors;
 }
 
 ALSM::DestroyeddActors ALSM::IdentifyDestroyedActors(const ActorList &actor_list) {
@@ -203,8 +199,10 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
     bool enable_physics = hybrid_physics_mode ? in_range_of_hero_actor : true;
     // enable_physics = enable_physics || is_dormant;
     if (!has_physics_enabled.count(actor_id) || has_physics_enabled[actor_id] != enable_physics) {
-      vehicle->SetSimulatePhysics(enable_physics);
-      has_physics_enabled[actor_id] = enable_physics;
+      if (hero_actors.find(actor_id) == hero_actors.end()) {
+        vehicle->SetSimulatePhysics(enable_physics);
+        has_physics_enabled[actor_id] = enable_physics;
+      }
     }
 
     bool state_entry_present = simulation_state.ContainsActor(actor_id);
@@ -226,8 +224,11 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
       // For now, just get one hero.
       auto it = hero_actors.begin();
       const ActorId &hero_actor_id = it->first;
-      hero_location = simulation_state.GetLocation(hero_actor_id);
+      if (simulation_state.ContainsActor(hero_actor_id)) {
+        hero_location = simulation_state.GetLocation(hero_actor_id);
+        }
       }
+
     // Updated kinematic state object.
     auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
     KinematicState kinematic_state{vehicle_location, vehicle_rotation,
