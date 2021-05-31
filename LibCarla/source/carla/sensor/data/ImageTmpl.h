@@ -9,7 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/sensor/data/Array.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
-#include "carla/sensor/s11n/Image16bitSerializer.h"
+#include "carla/sensor/s11n/OpticalFlowImageSerializer.h"
 
 namespace carla {
 namespace sensor {
@@ -22,10 +22,10 @@ namespace data {
   protected:
 
     using Serializer = s11n::ImageSerializer;
-    using Serializer16bit = s11n::Image16bitSerializer;
+    using SerializerOpticalFlow = s11n::OpticalFlowImageSerializer;
 
     friend Serializer;
-    friend Serializer16bit;
+    friend SerializerOpticalFlow;
 
     explicit ImageTmpl(RawData &&data)
       : Super(Serializer::header_offset, std::move(data)) {

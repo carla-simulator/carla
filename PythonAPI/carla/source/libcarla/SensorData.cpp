@@ -27,6 +27,10 @@
 
 #include <ostream>
 #include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
+#include <thread>
 
 namespace carla {
 namespace sensor {
@@ -40,8 +44,8 @@ namespace data {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const Image16bit &image) {
-    out << "Image16bit(frame=" << std::to_string(image.GetFrame())
+  std::ostream &operator<<(std::ostream &out, const OpticalFlowImage &image) {
+    out << "OpticalFlowImage(frame=" << std::to_string(image.GetFrame())
         << ", timestamp=" << std::to_string(image.GetTimestamp())
         << ", size=" << std::to_string(image.GetWidth()) << 'x' << std::to_string(image.GetHeight())
         << ')';
@@ -207,6 +211,123 @@ static void ConvertImage(T &self, EColorConverter cc) {
   }
 }
 
+static boost::python::numpy::ndarray ColorCodedFlow (
+    carla::sensor::data::OpticalFlowImage& image) {
+  namespace bp = boost::python;
+  namespace bn = boost::python::numpy;
+  namespace csd = carla::sensor::data;
+  constexpr float pi = 3.1415f;
+  // constexpr float pi2 = pi*0.5f;
+  constexpr float rad2ang = 360.f/(2.f*pi);
+  // const unsigned int width4 = 4*image.GetWidth();
+  // const unsigned int height4 = 4*image.GetHeight();
+  std::vector<uint8_t> result;
+  result.resize(image.GetHeight()*image.GetWidth()* 4);
+
+  // lambda for computing batches of pixels
+  auto command = [&] (size_t min_index, size_t max_index) {
+    for (size_t index = min_index; index < max_index; index++) {
+      const csd::OpticalFlowPixel& pixel = image[index];
+      float vx = pixel.x * image.GetWidth();
+      float vy = pixel.y * image.GetHeight();
+
+      float angle = 180.f + std::atan2(vy, vx)*rad2ang;
+      if (angle < 0) angle = 360.f + angle;
+      angle = std::fmod(angle, 360.f);
+
+      float norm = std::sqrt(vx*vx + vy*vy)*0.0001f;
+      norm = std::min(norm, 0.99f);
+      constexpr float basis = 100;
+      constexpr float overlogbasis = 1.f/3.401197382f;
+      // constexpr float scale = 3.f;
+      float intensity = std::log((basis - 1) * norm + 1)*overlogbasis;
+      // float intensity = norm;
+
+      float& H = angle;
+      float  S = 1.f;
+      float V = std::min(intensity, 1.f);
+      float H_60 = H*(1.f/60.f);
+
+      float C = V * S;
+      float X = C*(1.f - std::abs(std::fmod(H_60, 2.f) - 1.f));
+      float m = V - C;
+      // float C = (1.f - std::abs(2*V - 1)) * S;
+      // float X = C*(1.f - std::abs(std::fmod(H_60, 2.f) - 1.f));
+      // float m = V - 0.5f*C;
+
+
+      float r = 0,g = 0,b = 0;
+      unsigned int angle_case = static_cast<unsigned int>(H_60);
+      switch (angle_case) {
+      case 0:
+        r = C;
+        g = X;
+        b = 0;
+        break;
+      case 1:
+        r = X;
+        g = C;
+        b = 0;
+        break;
+      case 2:
+        r = 0;
+        g = C;
+        b = X;
+        break;
+      case 3:
+        r = 0;
+        g = X;
+        b = C;
+        break;
+      case 4:
+        r = X;
+        g = 0;
+        b = C;
+        break;
+      case 5:
+        r = C;
+        g = 0;
+        b = X;
+        break;
+      default:
+        r = 1;
+        g = 1;
+        b = 1;
+        break;
+      }
+
+      uint8_t R = static_cast<uint8_t>((r+m)*255.f);
+      uint8_t G = static_cast<uint8_t>((g+m)*255.f);
+      uint8_t B = static_cast<uint8_t>((b+m)*255.f);
+      result[4*index] = B;
+      result[4*index + 1] = G;
+      result[4*index + 2] = R;
+      result[4*index + 3] = 0;
+    }
+  };
+  size_t num_threads = std::max(8u, std::thread::hardware_concurrency());
+  size_t batch_size = image.size() / num_threads;
+  std::vector<std::thread*> t(num_threads+1);
+
+  for(size_t n = 0; n < num_threads; n++) {
+    t[n] = new std::thread(command, n * batch_size, (n+1) * batch_size);
+  }
+  t[num_threads] = new std::thread(command, num_threads * batch_size, image.size());
+
+  for(size_t n = 0; n <= num_threads; n++) {
+    if(t[n]->joinable()){
+      t[n]->join();
+    }
+    delete t[n];
+  }
+
+  bp::tuple shape = bp::make_tuple(result.size());
+  bp::tuple stride = bp::make_tuple(sizeof(uint8_t));
+  bn::dtype type = bn::dtype::get_builtin<uint8_t>();
+  return bn::from_data(&result[0], type, shape, stride, bp::object()).copy();
+  // return StdVectorToPyList(result);
+}
+
 template <typename T>
 static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc) {
   carla::PythonUtil::ReleaseGIL unlock;
@@ -280,19 +401,18 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<csd::Image16bit, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::Image16bit>>("Image16bit", no_init)
-    .add_property("width", &csd::Image16bit::GetWidth)
-    .add_property("height", &csd::Image16bit::GetHeight)
-    .add_property("fov", &csd::Image16bit::GetFOVAngle)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::Image16bit>)
-    // .def("convert", &ConvertImage<csd::Image>, (arg("color_converter"))) unimplemented
-    // .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::Raw)) unimplemented
-    .def("__len__", &csd::Image16bit::size)
-    .def("__iter__", iterator<csd::Image16bit>())
-    .def("__getitem__", +[](const csd::Image16bit &self, size_t pos) -> csd::Color16bit {
+  class_<csd::OpticalFlowImage, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::OpticalFlowImage>>("OpticalFlowImage", no_init)
+    .add_property("width", &csd::OpticalFlowImage::GetWidth)
+    .add_property("height", &csd::OpticalFlowImage::GetHeight)
+    .add_property("fov", &csd::OpticalFlowImage::GetFOVAngle)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::OpticalFlowImage>)
+    .def("get_color_coded_flow", &ColorCodedFlow)
+    .def("__len__", &csd::OpticalFlowImage::size)
+    .def("__iter__", iterator<csd::OpticalFlowImage>())
+    .def("__getitem__", +[](const csd::OpticalFlowImage &self, size_t pos) -> csd::OpticalFlowPixel {
       return self.at(pos);
     })
-    .def("__setitem__", +[](csd::Image16bit &self, size_t pos, csd::Color16bit color) {
+    .def("__setitem__", +[](csd::OpticalFlowImage &self, size_t pos, csd::OpticalFlowPixel color) {
       self.at(pos) = color;
     })
     .def(self_ns::str(self_ns::self))

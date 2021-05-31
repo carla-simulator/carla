@@ -73,8 +73,7 @@ static void WritePixelsToBuffer_Vulkan(
   }
 }
 
-// Temporal; this avoid allocating the array each time and also avoids checking
-// for a bigger texture, ReadSurfaceData will allocate the space needed.
+// Temporal; this avoid allocating the array each time
 TArray<FFloat16Color> gFloatPixels;
 
 static void WriteFloatPixelsToBuffer_Vulkan(
@@ -84,6 +83,7 @@ static void WriteFloatPixelsToBuffer_Vulkan(
     FRHICommandListImmediate &InRHICmdList)
 {
   check(IsInRenderingThread());
+  gFloatPixels.Empty();
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
@@ -99,13 +99,15 @@ static void WriteFloatPixelsToBuffer_Vulkan(
       Texture,
       FIntRect(0, 0, Rect.X, Rect.Y),
       gFloatPixels,
-      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+      CubeFace_PosX,0,0);
 
   TArray<float> IntermediateBuffer;
   IntermediateBuffer.Reserve(gFloatPixels.Num() * 2);
   for (FFloat16Color& color : gFloatPixels) {
-    IntermediateBuffer.Add((color.R.GetFloat() - 32767) * (2.0 / 65535));
-    IntermediateBuffer.Add((32767 - color.G.GetFloat()) * (2.0 / 65535));
+    float x = (color.R.GetFloat() - 0.5f)*4.f;
+    float y = (color.G.GetFloat() - 0.5f)*4.f;
+    IntermediateBuffer.Add(x);
+    IntermediateBuffer.Add(y);
   }
   Buffer.copy_from(Offset, IntermediateBuffer);
 }
