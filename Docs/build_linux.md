@@ -2,7 +2,72 @@
 
 This guide details how to build CARLA from source on Linux. There are two parts. Part one details system requirements and installations of required software, and part two details how to actually build and run CARLA.  
 
-The build process is long (4 hours or more) and involves several kinds of software. It is highly recommended to read through the guide fully before starting. 
+---
+## Linux build command summary
+
+<details>
+<summary> Show command lines to build on Linux</summary>
+
+```sh
+# Make sure to meet the minimum requirements
+# Read the complete documentation to understand each step
+
+# Install dependencies
+sudo apt-get update &&
+sudo apt-get install wget software-properties-common &&
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - &&
+sudo apt-add-repository "deb http://apt.llvm.org/$(lsb_release -c --short)/ llvm-toolchain-$(lsb_release -c --short)-8 main" &&
+sudo apt-get update
+
+# Additional dependencies for Ubuntu 18.04
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
+pip2 install --user setuptools &&
+pip3 install --user -Iv setuptools==47.3.1
+
+# Additional dependencies for previous Ubuntu versions
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev &&
+pip2 install --user setuptools &&
+pip3 install --user -Iv setuptools==47.3.1 &&
+pip2 install --user distro &&
+pip3 install --user distro
+
+# Change default clang version
+sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
+sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
+
+# Get a GitHub and a UE account, and link both
+# Install git
+
+# Download Unreal Engine 4.24
+git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.24
+cd ~/UnrealEngine_4.24
+
+# Download and install the UE patches
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_vulkan.patch
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_wheels.patch
+wget https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_benchmark.patch
+git apply UE4_patch_vulkan.patch UE4_patch_wheels.patch UE4_patch_benchmark.patch
+
+# Build UE
+./Setup.sh && ./GenerateProjectFiles.sh && make
+
+# Open the UE Editor to check everything works properly
+cd ~/UnrealEngine_4.24/Engine/Binaries/Linux && ./UE4Editor
+
+# Clone the CARLA repository
+git clone https://github.com/carla-simulator/carla
+
+# Get the CARLA assets
+cd ~/carla
+./Update.sh
+
+# Set the environment variable
+export UE4_ROOT=~/UnrealEngine_4.24
+
+# make the CARLA client and the CARLA server
+make PythonAPI
+make launch
 
 If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://github.com/carla-simulator/carla/discussions) to post any queries you may have.
 

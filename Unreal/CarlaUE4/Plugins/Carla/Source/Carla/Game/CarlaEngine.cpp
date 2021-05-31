@@ -136,12 +136,13 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
-  // tick the recorder/replayer system
+
   if (GetCurrentEpisode())
   {
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
     if (EpisodeRecorder)
     {
+      // tick the recorder/replayer system
       EpisodeRecorder->Ticking(DeltaSeconds);
     }
   }

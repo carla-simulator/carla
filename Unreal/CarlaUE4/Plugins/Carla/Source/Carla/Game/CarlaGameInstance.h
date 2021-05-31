@@ -103,6 +103,36 @@ public:
     return CurrentMapLayer;
   }
 
+  UFUNCTION(Category = "Carla Game Mode")
+  void ExecuteConsoleCommand(FString Cmd)
+  {
+    GEngine->Exec(GWorld, *Cmd);
+  }
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, Exec)
+  void ToggleSensorCameraStream()
+  {
+    SensorCameraStreamEnabled = !SensorCameraStreamEnabled;
+  }
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, Exec)
+  void ToggleSensorCameraTextureCapture()
+  {
+    SensorCameraTextureCaptureEnabled = !SensorCameraTextureCaptureEnabled;
+  }
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable)
+  bool IsSensorCameraStreamEnabled() const
+  {
+    return SensorCameraStreamEnabled;
+  }
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable)
+  bool IsSensorCameraTextureCaptureEnabled() const
+  {
+    return SensorCameraTextureCaptureEnabled;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
@@ -117,5 +147,11 @@ private:
 
   UPROPERTY(Category = "CARLA Game Instance", EditAnywhere)
   int32 CurrentMapLayer = static_cast<int32>(carla::rpc::MapLayer::All);
+
+  UPROPERTY(Category = "CARLA Game Instance", VisibleAnywhere)
+  bool SensorCameraStreamEnabled = true;
+
+  UPROPERTY(Category = "CARLA Game Instance", VisibleAnywhere)
+  bool SensorCameraTextureCaptureEnabled = true;
 
 };

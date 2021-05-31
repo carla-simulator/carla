@@ -14,6 +14,7 @@
 // =============================================================================
 
 // 1. Include the serializer here.
+#include "carla/sensor/s11n/BenchmarkSerializer.h"
 #include "carla/sensor/s11n/CollisionEventSerializer.h"
 #include "carla/sensor/s11n/DVSEventArraySerializer.h"
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
@@ -27,6 +28,7 @@
 #include "carla/sensor/s11n/SemanticLidarSerializer.h"
 
 // 2. Add a forward-declaration of the sensor here.
+class ABenchmarkSensor;
 class ACollisionSensor;
 class ADepthCamera;
 class ADVSCamera;
@@ -53,6 +55,7 @@ namespace sensor {
   /// Use s11n::NoopSerializer if the sensor does not send data (sensors that
   /// work only on client-side).
   using SensorRegistry = CompositeSerializer<
+    std::pair<ABenchmarkSensor *, s11n::BenchmarkSerializer>,
     std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>,
     std::pair<ADepthCamera *, s11n::ImageSerializer>,
     std::pair<ADVSCamera *, s11n::DVSEventArraySerializer>,
@@ -77,6 +80,7 @@ namespace sensor {
 #ifdef LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
 
 // 4. Include the sensor here.
+#include "Carla/Sensor/BenchmarkSensor.h"
 #include "Carla/Sensor/CollisionSensor.h"
 #include "Carla/Sensor/DepthCamera.h"
 #include "Carla/Sensor/DVSCamera.h"

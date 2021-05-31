@@ -1,0 +1,34 @@
+{"stat scenerendering": [
+    "STAT_InitViewsTime",
+    "STAT_TotalGPUFrameTime",
+    "STAT_TotalSceneRenderingTime",
+    "STAT_DepthDrawTime",
+    "STAT_BasePassDrawTime",
+    "STAT_LightingDrawTime",
+    "STAT_ProjectedShadowDrawTime",
+    "STAT_TranslucencyDrawTime",
+    "STAT_DynamicPrimitiveDrawTime",
+    "STAT_StaticDrawListDrawTime",
+    "STAT_SceneLights",
+    "STAT_MeshDrawCalls",
+    "STAT_SceneDecals",
+    "STAT_Decals"
+
+  ],
+  "stat rhi" : [
+    "STAT_RHITriangles",
+    "STAT_RHIDrawPrimitiveCalls"
+  ],
+  "stat initviews" : [
+    "STAT_ViewVisibilityTime",
+    "STAT_FrustumCull",
+    "STAT_OcclusionCull",
+    "STAT_ProcessedPrimitives",
+    "STAT_CulledPrimitives",
+    "STAT_StaticallyOccludedPrimitives",
+    "STAT_OccludedPrimitives",
+    "STAT_OcclusionQueries",
+    "STAT_VisibleStaticMeshElements",
+    "STAT_VisibleDynamicPrimitives"
+  ]
+}
