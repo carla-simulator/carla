@@ -86,7 +86,7 @@ Export the final mesh as an `.fbx` file with the name `SMC_<vehicle_name>.fbx`.
 
 __5. Create the mesh for the raycast sensor.__
 
-The raycast sensor mesh allows Unreal Engine to identify the vehicle's shape and use that to calculate collisions for the raycast sensor which allows the RADAR and LIDAR sensors to detect objects. This mesh should have a slightly more defined geometry than the Physical Asset mesh.
+The raycast sensor mesh sets up the vehicle's shape that will be detected by the raycast sensors (RADAR, LiDAR, and Semantic LiDAR). This mesh should have a slightly more defined geometry than the Physical Asset mesh in order to increase the realism of sensor simulation but not as detailed as the car mesh for performance reasons.
 
 Consider the following points when creating the raycast sensor mesh:
 
