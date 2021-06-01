@@ -211,16 +211,14 @@ static void ConvertImage(T &self, EColorConverter cc) {
   }
 }
 
+// method to convert optical flow images to rgb
 static boost::python::numpy::ndarray ColorCodedFlow (
     carla::sensor::data::OpticalFlowImage& image) {
   namespace bp = boost::python;
   namespace bn = boost::python::numpy;
   namespace csd = carla::sensor::data;
   constexpr float pi = 3.1415f;
-  // constexpr float pi2 = pi*0.5f;
   constexpr float rad2ang = 360.f/(2.f*pi);
-  // const unsigned int width4 = 4*image.GetWidth();
-  // const unsigned int height4 = 4*image.GetHeight();
   std::vector<uint8_t> result;
   result.resize(image.GetHeight()*image.GetWidth()* 4);
 
@@ -228,33 +226,26 @@ static boost::python::numpy::ndarray ColorCodedFlow (
   auto command = [&] (size_t min_index, size_t max_index) {
     for (size_t index = min_index; index < max_index; index++) {
       const csd::OpticalFlowPixel& pixel = image[index];
-      float vx = pixel.x * image.GetWidth();
-      float vy = pixel.y * image.GetHeight();
+      float vx = pixel.x;
+      float vy = pixel.y;
 
       float angle = 180.f + std::atan2(vy, vx)*rad2ang;
       if (angle < 0) angle = 360.f + angle;
       angle = std::fmod(angle, 360.f);
 
-      float norm = std::sqrt(vx*vx + vy*vy)*0.0001f;
-      norm = std::min(norm, 0.99f);
-      constexpr float basis = 100;
-      constexpr float overlogbasis = 1.f/3.401197382f;
-      // constexpr float scale = 3.f;
-      float intensity = std::log((basis - 1) * norm + 1)*overlogbasis;
-      // float intensity = norm;
+      float norm = std::sqrt(vx*vx + vy*vy);
+      const float shift = 0.999f;
+      const float a = 1.f/std::log(0.1f + shift);
+      float intensity = carla::geom::Math::Clamp(a*std::log(norm + shift), 0.f, 1.f);
 
       float& H = angle;
       float  S = 1.f;
-      float V = std::min(intensity, 1.f);
+      float V = intensity;
       float H_60 = H*(1.f/60.f);
 
       float C = V * S;
       float X = C*(1.f - std::abs(std::fmod(H_60, 2.f) - 1.f));
       float m = V - C;
-      // float C = (1.f - std::abs(2*V - 1)) * S;
-      // float X = C*(1.f - std::abs(std::fmod(H_60, 2.f) - 1.f));
-      // float m = V - 0.5f*C;
-
 
       float r = 0,g = 0,b = 0;
       unsigned int angle_case = static_cast<unsigned int>(H_60);
@@ -325,7 +316,6 @@ static boost::python::numpy::ndarray ColorCodedFlow (
   bp::tuple stride = bp::make_tuple(sizeof(uint8_t));
   bn::dtype type = bn::dtype::get_builtin<uint8_t>();
   return bn::from_data(&result[0], type, shape, stride, bp::object()).copy();
-  // return StdVectorToPyList(result);
 }
 
 template <typename T>
