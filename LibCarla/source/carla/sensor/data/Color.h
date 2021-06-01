@@ -47,7 +47,7 @@ namespace data {
   static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
 
 #pragma pack(push, 1)
-  /// A 64-bit color [16 bits per channel (R, G, B, and A each)]
+  /// Optical flow pixel format. 2 channel float data.
   struct OpticalFlowPixel {
     OpticalFlowPixel() = default;
     OpticalFlowPixel(const OpticalFlowPixel &) = default;
