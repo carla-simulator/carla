@@ -210,7 +210,7 @@ static void ConvertImage(T &self, EColorConverter cc) {
       throw std::invalid_argument("invalid color converter!");
   }
 }
-
+#ifndef _WIN32
 // method to convert optical flow images to rgb
 static boost::python::numpy::ndarray ColorCodedFlow (
     carla::sensor::data::OpticalFlowImage& image) {
@@ -317,6 +317,7 @@ static boost::python::numpy::ndarray ColorCodedFlow (
   bn::dtype type = bn::dtype::get_builtin<uint8_t>();
   return bn::from_data(&result[0], type, shape, stride, bp::object()).copy();
 }
+#endif
 
 template <typename T>
 static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc) {
@@ -396,7 +397,9 @@ void export_sensor_data() {
     .add_property("height", &csd::OpticalFlowImage::GetHeight)
     .add_property("fov", &csd::OpticalFlowImage::GetFOVAngle)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::OpticalFlowImage>)
+    #ifndef _WIN32
     .def("get_color_coded_flow", &ColorCodedFlow)
+    #endif
     .def("__len__", &csd::OpticalFlowImage::size)
     .def("__iter__", iterator<csd::OpticalFlowImage>())
     .def("__getitem__", +[](const csd::OpticalFlowImage &self, size_t pos) -> csd::OpticalFlowPixel {
