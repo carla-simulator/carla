@@ -17,7 +17,10 @@ enum class ECarlaServerResponse
   NotAVehicle,
   WalkerDead,
   NotAWalker,
-  WalkerIncompatibleController
+  WalkerIncompatibleController,
+  AutoPilotNotSupported,
+  CarSimPluginNotEnabled,
+  NotATrafficLight
 };
 
 static FString GetStringError(ECarlaServerResponse Response);

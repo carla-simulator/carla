@@ -8,6 +8,9 @@
 
 #include "Carla/Actor/ActorInfo.h"
 #include "Carla/Actor/ActorData.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Walker/WalkerController.h"
+#include "Carla/Traffic/TrafficLightState.h"
 
 #include "carla/rpc/ActorState.h"
 #include "carla/rpc/AttachmentType.h"
@@ -188,6 +191,10 @@ public:
 
   ECarlaServerResponse AddActorTorque(const FVector& Torque);
 
+  virtual ECarlaServerResponse SetActorSimulatePhysics(bool bEnabled);
+
+  virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);
+
   // Vehicle functions
   virtual ECarlaServerResponse EnableActorConstantVelocity(const FVector&)
   {
@@ -209,7 +216,74 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse ApplyPhysicsControl(const FVehiclePhysicsControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetVehicleLightState(const FVehicleLightState&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelSteerDirection(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelSteerAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse ApplyControlToVehicle(
+      const FVehicleControl&, const EVehicleInputPriority&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetActorAutopilot(bool)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse EnableCarSim(const FString&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse UseCarSimRoad(bool)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse EnableChronoPhysics(uint64_t, float,
+      const FString&, const FString&, const FString&, const FString&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   // Traffic light functions
+
+  virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetLightGreenTime(float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetLightYellowTime(float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetLightRedTime(float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
 
   // Traffic sign functions
 
@@ -220,7 +294,27 @@ public:
       float Speed)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
-  };
+  }
+
+  virtual ECarlaServerResponse ApplyControlToWalker(const FWalkerControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse FreezeTrafficLight(bool)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse ResetTrafficLightGroup()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
 
   // Sensor functions
 
@@ -273,6 +367,34 @@ public:
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
 
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
+
+  virtual ECarlaServerResponse ApplyPhysicsControl(
+      const FVehiclePhysicsControl& PhysicsControl) final;
+
+  virtual ECarlaServerResponse SetVehicleLightState(
+      const FVehicleLightState& LightState) final;
+
+  virtual ECarlaServerResponse SetWheelSteerDirection(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+
+  virtual ECarlaServerResponse GetWheelSteerAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle);
+
+  virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
+
+  virtual ECarlaServerResponse ApplyControlToVehicle(
+      const FVehicleControl&, const EVehicleInputPriority&) final;
+
+  virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled) final;
+
+  virtual ECarlaServerResponse EnableCarSim(const FString& SimfilePath) final;
+
+  virtual ECarlaServerResponse UseCarSimRoad(bool bEnabled) final;
+
+  virtual ECarlaServerResponse EnableChronoPhysics(
+      uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
+      const FString& VehicleJSON, const FString& PowertrainJSON,
+      const FString& TireJSON, const FString& BaseJSONPath) final;
 };
 
 class FSensorActor : public FCarlaActor
@@ -304,6 +426,19 @@ public:
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
       carla::rpc::ActorState InState);
+
+  virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState& State) final;
+
+  virtual ECarlaServerResponse SetLightGreenTime(float time) final;
+
+  virtual ECarlaServerResponse SetLightYellowTime(float time) final;
+
+  virtual ECarlaServerResponse SetLightRedTime(float time) final;
+
+  virtual ECarlaServerResponse FreezeTrafficLight(bool bFreeze) final;
+
+  virtual ECarlaServerResponse ResetTrafficLightGroup() final;
+
 };
 
 class FWalkerActor : public FCarlaActor
@@ -319,6 +454,14 @@ public:
       const FTransform& Transform,
       carla::rpc::WalkerControl WalkerControl,
       float Speed) final;
+
+  virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
+
+  virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled) final;
+
+  virtual ECarlaServerResponse ApplyControlToWalker(const FWalkerControl&) final;
+
+  virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControl&) final;
 };
 
 class FOtherActor : public FCarlaActor
