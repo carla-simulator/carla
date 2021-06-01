@@ -28,6 +28,12 @@ FString GetStringError(ECarlaServerResponse Response)
       return "Walker has incompatible controller";
     case ECarlaServerResponse::NullActor:
       return "Actor is null";
+    case ECarlaServerResponse::AutoPilotNotSupported:
+      return "Autopilot is not supported by the Actor";
+    case ECarlaServerResponse::CarSimPluginNotEnabled:
+      return "CarSim plugin is not enabled";
+    case ECarlaServerResponse::NotATrafficLight:
+      return "Actor is not a traffic light";
   }
   return "unknown error";
 }

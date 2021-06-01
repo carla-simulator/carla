@@ -227,7 +227,8 @@ protected:
   TSet<FCarlaActor::IdType> GhostToDormantActors;
   TSet<FCarlaActor::IdType> DormantToGhostActors;
 
-  TSet<TileID> CurrentTilesLoaded;
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  TSet<uint64> CurrentTilesLoaded;
 
   // Current Origin after rebase
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")

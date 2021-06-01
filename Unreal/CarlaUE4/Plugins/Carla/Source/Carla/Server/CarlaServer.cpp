@@ -1039,20 +1039,14 @@ void FCarlaServer::FPimpl::BindActions()
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyPhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+    if (Response != ECarlaServerResponse::Success)
     {
-      FVehicleData* ActorData = CarlaActor->GetActorData<FVehicleData>();
-      ActorData->PhysicsControl = FVehiclePhysicsControl(PhysicsControl);
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if (Vehicle == nullptr)
-      {
-        RESPOND_ERROR("unable to apply actor physics control: actor is not a vehicle");
-      }
-
-      Vehicle->ApplyVehiclePhysicsControl(FVehiclePhysicsControl(PhysicsControl));
+      return RespondError(
+          "apply_physics_control",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1065,22 +1059,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to apply actor light state: actor not found");
+      return RespondError(
+          "set_vehicle_light_state",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetVehicleLightState(FVehicleLightState(LightState));
+    if (Response != ECarlaServerResponse::Success)
     {
-      FVehicleData* ActorData = CarlaActor->GetActorData<FVehicleData>();
-      ActorData->LightState = FVehicleLightState(LightState);
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if (Vehicle == nullptr)
-      {
-        RESPOND_ERROR("unable to apply actor light state: actor is not a vehicle");
-      }
-
-      Vehicle->SetVehicleLightState(FVehicleLightState(LightState));
+      return RespondError(
+          "set_vehicle_light_state",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1093,19 +1084,20 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if(!CarlaActor){
-      RESPOND_ERROR("unable to apply actor wheel steer : actor not found");
+      return RespondError(
+          "set_wheel_steer_direction",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetWheelSteerDirection(
+            static_cast<EVehicleWheelLocation>(WheelLocation), AngleInDeg);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if(Vehicle == nullptr){
-        RESPOND_ERROR("unable to apply actor wheel steer : actor is not a vehicle");
-      }
-
-      Vehicle->SetWheelSteerDirection(static_cast<EVehicleWheelLocation>(WheelLocation), AngleInDeg);
+      return RespondError(
+          "set_wheel_steer_direction",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1117,22 +1109,23 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if(!CarlaActor){
-      RESPOND_ERROR("unable to get actor wheel angle : actor not found");
+      return RespondError(
+          "get_wheel_steer_angle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    float Angle;
+    ECarlaServerResponse Response =
+        CarlaActor->GetWheelSteerAngle(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Angle);
+    if (Response != ECarlaServerResponse::Success)
     {
-      return 0;
+      return RespondError(
+          "get_wheel_steer_angle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if(Vehicle == nullptr){
-
-        RESPOND_ERROR("unable to get actor wheel angle : actor is not a vehicle");
-      }
-
-      return Vehicle->GetWheelSteerAngle(static_cast<EVehicleWheelLocation>(WheelLocation));
-    }
+    return Angle;
   };
 
   BIND_SYNC(set_actor_simulate_physics) << [this](
@@ -1143,48 +1136,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set actor simulate physics: actor not found");
+      return RespondError(
+          "set_actor_simulate_physics",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorSimulatePhysics(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
     {
-      FActorData* ActorData = CarlaActor->GetActorData();
-      ActorData->bSimulatePhysics = bEnabled;
-    }
-    else
-    {
-      auto* Character = Cast<ACharacter>(CarlaActor->GetActor());
-      auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      // The physics in the vehicles works in a different way so to disable them.
-      if (CarlaVehicle != nullptr){
-        CarlaVehicle->SetSimulatePhysics(bEnabled);
-      }
-      // The physics in the walkers also works in a different way so to disable them,
-      // we need to do it in the UCharacterMovementComponent.
-      else if (Character != nullptr)
-      {
-        auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
-
-        if(bEnabled) {
-          CharacterMovement->SetDefaultMovementMode();
-        }
-        else {
-          CharacterMovement->DisableMovement();
-        }
-      }
-      // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
-      // that for disable it.
-      else
-      {
-        auto RootComponent = Cast<UPrimitiveComponent>(CarlaActor->GetActor()->GetRootComponent());
-        if (RootComponent == nullptr)
-        {
-          RESPOND_ERROR("unable to set actor simulate physics: not supported by actor");
-        }
-
-        RootComponent->SetSimulatePhysics(bEnabled);
-        RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-      }
+      return RespondError(
+          "set_actor_simulate_physics",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1197,39 +1161,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set actor enable gravity: actor not found");
+      return RespondError(
+          "set_actor_enable_gravity",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorEnableGravity(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto Character = Cast<ACharacter>(CarlaActor->GetActor());
-      // The physics in the walkers works in a different way so to disable them,
-      // we need to do it in the UCharacterMovementComponent.
-      if (Character != nullptr)
-      {
-        auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
-
-        if(bEnabled) {
-          CharacterMovement->SetDefaultMovementMode();
-        }
-        else {
-          if (CharacterMovement->IsFlying() || CharacterMovement->IsFalling())
-            CharacterMovement->DisableMovement();
-        }
-      }
-      // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
-      // that for disable it.
-      else
-      {
-        auto RootComponent = Cast<UPrimitiveComponent>(CarlaActor->GetActor()->GetRootComponent());
-        if (RootComponent == nullptr)
-        {
-          RESPOND_ERROR("unable to set actor enable gravity: not supported by actor");
-        }
-        RootComponent->SetEnableGravity(bEnabled);
-      }
+      return RespondError(
+          "set_actor_enable_gravity",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1244,21 +1188,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to apply control: actor not found");
+      return RespondError(
+          "apply_control_to_vehicle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::Client);
+    if (Response != ECarlaServerResponse::Success)
     {
-      FVehicleData* ActorData = CarlaActor->GetActorData<FVehicleData>();
-      ActorData->Control = Control;
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if (Vehicle == nullptr)
-      {
-        RESPOND_ERROR("unable to apply control: actor is not a vehicle");
-      }
-      Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
+      return RespondError(
+          "apply_control_to_vehicle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1271,26 +1213,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to apply control: actor not found");
+      return RespondError(
+          "apply_control_to_walker",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyControlToWalker(Control);
+    if (Response != ECarlaServerResponse::Success)
     {
-      FWalkerData* ActorData = CarlaActor->GetActorData<FWalkerData>();
-      ActorData->WalkerControl = Control;
-    }
-    else
-    {
-      auto Pawn = Cast<APawn>(CarlaActor->GetActor());
-      if (Pawn == nullptr)
-      {
-        RESPOND_ERROR("unable to apply control: actor is not a walker");
-      }
-      auto Controller = Cast<AWalkerController>(Pawn->GetController());
-      if (Controller == nullptr)
-      {
-        RESPOND_ERROR("unable to apply control: walker has an incompatible controller");
-      }
-      Controller->ApplyWalkerControl(Control);
+      return RespondError(
+          "apply_control_to_walker",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1303,24 +1238,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to apply control: actor not found");
+      return RespondError(
+          "apply_bone_control_to_walker",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyBoneControlToWalker(Control);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto Pawn = Cast<APawn>(CarlaActor->GetActor());
-      if (Pawn == nullptr)
-      {
-        RESPOND_ERROR("unable to apply control: actor is not a walker");
-      }
-      auto Controller = Cast<AWalkerController>(Pawn->GetController());
-      if (Controller == nullptr)
-      {
-        RESPOND_ERROR("unable to apply control: walker has an incompatible controller");
-      }
-      Controller->ApplyWalkerControl(Control);
+      return RespondError(
+          "apply_bone_control_to_walker",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1333,24 +1263,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set autopilot: actor not found");
+      return RespondError(
+          "set_actor_autopilot",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetActorAutopilot(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if (Vehicle == nullptr)
-      {
-        RESPOND_ERROR("unable to set autopilot: actor does not support autopilot");
-      }
-      auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
-      if (Controller == nullptr)
-      {
-        RESPOND_ERROR("unable to set autopilot: vehicle controller does not support autopilot");
-      }
-      Controller->SetAutopilot(bEnabled);
+      return RespondError(
+          "set_actor_autopilot",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1363,19 +1288,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set carsim: actor not found");
+      return RespondError(
+          "enable_carsim",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->EnableCarSim(carla::rpc::ToFString(SimfilePath));
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if (Vehicle == nullptr)
-      {
-        RESPOND_ERROR("unable to set carsim: not actor is not a vehicle");
-      }
-      UCarSimManagerComponent::CreateCarsimComponent(Vehicle, carla::rpc::ToFString(SimfilePath));
+      return RespondError(
+          "enable_carsim",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1388,27 +1313,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set carsim road: actor not found");
+      return RespondError(
+          "use_carsim_road",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->UseCarSimRoad(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if (Vehicle == nullptr)
-      {
-        RESPOND_ERROR("unable to set carsim road: not actor is not a vehicle");
-      }
-      auto* CarSimComponent = Vehicle->GetCarlaMovementComponent<UCarSimManagerComponent>();
-      if(CarSimComponent)
-      {
-        CarSimComponent->UseCarSimRoad(bEnabled);
-      }
-      else
-      {
-        RESPOND_ERROR("UCarSimManagerComponent plugin is not activated");
-      }
+      return RespondError(
+          "use_carsim_road",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1426,26 +1343,24 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set chrono physics: actor not found");
+      return RespondError(
+          "enable_chrono_physics",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->EnableChronoPhysics(
+            MaxSubsteps, MaxSubstepDeltaTime,
+            cr::ToFString(VehicleJSON),
+            cr::ToFString(PowertrainJSON),
+            cr::ToFString(TireJSON),
+            cr::ToFString(BaseJSONPath));
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      if (Vehicle == nullptr)
-      {
-        RESPOND_ERROR("unable to set chrono physics: not actor is not a vehicle");
-      }
-      UChronoMovementComponent::CreateChronoMovementComponent(
-          Vehicle,
-          MaxSubsteps,
-          MaxSubstepDeltaTime,
-          cr::ToFString(VehicleJSON),
-          cr::ToFString(PowertrainJSON),
-          cr::ToFString(TireJSON),
-          cr::ToFString(BaseJSONPath));
+      return RespondError(
+          "enable_chrono_physics",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1460,19 +1375,20 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set state: actor not found");
+      return RespondError(
+          "set_traffic_light_state",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetTrafficLightState(
+        static_cast<ETrafficLightState>(trafficLightState));
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
-      if (TrafficLight == nullptr)
-      {
-        RESPOND_ERROR("unable to set state: actor is not a traffic light");
-      }
-      TrafficLight->SetTrafficLightState(static_cast<ETrafficLightState>(trafficLightState));
+      return RespondError(
+          "set_traffic_light_state",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1485,19 +1401,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set green time: actor not found");
+      return RespondError(
+          "set_traffic_light_green_time",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetLightGreenTime(GreenTime);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
-      if (TrafficLight == nullptr)
-      {
-        RESPOND_ERROR("unable to set green time: actor is not a traffic light");
-      }
-      TrafficLight->SetGreenTime(GreenTime);
+      return RespondError(
+          "set_traffic_light_green_time",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1510,19 +1426,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set yellow time: actor not found");
+      return RespondError(
+          "set_traffic_light_yellow_time",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetLightYellowTime(YellowTime);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
-      if (TrafficLight == nullptr)
-      {
-        RESPOND_ERROR("unable to set yellow time: actor is not a traffic light");
-      }
-      TrafficLight->SetYellowTime(YellowTime);
+      return RespondError(
+          "set_traffic_light_yellow_time",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1535,19 +1451,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to set red time: actor not found");
+      return RespondError(
+          "set_traffic_light_red_time",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->SetLightRedTime(RedTime);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
-      if (TrafficLight == nullptr)
-      {
-        RESPOND_ERROR("unable to set red time: actor is not a traffic light");
-      }
-      TrafficLight->SetRedTime(RedTime);
+      return RespondError(
+          "set_traffic_light_red_time",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1560,19 +1476,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to alter frozen state: actor not found");
+      return RespondError(
+          "freeze_traffic_light",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->FreezeTrafficLight(Freeze);
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
-      if (TrafficLight == nullptr)
-      {
-        RESPOND_ERROR("unable to alter frozen state: actor is not a traffic light");
-      }
-      TrafficLight->SetTimeIsFrozen(Freeze);
+      return RespondError(
+          "freeze_traffic_light",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1584,19 +1500,19 @@ void FCarlaServer::FPimpl::BindActions()
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
-      RESPOND_ERROR("unable to reset traffic lights: actors not found");
+      return RespondError(
+          "reset_traffic_light_group",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    if (CarlaActor->IsDormant())
+    ECarlaServerResponse Response =
+        CarlaActor->ResetTrafficLightGroup();
+    if (Response != ECarlaServerResponse::Success)
     {
-    }
-    else
-    {
-      auto TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
-      if (TrafficLight == nullptr)
-      {
-        RESPOND_ERROR("unable to reset traffic lights: actor is not a traffic light");
-      }
-      TrafficLight->GetTrafficLightComponent()->GetGroup()->ResetGroup();
+      return RespondError(
+          "reset_traffic_light_group",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
   };
@@ -1638,6 +1554,7 @@ void FCarlaServer::FPimpl::BindActions()
       {
         if(View.IsDormant())
         {
+          // todo: implement
         }
         else
         {
@@ -1666,6 +1583,7 @@ void FCarlaServer::FPimpl::BindActions()
     }
     if (CarlaActor->IsDormant())
     {
+      //todo implement
       return std::vector<cr::ActorId>();
     }
     else

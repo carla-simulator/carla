@@ -15,6 +15,7 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
+#include "Carla/Traffic/TrafficLightBase.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/LabelledPoint.h"
@@ -366,6 +367,45 @@ ECarlaServerResponse FCarlaActor::AddActorTorque(const FVector& Torque)
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FCarlaActor::SetActorSimulatePhysics(bool bEnabled)
+{
+  if (IsDormant())
+  {
+    ActorData->bSimulatePhysics = bEnabled;
+  }
+  else
+  {
+    // In the rest of actors, the physics is controlled with the UPrimitiveComponent, so we use
+    // that for disable it.
+    auto RootComponent = Cast<UPrimitiveComponent>(GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      return ECarlaServerResponse::FunctionNotSupported;
+    }
+
+    RootComponent->SetSimulatePhysics(bEnabled);
+    RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FCarlaActor::SetActorEnableGravity(bool bEnabled)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto RootComponent = Cast<UPrimitiveComponent>(GetActor()->GetRootComponent());
+    if (RootComponent == nullptr)
+    {
+      return ECarlaServerResponse::FunctionNotSupported;
+    }
+    RootComponent->SetEnableGravity(bEnabled);
+  }
+  return ECarlaServerResponse::Success;
+}
+
 // FVehicleActor functions ---------------------
 
 ECarlaServerResponse FVehicleActor::EnableActorConstantVelocity(const FVector& Velocity)
@@ -441,11 +481,326 @@ ECarlaServerResponse FVehicleActor::GetVehicleLightState(FVehicleLightState& Lig
   return ECarlaServerResponse::Success;
 }
 
-// FSensor functions ---------------------
+ECarlaServerResponse FVehicleActor::ApplyPhysicsControl(
+      const FVehiclePhysicsControl& PhysicsControl)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    ActorData->PhysicsControl = PhysicsControl;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Vehicle->ApplyVehiclePhysicsControl(PhysicsControl);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetVehicleLightState(
+    const FVehicleLightState& LightState)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    ActorData->LightState = LightState;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Vehicle->SetVehicleLightState(LightState);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelSteerDirection(
+    const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->SetWheelSteerDirection(WheelLocation, AngleInDeg);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelSteerAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle)
+{
+  if (IsDormant())
+  {
+    Angle = 0;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Angle = Vehicle->GetWheelSteerAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetActorSimulatePhysics(bool bEnabled)
+{
+  if (IsDormant())
+  {
+    ActorData->bSimulatePhysics = bEnabled;
+  }
+  else
+  {
+    auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    // The physics in the vehicles works in a different way so to disable them.
+    if (CarlaVehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    CarlaVehicle->SetSimulatePhysics(bEnabled);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::ApplyControlToVehicle(
+      const FVehicleControl& Control, const EVehicleInputPriority& Priority)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    ActorData->Control = Control;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->ApplyVehicleControl(Control, Priority);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::AutoPilotNotSupported;
+    }
+    auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::AutoPilotNotSupported;
+    }
+    Controller->SetAutopilot(bEnabled);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::EnableCarSim(const FString& SimfilePath)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    UCarSimManagerComponent::CreateCarsimComponent(Vehicle, SimfilePath);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::UseCarSimRoad(bool bEnabled)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    auto* CarSimComponent = Vehicle->GetCarlaMovementComponent<UCarSimManagerComponent>();
+    if(CarSimComponent)
+    {
+      CarSimComponent->UseCarSimRoad(bEnabled);
+    }
+    else
+    {
+      return ECarlaServerResponse::CarSimPluginNotEnabled;
+    }
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::EnableChronoPhysics(
+      uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
+      const FString& VehicleJSON, const FString& PowertrainJSON,
+      const FString& TireJSON, const FString& BaseJSONPath)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    UChronoMovementComponent::CreateChronoMovementComponent(
+        Vehicle,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        VehicleJSON,
+        PowertrainJSON,
+        TireJSON,
+        BaseJSONPath);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+// FSensorActor functions ---------------------
 
 // FtrafficSignActor functions ---------------------
 
 // FTrafficLightActor functions ---------------------
+
+ECarlaServerResponse FTrafficLightActor::SetTrafficLightState(const ETrafficLightState& State)
+{
+  if (IsDormant())
+  {
+    // Todo: impletent to affect controller
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return ECarlaServerResponse::NotATrafficLight;
+    }
+    TrafficLight->SetTrafficLightState(State);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FTrafficLightActor::SetLightGreenTime(float time)
+{
+  if (IsDormant())
+  {
+    // Todo: implement
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return ECarlaServerResponse::NotATrafficLight;
+    }
+    TrafficLight->SetGreenTime(time);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FTrafficLightActor::SetLightYellowTime(float time)
+{
+  if (IsDormant())
+  {
+    // Todo: implement
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return ECarlaServerResponse::NotATrafficLight;
+    }
+    TrafficLight->SetYellowTime(time);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FTrafficLightActor::SetLightRedTime(float time)
+{
+  if (IsDormant())
+  {
+    // Todo: implement
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return ECarlaServerResponse::NotATrafficLight;
+    }
+    TrafficLight->SetRedTime(time);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FTrafficLightActor::FreezeTrafficLight(bool bFreeze)
+{
+  if (IsDormant())
+  {
+    // Todo: implement
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return ECarlaServerResponse::NotATrafficLight;
+    }
+    TrafficLight->SetTimeIsFrozen(bFreeze);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FTrafficLightActor::ResetTrafficLightGroup()
+{
+  if (IsDormant())
+  {
+    // Todo: implement
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return ECarlaServerResponse::NotATrafficLight;
+    }
+    TrafficLight->GetTrafficLightComponent()->GetGroup()->ResetGroup();
+  }
+  return ECarlaServerResponse::Success;
+}
 
 // FWalkerActor functions ---------------------
 
@@ -487,6 +842,107 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
       return ECarlaServerResponse::WalkerIncompatibleController;
     }
     Controller->ApplyWalkerControl(WalkerControl);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::SetActorSimulatePhysics(bool bEnabled)
+{
+  if (IsDormant())
+  {
+    ActorData->bSimulatePhysics = bEnabled;
+  }
+  else
+  {
+    auto* Character = Cast<ACharacter>(GetActor());
+    // The physics in the walkers also works in a different way so to disable them,
+    // we need to do it in the UCharacterMovementComponent.
+    if (Character == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
+    if(bEnabled) {
+      CharacterMovement->SetDefaultMovementMode();
+    }
+    else {
+      CharacterMovement->DisableMovement();
+    }
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::SetActorEnableGravity(bool bEnabled)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Character = Cast<ACharacter>(GetActor());
+    // The physics in the walkers works in a different way so to disable them,
+    // we need to do it in the UCharacterMovementComponent.
+    if (Character == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
+
+    if(bEnabled) {
+      CharacterMovement->SetDefaultMovementMode();
+    }
+    else {
+      if (CharacterMovement->IsFlying() || CharacterMovement->IsFalling())
+        CharacterMovement->DisableMovement();
+    }
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::ApplyControlToWalker(
+    const FWalkerControl& Control)
+{
+  if (IsDormant())
+  {
+    FWalkerData* ActorData = GetActorData<FWalkerData>();
+    ActorData->WalkerControl = Control;
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->ApplyWalkerControl(Control);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
+    const FWalkerBoneControl& Control)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->ApplyWalkerControl(Control);
   }
   return ECarlaServerResponse::Success;
 }
