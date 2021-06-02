@@ -45,7 +45,8 @@ public:
       IdType ActorId,
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 
   virtual ~FCarlaActor() {};
 
@@ -171,9 +172,34 @@ public:
   // Actor function interface ----------------------
 
   // General functions
-  ECarlaServerResponse SetActorLocation(const FVector& Location, ETeleportType Teleport);
 
-  ECarlaServerResponse SetActorTransform(const FTransform& Transform, ETeleportType Teleport);
+  FTransform GetActorLocalTransform() const;
+
+  FTransform GetActorGlobalTransform() const;
+
+  FVector GetActorLocalLocation() const;
+
+  FVector GetActorGlobalLocation() const;
+
+  void SetActorLocalLocation(
+      const FVector& Location,
+      ETeleportType Teleport = ETeleportType::TeleportPhysics);
+
+  void SetActorGlobalLocation(
+      const FVector& Location,
+      ETeleportType Teleport = ETeleportType::TeleportPhysics);
+
+  void SetActorLocalTransform(
+      const FTransform& Transform,
+      ETeleportType Teleport = ETeleportType::TeleportPhysics);
+
+  void SetActorGlobalTransform(
+      const FTransform& Transform,
+      ETeleportType Teleport = ETeleportType::TeleportPhysics);
+
+  FVector GetActorVelocity() const;
+
+  FVector GetActorAngularVelocity() const;
 
   ECarlaServerResponse SetActorTargetVelocity(const FVector& Velocity);
 
@@ -242,6 +268,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetVehicleControl(FVehicleControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse SetActorAutopilot(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -270,6 +301,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual UTrafficLightController* GetTrafficLightController()
+  {
+    return nullptr;
+  }
+
   virtual ECarlaServerResponse SetLightGreenTime(float)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -290,13 +326,17 @@ public:
   // Walker functions
   virtual ECarlaServerResponse SetWalkerState(
       const FTransform& Transform,
-      carla::rpc::WalkerControl WalkerControl,
-      float Speed)
+      carla::rpc::WalkerControl WalkerControl)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
   virtual ECarlaServerResponse ApplyControlToWalker(const FWalkerControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -323,7 +363,8 @@ public:
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
       ActorType Type,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 
 private:
 
@@ -349,6 +390,8 @@ protected:
 
   TSharedPtr<FActorData> ActorData = nullptr;
 
+  UWorld *World = nullptr;
+
 };
 
 class FVehicleActor : public FCarlaActor
@@ -358,7 +401,8 @@ public:
       IdType ActorId,
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 
   virtual ECarlaServerResponse EnableActorConstantVelocity(const FVector& Velocity) final;
 
@@ -385,6 +429,8 @@ public:
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&) final;
 
+  virtual ECarlaServerResponse GetVehicleControl(FVehicleControl&) final;
+
   virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled) final;
 
   virtual ECarlaServerResponse EnableCarSim(const FString& SimfilePath) final;
@@ -404,7 +450,8 @@ public:
       IdType ActorId,
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 
 };
 
@@ -415,7 +462,8 @@ public:
       IdType ActorId,
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 };
 
 class FTrafficLightActor : public FCarlaActor
@@ -425,9 +473,12 @@ public:
       IdType ActorId,
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 
   virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState& State) final;
+
+  virtual UTrafficLightController* GetTrafficLightController() final;
 
   virtual ECarlaServerResponse SetLightGreenTime(float time) final;
 
@@ -448,18 +499,20 @@ public:
       IdType ActorId,
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 
   virtual ECarlaServerResponse SetWalkerState(
       const FTransform& Transform,
-      carla::rpc::WalkerControl WalkerControl,
-      float Speed) final;
+      carla::rpc::WalkerControl WalkerControl) final;
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled) final;
 
   virtual ECarlaServerResponse ApplyControlToWalker(const FWalkerControl&) final;
+
+  virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
   virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControl&) final;
 };
@@ -471,6 +524,7 @@ public:
       IdType ActorId,
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
-      carla::rpc::ActorState InState);
+      carla::rpc::ActorState InState,
+      UWorld* World);
 
 };

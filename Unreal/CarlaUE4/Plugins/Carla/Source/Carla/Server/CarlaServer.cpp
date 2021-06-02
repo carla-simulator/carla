@@ -617,14 +617,9 @@ void FCarlaServer::FPimpl::BindActions()
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    FVector UELocation = Location;
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
-    }
 
+    CarlaActor->SetActorGlobalLocation(
+        Location, ETeleportType::TeleportPhysics);
     return R<void>::Success();
   };
 
@@ -642,15 +637,8 @@ void FCarlaServer::FPimpl::BindActions()
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    FTransform UETransform = Transform;
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
-    }
-
-    CarlaActor->SetActorTransform(UETransform, ETeleportType::TeleportPhysics);
+    CarlaActor->SetActorGlobalTransform(
+        Transform, ETeleportType::TeleportPhysics);
     return R<void>::Success();
   };
 
@@ -670,31 +658,11 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     // apply walker transform
-    FTransform NewTransform = Transform;
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      NewTransform = LargeMap->GlobalToLocalTransform(NewTransform);
-    }
-    FVector NewLocation = NewTransform.GetLocation();
-
-    FTransform CurrentTransform = CarlaActor->GetActor()->GetTransform();
-    FVector CurrentLocation = CurrentTransform.GetLocation();
-    NewLocation.Z += 90.0f; // move point up because in Unreal walker is centered in the middle height
-
-    // if difference between Z position is small, then we keep current, otherwise we set the new one
-    // (to avoid Z fighting position and falling pedestrians)
-    if (NewLocation.Z - CurrentLocation.Z < 100.0f)
-      NewLocation.Z = CurrentLocation.Z;
-
-    NewTransform.SetLocation(NewLocation);
-
     ECarlaServerResponse Response =
         CarlaActor->SetWalkerState(
-            NewTransform,
-            cr::WalkerControl(Transform.GetForwardVector(), Speed, false),
-            Speed);
+            Transform,
+            cr::WalkerControl(
+              Transform.GetForwardVector(), Speed, false));
     if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
