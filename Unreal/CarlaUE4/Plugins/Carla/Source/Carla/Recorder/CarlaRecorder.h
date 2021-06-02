@@ -197,11 +197,11 @@ private:
   CarlaRecorderQuery Query;
 
   void AddExistingActors(void);
-  void AddActorPosition(FCarlaActor &View);
-  void AddWalkerAnimation(FCarlaActor &View);
-  void AddVehicleAnimation(FCarlaActor &View);
-  void AddTrafficLightState(FCarlaActor &View);
-  void AddVehicleLight(FCarlaActor &View);
-  void AddActorKinematics(FCarlaActor &View);
-  void AddActorBoundingBox(FCarlaActor &View);
+  void AddActorPosition(FCarlaActor *CarlaActor);
+  void AddWalkerAnimation(FCarlaActor *CarlaActor);
+  void AddVehicleAnimation(FCarlaActor *CarlaActor);
+  void AddTrafficLightState(FCarlaActor *CarlaActor);
+  void AddVehicleLight(FCarlaActor *CarlaActor);
+  void AddActorKinematics(FCarlaActor *CarlaActor);
+  void AddActorBoundingBox(FCarlaActor *CarlaActor);
 };

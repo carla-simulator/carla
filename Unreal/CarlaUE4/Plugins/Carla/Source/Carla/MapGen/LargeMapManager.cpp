@@ -129,6 +129,10 @@ void ALargeMapManager::RegisterInitialObjects()
   const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
   for (const auto& CarlaActorPair : ActorRegistry)
   {
+    if (CarlaActorPair.Value->GetActorInfo()->Description.Id == "spectator")
+    {
+      continue;
+    }
     OnActorSpawned(*CarlaActorPair.Value.Get());
   }
 }
@@ -512,7 +516,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
   FString LongLevelPackageName = FPackageName::FilenameToLongPackageName(PackageFileName);
   FString UniqueLevelPackageName = LongLevelPackageName + TileName;
 
-  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName, RF_Transient);
+  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName);
   check(StreamingLevel);
 
   StreamingLevel->SetWorldAssetByPackageName(*UniqueLevelPackageName);

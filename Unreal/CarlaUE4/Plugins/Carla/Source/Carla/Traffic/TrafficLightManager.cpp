@@ -429,6 +429,7 @@ void ATrafficLightManager::SpawnTrafficLights()
     const auto& SignalId = SignalPair.first;
     const auto& Signal = SignalPair.second;
     if(!Signal->GetControllers().size() &&
+       !GetMap()->IsJunction(Signal->GetRoadId()) &&
        carla::road::SignalType::IsTrafficLight(Signal->GetType()) &&
        !SignalsToSpawn.count(SignalId))
     {

@@ -183,7 +183,10 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
   }
   auto Type = FActorRegistry_GetActorType(&Actor);
   TSharedPtr<FCarlaActor> CarlaActor =
-      FCarlaActor::ConstructCarlaActor(Id, &Actor, std::move(Info), Type, InState);
+      FCarlaActor::ConstructCarlaActor(
+        Id, &Actor,
+        std::move(Info), Type,
+        InState, Actor.GetWorld());
   return CarlaActor;
 }
 

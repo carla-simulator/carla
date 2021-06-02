@@ -16,6 +16,7 @@
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Game/CarlaStatics.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/LabelledPoint.h"
@@ -37,19 +38,22 @@ FCarlaActor::FCarlaActor(
     IdType ActorId,
     AActor* Actor,
     TSharedPtr<const FActorInfo> Info,
-    carla::rpc::ActorState InState)
+    carla::rpc::ActorState InState,
+    UWorld* World)
     : TheActor(Actor),
       Info(std::move(Info)),
       Id(ActorId),
-      State(InState)
+      State(InState),
+      World(World)
 {
 }
 FVehicleActor::FVehicleActor(
     IdType ActorId,
     AActor* Actor,
     TSharedPtr<const FActorInfo> Info,
-    carla::rpc::ActorState InState)
-    : FCarlaActor(ActorId, Actor, Info, InState)
+    carla::rpc::ActorState InState,
+    UWorld* World)
+    : FCarlaActor(ActorId, Actor, Info, InState, World)
 {
   Type = ActorType::Vehicle;
   ActorData = MakeShared<FVehicleData>();
@@ -58,8 +62,9 @@ FSensorActor::FSensorActor(
     IdType ActorId,
     AActor* Actor,
     TSharedPtr<const FActorInfo> Info,
-    carla::rpc::ActorState InState)
-    : FCarlaActor(ActorId, Actor, Info, InState)
+    carla::rpc::ActorState InState,
+    UWorld* World)
+    : FCarlaActor(ActorId, Actor, Info, InState, World)
 {
   Type = ActorType::Sensor;
   ActorData = MakeShared<FActorSensorData>();
@@ -68,8 +73,9 @@ FTrafficSignActor::FTrafficSignActor(
     IdType ActorId,
     AActor* Actor,
     TSharedPtr<const FActorInfo> Info,
-    carla::rpc::ActorState InState)
-    : FCarlaActor(ActorId, Actor, Info, InState)
+    carla::rpc::ActorState InState,
+    UWorld* World)
+    : FCarlaActor(ActorId, Actor, Info, InState, World)
 {
   Type = ActorType::TrafficSign;
   ActorData = MakeShared<FTrafficSignData>();
@@ -78,8 +84,9 @@ FTrafficLightActor::FTrafficLightActor(
     IdType ActorId,
     AActor* Actor,
     TSharedPtr<const FActorInfo> Info,
-    carla::rpc::ActorState InState)
-    : FCarlaActor(ActorId, Actor, Info, InState)
+    carla::rpc::ActorState InState,
+    UWorld* World)
+    : FCarlaActor(ActorId, Actor, Info, InState, World)
 {
   Type = ActorType::TrafficLight;
   ActorData = MakeShared<FTrafficLightData>();
@@ -88,8 +95,9 @@ FWalkerActor::FWalkerActor(
     IdType ActorId,
     AActor* Actor,
     TSharedPtr<const FActorInfo> Info,
-    carla::rpc::ActorState InState)
-    : FCarlaActor(ActorId, Actor, Info, InState)
+    carla::rpc::ActorState InState,
+    UWorld* World)
+    : FCarlaActor(ActorId, Actor, Info, InState, World)
 {
   Type = ActorType::Walker;
   ActorData = MakeShared<FWalkerData>();
@@ -98,8 +106,9 @@ FOtherActor::FOtherActor(
     IdType ActorId,
     AActor* Actor,
     TSharedPtr<const FActorInfo> Info,
-    carla::rpc::ActorState InState)
-    : FCarlaActor(ActorId, Actor, Info, InState)
+    carla::rpc::ActorState InState,
+    UWorld* World)
+    : FCarlaActor(ActorId, Actor, Info, InState, World)
 {
   Type = ActorType::Other;
   ActorData = MakeShared<FActorData>();
@@ -110,27 +119,28 @@ TSharedPtr<FCarlaActor> FCarlaActor::ConstructCarlaActor(
       AActor* Actor,
       TSharedPtr<const FActorInfo> Info,
       ActorType Type,
-      carla::rpc::ActorState InState)
+      carla::rpc::ActorState InState,
+      UWorld* World)
 {
   switch(Type)
   {
   case ActorType::TrafficSign:
-    return MakeShared<FTrafficSignActor>(ActorId, Actor, std::move(Info), InState);
+    return MakeShared<FTrafficSignActor>(ActorId, Actor, std::move(Info), InState, World);
     break;
   case ActorType::TrafficLight:
-    return MakeShared<FTrafficLightActor>(ActorId, Actor, std::move(Info), InState);
+    return MakeShared<FTrafficLightActor>(ActorId, Actor, std::move(Info), InState, World);
     break;
   case ActorType::Vehicle:
-    return MakeShared<FVehicleActor>(ActorId, Actor, std::move(Info), InState);
+    return MakeShared<FVehicleActor>(ActorId, Actor, std::move(Info), InState, World);
     break;
   case ActorType::Walker:
-    return MakeShared<FWalkerActor>(ActorId, Actor, std::move(Info), InState);
+    return MakeShared<FWalkerActor>(ActorId, Actor, std::move(Info), InState, World);
     break;
   case ActorType::Sensor:
-    return MakeShared<FSensorActor>(ActorId, Actor, std::move(Info), InState);
+    return MakeShared<FSensorActor>(ActorId, Actor, std::move(Info), InState, World);
     break;
   default:
-    return MakeShared<FOtherActor>(ActorId, Actor, std::move(Info), InState);
+    return MakeShared<FOtherActor>(ActorId, Actor, std::move(Info), InState, World);
     break;
   }
 }
@@ -161,11 +171,100 @@ void FCarlaActor::WakeActorUp(UCarlaEpisode* CarlaEpisode)
   ActorData->RestoreActorData(TheActor, CarlaEpisode);
 }
 
-ECarlaServerResponse FCarlaActor::SetActorLocation(const FVector& Location, ETeleportType TeleportType)
+FTransform FCarlaActor::GetActorLocalTransform() const
 {
   if (IsDormant())
   {
-    ActorData->Location = FDVector(Location);
+    FTransform Transform = FTransform(
+        ActorData->Rotation,
+        ActorData->Location.ToFVector(),
+        ActorData->Scale);
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      Transform = LargeMap->GlobalToLocalTransform(Transform);
+    }
+    return Transform;
+  }
+  else
+  {
+    return GetActor()->GetActorTransform();
+  }
+}
+
+FTransform FCarlaActor::GetActorGlobalTransform() const
+{
+  if (IsDormant())
+  {
+    return FTransform(
+        ActorData->Rotation,
+        ActorData->Location.ToFVector(),
+        ActorData->Scale);
+  }
+  else
+  {
+    FTransform Transform = GetActor()->GetActorTransform();
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      Transform = LargeMap->LocalToGlobalTransform(Transform);
+    }
+    return Transform;
+  }
+}
+
+FVector FCarlaActor::GetActorLocalLocation() const
+{
+  if (IsDormant())
+  {
+    FVector Location = ActorData->Location.ToFVector();
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      Location = LargeMap->GlobalToLocalLocation(Location);
+    }
+    return Location;
+  }
+  else
+  {
+    return GetActor()->GetActorLocation();
+  }
+}
+
+FVector FCarlaActor::GetActorGlobalLocation() const
+{
+  if (IsDormant())
+  {
+    return ActorData->Location.ToFVector();
+  }
+  else
+  {
+    FVector Location = GetActor()->GetActorLocation();
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      Location = LargeMap->LocalToGlobalLocation(Location);
+    }
+    return Location;
+  }
+}
+
+void FCarlaActor::SetActorLocalLocation(const FVector& Location, ETeleportType TeleportType)
+{
+  if (IsDormant())
+  {
+    FVector GlobalLocation = Location;
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      GlobalLocation = LargeMap->LocalToGlobalLocation(GlobalLocation);
+    }
+    ActorData->Location = FDVector(GlobalLocation);
   }
   else
   {
@@ -175,16 +274,48 @@ ECarlaServerResponse FCarlaActor::SetActorLocation(const FVector& Location, ETel
         nullptr,
         TeleportType);
   }
-  return ECarlaServerResponse::Success;
 }
 
-ECarlaServerResponse FCarlaActor::SetActorTransform(const FTransform& Transform, ETeleportType TeleportType)
+void FCarlaActor::SetActorGlobalLocation(
+    const FVector& Location, ETeleportType TeleportType)
 {
   if (IsDormant())
   {
-    ActorData->Location = FDVector(Transform.GetLocation());
-    ActorData->Rotation = Transform.GetRotation();
-    ActorData->Scale = Transform.GetScale3D();
+    ActorData->Location = FDVector(Location);;
+  }
+  else
+  {
+    FVector LocalLocation = Location;
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      LocalLocation = LargeMap->GlobalToLocalLocation(Location);
+    }
+    GetActor()->SetActorRelativeLocation(
+        LocalLocation,
+        false,
+        nullptr,
+        TeleportType);
+  }
+}
+
+void FCarlaActor::SetActorLocalTransform(
+    const FTransform& Transform, ETeleportType TeleportType)
+{
+  if (IsDormant())
+  {
+    FTransform GlobalTransform = Transform;
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      GlobalTransform =
+          LargeMap->LocalToGlobalTransform(GlobalTransform);
+    }
+    ActorData->Location = FDVector(GlobalTransform.GetLocation());
+    ActorData->Rotation = GlobalTransform.GetRotation();
+    ActorData->Scale = GlobalTransform.GetScale3D();
   }
   else
   {
@@ -194,7 +325,63 @@ ECarlaServerResponse FCarlaActor::SetActorTransform(const FTransform& Transform,
         nullptr,
         TeleportType);
   }
-  return ECarlaServerResponse::Success;
+}
+
+void FCarlaActor::SetActorGlobalTransform(
+    const FTransform& Transform, ETeleportType TeleportType)
+{
+  if (IsDormant())
+  {
+    ActorData->Location = FDVector(Transform.GetLocation());
+    ActorData->Rotation = Transform.GetRotation();
+    ActorData->Scale = Transform.GetScale3D();
+  }
+  else
+  {
+    FTransform LocalTransform = Transform;
+    ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(World);
+    if (LargeMap)
+    {
+      LocalTransform =
+          LargeMap->GlobalToLocalTransform(LocalTransform);
+    }
+    GetActor()->SetActorRelativeTransform(
+        LocalTransform,
+        false,
+        nullptr,
+        TeleportType);
+  }
+}
+
+FVector FCarlaActor::GetActorVelocity() const
+{
+  if (IsDormant())
+  {
+    return ActorData->Velocity;
+  }
+  else
+  {
+    return GetActor()->GetVelocity();
+  }
+}
+
+FVector FCarlaActor::GetActorAngularVelocity() const
+{
+  if (IsDormant())
+  {
+    return ActorData->AngularVelocity;
+  }
+  else
+  {
+    UPrimitiveComponent* Primitive =
+        Cast<UPrimitiveComponent>(GetActor()->GetRootComponent());
+    if (Primitive)
+    {
+      return Primitive->GetPhysicsAngularVelocityInDegrees();
+    }
+  }
+  return FVector();
 }
 
 ECarlaServerResponse FCarlaActor::SetActorTargetVelocity(const FVector& Velocity)
@@ -597,6 +784,25 @@ ECarlaServerResponse FVehicleActor::ApplyControlToVehicle(
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::GetVehicleControl(FVehicleControl& VehicleControl)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    VehicleControl = ActorData->Control;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    VehicleControl = Vehicle->GetVehicleControl();
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled)
 {
   if (IsDormant())
@@ -712,6 +918,24 @@ ECarlaServerResponse FTrafficLightActor::SetTrafficLightState(const ETrafficLigh
   return ECarlaServerResponse::Success;
 }
 
+UTrafficLightController* FTrafficLightActor::GetTrafficLightController()
+{
+  if (IsDormant())
+  {
+    FTrafficLightData* ActorData = GetActorData<FTrafficLightData>();
+    return ActorData->Controller;
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return nullptr;
+    }
+    return TrafficLight->GetTrafficLightComponent()->GetController();
+  }
+}
+
 ECarlaServerResponse FTrafficLightActor::SetLightGreenTime(float time)
 {
   if (IsDormant())
@@ -806,16 +1030,24 @@ ECarlaServerResponse FTrafficLightActor::ResetTrafficLightGroup()
 
 ECarlaServerResponse FWalkerActor::SetWalkerState(
     const FTransform& Transform,
-    carla::rpc::WalkerControl WalkerControl,
-    float Speed)
+    carla::rpc::WalkerControl WalkerControl)
 {
+  FVector NewLocation = Transform.GetLocation();
+  FVector CurrentLocation = GetActorGlobalLocation();
+  NewLocation.Z += 90.0f; // move point up because in Unreal walker is centered in the middle height
+
+  // if difference between Z position is small, then we keep current, otherwise we set the new one
+  // (to avoid Z fighting position and falling pedestrians)
+  if (NewLocation.Z - CurrentLocation.Z < 100.0f)
+    NewLocation.Z = CurrentLocation.Z;
+
+  FTransform NewTransform = Transform;
+  NewTransform.SetLocation(NewLocation);
+  SetActorGlobalTransform(NewTransform);
   if (IsDormant())
   {
     FWalkerData* WalkerData = GetActorData<FWalkerData>();
     WalkerData->WalkerControl = WalkerControl;
-    WalkerData->Location = FDVector(Transform.GetLocation());
-    WalkerData->Rotation = Transform.GetRotation();
-    WalkerData->Scale = Transform.GetScale3D();
   }
   else
   {
@@ -824,11 +1056,6 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
     {
       return ECarlaServerResponse::WalkerDead;
     }
-    GetActor()->SetActorRelativeTransform(
-        Transform,
-        false,
-        nullptr,
-        ETeleportType::TeleportPhysics);
 
     // apply walker speed
     auto Pawn = Cast<APawn>(GetActor());
@@ -842,6 +1069,38 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
       return ECarlaServerResponse::WalkerIncompatibleController;
     }
     Controller->ApplyWalkerControl(WalkerControl);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::GetWalkerControl(
+    FWalkerControl& Control)
+{
+  if (IsDormant())
+  {
+    FWalkerData* WalkerData = GetActorData<FWalkerData>();
+    Control = WalkerData->WalkerControl;
+  }
+  else
+  {
+    auto * Walker = Cast<AWalkerBase>(GetActor());
+    if (Walker && !Walker->bAlive)
+    {
+      return ECarlaServerResponse::WalkerDead;
+    }
+
+    // apply walker speed
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::ActorTypeMismatch;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Control = Controller->GetWalkerControl();
   }
   return ECarlaServerResponse::Success;
 }
