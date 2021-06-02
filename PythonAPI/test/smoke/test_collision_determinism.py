@@ -429,7 +429,7 @@ class TestCollisionDeterminism(SmokeTest):
         # Remove all the output files
         shutil.rmtree(output_path)
 
-    def test_three_cars(self):
+    def _test_three_cars(self):
         print("TestCollisionDeterminism.test_three_cars")
 
         # Setting output temporal folder
