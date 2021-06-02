@@ -322,7 +322,7 @@ void TrafficManagerLocal::Reset() {
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
-  SetupLocalMap();
+  //SetupLocalMap();
   Start();
 }
 
