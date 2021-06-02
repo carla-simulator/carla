@@ -225,6 +225,9 @@ public:
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
 
+  /// Method to set automatic respawn of dormant vehicles.
+  void SetRespawnDormantVehicles(const bool mode_switch);
+
   void ShutDown() {};
 };
 

@@ -162,54 +162,85 @@ void MotionPlanStage::Update(const unsigned long index) {
 
     // Measuring time elapsed since last teleportation for the vehicle.
     double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
-
-    if (simulation_state.IsDormant(actor_id) && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) { // && RELOC PARAM, OTHERWISE DO NORMAL HYBRID
-      cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
-      std::cout << "hero loc x " << hero_location.x << ", y " << hero_location.y << ", z " << hero_location.z << std::endl;
-      cg::Location vehicle_location = simulation_state.GetLocation(actor_id);
-      std::cout << "vehicle_location x " << vehicle_location.x << ", y " << vehicle_location.y << ", z " << vehicle_location.z << std::endl;
-      if (hero_location != cg::Location(0,0,0)) {
-        double twice_physics_radius = parameters.GetHybridPhysicsRadius();
-        double r_sample = random_devices.at(actor_id).next()*2.0f + twice_physics_radius;
-        int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-        int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-        cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
-        SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
-        cg::Location wpt_loc = teleport_waypoint->GetLocation();
-        std::cout << r_sample << std::endl;
-        std::cout << "teleport_waypoint x " << wpt_loc.x << ", y " << wpt_loc.y << ", z " << wpt_loc.z << std::endl;
-        teleportation_transform = teleport_waypoint->GetTransform();
-        output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
-        std::cout << "ML Stage" << std::endl;
+    if (parameters.GetRespawnDormantVehicles()) {
+      if (simulation_state.IsDormant(actor_id) && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) { // && RELOC PARAM, OTHERWISE DO NORMAL HYBRID
+        cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
+        std::cout << "hero loc x " << hero_location.x << ", y " << hero_location.y << ", z " << hero_location.z << std::endl;
+        if (hero_location != cg::Location(0,0,0)) {
+          double twice_physics_radius = 100.0;
+          double r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
+          int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+          int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+          cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
+          SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
+          // double inner = 50.0f;
+          // double outer = random_devices.at(actor_id).next()*2.0 + inner;
+          // SimpleWaypointPtr teleport_waypoint = local_map->GetWaypointInDistance(hero_location, inner, outer);
+          while (teleport_waypoint->CheckJunction()) {
+            r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
+            x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+            y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+            teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
+            teleport_waypoint = local_map->GetWaypoint(teleport_location);
+          }
+          SimpleWaypointPtr nearby_waypoint = nullptr;
+          NodeList possible_waypoints;
+          possible_waypoints.push_back(teleport_waypoint);
+          int elements = 1;
+          while (true) {
+            nearby_waypoint = teleport_waypoint->GetLeftWaypoint();
+            while (nearby_waypoint != nullptr) {
+              possible_waypoints.push_back(nearby_waypoint);
+              elements+=1;
+              nearby_waypoint = nearby_waypoint->GetLeftWaypoint();
+            }
+            nearby_waypoint = teleport_waypoint->GetRightWaypoint();
+            while (nearby_waypoint != nullptr) {
+              possible_waypoints.push_back(nearby_waypoint);
+              elements+=1;
+              nearby_waypoint = nearby_waypoint->GetRightWaypoint();
+            }
+            break;
+          }
+          int selection_index = static_cast<int>(random_devices.at(actor_id).next()) % elements;
+          cg::Location wpt_loc = possible_waypoints.at(selection_index)->GetLocation();
+          std::cout << "teleport_waypoint x " << wpt_loc.x << ", y " << wpt_loc.y << ", z " << wpt_loc.z << std::endl;
+          teleportation_transform = teleport_waypoint->GetTransform();
+          output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+          std::cout << "ML Stage" << std::endl;
+        }
       }
     }
 
-    // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-    else if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
+    else {
 
-      // Target displacement magnitude to achieve target velocity.
-      const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
-      SimpleWaypointPtr teleport_target = waypoint_buffer.front();
-      cg::Transform target_base_transform = teleport_target->GetTransform();
-      cg::Location target_base_location = target_base_transform.location;
-      cg::Vector3D target_heading = target_base_transform.GetForwardVector();
-      cg::Vector3D correct_heading = (target_base_location - ego_location).MakeSafeUnitVector(EPSILON);
+      // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
+      if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
 
-      if (ego_location.Distance(target_base_location) < target_displacement) {
-        cg::Location teleportation_location = ego_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
-        teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+        // Target displacement magnitude to achieve target velocity.
+        const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
+        SimpleWaypointPtr teleport_target = waypoint_buffer.front();
+        cg::Transform target_base_transform = teleport_target->GetTransform();
+        cg::Location target_base_location = target_base_transform.location;
+        cg::Vector3D target_heading = target_base_transform.GetForwardVector();
+        cg::Vector3D correct_heading = (target_base_location - ego_location).MakeSafeUnitVector(EPSILON);
+
+        if (ego_location.Distance(target_base_location) < target_displacement) {
+          cg::Location teleportation_location = ego_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
+          teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+        }
+        else {
+          cg::Location teleportation_location = ego_location + cg::Location(correct_heading * target_displacement);
+          teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+        }
+      // In case of an emergency stop, stay in the same location.
+      // Also, teleport only once every dt in asynchronous mode.
+      } else {
+        teleportation_transform = cg::Transform(ego_location, simulation_state.GetRotation(actor_id));
       }
-      else {
-        cg::Location teleportation_location = ego_location + cg::Location(correct_heading * target_displacement);
-        teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
-      }
-    // In case of an emergency stop, stay in the same location.
-    // Also, teleport only once every dt in asynchronous mode.
-    } else {
-      teleportation_transform = cg::Transform(ego_location, simulation_state.GetRotation(actor_id));
+      // Constructing the actuation signal.
+      output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
     }
-    // Constructing the actuation signal.
-    output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
   }
 }
 

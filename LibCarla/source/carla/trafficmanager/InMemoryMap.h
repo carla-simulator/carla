@@ -39,6 +39,7 @@ namespace bgi = boost::geometry::index;
   using WorldMap = carla::SharedPtr<cc::Map>;
 
   using Point3D = bg::model::point<float, 3, bg::cs::cartesian>;
+  using Box = bg::model::box<Point3D>;
   using SpatialTreeEntry = std::pair<Point3D, SimpleWaypointPtr>;
 
   using SegmentId = std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>;
@@ -83,10 +84,12 @@ namespace bgi = boost::geometry::index;
     /// This method is used to find and place lane change links.
     void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
 
-    std::vector<SimpleWaypointPtr> GetSuccessors(const SegmentId segment_id,
-    const SegmentTopology &segment_topology, const SegmentMap &segment_map);
-    std::vector<SimpleWaypointPtr> GetPredecessors(const SegmentId segment_id,
-    const SegmentTopology &segment_topology, const SegmentMap &segment_map);
+    NodeList GetSuccessors(const SegmentId segment_id,
+                          const SegmentTopology &segment_topology,
+                          const SegmentMap &segment_map);
+    NodeList GetPredecessors(const SegmentId segment_id,
+                            const SegmentTopology &segment_topology,
+                            const SegmentMap &segment_map);
 
     /// Computes the segment id of a given waypoint.
     /// The Id takes into account OpenDrive's road Id, lane Id and Section Id.

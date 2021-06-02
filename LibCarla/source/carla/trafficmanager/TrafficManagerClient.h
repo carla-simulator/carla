@@ -199,6 +199,12 @@ public:
     _client->call("set_osm_mode", mode_switch);
   }
 
+  /// Method to set automatic respawn of dormant vehicles.
+  void SetRespawnDormantVehicles(const bool mode_switch) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_respawn_dormant_vehicles", mode_switch);
+  }
+
   void ShutDown() {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("shut_down");

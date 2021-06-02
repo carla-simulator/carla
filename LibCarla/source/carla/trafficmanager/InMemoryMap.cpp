@@ -6,10 +6,10 @@
 
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/InMemoryMap.h"
+#include <boost/geometry/geometries/box.hpp>
 
 namespace carla {
 namespace traffic_manager {
-
 
   namespace cg = carla::geom;
   using namespace constants::Map;
@@ -28,9 +28,10 @@ namespace traffic_manager {
     return GetSegmentId(swp->GetWaypoint());
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetSuccessors(const SegmentId segment_id,
-  const SegmentTopology &segment_topology, const SegmentMap &segment_map) {
-    std::vector<SimpleWaypointPtr> result;
+  NodeList InMemoryMap::GetSuccessors(const SegmentId segment_id,
+                                      const SegmentTopology &segment_topology,
+                                      const SegmentMap &segment_map) {
+    NodeList result;
     if (segment_topology.find(segment_id) == segment_topology.end()) {
       return result;
     }
@@ -46,9 +47,10 @@ namespace traffic_manager {
     return result;
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetPredecessors(const SegmentId segment_id,
-  const SegmentTopology &segment_topology, const SegmentMap &segment_map) {
-    std::vector<SimpleWaypointPtr> result;
+  NodeList InMemoryMap::GetPredecessors(const SegmentId segment_id,
+                                        const SegmentTopology &segment_topology,
+                                        const SegmentMap &segment_map) {
+    NodeList result;
     if (segment_topology.find(segment_id) == segment_topology.end()) {
       return result;
     }
@@ -272,7 +274,7 @@ namespace traffic_manager {
     return closest_point;
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetDenseTopology() const {
+  NodeList InMemoryMap::GetDenseTopology() const {
     return dense_topology;
   }
 

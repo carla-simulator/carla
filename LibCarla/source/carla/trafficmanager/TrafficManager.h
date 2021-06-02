@@ -65,6 +65,14 @@ public:
     }
   }
 
+  /// Method to set Open Street Map mode.
+  void SetRespawnDormantVehicles(const bool mode_switch) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetRespawnDormantVehicles(mode_switch);
+    }
+  }
+
   /// This method sets the hybrid physics mode.
   void SetHybridPhysicsMode(const bool mode_switch) {
     TrafficManagerBase* tm_ptr = GetTM(_port);

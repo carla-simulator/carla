@@ -185,6 +185,10 @@ void TrafficManagerRemote::SetOSMMode(const bool mode_switch) {
   client.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
+  client.SetRespawnDormantVehicles(mode_switch);
+}
+
 void TrafficManagerRemote::ShutDown() {
   client.ShutDown();
 }

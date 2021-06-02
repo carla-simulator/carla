@@ -24,6 +24,11 @@ void Parameters::SetHybridPhysicsMode(const bool mode_switch) {
   hybrid_physics_mode.store(mode_switch);
 }
 
+void Parameters::SetRespawnDormantVehicles(const bool mode_switch) {
+
+  respawn_dormant_vehicles.store(mode_switch);
+}
+
 void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
 
   float new_percentage = std::min(100.0f, percentage);
@@ -271,6 +276,11 @@ float Parameters::GetPercentageIgnoreVehicles(const ActorId &actor_id) const {
 bool Parameters::GetHybridPhysicsMode() const {
 
   return hybrid_physics_mode.load();
+}
+
+bool Parameters::GetRespawnDormantVehicles() const {
+
+  return respawn_dormant_vehicles.load();
 }
 
 bool Parameters::GetOSMMode() const {

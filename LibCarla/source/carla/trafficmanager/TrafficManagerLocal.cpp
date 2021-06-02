@@ -406,6 +406,10 @@ void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
   parameters.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
+  parameters.SetRespawnDormantVehicles(mode_switch);
+}
+
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   for (auto &elem : tl_to_freeze) {
     if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {

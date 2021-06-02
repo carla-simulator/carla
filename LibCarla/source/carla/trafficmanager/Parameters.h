@@ -62,6 +62,8 @@ private:
   std::atomic<float> distance_margin{2.0};
   /// Hybrid physics mode switch.
   std::atomic<bool> hybrid_physics_mode{false};
+  /// Automatic respawn mode switch.
+  std::atomic<bool> respawn_dormant_vehicles{false};
   /// Hybrid physics radius.
   std::atomic<float> hybrid_physics_radius {70.0};
   /// Parameter specifying Open Street Map mode.
@@ -131,6 +133,9 @@ public:
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
 
+  /// Method to set Open Street Map mode.
+  void SetRespawnDormantVehicles(const bool mode_switch);
+
   ///////////////////////////////// GETTERS /////////////////////////////////////
 
   /// Method to retrieve hybrid physics radius.
@@ -174,6 +179,9 @@ public:
 
   /// Method to retrieve hybrid physics mode.
   bool GetHybridPhysicsMode() const;
+
+  /// Method to retrieve if we are automatically respawning vehicles.
+  bool GetRespawnDormantVehicles() const;
 
   /// Method to get Open Street Map mode.
   bool GetOSMMode() const;
