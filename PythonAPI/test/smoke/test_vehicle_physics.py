@@ -607,11 +607,6 @@ class TestStickyControl(SyncSmokeTest):
         d1, v1 = self.run_scenario(bp_veh, inp_control, continous=True)
         d2, v2 = self.run_scenario(bp_veh, inp_control, continous=True, sticky="False")
 
-
-        print("Sticky True", d0, v0)
-        print("Test 1", d1, v1)
-        print("Test 2", d2, v2)
-
         if not equal_tol(d0, d1, 1e-3) or not equal_tol(v0, v1, 1e-3):
             self.fail("%s: The input is not sticky: StickyTrue: [%f, %f] ContinousThrottle: [%f, %f]"
                 % (bp_veh.id, d0, v0, d1, v1))
