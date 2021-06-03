@@ -165,17 +165,25 @@ private:
   UPROPERTY()
   UMaterialInstance *RoadNodeMaterial;
 
+  /// Material to apply to curbs on the road
+  UPROPERTY()
+  UMaterialInstance *CurbNodeMaterialInstance;
+
+  /// Material to apply to gutters on the road
+  UPROPERTY()
+  UMaterialInstance *GutterNodeMaterialInstance;
+
   /// Workaround material for the second material for the MarkingNodes
   UPROPERTY()
   UMaterialInstance *MarkingNodeMaterialAux;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()
-  UMaterial *TerrainNodeMaterial;
+  UMaterialInstance *TerrainNodeMaterialInstance;
 
   /// Workaround material for the SidewalkNodes
   UPROPERTY()
-  UMaterial *SidewalkNodeMaterial;
+  UMaterialInstance *SidewalkNodeMaterialInstance;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder
