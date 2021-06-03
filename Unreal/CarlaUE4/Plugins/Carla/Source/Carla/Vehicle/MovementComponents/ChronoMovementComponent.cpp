@@ -6,6 +6,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "ChronoMovementComponent.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vehicle/MovementComponents/DefaultMovementComponent.h"
+
 #include "compiler/disable-ue4-macros.h"
 #include <carla/rpc/String.h>
 #ifdef WITH_CHRONO

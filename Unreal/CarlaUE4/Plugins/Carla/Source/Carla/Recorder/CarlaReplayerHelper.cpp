@@ -14,6 +14,19 @@
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Lights/CarlaLight.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
+#include "Carla/Actor/ActorSpawnResult.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Engine/StaticMeshActor.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/VehicleLightState.h>
+#include <compiler/enable-ue4-macros.h>
+
+
+#include "EngineUtils.h"
 
 // create or reuse an actor for replaying
 std::pair<int, FActorView>CarlaReplayerHelper::TryToCreateReplayerActor(
@@ -394,9 +407,11 @@ void CarlaReplayerHelper::ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walk
 bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero)
 {
   // set autopilot and physics to all AI vehicles
-  auto registry = Episode->GetActorRegistry();
-  for (const FActorView &ActorView : registry)
+  const FActorRegistry& Registry = Episode->GetActorRegistry();
+  for (auto& It : Registry)
   {
+    const FActorView &ActorView = It.Value;
+
     // enable physics only on vehicles
     switch (ActorView.GetActorType())
     {

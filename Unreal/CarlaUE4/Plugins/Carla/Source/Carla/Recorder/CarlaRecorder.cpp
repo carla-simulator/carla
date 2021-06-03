@@ -54,17 +54,17 @@ std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, doubl
   return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, ReplaySensors);
 }
 
-inline void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
+void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
 {
   Replayer.SetTimeFactor(TimeFactor);
 }
 
-inline void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
+void ACarlaRecorder::SetReplayerIgnoreHero(bool IgnoreHero)
 {
   Replayer.SetIgnoreHero(IgnoreHero);
 }
 
-inline void ACarlaRecorder::StopReplayer(bool KeepActors)
+void ACarlaRecorder::StopReplayer(bool KeepActors)
 {
   Replayer.Stop(KeepActors);
 }
@@ -86,7 +86,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
     // through all actors in registry
     for (auto It = Registry.begin(); It != Registry.end(); ++It)
     {
-      FActorView View = *It;
+      FActorView View = It.Value();
 
       switch (View.GetActorType())
       {
@@ -597,8 +597,9 @@ void ACarlaRecorder::AddExistingActors(void)
 {
   // registring all existing actors in first frame
   FActorRegistry Registry = Episode->GetActorRegistry();
-  for (auto &&View : Registry)
+  for (auto& It : Registry)
   {
+    const FActorView& View = It.Value;
     const AActor *Actor = View.GetActor();
     if (Actor != nullptr)
     {

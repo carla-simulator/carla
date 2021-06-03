@@ -7,6 +7,11 @@
 
 #include "SignComponent.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include "carla/opendrive/OpenDriveParser.h"
+#include "carla/road/element/RoadInfoSignal.h"
+#include <compiler/enable-ue4-macros.h>
+
 USignComponent::USignComponent()
 {
   PrimaryComponentTick.bCanEverTick = false;

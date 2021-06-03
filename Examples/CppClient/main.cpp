@@ -36,6 +36,7 @@ static auto &RandomChoice(const RangeT &range, RNG &&generator) {
 }
 
 /// Save a semantic segmentation image to disk converting to CityScapes palette.
+/*
 static void SaveSemSegImageToDisk(const csd::Image &image) {
   using namespace carla::image;
 
@@ -48,6 +49,7 @@ static void SaveSemSegImageToDisk(const csd::Image &image) {
       ColorConverter::CityScapesPalette());
   ImageIO::WriteView(filename, view);
 }
+*/
 
 static auto ParseArguments(int argc, const char *argv[]) {
   EXPECT_TRUE((argc == 1u) || (argc == 3u));
@@ -67,7 +69,7 @@ int main(int argc, const char *argv[]) {
     std::mt19937_64 rng((std::random_device())());
 
     auto client = cc::Client(host, port);
-    client.SetTimeout(10s);
+    client.SetTimeout(40s);
 
     std::cout << "Client API version : " << client.GetClientVersion() << '\n';
     std::cout << "Server API version : " << client.GetServerVersion() << '\n';
@@ -112,6 +114,7 @@ int main(int argc, const char *argv[]) {
     transform.rotation.pitch = -15.0f;
     spectator->SetTransform(transform);
 
+/*
     // Find a camera blueprint.
     auto camera_bp = blueprint_library->Find("sensor.camera.semantic_segmentation");
     EXPECT_TRUE(camera_bp != nullptr);
@@ -125,15 +128,16 @@ int main(int argc, const char *argv[]) {
 
     // Register a callback to save images to disk.
     camera->Listen([](auto data) {
-      auto image = boost::static_pointer_cast<csd::Image>(data);
-      EXPECT_TRUE(image != nullptr);
-      SaveSemSegImageToDisk(*image);
+        auto image = boost::static_pointer_cast<csd::Image>(data);
+        EXPECT_TRUE(image != nullptr);
+        SaveSemSegImageToDisk(*image);
     });
 
     std::this_thread::sleep_for(10s);
 
     // Remove actors from the simulation.
     camera->Destroy();
+*/
     vehicle->Destroy();
     std::cout << "Actors destroyed." << std::endl;
 

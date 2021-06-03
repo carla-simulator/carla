@@ -35,19 +35,11 @@ void AFrictionTrigger::Init()
   }
 }
 
-void AFrictionTrigger::UpdateWheelsFriction(AActor *OtherActor, float NewFriction)
+void AFrictionTrigger::UpdateWheelsFriction(AActor *OtherActor, TArray<float>& NewFriction)
 {
   ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
   if (Vehicle != nullptr)
-  {
-    TArray<float> WheelsFrictionScale = Vehicle->GetWheelsFrictionScale();
-    for (auto &FrictionScale : WheelsFrictionScale)
-    {
-      FrictionScale = NewFriction;
-    }
-
-    Vehicle->SetWheelsFrictionScale(WheelsFrictionScale);
-  }
+    Vehicle->SetWheelsFrictionScale(NewFriction);
 }
 
 void AFrictionTrigger::OnTriggerBeginOverlap(
@@ -58,7 +50,15 @@ void AFrictionTrigger::OnTriggerBeginOverlap(
     bool /*bFromSweep*/,
     const FHitResult & /*SweepResult*/)
 {
-  UpdateWheelsFriction(OtherActor, Friction);
+
+  // Save original friction of the wheels
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if(Vehicle == nullptr)
+    return;
+
+  OldFrictionValues = Vehicle->GetWheelsFrictionScale();
+  TArray<float> TriggerFriction = {Friction, Friction, Friction, Friction};
+  UpdateWheelsFriction(OtherActor, TriggerFriction);
 }
 
 void AFrictionTrigger::OnTriggerEndOverlap(
@@ -68,7 +68,10 @@ void AFrictionTrigger::OnTriggerEndOverlap(
     int32 /*OtherBodyIndex*/)
 {
   // Set Back Default Friction Value
-  UpdateWheelsFriction(OtherActor, 3.5f);
+  UpdateWheelsFriction(OtherActor, OldFrictionValues);
+
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  TArray<float> CurrFriction = Vehicle->GetWheelsFrictionScale();
 }
 
 // Called when the game starts or when spawned

@@ -61,7 +61,7 @@ TargetWPInfo GetTargetWaypoint(const Buffer &waypoint_buffer, const float &targe
   const SimpleWaypointPtr &buffer_front = waypoint_buffer.front();
   uint64_t startPosn = static_cast<uint64_t>(std::fabs(target_point_distance * INV_MAP_RESOLUTION));
   uint64_t index = 0;
-  /// Condition to determine forward or backward scanning of  WayPoint Buffer.
+  /// Condition to determine forward or backward scanning of waypoint buffer.
 
   if (startPosn < waypoint_buffer.size()) {
     bool mScanForward = false;

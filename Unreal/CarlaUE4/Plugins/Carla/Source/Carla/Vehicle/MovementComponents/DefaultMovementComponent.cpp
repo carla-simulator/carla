@@ -6,6 +6,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "DefaultMovementComponent.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 void UDefaultMovementComponent::CreateDefaultMovementComponent(ACarlaWheeledVehicle* Vehicle)
 {
