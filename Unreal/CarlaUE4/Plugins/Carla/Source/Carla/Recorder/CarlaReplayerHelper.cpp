@@ -20,6 +20,8 @@
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Engine/StaticMeshActor.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/VehicleLightState.h>
@@ -38,16 +40,12 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
 {
   check(Episode != nullptr);
 
-  FCarlaActor view_empty;
-
   // check type of actor we need
   if (ActorDesc.Id.StartsWith("traffic."))
   {
-    AActor *Actor = FindTrafficLightAt(Location);
-    if (Actor != nullptr)
+    FCarlaActor* CarlaActor = FindTrafficLightAt(Location);
+    if (CarlaActor != nullptr)
     {
-      // actor found
-      FCarlaActor* CarlaActor = Episode->FindCarlaActor(Actor);
       // reuse that actor
       return std::pair<int, FCarlaActor*>(2, CarlaActor);
     }
@@ -85,6 +83,11 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
       // relocate
       FTransform Trans2(Rot, Location, FVector(1, 1, 1));
       Result.Value->GetActor()->SetActorTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
+      ALargeMapManager * LargeMapManager = UCarlaStatics::GetLargeMapManager(Episode->GetWorld());
+      if (LargeMapManager)
+      {
+        LargeMapManager->OnActorSpawned(*Result.Value);
+      }
       return std::pair<int, FCarlaActor*>(1, Result.Value);
     }
     else
@@ -100,7 +103,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   }
 }
 
-AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
+FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
 {
   check(Episode != nullptr);
   auto World = Episode->GetWorld();
@@ -111,19 +114,22 @@ AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
   int y = static_cast<int>(Location.Y);
   int z = static_cast<int>(Location.Z);
 
-  // search an "traffic." actor at that position
-  for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
+  const FActorRegistry &Registry = Episode->GetActorRegistry();
+  // through all actors in registry
+  for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
-    ATrafficSignBase *Actor = *It;
-    check(Actor != nullptr);
-    FVector vec = Actor->GetTransform().GetTranslation();
-    int x2 = static_cast<int>(vec.X);
-    int y2 = static_cast<int>(vec.Y);
-    int z2 = static_cast<int>(vec.Z);
-    if ((x2 == x) && (y2 == y) && (z2 == z))
+    FCarlaActor* CarlaActor = It.Value().Get();
+    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight)
     {
-      // actor found
-      return static_cast<AActor *>(Actor);
+      FVector vec = CarlaActor->GetActorGlobalLocation();
+      int x2 = static_cast<int>(vec.X);
+      int y2 = static_cast<int>(vec.Y);
+      int z2 = static_cast<int>(vec.Z);
+      if ((x2 == x) && (y2 == y) && (z2 == z))
+      {
+        // actor found
+        return CarlaActor;
+      }
     }
   }
   // actor not found
@@ -131,41 +137,34 @@ AActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
 }
 
 // enable / disable physics for an actor
-bool CarlaReplayerHelper::SetActorSimulatePhysics(const FCarlaActor* CarlaActor, bool bEnabled)
+bool CarlaReplayerHelper::SetActorSimulatePhysics(FCarlaActor* CarlaActor, bool bEnabled)
 {
   if (!CarlaActor)
   {
     return false;
   }
-  auto RootComponent = Cast<UPrimitiveComponent>(CarlaActor->GetActor()->GetRootComponent());
-  if (RootComponent == nullptr)
+  ECarlaServerResponse Response =
+      CarlaActor->SetActorSimulatePhysics(bEnabled);
+  if (Response != ECarlaServerResponse::Success)
   {
     return false;
   }
-  RootComponent->SetSimulatePhysics(bEnabled);
-
   return true;
 }
 
 // enable / disable autopilot for an actor
-bool CarlaReplayerHelper::SetActorAutopilot(const FCarlaActor* CarlaActor, bool bEnabled, bool bKeepState)
+bool CarlaReplayerHelper::SetActorAutopilot(FCarlaActor* CarlaActor, bool bEnabled, bool bKeepState)
 {
   if (!CarlaActor)
   {
     return false;
   }
-  auto Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-  if (Vehicle == nullptr)
+  ECarlaServerResponse Response =
+      CarlaActor->SetActorAutopilot(bEnabled, bKeepState);
+  if (Response != ECarlaServerResponse::Success)
   {
     return false;
   }
-  auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
-  if (Controller == nullptr)
-  {
-    return false;
-  }
-  Controller->SetAutopilot(bEnabled, bKeepState);
-
   return true;
 }
 
@@ -223,9 +222,9 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
         SetActorSimulatePhysics(result.second, true);
       }
     }
+    return std::make_pair(result.first, result.second->GetActorId());
   }
-
-  return std::make_pair(result.first, result.second->GetActorId());
+  return std::make_pair(result.first, 0);
 }
 
 // replay event for removing actor
@@ -265,10 +264,10 @@ bool CarlaReplayerHelper::ProcessReplayerEventParent(uint32_t ChildId, uint32_t 
 bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime)
 {
   check(Episode != nullptr);
-  AActor *Actor = Episode->FindCarlaActor(Pos1.DatabaseId)->GetActor();
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(Pos1.DatabaseId);
   FVector Location;
   FRotator Rotation;
-  if (Actor  && !Actor->IsPendingKill())
+  if(CarlaActor)
   {
     // check to assign first position or interpolate between both
     if (Per == 0.0)
@@ -285,7 +284,7 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
     }
     // set new transform
     FTransform Trans(Rotation, Location, FVector(1, 1, 1));
-    Actor->SetActorTransform(Trans, false, nullptr, ETeleportType::None);
+    CarlaActor->SetActorGlobalTransform(Trans, ETeleportType::None);
     return true;
   }
   return false;
@@ -299,7 +298,10 @@ bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat R
   // get specator pawn
   APawn *Spectator = Episode->GetSpectatorPawn();
   // get the actor to follow
-  AActor *Actor = Episode->FindCarlaActor(Id)->GetActor();
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(Id);
+  if (!CarlaActor)
+    return false;
+  AActor *Actor = CarlaActor->GetActor();
 
   // check
   if (!Spectator || !Actor)
@@ -317,6 +319,7 @@ bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat R
 bool CarlaReplayerHelper::ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State)
 {
   check(Episode != nullptr);
+  // Todo: interface with FCarlaActor and UTrafficLightController
   AActor *Actor = Episode->FindCarlaActor(State.DatabaseId)->GetActor();
   if (Actor && !Actor->IsPendingKill())
   {
@@ -336,15 +339,9 @@ bool CarlaReplayerHelper::ProcessReplayerStateTrafficLight(CarlaRecorderStateTra
 void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
 {
   check(Episode != nullptr);
-  AActor *Actor = Episode->FindCarlaActor(Vehicle.DatabaseId)->GetActor();
-  if (Actor && !Actor->IsPendingKill())
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(Vehicle.DatabaseId);
+  if (CarlaActor)
   {
-    auto Veh = Cast<ACarlaWheeledVehicle>(Actor);
-    if (Veh == nullptr)
-    {
-      return;
-    }
-
     FVehicleControl Control;
     Control.Throttle = Vehicle.Throttle;
     Control.Steer = Vehicle.Steering;
@@ -353,7 +350,7 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
     Control.bReverse = (Vehicle.Gear < 0);
     Control.Gear = Vehicle.Gear;
     Control.bManualGearShift = false;
-    Veh->ApplyVehicleControl(Control, EVehicleInputPriority::User);
+    CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
   }
 }
 
@@ -361,17 +358,11 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
 void CarlaReplayerHelper::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle LightVehicle)
 {
   check(Episode != nullptr);
-  AActor *Actor = Episode->FindCarlaActor(LightVehicle.DatabaseId)->GetActor();
-  if (Actor && !Actor->IsPendingKill())
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(LightVehicle.DatabaseId);
+  if (CarlaActor)
   {
-    auto Veh = Cast<ACarlaWheeledVehicle>(Actor);
-    if (Veh == nullptr)
-    {
-      return;
-    }
-
     carla::rpc::VehicleLightState LightState(LightVehicle.State);
-    Veh->SetVehicleLightState(FVehicleLightState(LightState));
+    CarlaActor->SetVehicleLightState(FVehicleLightState(LightState));
   }
 }
 
@@ -410,7 +401,7 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
   const FActorRegistry& Registry = Episode->GetActorRegistry();
   for (auto& It : Registry)
   {
-    const FCarlaActor* CarlaActor = It.Value.Get();
+    FCarlaActor* CarlaActor = It.Value.Get();
 
     // enable physics only on vehicles
     switch (CarlaActor->GetActorType())
@@ -452,21 +443,13 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
   return true;
 }
 
-void CarlaReplayerHelper::SetActorVelocity(const FCarlaActor *CarlaActor, FVector Velocity)
+void CarlaReplayerHelper::SetActorVelocity(FCarlaActor *CarlaActor, FVector Velocity)
 {
   if (!CarlaActor)
   {
     return;
   }
-  auto RootComponent = Cast<UPrimitiveComponent>(CarlaActor->GetActor()->GetRootComponent());
-  if (RootComponent == nullptr)
-  {
-    return;
-  }
-  RootComponent->SetPhysicsLinearVelocity(
-      Velocity,
-      false,
-      "None");
+  CarlaActor->SetActorTargetVelocity(Velocity);
 }
 
 // set the animation speed for walkers
@@ -474,25 +457,13 @@ void CarlaReplayerHelper::SetWalkerSpeed(uint32_t ActorId, float Speed)
 {
   check(Episode != nullptr);
   FCarlaActor * CarlaActor = Episode->FindCarlaActor(ActorId);
-  AActor *Actor = nullptr;
-  if (CarlaActor)
+  if (!CarlaActor)
   {
-    Actor = CarlaActor->GetActor();
+    return;
   }
-  if (Actor && !Actor->IsPendingKill())
-  {
-    auto Wal = Cast<APawn>(Actor);
-    if (Wal)
-    {
-      auto Controller = Cast<AWalkerController>(Wal->GetController());
-      if (Controller != nullptr)
-      {
-        FWalkerControl Control;
-        Control.Speed = Speed;
-        Controller->ApplyWalkerControl(Control);
-     }
-    }
-  }
+  FWalkerControl Control;
+  Control.Speed = Speed;
+  CarlaActor->ApplyControlToWalker(Control);
 }
 
 void CarlaReplayerHelper::RemoveStaticProps()

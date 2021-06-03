@@ -136,6 +136,11 @@ public:
     return ActorDispatcher->GetActorRegistry();
   }
 
+  FActorRegistry &GetActorRegistry()
+  {
+    return ActorDispatcher->GetActorRegistry();
+  }
+
   // ===========================================================================
   // -- Actor look up methods --------------------------------------------------
   // ===========================================================================

@@ -803,7 +803,7 @@ ECarlaServerResponse FVehicleActor::GetVehicleControl(FVehicleControl& VehicleCo
   return ECarlaServerResponse::Success;
 }
 
-ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled)
+ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled, bool bKeepState)
 {
   if (IsDormant())
   {
@@ -820,7 +820,7 @@ ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled)
     {
       return ECarlaServerResponse::AutoPilotNotSupported;
     }
-    Controller->SetAutopilot(bEnabled);
+    Controller->SetAutopilot(bEnabled, bKeepState);
   }
   return ECarlaServerResponse::Success;
 }

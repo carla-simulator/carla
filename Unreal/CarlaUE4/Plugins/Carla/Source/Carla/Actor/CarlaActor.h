@@ -273,7 +273,7 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
-  virtual ECarlaServerResponse SetActorAutopilot(bool)
+  virtual ECarlaServerResponse SetActorAutopilot(bool, bool bKeepState = false)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -431,7 +431,7 @@ public:
 
   virtual ECarlaServerResponse GetVehicleControl(FVehicleControl&) final;
 
-  virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled) final;
+  virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) final;
 
   virtual ECarlaServerResponse EnableCarSim(const FString& SimfilePath) final;
 
