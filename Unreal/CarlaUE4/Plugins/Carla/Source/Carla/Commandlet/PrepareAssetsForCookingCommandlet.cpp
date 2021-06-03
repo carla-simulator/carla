@@ -173,7 +173,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       MapAsset.AssetName.ToString(AssetName);
 
       // check to ignore meshes from other tiles
-      if (i == -1 || (i != -1 && AssetName.Contains(TileName)))
+      if (i == -1 || (i != -1 && (AssetName.EndsWith(TileName) || AssetName.Contains(TileName + "_"))))
       {
         MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), ZeroTransform);
         UStaticMeshComponent *MeshComponent = MeshActor->GetStaticMeshComponent();
