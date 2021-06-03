@@ -71,7 +71,7 @@ public:
   bool SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation);
 
   // set the velocity of the actor
-  void SetActorVelocity(const FCarlaActor *CarlaActor, FVector Velocity);
+  void SetActorVelocity(FCarlaActor *CarlaActor, FVector Velocity);
 
   // set the animation speed for walkers
   void SetWalkerSpeed(uint32_t ActorId, float Speed);
@@ -89,10 +89,10 @@ private:
     uint32_t DesiredId,
     bool SpawnSensors);
 
-  AActor *FindTrafficLightAt(FVector Location);
+  FCarlaActor* FindTrafficLightAt(FVector Location);
 
   // enable / disable physics for an actor
-  bool SetActorSimulatePhysics(const FCarlaActor *CarlaActor, bool bEnabled);
+  bool SetActorSimulatePhysics(FCarlaActor *CarlaActor, bool bEnabled);
   // enable / disable autopilot for an actor
-  bool SetActorAutopilot(const FCarlaActor *CarlaActor, bool bEnabled, bool bKeepState = false);
+  bool SetActorAutopilot(FCarlaActor *CarlaActor, bool bEnabled, bool bKeepState = false);
 };

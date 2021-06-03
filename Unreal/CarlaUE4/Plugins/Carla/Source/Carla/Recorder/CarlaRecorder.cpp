@@ -201,21 +201,20 @@ void ACarlaRecorder::AddWalkerAnimation(FCarlaActor *CarlaActor)
 void ACarlaRecorder::AddTrafficLightState(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
-
-  // get states
-  UTrafficLightController* Controller =
-      CarlaActor->GetTrafficLightController();
-  if (Controller != nullptr)
+  // Todo: interface with FCarlaActor and UTrafficLightController
+  AActor *Actor = CarlaActor->GetActor();
+  if(Actor)
   {
-    auto* Group = Controller->GetGroup();
-    if (Group)
+    // get states
+    auto TrafficLight = Cast<ATrafficLightBase>(Actor);
+    if (TrafficLight != nullptr)
     {
       AddState(CarlaRecorderStateTrafficLight
       {
         CarlaActor->GetActorId(),
-        Group->IsFrozen(),
-        Controller->GetElapsedTime(),
-        static_cast<char>(Controller->GetCurrentState().State)
+        TrafficLight->GetTimeIsFrozen(),
+        TrafficLight->GetElapsedTime(),
+        static_cast<char>(TrafficLight->GetTrafficLightState())
       });
     }
   }
