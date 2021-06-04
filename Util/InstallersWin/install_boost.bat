@@ -107,6 +107,9 @@ if not exist "%BOOST_SRC_DIR%" (
     echo %FILE_N% Not downloading boost because already exists the folder "%BOOST_SRC_DIR%".
 )
 
+rem Workarround to make sure numpy is installed in python
+python -m pip install numpy
+
 cd "%BOOST_SRC_DIR%"
 if not exist "b2.exe" (
     echo %FILE_N% Generating build...
