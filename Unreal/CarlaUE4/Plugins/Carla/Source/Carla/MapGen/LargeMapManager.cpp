@@ -48,6 +48,7 @@ ALargeMapManager::~ALargeMapManager()
 void ALargeMapManager::BeginPlay()
 {
   Super::BeginPlay();
+  RegisterTilesInWorldComposition();
 
   UWorld* World = GetWorld();
   /// Setup delegates
@@ -290,6 +291,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GenerateMap);
   LM_LOG(Warning, "Generating Map %s ...", *InAssetsPath);
+  ClearWorldAndTiles();
 
   AssetsPath = InAssetsPath;
 
@@ -343,6 +345,27 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
   LM_LOG(Warning, "GenerateMap num Tiles generated %d", MapTiles.Num());
   DumpTilesTable();
 #endif // WITH_EDITOR
+}
+
+void ALargeMapManager::ClearWorldAndTiles()
+{
+  MapTiles.Empty();
+}
+
+void ALargeMapManager::RegisterTilesInWorldComposition()
+{
+  UWorld* World = GetWorld();
+  UWorldComposition* WorldComposition = World->WorldComposition;
+  World->ClearStreamingLevels();
+  WorldComposition->TilesStreaming.Empty();
+  WorldComposition->GetTilesList().Empty();
+
+  for (auto& It : MapTiles)
+  {
+    ULevelStreamingDynamic* StreamingLevel = It.Value.StreamingLevel;
+    World->AddStreamingLevel(StreamingLevel);
+    WorldComposition->TilesStreaming.Add(StreamingLevel);
+  }
 }
 
 // TODO: maybe remove this, I think I will not need it any more
@@ -583,12 +606,13 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
   // FVector OriginOffset = FVector(FMath::Sign(VTileID.X + 0.5f), FMath::Sign(VTileID.Y + 0.5f), FMath::Sign(VTileID.Z)) * 0.5f;
   // NewTile.Location = (FVector(VTileID) + OriginOffset)* TileSide * 0.5f;
   NewTile.Location = GetTileLocation(TileId);
-#if WITH_EDITOR
-  // 2 - Generate Tile name
-  NewTile.Name = GenerateTileName(TileId);
-  // LM_LOG(Warning, "Tile idd: %d, %d", VTileID.X, VTileID.Y);
-  // LM_LOG(Warning, "Tile location: %f, %f", NewTile.Location.X, NewTile.Location.Y);
-#endif // WITH_EDITOR
+  NewTile.Name = TileMapPath;
+// #if WITH_EDITOR
+//   // 2 - Generate Tile name
+//   NewTile.Name = GenerateTileName(TileId);
+//   // LM_LOG(Warning, "Tile idd: %d, %d", VTileID.X, VTileID.Y);
+//   // LM_LOG(Warning, "Tile location: %f, %f", NewTile.Location.X, NewTile.Location.Y);
+// #endif // WITH_EDITOR
 
   // 3 - Generate the StreamLevel
   FVector TileLocation = NewTile.Location;
@@ -599,9 +623,9 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
   FString FullName = TileMapPath;
   FString PackageFileName = FullName;
   FString LongLevelPackageName = FPackageName::FilenameToLongPackageName(PackageFileName);
-  FString UniqueLevelPackageName = LongLevelPackageName + TileName;
+  FString UniqueLevelPackageName = LongLevelPackageName;
 
-  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName, RF_Transient);
+  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName);
   check(StreamingLevel);
 
   StreamingLevel->SetWorldAssetByPackageName(*UniqueLevelPackageName);
@@ -638,8 +662,8 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
   StreamingLevel->PackageNameToLoad = *LongLevelPackageName;
 
 
-  World->AddStreamingLevel(StreamingLevel);
-  WorldComposition->TilesStreaming.Add(StreamingLevel);
+  // World->AddStreamingLevel(StreamingLevel);
+  // WorldComposition->TilesStreaming.Add(StreamingLevel);
 
 
   // FWorldTileInfo Info;

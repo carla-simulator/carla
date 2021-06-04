@@ -98,10 +98,19 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateLargeMap();
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
+  void ClearWorldAndTiles();
+
   void AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FIntVector GetNumTilesInXY() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
+  int GetNumTiles() const
+  {
+    return MapTiles.Num();
+  }
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   bool IsLevelOfTileLoaded(FIntVector InTileID) const;
@@ -266,6 +275,8 @@ protected:
   {
     if (!LargeMapTilePath.IsEmpty()) GenerateMap(LargeMapTilePath);
   }
+
+  void RegisterTilesInWorldComposition();
 
   FString GenerateTileName(TileID TileID);
 
