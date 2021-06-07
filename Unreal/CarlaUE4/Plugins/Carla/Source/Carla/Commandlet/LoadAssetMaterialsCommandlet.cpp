@@ -371,9 +371,9 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
         TArray<AActor*> FoundActors;
         UGameplayStatics::GetAllActorsOfClass(World, AStaticMeshActor::StaticClass(), FoundActors);
         bool HasRoadMesh = false;
-        for (int32 i = 0; i < FoundActors.Num() && HasRoadMesh == false; ++i) {
+        for (int32 j = 0; j < FoundActors.Num() && HasRoadMesh == false; ++j) {
 
-          AStaticMeshActor *MeshActor = Cast<AStaticMeshActor>(FoundActors[i]);
+          AStaticMeshActor *MeshActor = Cast<AStaticMeshActor>(FoundActors[j]);
           if (MeshActor->GetName().Contains("Roads") || MeshActor->GetName().Contains("Road")){
 
             HasRoadMesh = true;

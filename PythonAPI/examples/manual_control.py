@@ -154,7 +154,6 @@ def get_actor_display_name(actor, truncate=250):
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
-
 # ==============================================================================
 # -- World ---------------------------------------------------------------------
 # ==============================================================================
@@ -395,7 +394,10 @@ class KeyboardControl(object):
                         world.constant_velocity_enabled = True
                         world.hud.notification("Enabled Constant Velocity Mode at 60 km/h")
                 elif event.key > K_0 and event.key <= K_9:
-                    world.camera_manager.set_sensor(event.key - 1 - K_0)
+                    index_ctrl = 0
+                    if pygame.key.get_mods() & KMOD_CTRL:
+                        index_ctrl = 9
+                    world.camera_manager.set_sensor(event.key - 1 - K_0 + index_ctrl)
                 elif event.key == K_r and not (pygame.key.get_mods() & KMOD_CTRL):
                     world.camera_manager.toggle_recording()
                 elif event.key == K_r and (pygame.key.get_mods() & KMOD_CTRL):
@@ -993,7 +995,9 @@ class CameraManager(object):
                 {'lens_circle_multiplier': '3.0',
                 'lens_circle_falloff': '3.0',
                 'chromatic_aberration_intensity': '0.5',
-                'chromatic_aberration_offset': '0'}]]
+                'chromatic_aberration_offset': '0'}],
+            ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
+        ]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
@@ -1079,6 +1083,13 @@ class CameraManager(object):
             # Blue is positive, red is negative
             dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
             self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
+        elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
+            array = image.get_color_coded_flow()
+            array = np.frombuffer(array, dtype=np.dtype("uint8"))
+            array = np.reshape(array, (image.height, image.width, 4))
+            array = array[:, :, :3]
+            array = array[:, :, ::-1]
+            self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         else:
             image.convert(self.sensors[self.index][1])
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))

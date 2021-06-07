@@ -540,29 +540,33 @@ class TestVehicleTireConfig(SyncSmokeTest):
             vehicle_01.destroy()
             vehicle_02.destroy()
 
-class TestApplyControl(SyncSmokeTest):
+class TestStickyControl(SyncSmokeTest):
     def wait(self, frames=100):
         for _i in range(0, frames):
             self.world.tick()
 
-    def run_scenario(self, bp_veh, veh_control, init_speed = 0, continous = False, sticky = None):
+    def run_scenario(self, bp_veh, veh_control, continous = False, reset_after_first = False, sticky = None):
         ref_pos = -1
         veh_transf = carla.Transform(carla.Location(235, ref_pos, 0.2), carla.Rotation(yaw=90))
         veh_forward = veh_transf.rotation.get_forward_vector()
 
-        #bp_veh.set_attribute("sticky_control", "False")
+        if sticky is not None:
+            bp_veh.set_attribute("sticky_control", sticky)
+
         vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
 
-        vehicle_00.set_target_velocity(init_speed * veh_forward)
+        vehicle_00.set_target_velocity(carla.Vector3D(0, 0, 0))
         for _i in range(0, 10):
             self.world.tick()
 
-
         vehicle_00.apply_control(veh_control)
+        self.world.tick()
 
         for _i in range(0, 150):
             if continous:
                 vehicle_00.apply_control(veh_control)
+            if reset_after_first:
+                vehicle_00.apply_control(carla.VehicleControl())
             self.world.tick()
 
         loc_veh_00 = vehicle_00.get_location().y
@@ -573,24 +577,59 @@ class TestApplyControl(SyncSmokeTest):
 
         return dist_veh_00, vel_veh_00
 
-    def test_vehicle_control(self):
-        print("TestApplyControl.test_vehicle_control")
+    def test_default(self):
+        print("TestStickyControl.test_default")
 
         inp_control = carla.VehicleControl(throttle=1.0)
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
 
         bp_veh = bp_vehicles[0]
-        d0, v0 = self.run_scenario(bp_veh, inp_control, init_speed=0, continous=False)
-        d1, v1 = self.run_scenario(bp_veh, inp_control, init_speed=0, continous=True)
+        d0, v0 = self.run_scenario(bp_veh, inp_control)
+        d1, v1 = self.run_scenario(bp_veh, inp_control, continous=True)
+        d2, v2 = self.run_scenario(bp_veh, inp_control, continous=True, sticky="False")
 
-        if not equal_tol(d0, d1, 1e-5) or not equal_tol(v0, v1, 1e-5):
-            self.fail("%s: The input is not sticky: Continuos: [%f, %f] NotContinous: [%f, %f]"
+        if not equal_tol(d0, d1, 1e-3) or not equal_tol(v0, v1, 1e-3):
+            self.fail("%s: The default input is not sticky: Default: [%f, %f] ContinousThrottle: [%f, %f]"
                 % (bp_veh.id, d0, v0, d1, v1))
 
-        inp_control = carla.VehicleControl(brake=1.0)
-        d0, v0 = self.run_scenario(bp_veh, inp_control, init_speed=27, continous=False)
-        d1, v1 = self.run_scenario(bp_veh, inp_control, init_speed=27, continous=True)
+        if not equal_tol(d0, d2, 1e-3) or not equal_tol(v0, v2, 1e-3):
+            self.fail("%s: The default input is not sticky: Default: [%f, %f] ContinousThrottle: [%f, %f]"
+                % (bp_veh.id, d0, v0, d2, v2))
+
+    def test_true(self):
+        print("TestStickyControl.test_true")
+
+        inp_control = carla.VehicleControl(throttle=1.0)
+        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+
+        bp_veh = bp_vehicles[0]
+        d0, v0 = self.run_scenario(bp_veh, inp_control, sticky="True")
+        d1, v1 = self.run_scenario(bp_veh, inp_control, continous=True)
+        d2, v2 = self.run_scenario(bp_veh, inp_control, continous=True, sticky="False")
+
+        if not equal_tol(d0, d1, 1e-3) or not equal_tol(v0, v1, 1e-3):
+            self.fail("%s: The input is not sticky: StickyTrue: [%f, %f] ContinousThrottle: [%f, %f]"
+                % (bp_veh.id, d0, v0, d1, v1))
+
+        if not equal_tol(d0, d2, 1e-3) or not equal_tol(v0, v2, 1e-3):
+            self.fail("%s: The input is not sticky: StickyTrue: [%f, %f] ContinousThrottle: [%f, %f]"
+                % (bp_veh.id, d0, v0, d2, v2))
+
+    def test_false(self):
+        print("TestStickyControl.test_false")
+
+        inp_control = carla.VehicleControl(throttle=1.0)
+        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+
+        bp_veh = bp_vehicles[0]
+        d0, v0 = self.run_scenario(bp_veh, inp_control, sticky="False")
+        d1, v1 = self.run_scenario(bp_veh, inp_control, reset_after_first=True, sticky="True")
+        d2, v2 = self.run_scenario(bp_veh, inp_control, reset_after_first=True, sticky="False")
 
         if not equal_tol(d0, d1, 1e-5) or not equal_tol(v0, v1, 1e-5):
-            self.fail("%s: The input is not sticky: Continuos: [%f, %f] NotContinous: [%f, %f]"
+            self.fail("%s: The input is sticky: StickyFalse: [%f, %f] Reset: [%f, %f]"
                 % (bp_veh.id, d0, v0, d1, v1))
+
+        if not equal_tol(d0, d2, 1e-5) or not equal_tol(v0, v2, 1e-5):
+            self.fail("%s: The input is sticky: StickyFalse: [%f, %f] Reset: [%f, %f]"
+                % (bp_veh.id, d0, v0, d2, v2))
