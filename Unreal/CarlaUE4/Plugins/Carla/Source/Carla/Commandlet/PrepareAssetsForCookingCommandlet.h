@@ -78,6 +78,8 @@ public:
   /// structure.
   void LoadWorldTile(FAssetData &AssetData);
 
+  void LoadLargeMapWorld(FAssetData &AssetData);
+
   /// Spawns all the static meshes located in @a AssetsPaths inside the World.
   /// There is an option to use Carla materials by setting @a bUseCarlaMaterials
   /// to true, otherwise it will use RoadRunner materials.
@@ -87,7 +89,7 @@ public:
   TArray<AStaticMeshActor *> SpawnMeshesToWorld(
       const TArray<FString> &AssetsPaths,
       bool bUseCarlaMaterials,
-      int i = -1, 
+      int i = -1,
       int j = -1);
 
   /// Saves the current World, contained in @a AssetData, into @a DestPath
@@ -96,7 +98,8 @@ public:
       FAssetData &AssetData,
       const FString &PackageName,
       const FString &DestPath,
-      const FString &WorldName);
+      const FString &WorldName,
+      bool bGenerateSpawnPoints = true);
 
   /// Destroys all the previously spawned actors stored in @a SpawnedActors
   void DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors);

@@ -17,13 +17,13 @@
 // TODO: Cache CarlaEpisode
 
 USTRUCT()
-struct FGhostActor
+struct FActiveActor
 {
   GENERATED_BODY()
 
-  FGhostActor() {}
+  FActiveActor() {}
 
-  FGhostActor(
+  FActiveActor(
     const FCarlaActor* InCarlaActor,
     const FTransform& InTransform)
     : CarlaActor(InCarlaActor),
@@ -98,6 +98,8 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateLargeMap();
 
+  void GenerateMap(TArray<TPair<FString, FIntVector>> MapPathsIds);
+
   UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
   void ClearWorldAndTiles();
 
@@ -141,6 +143,10 @@ public:
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   FString LargeMapName = "testmap";
 
+  void SetTile0Offset(const FVector& Offset);
+
+  void SetTileSize(float Size);
+
 protected:
 
   FIntVector GetTileVectorID(FVector TileLocation) const;
@@ -170,29 +176,27 @@ protected:
 
   FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
 
-  ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
-
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
 
   void UpdateTilesState();
 
   void RemovePendingActorsToRemove();
 
-  // Check if any ghost actor has to be converted into dormant actor
+  // Check if any active actor has to be converted into dormant actor
   // because it went out of range (ActorStreamingDistance)
   // Just stores the array of selected actors
-  void CheckGhostActors();
+  void CheckActiveActors();
 
-  // Converts ghost actors that went out of range to dormant actors
-  void ConvertGhostToDormantActors();
+  // Converts active actors that went out of range to dormant actors
+  void ConvertActiveToDormantActors();
 
-  // Check if any dormant actor has to be converted into ghost actor
+  // Check if any dormant actor has to be converted into active actor
   // because it enter in range (ActorStreamingDistance)
   // Just stores the array of selected actors
   void CheckDormantActors();
 
-  // Converts ghost actors that went out of range to dormant actors
-  void ConvertDormantToGhostActors();
+  // Converts active actors that went out of range to dormant actors
+  void ConvertDormantToActiveActors();
 
   void CheckIfRebaseIsNeeded();
 
@@ -224,17 +228,17 @@ protected:
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> ActorsToConsider;
   //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
-  TArray<FCarlaActor::IdType> GhostActors;
+  TArray<FCarlaActor::IdType> ActiveActors;
   TArray<FCarlaActor::IdType> DormantActors;
 
   // Temporal sets to remove actors. Just to avoid removing them in the update loop
   TSet<AActor*> ActorsToRemove;
-  TSet<FCarlaActor::IdType> GhostsToRemove;
+  TSet<FCarlaActor::IdType> ActivesToRemove;
   TSet<FCarlaActor::IdType> DormantsToRemove;
 
   // Helpers to move Actors from one array to another.
-  TSet<FCarlaActor::IdType> GhostToDormantActors;
-  TSet<FCarlaActor::IdType> DormantToGhostActors;
+  TSet<FCarlaActor::IdType> ActiveToDormantActors;
+  TSet<FCarlaActor::IdType> DormantToActiveActors;
 
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TSet<uint64> CurrentTilesLoaded;
