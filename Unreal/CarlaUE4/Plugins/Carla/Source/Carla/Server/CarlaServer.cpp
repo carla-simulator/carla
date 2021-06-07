@@ -555,7 +555,6 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     FCarlaActor* ParentCarlaActor = Episode->FindCarlaActor(ParentId);
-    carla::log_warning(CarlaActor->GetActorId(), ParentId);
 
     if (!ParentCarlaActor)
     {

@@ -463,6 +463,21 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
   for (const auto &Map : AssetsPaths.MapsPaths)
   {
     MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
+    TArray<FAssetData> AssetsData;
+    UObjectLibrary* ObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), true, true);
+    ObjectLibrary->LoadAssetDataFromPath(Map.Path);
+    ObjectLibrary->GetAssetDataList(AssetsData);
+    int NumTiles = 0;
+    for (FAssetData &AssetData : AssetsData)
+    {
+      FString AssetName = AssetData.AssetName.ToString();
+      if (AssetName.Contains(Map.Name + "_Tile_"))
+      {
+        MapPathData.Append(Map.Path + TEXT("/") + AssetName + TEXT("+"));
+        NumTiles++;
+      }
+    }
+    UE_LOG(LogTemp, Warning, TEXT("Found %d tiles"), NumTiles);
   }
 
   if (!PropsMapPath.IsEmpty())
