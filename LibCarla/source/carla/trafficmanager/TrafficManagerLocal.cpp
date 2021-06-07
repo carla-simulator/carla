@@ -333,6 +333,9 @@ void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_
     std::cout << seed << std::endl;
     if (!is_custom_seed) {
       seed = vehicle->GetId() + seed;
+    } else {
+      counter += 1;
+      seed = counter + seed;
     }
     random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
   }

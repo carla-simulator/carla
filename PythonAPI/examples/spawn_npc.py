@@ -82,7 +82,7 @@ def main():
     argparser.add_argument(
         '--hybrid',
         action='store_true',
-        help='Enanble')
+        help='Enable hybrid mode execution')
     argparser.add_argument(
         '-s', '--seed',
         metavar='S',
@@ -93,6 +93,17 @@ def main():
         action='store_true',
         default=False,
         help='Enanble car lights')
+    argparser.add_argument(
+        '--hero',
+        action='store_true',
+        default=False,
+        help='Set one of the vehicles to hero')
+    argparser.add_argument(
+        '--respawn',
+        action='store_true',
+        default=False,
+        help='Automatically respawns dormant vehicles (only in large maps')
+
     args = argparser.parse_args()
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
@@ -110,6 +121,8 @@ def main():
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(1.0)
+        if args.respawn:
+            traffic_manager.set_respawn_dormant_vehicles(True)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
         if args.seed is not None:
@@ -161,6 +174,7 @@ def main():
         # Spawn vehicles
         # --------------
         batch = []
+        hero = args.hero
         for n, transform in enumerate(spawn_points):
             if n >= args.number_of_vehicles:
                 break
@@ -171,7 +185,11 @@ def main():
             if blueprint.has_attribute('driver_id'):
                 driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
                 blueprint.set_attribute('driver_id', driver_id)
-            blueprint.set_attribute('role_name', 'autopilot')
+            if hero:
+                blueprint.set_attribute('role_name', 'hero')
+                hero = False
+            else:
+                blueprint.set_attribute('role_name', 'autopilot')
 
             # prepare the light state of the cars to spawn
             light_state = vls.NONE
