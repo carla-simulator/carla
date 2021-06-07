@@ -157,10 +157,6 @@ private:
   UPROPERTY()
   UWorld *World;
 
-  /// Workaround material for MarkingNodes mesh
-  UPROPERTY()
-  UMaterialInstance *MarkingNodeMaterial;
-
   /// Workaround material for the RoadNode mesh
   UPROPERTY()
   UMaterialInstance *RoadNodeMaterial;
@@ -173,9 +169,13 @@ private:
   UPROPERTY()
   UMaterialInstance *GutterNodeMaterialInstance;
 
-  /// Workaround material for the second material for the MarkingNodes
+  /// Workaround material for the center lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeMaterialAux;
+  UMaterialInstance *MarkingNodeCenter;
+
+  /// Workaround material for exterior lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeExterior;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()
