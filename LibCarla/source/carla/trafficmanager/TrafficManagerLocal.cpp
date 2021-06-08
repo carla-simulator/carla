@@ -330,12 +330,10 @@ void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_
   std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
   for (const ActorPtr &vehicle: vehicle_list) {
-    std::cout << seed << std::endl;
     if (!is_custom_seed) {
       seed = vehicle->GetId() + seed;
     } else {
-      counter += 1;
-      seed = counter + seed;
+      seed = 1 + seed;
     }
     random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
   }

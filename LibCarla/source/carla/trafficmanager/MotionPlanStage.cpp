@@ -120,11 +120,8 @@ void MotionPlanStage::Update(const unsigned long index) {
           break;
         }
         int selection_index = static_cast<int>(random_devices.at(actor_id).next()) % elements;
-        cg::Location wpt_loc = possible_waypoints.at(selection_index)->GetLocation();
-        std::cout << "teleport_waypoint x " << wpt_loc.x << ", y " << wpt_loc.y << ", z " << wpt_loc.z << std::endl;
-        teleportation_transform = teleport_waypoint->GetTransform();
+        teleportation_transform = possible_waypoints.at(selection_index)->GetTransform();
         output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
-        std::cout << "ML Stage" << std::endl;
       }
     }
   }
@@ -147,7 +144,7 @@ void MotionPlanStage::Update(const unsigned long index) {
     // In case of collision or traffic light hazard.
     bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
 
-    if (ego_physics_enabled) {
+    if (ego_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
       const float target_point_distance = std::max(ego_speed * TARGET_WAYPOINT_TIME_HORIZON,
