@@ -151,7 +151,6 @@ AActor* FTrafficSignData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActor
 
 void FTrafficSignData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RecordActorData(Actor, CarlaEpisode);
   Model = Actor->GetClass();
   ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
   USignComponent* TrafficSignComponent =
@@ -194,7 +193,6 @@ AActor* FTrafficLightData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActo
 
 void FTrafficLightData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RecordActorData(Actor, CarlaEpisode);
   Model = Actor->GetClass();
   ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
   UTrafficLightComponent* Component = TrafficLight->GetTrafficLightComponent();

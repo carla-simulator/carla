@@ -9,6 +9,7 @@
 #include "UncenteredPivotPointMesh.h"
 
 #include "Walker/WalkerBase.h"
+#include "Carla/Game/Tagger.h"
 
 #include "FileHelper.h"
 #include "Paths.h"
@@ -111,6 +112,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
+  ATagger::TagActorsInLevel(*InLevel, true);
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
