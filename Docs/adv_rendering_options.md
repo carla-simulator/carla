@@ -1,16 +1,15 @@
 # Rendering options
 
-
+This guide details the different rendering options available in CARLA, including quality levels, no-rendering mode and off-screen mode. It also explains how version 0.9.12 of CARLA differs from previous versions in these respects.
 
 - [__Graphics quality__](#graphics-quality)  
-	- [Vulkan vs OpenGL](#vulkan-vs-opengl)  
+	- [Vulkan graphics API](#vulkan-graphics-api)  
 	- [Quality levels](#quality-levels)  
 - [__No-rendering mode__](#no-rendering-mode)  
 - [__Off-screen mode__](#off-screen-mode)  
-	- [Off-screen Vs no-rendering](#off-screen-vs-no-rendering)  
-- [__Running off-screen using a preferred GPU__](#running-off-screen-using-a-preferred-gpu)  
-	- [Docker - recommended approach](#docker-recommended-approach)  
-	- [Deprecated - emulate the virtual display](#deprecated-emulate-the-virtual-display)  
+	- [Off-screen Vs no-rendering](#off-screen-vs-no-rendering)
+	- [Setting off-screen mode (Version 0.9.12+)](#setting-off-screen-mode-version-0912)
+	- [Setting off-screen mode (Versions prior to 0.9.12)](#setting-off-screen-mode-versions-prior-to-0912)
 
 
 !!! Important
@@ -84,7 +83,7 @@ cd PythonAPI/examples && python3 no_rendering_mode.py
 ---
 ## Off-screen mode
 
-Starting from version 0.9.12, CARLA runs on Unreal Engine 4.26 which introduced support for off-screen rendering. In previous versions of CARLA, off-screen rendering depended upon the graphics API you were using. If you are using a previous version of CARLA, please select the corresponding documentation version in the lower right corner of the screen for more information.
+Starting from version 0.9.12, CARLA runs on Unreal Engine 4.26 which introduced support for off-screen rendering. In previous versions of CARLA, off-screen rendering depended upon the graphics API you were using.
 
 ### Off-screen vs no-rendering
 
@@ -93,13 +92,15 @@ It is important to understand the distinction between __no-rendering mode__ and 
 - __No-rendering mode:__ Unreal Engine does not render anything. Graphics are not computed. GPU based sensors return empty data.
 - __Off-screen mode:__ Unreal Engine is working as usual, rendering is computed but there is no display available. GPU based sensors return data.
 
-### Setting off-screen mode
+### Setting off-screen mode (Version 0.9.12+)
 
 To start CARLA in off-screen mode, run the following command:
 
 ```sh
 ./CarlaUE4.sh -RenderOffScreen
 ```
+
+### Setting off-screen mode (Versions prior to 0.9.12)
 
 Using off-screen mode differs if you are using either OpenGL or Vulkan. 
 
