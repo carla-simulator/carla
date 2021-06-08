@@ -66,7 +66,8 @@ void MotionPlanStage::Update(const unsigned long index) {
   // Instanciating teleportation transform.
   cg::Transform teleportation_transform;
 
-  if (simulation_state.IsDormant(actor_id) && parameters.GetRespawnDormantVehicles()) { // && RELOC PARAM, OTHERWISE DO NORMAL HYBRID
+  cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
+  if (simulation_state.IsDormant(actor_id) && parameters.GetRespawnDormantVehicles() && hero_location != cg::Location(0, 0, 0)) {
     // Flushing controller state for vehicle.
     current_state = {current_timestamp,
                     0.0f, 0.0f,
@@ -81,48 +82,44 @@ void MotionPlanStage::Update(const unsigned long index) {
     double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
 
     if (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT) {
-      cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
-      std::cout << "hero loc x " << hero_location.x << ", y " << hero_location.y << ", z " << hero_location.z << std::endl;
-      if (hero_location != cg::Location(0,0,0)) {
-        double twice_physics_radius = 100.0;
-        double r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
-        int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-        int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-        cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
-        SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
-        // double inner = 50.0f;
-        // double outer = random_devices.at(actor_id).next()*2.0 + inner;
-        // SimpleWaypointPtr teleport_waypoint = local_map->GetWaypointInDistance(hero_location, inner, outer);
-        while (teleport_waypoint->CheckJunction()) {
-          r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
-          x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-          y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-          teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
-          teleport_waypoint = local_map->GetWaypoint(teleport_location);
-        }
-        SimpleWaypointPtr nearby_waypoint = nullptr;
-        NodeList possible_waypoints;
-        possible_waypoints.push_back(teleport_waypoint);
-        int elements = 1;
-        while (true) {
-          nearby_waypoint = teleport_waypoint->GetLeftWaypoint();
-          while (nearby_waypoint != nullptr) {
-            possible_waypoints.push_back(nearby_waypoint);
-            elements+=1;
-            nearby_waypoint = nearby_waypoint->GetLeftWaypoint();
-          }
-          nearby_waypoint = teleport_waypoint->GetRightWaypoint();
-          while (nearby_waypoint != nullptr) {
-            possible_waypoints.push_back(nearby_waypoint);
-            elements+=1;
-            nearby_waypoint = nearby_waypoint->GetRightWaypoint();
-          }
-          break;
-        }
-        int selection_index = static_cast<int>(random_devices.at(actor_id).next()) % elements;
-        teleportation_transform = possible_waypoints.at(selection_index)->GetTransform();
-        output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+      double twice_physics_radius = 100.0;
+      double r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
+      int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+      int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+      cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
+      SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
+      // double inner = 50.0f;
+      // double outer = random_devices.at(actor_id).next()*2.0 + inner;
+      // SimpleWaypointPtr teleport_waypoint = local_map->GetWaypointInDistance(hero_location, inner, outer);
+      while (teleport_waypoint->CheckJunction()) {
+        r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
+        x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+        y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+        teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
+        teleport_waypoint = local_map->GetWaypoint(teleport_location);
       }
+      SimpleWaypointPtr nearby_waypoint = nullptr;
+      NodeList possible_waypoints;
+      possible_waypoints.push_back(teleport_waypoint);
+      int elements = 1;
+      while (true) {
+       nearby_waypoint = teleport_waypoint->GetLeftWaypoint();
+       while (nearby_waypoint != nullptr) {
+         possible_waypoints.push_back(nearby_waypoint);
+          elements+=1;
+         nearby_waypoint = nearby_waypoint->GetLeftWaypoint();
+       }
+       nearby_waypoint = teleport_waypoint->GetRightWaypoint();
+       while (nearby_waypoint != nullptr) {
+         possible_waypoints.push_back(nearby_waypoint);
+         elements+=1;
+         nearby_waypoint = nearby_waypoint->GetRightWaypoint();
+       }
+       break;
+      }
+      int selection_index = static_cast<int>(random_devices.at(actor_id).next()) % elements;
+      teleportation_transform = possible_waypoints.at(selection_index)->GetTransform();
+      output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
     }
   }
 
