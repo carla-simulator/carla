@@ -301,6 +301,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ETrafficLightState GetTrafficLightState() const
+  {
+    return ETrafficLightState::Off;
+  }
+
   virtual UTrafficLightController* GetTrafficLightController()
   {
     return nullptr;
@@ -477,6 +482,8 @@ public:
       UWorld* World);
 
   virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState& State) final;
+
+  virtual ETrafficLightState GetTrafficLightState() const final;
 
   virtual UTrafficLightController* GetTrafficLightController() final;
 

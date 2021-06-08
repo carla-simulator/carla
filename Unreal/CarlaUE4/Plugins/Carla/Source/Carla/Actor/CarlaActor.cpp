@@ -152,7 +152,7 @@ void FCarlaActor::PutActorToSleep(UCarlaEpisode* CarlaEpisode)
   State = carla::rpc::ActorState::Dormant;
   if (ActorData)
   {
-    ActorData->RecordActorData(TheActor, CarlaEpisode);
+    ActorData->RecordActorData(this, CarlaEpisode);
   }
   TheActor->Destroy();
   TheActor = nullptr;
@@ -168,7 +168,7 @@ void FCarlaActor::WakeActorUp(UCarlaEpisode* CarlaEpisode)
     return;
   }
   State = carla::rpc::ActorState::Alive;
-  ActorData->RestoreActorData(TheActor, CarlaEpisode);
+  ActorData->RestoreActorData(this, CarlaEpisode);
 }
 
 FTransform FCarlaActor::GetActorLocalTransform() const
@@ -904,7 +904,8 @@ ECarlaServerResponse FTrafficLightActor::SetTrafficLightState(const ETrafficLigh
 {
   if (IsDormant())
   {
-    // Todo: impletent to affect controller
+    FTrafficLightData* ActorData = GetActorData<FTrafficLightData>();
+    ActorData->LightState = State;
   }
   else
   {
@@ -916,6 +917,24 @@ ECarlaServerResponse FTrafficLightActor::SetTrafficLightState(const ETrafficLigh
     TrafficLight->SetTrafficLightState(State);
   }
   return ECarlaServerResponse::Success;
+}
+
+ETrafficLightState FTrafficLightActor::GetTrafficLightState() const
+{
+  if (IsDormant())
+  {
+    const FTrafficLightData* ActorData = GetActorData<FTrafficLightData>();
+    return ActorData->LightState;
+  }
+  else
+  {
+    auto TrafficLight = Cast<ATrafficLightBase>(GetActor());
+    if (TrafficLight == nullptr)
+    {
+      return ETrafficLightState::Off;
+    }
+    return TrafficLight->GetTrafficLightState();
+  }
 }
 
 UTrafficLightController* FTrafficLightActor::GetTrafficLightController()

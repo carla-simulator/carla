@@ -152,12 +152,6 @@ void ACarlaGameModeBase::BeginPlay()
   UWorld* World = GetWorld();
   check(World != nullptr);
 
-  if(LMManager)
-  {
-    //ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
-    //LMManager->AddActorToConsider(Player->GetPlayerController(World)->GetPawn());
-  }
-
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
   ReadyToRegisterObjects = true;
 

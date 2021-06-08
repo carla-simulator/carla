@@ -319,18 +319,21 @@ bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat R
 bool CarlaReplayerHelper::ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State)
 {
   check(Episode != nullptr);
-  // Todo: interface with FCarlaActor and UTrafficLightController
-  AActor *Actor = Episode->FindCarlaActor(State.DatabaseId)->GetActor();
-  if (Actor && !Actor->IsPendingKill())
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(State.DatabaseId);
+  if(CarlaActor)
   {
-    auto TrafficLight = Cast<ATrafficLightBase>(Actor);
-    if (TrafficLight != nullptr)
+    CarlaActor->SetTrafficLightState(static_cast<ETrafficLightState>(State.State));
+    UTrafficLightController* Controller = CarlaActor->GetTrafficLightController();
+    if(Controller)
     {
-      TrafficLight->SetTrafficLightState(static_cast<ETrafficLightState>(State.State));
-      TrafficLight->SetTimeIsFrozen(State.IsFrozen);
-      TrafficLight->SetElapsedTime(State.ElapsedTime);
+      Controller->SetElapsedTime(State.ElapsedTime);
+      ATrafficLightGroup* Group = Controller->GetGroup();
+      if (Group)
+      {
+        Group->SetFrozenGroup(State.IsFrozen);
+      }
     }
-    return true;
+     return true;
   }
   return false;
 }

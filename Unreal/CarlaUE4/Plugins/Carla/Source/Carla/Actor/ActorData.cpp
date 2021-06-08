@@ -17,6 +17,7 @@
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "Carla/Sensor/Sensor.h"
+#include "CarlaActor.h"
 
 AActor* FActorData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)
 {
@@ -26,8 +27,9 @@ AActor* FActorData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& 
   return CarlaEpisode->ReSpawnActorWithInfo(SpawnTransform, Info.Description);
 }
 
-void FActorData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FActorData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
+  AActor* Actor = CarlaActor->GetActor();
   FTransform Transform = Actor->GetTransform();
   Location = FDVector(Transform.GetLocation()) + CarlaEpisode->GetCurrentMapOrigin();
   Rotation = Transform.GetRotation();
@@ -41,8 +43,9 @@ void FActorData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
   Velocity = Actor->GetVelocity();
 }
 
-void FActorData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FActorData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
+  AActor* Actor = CarlaActor->GetActor();
   Actor->SetActorTransform(GetLocalTransform(CarlaEpisode));
   UPrimitiveComponent* Component = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
   if (Component)
@@ -90,9 +93,10 @@ FTransform FActorData::GetLocalTransform(UCarlaEpisode* CarlaEpisode) const
   return FTransform(Rotation, LocalLocation, Scale);
 }
 
-void FVehicleData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FVehicleData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RecordActorData(Actor, CarlaEpisode);
+  FActorData::RecordActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
   if (bSimulatePhysics)
   {
@@ -102,9 +106,10 @@ void FVehicleData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
   LightState = Vehicle->GetVehicleLightState();
 }
 
-void FVehicleData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RestoreActorData(Actor, CarlaEpisode);
+  FActorData::RestoreActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
   Vehicle->SetSimulatePhysics(bSimulatePhysics);
   if (bSimulatePhysics)
@@ -115,9 +120,10 @@ void FVehicleData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
   Vehicle->SetVehicleLightState(LightState);
 }
 
-void FWalkerData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FWalkerData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RecordActorData(Actor, CarlaEpisode);
+  FActorData::RecordActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   auto Walker = Cast<APawn>(Actor);
   auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
   if (Controller != nullptr)
@@ -126,9 +132,10 @@ void FWalkerData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
   }
 }
 
-void FWalkerData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FWalkerData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RestoreActorData(Actor, CarlaEpisode);
+  FActorData::RestoreActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   auto Walker = Cast<APawn>(Actor);
   auto Controller = Walker != nullptr ? Cast<AWalkerController>(Walker->GetController()) : nullptr;
   if (Controller != nullptr)
@@ -149,8 +156,10 @@ AActor* FTrafficSignData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActor
         SpawnParams);
 }
 
-void FTrafficSignData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FTrafficSignData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
+  FActorData::RecordActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   Model = Actor->GetClass();
   ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
   USignComponent* TrafficSignComponent =
@@ -162,9 +171,9 @@ void FTrafficSignData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisod
   }
 }
 
-void FTrafficSignData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FTrafficSignData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RestoreActorData(Actor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   if (SignId.Len())
   {
     USignComponent* SignComponent =
@@ -191,40 +200,48 @@ AActor* FTrafficLightData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActo
         SpawnParams);
 }
 
-void FTrafficLightData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FTrafficLightData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
+  FActorData::RecordActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   Model = Actor->GetClass();
   ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
   UTrafficLightComponent* Component = TrafficLight->GetTrafficLightComponent();
   SignId = Component->GetSignId();
   Controller = Component->GetController();
   Controller->RemoveTrafficLight(Component);
+  Controller->AddCarlaActorTrafficLight(CarlaActor);
+  LightState = TrafficLight->GetTrafficLightState();
   PoleIndex = TrafficLight->GetPoleIndex();
 }
 
-void FTrafficLightData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FTrafficLightData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RestoreActorData(Actor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(Actor);
   UTrafficLightComponent* Component = TrafficLight->GetTrafficLightComponent();
   Component->SetSignId(SignId);
+  Controller->RemoveCarlaActorTrafficLight(CarlaActor);
   Controller->AddTrafficLight(Component);
   ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CarlaEpisode->GetWorld());
   Component->InitializeSign(GameMode->GetMap().get());
   Component->SetLightState(Controller->GetCurrentState().State);
   TrafficLight->SetPoleIndex(PoleIndex);
+  TrafficLight->SetTrafficLightState(LightState);
 }
 
-void FActorSensorData::RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FActorSensorData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RecordActorData(Actor, CarlaEpisode);
+  FActorData::RecordActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   ASensor* Sensor = Cast<ASensor>(Actor);
   Stream = Sensor->MoveDataStream();
 }
 
-void FActorSensorData::RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode)
+void FActorSensorData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
 {
-  FActorData::RestoreActorData(Actor, CarlaEpisode);
+  FActorData::RestoreActorData(CarlaActor, CarlaEpisode);
+  AActor* Actor = CarlaActor->GetActor();
   ASensor* Sensor = Cast<ASensor>(Actor);
   Sensor->SetDataStream(std::move(Stream));
 }
