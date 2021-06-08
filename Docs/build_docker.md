@@ -40,7 +40,27 @@ docker pull carlasim/carla:0.9.11
 
 __2. Run the CARLA container.__
 
-Starting from version 0.9.9, CARLA supports the Vulkan graphics API as well as OpenGL and from 0.9.11, CARLA runs with Vulkan by default. This means if you want to run 0.9.11 with the OpenGL API, you will need to specify certain flags when you run the container.
+Different versions of CARLA support different graphics APIs which can affect the conditions in which the Docker image can run:
+
+- 0.9.12 supports only Vulkan
+- 0.9.7+ supports both Vulkan and OpenGL.
+
+
+__CARLA 0.9.12__
+
+To run CARLA with a display:
+
+```
+sudo docker run --privileged --gpus all --net=host -e DISPLAY=$DISPLAY carlasim/carla:0.9.12 /bin/bash ./CarlaUE4.sh
+```
+
+To run CARLA in off-screen mode:
+
+```
+sudo docker run --privileged --gpus all --net=host -v /tmp/.X11-unix:/tmp/.X11-unix:rw carlasim/carla:0.9.12 /bin/bash ./CarlaUE4.sh -RenderOffScreen
+```
+
+__CARLA 0.9.7 to 0.9.11__
 
 To run CARLA using Vulkan:
 
@@ -68,7 +88,7 @@ The above commands use some Docker flags that can be configured according to you
 
 ## Off-screen mode
 
-OpenGL requires no configuration if you are running CARLA on a machine without a display, however you will need to perform some extra steps to do the same using Vulkan. See the [rendering documentation](adv_rendering_options.md#off-screen-mode) for information.
+OpenGL requires no configuration if you are running CARLA on a machine without a display, however you will need to perform some extra steps to do the same using Vulkan prior to CARLA 0.9.12. See the [rendering documentation](adv_rendering_options.md#off-screen-mode) for information.
 
 ---
 
