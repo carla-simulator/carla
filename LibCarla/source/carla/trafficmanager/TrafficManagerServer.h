@@ -168,6 +168,11 @@ public:
         tm->SetHybridPhysicsRadius(mode_switch);
       });
 
+      /// Method to set respawn dormant vehicles mode.
+      server->bind("set_respawn_dormant_vehicles", [=](const bool mode_switch) {
+        tm->SetRespawnDormantVehicles(mode_switch);
+      });
+
       server->bind("shut_down", [=]() {
         tm->Release();
       });
