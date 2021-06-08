@@ -69,7 +69,10 @@ void ACarlaGameModeBase::InitGame(
       UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
   LMManager = Cast<ALargeMapManager>(LMManagerActor);
   if (LMManager) {
-    LMManager->GenerateLargeMap();
+    if (LMManager->GetNumTiles() == 0)
+    {
+      LMManager->GenerateLargeMap();
+    }
     InMapName = LMManager->LargeMapName;
   }
 

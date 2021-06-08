@@ -226,13 +226,13 @@ TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
   return GM->GetSpawnPointsTransforms();
 }
 
-carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
+carla::rpc::Actor UCarlaEpisode::SerializeActor(FCarlaActor *CarlaActor) const
 {
   carla::rpc::Actor Actor;
-  if (ActorView.IsValid())
+  if (CarlaActor)
   {
-    Actor = ActorView.GetActorInfo()->SerializedData;
-    auto ParentId = ActorView.GetParent();
+    Actor = CarlaActor->GetActorInfo()->SerializedData;
+    auto ParentId = CarlaActor->GetParent();
     if (ParentId)
     {
       Actor.parent_id = ParentId;
@@ -243,6 +243,31 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
     UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
   }
   return Actor;
+}
+
+carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
+{
+  FCarlaActor* CarlaActor = FindCarlaActor(Actor);
+  if (CarlaActor)
+  {
+    return SerializeActor(CarlaActor);
+  }
+  else
+  {
+    carla::rpc::Actor SerializedActor;
+    SerializedActor.id = 0u;
+    SerializedActor.description = FActorDescription();
+    SerializedActor.bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(Actor);
+    TSet<crp::CityObjectLabel> SemanticTags;
+    ATagger::GetTagsOfTaggedActor(*Actor, SemanticTags);
+    SerializedActor.semantic_tags.reserve(SemanticTags.Num());
+    for (auto &&Tag : SemanticTags)
+    {
+      using tag_t = decltype(SerializedActor.semantic_tags)::value_type;
+      SerializedActor.semantic_tags.emplace_back(static_cast<tag_t>(Tag));
+    }
+    return SerializedActor;
+  }
 }
 
 void UCarlaEpisode::AttachActors(
@@ -259,8 +284,8 @@ void UCarlaEpisode::AttachActors(
   {
     CarlaRecorderEventParent RecEvent
     {
-      FindActor(Child).GetActorId(),
-      FindActor(Parent).GetActorId()
+      FindCarlaActor(Child)->GetActorId(),
+      FindCarlaActor(Parent)->GetActorId()
     };
     Recorder->AddEvent(std::move(RecEvent));
   }

@@ -90,6 +90,7 @@ bool UTrafficLightController::IsCycleFinished() const
 
 void UTrafficLightController::SetTrafficLightsState(ETrafficLightState NewState)
 {
+  SetCurrentLightState(NewState);
   for(auto *Light : TrafficLights)
   {
     Light->SetLightState(NewState);
