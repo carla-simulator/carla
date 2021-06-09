@@ -154,7 +154,7 @@ void ACarlaRecorder::AddActorPosition(FCarlaActor *CarlaActor)
   AddPosition(CarlaRecorderPosition
   {
     CarlaActor->GetActorId(),
-    Transform.GetTranslation(),
+    Transform.GetLocation(),
     Transform.GetRotation().Euler()
   });
 }
@@ -561,16 +561,15 @@ void ACarlaRecorder::AddExistingActors(void)
   FActorRegistry Registry = Episode->GetActorRegistry();
   for (auto& It : Registry)
   {
-    const FCarlaActor* View = It.Value.Get();
-    const AActor *Actor = View->GetActor();
-    if (Actor != nullptr)
+    const FCarlaActor* CarlaActor = It.Value.Get();
+    if (CarlaActor != nullptr)
     {
       // create event
       CreateRecorderEventAdd(
-          View->GetActorId(),
-          static_cast<uint8_t>(View->GetActorType()),
-          Actor->GetActorTransform(),
-          View->GetActorInfo()->Description);
+          CarlaActor->GetActorId(),
+          static_cast<uint8_t>(CarlaActor->GetActorType()),
+          CarlaActor->GetActorGlobalTransform(),
+          CarlaActor->GetActorInfo()->Description);
     }
   }
 

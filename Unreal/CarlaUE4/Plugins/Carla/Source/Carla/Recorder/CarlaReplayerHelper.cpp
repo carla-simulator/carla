@@ -69,7 +69,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
         // relocate
         FRotator Rot = FRotator::MakeFromEuler(Rotation);
         FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-        CarlaActor->GetActor()->SetActorTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
+        CarlaActor->SetActorGlobalTransform(Trans2);
         return std::pair<int, FCarlaActor*>(2, CarlaActor);
       }
     }
@@ -82,7 +82,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
     {
       // relocate
       FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-      Result.Value->GetActor()->SetActorTransform(Trans2, false, nullptr, ETeleportType::TeleportPhysics);
+      Result.Value->SetActorGlobalTransform(Trans2);
       ALargeMapManager * LargeMapManager = UCarlaStatics::GetLargeMapManager(Episode->GetWorld());
       if (LargeMapManager)
       {
@@ -231,13 +231,13 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
 bool CarlaReplayerHelper::ProcessReplayerEventDel(uint32_t DatabaseId)
 {
   check(Episode != nullptr);
-  auto actor = Episode->FindCarlaActor(DatabaseId)->GetActor();
-  if (actor == nullptr)
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(DatabaseId);
+  if (CarlaActor == nullptr)
   {
     UE_LOG(LogCarla, Log, TEXT("Actor %d not found to destroy"), DatabaseId);
     return false;
   }
-  Episode->DestroyActor(actor);
+  Episode->DestroyActor(CarlaActor->GetActorId());
   return true;
 }
 
@@ -245,19 +245,36 @@ bool CarlaReplayerHelper::ProcessReplayerEventDel(uint32_t DatabaseId)
 bool CarlaReplayerHelper::ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId)
 {
   check(Episode != nullptr);
-  AActor *child = Episode->FindCarlaActor(ChildId)->GetActor();
-  AActor *parent = Episode->FindCarlaActor(ParentId)->GetActor();
-  if (child && parent)
+  FCarlaActor * Child = Episode->FindCarlaActor(ChildId);
+  FCarlaActor * Parent = Episode->FindCarlaActor(ParentId);
+  if(!Child)
   {
-    child->AttachToActor(parent, FAttachmentTransformRules::KeepRelativeTransform);
-    child->SetOwner(parent);
-    return true;
+    UE_LOG(LogCarla, Log, TEXT("Parenting Child actors not found"));
+    return false;
+  }
+  if(!Parent)
+  {
+    UE_LOG(LogCarla, Log, TEXT("Parenting Parent actors not found"));
+    return false;
+  }
+  Child->SetParent(ParentId);
+  Child->SetAttachmentType(carla::rpc::AttachmentType::Rigid);
+  Parent->AddChildren(Child->GetActorId());
+  if(!Parent->IsDormant())
+  {
+    if(!Child->IsDormant())
+    {
+      Episode->AttachActors(
+          Child->GetActor(),
+          Parent->GetActor(),
+          static_cast<EAttachmentType>(carla::rpc::AttachmentType::Rigid));
+    }
   }
   else
   {
-    UE_LOG(LogCarla, Log, TEXT("Parenting Actors not found"));
-    return false;
+    Episode->PutActorToSleep(Child->GetActorId());
   }
+  return true;
 }
 
 // reposition actors
@@ -295,23 +312,24 @@ bool CarlaReplayerHelper::SetCameraPosition(uint32_t Id, FVector Offset, FQuat R
 {
   check(Episode != nullptr);
 
-  // get specator pawn
-  APawn *Spectator = Episode->GetSpectatorPawn();
   // get the actor to follow
   FCarlaActor* CarlaActor = Episode->FindCarlaActor(Id);
   if (!CarlaActor)
     return false;
-  AActor *Actor = CarlaActor->GetActor();
-
-  // check
-  if (!Spectator || !Actor)
+  // get specator pawn
+  APawn *Spectator = Episode->GetSpectatorPawn();
+  if (!Spectator)
    return false;
 
+  FCarlaActor* CarlaSpectator = Episode->FindCarlaActor(Spectator);
+  if (!CarlaSpectator)
+    return false;
+
+  FTransform ActorTransform = CarlaActor->GetActorGlobalTransform();
   // set the new position
-  FQuat ActorRot = Actor->GetActorTransform().GetRotation();
-  FVector Pos = Actor->GetActorTransform().GetTranslation() + (ActorRot.RotateVector(Offset));
-  Spectator->SetActorLocation(Pos);
-  Spectator->SetActorRotation(ActorRot * Rotation);
+  FQuat ActorRot = ActorTransform.GetRotation();
+  FVector Pos = ActorTransform.GetTranslation() + (ActorRot.RotateVector(Offset));
+  CarlaSpectator->SetActorGlobalTransform(FTransform(ActorRot * Rotation, Pos, FVector(1,1,1)));
 
   return true;
 }
@@ -418,21 +436,15 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
             // stop all vehicles
             SetActorSimulatePhysics(CarlaActor, true);
             SetActorVelocity(CarlaActor, FVector(0, 0, 0));
-            // reset any control assigned
-            auto Veh = Cast<ACarlaWheeledVehicle>(const_cast<AActor *>(CarlaActor->GetActor()));
-            if (Veh != nullptr)
-            {
-              FVehicleControl Control;
-              Control.Throttle = 0.0f;
-              Control.Steer = 0.0f;
-              Control.Brake = 0.0f;
-              Control.bHandBrake = false;
-              Control.bReverse = false;
-              Control.Gear = 1;
-              Control.bManualGearShift = false;
-              Veh->ApplyVehicleControl(Control, EVehicleInputPriority::User);
-            }
-
+            FVehicleControl Control;
+            Control.Throttle = 0.0f;
+            Control.Steer = 0.0f;
+            Control.Brake = 0.0f;
+            Control.bHandBrake = false;
+            Control.bReverse = false;
+            Control.Gear = 1;
+            Control.bManualGearShift = false;
+            CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
         }
         break;
 

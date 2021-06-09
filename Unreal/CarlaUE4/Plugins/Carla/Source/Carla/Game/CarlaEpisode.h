@@ -176,26 +176,7 @@ public:
   TPair<EActorSpawnResultStatus, FCarlaActor*> SpawnActorWithInfo(
       const FTransform &Transform,
       FActorDescription thisActorDescription,
-      FCarlaActor::IdType DesiredId = 0)
-  {
-    FTransform NewTransform = Transform;
-    // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
-    auto result = ActorDispatcher->SpawnActor(NewTransform, thisActorDescription, DesiredId);
-    if (Recorder->IsEnabled())
-    {
-      if (result.Key == EActorSpawnResultStatus::Success)
-      {
-        Recorder->CreateRecorderEventAdd(
-          result.Value->GetActorId(),
-          static_cast<uint8_t>(result.Value->GetActorType()),
-          NewTransform,
-          std::move(thisActorDescription)
-        );
-      }
-    }
-
-    return result;
-  }
+      FCarlaActor::IdType DesiredId = 0);
 
   /// Spawns an actor based on @a ActorDescription at @a Transform.
   ///

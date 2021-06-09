@@ -314,9 +314,6 @@ static carla::Buffer FWorldObserver_Serialize(
     if(View->IsDormant())
     {
       const FActorData* ActorData = View->GetActorData();
-      FDVector ActorLocation = ActorData->Location;
-      ActorLocation -= MapOrigin;
-      ActorTransform = FTransform(ActorData->Rotation, ActorLocation.ToFVector());
       Velocity = TO_METERS * ActorData->Velocity;
       AngularVelocity = carla::geom::Vector3D
                         {ActorData->AngularVelocity.X,
@@ -327,12 +324,12 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     else
     {
-      ActorTransform = View->GetActor()->GetActorTransform();
       Velocity = TO_METERS * View->GetActor()->GetVelocity();
       AngularVelocity = FWorldObserver_GetAngularVelocity(*View->GetActor());
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetActorState(*View, Registry);
     }
+    ActorTransform = View->GetActorGlobalTransform();
 
     ActorDynamicState info = {
       View->GetActorId(),

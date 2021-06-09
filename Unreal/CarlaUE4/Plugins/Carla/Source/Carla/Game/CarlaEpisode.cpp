@@ -17,6 +17,7 @@
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
@@ -383,6 +384,36 @@ std::string UCarlaEpisode::StartRecorder(std::string Name, bool AdditionalData)
   else
   {
     result = "Recorder is not ready";
+  }
+
+  return result;
+}
+
+TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
+    const FTransform &Transform,
+    FActorDescription thisActorDescription,
+    FCarlaActor::IdType DesiredId)
+{
+  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  FTransform LocalTransform = Transform;
+  if(LargeMap)
+  {
+    LocalTransform = LargeMap->GlobalToLocalTransform(LocalTransform);
+  }
+
+  // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
+  auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
+  if (Recorder->IsEnabled())
+  {
+    if (result.Key == EActorSpawnResultStatus::Success)
+    {
+      Recorder->CreateRecorderEventAdd(
+        result.Value->GetActorId(),
+        static_cast<uint8_t>(result.Value->GetActorType()),
+        Transform,
+        std::move(thisActorDescription)
+      );
+    }
   }
 
   return result;

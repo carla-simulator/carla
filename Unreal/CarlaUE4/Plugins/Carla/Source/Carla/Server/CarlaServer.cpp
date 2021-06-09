@@ -500,16 +500,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-
-    FTransform UETransform = Transform;
-    if(LargeMap)
-    {
-      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
-    }
-
-    auto Result = Episode->SpawnActorWithInfo(UETransform, std::move(Description));
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
 
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
@@ -517,6 +508,7 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
 
+    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(Episode->GetWorld());
     if(LargeMap)
     {
       LargeMap->OnActorSpawned(*Result.Value);
@@ -533,16 +525,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-
-    FTransform UETransform = Transform;
-    if(LargeMap)
-    {
-      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
-    }
-
-    auto Result = Episode->SpawnActorWithInfo(UETransform, std::move(Description));
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
