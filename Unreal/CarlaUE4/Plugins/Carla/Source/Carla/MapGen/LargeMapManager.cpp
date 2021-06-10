@@ -29,7 +29,7 @@
 ALargeMapManager::ALargeMapManager()
 {
   PrimaryActorTick.bCanEverTick = true;
-  PrimaryActorTick.TickInterval = TickInterval;
+  // PrimaryActorTick.TickInterval = TickInterval;
 }
 
 ALargeMapManager::~ALargeMapManager()
@@ -63,6 +63,9 @@ void ALargeMapManager::BeginPlay()
   WorldComposition->bRebaseOriginIn3DSpace = true;
   WorldComposition->RebaseOriginDistance = RebaseOriginDistance;
 
+  LayerStreamingDistanceSquared = LayerStreamingDistance * LayerStreamingDistance;
+  ActorStreamingDistanceSquared = ActorStreamingDistance * ActorStreamingDistance;
+  RebaseOriginDistanceSquared = RebaseOriginDistance * RebaseOriginDistance;
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -72,6 +75,7 @@ void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOri
 
 void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::PostWorldOriginOffset);
   CurrentOriginInt = InDstOrigin;
   CurrentOriginD = FDVector(InDstOrigin);
 
@@ -119,26 +123,32 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
 
 void ALargeMapManager::RegisterInitialObjects()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::RegisterInitialObjects);
   UWorld* World = GetWorld();
   UCarlaEpisode* CurrentEpisode = UCarlaStatics::GetCurrentEpisode(World);
   const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
-  for (const auto& ViewPair : ActorRegistry)
+  for (const auto& CarlaActorPair : ActorRegistry)
   {
-    OnActorSpawned(ViewPair.Value);
+    if (CarlaActorPair.Value->GetActorInfo()->Description.Id == "spectator")
+    {
+      continue;
+    }
+    OnActorSpawned(*CarlaActorPair.Value.Get());
   }
 }
 
 void ALargeMapManager::OnActorSpawned(
-    const FActorView& ActorView)
+    const FCarlaActor& CarlaActor)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::OnActorSpawned);
   UWorld* World = GetWorld();
-  const FActorInfo* ActorInfo = ActorView.GetActorInfo();
-  AActor* Actor = const_cast<AActor*>(ActorView.GetActor());
+  const FActorInfo* ActorInfo = CarlaActor.GetActorInfo();
+  AActor* Actor = const_cast<AActor*>(CarlaActor.GetActor());
   bool IsHeroVehicle = false;
 
   // LM_LOG(Warning, "ALargeMapManager::OnActorSpawned func %s %s", *Actor->GetName(), *Actor->GetTranslation().ToString());
 
-  if (IsValid(Actor) && ActorView.GetActorType() == FActorView::ActorType::Vehicle)
+  if (Actor && CarlaActor.GetActorType() == FCarlaActor::ActorType::Vehicle)
   { // Check if is hero vehicle
 
     assert(ActorInfo);
@@ -171,7 +181,7 @@ void ALargeMapManager::OnActorSpawned(
     const FActorRegistry& ActorRegistry = CurrentEpisode->GetActorRegistry();
 
     // Any actor that is not the hero vehicle could possible be destroyed at some point
-    // we need to store the ActorView information to be able to spawn it again if needed
+    // we need to store the CarlaActor information to be able to spawn it again if needed
 
     LM_LOG(Error, "... not hero vehicle ...");
     if(IsValid(Actor))
@@ -180,7 +190,7 @@ void ALargeMapManager::OnActorSpawned(
       //       LM: Map<AActor* FGhostActor>  maybe per tile and in a tile sublevel?
 
       LM_LOG(Error, "GHOST VEHICLE DETECTED");
-      GhostActors.Add(ActorView.GetActorId());
+      GhostActors.Add(CarlaActor.GetActorId());
     }
     else
     { // Actor was spawned as dormant
@@ -188,7 +198,7 @@ void ALargeMapManager::OnActorSpawned(
       //       LM: Map<ActorId, TileID> , Tile: Map<ActorID, FDormantActor>
       //       In case of update: update Tile Map, update LM Map
       LM_LOG(Error, "DORMANT VEHICLE DETECTED");
-      DormantActors.Add(ActorView.GetActorId());
+      DormantActors.Add(CarlaActor.GetActorId());
     }
   }
 
@@ -206,8 +216,9 @@ void ALargeMapManager::OnActorDestroyed(AActor* DestroyedActor)
 
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
-  FActorView ActorView = CarlaEpisode->FindActor(DestroyedActor);
-  const FActorInfo* ActorInfo = ActorView.GetActorInfo();
+  FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(DestroyedActor);
+  if (CarlaActor)
+    const FActorInfo* ActorInfo = CarlaActor->GetActorInfo();
 
   // Hero has been removed?
   //
@@ -240,6 +251,8 @@ FVector ALargeMapManager::LocalToGlobalLocation(const FVector& InLocation) const
   return CurrentOriginD.ToFVector() + InLocation;
 }
 
+float tick_execution_time = 0;
+uint64_t num_ticks = 0;
 void ALargeMapManager::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
@@ -275,6 +288,7 @@ void ALargeMapManager::GenerateLargeMap() {
 
 void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GenerateMap);
   LM_LOG(Warning, "Generating Map %s ...", *InAssetsPath);
 
   AssetsPath = InAssetsPath;
@@ -332,9 +346,9 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 }
 
 // TODO: maybe remove this, I think I will not need it any more
-void ALargeMapManager::AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform)
+void ALargeMapManager::AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform)
 {
-  // GhostActors.Add(ActorView.GetActorId(), {Transform, ActorView});
+  // GhostActors.Add(CarlaActor.GetActorId(), {Transform, CarlaActor});
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -502,7 +516,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
   FString LongLevelPackageName = FPackageName::FilenameToLongPackageName(PackageFileName);
   FString UniqueLevelPackageName = LongLevelPackageName + TileName;
 
-  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName, RF_Transient);
+  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName);
   check(StreamingLevel);
 
   StreamingLevel->SetWorldAssetByPackageName(*UniqueLevelPackageName);
@@ -561,6 +575,7 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 }
 
 FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID TileId) {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::LoadCarlaMapTile);
   // Need to generate a new Tile
   FCarlaMapTile NewTile;
   // 1 - Calculate the Tile position
@@ -650,6 +665,7 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
 
 void ALargeMapManager::UpdateTilesState()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::UpdateTilesState);
   TSet<TileID> TilesToConsider;
 
   // Loop over ActorsToConsider to update the state of the map tiles
@@ -680,7 +696,7 @@ void ALargeMapManager::UpdateTilesState()
 
 void ALargeMapManager::RemovePendingActorsToRemove()
 {
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::RemovePendingActorsToRemove);
   if(ActorsToRemove.Num() > 0 || GhostsToRemove.Num() > 0)
   {
     LM_LOG(Error, "ActorsToRemove %d GhostsToRemove %d", ActorsToRemove.Num(), GhostsToRemove.Num());
@@ -693,13 +709,13 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   ActorsToRemove.Reset();
 
 
-  for (FActorView::IdType ActorToRemove : GhostsToRemove)
+  for (FCarlaActor::IdType ActorToRemove : GhostsToRemove)
   {
     GhostActors.Remove(ActorToRemove);
   }
   GhostsToRemove.Reset();
 
-  for(FActorView::IdType Id : DormantsToRemove)
+  for(FCarlaActor::IdType Id : DormantsToRemove)
   {
     DormantActors.Remove(Id);
   }
@@ -708,12 +724,13 @@ void ALargeMapManager::RemovePendingActorsToRemove()
 
 void ALargeMapManager::CheckGhostActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckGhostActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
   // Check if they have to be destroyed
-  for(FActorView::IdType Id : GhostActors)
+  for(FCarlaActor::IdType Id : GhostActors)
   {
-    FActorView* View = CarlaEpisode->FindActorPtr(Id);
+    FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
     if (View)
     {
       AActor * Actor = View->GetActor();
@@ -733,14 +750,6 @@ void ALargeMapManager::CheckGhostActors()
         FVector HeroLocation = HeroActor->GetActorLocation();
 
         float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
-
-        // LM_LOG(Warning, "CheckGhostActors\n\t%s\n\tRelLoc: %s\n\tOrigin: %s\n\tWorldLoc: %s\n\tTile %s\n\tDist %.2f (%.2f)", \
-        //   *Actor->GetName(), *RelativeLocation.ToString(), \
-        //   *CurrentOriginD.ToString(), \
-        //   *WorldLocation.ToString(), \
-        //   *TileIDToString(GetTileID(WorldLocation)),\
-        //   RelativeLocation.Size(), ActorStreamingDistance \
-        // );
 
         if (DistanceSquared > ActorStreamingDistanceSquared)
         {
@@ -767,12 +776,13 @@ void ALargeMapManager::CheckGhostActors()
 
 void ALargeMapManager::ConvertGhostToDormantActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertGhostToDormantActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
   // These actors are on dormant state so remove them from ghost actors
   // But save them on the dormant array first
-  for(FActorView::IdType Id : GhostToDormantActors)
+  for(FCarlaActor::IdType Id : GhostToDormantActors)
   {
     // To dormant state
     CarlaEpisode->PutActorToSleep(Id);
@@ -788,23 +798,24 @@ void ALargeMapManager::ConvertGhostToDormantActors()
 
 void ALargeMapManager::CheckDormantActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckDormantActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
 
-  for(FActorView::IdType Id : DormantActors)
+  for(FCarlaActor::IdType Id : DormantActors)
   {
-    FActorView* ActorView = CarlaEpisode->FindActorPtr(Id);
+    FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(Id);
 
     // If the Ids don't match, the actor has been removed
-    if(!ActorView || ActorView->GetActorId() != Id || !ActorView->IsDormant())
+    if(!CarlaActor || CarlaActor->GetActorId() != Id || !CarlaActor->IsDormant())
     {
-      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, ActorView?ActorView->GetActorId():0);
+      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, CarlaActor?CarlaActor->GetActorId():0);
       DormantsToRemove.Add(Id);
       continue;
     }
 
-    const FActorData* ActorData = ActorView->GetActorData();
+    const FActorData* ActorData = CarlaActor->GetActorData();
 
     for(AActor* Actor : ActorsToConsider)
     {
@@ -837,16 +848,17 @@ void ALargeMapManager::CheckDormantActors()
 
 void ALargeMapManager::ConvertDormantToGhostActors()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertDormantToGhostActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
-  for(FActorView::IdType Id : DormantToGhostActors)
+  for(FCarlaActor::IdType Id : DormantToGhostActors)
   {
     LM_LOG(Warning, "Converting %d Dormant To Ghost", Id);
 
     CarlaEpisode->WakeActorUp(Id);
 
-    FActorView* View = CarlaEpisode->FindActorPtr(Id);
+    FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
 
     if (View->GetActor()){
       LM_LOG(Warning, "Spawning dormant at %s\n\tOrigin: %s\n\tRel. location: %s", \
@@ -867,6 +879,7 @@ void ALargeMapManager::ConvertDormantToGhostActors()
 
 void ALargeMapManager::CheckIfRebaseIsNeeded()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckIfRebaseIsNeeded);
   if(ActorsToConsider.Num() > 0)
   {
     UWorld* World = GetWorld();
@@ -893,6 +906,7 @@ void ALargeMapManager::CheckIfRebaseIsNeeded()
 void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
                                           TSet<TileID>& OutTilesToConsider)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GetTilesToConsider);
   check(ActorToConsider);
   // World location
   FDVector ActorLocation = CurrentOriginD + ActorToConsider->GetActorLocation();
@@ -914,6 +928,7 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
       FCarlaMapTile* Tile = MapTiles.Find(TileID);
       if (!Tile)
       {
+        // LM_LOG(Warning, "Requested tile %d, %d  but tile was not found", TileToCheck.X, TileToCheck.Y);
         continue; // Tile does not exist, discard
       }
 
@@ -934,6 +949,7 @@ void ALargeMapManager::GetTilesThatNeedToChangeState(
   TSet<TileID>& OutTilesToBeVisible,
   TSet<TileID>& OutTilesToHidde)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GetTilesThatNeedToChangeState);
   OutTilesToBeVisible = InTilesToConsider.Difference(CurrentTilesLoaded);
   OutTilesToHidde = CurrentTilesLoaded.Difference(InTilesToConsider);
 }
@@ -944,6 +960,7 @@ void ALargeMapManager::UpdateTileState(
   bool InShouldBeLoaded,
   bool InShouldBeVisible)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::UpdateTileState);
   UWorld* World = GetWorld();
   UWorldComposition* WorldComposition = World->WorldComposition;
 
@@ -963,6 +980,7 @@ void ALargeMapManager::UpdateCurrentTilesLoaded(
   const TSet<TileID>& InTilesToBeVisible,
   const TSet<TileID>& InTilesToHidde)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::UpdateCurrentTilesLoaded);
   for (const TileID TileID : InTilesToHidde)
   {
     CurrentTilesLoaded.Remove(TileID);

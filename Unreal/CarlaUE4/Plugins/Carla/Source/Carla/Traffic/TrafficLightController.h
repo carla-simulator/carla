@@ -120,6 +120,15 @@ public:
 
   const ATrafficLightGroup* GetGroup() const;
 
+  ETrafficLightState GetCurrentLightState() const
+  {
+    return CurrentLightState;
+  }
+  void SetCurrentLightState(ETrafficLightState NewState)
+  {
+    CurrentLightState = NewState;
+  }
+
 private:
 
   void SetStateTime(const ETrafficLightState State, float NewTime);
@@ -153,4 +162,5 @@ private:
   UPROPERTY()
   float ElapsedTime = 0;
 
+  ETrafficLightState CurrentLightState = ETrafficLightState::Green;
 };
