@@ -1,5 +1,6 @@
 ## Latest
 
+  * Changed the resolution of the cached map in Traffic Manager from 0.1 to 5 meters
   * Fixed import sumo_integration module from other scripts
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
@@ -24,8 +25,11 @@
   * Fix bug in carla.Transform.get_up_vector()
   * Fix bug in lidar channel point count
   * Fix imu: some weird cases were given nan values
+  * Fix bugs in apply_physics_control and friction trigger
+  * Exposed tire parameters for longitudinal and lateral stiffness in the PhysicsControl. 
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
   * Improved agent's vehicle detection to also take into account the actor bounding boxes
+  * Added Optical Flow camera
   * API extensions:
   - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
   - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee

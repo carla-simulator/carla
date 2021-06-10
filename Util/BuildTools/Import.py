@@ -170,8 +170,8 @@ def generate_decals_file(folder):
                 'x_axis' : '15.0',
                 'y_axis' : '15.0',
                 'z_axis' : '0.0'},
-                'decal_min_scale' : '1.0',
-                'decal_max_scale' : '1.5',
+                'decal_min_scale' : '0.3',
+                'decal_max_scale' : '0.7',
                 'decal_random_yaw' : '360.0',
                 'random_offset' : '50.0'
             });
@@ -228,7 +228,7 @@ def generate_import_setting_file(package_name, json_dirname, props, maps, do_til
             "TextureImportData": {},
             "StaticMeshImportData": {
                 "bRemoveDegenerates": 1,
-                "bAutoGenerateCollision": 0,
+                "bAutoGenerateCollision": 1,
                 "bCombineMeshes": 0,
                 "bConvertSceneUnit": 1,
                 "bForceVerticesRelativeToTile": do_tiles,
@@ -427,16 +427,8 @@ def import_assets_from_json_list(json_list):
             # We prepare only the maps for cooking after moving them. Props cooking will be done from Package.sh script.
             if len(maps) > 0:
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
-
-                # We apply the carla materials to the imported maps
                 load_asset_materials_commandlet(package_name)
             thr.join()
-
-def load_asset_materials_commandlet(package_name):
-    commandlet_name = "LoadAssetMaterials"
-    commandlet_arguments = ["-PackageName=%s" % package_name]
-    invoke_commandlet(commandlet_name, commandlet_arguments)
-
 
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"

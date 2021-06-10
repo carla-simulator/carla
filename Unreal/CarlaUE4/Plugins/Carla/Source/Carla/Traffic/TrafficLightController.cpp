@@ -68,6 +68,11 @@ void UTrafficLightController::AddTrafficLight(UTrafficLightComponent * TrafficLi
   TrafficLight->SetController(this);
 }
 
+void UTrafficLightController::RemoveTrafficLight(UTrafficLightComponent * TrafficLight)
+{
+  TrafficLights.Remove(TrafficLight);
+}
+
 const FString &UTrafficLightController::GetControllerId() const
 {
   return ControllerId;
@@ -85,6 +90,7 @@ bool UTrafficLightController::IsCycleFinished() const
 
 void UTrafficLightController::SetTrafficLightsState(ETrafficLightState NewState)
 {
+  SetCurrentLightState(NewState);
   for(auto *Light : TrafficLights)
   {
     Light->SetLightState(NewState);

@@ -73,6 +73,9 @@ public:
   void AddTrafficLight(UTrafficLightComponent * TrafficLight);
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  void RemoveTrafficLight(UTrafficLightComponent * TrafficLight);
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   bool IsCycleFinished() const;
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
@@ -117,6 +120,15 @@ public:
 
   const ATrafficLightGroup* GetGroup() const;
 
+  ETrafficLightState GetCurrentLightState() const
+  {
+    return CurrentLightState;
+  }
+  void SetCurrentLightState(ETrafficLightState NewState)
+  {
+    CurrentLightState = NewState;
+  }
+
 private:
 
   void SetStateTime(const ETrafficLightState State, float NewTime);
@@ -150,4 +162,5 @@ private:
   UPROPERTY()
   float ElapsedTime = 0;
 
+  ETrafficLightState CurrentLightState = ETrafficLightState::Green;
 };

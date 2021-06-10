@@ -55,7 +55,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
 }
 
-bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool reset_settings)
+bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
   FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
   bool bIsFileFound = false;
@@ -104,7 +104,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool reset_settings
   {
     UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
-    if (reset_settings)
+    if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
   }
   return bIsFileFound;
@@ -221,24 +221,21 @@ void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
 {
-  TArray<FTransform> SpawnPoints;
-  for (TActorIterator<AVehicleSpawnPoint> It(GetWorld()); It; ++It)
-  {
-    SpawnPoints.Add(It->GetActorTransform());
-  }
-  return SpawnPoints;
+  ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
+
+  return GM->GetSpawnPointsTransforms();
 }
 
-carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
+carla::rpc::Actor UCarlaEpisode::SerializeActor(FCarlaActor *CarlaActor) const
 {
   carla::rpc::Actor Actor;
-  if (ActorView.IsValid())
+  if (CarlaActor)
   {
-    Actor = ActorView.GetActorInfo()->SerializedData;
-    auto Parent = ActorView.GetActor()->GetOwner();
-    if (Parent != nullptr)
+    Actor = CarlaActor->GetActorInfo()->SerializedData;
+    auto ParentId = CarlaActor->GetParent();
+    if (ParentId)
     {
-      Actor.parent_id = FindActor(Parent).GetActorId();
+      Actor.parent_id = ParentId;
     }
   }
   else
@@ -248,11 +245,38 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
   return Actor;
 }
 
+carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
+{
+  FCarlaActor* CarlaActor = FindCarlaActor(Actor);
+  if (CarlaActor)
+  {
+    return SerializeActor(CarlaActor);
+  }
+  else
+  {
+    carla::rpc::Actor SerializedActor;
+    SerializedActor.id = 0u;
+    SerializedActor.description = FActorDescription();
+    SerializedActor.bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(Actor);
+    TSet<crp::CityObjectLabel> SemanticTags;
+    ATagger::GetTagsOfTaggedActor(*Actor, SemanticTags);
+    SerializedActor.semantic_tags.reserve(SemanticTags.Num());
+    for (auto &&Tag : SemanticTags)
+    {
+      using tag_t = decltype(SerializedActor.semantic_tags)::value_type;
+      SerializedActor.semantic_tags.emplace_back(static_cast<tag_t>(Tag));
+    }
+    return SerializedActor;
+  }
+}
+
 void UCarlaEpisode::AttachActors(
     AActor *Child,
     AActor *Parent,
     EAttachmentType InAttachmentType)
 {
+  Child->AddActorWorldOffset(FVector(CurrentMapOrigin));
+
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
 
   // recorder event
@@ -260,8 +284,8 @@ void UCarlaEpisode::AttachActors(
   {
     CarlaRecorderEventParent RecEvent
     {
-      FindActor(Child).GetActorId(),
-      FindActor(Parent).GetActorId()
+      FindCarlaActor(Child)->GetActorId(),
+      FindCarlaActor(Parent)->GetActorId()
     };
     Recorder->AddEvent(std::move(RecEvent));
   }

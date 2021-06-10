@@ -46,6 +46,30 @@ namespace data {
 
   static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
 
+#pragma pack(push, 1)
+  /// Optical flow pixel format. 2 channel float data.
+  struct OpticalFlowPixel {
+    OpticalFlowPixel() = default;
+    OpticalFlowPixel(const OpticalFlowPixel &) = default;
+
+    OpticalFlowPixel(float x, float y)
+      : x(x), y(y) {}
+
+    OpticalFlowPixel &operator=(const OpticalFlowPixel &) = default;
+
+    bool operator==(const OpticalFlowPixel &rhs) const  {
+      return (x == rhs.x) && (y == rhs.y);
+    }
+
+    bool operator!=(const OpticalFlowPixel &rhs) const  {
+      return !(*this == rhs);
+    }
+
+    float x = 0;
+    float y = 0;
+  };
+#pragma pack(pop)
+
 } // namespace data
 } // namespace sensor
 } // namespace carla

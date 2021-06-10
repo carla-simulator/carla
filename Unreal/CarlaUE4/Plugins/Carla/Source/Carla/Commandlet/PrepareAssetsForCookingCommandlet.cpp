@@ -49,21 +49,28 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 #if WITH_EDITORONLY_DATA
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
-  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeCenterMaterial(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V3.M_Road_03_Tiled_V3'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeExteriorMaterial(TEXT(
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled.M_Road_03_Tiled'"));
-  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNodeAux(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMY.M_Road_03_LMY'"));
-  static ConstructorHelpers::FObjectFinder<UMaterial> TerrainNodeMaterial(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/Grass/M_Grass01.M_Grass01'"));
-  static ConstructorHelpers::FObjectFinder<UMaterial> SidewalkNode(TEXT(
-      "Material'/Game/Carla/Static/GenericMaterials/CheapMaterials/M_SideWalkCheap01'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V2.M_Road_03_Tiled_V2'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainNodeMaterial(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Grass/MI_Grass.MI_Grass'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> CurbNodeMaterial(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_curb/MI_largeM_curb01.MI_largeM_curb01'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GutterNodeMaterial(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_gutter/MI_largeM_gutter01.MI_largeM_gutter01'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SidewalkNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_sidewalk/tile01/MI_largeM_tile02.MI_largeM_tile02'"));
 
-  MarkingNodeMaterial = (UMaterialInstance *) MarkingNode.Object;
+  GutterNodeMaterialInstance = (UMaterialInstance *) GutterNodeMaterial.Object;
+  CurbNodeMaterialInstance = (UMaterialInstance *) CurbNodeMaterial.Object;
+  TerrainNodeMaterialInstance = (UMaterialInstance *) TerrainNodeMaterial.Object;
+  MarkingNodeCenter = (UMaterialInstance *) MarkingNodeCenterMaterial.Object;
+  MarkingNodeExterior = (UMaterialInstance *) MarkingNodeExteriorMaterial.Object;
   RoadNodeMaterial = (UMaterialInstance *) RoadNode.Object;
-  MarkingNodeMaterialAux = (UMaterialInstance *) RoadNodeAux.Object;
-  SidewalkNodeMaterial = (UMaterial *) SidewalkNode.Object;
+  SidewalkNodeMaterialInstance = (UMaterialInstance *) SidewalkNode.Object;
 #endif
 }
 #if WITH_EDITORONLY_DATA
@@ -166,7 +173,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
       MapAsset.AssetName.ToString(AssetName);
 
       // check to ignore meshes from other tiles
-      if (i == -1 || (i != -1 && AssetName.Contains(TileName)))
+      if (i == -1 || (i != -1 && (AssetName.EndsWith(TileName) || AssetName.Contains(TileName + "_"))))
       {
         MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), ZeroTransform);
         UStaticMeshComponent *MeshComponent = MeshActor->GetStaticMeshComponent();
@@ -189,8 +196,8 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           // tag
           if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
           {
-            MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeMaterial);
-            MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeMaterialAux);
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeExterior);
+            MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeCenter);
           }
           else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
           {
@@ -198,12 +205,22 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           }
           else if (AssetName.Contains(SSTags::R_TERRAIN))
           {
-            MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterial);
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterialInstance);
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
           else if (AssetName.Contains(SSTags::R_SIDEWALK1) || AssetName.Contains(SSTags::R_SIDEWALK2))
           {
-            MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterial);
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterialInstance);
+            MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
+          }
+          else if (AssetName.Contains(SSTags::R_CURB1) || AssetName.Contains(SSTags::R_CURB2)) {
+
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, CurbNodeMaterialInstance);
+            MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
+          }
+          else if (AssetName.Contains(SSTags::R_GUTTER1) || AssetName.Contains(SSTags::R_GUTTER2)) {
+
+            MeshActor->GetStaticMeshComponent()->SetMaterial(0, GutterNodeMaterialInstance);
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
         }
@@ -512,7 +529,13 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
       // Load World
       FAssetData AssetData;
       LoadWorldTile(AssetData);
-      World = CastChecked<UWorld>(AssetData.GetAsset());
+      UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(AssetData.GetAsset());
+      if (BaseMapRedirector != nullptr) {
+        World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+      }
+      else {
+        World = CastChecked<UWorld>(AssetData.GetAsset());
+      }
       // try to create each possible tile of the map
       int  i, j;
       bool Res;
@@ -556,7 +579,13 @@ void UPrepareAssetsForCookingCommandlet::PreparePropsForCooking(
   FAssetData AssetData;
   // Loads the BaseMap
   LoadWorld(AssetData);
-  World = CastChecked<UWorld>(AssetData.GetAsset());
+  UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(AssetData.GetAsset());
+  if (BaseMapRedirector != nullptr) {
+    World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+  }
+  else {
+    World = CastChecked<UWorld>(AssetData.GetAsset());
+  }
 
   // Remove the meshes names from the original path for props, so we can load
   // props inside folder
