@@ -160,25 +160,33 @@ private:
   UPROPERTY()
   UWorld *World;
 
-  /// Workaround material for MarkingNodes mesh
-  UPROPERTY()
-  UMaterialInstance *MarkingNodeMaterial;
-
   /// Workaround material for the RoadNode mesh
   UPROPERTY()
   UMaterialInstance *RoadNodeMaterial;
 
-  /// Workaround material for the second material for the MarkingNodes
+  /// Material to apply to curbs on the road
   UPROPERTY()
-  UMaterialInstance *MarkingNodeMaterialAux;
+  UMaterialInstance *CurbNodeMaterialInstance;
+
+  /// Material to apply to gutters on the road
+  UPROPERTY()
+  UMaterialInstance *GutterNodeMaterialInstance;
+
+  /// Workaround material for the center lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeCenter;
+
+  /// Workaround material for exterior lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeExterior;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()
-  UMaterial *TerrainNodeMaterial;
+  UMaterialInstance *TerrainNodeMaterialInstance;
 
   /// Workaround material for the SidewalkNodes
   UPROPERTY()
-  UMaterial *SidewalkNodeMaterial;
+  UMaterialInstance *SidewalkNodeMaterialInstance;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder

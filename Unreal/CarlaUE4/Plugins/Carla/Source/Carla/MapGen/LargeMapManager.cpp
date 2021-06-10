@@ -887,6 +887,7 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
       FCarlaMapTile* Tile = MapTiles.Find(TileID);
       if (!Tile)
       {
+        // LM_LOG(Warning, "Requested tile %d, %d  but tile was not found", TileToCheck.X, TileToCheck.Y);
         continue; // Tile does not exist, discard
       }
 

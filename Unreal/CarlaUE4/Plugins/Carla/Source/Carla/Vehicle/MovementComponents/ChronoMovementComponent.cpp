@@ -353,7 +353,7 @@ void UChronoMovementComponent::DisableChronoPhysics()
   CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
       ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
   UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
-  carla::log_warning("Chrono physics does not support collisions yet, reverting to default PhysX phisics.");
+  carla::log_warning("Chrono physics does not support collisions yet, reverting to default PhysX physics.");
 }
 
 void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
