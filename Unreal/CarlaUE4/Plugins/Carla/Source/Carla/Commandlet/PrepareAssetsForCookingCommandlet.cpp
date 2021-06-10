@@ -49,8 +49,11 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 #if WITH_EDITORONLY_DATA
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
+
+  //Yellow markings
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeCenterMaterial(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V3.M_Road_03_Tiled_V3'"));
+  //White markings
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeExteriorMaterial(TEXT(
     "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
@@ -196,8 +199,23 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           // tag
           if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
           {
-            MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeExterior);
-            MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeCenter);
+            if (MeshActor->GetStaticMeshComponent()->GetNumMaterials() == 1)
+            {
+              if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[0].ImportedMaterialSlotName.ToString().Contains("Yellow"))
+              {
+                MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeCenter);
+              }
+              else
+              {
+                MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeExterior);
+              }
+            }
+            else
+            {
+              MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeExterior);
+              MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeCenter);
+            }
+          }
           }
           else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
           {
