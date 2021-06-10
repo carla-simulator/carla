@@ -216,8 +216,13 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
 
 void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
 {
-  FCarlaStaticDelegates::OnEpisodeSettingsChange.Broadcast(Settings);
   EpisodeSettings = Settings;
+  if(EpisodeSettings.ActorActiveDistance > EpisodeSettings.TileStreamingDistance)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Setting ActorActiveDistance is lower that TileStreamingDistance, TileStreamingDistance will be used instead"));
+    EpisodeSettings.ActorActiveDistance = EpisodeSettings.TileStreamingDistance;
+  }
+  FCarlaStaticDelegates::OnEpisodeSettingsChange.Broadcast(EpisodeSettings);
 }
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const

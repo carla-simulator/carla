@@ -238,6 +238,30 @@ void ALargeMapManager::SetTileSize(float Size)
   TileSide = Size;
 }
 
+void ALargeMapManager::SetLayerStreamingDistance(float Distance)
+{
+  LayerStreamingDistance = Distance;
+  LayerStreamingDistanceSquared =
+      LayerStreamingDistance*LayerStreamingDistance;
+}
+
+void ALargeMapManager::SetActorStreamingDistance(float Distance)
+{
+  ActorStreamingDistance = Distance;
+  ActorStreamingDistanceSquared =
+      ActorStreamingDistance*ActorStreamingDistance;
+}
+
+float ALargeMapManager::GetLayerStreamingDistance()
+{
+  return LayerStreamingDistance;
+}
+
+float ALargeMapManager::GetActorStreamingDistance()
+{
+  return ActorStreamingDistance;
+}
+
 FTransform ALargeMapManager::GlobalToLocalTransform(const FTransform& InTransform) const
 {
   return FTransform(
@@ -855,15 +879,18 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
   // Calculate Current Tile
   FIntVector CurrentTile = GetTileVectorID(ActorLocation);
 
-  // Calculate the number of tiles in range based on LayerStreamingDistance
-  int32 TilesToConsider = (int32)(LayerStreamingDistance / TileSide) + 1;
-  for (int Y = -TilesToConsider; Y < TilesToConsider; Y++)
+  // Calculate tile bounds
+  FDVector UpperPos = ActorLocation + FDVector(LayerStreamingDistance,LayerStreamingDistance,0);
+  FDVector LowerPos = ActorLocation + FDVector(-LayerStreamingDistance,-LayerStreamingDistance,0);
+  FIntVector UpperTileId = GetTileVectorID(UpperPos);
+  FIntVector LowerTileId = GetTileVectorID(LowerPos);
+  for (int Y = UpperTileId.Y; Y <= LowerTileId.Y; Y++)
   {
-    for (int X = -TilesToConsider; X < TilesToConsider; X++)
+    for (int X = LowerTileId.X; X <= UpperTileId.X; X++)
     {
       // I don't check the bounds of the Tile map, if the Tile does not exist
       // I just simply discard it
-      FIntVector TileToCheck = CurrentTile + FIntVector(X, Y, 0);
+      FIntVector TileToCheck = FIntVector(X, Y, 0);
 
       TileID TileID = GetTileID(TileToCheck);
       FCarlaMapTile* Tile = MapTiles.Find(TileID);
@@ -874,13 +901,13 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
       }
 
       // Calculate distance between actor and tile
-      float Distance2 = FDVector::DistSquared(Tile->Location, ActorLocation);
+      // float Distance2 = FDVector::DistSquared(Tile->Location, ActorLocation);
 
-      // Load level if we are in range
-      if (Distance2 < LayerStreamingDistanceSquared)
-      {
+      // // Load level if we are in range
+      // if (Distance2 < LayerStreamingDistanceSquared)
+      // {
         OutTilesToConsider.Add(TileID);
-      }
+      // }
     }
   }
 }
