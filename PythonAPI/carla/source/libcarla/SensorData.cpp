@@ -211,10 +211,9 @@ static void ConvertImage(T &self, EColorConverter cc) {
   }
 }
 // method to convert optical flow images to rgb
-static boost::python::numpy::ndarray ColorCodedFlow (
+static std::vector<uint8_t> ColorCodedFlow (
     carla::sensor::data::OpticalFlowImage& image) {
   namespace bp = boost::python;
-  namespace bn = boost::python::numpy;
   namespace csd = carla::sensor::data;
   constexpr float pi = 3.1415f;
   constexpr float rad2ang = 360.f/(2.f*pi);
@@ -310,11 +309,7 @@ static boost::python::numpy::ndarray ColorCodedFlow (
     }
     delete t[n];
   }
-
-  bp::tuple shape = bp::make_tuple(result.size());
-  bp::tuple stride = bp::make_tuple(sizeof(uint8_t));
-  bn::dtype type = bn::dtype::get_builtin<uint8_t>();
-  return bn::from_data(&result[0], type, shape, stride, bp::object()).copy();
+  return result;
 }
 
 template <typename T>
@@ -357,6 +352,11 @@ void export_sensor_data() {
   namespace cs = carla::sensor;
   namespace csd = carla::sensor::data;
   namespace css = carla::sensor::s11n;
+
+  // wrapper for std::vector<uint8_t>
+  class_<std::vector<uint8_t> >("VecUint8")
+      .def(vector_indexing_suite<std::vector<uint8_t> >())
+      .add_property("raw_data", &GetRawDataAsBuffer<std::vector<uint8_t> >);
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame", &cs::SensorData::GetFrame)
