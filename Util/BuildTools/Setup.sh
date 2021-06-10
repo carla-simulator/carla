@@ -504,9 +504,13 @@ if ${USE_CHRONO} ; then
   if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
     log "Eigen already installed."
   else
-    log "Retrieving Eigen."
-    wget ${EIGEN_REPO}
-
+    if [[ -f ${LOCAL_PACKAGES}/${EIGEN_BASENAME}.tar.gz ]] ; then
+      log "Using local copy of  Eigen."
+      cp ${LOCAL_PACKAGES}/${EIGEN_BASENAME}.tar.gz .
+    else
+      log "Retrieving Eigen."
+      wget ${EIGEN_REPO}
+    fi
     log "Extracting Eigen."
     tar -xzf ${EIGEN_BASENAME}.tar.gz
     mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
