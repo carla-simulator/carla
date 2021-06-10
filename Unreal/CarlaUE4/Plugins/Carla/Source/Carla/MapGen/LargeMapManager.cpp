@@ -14,11 +14,7 @@
 #include "FileHelper.h"
 #include "Paths.h"
 
-#if WITH_EDITOR
 #define LARGEMAP_LOGS 1
-#else
-#define LARGEMAP_LOGS 0
-#endif // WITH_EDITOR
 
 #if LARGEMAP_LOGS
 #define LM_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
@@ -718,13 +714,6 @@ void ALargeMapManager::CheckActiveActors()
 
         if (DistanceSquared > ActorStreamingDistanceSquared)
         {
-          LM_LOG(Warning, "CheckActiveActors Tile not loaded %s %s (%s)-> Active To Dormant %s", \
-            *TileIDToString(GetTileID(WorldLocation)),\
-            *WorldLocation.ToString(), \
-            *CurrentOriginD.ToString(), \
-            *Actor->GetName() \
-          );
-
           // Save to temporal container. Later will be converted to dormant
           ActiveToDormantActors.Add(Id);
           ActivesToRemove.Add(Id);
@@ -773,9 +762,21 @@ void ALargeMapManager::CheckDormantActors()
     FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(Id);
 
     // If the Ids don't match, the actor has been removed
-    if(!CarlaActor || CarlaActor->GetActorId() != Id || !CarlaActor->IsDormant())
+    if(!CarlaActor)
     {
-      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, CarlaActor?CarlaActor->GetActorId():0);
+      LM_LOG(Error, "CheckDormantActors Carla Actor %d not found", Id);
+      DormantsToRemove.Add(Id);
+      continue;
+    }
+    if(CarlaActor->GetActorId() != Id)
+    {
+      LM_LOG(Error, "CheckDormantActors IDs doesn't match!! Wanted = %d Received = %d", Id, CarlaActor->GetActorId());
+      DormantsToRemove.Add(Id);
+      continue;
+    }
+    if (!CarlaActor->IsDormant())
+    {
+      LM_LOG(Error, "CheckDormantActors Carla Actor %d is not dormant", Id);
       DormantsToRemove.Add(Id);
       continue;
     }
@@ -791,18 +792,8 @@ void ALargeMapManager::CheckDormantActors()
 
       float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-      // LM_LOG(Warning, "CheckDormantActors\n\t%d\n\tWorldLoc: %s\n\tRelLoc: %s\n\tOrigin: %s\n\tTile %s\n\tDist %.2f (%.2f)", \
-      //     Id,\
-      //     *WorldLocation.ToString(), \
-      //     *RelativeLocation.ToString(), \
-      //     *CurrentOriginD.ToString(), \
-      //     *TileIDToString(GetTileID(WorldLocation)),\
-      //     (RelativeLocation - HeroLocation).Size(), ActorStreamingDistance \
-      //   );
-
       if(DistanceSquared < ActorStreamingDistanceSquared && IsTileLoaded(WorldLocation))
       {
-        LM_LOG(Warning, "Need to spawn a dormant actor with Id %d", Id);
         DormantToActiveActors.Add(Id);
         DormantsToRemove.Add(Id);
         break;
@@ -825,7 +816,7 @@ void ALargeMapManager::ConvertDormantToActiveActors()
 
     FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
 
-    if (View->GetActor()){
+    if (View->IsActive()){
       LM_LOG(Warning, "Spawning dormant at %s\n\tOrigin: %s\n\tRel. location: %s", \
         *((CurrentOriginD + View->GetActor()->GetActorLocation()).ToString()), \
         *(CurrentOriginD.ToString()), \
@@ -835,8 +826,8 @@ void ALargeMapManager::ConvertDormantToActiveActors()
     }
     else
     {
-      LM_LOG(Warning, "FAIL Actor %d could not be woken up", Id);
-      CarlaEpisode->DestroyActor(Id);
+      LM_LOG(Warning, "Actor %d could not be woken up, keeping sleep state", Id);
+      DormantActors.Add(Id);
     }
   }
   DormantToActiveActors.Reset();

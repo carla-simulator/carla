@@ -58,7 +58,13 @@ public:
 
   bool IsAlive() const
   {
-    return (carla::rpc::ActorState::Alive == State);
+    return (carla::rpc::ActorState::PendingKill != State &&
+            carla::rpc::ActorState::Invalid != State);
+  }
+
+  bool IsActive() const
+  {
+    return (carla::rpc::ActorState::Active == State);
   }
 
   bool IsDormant() const

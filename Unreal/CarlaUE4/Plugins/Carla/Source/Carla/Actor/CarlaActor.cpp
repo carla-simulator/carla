@@ -163,11 +163,10 @@ void FCarlaActor::WakeActorUp(UCarlaEpisode* CarlaEpisode)
   TheActor = ActorData->RespawnActor(CarlaEpisode, *Info);
   if (TheActor == nullptr)
   {
-    State = carla::rpc::ActorState::Invalid;
     UE_LOG(LogCarla, Error, TEXT("Could not wake up dormant actor %d at location %s"), GetActorId(), *(ActorData->GetLocalTransform(CarlaEpisode).GetLocation().ToString()));
     return;
   }
-  State = carla::rpc::ActorState::Alive;
+  State = carla::rpc::ActorState::Active;
   ActorData->RestoreActorData(this, CarlaEpisode);
 }
 
