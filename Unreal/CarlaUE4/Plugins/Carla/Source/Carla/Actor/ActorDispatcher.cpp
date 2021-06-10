@@ -39,15 +39,15 @@ void UActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
   }
 }
 
-TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
+TPair<EActorSpawnResultStatus, FCarlaActor*> UActorDispatcher::SpawnActor(
     const FTransform &Transform,
     FActorDescription Description,
-    FActorView::IdType DesiredId)
+    FCarlaActor::IdType DesiredId)
 {
   if ((Description.UId == 0u) || (Description.UId > static_cast<uint32>(SpawnFunctions.Num())))
   {
     UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription '%s' (UId=%d)"), *Description.Id, Description.UId);
-    return MakeTuple(EActorSpawnResultStatus::InvalidDescription, FActorView());
+    return MakeTuple(EActorSpawnResultStatus::InvalidDescription, nullptr);
   }
 
   UE_LOG(LogCarla, Log, TEXT("Spawning actor '%s'"), *Description.Id);
@@ -63,16 +63,17 @@ TPair<EActorSpawnResultStatus, FActorView> UActorDispatcher::SpawnActor(
   }
 
   UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor spawned DesiredId %d"), DesiredId);
-  FActorView View = Result.IsValid() ? RegisterActor(*Result.Actor, std::move(Description), DesiredId) : FActorView();
-  UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor registered with ID %d"), View.GetActorId());
-  if (!View.IsValid())
+  FCarlaActor* View = Result.IsValid() ?
+      RegisterActor(*Result.Actor, std::move(Description), DesiredId) : nullptr;
+  if (!View)
   {
     UE_LOG(LogCarla, Warning, TEXT("Failed to spawn actor '%s'"), *Description.Id);
     check(Result.Status != EActorSpawnResultStatus::Success);
   }
   else
   {
-    ATagger::TagActor(*View.GetActor(), true);
+    UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor registered with ID %d"), View->GetActorId());
+    ATagger::TagActor(*View->GetActor(), true);
   }
 
   return MakeTuple(Result.Status, View);
@@ -109,10 +110,10 @@ AActor* UActorDispatcher::ReSpawnActor(
   return nullptr;
 }
 
-bool UActorDispatcher::DestroyActor(FActorView::IdType ActorId)
+bool UActorDispatcher::DestroyActor(FCarlaActor::IdType ActorId)
 {
   // Check if the actor is in the registry.
-  FActorView* View = Registry.FindPtr(ActorId);
+  FCarlaActor* View = Registry.FindCarlaActor(ActorId);
 
   // Invalid destruction if is not marked to PendingKill (except is dormant, dormant actors can be destroyed)
   if (!View)
@@ -154,10 +155,12 @@ bool UActorDispatcher::DestroyActor(FActorView::IdType ActorId)
   return true;
 }
 
-FActorView UActorDispatcher::RegisterActor(AActor &Actor, FActorDescription Description, FActorRegistry::IdType DesiredId)
+FCarlaActor* UActorDispatcher::RegisterActor(
+    AActor &Actor, FActorDescription Description,
+    FActorRegistry::IdType DesiredId)
 {
-  FActorView View = Registry.Register(Actor, std::move(Description), DesiredId);
-  if (View.IsValid())
+  FCarlaActor* View = Registry.Register(Actor, std::move(Description), DesiredId);
+  if (View)
   {
     // TODO: support external actor destruction
     // Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
@@ -165,12 +168,12 @@ FActorView UActorDispatcher::RegisterActor(AActor &Actor, FActorDescription Desc
   return View;
 }
 
-void UActorDispatcher::PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+void UActorDispatcher::PutActorToSleep(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode)
 {
   Registry.PutActorToSleep(Id, CarlaEpisode);
 }
 
-void UActorDispatcher::WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode)
+void UActorDispatcher::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode)
 {
   Registry.WakeActorUp(Id, CarlaEpisode);
 }

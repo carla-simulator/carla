@@ -24,13 +24,13 @@ struct FGhostActor
   FGhostActor() {}
 
   FGhostActor(
-    const FActorView* InActorView,
+    const FCarlaActor* InCarlaActor,
     const FTransform& InTransform)
-    : ActorView(InActorView),
+    : CarlaActor(InCarlaActor),
       WorldLocation(FDVector(InTransform.GetTranslation())),
       Rotation(InTransform.GetRotation()) {}
 
-  const FActorView* ActorView;
+  const FCarlaActor* CarlaActor;
 
   FDVector WorldLocation;
 
@@ -84,7 +84,7 @@ public:
 
   void RegisterInitialObjects();
 
-  void OnActorSpawned(const FActorView& ActorView);
+  void OnActorSpawned(const FCarlaActor& CarlaActor);
 
   UFUNCTION(Category="Large Map Manager")
   void OnActorDestroyed(AActor* DestroyedActor);
@@ -98,7 +98,7 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateLargeMap();
 
-  void AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform);
+  void AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FIntVector GetNumTilesInXY() const;
@@ -215,19 +215,20 @@ protected:
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> ActorsToConsider;
   //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
-  TArray<FActorView::IdType> GhostActors;
-  TArray<FActorView::IdType> DormantActors;
+  TArray<FCarlaActor::IdType> GhostActors;
+  TArray<FCarlaActor::IdType> DormantActors;
 
   // Temporal sets to remove actors. Just to avoid removing them in the update loop
   TSet<AActor*> ActorsToRemove;
-  TSet<FActorView::IdType> GhostsToRemove;
-  TSet<FActorView::IdType> DormantsToRemove;
+  TSet<FCarlaActor::IdType> GhostsToRemove;
+  TSet<FCarlaActor::IdType> DormantsToRemove;
 
   // Helpers to move Actors from one array to another.
-  TSet<FActorView::IdType> GhostToDormantActors;
-  TSet<FActorView::IdType> DormantToGhostActors;
+  TSet<FCarlaActor::IdType> GhostToDormantActors;
+  TSet<FCarlaActor::IdType> DormantToGhostActors;
 
-  TSet<TileID> CurrentTilesLoaded;
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  TSet<uint64> CurrentTilesLoaded;
 
   // Current Origin after rebase
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")

@@ -17,7 +17,7 @@
 #include <unordered_map>
 
 class UCarlaEpisode;
-struct FActorView;
+class FCarlaActor;
 struct FActorDescription;
 
 class CarlaReplayerHelper
@@ -71,7 +71,7 @@ public:
   bool SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation);
 
   // set the velocity of the actor
-  void SetActorVelocity(const FActorView &ActorView, FVector Velocity);
+  void SetActorVelocity(FCarlaActor *CarlaActor, FVector Velocity);
 
   // set the animation speed for walkers
   void SetWalkerSpeed(uint32_t ActorId, float Speed);
@@ -82,17 +82,17 @@ private:
 
   UCarlaEpisode *Episode {nullptr};
 
-  std::pair<int, FActorView>TryToCreateReplayerActor(
+  std::pair<int, FCarlaActor*>TryToCreateReplayerActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
     uint32_t DesiredId,
     bool SpawnSensors);
 
-  AActor *FindTrafficLightAt(FVector Location);
+  FCarlaActor* FindTrafficLightAt(FVector Location);
 
   // enable / disable physics for an actor
-  bool SetActorSimulatePhysics(const FActorView &ActorView, bool bEnabled);
+  bool SetActorSimulatePhysics(FCarlaActor *CarlaActor, bool bEnabled);
   // enable / disable autopilot for an actor
-  bool SetActorAutopilot(const FActorView &ActorView, bool bEnabled, bool bKeepState = false);
+  bool SetActorAutopilot(FCarlaActor *CarlaActor, bool bEnabled, bool bKeepState = false);
 };

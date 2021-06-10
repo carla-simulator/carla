@@ -32,7 +32,7 @@ class TestSpawnpoints(SyncSmokeTest):
                 no_rendering_mode=False,
                 synchronous_mode=True,
                 fixed_delta_seconds=0.05)
-            self.world.apply_settings(settings)
+            self.world.apply_settings(settings, 30)
 
             # spawn all kind of vehicle
             for vehicle in blueprints:

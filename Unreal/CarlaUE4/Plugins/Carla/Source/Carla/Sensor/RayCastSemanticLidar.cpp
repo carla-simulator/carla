@@ -189,9 +189,9 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 
     if (actor != nullptr) {
 
-      const FActorView view = Registry.Find(actor);
-      if(view.IsValid())
-        Detection.object_idx = view.GetActorId();
+      const FCarlaActor* view = Registry.FindCarlaActor(actor);
+      if(view)
+        Detection.object_idx = view->GetActorId();
 
     }
     else {
