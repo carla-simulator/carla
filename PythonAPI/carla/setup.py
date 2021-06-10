@@ -39,8 +39,6 @@ def get_libcarla_extensions():
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
-            numpylib = 'libboost_numpy%d%d.a' % (sys.version_info.major,
-                                               sys.version_info.minor)
             if is_rss_variant_enabled():
                 print('Building AD RSS variant.')
                 extra_link_args = [ os.path.join(pwd, 'dependencies/lib/libcarla_client_rss.a') ]
@@ -86,7 +84,6 @@ def get_libcarla_extensions():
                 extra_link_args += ['-ltbb']
 
             extra_link_args += [os.path.join(pwd, 'dependencies/lib', pylib)]
-            extra_link_args += [os.path.join(pwd, 'dependencies/lib', numpylib)]
 
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
@@ -107,14 +104,11 @@ def get_libcarla_extensions():
         pylib = 'libboost_python%d%d' % (
             sys.version_info.major,
             sys.version_info.minor)
-        numpylib = 'libboost_numpy%d%d' % (
-            sys.version_info.major,
-            sys.version_info.minor)
 
         extra_link_args = ['shlwapi.lib', 'Advapi32.lib', 'ole32.lib', 'shell32.lib']
 
         required_libs = [
-            pylib, numpylib, 'libboost_filesystem',
+            pylib, 'libboost_filesystem',
             'rpc.lib', 'carla_client.lib',
             'libpng.lib', 'zlib.lib',
             'Recast.lib', 'Detour.lib', 'DetourCrowd.lib',
@@ -131,7 +125,7 @@ def get_libcarla_extensions():
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
         extra_compile_args = [
             '/experimental:external', '/external:I', 'dependencies/include/system',
-            '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB', '/DBOOST_NUMPY_STATIC_LIB',
+            '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
             '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0600', '/DHAVE_SNPRINTF',
             '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true', '/MD']
     else:
