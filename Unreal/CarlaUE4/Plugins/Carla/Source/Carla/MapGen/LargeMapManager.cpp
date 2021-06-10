@@ -252,12 +252,12 @@ void ALargeMapManager::SetActorStreamingDistance(float Distance)
       ActorStreamingDistance*ActorStreamingDistance;
 }
 
-float ALargeMapManager::GetLayerStreamingDistance()
+float ALargeMapManager::GetLayerStreamingDistance() const
 {
   return LayerStreamingDistance;
 }
 
-float ALargeMapManager::GetActorStreamingDistance()
+float ALargeMapManager::GetActorStreamingDistance() const
 {
   return ActorStreamingDistance;
 }
@@ -896,18 +896,10 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
       FCarlaMapTile* Tile = MapTiles.Find(TileID);
       if (!Tile)
       {
-        // LM_LOG(Warning, "Requested tile %d, %d  but tile was not found", TileToCheck.X, TileToCheck.Y);
         continue; // Tile does not exist, discard
       }
 
-      // Calculate distance between actor and tile
-      // float Distance2 = FDVector::DistSquared(Tile->Location, ActorLocation);
-
-      // // Load level if we are in range
-      // if (Distance2 < LayerStreamingDistanceSquared)
-      // {
         OutTilesToConsider.Add(TileID);
-      // }
     }
   }
 }
