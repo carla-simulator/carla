@@ -64,6 +64,10 @@ private:
   std::atomic<bool> hybrid_physics_mode{false};
   /// Automatic respawn mode switch.
   std::atomic<bool> respawn_dormant_vehicles{false};
+  /// Minimum distance to respawn vehicles with respect to the hero vehicle.
+  std::atomic<float> respawn_lower_bound{100.0};
+  /// Maximum distance to respawn vehicles with respect to the hero vehicle.
+  std::atomic<float> respawn_upper_bound{1000.0};
   /// Hybrid physics radius.
   std::atomic<float> hybrid_physics_radius {70.0};
   /// Parameter specifying Open Street Map mode.
@@ -133,8 +137,11 @@ public:
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
 
-  /// Method to set Open Street Map mode.
+  /// Method to set if we are automatically respawning vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch);
+
+  /// Method to set boundaries for respawning vehicles.
+  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
 
   ///////////////////////////////// GETTERS /////////////////////////////////////
 
@@ -182,6 +189,12 @@ public:
 
   /// Method to retrieve if we are automatically respawning vehicles.
   bool GetRespawnDormantVehicles() const;
+
+  /// Method to retrieve minimum distance from hero vehicle when respawning vehicles.
+  float GetLowerBoundaryRespawnDormantVehicles() const;
+
+  /// Method to retrieve maximum distance from hero vehicle when respawning vehicles.
+  float GetUpperBoundaryRespawnDormantVehicles() const;
 
   /// Method to get Open Street Map mode.
   bool GetOSMMode() const;

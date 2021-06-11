@@ -65,11 +65,18 @@ public:
     }
   }
 
-  /// Method to set Open Street Map mode.
+  /// Method to set if we are automatically respawning vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if (tm_ptr != nullptr) {
       tm_ptr->SetRespawnDormantVehicles(mode_switch);
+    }
+  }
+  /// Method to set boundaries for respawning vehicles.
+  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
     }
   }
 

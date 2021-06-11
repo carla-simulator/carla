@@ -205,6 +205,12 @@ public:
     _client->call("set_respawn_dormant_vehicles", mode_switch);
   }
 
+  /// Method to set boundaries for respawning vehicles.
+  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_boundaries_respawn_dormant_vehicles", lower_bound, upper_bound);
+  }
+
   void ShutDown() {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("shut_down");

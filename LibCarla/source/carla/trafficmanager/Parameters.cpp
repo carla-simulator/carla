@@ -29,6 +29,11 @@ void Parameters::SetRespawnDormantVehicles(const bool mode_switch) {
   respawn_dormant_vehicles.store(mode_switch);
 }
 
+void Parameters::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+  respawn_lower_bound = lower_bound;
+  respawn_upper_bound = upper_bound;
+}
+
 void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
 
   float new_percentage = std::min(100.0f, percentage);
@@ -282,6 +287,17 @@ bool Parameters::GetRespawnDormantVehicles() const {
 
   return respawn_dormant_vehicles.load();
 }
+
+float Parameters::GetLowerBoundaryRespawnDormantVehicles() const {
+
+  return respawn_lower_bound.load();
+}
+
+float Parameters::GetUpperBoundaryRespawnDormantVehicles() const {
+
+  return respawn_upper_bound.load();
+}
+
 
 bool Parameters::GetOSMMode() const {
 

@@ -108,6 +108,9 @@ public:
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch);
 
+  // Method to set boundaries to respawn of dormant vehicles.
+  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
+
   virtual void ShutDown();
 
   /// Method to provide synchronous tick

@@ -191,6 +191,10 @@ void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
   client.SetRespawnDormantVehicles(mode_switch);
 }
 
+void TrafficManagerRemote::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+  client.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
+}
+
 void TrafficManagerRemote::ShutDown() {
   client.ShutDown();
 }

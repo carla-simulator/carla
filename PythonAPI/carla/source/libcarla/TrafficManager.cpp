@@ -37,5 +37,6 @@ void export_trafficmanager() {
     .def("set_random_device_seed", &ctm::TrafficManager::SetRandomDeviceSeed)
     .def("set_osm_mode", &carla::traffic_manager::TrafficManager::SetOSMMode)
     .def("set_respawn_dormant_vehicles", &carla::traffic_manager::TrafficManager::SetRespawnDormantVehicles)
+    .def("set_boundaries_respawn_dormant_vehicles", &carla::traffic_manager::TrafficManager::SetBoundariesRespawnDormantVehicles)
     .def("shut_down", &ctm::TrafficManager::ShutDown);
 }

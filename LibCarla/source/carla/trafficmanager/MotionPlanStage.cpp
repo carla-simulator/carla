@@ -51,11 +51,11 @@ MotionPlanStage::MotionPlanStage(
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
-  const cg::Location ego_location = simulation_state.GetLocation(actor_id);
-  const cg::Vector3D ego_velocity = simulation_state.GetVelocity(actor_id);
-  const float ego_speed = ego_velocity.Length();
-  const cg::Vector3D ego_heading = simulation_state.GetHeading(actor_id);
-  const bool ego_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
+  const cg::Location vehicle_location = simulation_state.GetLocation(actor_id);
+  const cg::Vector3D vehicle_velocity = simulation_state.GetVelocity(actor_id);
+  const float vehicle_speed = vehicle_velocity.Length();
+  const cg::Vector3D vehicle_heading = simulation_state.GetHeading(actor_id);
+  const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
   const Buffer &waypoint_buffer = buffer_map.at(actor_id);
   const LocalizationData &localization = localization_frame.at(index);
   const CollisionHazardData &collision_hazard = collision_frame.at(index);
@@ -66,8 +66,11 @@ void MotionPlanStage::Update(const unsigned long index) {
   // Instanciating teleportation transform.
   cg::Transform teleportation_transform;
 
+  // Get information about the hero location from the actor_id state.
   cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
-  if (simulation_state.IsDormant(actor_id) && parameters.GetRespawnDormantVehicles() && hero_location != cg::Location(0, 0, 0)) {
+  bool is_hero_alive = hero_location != cg::Location(0, 0, 0);
+
+  if (simulation_state.IsDormant(actor_id) && parameters.GetRespawnDormantVehicles() && is_hero_alive) {
     // Flushing controller state for vehicle.
     current_state = {current_timestamp,
                     0.0f, 0.0f,
@@ -78,12 +81,16 @@ void MotionPlanStage::Update(const unsigned long index) {
       teleportation_instance.insert({actor_id, current_timestamp});
     }
 
+    // Get lower and upper bound for teleporting vehicle.
+    float lower_bound = parameters.GetLowerBoundaryRespawnDormantVehicles();
+    float upper_bound = parameters.GetUpperBoundaryRespawnDormantVehicles();
+    float dilate_factor = (upper_bound-lower_bound)/100.0f;
+
     // Measuring time elapsed since last teleportation for the vehicle.
     double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
 
     if (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT) {
-      double twice_physics_radius = 100.0;
-      double r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
+      double r_sample = (random_devices.at(actor_id).next()*dilate_factor) + lower_bound;
       int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
       int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
       cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
@@ -92,7 +99,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       // double outer = random_devices.at(actor_id).next()*2.0 + inner;
       // SimpleWaypointPtr teleport_waypoint = local_map->GetWaypointInDistance(hero_location, inner, outer);
       while (teleport_waypoint->CheckJunction()) {
-        r_sample = random_devices.at(actor_id).next()*10.0 + twice_physics_radius;
+        r_sample = (random_devices.at(actor_id).next()*dilate_factor) + lower_bound;
         x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
         y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
         teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
@@ -119,19 +126,22 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
       int selection_index = static_cast<int>(random_devices.at(actor_id).next()) % elements;
       teleportation_transform = possible_waypoints.at(selection_index)->GetTransform();
-      output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+    } else {
+      // Teleport only once every dt in asynchronous mode.
+      teleportation_transform = cg::Transform(vehicle_location, simulation_state.GetRotation(actor_id));
     }
+    output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
   }
 
   else {
 
     // Target velocity for vehicle.
-    const float ego_speed_limit = simulation_state.GetSpeedLimit(actor_id);
-    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, ego_speed_limit) / 3.6f;
+    const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
+    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
 
     // Collision handling and target velocity correction.
-    std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, ego_velocity,
-                                                                  ego_heading, max_target_velocity);
+    std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, vehicle_velocity,
+                                                                  vehicle_heading, max_target_velocity);
     bool collision_emergency_stop = collision_response.first;
     float dynamic_target_velocity = collision_response.second;
 
@@ -141,15 +151,15 @@ void MotionPlanStage::Update(const unsigned long index) {
     // In case of collision or traffic light hazard.
     bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
 
-    if (ego_physics_enabled && !simulation_state.IsDormant(actor_id)) {
+    if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
-      const float target_point_distance = std::max(ego_speed * TARGET_WAYPOINT_TIME_HORIZON,
+      const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
                                                   TARGET_WAYPOINT_HORIZON_LENGTH);
       const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
       const cg::Location target_location = target_waypoint->GetLocation();
-      float dot_product = DeviationDotProduct(ego_location, ego_heading, target_location);
-      float cross_product = DeviationCrossProduct(ego_location, ego_heading, target_location);
+      float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
+      float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
       dot_product = 1.0f - dot_product;
       if (cross_product < 0.0f) {
         dot_product *= -1.0f;
@@ -168,7 +178,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       // Select PID parameters.
       std::vector<float> longitudinal_parameters;
       std::vector<float> lateral_parameters;
-      if (ego_speed > HIGHWAY_SPEED) {
+      if (vehicle_speed > HIGHWAY_SPEED) {
         longitudinal_parameters = highway_longitudinal_parameters;
         lateral_parameters = highway_lateral_parameters;
       } else {
@@ -178,7 +188,7 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // If physics is enabled for the vehicle, use PID controller.
       // State update for vehicle.
-      current_state = PID::StateUpdate(previous_state, ego_speed, dynamic_target_velocity,
+      current_state = PID::StateUpdate(previous_state, vehicle_speed, dynamic_target_velocity,
                                       current_deviation, current_timestamp);
 
       // Controller actuation.
@@ -231,20 +241,20 @@ void MotionPlanStage::Update(const unsigned long index) {
         cg::Transform target_base_transform = teleport_target->GetTransform();
         cg::Location target_base_location = target_base_transform.location;
         cg::Vector3D target_heading = target_base_transform.GetForwardVector();
-        cg::Vector3D correct_heading = (target_base_location - ego_location).MakeSafeUnitVector(EPSILON);
+        cg::Vector3D correct_heading = (target_base_location - vehicle_location).MakeSafeUnitVector(EPSILON);
 
-        if (ego_location.Distance(target_base_location) < target_displacement) {
-          cg::Location teleportation_location = ego_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
+        if (vehicle_location.Distance(target_base_location) < target_displacement) {
+          cg::Location teleportation_location = vehicle_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
           teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
         }
         else {
-          cg::Location teleportation_location = ego_location + cg::Location(correct_heading * target_displacement);
+          cg::Location teleportation_location = vehicle_location + cg::Location(correct_heading * target_displacement);
           teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
         }
       // In case of an emergency stop, stay in the same location.
       // Also, teleport only once every dt in asynchronous mode.
       } else {
-        teleportation_transform = cg::Transform(ego_location, simulation_state.GetRotation(actor_id));
+        teleportation_transform = cg::Transform(vehicle_location, simulation_state.GetRotation(actor_id));
       }
       // Constructing the actuation signal.
       output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
@@ -298,8 +308,8 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
 
 std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardData &collision_hazard,
                                                           const bool tl_hazard,
-                                                          const cg::Vector3D ego_velocity,
-                                                          const cg::Vector3D ego_heading,
+                                                          const cg::Vector3D vehicle_velocity,
+                                                          const cg::Vector3D vehicle_heading,
                                                           const float max_target_velocity) {
   bool collision_emergency_stop = false;
   float dynamic_target_velocity = max_target_velocity;
@@ -307,17 +317,17 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
   if (collision_hazard.hazard && !tl_hazard) {
     const ActorId other_actor_id = collision_hazard.hazard_actor_id;
     const cg::Vector3D other_velocity = simulation_state.GetVelocity(other_actor_id);
-    const float ego_relative_speed = (ego_velocity - other_velocity).Length();
+    const float vehicle_relative_speed = (vehicle_velocity - other_velocity).Length();
     const float available_distance_margin = collision_hazard.available_distance_margin;
 
-    const float other_speed_along_heading = cg::Math::Dot(other_velocity, ego_heading);
+    const float other_speed_along_heading = cg::Math::Dot(other_velocity, vehicle_heading);
 
     // Consider collision avoidance decisions only if there is positive relative velocity
     // of the ego vehicle (meaning, ego vehicle is closing the gap to the lead vehicle).
-    if (ego_relative_speed > EPSILON_RELATIVE_SPEED) {
+    if (vehicle_relative_speed > EPSILON_RELATIVE_SPEED) {
       // If other vehicle is approaching lead vehicle and lead vehicle is further
       // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
-      float follow_lead_distance = ego_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
+      float follow_lead_distance = vehicle_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
       if (available_distance_margin > follow_lead_distance) {
         // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
         // by maintaining a relative speed of RELATIVE_APPROACH_SPEED

@@ -322,7 +322,7 @@ void TrafficManagerLocal::Reset() {
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
-  //SetupLocalMap();
+  SetupLocalMap();
   Start();
 }
 
@@ -409,6 +409,10 @@ void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
 
 void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
   parameters.SetRespawnDormantVehicles(mode_switch);
+}
+
+void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+  parameters.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
