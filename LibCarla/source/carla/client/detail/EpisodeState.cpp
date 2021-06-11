@@ -21,18 +21,13 @@ namespace detail {
       _simulation_state(state.GetSimulationState()) {
     _actors.reserve(state.size());
     for (auto &&actor : state) {
-
-      // Origin offset conversion for Large maps
-      geom::Transform transform = actor.transform;
-      transform.location += {_map_origin};
-
       DEBUG_ONLY(auto result = )
       _actors.emplace(
           actor.id,
           ActorSnapshot{
               actor.id,
               actor.actor_state,
-              transform,
+              actor.transform,
               actor.velocity,
               actor.angular_velocity,
               actor.acceleration,

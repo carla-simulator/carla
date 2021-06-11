@@ -12,6 +12,7 @@
 #include "HAL/PlatformFilemanager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 static bool ValidateStaticMesh(UStaticMesh *Mesh)
 {
@@ -127,6 +128,25 @@ void UPrepareAssetsForCookingCommandlet::LoadWorldTile(FAssetData &AssetData)
   if (AssetDatas.Num() > 0)
   {
     // Extract first asset found in folder path (i.e. the BaseTile)
+    AssetData = AssetDatas.Pop();
+  }
+}
+
+void UPrepareAssetsForCookingCommandlet::LoadLargeMapWorld(FAssetData &AssetData)
+{
+  // BaseMap path inside Carla
+  const FString BaseMap = TEXT("/Game/Carla/Maps/BaseLargeMap");
+
+  // Load Map folder using object library
+  MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
+  MapObjectLibrary->AddToRoot();
+  MapObjectLibrary->LoadAssetDataFromPath(*BaseMap);
+  MapObjectLibrary->LoadAssetsFromAssetData();
+  MapObjectLibrary->GetAssetDataList(AssetDatas);
+
+  if (AssetDatas.Num() > 0)
+  {
+    // Extract first asset found in folder path (i.e. the BaseMap)
     AssetData = AssetDatas.Pop();
   }
 }
@@ -293,7 +313,8 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
     FAssetData &AssetData,
     const FString &PackageName,
     const FString &DestPath,
-    const FString &WorldName)
+    const FString &WorldName,
+    bool bGenerateSpawnPoints)
 {
   // Create Package to save
   UPackage *Package = AssetData.GetPackage();
@@ -314,7 +335,7 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
       WorldName + TEXT("/OpenDrive/") + WorldName + TEXT(".xodr");
 
   bool bPackageSaved = false;
-  if (FPaths::FileExists(PathXODR))
+  if (FPaths::FileExists(PathXODR) && bGenerateSpawnPoints)
   {
     // We need to spawn OpenDrive assets before saving the map
     AOpenDriveActor *OpenWorldActor = CastChecked<AOpenDriveActor>(
@@ -459,6 +480,21 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
   for (const auto &Map : AssetsPaths.MapsPaths)
   {
     MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
+    TArray<FAssetData> AssetsData;
+    UObjectLibrary* ObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), true, true);
+    ObjectLibrary->LoadAssetDataFromPath(Map.Path);
+    ObjectLibrary->GetAssetDataList(AssetsData);
+    int NumTiles = 0;
+    for (FAssetData &AssetData : AssetsData)
+    {
+      FString AssetName = AssetData.AssetName.ToString();
+      if (AssetName.Contains(Map.Name + "_Tile_"))
+      {
+        MapPathData.Append(Map.Path + TEXT("/") + AssetName + TEXT("+"));
+        NumTiles++;
+      }
+    }
+    UE_LOG(LogTemp, Warning, TEXT("Found %d tiles"), NumTiles);
   }
 
   if (!PropsMapPath.IsEmpty())
@@ -495,7 +531,7 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
 
     const FString DefaultPath   = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
     const FString RoadsPath     = BasePath + SSTags::ROAD      + MapPath;
-    const FString RoadLinesPath = BasePath + SSTags::ROADLINES + MapPath;
+    const FString RoadLinesPath = BasePath + SSTags::ROADLINE  + MapPath;
     const FString TerrainPath   = BasePath + SSTags::TERRAIN   + MapPath;
     const FString SidewalkPath  = BasePath + SSTags::SIDEWALK  + MapPath;
 
@@ -525,6 +561,33 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
     }
     else
     {
+      TArray<TPair<FString, FIntVector>> MapPathsIds;
+
+      FVector PositionTile0 = FVector();
+      float TileSize = 200000.f;
+      FString TxtFile;
+      FString TilesInfoPath = FPaths::ProjectContentDir() + PackageName + TEXT("/Maps/") + Map.Name + "/TilesInfo.txt";
+      UE_LOG(LogTemp, Warning, TEXT("Loading %s ..."), *TilesInfoPath);
+      if (FFileHelper::LoadFileToString(TxtFile, *(TilesInfoPath)) == true) {
+
+        TArray<FString> Out;
+        TxtFile.ParseIntoArray(Out, TEXT(","), true);
+        if (Out.Num() >= 3)
+        {
+          const float METERSTOCM = 100.f;
+          PositionTile0.X = METERSTOCM * FCString::Atof(*Out[0]);
+          PositionTile0.Y = METERSTOCM * FCString::Atof(*Out[1]);
+          TileSize = METERSTOCM * FCString::Atof(*Out[2]);
+        }
+        else
+        {
+          UE_LOG(LogTemp, Warning, TEXT("TilesInfo.txt format is invalid file"));
+        }
+      }
+      else {
+        UE_LOG(LogTemp, Warning, TEXT("Could not find TilesInfo.txt file"));
+      }
+
       UE_LOG(LogTemp, Log, TEXT("Cooking tiles:"));
       // Load World
       FAssetData AssetData;
@@ -556,6 +619,9 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
             // Save the World in specified path
             // UE_LOG(LogTemp, Log, TEXT("Saving as %s to %s"), *TileName, *Map.Path);
             SaveWorld(AssetData, PackageName, Map.Path, TileName);
+            MapPathsIds.Add(
+                TPair<FString, FIntVector>(
+                  Map.Path + "/" + TileName, FIntVector(i, j, 0)));
             // Remove spawned actors from world to keep equal as BaseMap
             DestroySpawnedActorsInWorld(SpawnedActors);
             ++i;
@@ -565,6 +631,31 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
         ++j;
       }
       while (i > 0);
+
+      #if WITH_EDITOR
+        UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+      #endif
+      // Load base map for tiled maps
+      LoadLargeMapWorld(AssetData);
+      BaseMapRedirector = Cast<UObjectRedirector>(AssetData.GetAsset());
+      if (BaseMapRedirector != nullptr) {
+        World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+      }
+      else {
+        World = CastChecked<UWorld>(AssetData.GetAsset());
+      }
+
+      // Generate Large Map Manager
+      ALargeMapManager* LargeMapManager = World->SpawnActor<ALargeMapManager>(
+          ALargeMapManager::StaticClass(), FTransform());
+      LargeMapManager->LargeMapTilePath = Map.Path;
+      LargeMapManager->LargeMapName = Map.Name;
+      LargeMapManager->SetTile0Offset(PositionTile0);
+      LargeMapManager->SetTileSize(TileSize);
+      LargeMapManager->GenerateMap(MapPathsIds);
+
+      SaveWorld(AssetData, PackageName, Map.Path, Map.Name, false);
+
       UE_LOG(LogTemp, Log, TEXT("End cooking tiles"));
     }
   }
