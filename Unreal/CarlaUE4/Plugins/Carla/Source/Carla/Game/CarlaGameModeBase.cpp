@@ -69,7 +69,10 @@ void ACarlaGameModeBase::InitGame(
       UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
   LMManager = Cast<ALargeMapManager>(LMManagerActor);
   if (LMManager) {
-    LMManager->GenerateLargeMap();
+    if (LMManager->GetNumTiles() == 0)
+    {
+      LMManager->GenerateLargeMap();
+    }
     InMapName = LMManager->LargeMapName;
   }
 
@@ -148,12 +151,6 @@ void ACarlaGameModeBase::BeginPlay()
 
   UWorld* World = GetWorld();
   check(World != nullptr);
-
-  if(LMManager)
-  {
-    //ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
-    //LMManager->AddActorToConsider(Player->GetPlayerController(World)->GetPawn());
-  }
 
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
   ReadyToRegisterObjects = true;

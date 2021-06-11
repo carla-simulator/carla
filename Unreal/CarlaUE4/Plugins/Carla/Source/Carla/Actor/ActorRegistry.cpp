@@ -102,7 +102,7 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
   Ids.Emplace(&Actor, Id);
 
   TSharedPtr<FCarlaActor> View =
-      MakeCarlaActor(Id, Actor, std::move(Description), crp::ActorState::Alive);
+      MakeCarlaActor(Id, Actor, std::move(Description), crp::ActorState::Active);
 
   TSharedPtr<FCarlaActor>& Result = ActorDatabase.Emplace(Id, MoveTemp(View));
 
@@ -186,7 +186,7 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
       FCarlaActor::ConstructCarlaActor(
         Id, &Actor,
         std::move(Info), Type,
-        InState, Actor.GetWorld());
+        InState, (&Actor)->GetWorld());
   return CarlaActor;
 }
 

@@ -17,6 +17,7 @@
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
@@ -215,8 +216,13 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
 
 void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
 {
-  FCarlaStaticDelegates::OnEpisodeSettingsChange.Broadcast(Settings);
   EpisodeSettings = Settings;
+  if(EpisodeSettings.ActorActiveDistance > EpisodeSettings.TileStreamingDistance)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Setting ActorActiveDistance is lower that TileStreamingDistance, TileStreamingDistance will be used instead"));
+    EpisodeSettings.ActorActiveDistance = EpisodeSettings.TileStreamingDistance;
+  }
+  FCarlaStaticDelegates::OnEpisodeSettingsChange.Broadcast(EpisodeSettings);
 }
 
 TArray<FTransform> UCarlaEpisode::GetRecommendedSpawnPoints() const
@@ -383,6 +389,36 @@ std::string UCarlaEpisode::StartRecorder(std::string Name, bool AdditionalData)
   else
   {
     result = "Recorder is not ready";
+  }
+
+  return result;
+}
+
+TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
+    const FTransform &Transform,
+    FActorDescription thisActorDescription,
+    FCarlaActor::IdType DesiredId)
+{
+  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  FTransform LocalTransform = Transform;
+  if(LargeMap)
+  {
+    LocalTransform = LargeMap->GlobalToLocalTransform(LocalTransform);
+  }
+
+  // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
+  auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
+  if (Recorder->IsEnabled())
+  {
+    if (result.Key == EActorSpawnResultStatus::Success)
+    {
+      Recorder->CreateRecorderEventAdd(
+        result.Value->GetActorId(),
+        static_cast<uint8_t>(result.Value->GetActorType()),
+        Transform,
+        std::move(thisActorDescription)
+      );
+    }
   }
 
   return result;

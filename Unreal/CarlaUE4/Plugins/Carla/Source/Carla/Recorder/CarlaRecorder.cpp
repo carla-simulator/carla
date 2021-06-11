@@ -154,7 +154,7 @@ void ACarlaRecorder::AddActorPosition(FCarlaActor *CarlaActor)
   AddPosition(CarlaRecorderPosition
   {
     CarlaActor->GetActorId(),
-    Transform.GetTranslation(),
+    Transform.GetLocation(),
     Transform.GetRotation().Euler()
   });
 }
@@ -201,20 +201,20 @@ void ACarlaRecorder::AddWalkerAnimation(FCarlaActor *CarlaActor)
 void ACarlaRecorder::AddTrafficLightState(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
-  // Todo: interface with FCarlaActor and UTrafficLightController
-  AActor *Actor = CarlaActor->GetActor();
-  if(Actor)
+
+  ETrafficLightState LightState = CarlaActor->GetTrafficLightState();
+  UTrafficLightController* Controller = CarlaActor->GetTrafficLightController();
+  if (Controller)
   {
-    // get states
-    auto TrafficLight = Cast<ATrafficLightBase>(Actor);
-    if (TrafficLight != nullptr)
+    ATrafficLightGroup* Group = Controller->GetGroup();
+    if (Group)
     {
       AddState(CarlaRecorderStateTrafficLight
       {
         CarlaActor->GetActorId(),
-        TrafficLight->GetTimeIsFrozen(),
-        TrafficLight->GetElapsedTime(),
-        static_cast<char>(TrafficLight->GetTrafficLightState())
+        Group->IsFrozen(),
+        Controller->GetElapsedTime(),
+        static_cast<char>(LightState)
       });
     }
   }
@@ -561,16 +561,15 @@ void ACarlaRecorder::AddExistingActors(void)
   FActorRegistry Registry = Episode->GetActorRegistry();
   for (auto& It : Registry)
   {
-    const FCarlaActor* View = It.Value.Get();
-    const AActor *Actor = View->GetActor();
-    if (Actor != nullptr)
+    const FCarlaActor* CarlaActor = It.Value.Get();
+    if (CarlaActor != nullptr)
     {
       // create event
       CreateRecorderEventAdd(
-          View->GetActorId(),
-          static_cast<uint8_t>(View->GetActorType()),
-          Actor->GetActorTransform(),
-          View->GetActorInfo()->Description);
+          CarlaActor->GetActorId(),
+          static_cast<uint8_t>(CarlaActor->GetActorType()),
+          CarlaActor->GetActorGlobalTransform(),
+          CarlaActor->GetActorInfo()->Description);
     }
   }
 

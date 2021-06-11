@@ -8,6 +8,9 @@
 #include "Carla/Util/ObjectRegister.h"
 
 #include "Carla/Game/Tagger.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
+
+#include "GameFramework/Character.h"
 
 #if WITH_EDITOR
 #include "FileHelper.h"
