@@ -32,7 +32,8 @@
   * Added Optical Flow camera
   * API extensions:
   - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
-  - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee
+  - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle wheel
+  - Added `scattering_intensity` , `mie_scattering_scale` , `rayleigh_scattering_scale` to PythonAPI for changing weather attributes
 
 ## CARLA 0.9.11
 

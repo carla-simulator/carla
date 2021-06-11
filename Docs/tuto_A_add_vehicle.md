@@ -126,11 +126,13 @@ In the dialogue box that pops up:
 
 The Skeletal Mesh will appear along with two new files, `<vehicle_name>_PhysicsAssets` and `<vehicle_name>_Skeleton`.
 
-__3. Set the raycast sensor mesh.__
+Import the rest of your `.fbx` files separately from the main vehicle skeleton `.fbx` file.
+
+__3. Set the physical asset mesh.__
 
 >1. Open `<vehicle_name>_PhysicsAssets` from the **_Content Browser_**.
 - Right-click on the `Vehicle_Base` mesh in the **_Skeleton Tree_** panel and go to **_Copy Collision from StaticMesh_**.
-- Search for and select your `SM_sc_<vehicle_name>` file. You should see the outline of the raycast sensor mesh appear in the viewport.
+- Search for and select your `SMC_<vehicle_name>` file. You should see the outline of the physical asset mesh appear in the viewport.
 - Delete the default capsule shape from the `Vehicle_Base`.
 - Select all the wheels:
     - Go to the **_Tools_** panel and change the **_Primitive Type_** to `Sphere`.
@@ -141,7 +143,7 @@ __3. Set the raycast sensor mesh.__
 - Adjust the wheel sphere to the size of the wheel.
 - Save and close the window.
 
->>![Collision mesh](../img/collision_mesh_vehicle.png)
+>![Collision mesh](../img/collision_mesh_vehicle.png)
 
 __4. Create the Animation Blueprint.__
 

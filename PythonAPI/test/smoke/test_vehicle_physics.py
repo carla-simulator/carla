@@ -95,6 +95,11 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
 
     return physics_control
 
+SpawnActor = carla.command.SpawnActor
+FutureActor = carla.command.FutureActor
+ApplyTargetVelocity = carla.command.ApplyTargetVelocity
+ApplyVehicleControl = carla.command.ApplyVehicleControl
+
 
 class TestApplyVehiclePhysics(SyncSmokeTest):
     def wait(self, frames=100):
@@ -210,64 +215,53 @@ class TestVehicleFriction(SyncSmokeTest):
             vehicle_00.set_enable_gravity(True)
 
             veh_transf.location.x -= 4
+            veh_transf.location.z += 0.5
             vehicle_01 = self.world.spawn_actor(bp_veh, veh_transf)
             vehicle_01.set_target_velocity(carla.Vector3D(0, 0, 0))
-            vehicle_01.set_enable_gravity(True)
-
-            veh_transf.location.x -= 4
-            veh_transf.location.z += 0.5
-            vehicle_02 = self.world.spawn_actor(bp_veh, veh_transf)
-            vehicle_02.set_target_velocity(carla.Vector3D(0, 0, 0))
-            vehicle_02.set_enable_gravity(False)
+            vehicle_01.set_enable_gravity(False)
 
             self.wait(10)
 
-            vel_ref = 100.0 / 3.6
             vehicle_00.apply_physics_control(change_physics_control(vehicle_00, tire_friction=0.0, drag=0.0))
             vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=0.0, drag=0.0))
-            vehicle_02.apply_physics_control(change_physics_control(vehicle_02, tire_friction=0.0, drag=0.0))
             self.wait(1)
-            vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            vehicle_02.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+            vel_ref = 100.0 / 3.6
+
+            self.client.apply_batch_sync([
+                ApplyTargetVelocity(vehicle_00, carla.Vector3D(0, vel_ref, 0)),
+                ApplyTargetVelocity(vehicle_01, carla.Vector3D(0, vel_ref, 0)),
+            ])
 
             self.wait(1)
 
             vel_veh_00 = vehicle_00.get_velocity().y
             vel_veh_01 = vehicle_01.get_velocity().y
-            vel_veh_02 = vehicle_02.get_velocity().y
 
-            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01, vel_veh_02], 1e-3):
+            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01], 1e-3):
                 vehicle_00.destroy()
                 vehicle_01.destroy()
-                vehicle_02.destroy()
-                self.fail("%s: Velocities are not equal after initialization. Ref: %.3f -> [%.3f, %.3f, %.3f]"
-                  % (bp_veh.id, vel_ref, vel_veh_00, vel_veh_01, vel_veh_02))
+                self.fail("%s: Velocities are not equal after initialization. Ref: %.3f -> [%.3f, %.3f]"
+                  % (bp_veh.id, vel_ref, vel_veh_00, vel_veh_01))
 
             self.wait(200)
 
             vel_veh_00 = vehicle_00.get_velocity().y
             vel_veh_01 = vehicle_01.get_velocity().y
-            vel_veh_02 = vehicle_02.get_velocity().y
-            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01, vel_veh_02], 1e-2):
+            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01], 1e-2):
                 vehicle_00.destroy()
                 vehicle_01.destroy()
-                vehicle_02.destroy()
-                self.fail("%s: Velocities are not equal after simulation. Ref: %.3f -> [%.3f, %.3f, %.3f]"
-                  % (bp_veh.id, vel_ref, vel_veh_00, vel_veh_01, vel_veh_02))
+                self.fail("%s: Velocities are not equal after simulation. Ref: %.3f -> [%.3f, %.3f]"
+                  % (bp_veh.id, vel_ref, vel_veh_00, vel_veh_01))
 
             loc_veh_00 = vehicle_00.get_location().y
             loc_veh_01 = vehicle_01.get_location().y
-            loc_veh_02 = vehicle_02.get_location().y
-            if not list_equal_tol([loc_veh_00, loc_veh_01, loc_veh_02], 1e-2):
+            if not list_equal_tol([loc_veh_00, loc_veh_01], 1e-2):
                 vehicle_00.destroy()
                 vehicle_01.destroy()
-                vehicle_02.destroy()
-                self.fail("%s: Locations are not equal after simulation: %f %f %f" % (bp_veh.id, loc_veh_00, loc_veh_01, loc_veh_02))
+                self.fail("%s: Locations are not equal after simulation: %f %f" % (bp_veh.id, loc_veh_00, loc_veh_01))
 
             vehicle_00.destroy()
             vehicle_01.destroy()
-            vehicle_02.destroy()
 
     def test_vehicle_friction_volume(self):
         print("TestVehicleFriction.test_vehicle_friction_volume")
@@ -311,8 +305,11 @@ class TestVehicleFriction(SyncSmokeTest):
             vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=friction_ref, drag=0.0))
             self.wait(1)
  
-            vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+            self.client.apply_batch_sync([
+                ApplyTargetVelocity(vehicle_00, carla.Vector3D(0, vel_ref, 0)),
+                ApplyTargetVelocity(vehicle_01, carla.Vector3D(0, vel_ref, 0)),
+            ])
+
             self.wait(10)
 
             # Before trigger
@@ -394,10 +391,11 @@ class TestVehicleFriction(SyncSmokeTest):
             vehicle_01.apply_physics_control(change_physics_control(vehicle_01, tire_friction=0.5, drag=0.0))
             vehicle_02.apply_physics_control(change_physics_control(vehicle_02, tire_friction=3.0, drag=0.0))
             self.wait(1)
-            vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            vehicle_02.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-
+            self.client.apply_batch_sync([
+                ApplyTargetVelocity(vehicle_00, carla.Vector3D(0, vel_ref, 0)),
+                ApplyTargetVelocity(vehicle_01, carla.Vector3D(0, vel_ref, 0)),
+                ApplyTargetVelocity(vehicle_02, carla.Vector3D(0, vel_ref, 0))
+            ])
             self.wait(50)
 
             vel_veh_00 = vehicle_00.get_velocity().y
@@ -407,9 +405,11 @@ class TestVehicleFriction(SyncSmokeTest):
 
             for _i in range(0, 300):
                 self.world.tick()
-                vehicle_00.apply_control(carla.VehicleControl(brake=1.0))
-                vehicle_01.apply_control(carla.VehicleControl(brake=1.0))
-                vehicle_02.apply_control(carla.VehicleControl(brake=1.0))
+                self.client.apply_batch_sync([
+                    ApplyVehicleControl(vehicle_00, carla.VehicleControl(brake=1.0)),
+                    ApplyVehicleControl(vehicle_01, carla.VehicleControl(brake=1.0)),
+                    ApplyVehicleControl(vehicle_02, carla.VehicleControl(brake=1.0))
+                ])
 
             curr_vel_veh_00 = vehicle_00.get_velocity().y
             dist_veh_00 = vehicle_00.get_location().y - loc_veh_00
@@ -459,8 +459,10 @@ class TestVehicleTireConfig(SyncSmokeTest):
             vehicle_01.apply_physics_control(change_physics_control(vehicle_01, wheel_sweep = True))
             self.wait(1)
 
-            vehicle_00.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
-            vehicle_01.set_target_velocity(carla.Vector3D(0, vel_ref, 0))
+            self.client.apply_batch_sync([
+                ApplyTargetVelocity(vehicle_00, carla.Vector3D(0, vel_ref, 0)),
+                ApplyTargetVelocity(vehicle_01, carla.Vector3D(0, vel_ref, 0))
+            ])
             self.wait(200)
 
             loc_veh_00 = vehicle_00.get_location().y
@@ -517,9 +519,11 @@ class TestVehicleTireConfig(SyncSmokeTest):
 
             for _i in range(0, 100):
                 self.world.tick()
-                vehicle_00.apply_control(carla.VehicleControl(throttle=1.0))
-                vehicle_01.apply_control(carla.VehicleControl(throttle=1.0))
-                vehicle_02.apply_control(carla.VehicleControl(throttle=1.0))
+                self.client.apply_batch_sync([
+                    ApplyVehicleControl(vehicle_00, carla.VehicleControl(throttle=1.0)),
+                    ApplyVehicleControl(vehicle_01, carla.VehicleControl(throttle=1.0)),
+                    ApplyVehicleControl(vehicle_02, carla.VehicleControl(throttle=1.0))
+                ])
 
             vel_veh_00 = vehicle_00.get_velocity().y
             vel_veh_01 = vehicle_01.get_velocity().y
@@ -553,27 +557,36 @@ class TestStickyControl(SyncSmokeTest):
         if sticky is not None:
             bp_veh.set_attribute("sticky_control", sticky)
 
-        vehicle_00 = self.world.spawn_actor(bp_veh, veh_transf)
+        batch = [SpawnActor(bp_veh, veh_transf)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))]
 
-        vehicle_00.set_target_velocity(carla.Vector3D(0, 0, 0))
+        responses = self.client.apply_batch_sync(batch)
+
+        if len(responses) != 1 or responses[0].error:
+            self.fail("%s: The test car could not be correctly spawned" % (bp_veh.id))
+
+        vehicle_id = responses[0].actor_id
+        vehicle_00 = self.world.get_actor(vehicle_id)
+
         for _i in range(0, 10):
             self.world.tick()
 
-        vehicle_00.apply_control(veh_control)
+        self.client.apply_batch_sync([ApplyVehicleControl(vehicle_00, veh_control)])
         self.world.tick()
 
         for _i in range(0, 150):
             if continous:
-                vehicle_00.apply_control(veh_control)
+                self.client.apply_batch_sync([ApplyVehicleControl(vehicle_00, veh_control)])
             if reset_after_first:
-                vehicle_00.apply_control(carla.VehicleControl())
+                self.client.apply_batch_sync([ApplyVehicleControl(vehicle_00, carla.VehicleControl())])
             self.world.tick()
 
         loc_veh_00 = vehicle_00.get_location().y
         vel_veh_00 = vehicle_00.get_velocity().y
         dist_veh_00 = loc_veh_00 - ref_pos
 
-        vehicle_00.destroy()
+        self.client.apply_batch([carla.command.DestroyActor(vehicle_id)])
+        self.world.tick()
 
         return dist_veh_00, vel_veh_00
 
