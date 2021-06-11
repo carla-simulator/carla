@@ -186,7 +186,7 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
       FCarlaActor::ConstructCarlaActor(
         Id, &Actor,
         std::move(Info), Type,
-        InState, (&Actor)->GetWorld());
+        InState, Actor.GetWorld());
   return CarlaActor;
 }
 
