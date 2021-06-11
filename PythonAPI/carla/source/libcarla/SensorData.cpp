@@ -210,14 +210,25 @@ static void ConvertImage(T &self, EColorConverter cc) {
       throw std::invalid_argument("invalid color converter!");
   }
 }
+
+// image object resturned from optical flow to color conversion
+class FakeImage : public std::vector<uint8_t> {
+  public:
+  unsigned int Width = 0;
+  unsigned int Height = 0;
+  float FOV = 0;
+};
 // method to convert optical flow images to rgb
-static std::vector<uint8_t> ColorCodedFlow (
+static FakeImage ColorCodedFlow (
     carla::sensor::data::OpticalFlowImage& image) {
   namespace bp = boost::python;
   namespace csd = carla::sensor::data;
   constexpr float pi = 3.1415f;
   constexpr float rad2ang = 360.f/(2.f*pi);
-  std::vector<uint8_t> result;
+  FakeImage result;
+  result.Width = image.GetWidth();
+  result.Height = image.GetHeight();
+  result.FOV = image.GetFOVAngle();
   result.resize(image.GetHeight()*image.GetWidth()* 4);
 
   // lambda for computing batches of pixels
@@ -353,10 +364,14 @@ void export_sensor_data() {
   namespace csd = carla::sensor::data;
   namespace css = carla::sensor::s11n;
 
-  // wrapper for std::vector<uint8_t>
-  class_<std::vector<uint8_t> >("VecUint8")
-      .def(vector_indexing_suite<std::vector<uint8_t> >())
-      .add_property("raw_data", &GetRawDataAsBuffer<std::vector<uint8_t> >);
+  // Fake image returned from optical flow to color conversion
+  // fakes the regular image object
+  class_<FakeImage>("FakeImage", no_init)
+      .def(vector_indexing_suite<std::vector<uint8_t>>())
+      .add_property("width", &FakeImage::Width)
+      .add_property("height", &FakeImage::Height)
+      .add_property("fov", &FakeImage::FOV)
+      .add_property("raw_data", &GetRawDataAsBuffer<FakeImage>);
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame", &cs::SensorData::GetFrame)
