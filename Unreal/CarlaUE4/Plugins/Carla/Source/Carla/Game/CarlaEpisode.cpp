@@ -219,8 +219,8 @@ void UCarlaEpisode::ApplySettings(const FEpisodeSettings &Settings)
   EpisodeSettings = Settings;
   if(EpisodeSettings.ActorActiveDistance > EpisodeSettings.TileStreamingDistance)
   {
-    UE_LOG(LogCarla, Warning, TEXT("Setting ActorActiveDistance is lower that TileStreamingDistance, TileStreamingDistance will be used instead"));
-    EpisodeSettings.ActorActiveDistance = EpisodeSettings.TileStreamingDistance;
+    UE_LOG(LogCarla, Warning, TEXT("Setting ActorActiveDistance is smaller that TileStreamingDistance, TileStreamingDistance will be increased"));
+    EpisodeSettings.TileStreamingDistance = EpisodeSettings.ActorActiveDistance;
   }
   FCarlaStaticDelegates::OnEpisodeSettingsChange.Broadcast(EpisodeSettings);
 }

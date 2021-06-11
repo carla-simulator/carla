@@ -10,6 +10,7 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 
+#include "InstancedFoliageActor.h"
 #include "GameFramework/Character.h"
 
 #if WITH_EDITOR
