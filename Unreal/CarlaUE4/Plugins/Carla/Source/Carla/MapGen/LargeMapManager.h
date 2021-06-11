@@ -147,6 +147,14 @@ public:
 
   void SetTileSize(float Size);
 
+  void SetLayerStreamingDistance(float Distance);
+
+  void SetActorStreamingDistance(float Distance);
+
+  float GetLayerStreamingDistance() const;
+
+  float GetActorStreamingDistance() const;
+
 protected:
 
   FIntVector GetTileVectorID(FVector TileLocation) const;

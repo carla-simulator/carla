@@ -531,7 +531,7 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
 
     const FString DefaultPath   = TEXT("/Game/") + PackageName + TEXT("/Maps/") + Map.Name;
     const FString RoadsPath     = BasePath + SSTags::ROAD      + MapPath;
-    const FString RoadLinesPath = BasePath + SSTags::ROADLINES + MapPath;
+    const FString RoadLinesPath = BasePath + SSTags::ROADLINE  + MapPath;
     const FString TerrainPath   = BasePath + SSTags::TERRAIN   + MapPath;
     const FString SidewalkPath  = BasePath + SSTags::SIDEWALK  + MapPath;
 
