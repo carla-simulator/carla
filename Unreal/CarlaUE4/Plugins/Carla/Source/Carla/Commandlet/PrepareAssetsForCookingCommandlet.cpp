@@ -216,26 +216,16 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           // tag
           if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
           {
-            if (MeshActor->GetStaticMeshComponent()->GetNumMaterials() == 1)
+            for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
             {
-              bool FoundColorName = true;
-              for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num() && FoundColorName == false; ++i)
+              if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString().Contains("Yellow"))
               {
-                if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString().Contains("Yellow"))
-                {
-                  MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeYellow);
-                  FoundColorName = true;
-                }
-                else
-                {
-                  MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeWhite);
-                }
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeYellow);
               }
-            }
-            else
-            {
-              MeshActor->GetStaticMeshComponent()->SetMaterial(0, MarkingNodeWhite);
-              MeshActor->GetStaticMeshComponent()->SetMaterial(1, MarkingNodeYellow);
+              else
+              {
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeWhite);
+              }
             }
           }
           else if (AssetName.Contains(SSTags::R_ROAD1) || AssetName.Contains(SSTags::R_ROAD2))
