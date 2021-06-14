@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import argparse
 import threading
+import copy
 
 # Global variables
 IMPORT_SETTING_FILENAME = "importsetting.json"
@@ -79,8 +80,8 @@ def generate_json_package(folder, package_name, use_carla_materials):
             tiles = map_name[2]
             tiles = ["%s/%s" % (path, x) for x in tiles]
             map_dict = {
-                'name': name, 
-                'xodr':   '%s/%s.xodr' % (path, name), 
+                'name': name,
+                'xodr':   '%s/%s.xodr' % (path, name),
                 'use_carla_materials': use_carla_materials
             }
             # check for only one 'source' or map in 'tiles'
@@ -324,7 +325,7 @@ def copy_roadpainter_config_files(package_name):
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
-    shutil.copy(final_path, package_config_path) 
+    shutil.copy(final_path, package_config_path)
 
 
 def copy_roadpainter_config_files(package_name):
@@ -339,18 +340,57 @@ def copy_roadpainter_config_files(package_name):
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
-    shutil.copy(final_path, package_config_path) 
+    shutil.copy(final_path, package_config_path)
 
 
-def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size):
+def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, batch_size):
     """Same commandlet is used for importing assets and also maps."""
     commandlet_name = "ImportAssets"
 
-    # Import Props
-    import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps, do_tiles, tile_size)
-    commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
-    invoke_commandlet(commandlet_name, commandlet_arguments)
-    os.remove(import_setting_file)
+    if do_tiles:
+        for umap in maps:
+            # import groups of tiles to prevent unreal from using too much memory
+            map_template = {}
+            for key, value in umap.iteritems():
+                if key is not 'tiles':
+                    map_template[key] = value
+            map_template['tiles'] = []
+            tiles = umap['tiles']
+            tiles.sort()
+            total_tiles = len(tiles)
+            num_batches = int(total_tiles / batch_size)
+            current_tile = 0
+            current_batch = 0
+            current_batch_size = 0
+            current_batch_map = copy.deepcopy(map_template)
+            # get groups of tiles
+            while current_tile < total_tiles:
+                current_batch_map['tiles'].append(tiles[current_tile])
+                file_path = os.path.join(json_dirname, tiles[current_tile])
+                current_batch_size += os.path.getsize(file_path)/1000000.0
+                current_tile += 1
+                current_batch += 1
+                # import when the size of the group of tiles surpasses the specified size in MB
+                if current_batch_size >= batch_size:
+                    import_setting_file = generate_import_setting_file(package_name, json_dirname, props, [current_batch_map], do_tiles, tile_size)
+                    commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
+                    invoke_commandlet(commandlet_name, commandlet_arguments)
+                    os.remove(import_setting_file)
+                    current_batch_map = copy.deepcopy(map_template)
+                    current_batch = 0
+                    current_batch_size = 0
+            # import remaining tiles
+            if current_batch > 0:
+                import_setting_file = generate_import_setting_file(package_name, json_dirname, props, [current_batch_map], do_tiles, tile_size)
+                commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
+                invoke_commandlet(commandlet_name, commandlet_arguments)
+                os.remove(import_setting_file)
+    else:
+        # Import Props
+        import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps, do_tiles, tile_size)
+        commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
+        invoke_commandlet(commandlet_name, commandlet_arguments)
+        os.remove(import_setting_file)
 
     # Move maps XODR files if any
     for umap in maps:
@@ -385,7 +425,7 @@ def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size):
     generate_package_file(package_name, props, maps)
 
 
-def import_assets_from_json_list(json_list):
+def import_assets_from_json_list(json_list, batch_size):
     maps = []
     package_name = ""
     for dirname, filename in json_list:
@@ -413,9 +453,9 @@ def import_assets_from_json_list(json_list):
             thr.start()
 
             if ("tiles" in maps[0]):
-                import_assets(package_name, dirname, props, maps, 1, tile_size)
+                import_assets(package_name, dirname, props, maps, 1, tile_size, batch_size)
             else:
-                import_assets(package_name, dirname, props, maps, 0, 0)
+                import_assets(package_name, dirname, props, maps, 0, 0, 0)
 
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
@@ -434,7 +474,7 @@ def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
     commandlet_arguments = ["-PackageName=%s" % package_name]
     invoke_commandlet(commandlet_name, commandlet_arguments)
-    
+
 def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = ["-PackageName=%s" % package_name]
@@ -542,7 +582,11 @@ def main():
         '--json-only',
         action='store_true',
         help='Create JSON files only')
-
+    argparser.add_argument(
+        '--batch-size',
+        type=float,
+        default=300,
+        help='Max batch size in MB')
     args = argparser.parse_known_args()[0]
 
     import_folder = os.path.join(CARLA_ROOT_PATH, "Import")
@@ -557,7 +601,7 @@ def main():
 
     if args.json_only == False:
         copy_roadpainter_config_files(args.package)
-        import_assets_from_json_list(json_list)
+        import_assets_from_json_list(json_list, args.batch_size)
 
 if __name__ == '__main__':
     main()
