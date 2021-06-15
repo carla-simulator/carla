@@ -8,6 +8,7 @@
 
 #include "carla/Exception.h"
 #include "carla/Version.h"
+#include "carla/client/FileTransfer.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/BoneTransformData.h"
@@ -172,6 +173,44 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
   }
 
+  bool Client::SetFilesBaseFolder(const std::string &path) {
+    return FileTransfer::SetFilesBaseFolder(path);
+  }
+
+  std::vector<std::string> Client::GetRequiredFiles(const std::string &folder, const bool download) const {
+    // Get the list of required files
+    auto requiredFiles = _pimpl->CallAndWait<std::vector<std::string>>("get_required_files", folder);
+
+    if (download) {
+
+      // For each required file, check if it exists and request it otherwise
+      for(auto requiredFile : requiredFiles) {
+        if(!FileTransfer::FileExists(requiredFile)) {
+          RequestFile(requiredFile);
+        }
+      }
+    }
+    return requiredFiles;
+  }
+
+  void Client::RequestFile(const std::string &name) const {
+    // Download the binary content of the file from the server and write it on the client
+    auto content = _pimpl->CallAndWait<std::vector<uint8_t>>("request_file", name);
+    FileTransfer::WriteFile(name, content);
+  }
+
+  std::vector<uint8_t> Client::GetCacheFile(const std::string &name, const bool request_otherwise) const {
+    // Get the file from the cache in the file transfer
+    std::vector<uint8_t> file = FileTransfer::ReadFile(name);
+
+    // If it isn't in the cache, download it if request otherwise is true
+    if (file.empty() && request_otherwise) {
+      RequestFile(name);
+      file = FileTransfer::ReadFile(name);
+    }
+    return file;
+  }
+
   std::vector<std::string> Client::GetAvailableMaps() {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
@@ -231,7 +270,7 @@ namespace detail {
   void Client::SetWheelSteerDirection(
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation vehicle_wheel,
-        float angle_in_deg){
+        float angle_in_deg) {
     return _pimpl->AsyncCall("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
   }
 

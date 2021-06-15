@@ -69,8 +69,10 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     }
     // Some conversions...
     FinalPath = FinalPath.Replace(TEXT("/Game/"), *FPaths::ProjectContentDir());
-    if (FPaths::FileExists(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath)))
-    {
+    FinalPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath);
+
+    if (FPaths::FileExists(FinalPath)) {
+      UCarlaStatics::GetGameInstance(GetWorld())->SetMapPath(FinalPath);
       bIsFileFound = true;
       FinalPath = MapString;
     }
