@@ -5,7 +5,7 @@ The CARLA team prepares every asset to run under certain default settings. Howev
 *   [__Car materials__](#car-materials)  
 *   [__Customize car materials__](#customize-car-materials)  
 	*   [Exterior properties](#exterior-properties)  
-*   [__Building material__](#building-material)  
+*   [__Building materials__](#building-materials)  
 *   [__Customize a building material__](#customize-a-building-material)  
 
 !!! Important
@@ -108,6 +108,8 @@ The materials applied to buildings are made of four basic textures that are comb
 	*   `RGB` — Channels with the base colors.  
 	*   `Alpha` — This channel defines a mask that allows to modify the color of the portions in white. This is useful to create some variations from the same material.  
 
+![building_diffuse_alpha](img/building_diffuse_alpha.png)
+
 *   __ORME__ — Maps different properties of the material using specific channels.  
 	*   `Ambient occlusion` — Contained in the `R` channel.  
 	*   `Roughness` — Contained in the `G` channel.  
@@ -120,16 +122,22 @@ The materials applied to buildings are made of four basic textures that are comb
 *   __Emissive__ — If applicable, this texture is used to set the emissive base colors of the texture.  
 	*   `RGB` — Color information for the emissive elements in the texture.  
 
+![emissive](img/EmissiveIntensity.gif)
+
 ---
 ## Customize a building material
 
 Similarly to car materials, a building material can be greatly changed if desired, but it is only recommended if the user has some expertise with Unreal Engine. However, there is some customization available for the two main shaders that buildings use.  
 
-*   __Glass shader__ — `M_CarWindows_Master`.  
+
+![building_material](img/building_material.png)
+
+
+*   __Glass shader__ — `M_GlassMaster`.  
 	*   `Opacity` — Enable color changes on the white area on the __Diffuse__ `Alpha` texture.  
 	*   `Color` — Tint to be applied based on the white area on the __Diffuse__ `Alpha` texture.  
 
-*   __Building shader__ — `M_Building_Master`  
+*   __Building shader__ — `M_MaterialMaster`  
 	*   `Change Color` — Enable color changes on the white area on the __Diffuse__ `Alpha` texture.  
 	*   `Color` — Tint to be applied based on the white area on the __Diffuse__ `Alpha` texture.  
 	*   `Emissive Texture` — Enable the usage of an __Emissive__ texture.  
