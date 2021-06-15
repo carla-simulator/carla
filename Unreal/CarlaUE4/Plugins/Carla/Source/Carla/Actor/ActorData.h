@@ -12,6 +12,7 @@
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "Carla/Sensor/DataStream.h"
+#include "Carla/Traffic/TrafficLightState.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WalkerControl.h>
@@ -19,6 +20,7 @@
 
 class UCarlaEpisode;
 class UTrafficLightController;
+class FCarlaActor;
 
 class FActorData
 {
@@ -36,9 +38,9 @@ public:
 
   bool bSimulatePhysics = false;
 
-  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode);
+  virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode);
 
-  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode);
+  virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode);
 
   virtual AActor* RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info);
 
@@ -57,9 +59,9 @@ public:
 
   FVehicleLightState LightState;
 
-  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
-  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 };
 
 class FWalkerData : public FActorData
@@ -70,9 +72,9 @@ public:
 
   bool bAlive = true;
 
-  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
-  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 };
 
 class FTrafficSignData : public FActorData
@@ -86,9 +88,9 @@ public:
 
   virtual AActor* RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info) override;
 
-  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
-  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 };
 
 class FTrafficLightData : public FActorData
@@ -96,6 +98,8 @@ class FTrafficLightData : public FActorData
 public:
 
   UTrafficLightController* Controller;
+
+  ETrafficLightState LightState;
 
   FString SignId;
 
@@ -105,9 +109,9 @@ public:
 
   virtual AActor* RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info) override;
 
-  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
-  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
 };
 
@@ -117,7 +121,7 @@ public:
 
   FDataStream Stream;
 
-  virtual void RecordActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
-  virtual void RestoreActorData(AActor* Actor, UCarlaEpisode* CarlaEpisode) override;
+  virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 };
