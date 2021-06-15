@@ -103,6 +103,39 @@ public:
     return CurrentMapLayer;
   }
 
+  UFUNCTION(BlueprintCallable)
+  void SetDefaultMapPath() {
+    // Read the config file
+    FConfigFile ConfigFile = FConfigFile();
+    FString configFStr = FPaths::ProjectDir();
+    configFStr += "Config/DefaultEngine.ini";
+    ConfigFile.Read(configFStr);
+
+    // Depending on where we are, set the editor or game default map
+#ifdef UE_EDITOR
+    ConfigFile.GetString(TEXT("/Script/EngineSettings.GameMapsSettings"), TEXT("EditorStartupMap"), _MapPath);
+#else
+    ConfigFile.GetString(TEXT("/Script/EngineSettings.GameMapsSettings"), TEXT("GameDefaultMap"), _MapPath);
+#endif
+
+    // Format and convert the path to absolute
+    _MapPath = _MapPath.Replace(TEXT("/Game/"), *FPaths::ProjectContentDir());
+    _MapPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*_MapPath);
+    _MapPath = FPaths::GetBaseFilename(_MapPath, false);
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void SetMapPath(const FString &MapPath)
+  {
+    _MapPath = MapPath;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  const FString &GetMapPath() const
+  {
+    return _MapPath;
+  }
+
 private:
 
   UPROPERTY(Category = "CARLA Settings", EditAnywhere)
@@ -117,5 +150,8 @@ private:
 
   UPROPERTY(Category = "CARLA Game Instance", EditAnywhere)
   int32 CurrentMapLayer = static_cast<int32>(carla::rpc::MapLayer::All);
+
+  UPROPERTY()
+  FString _MapPath;
 
 };

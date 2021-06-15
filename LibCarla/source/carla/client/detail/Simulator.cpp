@@ -143,6 +143,27 @@ namespace detail {
   }
 
   // ===========================================================================
+  // -- Required files ---------------------------------------------------------
+  // ===========================================================================
+
+
+    bool Simulator::SetFilesBaseFolder(const std::string &path) {
+      return _client.SetFilesBaseFolder(path);
+    }
+
+    std::vector<std::string> Simulator::GetRequiredFiles(const std::string &folder, const bool download) const {
+      return _client.GetRequiredFiles(folder, download);
+    }
+
+    void Simulator::RequestFile(const std::string &name) const {
+      _client.RequestFile(name);
+    }
+
+    std::vector<uint8_t> Simulator::GetCacheFile(const std::string &name, const bool request_otherwise) const {
+      return _client.GetCacheFile(name, request_otherwise);
+    }
+
+  // ===========================================================================
   // -- Tick -------------------------------------------------------------------
   // ===========================================================================
 
