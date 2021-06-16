@@ -12,7 +12,7 @@ Steps to reproduce:
 Other information (documentation you consulted, workarounds you tried):
 
 If you are asking a question please make sure your question was not asked before
-by searching among the existing issues and checking the CARLA forum https://forum.carla.org. Also make sure you have read ourdocumentation and FAQ at http://carla.readthedocs.io. 
+by searching among the existing issues and checking the CARLA forum https://github.com/carla-simulator/carla/discussions. Also make sure you have read ourdocumentation and FAQ at http://carla.readthedocs.io. 
 
 If your question is about creating content (assets, levels) you'll most likely
 have all the info you need in the Unreal Engine's documentation

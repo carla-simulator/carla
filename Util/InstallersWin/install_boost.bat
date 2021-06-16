@@ -71,7 +71,7 @@ set BOOST_TEMP_FOLDER=boost_%BOOST_VERSION:.=_%
 set BOOST_TEMP_FILE=%BOOST_TEMP_FOLDER%.zip
 set BOOST_TEMP_FILE_DIR=%BUILD_DIR%%BOOST_TEMP_FILE%
 
-set BOOST_REPO=https://dl.bintray.com/boostorg/release/%BOOST_VERSION%/source/%BOOST_TEMP_FILE%
+set BOOST_REPO=https://boostorg.jfrog.io/artifactory/main/release/%BOOST_VERSION%/source/%BOOST_TEMP_FILE%
 set BOOST_SRC_DIR=%BUILD_DIR%%BOOST_BASENAME%-source\
 set BOOST_INSTALL_DIR=%BUILD_DIR%%BOOST_BASENAME%-install\
 set BOOST_LIB_DIR=%BOOST_INSTALL_DIR%lib\
@@ -90,7 +90,7 @@ if not exist "%BOOST_SRC_DIR%" (
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%BOOST_REPO%', '%BOOST_TEMP_FILE_DIR%')"
     )
     if not exist "%BOOST_TEMP_FILE_DIR%" (
-        echo %FILE_N% Using Boost backup        
+        echo %FILE_N% Using Boost backup
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/%BOOST_TEMP_FILE%', '%BOOST_TEMP_FILE_DIR%')"
     )
     if %errorlevel% neq 0 goto error_download

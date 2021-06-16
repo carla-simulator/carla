@@ -152,7 +152,7 @@ void export_world() {
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
-    .def(init<bool, bool, double, bool, double, int, float, bool>(
+    .def(init<bool, bool, double, bool, double, int, float, bool, float, float>(
         (arg("synchronous_mode")=false,
          arg("no_rendering_mode")=false,
          arg("fixed_delta_seconds")=0.0,
@@ -160,7 +160,9 @@ void export_world() {
          arg("max_substep_delta_time")=0.01,
          arg("max_substeps")=10,
          arg("max_culling_distance")=0.0f,
-         arg("deterministic_ragdolls")=false)))
+         arg("deterministic_ragdolls")=false,
+         arg("tile_stream_distance")=3000.f,
+         arg("actor_active_distance")=2000.f)))
     .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
     .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
     .def_readwrite("substepping", &cr::EpisodeSettings::substepping)
@@ -176,6 +178,8 @@ void export_world() {
           double fds = (value == object{} ? 0.0 : extract<double>(value));
           self.fixed_delta_seconds = fds > 0.0 ? fds : boost::optional<double>{};
         })
+    .def_readwrite("tile_stream_distance", &cr::EpisodeSettings::tile_stream_distance)
+    .def_readwrite("actor_active_distance", &cr::EpisodeSettings::actor_active_distance)
     .def("__eq__", &cr::EpisodeSettings::operator==)
     .def("__ne__", &cr::EpisodeSettings::operator!=)
     .def(self_ns::str(self_ns::self))

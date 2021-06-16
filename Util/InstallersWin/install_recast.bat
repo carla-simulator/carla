@@ -35,8 +35,8 @@ rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
-set RECAST_HASH=cdce4e
-set RECAST_COMMIT=cdce4e1a270fdf1f3942d4485954cc5e136df1df
+set RECAST_HASH=0b13b0
+set RECAST_COMMIT=0b13b0d288ac96fdc5347ee38299511c6e9400db
 set RECAST_SRC=recast-%RECAST_HASH%-src
 set RECAST_SRC_DIR=%BUILD_DIR%%RECAST_SRC%\
 set RECAST_INSTALL=recast-%RECAST_HASH%-install

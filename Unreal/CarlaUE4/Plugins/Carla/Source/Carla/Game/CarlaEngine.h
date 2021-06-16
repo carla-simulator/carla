@@ -47,18 +47,18 @@ public:
   }
 
   static uint64_t GetFrameCounter()
-  { 
+  {
     return FCarlaEngine::FrameCounter;
   }
 
-  static uint64_t UpdateFrameCounter() 
-  { 
+  static uint64_t UpdateFrameCounter()
+  {
     FCarlaEngine::FrameCounter += 1;
     return FCarlaEngine::FrameCounter;
   }
 
   static void ResetFrameCounter(uint64_t Value = 0)
-  { 
+  {
     FCarlaEngine::FrameCounter = Value;
   }
 

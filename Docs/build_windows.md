@@ -4,7 +4,7 @@ This guide details how to build CARLA from source on Windows. There are two part
 
 The build process is long (4 hours or more) and involves several kinds of software. It is highly recommended to read through the guide fully before starting. 
 
-If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://forum.carla.org/c/installation-issues/linux) to post any queries you may have.
+If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://github.com/carla-simulator/carla/discussions) to post any queries you may have.
 
 - [__Part One: Prerequisites__](#part-one-prerequisites)
     - [System requirements](#system-requirements)
@@ -183,7 +183,7 @@ Optionally, to compile the PythonAPI for Python2, run the following command in t
 ```
 
 !!! Note
-    __Note that when the compilation is done, you may see a successful output in the terminal even if the compilation of the Python API client was unsuccessful.__ Check for any errors in the terminal output and check that a `.egg` file exists in `PythonAPI\carla\dist`. If you come across any errors, check the [F.A.Q.](build_faq.md) or post in the [CARLA forum](https://forum.carla.org/c/installation-issues/windows).
+    __Note that when the compilation is done, you may see a successful output in the terminal even if the compilation of the Python API client was unsuccessful.__ Check for any errors in the terminal output and check that a `.egg` file exists in `PythonAPI\carla\dist`. If you come across any errors, check the [F.A.Q.](build_faq.md) or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions).
 
 
 __2.__ __Compile the server__:
@@ -282,7 +282,7 @@ python3 dynamic_weather.py
 
 ---
 
-Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://forum.carla.org/c/installation-issues/windows) for any issues regarding this guide.  
+Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues regarding this guide.  
 
 Now that you have built CARLA, learn how to update the CARLA build or take your first steps in the simulation, and learn some core concepts.
 

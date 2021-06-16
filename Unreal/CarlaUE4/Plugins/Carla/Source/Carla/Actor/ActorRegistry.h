@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorView.h"
+#include "Carla/Actor/CarlaActor.h"
 
 #include "Containers/Map.h"
 
@@ -21,11 +21,13 @@ class FActorRegistry
 {
 private:
 
-  using DatabaseType = std::unordered_map<FActorView::IdType, FActorView>;
+  // using DatabaseType = std::unordered_map<FCarlaActor::IdType, FCarlaActor>;
+  using DatabaseType = TMap<FCarlaActor::IdType, TSharedPtr<FCarlaActor>>;
 
 public:
 
-  using IdType = DatabaseType::key_type;
+  using IdType = FCarlaActor::IdType;
+  using ValueType = TSharedPtr<FCarlaActor>;
 
   // ===========================================================================
   /// @name Actor registry functions
@@ -37,11 +39,11 @@ public:
   /// actor.
   ///
   /// @warning Undefined if an actor is registered more than once.
-  FActorView Register(AActor &Actor, FActorDescription Description, IdType DesiredId = 0);
+  FCarlaActor* Register(AActor &Actor, FActorDescription Description, IdType DesiredId = 0);
 
-  void Deregister(IdType Id);
+  void Deregister(IdType Id, bool KeepId = false);
 
-  void Deregister(AActor *Actor);
+  void Deregister(AActor *Actor, bool KeepId = false);
 
   /// @}
   // ===========================================================================
@@ -56,30 +58,42 @@ public:
 
   bool IsEmpty() const
   {
-    return ActorDatabase.empty();
+    return Num() == 0;
   }
 
   bool Contains(uint32 Id) const
   {
-    return ActorDatabase.find(Id) != ActorDatabase.end();
+    return ActorDatabase.Find(Id) != nullptr;
   }
 
-  FActorView Find(IdType Id) const
+  FCarlaActor* FindCarlaActor(IdType Id)
   {
-    auto it = ActorDatabase.find(Id);
-    return it != ActorDatabase.end() ? it->second : FActorView();
+    ValueType* CarlaActorPtr = ActorDatabase.Find(Id);
+    return CarlaActorPtr ? CarlaActorPtr->Get() : nullptr;
   }
 
-  FActorView Find(const AActor *Actor) const
+  const FCarlaActor* FindCarlaActor(IdType Id) const
   {
-    auto PtrToId = Ids.Find(Actor);
-    return PtrToId != nullptr ? Find(*PtrToId) : FActorView();
+    const ValueType* CarlaActorPtr = ActorDatabase.Find(Id);
+    return CarlaActorPtr ? CarlaActorPtr->Get() : nullptr;
   }
 
-  /// If the actor is not found in the registry, create a fake actor view. The
-  /// returned FActorView has some information about the @a Actor but will have
-  /// an invalid id.
-  FActorView FindOrFake(AActor *Actor) const;
+  FCarlaActor* FindCarlaActor(const AActor *Actor)
+  {
+    IdType* PtrToId = Ids.Find(Actor);
+    return PtrToId ? FindCarlaActor(*PtrToId) : nullptr;
+  }
+
+  const FCarlaActor* FindCarlaActor(const AActor *Actor) const
+  {
+    const IdType* PtrToId = Ids.Find(Actor);
+    return PtrToId ? FindCarlaActor(*PtrToId) : nullptr;
+  }
+
+
+  void PutActorToSleep(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode);
+
+  void WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode);
 
   /// @}
   // ===========================================================================
@@ -88,26 +102,33 @@ public:
   /// @{
 public:
 
-  using value_type = DatabaseType::mapped_type;
-
   auto begin() const noexcept
   {
-    return carla::iterator::make_map_values_const_iterator(ActorDatabase.begin());
+    return ActorDatabase.begin();
   }
 
   auto end() const noexcept
   {
-    return carla::iterator::make_map_values_const_iterator(ActorDatabase.end());
+    return ActorDatabase.end();
   }
 
   /// @}
 private:
 
-  FActorView MakeView(IdType Id, AActor &Actor, FActorDescription Description) const;
+  TSharedPtr<FCarlaActor> MakeCarlaActor(
+    IdType Id,
+    AActor &Actor,
+    FActorDescription Description,
+    carla::rpc::ActorState InState) const;
+
+  FCarlaActor MakeFakeActor(
+    AActor &Actor) const;
 
   TMap<IdType, AActor *> Actors;
 
   TMap<AActor *, IdType> Ids;
 
   DatabaseType ActorDatabase;
+
+  static IdType ID_COUNTER;
 };

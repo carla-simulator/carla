@@ -49,6 +49,6 @@ class SyncSmokeTest(SmokeTest):
 
     def tearDown(self):
         self.world.apply_settings(self.settings)
-        self.world.tick()
+        self.world.tick(120)
         self.settings = None
         super(SyncSmokeTest, self).tearDown()

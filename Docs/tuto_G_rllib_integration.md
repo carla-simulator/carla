@@ -231,4 +231,4 @@ To run the DQN example on AWS:
 
 ---
 
-This guide has outlined how to install and run the RLlib integration on AWS and on a local machine. If you have any questions or ran into any issues working through the guide, feel free to post in the [forum](https://forum.carla.org/) or raise an issue on [GitHub](https://github.com/carla-simulator/rllib-integration).
+This guide has outlined how to install and run the RLlib integration on AWS and on a local machine. If you have any questions or ran into any issues working through the guide, feel free to post in the [forum](https://github.com/carla-simulator/carla/discussions/) or raise an issue on [GitHub](https://github.com/carla-simulator/rllib-integration).

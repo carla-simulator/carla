@@ -86,6 +86,39 @@
       doc: >
         Disables any constant velocity previously set for a carla.Vehicle actor.  
     # --------------------------------------
+    - def_name: enable_chrono_physics
+      params:
+        - param_name: max_substeps
+          type: int
+          doc: >
+            Max number of Chrono substeps
+        - param_name: max_substep_delta_time
+          type: int
+          doc: >
+            Max size of substep
+        - param_name: vehicle_json
+          type: str
+          doc: >
+            Path to vehicle json file relative to `base_json_path`
+        - param_name: powertrain_json
+          type: str
+          doc: >
+            Path to powertrain json file relative to `base_json_path`
+        - param_name: tire_json
+          type: str
+          doc: >
+            Path to tire json file relative to `base_json_path`
+        - param_name: base_json_path
+          type: str
+          doc: >
+            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).
+      doc: >
+        Enables Chrono physics on a spawned vehicle.
+      note: >
+        Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+      warning: >
+        Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+    # --------------------------------------
     - def_name: enable_constant_velocity
       params:
       - param_name: velocity
@@ -95,7 +128,7 @@
         param_units: m/s
       doc: >
         Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
-      Note: >
+      note: >
         Only carla.Vehicle actors can use this method.  
       warning: >
         Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
@@ -316,6 +349,27 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+    - def_name: set_wheel_steer_direction
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+        - param_name: angle_in_deg
+          type: float
+      doc: >
+        Sets the angle of a vehicle's wheel visually.
+      warning: >
+        Does not affect the physics of the vehicle.
+    # --------------------------------------
+    - def_name: get_wheel_steer_angle
+      return: float
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+      doc: >
+        Returns the physics angle in degrees of a vehicle's wheel.
+      note: >
+        Returns the angle based on the physics of the wheel, not the visual angle.
+    # --------------------------------------
 
   - class_name: Walker
     parent: carla.Actor
@@ -520,5 +574,30 @@
         Sets a given time for the yellow light to be active.
     # --------------------------------------
     - def_name: __str__
+    # --------------------------------------
+  - class_name: VehicleWheelLocation
+    doc: >
+      `enum` representing the position of each wheel on a vehicle. 
+      Used to identify the target wheel when setting an angle in carla.Vehicle.set_wheel_steer_direction or carla.Vehicle.get_wheel_steer_angle.
+  # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: FL_Wheel
+      doc: >
+        Front left wheel of a 4 wheeled vehicle.
+    - var_name: FR_Wheel
+      doc: >
+        Front right wheel of a 4 wheeled vehicle.
+    - var_name: BL_Wheel
+      doc: >
+        Back left wheel of a 4 wheeled vehicle.
+    - var_name: BR_Wheel
+      doc: >
+        Back right wheel of a 4 wheeled vehicle.
+    - var_name: Front_Wheel
+      doc: >
+        Front wheel of a 2 wheeled vehicle.
+    - var_name: Back_Wheel
+      doc: >
+        Back wheel of a 2 wheeled vehicle.
     # --------------------------------------
 ...

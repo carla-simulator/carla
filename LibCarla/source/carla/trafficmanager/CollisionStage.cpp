@@ -22,7 +22,6 @@ CollisionStage::CollisionStage(
   const TrackTraffic &track_traffic,
   const Parameters &parameters,
   CollisionFrame &output_array,
-  cc::DebugHelper &debug_helper,
   RandomGeneratorMap &random_devices)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
@@ -30,7 +29,6 @@ CollisionStage::CollisionStage(
     track_traffic(track_traffic),
     parameters(parameters),
     output_array(output_array),
-    debug_helper(debug_helper),
     random_devices(random_devices) {}
 
 void CollisionStage::Update(const unsigned long index) {
@@ -347,10 +345,10 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
     GeometryComparison geometry_comparison = GetGeometryBetweenActors(reference_vehicle_id, other_actor_id);
 
     // Conditions for collision negotiation.
-    bool geodesic_path_bbox_touching = geometry_comparison.inter_geodesic_distance < 0.1;
-    bool vehicle_bbox_touching = geometry_comparison.inter_bbox_distance < 0.1;
-    bool ego_path_clear = geometry_comparison.other_vehicle_to_reference_geodesic > 0.1;
-    bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > 0.1;
+    bool geodesic_path_bbox_touching = geometry_comparison.inter_geodesic_distance < OVERLAP_THRESHOLD;
+    bool vehicle_bbox_touching = geometry_comparison.inter_bbox_distance < OVERLAP_THRESHOLD;
+    bool ego_path_clear = geometry_comparison.other_vehicle_to_reference_geodesic > OVERLAP_THRESHOLD;
+    bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > OVERLAP_THRESHOLD;
     bool ego_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic < geometry_comparison.other_vehicle_to_reference_geodesic;
     bool other_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic > geometry_comparison.other_vehicle_to_reference_geodesic;
     bool ego_angular_priority = reference_heading_to_other_dot< cg::Math::Dot(other_heading, other_to_reference);
@@ -366,7 +364,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
       hazard = true;
 
       const float reference_lead_distance = parameters.GetDistanceToLeadingVehicle(reference_vehicle_id);
-      const float specific_distance_margin = std::max(reference_lead_distance, BOUNDARY_EXTENSION_MINIMUM);
+      const float specific_distance_margin = std::max(reference_lead_distance, MIN_REFERENCE_DISTANCE);
       available_distance_margin = static_cast<float>(std::max(geometry_comparison.reference_vehicle_to_other_geodesic
                                                               - static_cast<double>(specific_distance_margin), 0.0));
 
@@ -381,7 +379,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
         // Check if the same vehicle is under lock.
         if (other_actor_id == lock.lead_vehicle_id) {
           // If the body of the lead vehicle is touching the reference vehicle bounding box.
-          if (geometry_comparison.other_vehicle_to_reference_geodesic < 0.1) {
+          if (geometry_comparison.other_vehicle_to_reference_geodesic < OVERLAP_THRESHOLD) {
             // Distance between the bodies of the vehicles.
             lock.distance_to_lead_vehicle = geometry_comparison.inter_bbox_distance;
           } else {
@@ -413,16 +411,6 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
 void CollisionStage::ClearCycleCache() {
   geodesic_boundary_map.clear();
   geometry_cache.clear();
-}
-
-void CollisionStage::DrawBoundary(const LocationVector &boundary) {
-  cg::Location one_meter_up(0.0f, 0.0f, 1.0f);
-  for (uint64_t i = 0u; i < boundary.size(); ++i) {
-    debug_helper.DrawLine(
-        boundary[i] + one_meter_up,
-        boundary[i+1 == boundary.size()? 0: i+1] + one_meter_up,
-        0.1f, {255u, 255u, 0u}, 0.05f);
-  }
 }
 
 } // namespace traffic_manager

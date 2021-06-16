@@ -4,7 +4,7 @@ Some of the most common issues regarding CARLA installation and builds are liste
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>
@@ -37,6 +37,7 @@ CARLA forum</a>
 * ["make launch" is not working on Windows.](#make-launch-is-not-working-on-windows)
 * [Make is missing libintl3.dll or/and libiconv2.dll.](#make-is-missing-libintl3dll-orand-libiconv2dll)
 * [Modules are missing or built with a different engine version.](#modules-are-missing-or-built-with-a-different-engine-version)
+* [There is no `dist` folder in `PythonAPI/carla` despite a successful output message.](#there-is-no-dist-folder-in-pythonapicarla-despite-a-successful-output-message)
 
 ---
 
@@ -48,6 +49,7 @@ CARLA forum</a>
 * [Can't run CARLA neither binary nor source build.](#cant-run-carla-neither-binary-nor-source-build)
 * [ImportError: DLL load failed: The specified module could not be found.](#importerror-dll-load-failed-the-specified-module-could-not-be-found)
 * [ImportError: DLL load failed while importing libcarla: %1 is not a valid Win32 app.](#importerror-dll-load-failed-while-importing-libcarla-1-is-not-a-valid-win32-app)
+* [ImportError: No module named 'carla'](#importerror-no-module-named-carla)
 
 ---
 
@@ -55,6 +57,7 @@ CARLA forum</a>
 
 * [Fatal error: 'version.h' has been modified since the precompiled header.](#fatal-error-versionh-has-been-modified-since-the-precompiled-header)
 * [Create a binary version of CARLA.](#create-a-binary-version-of-carla)
+* [Can I package CARLA for Windows on a Linux machine and vice versa?](#can-i-package-carla-for-windows-on-a-linux-machine-and-vice-versa)
 
 ---
 
@@ -64,17 +67,15 @@ CARLA forum</a>
 
 ###### Expected disk space to build CARLA.
 
-> It is advised to have at least 30-50GB free. Building CARLA requires about 25GB of disk space, plus Unreal Engine, which is similar in size. 
->
-> Unreal Engine on Linux requires much more disk space as it keeps all the intermediate files. [This thread](https://answers.unrealengine.com/questions/430541/linux-engine-size.html) discusses the matter.
+> It is advised to have at least 170GB free. Building CARLA requires about 35GB of disk space, plus Unreal Engine which requires about 95-135GB.
 
 <!-- ======================================================================= -->
 
 ###### Recommended hardware to run CARLA.
 
-> CARLA is a performance demanding software. At the very minimum it requires a 4GB GPU or, even better, a dedicated GPU capable of running Unreal Engine.  
+> CARLA is a performance demanding software. At the very minimum it requires a 6GB GPU or, even better, a dedicated GPU capable of running Unreal Engine.  
 >
-> Take a look at [Unreal Engine's recommended hardware](https://wiki.unrealengine.com/Recommended_Hardware).
+> Take a look at [Unreal Engine's recommended hardware](https://www.ue4community.wiki/recommended-hardware-x1p9qyg0).
 
 ---
 
@@ -97,9 +98,9 @@ CARLA forum</a>
 > * __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=~/UnrealEngine_4.24` to set the variable this time.  
 > * __Check dependencies.__ Make sure that everything was installed properly. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
-> * __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 15GB of disk space and a dedicated GPU (or at least one with 4GB) to run.
+> * __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 170GB of disk space and a dedicated GPU (or at least one with 6GB) to run.
 > 
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://forum.carla.org/) so the team can get to know more about them.   
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.   
 
 <!-- ======================================================================= -->
 
@@ -109,8 +110,8 @@ CARLA forum</a>
 > 
 > __2. Is git properly installed?__ Sometimes an error shows incompatibilities with the `https` protocol. It can be solved easily by uninstalling and reinstalling git. Open a terminal and run the following commands:
 >
->      $ sudo apt-get remove git #Uninstall git
->      $ sudo apt install git-all #install git
+>      sudo apt-get remove git #Uninstall git
+>      sudo apt install git-all #install git
 > 
 
 <!-- ======================================================================= -->
@@ -120,18 +121,18 @@ CARLA forum</a>
 > Run the following command.
 > 
 > 
->       $ pip3 install -Iv setuptools==47.3.1
+>       pip3 install -Iv setuptools==47.3.1
 >  
 >
 > And build the PythonAPI again. 
 > 
 >
->      $ make PythonAPI
+>      make PythonAPI
 >
 >
 > Try to build the docs to test if everything is running properly. A successful message should show.
 >
->      $ make PythonAPI.docs
+>      make PythonAPI.docs
 
 <!-- ======================================================================= -->
 
@@ -144,35 +145,35 @@ CARLA forum</a>
 > First of all, open `<root_carla>/PythonAPI/carla/dist`. There should be an `.egg` file for the corresponding CARLA and Python version you are using (similar to `carla-0.X.X-pyX.X-linux-x86_64.egg`). Make sure the file matches the Python version you are using. To check your Python version use the following command.  
 > 
 > 
->       $ python3 --version # CARLA no longer provides support for Python2, so we are dismissing it here
+>       python3 --version # CARLA no longer provides support for Python2, so we are dismissing it here
 > 
 >
 > If either the file is missing or you think it could be corrupted, try rebuilding again.  
 >
->      $ make clean
->      $ make PythonAPI
->      $ make launch
+>      make clean
+>      make PythonAPI
+>      make launch
 >
 >  
 > Now try one of the example scripts again. 
 >
->      $ cd PythonAPI/examples
->      $ python3 dynamic_weather.py
+>      cd PythonAPI/examples
+>      python3 dynamic_weather.py
 >
 > If the error persists, the problem is probably related with your PythonPATH. These scripts automatically look for the `.egg` file associated with the build, so maybe there is another `.egg` file in your PythonPATH interfering with the process. Show the content of the PythonPATH with the following command.  
 >
 >
->      $ echo $PYTHONPATH
+>      echo $PYTHONPATH
 >
 > Look up in the output for other instances of `.egg` files in a route similar to `PythonAPI/carla/dist`, and get rid of these. They probably belong to other instances of CARLA installations. For example, if you also installed CARLA via *apt-get*, you can remove it with the following command, and the PythonPATH will be cleaned too.  
 >
->      $ sudo apt-get purge carla-simulator
+>      sudo apt-get purge carla-simulator
 >
 > Ultimately there is the option to add the `.egg` file of your build to the PythonPATH using the `~/.bashrc`. This is not the recommended way. It would be better to have a clear PythonPATH and simply add the path to the necessary `.egg` files in the scripts.  
 >
 > First, open `~/.bashrc`.
 >
->      $ gedit ~/.bashrc
+>      gedit ~/.bashrc
 >
 > 
 > Add the following lines to `~/.bashrc`. These store the path to the build `.egg` file, so that Python can automatically find it. Save the file, and reset the terminal for changes to be effective.
@@ -263,9 +264,9 @@ CARLA forum</a>
 > * __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
 > * __Visual Studio 2017.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.  
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
-> * __Meet system requirements.__ CARLA needs around 30-50GB of disk space and a dedicated GPU (or at least one with 4GB) to run.  
+> * __Meet system requirements.__ CARLA needs around 170GB of disk space and a dedicated GPU (or at least one with 6GB) to run.  
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://forum.carla.org/) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
@@ -278,6 +279,12 @@ CARLA forum</a>
 ###### Modules are missing or built with a different engine version.
 
 > Click on __Accept__ to rebuild them. 
+
+<!-- ======================================================================= -->
+
+###### There is no `dist` folder in `PythonAPI/carla` despite a successful output message.
+
+>In Windows, the `make PythonAPI` command can return a message that the Python API was installed successfully when it actually wasn't. If there is no `dist` folder created in the `PythonAPI/carla` directory after you see this output, then look at the command output higher up. It is likely an error occurred and the build needs to be retried after correcting the error and running `make clean`.
 
 ---
 
@@ -308,7 +315,7 @@ CARLA forum</a>
 
 ###### Can't run CARLA neither binary nor source build.
 
-> NVIDIA drivers may be outdated. Make sure that this is not the case. If the issue is still unresolved, take a look at the [forum](https://forum.carla.org/) and post the specific issue. 
+> NVIDIA drivers may be outdated. Make sure that this is not the case. If the issue is still unresolved, take a look at the [forum](https://github.com/carla-simulator/carla/discussions/) and post the specific issue. 
 
 <!-- ======================================================================= -->
 
@@ -322,6 +329,41 @@ CARLA forum</a>
 
 > A 32-bit Python version is creating conflicts when trying to run a script. Uninstall it and leave only the Python3 x64 required. 
 
+<!-- ======================================================================= -->
+
+###### ImportError: No module named 'carla'
+
+> This error occurs because Python cannot find the CARLA library. The CARLA library is contained in an `.egg` file, located in the directory `PythonAPI/carla/dist` and all the example scripts will look for it in this directory. The `.egg` file follows the nomenclature of `carla-<carla-version>-py<python-version>-<operating-system>.egg`.
+>
+>If you are using a packaged version of CARLA, there will be several `.egg` files, corresponding to different versions of Python, depending on the version of CARLA. Make sure you are running the scripts with one of these Python versions. To check the default Python version, type the following into the command line:
+>
+>
+>       python3 --version
+>       # or
+>       python --version 
+>
+
+>If you built Python from source, the `.egg` file will be built according to the default Python version on your system. In Linux this will be the default Python version returned for:
+
+
+>       /usr/bin/env python3 --version
+>       # or if you specify ARGS="--python-version=2"
+>       /usr/bin/env python2 --version
+
+
+>In Windows it will be the default Python version for:
+
+>       py -3 --version
+
+>Make sure you are running your scripts with the version of Python that corresponds to your `.egg` file.
+>In Linux, you may also need to set your Python path to point to the CARLA `.egg`. To do this, run the following command:
+
+>       export PYTHONPATH=$PYTHONPATH:<path/to/carla/>/PythonAPI/carla/dist/<your_egg_file>
+>       # Check if CARLA can now be found
+>       python3 -c 'import carla;print("Success")'
+
+>Be aware that virtual environments, or other Python environments like Conda, can complicate the installation of CARLA. Make sure you have set up your Python defaults and paths accordingly.
+
 ---
 
 ## Other
@@ -331,8 +373,8 @@ CARLA forum</a>
 
 > This happens from time to time due to Linux updates. There is a special target in the Makefile for this issue. It takes a long time but fixes the issue:
 >
->      $ make hard-clean
->      $ make CarlaUE4Editor
+>      make hard-clean
+>      make CarlaUE4Editor
 
 <!-- ======================================================================= -->
 
@@ -341,5 +383,11 @@ CARLA forum</a>
 > In Linux, run `make package` in the project folder. The package will include the project, and the Python API modules.  
 >
 > Alternatively, it is possible to compile a binary version of CARLA within Unreal Editor. Open the CarlaUE4 project, go to the menu `File/Package Project`, and select a platform. This may take a while. 
+
+<!-- ======================================================================= -->
+
+###### Can I package CARLA for Windows on a Linux machine and vice versa?
+
+>Although this feature is available for Unreal Engine, it is not available in CARLA. We have a number of dependencies that are not supported to be cross compiled.
 
 ---
