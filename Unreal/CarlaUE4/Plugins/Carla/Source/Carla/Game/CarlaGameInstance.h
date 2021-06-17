@@ -119,7 +119,8 @@ public:
 #endif
 
     // Format and convert the path to absolute
-    _MapPath = _MapPath.Replace(TEXT("/Game/"), *FPaths::ProjectContentDir());
+    _MapPath.RemoveFromStart(TEXT("/Game/"));
+    _MapPath = FPaths::ProjectContentDir() + _MapPath;
     _MapPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*_MapPath);
     _MapPath = FPaths::GetBaseFilename(_MapPath, false);
   }
