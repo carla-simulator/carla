@@ -94,6 +94,9 @@ namespace client {
     /// Returns all the landmarks in the same group including this one
     std::vector<SharedPtr<Landmark>> GetLandmarkGroup(const Landmark &landmark) const;
 
+    /// Cooks InMemoryMap used by the traffic manager
+    void CookInMemoryMap(const std::string& path) const;
+
   private:
 
     const rpc::MapInfo _description;

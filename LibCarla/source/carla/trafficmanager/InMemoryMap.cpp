@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "carla/Logging.h"
+
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 
@@ -62,6 +64,114 @@ namespace traffic_manager {
       }
     }
     return result;
+  }
+
+  void InMemoryMap::Cook(WorldMap world_map, const std::string& path) {
+    InMemoryMap local_map(world_map);
+    local_map.SetUp();
+    local_map.Save(path);
+  }
+
+  void InMemoryMap::Save(const std::string& path) {
+    std::string filename;
+    if (path.empty()) {
+      filename = this->GetMapName() + ".bin";
+    } else {
+      filename = path;
+    }
+
+    std::ofstream out_file;
+    out_file.open(filename, std::ios::binary);
+    if (!out_file.is_open()) {
+      log_error("Could not open binary file");
+      return;
+    }
+
+    // write total records
+    uint32_t total = static_cast<uint32_t>(dense_topology.size());
+    out_file.write(reinterpret_cast<const char *>(&total), sizeof(uint32_t));
+
+    // write simple waypoints
+    for (auto& wp: dense_topology) {
+      CachedSimpleWaypoint cached_wp(wp);
+      cached_wp.Write(out_file);
+    }
+
+    out_file.close();
+    return;
+  }
+
+  // bool InMemoryMap::Load(const std::string& filename) {
+
+  //   auto directory = "/home/jmoriana/carlaCache/" + filename;
+  //   std::cout << "Loading from " << directory << std::endl;
+
+  //   std::ifstream in_file;
+  //   std::istream_iterator<uint8_t> start(in_file), end;
+
+  //   // read the whole file
+  //   in_file.open(directory, std::ios::binary);
+  //   if (!in_file.is_open()) {
+  //     log_warning("Cache InMemoryMap not found");
+  //     return false;
+  //   }
+  //   std::vector<uint8_t> content(start, end);
+  //   std::cout << "Iep " << content.size() << std::endl;
+  //   in_file.close();
+
+  //   // parse the content
+  //   return Load(std::move(content));
+  // }
+
+  bool InMemoryMap::Load(const std::vector<uint8_t>& content) {
+    unsigned long pos = 0;
+    std::vector<CachedSimpleWaypoint> cached_waypoints;
+    std::unordered_map<uint64_t, uint32_t> id2index;
+
+    // read total records
+    uint32_t total;
+    memcpy(&total, &content[pos], sizeof(total));
+    pos += sizeof(total);
+
+    // read simple waypoints
+    for (uint32_t i=0; i < total; i++) {
+      CachedSimpleWaypoint cached_wp;
+      cached_wp.Read(content, pos);
+      cached_waypoints.push_back(cached_wp);
+      id2index.insert({cached_wp.waypoint_id, i});
+
+      WaypointPtr waypoint_ptr = _world_map->GetWaypointXODR(cached_wp.road_id, cached_wp.lane_id, cached_wp.s);
+      SimpleWaypointPtr wp = std::make_shared<SimpleWaypoint>(waypoint_ptr);
+      dense_topology.push_back(wp);
+    }
+
+    // connect waypoints
+    for (uint32_t i=0; i < dense_topology.size(); i++) {
+      auto wp = dense_topology.at(i);
+      auto cached_wp = cached_waypoints.at(i);
+
+      std::vector<SimpleWaypointPtr> next_waypoints;
+      for (auto id : cached_wp.next_waypoints) {
+        next_waypoints.push_back(dense_topology.at(id2index.at(id)));
+      }
+      std::vector<SimpleWaypointPtr> previous_waypoints;
+      for (auto id : cached_wp.previous_waypoints) {
+        previous_waypoints.push_back(dense_topology.at(id2index.at(id)));
+      }
+      wp->SetNextWaypoint(next_waypoints);
+      wp->SetPreviousWaypoint(previous_waypoints);
+      if (cached_wp.next_left_waypoint > 0) {
+        wp->SetLeftWaypoint(dense_topology.at(id2index.at(cached_wp.next_left_waypoint)));
+      }
+      if (cached_wp.next_right_waypoint > 0) {
+        wp->SetRightWaypoint(dense_topology.at(id2index.at(cached_wp.next_right_waypoint)));
+      }
+    }
+
+    // create spatial tree
+    SetUpSpatialTree();
+
+    return true;
   }
 
   void InMemoryMap::SetUp() {
@@ -214,14 +324,7 @@ namespace traffic_manager {
       }
     }
 
-    // Localizing waypoints into grids.
-    for (auto &simple_waypoint: dense_topology) {
-      if (simple_waypoint != nullptr) {
-        const cg::Location loc = simple_waypoint->GetLocation();
-        Point3D point(loc.x, loc.y, loc.z);
-        rtree.insert(std::make_pair(point, simple_waypoint));
-      }
-    }
+    SetUpSpatialTree();
 
     // Placing inter-segment connections.
     for (auto &segment : segment_map) {
@@ -256,6 +359,16 @@ namespace traffic_manager {
             next_waypoint->SetPreviousWaypoint({swp});
           }
         }
+      }
+    }
+  }
+
+  void InMemoryMap::SetUpSpatialTree() {
+    for (auto &simple_waypoint: dense_topology) {
+      if (simple_waypoint != nullptr) {
+        const cg::Location loc = simple_waypoint->GetLocation();
+        Point3D point(loc.x, loc.y, loc.z);
+        rtree.insert(std::make_pair(point, simple_waypoint));
       }
     }
   }

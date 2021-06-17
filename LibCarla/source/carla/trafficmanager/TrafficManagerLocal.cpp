@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+#include "carla/Logging.h"
+
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
@@ -104,9 +106,16 @@ TrafficManagerLocal::~TrafficManagerLocal() {
 }
 
 void TrafficManagerLocal::SetupLocalMap() {
-  const carla::SharedPtr<cc::Map> world_map = world.GetMap();
+  const carla::SharedPtr<const cc::Map> world_map = world.GetMap();
   local_map = std::make_shared<InMemoryMap>(world_map);
-  local_map->SetUp();
+
+  auto files = episode_proxy.Lock()->GetRequiredFiles("TM");
+  if (!files.empty()) {
+    local_map->Load(episode_proxy.Lock()->GetCacheFile(files[0], true));
+  } else {
+    log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
+    local_map->SetUp();
+  }
 }
 
 void TrafficManagerLocal::Start() {

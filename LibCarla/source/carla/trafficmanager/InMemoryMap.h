@@ -22,6 +22,7 @@
 #include "carla/road/RoadTypes.h"
 
 #include "carla/trafficmanager/SimpleWaypoint.h"
+#include "carla/trafficmanager/CachedSimpleWaypoint.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -36,7 +37,7 @@ namespace bgi = boost::geometry::index;
   using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
   using NodeList = std::vector<SimpleWaypointPtr>;
   using GeoGridId = crd::JuncId;
-  using WorldMap = carla::SharedPtr<cc::Map>;
+  using WorldMap = carla::SharedPtr<const cc::Map>;
 
   using Point3D = bg::model::point<float, 3, bg::cs::cartesian>;
   using SpatialTreeEntry = std::pair<Point3D, SimpleWaypointPtr>;
@@ -65,6 +66,11 @@ namespace bgi = boost::geometry::index;
     InMemoryMap(WorldMap world_map);
     ~InMemoryMap();
 
+    static void Cook(WorldMap world_map, const std::string& path);
+
+    //bool Load(const std::string& filename);
+    bool Load(const std::vector<uint8_t>& content);
+
     /// This method constructs the local map with a resolution of
     /// sampling_resolution.
     void SetUp();
@@ -79,6 +85,10 @@ namespace bgi = boost::geometry::index;
     std::string GetMapName();
 
   private:
+    void Save(const std::string& path);
+
+    void SetUpDenseTopology();
+    void SetUpSpatialTree();
 
     /// This method is used to find and place lane change links.
     void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);

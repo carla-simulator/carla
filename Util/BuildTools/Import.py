@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -12,10 +12,12 @@ from __future__ import print_function
 
 import errno
 import fnmatch
+import glob
 import json
 import os
 import shutil
 import subprocess
+import sys
 import argparse
 import threading
 
@@ -25,6 +27,16 @@ SCRIPT_NAME = os.path.basename(__file__)
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 # Go two directories above the current script
 CARLA_ROOT_PATH = os.path.normpath(SCRIPT_DIR + '/../..')
+
+try:
+    sys.path.append(glob.glob(os.path.join(CARLA_ROOT_PATH, "PythonAPI/carla/dist/carla-*%d.%d-%s.egg" % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64')))[0])
+except IndexError:
+    pass
+
+import carla
 
 
 def get_packages_json_list(folder):
@@ -79,8 +91,8 @@ def generate_json_package(folder, package_name, use_carla_materials):
             tiles = map_name[2]
             tiles = ["%s/%s" % (path, x) for x in tiles]
             map_dict = {
-                'name': name, 
-                'xodr':   '%s/%s.xodr' % (path, name), 
+                'name': name,
+                'xodr':   '%s/%s.xodr' % (path, name),
                 'use_carla_materials': use_carla_materials
             }
             # check for only one 'source' or map in 'tiles'
@@ -324,7 +336,7 @@ def copy_roadpainter_config_files(package_name):
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
-    shutil.copy(final_path, package_config_path) 
+    shutil.copy(final_path, package_config_path)
 
 
 def copy_roadpainter_config_files(package_name):
@@ -339,7 +351,7 @@ def copy_roadpainter_config_files(package_name):
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
-    shutil.copy(final_path, package_config_path) 
+    shutil.copy(final_path, package_config_path)
 
 
 def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size):
@@ -409,8 +421,8 @@ def import_assets_from_json_list(json_list):
             package_name = filename.replace(".json", "")
 
             # we need to build the binary file for navigation of pedestrians
-            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
-            thr.start()
+#            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
+#            thr.start()
 
             if ("tiles" in maps[0]):
                 import_assets(package_name, dirname, props, maps, 1, tile_size)
@@ -428,13 +440,15 @@ def import_assets_from_json_list(json_list):
             if len(maps) > 0:
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
                 load_asset_materials_commandlet(package_name)
-            thr.join()
+#            thr.join()
+
+            build_binary_for_tm(package_name, dirname, maps)
 
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
     commandlet_arguments = ["-PackageName=%s" % package_name]
     invoke_commandlet(commandlet_name, commandlet_arguments)
-    
+
 def prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps):
     commandlet_name = "PrepareAssetsForCooking"
     commandlet_arguments = ["-PackageName=%s" % package_name]
@@ -526,6 +540,34 @@ def build_binary_for_navigation(package_name, dirname, maps):
                 os.remove(fbx_path_target)
 
         os.remove(xodr_path_target)
+
+
+def build_binary_for_tm(package_name, dirname, maps):
+
+    xodrs = set(
+        (map["name"], map["xodr"]) for map in maps if "xodr" in map)
+
+    for target_name, xodr in xodrs:
+        with open(os.path.join(dirname, xodr), "rt") as f:
+            data = f.read()
+
+        # copy the binary file
+        tm_folder_target = os.path.join(
+            CARLA_ROOT_PATH,
+            "Unreal",
+            "CarlaUE4",
+            "Content",
+            package_name,
+            "Maps",
+            target_name,
+            "TM")
+
+        if not os.path.exists(tm_folder_target):
+            os.makedirs(tm_folder_target)
+
+        m = carla.Map(target_name, data)
+        m.cook_in_memory_map(os.path.join(tm_folder_target, "%s.bin" % target_name))
+
 
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)
