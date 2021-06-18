@@ -12,8 +12,7 @@ import random
 import numpy as np
 import carla
 from agents.navigation.agent import Agent
-from agents.navigation.local_planner_behavior import LocalPlanner
-from agents.navigation.local_planner import RoadOption
+from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 from agents.navigation.behavior_types import Cautious, Aggressive, Normal
@@ -46,7 +45,7 @@ class BehaviorAgent(Agent):
         super(BehaviorAgent, self).__init__(vehicle)
         self.vehicle = vehicle
         self.ignore_traffic_light = ignore_traffic_light
-        self._local_planner = LocalPlanner(self)
+        self._local_planner = LocalPlanner(vehicle)
         self._grp = None
         self.look_ahead_steps = 0
 
@@ -101,21 +100,20 @@ class BehaviorAgent(Agent):
             # This method also includes stop signs and intersections.
             self.light_state = str(self.vehicle.get_traffic_light_state())
 
-    def set_destination(self, start_location, end_location, clean=False):
+    def set_destination(self, start_location, end_location):
         """
         This method creates a list of waypoints from agent's position to destination location
         based on the route returned by the global router.
 
             :param start_location: initial position
             :param end_location: final position
-            :param clean: boolean to clean the waypoint queue
         """
         self.start_waypoint = self._map.get_waypoint(start_location)
         self.end_waypoint = self._map.get_waypoint(end_location)
 
         route_trace = self.trace_route(self.start_waypoint, self.end_waypoint)
 
-        self._local_planner.set_global_plan(route_trace, clean)
+        self._local_planner.set_global_plan(route_trace)
 
     def reroute(self, spawn_points):
         """
@@ -124,6 +122,8 @@ class BehaviorAgent(Agent):
 
             :param spawn_points: list of possible destinations for the agent
         """
+        # TODO: Not working, make it part of the local planner
+        # self._local_planner.add_global_plan(waypoint)  # Mix between set destination and trace route
 
         print("Target almost reached, setting new destination...")
         random.shuffle(spawn_points)
@@ -337,18 +337,21 @@ class BehaviorAgent(Agent):
 
         # Under safety time distance, slow down.
         if self.behavior.safety_time > ttc > 0.0:
-            control = self._local_planner.run_step(
-                target_speed=min(positive(vehicle_speed - self.behavior.speed_decrease),
-                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+            control = self._local_planner.run_step(debug=debug)
+            # control = self._local_planner.run_step(
+            #     target_speed=min(positive(vehicle_speed - self.behavior.speed_decrease),
+            #                      min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
         # Actual safety distance area, try to follow the speed of the vehicle in front.
         elif 2 * self.behavior.safety_time > ttc >= self.behavior.safety_time:
-            control = self._local_planner.run_step(
-                target_speed=min(max(self.min_speed, vehicle_speed),
-                                 min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+            control = self._local_planner.run_step(debug=debug)
+            # control = self._local_planner.run_step(
+            #     target_speed=min(max(self.min_speed, vehicle_speed),
+            #                      min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
         # Normal behavior.
         else:
-            control = self._local_planner.run_step(
-                target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
+            control = self._local_planner.run_step(debug=debug)
+            # control = self._local_planner.run_step(
+            #     target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
 
         return control
 
@@ -359,6 +362,7 @@ class BehaviorAgent(Agent):
             :param debug: boolean for debugging
             :return control: carla.VehicleControl
         """
+        # TODO: Everytime the local_planner run step is called, reset the speed
         control = None
         if self.behavior.tailgate_counter > 0:
             self.behavior.tailgate_counter -= 1
@@ -410,14 +414,16 @@ class BehaviorAgent(Agent):
 
         # Checking if there's a junction nearby to slow down
         elif self.incoming_waypoint.is_junction and (self.incoming_direction == RoadOption.LEFT or self.incoming_direction == RoadOption.RIGHT):
-            control = self._local_planner.run_step(
-                target_speed=min(self.behavior.max_speed, self.speed_limit - 5), debug=debug)
+            control = self._local_planner.run_step(debug=debug)
+            # control = self._local_planner.run_step(
+            #     target_speed=min(self.behavior.max_speed, self.speed_limit - 5), debug=debug)
 
         # 5: Normal behavior
 
         # Calculate controller based on no turn, traffic light or vehicle in front
         else:
-            control = self._local_planner.run_step(
-                target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
+            control = self._local_planner.run_step(debug=debug)
+            # control = self._local_planner.run_step(
+            #     target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
 
         return control

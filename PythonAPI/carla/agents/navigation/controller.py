@@ -92,6 +92,15 @@ class VehiclePIDController():
         return control
 
 
+    def change_longitudinal_PID(self, args_longitudinal):
+        """Changes the parameters of the PIDLongitudinalController"""
+        self._lon_controller.change_parameters(**args_longitudinal)
+
+    def change_lateral_PID(self, args_lateral):
+        """Changes the parameters of the PIDLongitudinalController"""
+        self._lon_controller.change_parameters(**args_lateral)
+
+
 class PIDLongitudinalController():
     """
     PIDLongitudinalController implements longitudinal control using a PID.
@@ -150,6 +159,14 @@ class PIDLongitudinalController():
             _ie = 0.0
 
         return np.clip((self._k_p * error) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
+
+    def change_parameters(self, K_P, K_D, K_I, dt):
+        """Changes the PID parameters"""
+        self._k_p = K_P
+        self._k_d = K_D
+        self._k_i = K_I
+        self._dt = dt
+
 
 class PIDLateralController():
     """
@@ -230,3 +247,10 @@ class PIDLateralController():
             _ie = 0.0
 
         return np.clip((self._k_p * _dot) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
+
+    def change_parameters(self, K_P, K_D, K_I, dt):
+        """Changes the PID parameters"""
+        self._k_p = K_P
+        self._k_d = K_D
+        self._k_i = K_I
+        self._dt = dt

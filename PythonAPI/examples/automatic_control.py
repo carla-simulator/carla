@@ -59,7 +59,6 @@ import carla
 from carla import ColorConverter as cc
 
 from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
-from agents.navigation.roaming_agent import RoamingAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 
 
@@ -138,7 +137,7 @@ class World(object):
             spawn_point.rotation.pitch = 0.0
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
-
+            self.modify_vehicle_physics(self.player)
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
@@ -147,6 +146,7 @@ class World(object):
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.modify_vehicle_physics(self.player)
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
@@ -165,6 +165,14 @@ class World(object):
         self.hud.notification('Weather: %s' % preset[1])
         self.player.get_world().set_weather(preset[0])
 
+    def modify_vehicle_physics(self, actor):
+        #If actor is not a vehicle, we cannot use the physics control
+        try:
+            physics_control = actor.get_physics_control()
+            physics_control.use_sweep_wheel_collision = True
+            actor.apply_physics_control(physics_control)
+        except Exception:
+            pass
     def tick(self, clock):
         """Method for every tick"""
         self.hud.tick(self, clock)
@@ -687,13 +695,12 @@ def game_loop(args):
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
 
-        if args.agent == "Roaming":
-            agent = RoamingAgent(world.player)
-        elif args.agent == "Basic":
+        if args.agent == "Basic":
             agent = BasicAgent(world.player)
             spawn_point = world.map.get_spawn_points()[0]
-            agent.set_destination(spawn_point)
+            agent.set_destination(spawn_point.location)
         else:
+            # TODO: Change PIDS and target speed to make it on spped limti
             agent = BehaviorAgent(world.player, behavior=args.behavior)
 
             spawn_points = world.map.get_spawn_points()
@@ -704,7 +711,7 @@ def game_loop(args):
             else:
                 destination = spawn_points[1].location
 
-            agent.set_destination(agent.vehicle.get_location(), destination, clean=True)
+            agent.set_destination(agent.vehicle.get_location(), destination)
 
         clock = pygame.time.Clock()
 
@@ -717,7 +724,7 @@ def game_loop(args):
             if not world.world.wait_for_tick(10.0):
                 continue
 
-            if args.agent == "Roaming" or args.agent == "Basic":
+            if args.agent == "Basic":
                 if controller.parse_events():
                     return
 
@@ -738,13 +745,13 @@ def game_loop(args):
                 pygame.display.flip()
 
                 # Set new destination when target has been reached
-                if len(agent.get_local_planner().waypoints_queue) < num_min_waypoints and args.loop:
+                if len(agent.get_local_planner()._waypoints_queue) < num_min_waypoints and args.loop:
                     agent.reroute(spawn_points)
                     tot_target_reached += 1
                     world.hud.notification("The target has been reached " +
                                            str(tot_target_reached) + " times.", seconds=4.0)
 
-                elif len(agent.get_local_planner().waypoints_queue) == 0 and not args.loop:
+                elif len(agent.get_local_planner()._waypoints_queue) == 0 and not args.loop:
                     print("Target reached, mission accomplished...")
                     break
 
@@ -813,7 +820,7 @@ def main():
         help='Choose one of the possible agent behaviors (default: normal) ',
         default='normal')
     argparser.add_argument("-a", "--agent", type=str,
-                           choices=["Behavior", "Roaming", "Basic"],
+                           choices=["Behavior", "Basic"],
                            help="select which agent to run",
                            default="Behavior")
     argparser.add_argument(
