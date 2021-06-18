@@ -100,6 +100,13 @@ void ATagger::TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation)
   }
 }
 
+void ATagger::TagActorsInLevel(ULevel &Level, bool bTagForSemanticSegmentation)
+{
+  for (AActor * Actor : Level.Actors) {
+    TagActor(*Actor, bTagForSemanticSegmentation);
+  }
+}
+
 void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TSet<crp::CityObjectLabel> &Tags)
 {
   TArray<UPrimitiveComponent *> Components;

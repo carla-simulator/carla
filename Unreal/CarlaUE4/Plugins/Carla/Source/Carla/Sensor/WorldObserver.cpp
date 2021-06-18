@@ -164,7 +164,7 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
       state.vehicle_data.control = carla::rpc::VehicleControl{ActorData->Control};
       using TLS = carla::rpc::TrafficLightState;
       state.vehicle_data.traffic_light_state = TLS::Green;
-      state.vehicle_data.speed_limit = 0;
+      state.vehicle_data.speed_limit = 30;
       state.vehicle_data.has_traffic_light = false;
   }
   else if (AType::Walker == View.GetActorType())
@@ -314,9 +314,6 @@ static carla::Buffer FWorldObserver_Serialize(
     if(View->IsDormant())
     {
       const FActorData* ActorData = View->GetActorData();
-      FDVector ActorLocation = ActorData->Location;
-      ActorLocation -= MapOrigin;
-      ActorTransform = FTransform(ActorData->Rotation, ActorLocation.ToFVector());
       Velocity = TO_METERS * ActorData->Velocity;
       AngularVelocity = carla::geom::Vector3D
                         {ActorData->AngularVelocity.X,
@@ -327,12 +324,12 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     else
     {
-      ActorTransform = View->GetActor()->GetActorTransform();
       Velocity = TO_METERS * View->GetActor()->GetVelocity();
       AngularVelocity = FWorldObserver_GetAngularVelocity(*View->GetActor());
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetActorState(*View, Registry);
     }
+    ActorTransform = View->GetActorGlobalTransform();
 
     ActorDynamicState info = {
       View->GetActorId(),

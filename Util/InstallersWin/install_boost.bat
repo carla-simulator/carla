@@ -90,7 +90,7 @@ if not exist "%BOOST_SRC_DIR%" (
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%BOOST_REPO%', '%BOOST_TEMP_FILE_DIR%')"
     )
     if not exist "%BOOST_TEMP_FILE_DIR%" (
-        echo %FILE_N% Using Boost backup        
+        echo %FILE_N% Using Boost backup
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/%BOOST_TEMP_FILE%', '%BOOST_TEMP_FILE_DIR%')"
     )
     if %errorlevel% neq 0 goto error_download

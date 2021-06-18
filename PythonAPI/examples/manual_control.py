@@ -1084,8 +1084,8 @@ class CameraManager(object):
             dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
             self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
-            array = image.get_color_coded_flow()
-            array = np.frombuffer(array, dtype=np.dtype("uint8"))
+            image = image.get_color_coded_flow()
+            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
             array = array[:, :, ::-1]
