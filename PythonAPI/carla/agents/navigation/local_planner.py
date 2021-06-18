@@ -65,7 +65,7 @@ class LocalPlanner(object):
         self._sampling_radius = None
         self._min_distance = None
         self._current_waypoint = None
-        self._target_road_option = None
+        self.target_road_option = None
         self._next_waypoints = None
         self.target_waypoint = None
         self._vehicle_controller = None
@@ -84,8 +84,8 @@ class LocalPlanner(object):
             print("Destroying ego-vehicle!")
 
     def reset_vehicle(self):
+        """Reset the ego-vehicle"""
         self._vehicle = None
-        print("Resetting ego-vehicle!")
 
     def _init_controller(self, opt_dict):
         """
@@ -112,6 +112,26 @@ class LocalPlanner(object):
             'K_D': 0,
             'K_I': 0.05,
             'dt': self._dt}
+        # self.args_lat_hw_dict = {
+        #     'K_P': 0.75,
+        #     'K_D': 0.02,
+        #     'K_I': 0.4,
+        #     'dt': 1.0 / self.FPS}
+        # self.args_lat_city_dict = {
+        #     'K_P': 0.58,
+        #     'K_D': 0.02,
+        #     'K_I': 0.5,
+        #     'dt': 1.0 / self.FPS}
+        # self.args_long_hw_dict = {
+        #     'K_P': 0.37,
+        #     'K_D': 0.024,
+        #     'K_I': 0.032,
+        #     'dt': 1.0 / self.FPS}
+        # self.args_long_city_dict = {
+        #     'K_P': 0.15,
+        #     'K_D': 0.05,
+        #     'K_I': 0.07,
+        #     'dt': 1.0 / self.FPS}
         self._offset = 0
 
         # parameters overload
@@ -150,7 +170,6 @@ class LocalPlanner(object):
         # compute initial waypoints
         self._waypoints_queue.append((self._current_waypoint.next(self._sampling_radius)[0], RoadOption.LANEFOLLOW))
 
-        self._target_road_option = RoadOption.LANEFOLLOW
         # fill waypoint trajectory queue
         self._compute_next_waypoints(k=200)
 
@@ -208,7 +227,6 @@ class LocalPlanner(object):
         self._waypoints_queue.clear()
         for elem in current_plan:
             self._waypoints_queue.append(elem)
-        self._target_road_option = RoadOption.LANEFOLLOW
 
         # and the buffer
         self._waypoint_buffer.clear()
@@ -230,7 +248,7 @@ class LocalPlanner(object):
         :return: control to be applied
         """
 
-        # not enough waypoints in the horizon? => add more!
+        # Add more waypoints too few in the horizon
         if not self._stop_waypoint_creation and len(self._waypoints_queue) < int(self._waypoints_queue.maxlen * 0.5):
             self._compute_next_waypoints(k=100)
 
@@ -244,7 +262,7 @@ class LocalPlanner(object):
 
             return control
 
-        #   Buffering the waypoints
+        # Buffering the waypoints
         if not self._waypoint_buffer:
             for _ in range(self._buffer_size):
                 if self._waypoints_queue:
@@ -253,15 +271,16 @@ class LocalPlanner(object):
                 else:
                     break
 
-        # current vehicle waypoint
+        # Current vehicle waypoint
         vehicle_transform = self._vehicle.get_transform()
         self._current_waypoint = self._map.get_waypoint(vehicle_transform.location)
-        # target waypoint
-        self.target_waypoint, self._target_road_option = self._waypoint_buffer[0]
-        # move using PID controllers
+        # Target waypoint
+        self.target_waypoint, self.target_road_option = self._waypoint_buffer[0]
+
+        # Move using PID controllers
         control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
 
-        # purge the queue of obsolete waypoints
+        # Purge the queue of obsolete waypoints
         max_index = -1
 
         for i, (waypoint, _) in enumerate(self._waypoint_buffer):
@@ -272,9 +291,26 @@ class LocalPlanner(object):
                 self._waypoint_buffer.popleft()
 
         if debug:
-            draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], self._vehicle.get_location().z + 1.0)
+            draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], 1.0)
 
         return control
+
+    def get_incoming_waypoint_and_direction(self, steps=3):
+        """
+        Returns direction and waypoint at a distance ahead defined by the user.
+
+            :param steps: number of steps to get the incoming waypoint.
+        """
+        if len(self._waypoints_queue) > steps:
+            return self._waypoints_queue[steps]
+
+        else:
+            try:
+                wpt, direction = self._waypoints_queue[-1]
+                return wpt, direction
+            except IndexError as i:
+                return None, RoadOption.VOID
+
 
     def done(self):
         """
