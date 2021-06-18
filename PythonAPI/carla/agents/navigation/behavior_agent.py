@@ -16,7 +16,7 @@ from agents.navigation.local_planner_behavior import LocalPlanner
 from agents.navigation.local_planner import RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-from agents.navigation.types_behavior import Cautious, Aggressive, Normal
+from agents.navigation.behavior_types import Cautious, Aggressive, Normal
 
 from agents.tools.misc import get_speed, positive
 
@@ -110,12 +110,10 @@ class BehaviorAgent(Agent):
             :param end_location: final position
             :param clean: boolean to clean the waypoint queue
         """
-        if clean:
-            self._local_planner.waypoints_queue.clear()
         self.start_waypoint = self._map.get_waypoint(start_location)
         self.end_waypoint = self._map.get_waypoint(end_location)
 
-        route_trace = self._trace_route(self.start_waypoint, self.end_waypoint)
+        route_trace = self.trace_route(self.start_waypoint, self.end_waypoint)
 
         self._local_planner.set_global_plan(route_trace, clean)
 
@@ -135,19 +133,17 @@ class BehaviorAgent(Agent):
 
         self.set_destination(new_start, destination)
 
-    def _trace_route(self, start_waypoint, end_waypoint):
+    def trace_route(self, start_waypoint, end_waypoint):
         """
-        This method sets up a global router and returns the
-        optimal route from start_waypoint to end_waypoint.
+        This method sets up a global router and returns the optimal route
+        from start_waypoint to end_waypoint
 
             :param start_waypoint: initial position
             :param end_waypoint: final position
         """
         # Setting up global router
         if self._grp is None:
-            wld = self.vehicle.get_world()
-            dao = GlobalRoutePlannerDAO(
-                wld.get_map(), sampling_resolution=self._sampling_resolution)
+            dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map(), self._sampling_resolution)
             grp = GlobalRoutePlanner(dao)
             grp.setup()
             self._grp = grp

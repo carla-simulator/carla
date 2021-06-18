@@ -13,7 +13,10 @@ import math
 from enum import Enum
 
 import carla
-from agents.tools.misc import is_within_distance_ahead, is_within_distance, compute_distance
+from agents.tools.misc import (is_within_distance_ahead,
+                               is_within_distance,
+                               compute_distance,
+                               get_trafficlight_trigger_location)
 
 class AgentState(Enum):
     """
@@ -27,7 +30,7 @@ class AgentState(Enum):
 class Agent(object):
     """Base class to define agents in CARLA"""
 
-    def __init__(self, vehicle):
+    def __init__(self, vehicle, debug=False):
         """
         Constructor method.
 
@@ -45,14 +48,15 @@ class Agent(object):
             print('  The server could not send the OpenDRIVE (.xodr) file:')
             print('  Make sure it exists, has the same name of your town, and is correct.')
             sys.exit(1)
+        self._debug = debug
         self._last_traffic_light = None
+        self._sampling_resolution = 2.0
 
     def get_local_planner(self):
         """Get method for protected member local planner"""
         return self._local_planner
 
-    @staticmethod
-    def run_step(debug=False):
+    def run_step(self):
         """
         Execute one step of navigation.
 
@@ -61,12 +65,19 @@ class Agent(object):
         """
         control = carla.VehicleControl()
 
-        if debug:
-            control.steer = 0.0
-            control.throttle = 0.0
-            control.brake = 0.0
-            control.hand_brake = False
-            control.manual_gear_shift = False
+        return control
+
+    def emergency_stop(self):
+        """
+        Send an emergency stop command to the vehicle
+
+            :return: control for braking
+        """
+        control = carla.VehicleControl()
+        control.steer = 0.0
+        control.throttle = 0.0
+        control.brake = 1.0
+        control.hand_brake = False
 
         return control
 
@@ -86,7 +97,7 @@ class Agent(object):
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
 
         for traffic_light in lights_list:
-            object_location = self._get_trafficlight_trigger_location(traffic_light)
+            object_location = get_trafficlight_trigger_location(traffic_light)
             object_waypoint = self._map.get_waypoint(object_location)
 
             if object_waypoint.road_id != ego_vehicle_waypoint.road_id:
@@ -106,29 +117,6 @@ class Agent(object):
                     return (True, traffic_light)
 
         return (False, None)
-
-    def _get_trafficlight_trigger_location(self, traffic_light):  # pylint: disable=no-self-use
-        """
-        Calculates the yaw of the waypoint that represents the trigger volume of the traffic light
-        """
-        def rotate_point(point, radians):
-            """
-            rotate a given point by a given angle
-            """
-            rotated_x = math.cos(radians) * point.x - math.sin(radians) * point.y
-            rotated_y = math.sin(radians) * point.x - math.cos(radians) * point.y
-
-            return carla.Vector3D(rotated_x, rotated_y, point.z)
-
-        base_transform = traffic_light.get_transform()
-        base_rot = base_transform.rotation.yaw
-        area_loc = base_transform.transform(traffic_light.trigger_volume.location)
-        area_ext = traffic_light.trigger_volume.extent
-
-        point = rotate_point(carla.Vector3D(0, 0, area_ext.z), math.radians(base_rot))
-        point_location = area_loc + carla.Location(x=point.x, y=point.y)
-
-        return carla.Location(point_location.x, point_location.y, point_location.z)
 
     def _bh_is_vehicle_hazard(self, ego_wpt, ego_loc, vehicle_list,
                            proximity_th, up_angle_th, low_angle_th=0, lane_offset=0):
@@ -233,19 +221,3 @@ class Agent(object):
                 return (True, target_vehicle)
 
         return (False, None)
-
-
-    @staticmethod
-    def emergency_stop():
-        """
-        Send an emergency stop command to the vehicle
-
-            :return: control for braking
-        """
-        control = carla.VehicleControl()
-        control.steer = 0.0
-        control.throttle = 0.0
-        control.brake = 1.0
-        control.hand_brake = False
-
-        return control

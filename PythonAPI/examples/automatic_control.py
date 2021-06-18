@@ -692,9 +692,7 @@ def game_loop(args):
         elif args.agent == "Basic":
             agent = BasicAgent(world.player)
             spawn_point = world.map.get_spawn_points()[0]
-            agent.set_destination((spawn_point.location.x,
-                                   spawn_point.location.y,
-                                   spawn_point.location.z))
+            agent.set_destination(spawn_point)
         else:
             agent = BehaviorAgent(world.player, behavior=args.behavior)
 
