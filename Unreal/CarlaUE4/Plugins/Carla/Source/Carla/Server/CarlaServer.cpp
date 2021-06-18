@@ -23,6 +23,7 @@
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Actor/ActorData.h"
 #include "CarlaServerResponse.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -1560,18 +1561,38 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::ActorId ActorId) -> R<std::vector<cg::BoundingBox>>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->GetActorRegistry().Find(ActorId);
-    if (!ActorView.IsValid() || ActorView.GetActor()->IsPendingKill())
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (CarlaActor)
     {
-      RESPOND_ERROR("unable to get group traffic lights: actor not found");
+      return RespondError(
+          "get_light_boxes",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(ActorView.GetActor());
-    TArray<FBoundingBox> Result;
-    TArray<uint8> OutTag;
-    UBoundingBoxCalculator::GetTrafficLightBoundingBox(
-        TrafficLight, Result, OutTag,
-         static_cast<uint8>(carla::rpc::CityObjectLabel::TrafficLight));
-    return MakeVectorFromTArray<cg::BoundingBox>(Result);
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "get_light_boxes",
+          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
+      if (!TrafficLight)
+      {
+        return RespondError(
+          "get_light_boxes",
+          ECarlaServerResponse::NotATrafficLight,
+          " Actor Id: " + FString::FromInt(ActorId));
+      }
+      TArray<FBoundingBox> Result;
+      TArray<uint8> OutTag;
+      UBoundingBoxCalculator::GetTrafficLightBoundingBox(
+          TrafficLight, Result, OutTag,
+          static_cast<uint8>(carla::rpc::CityObjectLabel::TrafficLight));
+      return MakeVectorFromTArray<cg::BoundingBox>(Result);
+    }
   };
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
