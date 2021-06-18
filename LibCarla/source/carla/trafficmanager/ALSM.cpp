@@ -172,9 +172,18 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
   bool hero_actor_present = hero_actors.size() != 0u;
   float physics_radius = parameters.GetHybridPhysicsRadius();
   float physics_radius_square = SQUARE(physics_radius);
+  bool is_respawn_vehicles = parameters.GetRespawnDormantVehicles();
+  if (is_respawn_vehicles && !hero_actor_present) {
+    track_traffic.SetHeroLocation(cg::Location(0,0,0));
+  }
+  // Update first the information regarding any hero vehicle.
   for (auto &hero_actor_info: hero_actors){
+    if (is_respawn_vehicles) {
+      track_traffic.SetHeroLocation(hero_actor_info.second->GetTransform().location);
+    }
     UpdateData(hybrid_physics_mode, max_idle_time, hero_actor_info.second, hero_actor_present, physics_radius_square);
   }
+  // Update information for all other registered vehicles.
   for (const Actor &vehicle : vehicle_list) {
     ActorId actor_id = vehicle->GetId();
     if (hero_actors.find(actor_id) == hero_actors.end()) {
@@ -234,23 +243,11 @@ void ALSM::UpdateData(const bool hybrid_physics_mode,
     vehicle_velocity = displacement * INV_HYBRID_DT;
   }
 
-  // If hero actor is present, add its location.
-  cg::Location hero_location = cg::Location(0,0,0);
-  if (hero_actor_present) {
-    // For now, just get one hero.
-    auto it = hero_actors.begin();
-    const ActorId &hero_actor_id = it->first;
-    if (simulation_state.ContainsActor(hero_actor_id)) {
-      hero_location = simulation_state.GetLocation(hero_actor_id);
-      }
-    }
-
   // Updated kinematic state object.
   auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
   KinematicState kinematic_state{vehicle_location, vehicle_rotation,
                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit(),
-                                  enable_physics, vehicle->IsDormant(),
-                                  hero_location};
+                                  enable_physics, vehicle->IsDormant()};
 
   // Updated traffic light state object.
   TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
@@ -284,7 +281,7 @@ void ALSM::UpdateUnregisteredActorsData() {
     const cg::Rotation actor_rotation = actor_transform.rotation;
     const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
     const bool actor_is_dormant = actor_ptr->IsDormant();
-    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, actor_is_dormant, cg::Location(0,0,0)};
+    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, actor_is_dormant};
 
     TrafficLightState tl_state;
     ActorType actor_type = ActorType::Any;

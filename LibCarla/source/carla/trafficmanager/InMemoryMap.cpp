@@ -171,7 +171,7 @@ namespace traffic_manager {
           auto max_splits = max(angle_splits, distance_splits);
           if (max_splits >= 1) {
             // Compute how many waypoints do we need to generate.
-            for (auto j = 0; j < max_splits; ++j) {
+            for (uint16_t j = 0; j < max_splits; ++j) {
               auto next_waypoints = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/(max_splits+1));
               if (next_waypoints.size() != 0) {
                 auto new_waypoint = next_waypoints.front();
@@ -215,6 +215,7 @@ namespace traffic_manager {
         dense_topology.push_back(swp);
       }
     }
+    std::cout << geodesic_grid_id_counter << std::endl;
 
     // Localizing waypoints into grids.
     for (auto &simple_waypoint: dense_topology) {
@@ -267,11 +268,88 @@ namespace traffic_manager {
     Point3D query_point(loc.x, loc.y, loc.z);
     std::vector<SpatialTreeEntry> result_1;
 
+    // auto start1 = std::chrono::high_resolution_clock::now();
     rtree.query(bgi::nearest(query_point, 1), std::back_inserter(result_1));
+    // auto end1 = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> diff1 = end1-start1;
+    // std::cout << "rtree.query nearest time: "<< diff1.count() << " s\n";
     SpatialTreeEntry &closest_entry = result_1.front();
     SimpleWaypointPtr &closest_point = closest_entry.second;
 
     return closest_point;
+  }
+
+  NodeList InMemoryMap::GetWaypointsInDelta(const cg::Location loc, const float n, const float val) const {
+    Point3D query_point(loc.x, loc.y, loc.z);
+    float const delta = 25.0f;
+    float const z_diff = 200.0f;
+    // Point3D lower_p1(loc.x + 50.0f, loc.y + 50.0f, loc.z + z_diff);
+    // Point3D lower_p2(loc.x - 50.0f, loc.y - 50.0f, loc.z - z_diff);
+    // Point3D upper_p1(loc.x + 1500.0f + delta, loc.y + 1500.0f + delta, loc.z + z_diff);
+    // Point3D upper_p2(loc.x - 1500.0f - delta, loc.y - 1500.0f - delta, loc.z - z_diff);
+
+    Point3D lower_p1(loc.x + val, loc.y + val, loc.z + z_diff);
+    Point3D lower_p2(loc.x - val, loc.y - val, loc.z - z_diff);
+    Point3D upper_p1(loc.x + val + delta, loc.y + val + delta, loc.z + z_diff);
+    Point3D upper_p2(loc.x - val - delta, loc.y - val - delta, loc.z - z_diff);
+
+    Box lower_query_box(lower_p2, lower_p1);
+    Box upper_query_box(upper_p2, upper_p1);
+
+    std::vector<SpatialTreeEntry> result_1;
+    NodeList result1;
+    NodeList result2;
+    auto start1 = std::chrono::high_resolution_clock::now();
+    rtree.query(bgi::within(upper_query_box)
+              && !bgi::within(lower_query_box)
+              && bgi::satisfies([&](SpatialTreeEntry const& v) { return !v.second->CheckJunction();}),
+              std::back_inserter(result_1));
+    auto end1 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff1 = end1-start1;
+
+    // std::cout << "rtree.query time: "<< diff1.count() << " s\n";
+    // std::cout << "rtree.query size: "<< result_1.size() << " s\n";
+
+    unsigned seed = std::chrono::system_clock::now()
+                        .time_since_epoch()
+                        .count();
+    std::shuffle(result_1.begin(), result_1.end(), std::default_random_engine(seed));
+
+    for (uint16_t i = 0; i < n && i < result_1.size(); i++) {
+        SpatialTreeEntry &closest_entry = result_1.at(i);
+        SimpleWaypointPtr &closest_point = closest_entry.second;
+        // std::cout << "point " << bg::wkt(closest_entry.first) << std::endl;
+        result1.push_back(closest_point);
+      }
+    auto end2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff2 = end2-start1;
+    // std::cout << "rtree.query + insertion time: "<< diff2.count() << " s\n";
+
+    // second query
+    auto start2 = std::chrono::high_resolution_clock::now();
+    int x = 0;
+    for (Rtree::const_query_iterator
+        it = rtree.qbegin(bgi::within(upper_query_box)
+        && !bgi::within(lower_query_box)
+        && bgi::satisfies([&](SpatialTreeEntry const& v) { return v.second->CheckJunction();}));
+        it != rtree.qend();
+        ++it) {
+    x++;
+    // std::cout << "point " << bg::wkt(it->first) << ", i= " << x << ", n= " << n << std::endl;
+    result2.push_back(it->second);
+    if ( x >= n )
+        break;
+    }
+    auto end3 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff3 = end3-start2;
+
+    // std::cout << "iterate query + insertion time: "<< diff3.count() << " s\n";
+    // std::cout << "iterate query size: "<< result2.size() << " s\n";
+
+    return result1;
+    // } else {
+    //   return {};
+    // }
   }
 
   NodeList InMemoryMap::GetDenseTopology() const {

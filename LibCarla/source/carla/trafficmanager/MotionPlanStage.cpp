@@ -20,7 +20,7 @@ MotionPlanStage::MotionPlanStage(
   const SimulationState &simulation_state,
   const Parameters &parameters,
   const BufferMap &buffer_map,
-  const TrackTraffic &track_traffic,
+  TrackTraffic &track_traffic,
   const std::vector<float> &urban_longitudinal_parameters,
   const std::vector<float> &highway_longitudinal_parameters,
   const std::vector<float> &urban_lateral_parameters,
@@ -67,7 +67,7 @@ void MotionPlanStage::Update(const unsigned long index) {
   cg::Transform teleportation_transform;
 
   // Get information about the hero location from the actor_id state.
-  cg::Location hero_location = simulation_state.GetHeroLocation(actor_id);
+  cg::Location hero_location = track_traffic.GetHeroLocation();
   bool is_hero_alive = hero_location != cg::Location(0, 0, 0);
 
   if (simulation_state.IsDormant(actor_id) && parameters.GetRespawnDormantVehicles() && is_hero_alive) {
@@ -80,6 +80,7 @@ void MotionPlanStage::Update(const unsigned long index) {
     if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
       teleportation_instance.insert({actor_id, current_timestamp});
     }
+    // std::cout << "HERO LOC x: " << hero_location.x << " y: " << hero_location.y << " z: " << hero_location.z << std::endl;
 
     // Get lower and upper bound for teleporting vehicle.
     float lower_bound = parameters.GetLowerBoundaryRespawnDormantVehicles();
@@ -91,41 +92,53 @@ void MotionPlanStage::Update(const unsigned long index) {
 
     if (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT) {
       double r_sample = (random_devices.at(actor_id).next()*dilate_factor) + lower_bound;
-      int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-      int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-      cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
-      SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
-      // double inner = 50.0f;
-      // double outer = random_devices.at(actor_id).next()*2.0 + inner;
-      // SimpleWaypointPtr teleport_waypoint = local_map->GetWaypointInDistance(hero_location, inner, outer);
-      while (teleport_waypoint->CheckJunction()) {
-        r_sample = (random_devices.at(actor_id).next()*dilate_factor) + lower_bound;
-        x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-        y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
-        teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
-        teleport_waypoint = local_map->GetWaypoint(teleport_location);
+      // int x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+      // int y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+      NodeList teleport_waypoint_list = local_map->GetWaypointsInDelta(hero_location, 5, r_sample);
+      teleportation_transform = teleport_waypoint_list.at(0)->GetTransform();
+      for (auto &teleport_waypoint : teleport_waypoint_list) {
+        if (track_traffic.IsWaypointFree(teleport_waypoint->GetId())) {
+          teleportation_transform = teleport_waypoint->GetTransform();
+          track_traffic.AddTakenWaypoint(teleport_waypoint->GetId());
+          // std::cout << "We found it!" << std::endl;
+          break;
+        } else {
+          // std::cout << "Grid is occupied. THE STRUCT IN MPStage DOESNT GET CLEANED." << std::endl;
+        }
       }
-      SimpleWaypointPtr nearby_waypoint = nullptr;
-      NodeList possible_waypoints;
-      possible_waypoints.push_back(teleport_waypoint);
-      int elements = 1;
-      while (true) {
-       nearby_waypoint = teleport_waypoint->GetLeftWaypoint();
-       while (nearby_waypoint != nullptr) {
-         possible_waypoints.push_back(nearby_waypoint);
-          elements+=1;
-         nearby_waypoint = nearby_waypoint->GetLeftWaypoint();
-       }
-       nearby_waypoint = teleport_waypoint->GetRightWaypoint();
-       while (nearby_waypoint != nullptr) {
-         possible_waypoints.push_back(nearby_waypoint);
-         elements+=1;
-         nearby_waypoint = nearby_waypoint->GetRightWaypoint();
-       }
-       break;
-      }
-      int selection_index = static_cast<int>(random_devices.at(actor_id).next()) % elements;
-      teleportation_transform = possible_waypoints.at(selection_index)->GetTransform();
+      // cg::Location teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
+      // SimpleWaypointPtr teleport_waypoint = local_map->GetWaypoint(teleport_location);
+      // // double inner = 50.0f;
+      // // double outer = random_devices.at(actor_id).next()*2.0 + inner;
+      // // SimpleWaypointPtr teleport_waypoint = local_map->GetWaypointInDistance(hero_location, inner, outer);
+      // while (teleport_waypoint->CheckJunction()) {
+      //   r_sample = (random_devices.at(actor_id).next()*dilate_factor) + lower_bound;
+      //   x_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+      //   y_sign = random_devices.at(actor_id).next() < 50.0 ? -1 : 1;
+      //   teleport_location = hero_location + cg::Location(r_sample*x_sign, r_sample*y_sign, 0.0);
+      //   teleport_waypoint = local_map->GetWaypoint(teleport_location);
+      // }
+      // SimpleWaypointPtr nearby_waypoint = nullptr;
+      // NodeList possible_waypoints;
+      // possible_waypoints.push_back(teleport_waypoint);
+      // int elements = 1;
+      // while (true) {
+      //  nearby_waypoint = teleport_waypoint->GetLeftWaypoint();
+      //  while (nearby_waypoint != nullptr) {
+      //    possible_waypoints.push_back(nearby_waypoint);
+      //     elements+=1;
+      //    nearby_waypoint = nearby_waypoint->GetLeftWaypoint();
+      //  }
+      //  nearby_waypoint = teleport_waypoint->GetRightWaypoint();
+      //  while (nearby_waypoint != nullptr) {
+      //    possible_waypoints.push_back(nearby_waypoint);
+      //    elements+=1;
+      //    nearby_waypoint = nearby_waypoint->GetRightWaypoint();
+      //  }
+      //  break;
+      // }
+      // int selection_index = static_cast<int>(random_devices.at(actor_id).next()) % elements;
+      // teleportation_transform = possible_waypoints.at(selection_index)->GetTransform();
     } else {
       // Teleport only once every dt in asynchronous mode.
       teleportation_transform = cg::Transform(vehicle_location, simulation_state.GetRotation(actor_id));

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -21,6 +22,7 @@
 #include "carla/Memory.h"
 #include "carla/road/RoadTypes.h"
 
+#include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
 namespace carla {
@@ -44,7 +46,9 @@ namespace bgi = boost::geometry::index;
 
   using SegmentId = std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>;
   using SegmentTopology = std::map<SegmentId, std::pair<std::vector<SegmentId>, std::vector<SegmentId>>>;
+  using SegmentToGeoId = std::map<std::vector<SimpleWaypointPtr>, GeoGridId>;
   using SegmentMap = std::map<SegmentId, std::vector<SimpleWaypointPtr>>;
+  using Rtree = bgi::rtree<SpatialTreeEntry, bgi::rstar<16>>;
 
   /// This class builds a discretized local map-cache.
   /// Instantiate the class with the world and run SetUp() to construct the
@@ -59,7 +63,7 @@ namespace bgi = boost::geometry::index;
     /// sparse topology.
     NodeList dense_topology;
     /// Spatial quadratic R-tree for indexing and querying waypoints.
-    bgi::rtree<SpatialTreeEntry, bgi::rstar<16>> rtree;
+    Rtree rtree;
 
   public:
 
@@ -72,6 +76,9 @@ namespace bgi = boost::geometry::index;
 
     /// This method returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const cg::Location loc) const;
+
+    /// This method returns n waypoints in an delta area with a certain distance from the ego vehicle (CHANGE val TO dist).
+    NodeList GetWaypointsInDelta(const cg::Location loc, const float n, const float val) const;
 
     /// This method returns the full list of discrete samples of the map in the
     /// local cache.

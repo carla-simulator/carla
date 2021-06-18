@@ -71,7 +71,7 @@ static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
 
 namespace Collision {
 static const float BOUNDARY_EXTENSION_MAXIMUM = 40.0f;
-static const float BOUNDARY_EXTENSION_MINIMUM = 2.0f;
+static const float BOUNDARY_EXTENSION_MINIMUM = 2.5f;
 static const float BOUNDARY_EXTENSION_RATE = RATE(BOUNDARY_EXTENSION_MAXIMUM,
                                                   BOUNDARY_EXTENSION_MINIMUM,
                                                   SpeedThreshold::ARBITRARY_MAX_SPEED);

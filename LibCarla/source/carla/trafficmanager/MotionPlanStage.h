@@ -24,7 +24,7 @@ private:
   const SimulationState &simulation_state;
   const Parameters &parameters;
   const BufferMap &buffer_map;
-  const TrackTraffic &track_traffic;
+  TrackTraffic &track_traffic;
   // PID paramenters for various road conditions.
   const std::vector<float> urban_longitudinal_parameters;
   const std::vector<float> highway_longitudinal_parameters;
@@ -59,7 +59,7 @@ public:
                   const SimulationState &simulation_state,
                   const Parameters &parameters,
                   const BufferMap &buffer_map,
-                  const TrackTraffic &track_traffic,
+                  TrackTraffic &track_traffic,
                   const std::vector<float> &urban_longitudinal_parameters,
                   const std::vector<float> &highway_longitudinal_parameters,
                   const std::vector<float> &urban_lateral_parameters,

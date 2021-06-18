@@ -21,7 +21,6 @@ struct KinematicState {
   float speed_limit;
   bool physics_enabled;
   bool is_dormant;
-  cg::Location hero_location;
 };
 using KinematicStateMap = std::unordered_map<ActorId, KinematicState>;
 
