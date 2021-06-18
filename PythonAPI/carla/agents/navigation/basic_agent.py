@@ -38,7 +38,7 @@ class BasicAgent(Agent):
         self._local_planner = LocalPlanner(
             self._vehicle, opt_dict={'target_speed' : target_speed,
             'lateral_control_dict':args_lateral_dict})
-        self._hop_resolution = 2.0
+        self._sampling_resolution = 2.0
         self._path_seperation_hop = 2
         self._path_seperation_threshold = 0.5
         self._target_speed = target_speed
@@ -51,22 +51,24 @@ class BasicAgent(Agent):
         """
 
         start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
-        end_waypoint = self._map.get_waypoint(
-            carla.Location(location[0], location[1], location[2]))
+        end_waypoint = self._map.get_waypoint(location)
 
-        route_trace = self._trace_route(start_waypoint, end_waypoint)
+        route_trace = self.trace_route(start_waypoint, end_waypoint)
 
         self._local_planner.set_global_plan(route_trace)
 
-    def _trace_route(self, start_waypoint, end_waypoint):
+    def trace_route(self, start_waypoint, end_waypoint):
         """
         This method sets up a global router and returns the optimal route
         from start_waypoint to end_waypoint
+
+            :param start_waypoint: initial position
+            :param end_waypoint: final position
         """
 
         # Setting up global router
         if self._grp is None:
-            dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map(), self._hop_resolution)
+            dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map(), self._sampling_resolution)
             grp = GlobalRoutePlanner(dao)
             grp.setup()
             self._grp = grp

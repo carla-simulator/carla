@@ -39,6 +39,29 @@ def get_speed(vehicle):
 
     return 3.6 * math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2)
 
+def get_trafficlight_trigger_location(traffic_light):
+    """
+    Calculates the yaw of the waypoint that represents the trigger volume of the traffic light
+    """
+    def rotate_point(point, radians):
+        """
+        rotate a given point by a given angle
+        """
+        rotated_x = math.cos(radians) * point.x - math.sin(radians) * point.y
+        rotated_y = math.sin(radians) * point.x - math.cos(radians) * point.y
+
+        return carla.Vector3D(rotated_x, rotated_y, point.z)
+
+    base_transform = traffic_light.get_transform()
+    base_rot = base_transform.rotation.yaw
+    area_loc = base_transform.transform(traffic_light.trigger_volume.location)
+    area_ext = traffic_light.trigger_volume.extent
+
+    point = rotate_point(carla.Vector3D(0, 0, area_ext.z), math.radians(base_rot))
+    point_location = area_loc + carla.Location(x=point.x, y=point.y)
+
+    return carla.Location(point_location.x, point_location.y, point_location.z)
+
 def is_within_distance_ahead(target_transform, current_transform, max_distance):
     """
     Check if a target object is within a certain distance in front of a reference object.
