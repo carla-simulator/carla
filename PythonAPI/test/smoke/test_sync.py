@@ -140,3 +140,38 @@ class TestSynchronousMode(SyncSmokeTest):
                     sensor.destroy()
             if car is not None:
                 car.destroy()
+
+    def batch_scenario(self, batch_tick, after_tick):
+        bp_veh = self.world.get_blueprint_library().filter("vehicle.*")[0]
+        veh_transf = self.world.get_map().get_spawn_points()[0]
+
+        frame_init = self.world.get_snapshot().frame
+
+        batch = [carla.command.SpawnActor(bp_veh, veh_transf)]
+
+        responses = self.client.apply_batch_sync(batch, batch_tick)
+        if after_tick:
+            self.world.tick()
+
+        if len(responses) != 1 or responses[0].error:
+            self.fail("%s: The test car could not be correctly spawned" % (bp_veh.id))
+
+        vehicle_id = responses[0].actor_id
+
+        frame_after = self.world.get_snapshot().frame
+
+        self.client.apply_batch_sync([carla.command.DestroyActor(vehicle_id)])
+
+        return frame_init, frame_after
+
+    def test_apply_batch_sync(self):
+        print("TestSynchronousMode.test_apply_batch_sync")
+
+        a_t0, a_t1 = self.batch_scenario(False, False)
+        self.assertEqual(a_t0, a_t1, "Something has failed with the apply_batch_sync. These frames should be equal: %d %d" % (a_t0, a_t1))
+
+        a_t0, a_t1 = self.batch_scenario(True, False)
+        self.assertEqual(a_t0+1, a_t1, "Something has failed with the apply_batch_sync. These frames should be consecutive: %d %d" % (a_t0, a_t1))
+
+        a_t0, a_t1 = self.batch_scenario(False, True)
+        self.assertEqual(a_t0+1, a_t1, "Something has failed with the apply_batch_sync. These frames should be consecutive: %d %d" % (a_t0, a_t1))
