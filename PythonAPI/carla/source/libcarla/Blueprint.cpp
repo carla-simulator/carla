@@ -24,6 +24,12 @@ namespace data {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const OpticalFlowPixel &color) {
+    out << "Color(" << std::to_string(color.x)
+        << ',' << std::to_string(color.y) << ')';
+    return out;
+  }
+
 } // namespace data
 } // namespace sensor
 
