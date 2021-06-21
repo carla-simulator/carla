@@ -278,11 +278,11 @@ pip install --upgrade pip
 
 # Install Python library dependencies
 
-pip2 install --user setuptools &&
+pip install --user setuptools &&
 pip3 install --user -Iv setuptools==47.3.1 &&
-pip2 install --user distro &&
+pip install --user distro &&
 pip3 install --user distro &&
-pip2 install --user wheel &&
+pip install --user wheel &&
 pip3 install --user wheel auditwheel
 
 # Change default clang version
