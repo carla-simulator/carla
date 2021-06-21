@@ -17,7 +17,7 @@ import glob
 import logging
 import math
 import os
-import random
+import numpy.random as random
 import re
 import sys
 import weakref
@@ -90,6 +90,7 @@ class World(object):
 
     def __init__(self, carla_world, hud, args):
         """Constructor method"""
+        self._args = args
         self.world = carla_world
         try:
             self.map = self.world.get_map()
@@ -107,7 +108,6 @@ class World(object):
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
         self._actor_filter = args.filter
-        self._gamma = args.gamma
         self.restart(args)
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
@@ -118,9 +118,6 @@ class World(object):
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
         cam_pos_id = self.camera_manager.transform_index if self.camera_manager is not None else 0
-        # Set the seed if requested by user
-        if args.seed is not None:
-            random.seed(args.seed)
 
         # Get a random blueprint.
         blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
@@ -128,8 +125,8 @@ class World(object):
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
             blueprint.set_attribute('color', color)
+
         # Spawn the player.
-        print("Spawning the player")
         if self.player is not None:
             spawn_point = self.player.get_transform()
             spawn_point.location.z += 2.0
@@ -147,11 +144,17 @@ class World(object):
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.modify_vehicle_physics(self.player)
+
+        if self._args.sync:
+            self.world.tick()
+        else:
+            self.world.wait_for_tick()
+
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
-        self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
+        self.camera_manager = CameraManager(self.player, self.hud)
         self.camera_manager.transform_index = cam_pos_id
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
@@ -556,7 +559,7 @@ class GnssSensor(object):
 class CameraManager(object):
     """ Class for camera management"""
 
-    def __init__(self, parent_actor, hud, gamma_correction):
+    def __init__(self, parent_actor, hud):
         """Constructor method"""
         self.sensor = None
         self.surface = None
@@ -593,8 +596,6 @@ class CameraManager(object):
             if item[0].startswith('sensor.camera'):
                 blp.set_attribute('image_size_x', str(hud.dim[0]))
                 blp.set_attribute('image_size_y', str(hud.dim[1]))
-                if blp.has_attribute('gamma'):
-                    blp.set_attribute('gamma', str(gamma_correction))
             elif item[0].startswith('sensor.lidar'):
                 blp.set_attribute('range', '50')
             item.append(blp)
@@ -676,17 +677,32 @@ class CameraManager(object):
 
 
 def game_loop(args):
-    """ Main loop for agent"""
+    """
+    Main loop of the simulation. It handles updating all the HUD information,
+    ticking the agent and, if needed, the world.
+    """
 
     pygame.init()
     pygame.font.init()
     world = None
-    tot_target_reached = 0
-    num_min_waypoints = 21
 
     try:
+        if args.seed:
+            random.seed(args.seed)
+
         client = carla.Client(args.host, args.port)
         client.set_timeout(4.0)
+
+        traffic_manager = client.get_trafficmanager()
+        sim_world = client.get_world()
+
+        if args.sync:
+            settings = sim_world.get_settings()
+            settings.synchronous_mode = True
+            settings.fixed_delta_seconds = 0.05
+            sim_world.apply_settings(settings)
+
+            traffic_manager.set_synchronous_mode(True)
 
         display = pygame.display.set_mode(
             (args.width, args.height),
@@ -695,60 +711,53 @@ def game_loop(args):
         hud = HUD(args.width, args.height)
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
-
-        spawn_points = world.map.get_spawn_points()
-        random.shuffle(spawn_points)
-        if spawn_points[0].location != world.player.get_location():
-            destination = spawn_points[0].location
-        else:
-            destination = spawn_points[1].location
-
         if args.agent == "Basic":
             agent = BasicAgent(world.player)
-            agent.set_destination(destination)
         else:
             agent = BehaviorAgent(world.player, behavior=args.behavior)
-            agent.set_destination(agent.vehicle.get_location(), destination)
+
+        # Set the agent destination
+        spawn_points = world.map.get_spawn_points()
+        destination = random.choice(spawn_points).location
+        agent.set_destination(destination)
 
         clock = pygame.time.Clock()
 
         while True:
-            clock.tick_busy_loop(60)
+            clock.tick()
+            if args.sync:
+                world.world.tick()
+            else:
+                world.world.wait_for_tick()
             if controller.parse_events():
                 return
-            if not world.world.wait_for_tick(10.0):
-                continue
 
-            world.world.wait_for_tick(10.0)
             world.tick(clock)
             world.render(display)
             pygame.display.flip()
 
-            if args.agent == "Behavior":
-                agent.update_information()
-
-                # Set new destination when target has been reached
-                if len(agent.get_local_planner()._waypoints_queue) < num_min_waypoints and args.loop:
-                    agent.reroute(spawn_points)
-                    tot_target_reached += 1
-                    world.hud.notification("The target has been reached " +
-                                           str(tot_target_reached) + " times.", seconds=4.0)
-
-                elif len(agent.get_local_planner()._waypoints_queue) == 0 and not args.loop:
-                    print("Target reached, mission accomplished...")
+            if agent.done():
+                if args.loop:
+                    agent.set_destination(random.choice(spawn_points).location)
+                    world.hud.notification("The target has been reached, searching for another target", seconds=4.0)
+                    print("The target has been reached, searching for another target")
+                else:
+                    print("The target has been reached, stopping the simulation")
                     break
-
-                speed_limit = world.player.get_speed_limit()
-                agent.get_local_planner().set_speed(speed_limit)
-
-            # TODO: Add a done state for agents
 
             control = agent.run_step()
             control.manual_gear_shift = False
             world.player.apply_control(control)
 
     finally:
+
         if world is not None:
+            settings = world.world.get_settings()
+            settings.synchronous_mode = False
+            settings.fixed_delta_seconds = None
+            world.world.apply_settings(settings)
+            traffic_manager.set_synchronous_mode(True)
+
             world.destroy()
 
         pygame.quit()
@@ -786,29 +795,29 @@ def main():
         default='1280x720',
         help='Window resolution (default: 1280x720)')
     argparser.add_argument(
+        '--sync',
+        action='store_true',
+        help='Synchronous mode execution')
+    argparser.add_argument(
         '--filter',
         metavar='PATTERN',
         default='vehicle.*',
         help='Actor filter (default: "vehicle.*")')
-    argparser.add_argument(
-        '--gamma',
-        default=2.2,
-        type=float,
-        help='Gamma correction of the camera (default: 2.2)')
     argparser.add_argument(
         '-l', '--loop',
         action='store_true',
         dest='loop',
         help='Sets a new random destination upon reaching the previous one (default: False)')
     argparser.add_argument(
+        "-a", "--agent", type=str,
+        choices=["Behavior", "Basic"],
+        help="select which agent to run",
+        default="Behavior")
+    argparser.add_argument(
         '-b', '--behavior', type=str,
         choices=["cautious", "normal", "aggressive"],
         help='Choose one of the possible agent behaviors (default: normal) ',
         default='normal')
-    argparser.add_argument("-a", "--agent", type=str,
-                           choices=["Behavior", "Basic"],
-                           help="select which agent to run",
-                           default="Behavior")
     argparser.add_argument(
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',

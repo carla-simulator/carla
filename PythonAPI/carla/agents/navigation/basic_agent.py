@@ -26,14 +26,15 @@ class AgentState(Enum):
 
 class BasicAgent(Agent):
     """
-    BasicAgent implements a basic agent that navigates scenes to reach a given
-    target destination. This agent respects traffic lights and other vehicles.
+    BasicAgent implements an agent that navigates the scene.
+    This agent respects traffic lights and other vehicles, but ignores stop signs.
+    It has several functions available to specify the route that the agent must follow
     """
 
     def __init__(self, vehicle, target_speed=20):
         """
-
         :param vehicle: actor to apply to local planner logic onto
+        :param target_speed: speed (in Km/h) at which the vehicle will move
         """
         super(BasicAgent, self).__init__(vehicle)
 
@@ -49,11 +50,9 @@ class BasicAgent(Agent):
             self._vehicle,
             opt_dict={
                 'target_speed' : target_speed,
-                'lateral_control_dict': {'K_P': 1, 'K_D': 0.4, 'K_I': 0, 'dt': 1.0 / 20.0},
                 'max_brake': self._max_brake
             }
         )
-
 
     def emergency_stop(self):
         """
@@ -67,27 +66,27 @@ class BasicAgent(Agent):
 
         return control
 
-
     def get_local_planner(self):
         """
         Get method for protected member local planner
         """
         return self._local_planner
 
-
-    def set_destination(self, location):
+    def set_destination(self, end_location, start_location=None):
         """
         This method creates a list of waypoints from agent's position to destination location
         based on the route returned by the global router
         """
+        if not start_location:
+            start_location = self._vehicle.get_location()
 
         start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
-        end_waypoint = self._map.get_waypoint(location)
+        end_waypoint = self._map.get_waypoint(end_location)
 
-        route_trace = self.trace_route(start_waypoint, end_waypoint)
+        route_trace = self._trace_route(start_waypoint, end_waypoint)
         self._local_planner.set_global_plan(route_trace)
 
-    def trace_route(self, start_waypoint, end_waypoint):
+    def _trace_route(self, start_waypoint, end_waypoint):
         """
         This method sets up a global router and returns the optimal route
         from start_waypoint to end_waypoint
@@ -126,7 +125,7 @@ class BasicAgent(Agent):
 
         # Check for possible obstacles
         max_vehicle_distance = self._base_vehicle_threshold + vehicle_speed
-        vehicle_state, vehicle = self._is_vehicle_hazard(vehicle_list, max_vehicle_distance)
+        vehicle_state, vehicle = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
         if vehicle_state:
             if debug:
                 print('!!! VEHICLE BLOCKING AHEAD [{}])'.format(vehicle.id))
@@ -136,7 +135,7 @@ class BasicAgent(Agent):
 
         # Check if the vehicle is affected by a red traffic light
         max_tlight_distance = self._base_tlight_threshold + vehicle_speed
-        light_state, traffic_light = self._is_light_red(lights_list, max_tlight_distance)
+        light_state, traffic_light = self._affected_by_traffic_light(lights_list, max_tlight_distance)
         if light_state:
             if debug:
                 print('=== RED LIGHT AHEAD [{}])'.format(traffic_light.id))
@@ -155,6 +154,5 @@ class BasicAgent(Agent):
     def done(self):
         """
         Check whether the agent has reached its destination.
-        :return bool
         """
         return self._local_planner.done()

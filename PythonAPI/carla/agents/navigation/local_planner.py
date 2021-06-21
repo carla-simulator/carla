@@ -42,19 +42,16 @@ class LocalPlanner(object):
     def __init__(self, vehicle, opt_dict=None):
         """
         :param vehicle: actor to apply to local planner logic onto
-        :param opt_dict: dictionary of arguments with the following semantics:
-            dt -- time difference between physics control in seconds. This is typically fixed from server side
-                  using the arguments -benchmark -fps=F . In this case dt = 1/F
-
-            target_speed -- desired cruise speed in Km/h
-
-            sampling_radius -- search radius for next waypoints in seconds: e.g. 0.5 seconds ahead
-
-            lateral_control_dict -- dictionary of arguments to setup the lateral PID controller
-                                    {'K_P':, 'K_D':, 'K_I':, 'dt'}
-
-            longitudinal_control_dict -- dictionary of arguments to setup the longitudinal PID controller
-                                        {'K_P':, 'K_D':, 'K_I':, 'dt'}
+        :param opt_dict: dictionary of arguments with different parameters:
+            dt: time between simulation steps
+            target_speed: desired cruise speed in Km/h
+            sampling_radius: distance between the waypoints part of the plan
+            lateral_control_dict: values of the lateral PID controller
+            longitudinal_control_dict: values of the longitudinal PID controller
+            max_throttle: maximum throttle applied to the vehicle
+            max_brake: maximum brake applied to the vehicle
+            max_steering: maximum steering applied to the vehicle
+            offset: distance between the route waypoints and the center of the lane
         """
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
@@ -62,19 +59,15 @@ class LocalPlanner(object):
 
         self._target_speed = 20.0  # Km/h
         self._sampling_radius = 1.0
-        self._min_distance = 5.0
+        self._min_distance = 8.0
         self._dt = 1.0 / 20.0
         self._max_brake = 0.3
         self._max_throt = 0.75
         self._max_steer = 0.8
         self._offset = 0
 
-        self._args_lateral_dict = {'K_P': 1.95, 'K_D': 0.2, 'K_I': 0.07, 'dt': self._dt}
+        self._args_lateral_dict = {'K_P': 1.95, 'K_D': 0.2, 'K_I': 0.05, 'dt': self._dt}
         self._args_longitudinal_dict = {'K_P': 1.0, 'K_D': 0, 'K_I': 0.05, 'dt': self._dt}
-        # self.args_lat_hw_dict = {'K_P': 0.75, 'K_D': 0.02, 'K_I': 0.4, 'dt': 1.0 / self.FPS}
-        # self.args_lat_city_dict = {'K_P': 0.58, 'K_D': 0.02, 'K_I': 0.5, 'dt': 1.0 / self.FPS}
-        # self.args_long_hw_dict = {'K_P': 0.37, 'K_D': 0.024, 'K_I': 0.032, 'dt': 1.0 / self.FPS}
-        # self.args_long_city_dict = {'K_P': 0.15, 'K_D': 0.05, 'K_I': 0.07, 'dt': 1.0 / self.FPS}
 
         self._vehicle_controller = None
         self.target_waypoint = None
@@ -88,10 +81,6 @@ class LocalPlanner(object):
 
         # initializing controller
         self._init_controller(opt_dict)
-
-    def __del__(self):
-        if self._vehicle:
-            self._vehicle.destroy()
 
     def reset_vehicle(self):
         """Reset the ego-vehicle"""
@@ -141,7 +130,6 @@ class LocalPlanner(object):
         self._waypoints_queue.append((self.target_waypoint, self.target_road_option))
         self._compute_next_waypoints(k=self._min_waypoint_queue_length)
 
-        self._world.debug.draw_point(self.target_waypoint.transform.location + carla.Location(z=1), life_time=20, size=0.5)
 
     def set_speed(self, speed):
         """
@@ -155,6 +143,7 @@ class LocalPlanner(object):
                   "Use 'follow_speed_limits' to deactivate this")
         self._target_speed = speed
         # TODO: Change the sampling distance too?
+
 
     def follow_speed_limits(self, value=True):
         """
