@@ -136,7 +136,6 @@ class LocalPlanner(object):
         # Compute the current vehicle waypoint
         current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         self.target_waypoint, self.target_road_option = (current_waypoint, RoadOption.LANEFOLLOW)
-        print("Starting position: {}".format(self.target_waypoint))
 
         # Fill the waypoint queue
         self._waypoints_queue.append((self.target_waypoint, self.target_road_option))

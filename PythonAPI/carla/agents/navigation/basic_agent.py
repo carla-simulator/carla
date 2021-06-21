@@ -7,12 +7,22 @@
 waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
-
 import carla
-from agents.navigation.agent import Agent, AgentState
+from agents.navigation.agent import Agent
 from agents.navigation.local_planner import LocalPlanner
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.tools.misc import get_speed
+
+from enum import Enum
+
+class AgentState(Enum):
+    """
+    AGENT_STATE represents the possible states of a roaming agent
+    """
+    NAVIGATING = 1
+    BLOCKED_BY_VEHICLE = 2
+    BLOCKED_RED_LIGHT = 3
 
 class BasicAgent(Agent):
     """
@@ -27,22 +37,43 @@ class BasicAgent(Agent):
         """
         super(BasicAgent, self).__init__(vehicle)
 
-        self._proximity_tlight_threshold = 5.0  # meters
-        self._proximity_vehicle_threshold = 10.0  # meters
         self._state = AgentState.NAVIGATING
-        args_lateral_dict = {
-            'K_P': 1,
-            'K_D': 0.4,
-            'K_I': 0,
-            'dt': 1.0/20.0}
-        self._local_planner = LocalPlanner(
-            self._vehicle, opt_dict={'target_speed' : target_speed,
-            'lateral_control_dict':args_lateral_dict})
-        self._sampling_resolution = 2.0
-        self._path_seperation_hop = 2
-        self._path_seperation_threshold = 0.5
         self._target_speed = target_speed
+        self._sampling_resolution = 2.0
         self._grp = None
+
+        self._base_tlight_threshold = 5.0  # meters
+        self._base_vehicle_threshold = 5.0  # meters
+        self._max_brake = 0.5
+        self._local_planner = LocalPlanner(
+            self._vehicle,
+            opt_dict={
+                'target_speed' : target_speed,
+                'lateral_control_dict': {'K_P': 1, 'K_D': 0.4, 'K_I': 0, 'dt': 1.0 / 20.0},
+                'max_brake': self._max_brake
+            }
+        )
+
+
+    def emergency_stop(self):
+        """
+        Send an emergency stop command to the vehicle
+        """
+        control = carla.VehicleControl()
+        control.steer = 0.0
+        control.throttle = 0.0
+        control.brake = self._max_brake
+        control.hand_brake = False
+
+        return control
+
+
+    def get_local_planner(self):
+        """
+        Get method for protected member local planner
+        """
+        return self._local_planner
+
 
     def set_destination(self, location):
         """
@@ -84,18 +115,18 @@ class BasicAgent(Agent):
         Execute one step of navigation.
         :return: carla.VehicleControl
         """
-
-        # is there an obstacle in front of us?
         hazard_detected = False
 
-        # retrieve relevant elements for safe navigation, i.e.: traffic lights
-        # and other vehicles
+        # Retrieve all relevant actors
         actor_list = self._world.get_actors()
         vehicle_list = actor_list.filter("*vehicle*")
         lights_list = actor_list.filter("*traffic_light*")
 
-        # check possible obstacles
-        vehicle_state, vehicle = self._is_vehicle_hazard(vehicle_list)
+        vehicle_speed = get_speed(self._vehicle) / 3.6
+
+        # Check for possible obstacles
+        max_vehicle_distance = self._base_vehicle_threshold + vehicle_speed
+        vehicle_state, vehicle = self._is_vehicle_hazard(vehicle_list, max_vehicle_distance)
         if vehicle_state:
             if debug:
                 print('!!! VEHICLE BLOCKING AHEAD [{}])'.format(vehicle.id))
@@ -103,8 +134,9 @@ class BasicAgent(Agent):
             self._state = AgentState.BLOCKED_BY_VEHICLE
             hazard_detected = True
 
-        # check for the state of the traffic lights
-        light_state, traffic_light = self._is_light_red(lights_list)
+        # Check if the vehicle is affected by a red traffic light
+        max_tlight_distance = self._base_tlight_threshold + vehicle_speed
+        light_state, traffic_light = self._is_light_red(lights_list, max_tlight_distance)
         if light_state:
             if debug:
                 print('=== RED LIGHT AHEAD [{}])'.format(traffic_light.id))
@@ -116,7 +148,6 @@ class BasicAgent(Agent):
             control = self.emergency_stop()
         else:
             self._state = AgentState.NAVIGATING
-            # standard local planner behavior
             control = self._local_planner.run_step(debug=debug)
 
         return control

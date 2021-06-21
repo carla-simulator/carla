@@ -741,6 +741,8 @@ def game_loop(args):
                 speed_limit = world.player.get_speed_limit()
                 agent.get_local_planner().set_speed(speed_limit)
 
+            # TODO: Add a done state for agents
+
             control = agent.run_step()
             control.manual_gear_shift = False
             world.player.apply_control(control)
