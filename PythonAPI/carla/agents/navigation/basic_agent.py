@@ -54,7 +54,6 @@ class BasicAgent(Agent):
         end_waypoint = self._map.get_waypoint(location)
 
         route_trace = self.trace_route(start_waypoint, end_waypoint)
-
         self._local_planner.set_global_plan(route_trace)
 
     def trace_route(self, start_waypoint, end_waypoint):

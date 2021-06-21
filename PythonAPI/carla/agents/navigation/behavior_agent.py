@@ -112,8 +112,7 @@ class BehaviorAgent(Agent):
         self.end_waypoint = self._map.get_waypoint(end_location)
 
         route_trace = self.trace_route(self.start_waypoint, self.end_waypoint)
-
-        self._local_planner.set_global_plan(route_trace)
+        self._local_planner.set_global_plan(route_trace, stop_waypoint_creation=False)
 
     def reroute(self, spawn_points):
         """
@@ -337,21 +336,29 @@ class BehaviorAgent(Agent):
 
         # Under safety time distance, slow down.
         if self.behavior.safety_time > ttc > 0.0:
+            target_speed = min([
+                positive(vehicle_speed - self.behavior.speed_decrease),
+                self.behavior.max_speed,
+                self.speed_limit - self.behavior.speed_lim_dist])
+            self._local_planner.set_speed(target_speed)
             control = self._local_planner.run_step(debug=debug)
-            # control = self._local_planner.run_step(
-            #     target_speed=min(positive(vehicle_speed - self.behavior.speed_decrease),
-            #                      min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+
         # Actual safety distance area, try to follow the speed of the vehicle in front.
         elif 2 * self.behavior.safety_time > ttc >= self.behavior.safety_time:
+            target_speed = min([
+                max(self.min_speed, vehicle_speed),
+                self.behavior.max_speed,
+                self.speed_limit - self.behavior.speed_lim_dist])
+            self._local_planner.set_speed(target_speed)
             control = self._local_planner.run_step(debug=debug)
-            # control = self._local_planner.run_step(
-            #     target_speed=min(max(self.min_speed, vehicle_speed),
-            #                      min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist)), debug=debug)
+
         # Normal behavior.
         else:
+            target_speed = min([
+                self.behavior.max_speed,
+                self.speed_limit - self.behavior.speed_lim_dist])
+            self._local_planner.set_speed(target_speed)
             control = self._local_planner.run_step(debug=debug)
-            # control = self._local_planner.run_step(
-            #     target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
 
         return control
 
@@ -362,7 +369,6 @@ class BehaviorAgent(Agent):
             :param debug: boolean for debugging
             :return control: carla.VehicleControl
         """
-        # TODO: Everytime the local_planner run step is called, reset the speed
         control = None
         if self.behavior.tailgate_counter > 0:
             self.behavior.tailgate_counter -= 1
@@ -373,12 +379,10 @@ class BehaviorAgent(Agent):
         ego_vehicle_wp = self._map.get_waypoint(ego_vehicle_loc)
 
         # 1: Red lights and stops behavior
-
         if self.traffic_light_manager(ego_vehicle_wp) != 0:
             return self.emergency_stop()
 
-        # 2.1: Pedestrian avoidancd behaviors
-
+        # 2.1: Pedestrian avoidance behaviors
         walker_state, walker, w_distance = self.pedestrian_avoid_manager(
             ego_vehicle_loc, ego_vehicle_wp)
 
@@ -410,20 +414,20 @@ class BehaviorAgent(Agent):
             else:
                 control = self.car_following_manager(vehicle, distance)
 
-        # 4: Intersection behavior
-
-        # Checking if there's a junction nearby to slow down
-        elif self.incoming_waypoint.is_junction and (self.incoming_direction == RoadOption.LEFT or self.incoming_direction == RoadOption.RIGHT):
+        # 3: Intersection behavior
+        elif self.incoming_waypoint.is_junction and (self.incoming_direction in [RoadOption.LEFT, RoadOption.RIGHT]):
+            target_speed = min([
+                self.behavior.max_speed,
+                self.speed_limit - 5])
+            self._local_planner.set_speed(target_speed)
             control = self._local_planner.run_step(debug=debug)
-            # control = self._local_planner.run_step(
-            #     target_speed=min(self.behavior.max_speed, self.speed_limit - 5), debug=debug)
 
-        # 5: Normal behavior
-
-        # Calculate controller based on no turn, traffic light or vehicle in front
+        # 4: Normal behavior
         else:
-            control = self._local_planner.run_step(debug=debug)
-            # control = self._local_planner.run_step(
-            #     target_speed= min(self.behavior.max_speed, self.speed_limit - self.behavior.speed_lim_dist), debug=debug)
+            target_speed = min([
+                self.behavior.max_speed,
+                self.speed_limit - self.behavior.speed_lim_dist])
+            self._local_planner.set_speed(target_speed)
+        control = self._local_planner.run_step(debug=debug)
 
         return control
