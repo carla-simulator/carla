@@ -17,7 +17,7 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
 from agents.navigation.behavior_types import Cautious, Aggressive, Normal
 
-from agents.tools.misc import get_speed, positive
+from agents.tools.misc import get_speed, positive, is_within_distance, compute_distance
 
 class BehaviorAgent(Agent):
     """
@@ -154,6 +154,63 @@ class BehaviorAgent(Agent):
 
         return route
 
+    def _is_vehicle_hazard(self, vehicle_list, proximity_th, up_angle_th, low_angle_th=0, lane_offset=0):
+        """
+        Check if a given vehicle is an obstacle in our way. To this end we take
+        into account the road and lane the target vehicle is on and run a
+        geometry test to check if the target vehicle is under a certain distance
+        in front of our ego vehicle. We also check the next waypoint, just to be
+        sure there's not a sudden road id change.
+
+        WARNING: This method is an approximation that could fail for very large
+        vehicles, which center is actually on a different lane but their
+        extension falls within the ego vehicle lane. Also, make sure to remove
+        the ego vehicle from the list. Lane offset is set to +1 for right lanes
+        and -1 for left lanes, but this has to be inverted if lane values are
+        negative.
+
+            :param vehicle_list: list of potential obstacle to check
+            :param proximity_th: threshold for the agent to be alerted of
+            a possible collision
+            :param up_angle_th: upper threshold for angle
+            :param low_angle_th: lower threshold for angle
+            :param lane_offset: for right and left lane changes
+            :return: a tuple given by (bool_flag, vehicle, distance), where:
+            - bool_flag is True if there is a vehicle ahead blocking us
+                   and False otherwise
+            - vehicle is the blocker object itself
+            - distance is the meters separating the two vehicles
+        """
+
+        ego_transform = self._vehicle.get_transform()
+        ego_location = ego_transform.location
+        ego_wpt = self._map.get_waypoint(ego_location)
+
+        # Get the right offset
+        if ego_wpt.lane_id < 0 and lane_offset != 0:
+            lane_offset *= -1
+
+        for target_vehicle in vehicle_list:
+
+            target_transform = target_vehicle.get_transform()
+            target_location = target_transform.location
+            # If the object is not in our next or current lane it's not an obstacle
+
+            target_wpt = self._map.get_waypoint(target_location)
+            if target_wpt.road_id != ego_wpt.road_id or \
+                    target_wpt.lane_id != ego_wpt.lane_id + lane_offset:
+                next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=5)[0]
+                if target_wpt.road_id != next_wpt.road_id or \
+                        target_wpt.lane_id != next_wpt.lane_id + lane_offset:
+                    continue
+
+            if is_within_distance(target_transform, ego_transform,
+                                  proximity_th, up_angle_th, low_angle_th):
+
+                return (True, target_vehicle, compute_distance(target_location, ego_location))
+
+        return (False, None, -1)
+
     def traffic_light_manager(self, waypoint):
         """
         This method is in charge of behaviors for red lights and stops.
@@ -177,7 +234,7 @@ class BehaviorAgent(Agent):
             self.light_id_to_ignore = -1
         return 0
 
-    def _overtake(self, location, waypoint, vehicle_list):
+    def _overtake(self, waypoint, vehicle_list):
         """
         This method is in charge of overtaking behaviors.
 
@@ -194,7 +251,7 @@ class BehaviorAgent(Agent):
 
         if (left_turn == carla.LaneChange.Left or left_turn ==
                 carla.LaneChange.Both) and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
-            new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
+            new_vehicle_state, _, _ = self._is_vehicle_hazard(vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=180, lane_offset=-1)
             if not new_vehicle_state:
                 print("Overtaking to the left!")
@@ -202,7 +259,7 @@ class BehaviorAgent(Agent):
                 self.set_destination(left_wpt.transform.location,
                                      self.end_waypoint.transform.location, clean=True)
         elif right_turn == carla.LaneChange.Right and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
-            new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
+            new_vehicle_state, _, _ = self._is_vehicle_hazard(vehicle_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=180, lane_offset=1)
             if not new_vehicle_state:
                 print("Overtaking to the right!")
@@ -210,7 +267,7 @@ class BehaviorAgent(Agent):
                 self.set_destination(right_wpt.transform.location,
                                      self.end_waypoint.transform.location, clean=True)
 
-    def _tailgating(self, location, waypoint, vehicle_list):
+    def _tailgating(self, waypoint, vehicle_list):
         """
         This method is in charge of tailgating behaviors.
 
@@ -225,12 +282,12 @@ class BehaviorAgent(Agent):
         left_wpt = waypoint.get_left_lane()
         right_wpt = waypoint.get_right_lane()
 
-        behind_vehicle_state, behind_vehicle, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
+        behind_vehicle_state, behind_vehicle, _ = self._is_vehicle_hazard(vehicle_list, max(
             self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, low_angle_th=160)
         if behind_vehicle_state and self.speed < get_speed(behind_vehicle):
             if (right_turn == carla.LaneChange.Right or right_turn ==
                     carla.LaneChange.Both) and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
-                new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
+                new_vehicle_state, _, _ = self._is_vehicle_hazard(vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the right!")
@@ -238,7 +295,7 @@ class BehaviorAgent(Agent):
                     self.set_destination(right_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
             elif left_turn == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
-                new_vehicle_state, _, _ = self._bh_is_vehicle_hazard(waypoint, location, vehicle_list, max(
+                new_vehicle_state, _, _ = self._is_vehicle_hazard(vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the left!")
@@ -246,7 +303,7 @@ class BehaviorAgent(Agent):
                     self.set_destination(left_wpt.transform.location,
                                          self.end_waypoint.transform.location, clean=True)
 
-    def collision_and_car_avoid_manager(self, location, waypoint):
+    def collision_and_car_avoid_manager(self, waypoint):
         """
         This module is in charge of warning in case of a collision
         and managing possible overtaking or tailgating chances.
@@ -263,16 +320,16 @@ class BehaviorAgent(Agent):
         vehicle_list = [v for v in vehicle_list if dist(v) < 45 and v.id != self.vehicle.id]
 
         if self.direction == RoadOption.CHANGELANELEFT:
-            vehicle_state, vehicle, distance = self._bh_is_vehicle_hazard(
-                waypoint, location, vehicle_list, max(
+            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+                vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=-1)
         elif self.direction == RoadOption.CHANGELANERIGHT:
-            vehicle_state, vehicle, distance = self._bh_is_vehicle_hazard(
-                waypoint, location, vehicle_list, max(
+            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+                vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=180, lane_offset=1)
         else:
-            vehicle_state, vehicle, distance = self._bh_is_vehicle_hazard(
-                waypoint, location, vehicle_list, max(
+            vehicle_state, vehicle, distance = self._is_vehicle_hazard(
+                vehicle_list, max(
                     self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=30)
 
             # Check for overtaking
@@ -280,18 +337,18 @@ class BehaviorAgent(Agent):
             if vehicle_state and self.direction == RoadOption.LANEFOLLOW and \
                     not waypoint.is_junction and self.speed > 10 \
                     and self.behavior.overtake_counter == 0 and self.speed > get_speed(vehicle):
-                self._overtake(location, waypoint, vehicle_list)
+                self._overtake(waypoint, vehicle_list)
 
             # Check for tailgating
 
             elif not vehicle_state and self.direction == RoadOption.LANEFOLLOW \
                     and not waypoint.is_junction and self.speed > 10 \
                     and self.behavior.tailgate_counter == 0:
-                self._tailgating(location, waypoint, vehicle_list)
+                self._tailgating(waypoint, vehicle_list)
 
         return vehicle_state, vehicle, distance
 
-    def pedestrian_avoid_manager(self, location, waypoint):
+    def pedestrian_avoid_manager(self, waypoint):
         """
         This module is in charge of warning in case of a collision
         with any pedestrian.
@@ -308,13 +365,13 @@ class BehaviorAgent(Agent):
         walker_list = [w for w in walker_list if dist(w) < 10]
 
         if self.direction == RoadOption.CHANGELANELEFT:
-            walker_state, walker, distance = self._bh_is_vehicle_hazard(waypoint, location, walker_list, max(
+            walker_state, walker, distance = self._is_vehicle_hazard(walker_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=90, lane_offset=-1)
         elif self.direction == RoadOption.CHANGELANERIGHT:
-            walker_state, walker, distance = self._bh_is_vehicle_hazard(waypoint, location, walker_list, max(
+            walker_state, walker, distance = self._is_vehicle_hazard(walker_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 2), up_angle_th=90, lane_offset=1)
         else:
-            walker_state, walker, distance = self._bh_is_vehicle_hazard(waypoint, location, walker_list, max(
+            walker_state, walker, distance = self._is_vehicle_hazard(walker_list, max(
                 self.behavior.min_proximity_threshold, self.speed_limit / 3), up_angle_th=60)
 
         return walker_state, walker, distance
@@ -383,8 +440,7 @@ class BehaviorAgent(Agent):
             return self.emergency_stop()
 
         # 2.1: Pedestrian avoidance behaviors
-        walker_state, walker, w_distance = self.pedestrian_avoid_manager(
-            ego_vehicle_loc, ego_vehicle_wp)
+        walker_state, walker, w_distance = self.pedestrian_avoid_manager(ego_vehicle_wp)
 
         if walker_state:
             # Distance is computed from the center of the two cars,
@@ -398,8 +454,7 @@ class BehaviorAgent(Agent):
                 return self.emergency_stop()
 
         # 2.2: Car following behaviors
-        vehicle_state, vehicle, distance = self.collision_and_car_avoid_manager(
-            ego_vehicle_loc, ego_vehicle_wp)
+        vehicle_state, vehicle, distance = self.collision_and_car_avoid_manager(ego_vehicle_wp)
 
         if vehicle_state:
             # Distance is computed from the center of the two cars,

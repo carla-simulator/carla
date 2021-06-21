@@ -7,24 +7,8 @@
 waypoints and avoiding other vehicles.
 The agent also responds to traffic lights. """
 
-import sys
-import math
-
-from enum import Enum
-
 import carla
-from agents.tools.misc import (is_within_distance_ahead,
-                               is_within_distance,
-                               compute_distance,
-                               get_trafficlight_trigger_location)
-
-class AgentState(Enum):
-    """
-    AGENT_STATE represents the possible states of a roaming agent
-    """
-    NAVIGATING = 1
-    BLOCKED_BY_VEHICLE = 2
-    BLOCKED_RED_LIGHT = 3
+from agents.tools.misc import is_within_distance, get_trafficlight_trigger_location
 
 
 class Agent(object):
@@ -37,24 +21,14 @@ class Agent(object):
             :param vehicle: actor to apply to local planner logic onto
         """
         self._vehicle = vehicle
-        self._proximity_tlight_threshold = 5.0  # meters
-        self._proximity_vehicle_threshold = 10.0  # meters
-        self._local_planner = None
-        self._world = self._vehicle.get_world()
-        try:
-            self._map = self._world.get_map()
-        except RuntimeError as error:
-            print('RuntimeError: {}'.format(error))
-            print('  The server could not send the OpenDRIVE (.xodr) file:')
-            print('  Make sure it exists, has the same name of your town, and is correct.')
-            sys.exit(1)
-        self._debug = debug
-        self._last_traffic_light = None
-        self._sampling_resolution = 2.0
+        self._base_tlight_threshold = 5.0  # meters
+        self._base_vehicle_threshold = 5.0  # meters
 
-    def get_local_planner(self):
-        """Get method for protected member local planner"""
-        return self._local_planner
+        self._world = self._vehicle.get_world()
+        self._map = self._world.get_map()
+        self._debug = debug
+
+        self._last_traffic_light = None
 
     def run_step(self):
         """
@@ -81,7 +55,7 @@ class Agent(object):
 
         return control
 
-    def _is_light_red(self, lights_list):
+    def _is_light_red(self, lights_list, max_distance=None):
         """
         Method to check if there is a red light affecting us. This version of
         the method is compatible with both European and US style traffic lights.
@@ -93,6 +67,15 @@ class Agent(object):
                  - traffic_light is the object itself or None if there is no
                    red traffic light affecting us
         """
+        if not max_distance:
+            max_distance = self._base_tlight_threshold
+
+        if self._last_traffic_light:
+            if self._last_traffic_light.state != carla.TrafficLightState.Red:
+                self._last_traffic_light = None
+            else:
+                return (True, self._last_traffic_light)
+
         ego_vehicle_location = self._vehicle.get_location()
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
 
@@ -110,71 +93,20 @@ class Agent(object):
             if dot_ve_wp < 0:
                 continue
 
-            if is_within_distance_ahead(object_waypoint.transform,
-                                        self._vehicle.get_transform(),
-                                        self._proximity_tlight_threshold):
-                if traffic_light.state == carla.TrafficLightState.Red:
-                    return (True, traffic_light)
+            if traffic_light.state != carla.TrafficLightState.Red:
+                continue
+
+            if is_within_distance(object_waypoint.transform,
+                                  self._vehicle.get_transform(),
+                                  max_distance,
+                                  [0, 90]):
+
+                self._last_traffic_light = traffic_light
+                return (True, traffic_light)
 
         return (False, None)
 
-    def _bh_is_vehicle_hazard(self, ego_wpt, ego_loc, vehicle_list,
-                           proximity_th, up_angle_th, low_angle_th=0, lane_offset=0):
-        """
-        Check if a given vehicle is an obstacle in our way. To this end we take
-        into account the road and lane the target vehicle is on and run a
-        geometry test to check if the target vehicle is under a certain distance
-        in front of our ego vehicle. We also check the next waypoint, just to be
-        sure there's not a sudden road id change.
-
-        WARNING: This method is an approximation that could fail for very large
-        vehicles, which center is actually on a different lane but their
-        extension falls within the ego vehicle lane. Also, make sure to remove
-        the ego vehicle from the list. Lane offset is set to +1 for right lanes
-        and -1 for left lanes, but this has to be inverted if lane values are
-        negative.
-
-            :param ego_wpt: waypoint of ego-vehicle
-            :param ego_log: location of ego-vehicle
-            :param vehicle_list: list of potential obstacle to check
-            :param proximity_th: threshold for the agent to be alerted of
-            a possible collision
-            :param up_angle_th: upper threshold for angle
-            :param low_angle_th: lower threshold for angle
-            :param lane_offset: for right and left lane changes
-            :return: a tuple given by (bool_flag, vehicle, distance), where:
-            - bool_flag is True if there is a vehicle ahead blocking us
-                   and False otherwise
-            - vehicle is the blocker object itself
-            - distance is the meters separating the two vehicles
-        """
-
-        # Get the right offset
-        if ego_wpt.lane_id < 0 and lane_offset != 0:
-            lane_offset *= -1
-
-        for target_vehicle in vehicle_list:
-
-            target_vehicle_loc = target_vehicle.get_location()
-            # If the object is not in our next or current lane it's not an obstacle
-
-            target_wpt = self._map.get_waypoint(target_vehicle_loc)
-            if target_wpt.road_id != ego_wpt.road_id or \
-                    target_wpt.lane_id != ego_wpt.lane_id + lane_offset:
-                next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=5)[0]
-                if target_wpt.road_id != next_wpt.road_id or \
-                        target_wpt.lane_id != next_wpt.lane_id + lane_offset:
-                    continue
-
-            if is_within_distance(target_vehicle_loc, ego_loc,
-                                  self._vehicle.get_transform().rotation.yaw,
-                                  proximity_th, up_angle_th, low_angle_th):
-
-                return (True, target_vehicle, compute_distance(target_vehicle_loc, ego_loc))
-
-        return (False, None, -1)
-
-    def _is_vehicle_hazard(self, vehicle_list):
+    def _is_vehicle_hazard(self, vehicle_list, max_distance=None):
         """
         :param vehicle_list: list of potential obstacle to check
         :return: a tuple given by (bool_flag, vehicle), where
@@ -182,6 +114,8 @@ class Agent(object):
                    and False otherwise
                  - vehicle is the blocker object itself
         """
+        if not max_distance:
+            max_distance = self._base_vehicle_threshold
 
         ego_vehicle_transform = self._vehicle.get_transform()
         ego_vehicle_forward_vector = ego_vehicle_transform.get_forward_vector()
@@ -195,11 +129,11 @@ class Agent(object):
             y=ego_vehicle_extent * ego_vehicle_forward_vector.y,
         )
         for target_vehicle in vehicle_list:
-            # do not account for the ego vehicle
+            # Do not account for the ego vehicle
             if target_vehicle.id == self._vehicle.id:
                 continue
 
-            # if the object is not in our lane it's not an obstacle
+            # If the object is not in our lane it's not an obstacle
             target_vehicle_transform = target_vehicle.get_transform()
             target_vehicle_forward_vector = target_vehicle_transform.get_forward_vector()
             target_vehicle_extent = target_vehicle.bounding_box.extent.x
@@ -208,16 +142,18 @@ class Agent(object):
                     target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
                 continue
 
-            # Get the transofrm of the back of the vehicle
+            # Get the transform of the back of the vehicle
             target_vehicle_rear_transform = target_vehicle_transform
             target_vehicle_rear_transform.location -= carla.Location(
                 x=target_vehicle_extent * target_vehicle_forward_vector.x,
                 y=target_vehicle_extent * target_vehicle_forward_vector.y,
             )
 
-            if is_within_distance_ahead(target_vehicle_rear_transform,
-                                        ego_vehicle_front_transform,
-                                        self._proximity_vehicle_threshold):
+            if is_within_distance(target_vehicle_rear_transform,
+                                  ego_vehicle_front_transform,
+                                  max_distance,
+                                  [0, 90]):
+
                 return (True, target_vehicle)
 
         return (False, None)
