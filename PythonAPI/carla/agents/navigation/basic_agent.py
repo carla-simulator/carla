@@ -66,6 +66,12 @@ class BasicAgent(Agent):
 
         return control
 
+    def set_target_speed(self, speed):
+        """
+        Changes the target speed of the agent
+        """
+        self._local_planner.set_speed(speed)
+
     def get_local_planner(self):
         """
         Get method for protected member local planner
@@ -76,15 +82,35 @@ class BasicAgent(Agent):
         """
         This method creates a list of waypoints from agent's position to destination location
         based on the route returned by the global router
+
+            :param end_location: final location of the route
+            :param start_location: starting location of the route
         """
         if not start_location:
             start_location = self._vehicle.get_location()
+            clean_queue = True
+        else:
+            clean_queue = False
 
         start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         end_waypoint = self._map.get_waypoint(end_location)
 
         route_trace = self._trace_route(start_waypoint, end_waypoint)
-        self._local_planner.set_global_plan(route_trace)
+        self._local_planner.set_global_plan(route_trace, clean_queue=clean_queue)
+
+    def set_global_plan(self, plan, stop_waypoint_creation=True, clean_queue=True):
+        """
+        Adds a specific plan to the agent.
+
+            :param stop_waypoint_creation: stops the automatic creation of waypoints
+            :param clean_queue: resets the current agent's plan
+        """
+        self._local_planner.set_global_plan(
+            plan,
+            stop_waypoint_creation=stop_waypoint_creation,
+            clean_queue=clean_queue
+        )
+
 
     def _trace_route(self, start_waypoint, end_waypoint):
         """
