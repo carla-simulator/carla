@@ -1547,6 +1547,59 @@ If __True__, Pedestrian navigation will be enabled using Recast tool. For very l
 
 ---
 
+## carla.OpticalFlowImage<a name="carla.OpticalFlowImage"></a>
+<small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
+Class that defines an optical flow image of 2-Dimension float (32-bit) vectors representing the optical flow detected in the field of view. The components of the vector represents the displacement of an object in the image plane. Each component outputs values in the normalized range [-2,2] which scales to [-2 size, 2 size] with size being the total resolution in the corresponding component.  
+
+### Instance Variables
+- <a name="carla.OpticalFlowImage.fov"></a>**<font color="#f8805a">fov</font>** (_float<small> – degrees</small>_)  
+Horizontal field of view of the image.  
+- <a name="carla.OpticalFlowImage.height"></a>**<font color="#f8805a">height</font>** (_int_)  
+Image height in pixels.  
+- <a name="carla.OpticalFlowImage.width"></a>**<font color="#f8805a">width</font>** (_int_)  
+Image width in pixels.  
+- <a name="carla.OpticalFlowImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+
+### Methods
+
+##### Getters
+- <a name="carla.OpticalFlowImage.get_color_coded_flow"></a>**<font color="#7fb800">get_color_coded_flow</font>**(<font color="#00a6ed">**self**</font>)  
+Visualization helper. Converts the optical flow image to an RGB image.  
+    - **Return:** _[carla.Image](#carla.Image)_  
+
+##### Dunder methods
+- <a name="carla.OpticalFlowImage.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+- <a name="carla.OpticalFlowImage.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the [carla.OpticalFlowPixel](#carla.OpticalFlowPixel) that form the image.  
+- <a name="carla.OpticalFlowImage.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.OpticalFlowImage.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)</font>)  
+- <a name="carla.OpticalFlowImage.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.OpticalFlowPixel<a name="carla.OpticalFlowPixel"></a>
+Class that defines a 2 dimensional vector representing an optical flow pixel.  
+
+### Instance Variables
+- <a name="carla.OpticalFlowPixel.x"></a>**<font color="#f8805a">x</font>** (_float_)  
+Optical flow in the x component.  
+- <a name="carla.OpticalFlowPixel.y"></a>**<font color="#f8805a">y</font>** (_float_)  
+Optical flow in the y component.  
+
+### Methods
+- <a name="carla.OpticalFlowPixel.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0</font>, <font color="#00a6ed">**y**=0</font>)  
+Initializes the Optical Flow Pixel. Zero by default.  
+    - **Parameters:**
+        - `x` (_float_)  
+        - `y` (_float_)  
+
+##### Dunder methods
+- <a name="carla.OpticalFlowPixel.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.OpticalFlowPixel](#carla.OpticalFlowPixel)</font>)  
+- <a name="carla.OpticalFlowPixel.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.OpticalFlowPixel](#carla.OpticalFlowPixel)</font>)  
+- <a name="carla.OpticalFlowPixel.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.Osm2Odr<a name="carla.Osm2Odr"></a>
 Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
 
@@ -3665,27 +3718,7 @@ if vehicle_actor.is_at_traffic_light():
 <img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
   
 </div>
-
-<div id ="carla.Vehicle.set_wheel_steer_direction-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.Vehicle.set_wheel_steer_direction
-</p>
-<div id="carla.Vehicle.set_wheel_steer_direction-code" class="SnipetContent">
-
-```py
   
-# Sets the appearance of the vehicles front wheels to 40°. Vehicle physics will not be affected.
-
-vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FR_Wheel, 40.0)
-vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Vehicle.set_wheel_steer_direction-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.DebugHelper.draw_string-snipet" style="display: none;">
 <div id ="carla.World.unload_map_layer-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.World.unload_map_layer
@@ -3785,6 +3818,25 @@ Snippet for carla.Client.__init__
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Vehicle.set_wheel_steer_direction-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Vehicle.set_wheel_steer_direction
+</p>
+<div id="carla.Vehicle.set_wheel_steer_direction-code" class="SnipetContent">
+
+```py
+  
+# Sets the appearance of the vehicles front wheels to 40°. Vehicle physics will not be affected.
+
+vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FR_Wheel, 40.0)
+vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Vehicle.set_wheel_steer_direction-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   

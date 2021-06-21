@@ -97,6 +97,16 @@ void export_blueprint() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<csd::OpticalFlowPixel>("OpticalFlowPixel")
+    .def(init<float, float>(
+        (arg("x")=0, arg("y")=0)))
+    .def_readwrite("x", &csd::OpticalFlowPixel::x)
+    .def_readwrite("y", &csd::OpticalFlowPixel::y)
+    .def("__eq__", &csd::OpticalFlowPixel::operator==)
+    .def("__ne__", &csd::OpticalFlowPixel::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cc::ActorAttribute>("ActorAttribute", no_init)
     .add_property("id", CALL_RETURNING_COPY(cc::ActorAttribute, GetId))
     .add_property("type", &cc::ActorAttribute::GetType)
