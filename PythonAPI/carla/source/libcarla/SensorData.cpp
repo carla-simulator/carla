@@ -210,16 +210,25 @@ static void ConvertImage(T &self, EColorConverter cc) {
       throw std::invalid_argument("invalid color converter!");
   }
 }
-#ifndef _WIN32
+
+// image object resturned from optical flow to color conversion
+class FakeImage : public std::vector<uint8_t> {
+  public:
+  unsigned int Width = 0;
+  unsigned int Height = 0;
+  float FOV = 0;
+};
 // method to convert optical flow images to rgb
-static boost::python::numpy::ndarray ColorCodedFlow (
+static FakeImage ColorCodedFlow (
     carla::sensor::data::OpticalFlowImage& image) {
   namespace bp = boost::python;
-  namespace bn = boost::python::numpy;
   namespace csd = carla::sensor::data;
   constexpr float pi = 3.1415f;
   constexpr float rad2ang = 360.f/(2.f*pi);
-  std::vector<uint8_t> result;
+  FakeImage result;
+  result.Width = image.GetWidth();
+  result.Height = image.GetHeight();
+  result.FOV = image.GetFOVAngle();
   result.resize(image.GetHeight()*image.GetWidth()* 4);
 
   // lambda for computing batches of pixels
@@ -311,13 +320,8 @@ static boost::python::numpy::ndarray ColorCodedFlow (
     }
     delete t[n];
   }
-
-  bp::tuple shape = bp::make_tuple(result.size());
-  bp::tuple stride = bp::make_tuple(sizeof(uint8_t));
-  bn::dtype type = bn::dtype::get_builtin<uint8_t>();
-  return bn::from_data(&result[0], type, shape, stride, bp::object()).copy();
+  return result;
 }
-#endif
 
 template <typename T>
 static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc) {
@@ -360,6 +364,15 @@ void export_sensor_data() {
   namespace csd = carla::sensor::data;
   namespace css = carla::sensor::s11n;
 
+  // Fake image returned from optical flow to color conversion
+  // fakes the regular image object
+  class_<FakeImage>("FakeImage", no_init)
+      .def(vector_indexing_suite<std::vector<uint8_t>>())
+      .add_property("width", &FakeImage::Width)
+      .add_property("height", &FakeImage::Height)
+      .add_property("fov", &FakeImage::FOV)
+      .add_property("raw_data", &GetRawDataAsBuffer<FakeImage>);
+
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame", &cs::SensorData::GetFrame)
     .add_property("frame_number", &cs::SensorData::GetFrame) // deprecated.
@@ -397,9 +410,7 @@ void export_sensor_data() {
     .add_property("height", &csd::OpticalFlowImage::GetHeight)
     .add_property("fov", &csd::OpticalFlowImage::GetFOVAngle)
     .add_property("raw_data", &GetRawDataAsBuffer<csd::OpticalFlowImage>)
-    #ifndef _WIN32
     .def("get_color_coded_flow", &ColorCodedFlow)
-    #endif
     .def("__len__", &csd::OpticalFlowImage::size)
     .def("__iter__", iterator<csd::OpticalFlowImage>())
     .def("__getitem__", +[](const csd::OpticalFlowImage &self, size_t pos) -> csd::OpticalFlowPixel {

@@ -72,7 +72,7 @@ void export_actor() {
 
   enum_<cr::ActorState>("ActorState")
     .value("Invalid", cr::ActorState::Invalid)
-    .value("Alive", cr::ActorState::Alive)
+    .value("Active", cr::ActorState::Active)
     .value("Dormant", cr::ActorState::Dormant)
   ;
 
@@ -90,6 +90,7 @@ void export_actor() {
       .add_property("actor_state", CALL_WITHOUT_GIL(cc::Actor, GetActorState))
       .add_property("is_alive", CALL_WITHOUT_GIL(cc::Actor, IsAlive))
       .add_property("is_dormant", CALL_WITHOUT_GIL(cc::Actor, IsDormant))
+      .add_property("is_active", CALL_WITHOUT_GIL(cc::Actor, IsActive))
       .add_property("attributes", +[] (const cc::Actor &self) {
         boost::python::dict attribute_dict;
         for (auto &&attribute_value : self.GetAttributes()) {
@@ -144,7 +145,7 @@ void export_actor() {
     .value("Front_Wheel", cr::VehicleWheelLocation::Front_Wheel)
     .value("Back_Wheel", cr::VehicleWheelLocation::Back_Wheel)
   ;
-  
+
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))

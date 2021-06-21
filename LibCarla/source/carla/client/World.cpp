@@ -53,6 +53,10 @@ namespace client {
   uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout) {
     rpc::EpisodeSettings new_settings = settings;
     uint64_t id = _episode.Lock()->SetEpisodeSettings(settings);
+
+    time_duration local_timeout = timeout.milliseconds() == 0 ?
+        _episode.Lock()->GetNetworkingTimeout() : timeout;
+
     if (settings.fixed_delta_seconds.has_value()) {
       using namespace std::literals::chrono_literals;
 
@@ -68,7 +72,7 @@ namespace client {
         if (tics_correct >= 2)
           return id;
 
-        Tick(timeout);
+        Tick(local_timeout);
       }
 
       log_warning("World::ApplySettings: After", number_of_attemps, " attemps, the settings were not correctly set. Please check that everything is consistent.");
@@ -129,7 +133,10 @@ namespace client {
   }
 
   WorldSnapshot World::WaitForTick(time_duration timeout) const {
-    return _episode.Lock()->WaitForTick(timeout);
+    time_duration local_timeout = timeout.milliseconds() == 0 ?
+        _episode.Lock()->GetNetworkingTimeout() : timeout;
+
+    return _episode.Lock()->WaitForTick(local_timeout);
   }
 
   size_t World::OnTick(std::function<void(WorldSnapshot)> callback) {
@@ -141,7 +148,9 @@ namespace client {
   }
 
   uint64_t World::Tick(time_duration timeout) {
-    return _episode.Lock()->Tick(timeout);
+    time_duration local_timeout = timeout.milliseconds() == 0 ?
+        _episode.Lock()->GetNetworkingTimeout() : timeout;
+    return _episode.Lock()->Tick(local_timeout);
   }
 
   void World::SetPedestriansCrossFactor(float percentage) {

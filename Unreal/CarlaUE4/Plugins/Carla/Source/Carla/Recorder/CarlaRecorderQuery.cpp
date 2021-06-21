@@ -10,6 +10,11 @@
 #include <sstream>
 #include <string>
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/VehicleLightState.h>
+#include <carla/rpc/VehiclePhysicsControl.h>
+#include <compiler/enable-ue4-macros.h>
+
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
   if (File.eof())

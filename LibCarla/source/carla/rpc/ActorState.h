@@ -13,7 +13,7 @@ namespace rpc {
 
   enum class ActorState : uint8_t {
     Invalid,
-    Alive,
+    Active,
     Dormant,
     PendingKill,
   };

@@ -78,6 +78,8 @@ public:
   /// structure.
   void LoadWorldTile(FAssetData &AssetData);
 
+  void LoadLargeMapWorld(FAssetData &AssetData);
+
   /// Spawns all the static meshes located in @a AssetsPaths inside the World.
   /// There is an option to use Carla materials by setting @a bUseCarlaMaterials
   /// to true, otherwise it will use RoadRunner materials.
@@ -87,7 +89,7 @@ public:
   TArray<AStaticMeshActor *> SpawnMeshesToWorld(
       const TArray<FString> &AssetsPaths,
       bool bUseCarlaMaterials,
-      int i = -1, 
+      int i = -1,
       int j = -1);
 
   /// Saves the current World, contained in @a AssetData, into @a DestPath
@@ -96,7 +98,8 @@ public:
       FAssetData &AssetData,
       const FString &PackageName,
       const FString &DestPath,
-      const FString &WorldName);
+      const FString &WorldName,
+      bool bGenerateSpawnPoints = true);
 
   /// Destroys all the previously spawned actors stored in @a SpawnedActors
   void DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors);
@@ -157,25 +160,33 @@ private:
   UPROPERTY()
   UWorld *World;
 
-  /// Workaround material for MarkingNodes mesh
-  UPROPERTY()
-  UMaterialInstance *MarkingNodeMaterial;
-
   /// Workaround material for the RoadNode mesh
   UPROPERTY()
   UMaterialInstance *RoadNodeMaterial;
 
-  /// Workaround material for the second material for the MarkingNodes
+  /// Material to apply to curbs on the road
   UPROPERTY()
-  UMaterialInstance *MarkingNodeMaterialAux;
+  UMaterialInstance *CurbNodeMaterialInstance;
+
+  /// Material to apply to gutters on the road
+  UPROPERTY()
+  UMaterialInstance *GutterNodeMaterialInstance;
+
+  /// Workaround material for the center lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeYellow;
+
+  /// Workaround material for exterior lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeWhite;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()
-  UMaterial *TerrainNodeMaterial;
+  UMaterialInstance *TerrainNodeMaterialInstance;
 
   /// Workaround material for the SidewalkNodes
   UPROPERTY()
-  UMaterial *SidewalkNodeMaterial;
+  UMaterialInstance *SidewalkNodeMaterialInstance;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder

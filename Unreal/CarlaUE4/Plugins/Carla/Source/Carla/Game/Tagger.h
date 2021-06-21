@@ -46,6 +46,8 @@ public:
   /// objects having this value active.
   static void TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation);
 
+  static void TagActorsInLevel(ULevel &Level, bool bTagForSemanticSegmentation);
+
   /// Retrieve the tag of an already tagged component.
   static crp::CityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
   {
