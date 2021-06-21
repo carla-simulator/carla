@@ -68,6 +68,46 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+  
+  - class_name: OpticalFlowPixel
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a 2 dimensional vector representing an optical flow pixel.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+      doc: >
+        Optical flow in the x component. 
+    - var_name: y
+      type: float
+      doc: >
+        Optical flow in the y component.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0
+      - param_name: y
+        type: float
+        default: 0
+      doc: >
+        Initializes the Optical Flow Pixel. Zero by default. 
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.OpticalFlowPixel
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.OpticalFlowPixel
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
 
   - class_name: ActorAttribute
     # - DESCRIPTION ------------------------
