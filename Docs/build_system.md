@@ -3,7 +3,9 @@
 * [__Setup__](#setup)  
 * [__LibCarla__](#libcarla)  
 * [__CarlaUE4 and Carla plugin__](#carlaue4-and-carla-plugin)  
-* [__PythonAPI__](#pythonapi)  
+* [__PythonAPI__](#pythonapi)
+    - [Versions 0.9.12+](#versions-0912)
+    - [Versions prior to 0.9.12](#versions-prior-to-0912)
 
 > _This document is a work in progress, only the Linux build system is taken into account here._
 
@@ -74,9 +76,32 @@ make launch
 
 ---
 ## PythonAPI
+### Versions 0.9.12+
 
 Compiled using Python's `setuptools` ("setup.py"). Currently requires the following to be installed in the machine: Python, libpython-dev, and
-libboost-python-dev; both for Python 2.7 and 3.5.
+libboost-python-dev, pip>=20.3, wheel and auditwheel.
+
+Command:
+
+```sh
+make PythonAPI
+```
+
+Installs a `.whl` file according to the supported Python version on the system. Python 2.7, 3.6, 3.7 and 3.8 are supported. The wheel is installed using the command:
+
+```
+pip install <wheel_file>.whl
+```
+
+If previous libraries are found, they will be uninstalled and the new one will be installed.
+
+There is no need to import the library path directly in scripts as was required in previous versions (see section [__Versions prior to 0.9.12__](#versions-prior-to-0912)); `import carla` is sufficient.
+
+
+### Versions prior to 0.9.12
+
+Compiled using Python's `setuptools` ("setup.py"). Currently requires the following to be installed in the machine: Python, libpython-dev, and
+libboost-python-dev.
 
 Command
 

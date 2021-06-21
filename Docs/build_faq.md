@@ -141,11 +141,16 @@ CARLA forum</a>
 > ![faq_rpc_error](img/faq_rpc_error.jpg)
 >
 > If running a script returns an output similar to this, there is a problem with the `.egg` file in the PythonAPI. 
+
+!!! Important
+    CARLA used `.egg` files for the client library in versions prior to 0.9.12. If you are using 0.9.12+, `.whl` files are used instead and the information in this section will not be relevant to you.
 > 
 > First of all, open `<root_carla>/PythonAPI/carla/dist`. There should be an `.egg` file for the corresponding CARLA and Python version you are using (similar to `carla-0.X.X-pyX.X-linux-x86_64.egg`). Make sure the file matches the Python version you are using. To check your Python version use the following command.  
 > 
 > 
->       python3 --version # CARLA no longer provides support for Python2, so we are dismissing it here
+>       python3 --version
+>       # or for Python 2
+>       python --version
 > 
 >
 > If either the file is missing or you think it could be corrupted, try rebuilding again.  
@@ -335,6 +340,10 @@ CARLA forum</a>
 
 > This error occurs because Python cannot find the CARLA library. The CARLA library is contained in an `.egg` file, located in the directory `PythonAPI/carla/dist` and all the example scripts will look for it in this directory. The `.egg` file follows the nomenclature of `carla-<carla-version>-py<python-version>-<operating-system>.egg`.
 >
+
+!!! Important
+    CARLA used `.egg` files for the client library in versions prior to 0.9.12. If you are using 0.9.12+, `.whl` files are used instead and the information in this section will not be relevant to you.
+
 >If you are using a packaged version of CARLA, there will be several `.egg` files, corresponding to different versions of Python, depending on the version of CARLA. Make sure you are running the scripts with one of these Python versions. To check the default Python version, type the following into the command line:
 >
 >

@@ -48,9 +48,24 @@ In this section you will find details of system requirements, minor and major so
     Be sure that the above programs are added to the [environment path](https://www.java.com/en/download/help/path.xml). Remember that the path added should correspond to the progam's `bin` directory.  
 #### Python dependencies
 
-Run the following command to install the dependencies for the Python API client:
+CARLA requires some Python dependencies to be installed with `pip version >= 20.3`. Ensure you have a compatible version by running:
 
-    pip3 install --user setuptools
+```sh
+pip -V
+```
+
+If you need to upgrade:
+
+```sh
+pip install --upgrade pip
+```
+
+Once you have the correct version of `pip`, you can install the dependencies:
+
+```sh
+pip3 install --user setuptools
+pip3 install --user wheel
+```
 
 #### Major installations
 ##### Visual Studio 2017
@@ -176,14 +191,17 @@ The following command compiles the Python API client:
     make PythonAPI
 ```
 
-Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
+Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory. Python versions 2.7, 3.6, 3.7, and 3.8 are supported.
 
 ```sh
-    make PythonAPI ARGS="--python-version=2"
+    # Delete versions as required
+    make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
 ```
 
-!!! Note
-    __Note that when the compilation is done, you may see a successful output in the terminal even if the compilation of the Python API client was unsuccessful.__ Check for any errors in the terminal output and check that a `.egg` file exists in `PythonAPI\carla\dist`. If you come across any errors, check the [F.A.Q.](build_faq.md) or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions).
+!!! Important
+    Previous versions of CARLA created a `.egg` file containing the CARLA client library. __In versions 0.9.12+ this behavior changes significantly; `.egg` files are no longer used.__ `make PythonAPI` will install the library using `pip` and a `.whl` file. Every time you run `make PythonAPI` the previous library you had installed will be uninstalled and a new one will be installed according to the source code you are using.
+
+    If you are building a version of CARLA prior to 0.9.12, please select the correct version of the documentation in the bottom right-hand corner.
 
 
 __2.__ __Compile the server__:
@@ -212,10 +230,6 @@ Test the simulator using the example scripts inside `PythonAPI\examples`.  With 
         cd PythonAPI\examples
         python3 dynamic_weather.py 
 ```
-
-!!! Note
-    If you encounter the error `ModuleNotFoundError: No module named 'carla'` while running a script, you may be running a different version of Python than the one used to install the client. Go to `PythonAPI\carla\dist` and check the version of Python used in the `.egg` file.
-    
 
 !!! Important
     If the simulation is running at a very low FPS rate, go to `Edit -> Editor preferences -> Performance` in the Unreal Engine editor and disable `Use less CPU when in background`.
@@ -253,10 +267,19 @@ Below is a summary of the requirements and commands needed to build CARLA on Win
 #   Git
 #   Make
 #   Python3 x64
+#   pip>=20.3
 #   Modified Unreal Engine 4.24
 #   Visual Studio 2017 with Windows 8.1 SDK, x64 Visual C++ Toolset and .NET framework 4.6.2
 
 # Set environment variables for the software
+
+# Upgrade to pip>=20.3
+pip install --upgrade pip
+
+# Install Python library dependencies:
+
+pip3 install --user setuptools
+pip3 install --user wheel
 
 # Clone the CARLA repository
 git clone https://github.com/carla-simulator/carla
