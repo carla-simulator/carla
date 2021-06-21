@@ -142,7 +142,6 @@ class LocalPlanner(object):
             print("WARNING: The max speed is currently set to follow the speed limits. "
                   "Use 'follow_speed_limits' to deactivate this")
         self._target_speed = speed
-        # TODO: Change the sampling distance too?
 
 
     def follow_speed_limits(self, value=True):
@@ -153,6 +152,7 @@ class LocalPlanner(object):
         :return:
         """
         self._follow_speed_limits = value
+
 
     def _compute_next_waypoints(self, k=1):
         """
@@ -185,6 +185,7 @@ class LocalPlanner(object):
 
             self._waypoints_queue.append((next_waypoint, road_option))
 
+
     def set_global_plan(self, current_plan, stop_waypoint_creation=True, clean_queue=True):
         """
         Adds a new plan to the local planner.
@@ -203,6 +204,7 @@ class LocalPlanner(object):
             self._waypoints_queue.append(elem)
 
         self._stop_waypoint_creation = stop_waypoint_creation
+
 
     def run_step(self, debug=False):
         """
@@ -250,6 +252,7 @@ class LocalPlanner(object):
 
         return control
 
+
     def get_incoming_waypoint_and_direction(self, steps=3):
         """
         Returns direction and waypoint at a distance ahead defined by the user.
@@ -266,6 +269,7 @@ class LocalPlanner(object):
             except IndexError as i:
                 return None, RoadOption.VOID
 
+
     def done(self):
         """
         Returns whether or not the planner has finished
@@ -273,6 +277,7 @@ class LocalPlanner(object):
         :return: boolean
         """
         return len(self._waypoints_queue) == 0
+
 
 def _retrieve_options(list_waypoints, current_waypoint):
     """
