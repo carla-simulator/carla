@@ -95,11 +95,7 @@ TrafficManagerLocal::TrafficManagerLocal(
 
   registered_vehicles_state = -1;
 
-  // auto start = std::chrono::high_resolution_clock::now();
   SetupLocalMap();
-  // auto end = std::chrono::high_resolution_clock::now();
-  // std::chrono::duration<double> diff = end-start;
-  // std::cout << "SetupLocalMap(): "<<  diff.count() << " s\n";
 
   Start();
 }
@@ -133,19 +129,15 @@ void TrafficManagerLocal::Run() {
 
     bool synchronous_mode = parameters.GetSynchronousMode();
     bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+    parameters.SetMaxBoundaries(10.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
-    // auto start_sync = std::chrono::high_resolution_clock::now();
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
       std::unique_lock<std::mutex> lock(step_execution_mutex);
       step_begin_trigger.wait(lock, [this]() {return step_begin.load() || !run_traffic_manger.load();});
       step_begin.store(false);
     }
-    // auto end_sync = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff_sync = end_sync-start_sync;
-    // if (diff_sync.count() > 0.00005f) {
-    //   std::cout << "Wait for external trigger for sync mode init: "<<  diff_sync.count() << " s\n";
-    // }
+
     // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
     if (!synchronous_mode && hybrid_physics_mode) {
       TimePoint current_instance = chr::system_clock::now();
@@ -168,11 +160,7 @@ void TrafficManagerLocal::Run() {
     // auto start_run = std::chrono::high_resolution_clock::now();
     std::unique_lock<std::mutex> registration_lock(registration_mutex);
     // Updating simulation state, actor life cycle and performing necessary cleanup.
-    // auto start1 = std::chrono::high_resolution_clock::now();
     alsm.Update();
-    // auto end1 = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff1 = end1-start1;
-    // std::cout << "ALSM Stage: "<<  diff1.count() << " s\n";
 
     // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
     int current_registered_vehicles_state = registered_vehicles.GetState();
@@ -210,35 +198,20 @@ void TrafficManagerLocal::Run() {
 
     // Run core operation stages.
 
-    // auto start2 = std::chrono::high_resolution_clock::now();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
-    // auto end2 = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff2 = end2-start2;
-    // std::cout << "Localization Stage: "<<  diff2.count() << " s\n";
-
-    // auto start3 = std::chrono::high_resolution_clock::now();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
-    // auto end3 = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff3 = end3-start3;
-    // std::cout << "Collision Stage: "<<  diff3.count() << " s\n";
-
-    // auto start4 = std::chrono::high_resolution_clock::now();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
     }
-    // auto end4 = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff4 = end4-start4;
-    // std::cout << "TL and MP Stage: "<<  diff4.count() << " s\n";
 
     registration_lock.unlock();
 
-    // auto start5 = std::chrono::high_resolution_clock::now();
     // Sending the current cycle's batch command to the simulator.
     if (synchronous_mode) {
       episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
@@ -249,13 +222,6 @@ void TrafficManagerLocal::Run() {
         episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
       }
     }
-    // auto end5 = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff5 = end5-start5;
-    // std::cout << "Sending the current cycle's batch: "<<  diff5.count() << " s\n";
-
-    // auto end_run = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff_run = end_run-start_run;
-    // std::cout << "One full TM Loop: "<<  diff_run.count() << " s\n";
   }
 }
 
@@ -413,6 +379,10 @@ void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
 
 void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
   parameters.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
+}
+
+void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
+  parameters.SetMaxBoundaries(lower, upper);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {

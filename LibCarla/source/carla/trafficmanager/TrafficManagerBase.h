@@ -113,6 +113,9 @@ public:
   /// Method to set boundaries for respawning vehicles.
   virtual void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) = 0;
 
+  /// Method to set limits for boundaries when respawning vehicles.
+  virtual void SetMaxBoundaries(const float lower, const float upper) = 0;
+
   virtual void ShutDown() = 0;
 
 protected:

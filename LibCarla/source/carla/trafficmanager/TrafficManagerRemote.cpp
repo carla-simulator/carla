@@ -195,6 +195,10 @@ void TrafficManagerRemote::SetBoundariesRespawnDormantVehicles(const float lower
   client.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
 }
 
+void TrafficManagerRemote::SetMaxBoundaries(const float lower, const float upper) {
+  client.SetMaxBoundaries(lower, upper);
+}
+
 void TrafficManagerRemote::ShutDown() {
   client.ShutDown();
 }

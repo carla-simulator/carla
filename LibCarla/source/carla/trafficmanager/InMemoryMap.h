@@ -78,7 +78,7 @@ namespace bgi = boost::geometry::index;
     SimpleWaypointPtr GetWaypoint(const cg::Location loc) const;
 
     /// This method returns n waypoints in an delta area with a certain distance from the ego vehicle (CHANGE val TO dist).
-    NodeList GetWaypointsInDelta(const cg::Location loc, const float n, const float val) const;
+    NodeList GetWaypointsInDelta(const cg::Location loc, const uint16_t n_points, const float random_sample) const;
 
     /// This method returns the full list of discrete samples of the map in the
     /// local cache.

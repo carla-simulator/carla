@@ -80,6 +80,14 @@ public:
     }
   }
 
+  /// Method to set boundaries for respawning vehicles.
+  void SetMaxBoundaries(const float lower, const float upper) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetMaxBoundaries(lower, upper);
+    }
+  }
+
   /// This method sets the hybrid physics mode.
   void SetHybridPhysicsMode(const bool mode_switch) {
     TrafficManagerBase* tm_ptr = GetTM(_port);

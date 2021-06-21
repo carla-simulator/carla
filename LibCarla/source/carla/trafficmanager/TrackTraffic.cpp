@@ -53,9 +53,6 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
             actor_to_grids.erase(actor_id);
         }
 
-        // Clear taken waypoint set.
-        taken_waypoints.clear();
-
         // Step through buffer and update grid list for actor and actor list for grids.
         std::unordered_set<GeoGridId> current_grids;
         uint64_t buffer_size = buffer.size();
@@ -83,13 +80,17 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
 }
 
 bool TrackTraffic::IsWaypointFree(const uint64_t waypoint_id) const {
-    return taken_waypoints.find(waypoint_id) != taken_waypoints.end();
+    return taken_waypoints.find(waypoint_id) == taken_waypoints.end();
 }
 
 void TrackTraffic::AddTakenWaypoint(const uint64_t waypoint_id) {
     if (taken_waypoints.find(waypoint_id) == taken_waypoints.end()) {
         taken_waypoints.insert(waypoint_id);
     }
+}
+
+void TrackTraffic::ClearTakenWaypoints() {
+    taken_waypoints.clear();
 }
 
 void TrackTraffic::SetHeroLocation(const cg::Location _location) {

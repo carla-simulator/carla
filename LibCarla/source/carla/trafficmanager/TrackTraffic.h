@@ -53,6 +53,7 @@ public:
     ActorIdSet GetOverlappingVehicles(ActorId actor_id) const;
     bool IsWaypointFree(const uint64_t waypoint_id) const;
     void AddTakenWaypoint(const uint64_t waypoint_id);
+    void ClearTakenWaypoints();
 
     void SetHeroLocation(const cg::Location location);
     cg::Location GetHeroLocation() const;

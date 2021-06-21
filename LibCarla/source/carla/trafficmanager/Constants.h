@@ -100,6 +100,8 @@ static const double MAP_RESOLUTION = 5.0;
 static const double MAX_WPT_DISTANCE = MAP_RESOLUTION/2.0 + SQUARE(MAP_RESOLUTION);
 static const float INV_MAP_RESOLUTION = 0.2f;
 static const float SEVEN_DEG_TO_RAD = 0.122f;
+static float const DELTA = 25.0f;
+static float const Z_DELTA = 500.0f;
 } // namespace Map
 
 namespace TrafficLight {
@@ -118,6 +120,7 @@ static const float CRITICAL_BRAKING_MARGIN = 0.25f;
 static const float EPSILON_RELATIVE_SPEED = 0.001f;
 static const float MAX_JUNCTION_BLOCK_DISTANCE = 0.5f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
 static const float TWO_KM = 2000.0f;
+static const uint16_t ATTEMPTS_TO_TELEPORT = 5u;
 } // namespace MotionPlan
 
 namespace PID {
