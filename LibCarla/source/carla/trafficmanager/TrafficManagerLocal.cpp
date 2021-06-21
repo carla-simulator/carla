@@ -157,7 +157,7 @@ void TrafficManagerLocal::Run() {
       }
       last_frame = timestamp.frame;
     }
-    // auto start_run = std::chrono::high_resolution_clock::now();
+
     std::unique_lock<std::mutex> registration_lock(registration_mutex);
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();

@@ -46,7 +46,6 @@ namespace bgi = boost::geometry::index;
 
   using SegmentId = std::tuple<crd::RoadId, crd::LaneId, crd::SectionId>;
   using SegmentTopology = std::map<SegmentId, std::pair<std::vector<SegmentId>, std::vector<SegmentId>>>;
-  using SegmentToGeoId = std::map<std::vector<SimpleWaypointPtr>, GeoGridId>;
   using SegmentMap = std::map<SegmentId, std::vector<SimpleWaypointPtr>>;
   using Rtree = bgi::rtree<SpatialTreeEntry, bgi::rstar<16>>;
 
@@ -77,7 +76,7 @@ namespace bgi = boost::geometry::index;
     /// This method returns the closest waypoint to a given location on the map.
     SimpleWaypointPtr GetWaypoint(const cg::Location loc) const;
 
-    /// This method returns n waypoints in an delta area with a certain distance from the ego vehicle (CHANGE val TO dist).
+    /// This method returns n waypoints in an delta area with a certain distance from the ego vehicle.
     NodeList GetWaypointsInDelta(const cg::Location loc, const uint16_t n_points, const float random_sample) const;
 
     /// This method returns the full list of discrete samples of the map in the

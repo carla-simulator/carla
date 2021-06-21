@@ -267,11 +267,8 @@ namespace traffic_manager {
     Point3D query_point(loc.x, loc.y, loc.z);
     std::vector<SpatialTreeEntry> result_1;
 
-    // auto start1 = std::chrono::high_resolution_clock::now();
     rtree.query(bgi::nearest(query_point, 1), std::back_inserter(result_1));
-    // auto end1 = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> diff1 = end1-start1;
-    // std::cout << "rtree.query nearest time: "<< diff1.count() << " s\n";
+
     SpatialTreeEntry &closest_entry = result_1.front();
     SimpleWaypointPtr &closest_point = closest_entry.second;
 
