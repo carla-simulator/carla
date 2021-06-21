@@ -178,7 +178,7 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld *world) const
   GEngine->Exec(world, TEXT("r.AmbientOcclusionLevels 0"));
   GEngine->Exec(world, TEXT("r.DefaultFeature.AmbientOcclusionStaticFraction 0"));
   GEngine->Exec(world, TEXT("r.RHICmdBypass 0"));
-  GEngine->Exec(world, TEXT("r.DefaultFeature.AntiAliasing 2"));
+  GEngine->Exec(world, TEXT("r.DefaultFeature.AntiAliasing 1"));
   GEngine->Exec(world, TEXT("r.Streaming.PoolSize 2000"));
   GEngine->Exec(world, TEXT("r.HZBOcclusion 0"));
   GEngine->Exec(world, TEXT("r.MinScreenRadiusForLights 0.01"));
@@ -375,7 +375,7 @@ void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld *world) const
 
   GEngine->Exec(world, TEXT("r.AmbientOcclusionLevels -1"));
   GEngine->Exec(world, TEXT("r.RHICmdBypass 1"));
-  GEngine->Exec(world, TEXT("r.DefaultFeature.AntiAliasing 2"));
+  GEngine->Exec(world, TEXT("r.DefaultFeature.AntiAliasing 1"));
   GEngine->Exec(world, TEXT("r.Streaming.PoolSize 2000"));
   GEngine->Exec(world, TEXT("r.MinScreenRadiusForLights 0.03"));
   GEngine->Exec(world, TEXT("r.SeparateTranslucency 1"));
