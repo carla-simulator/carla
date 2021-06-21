@@ -28,6 +28,9 @@ class Agent(object):
         self._map = self._world.get_map()
         self._debug = debug
 
+        self._ignore_traffic_lights = False
+        self._ignore_stop_signs = False
+        self._ignore_vehicles = False
         self._last_traffic_light = None
 
     def run_step(self):
@@ -55,7 +58,25 @@ class Agent(object):
 
         return control
 
-    def _is_light_red(self, lights_list, max_distance=None):
+    def ignore_traffic_lights(self, active):
+        """
+        (De)activates the checks for traffic lights
+        """
+        self._ignore_traffic_lights = active
+
+    def ignore_stop_signs(self, active):
+        """
+        (De)activates the checks for stop signs
+        """
+        self._ignore_stop_signs = active
+
+    def ignore_vehicles(self, active):
+        """
+        (De)activates the checks for stop signs
+        """
+        self._ignore_vehicles = active
+
+    def _affected_by_traffic_light(self, lights_list, max_distance=None):
         """
         Method to check if there is a red light affecting us. This version of
         the method is compatible with both European and US style traffic lights.
@@ -67,6 +88,9 @@ class Agent(object):
                  - traffic_light is the object itself or None if there is no
                    red traffic light affecting us
         """
+        if self._ignore_traffic_lights:
+            return (False, None)
+
         if not max_distance:
             max_distance = self._base_tlight_threshold
 
@@ -106,14 +130,18 @@ class Agent(object):
 
         return (False, None)
 
-    def _is_vehicle_hazard(self, vehicle_list, max_distance=None):
+    def _vehicle_obstacle_detected(self, vehicle_list, max_distance=None):
         """
         :param vehicle_list: list of potential obstacle to check
+        :param max_distance: max distance to check for obstacles
         :return: a tuple given by (bool_flag, vehicle), where
                  - bool_flag is True if there is a vehicle ahead blocking us
                    and False otherwise
                  - vehicle is the blocker object itself
         """
+        if self._ignore_vehicles:
+            return (False, None)
+
         if not max_distance:
             max_distance = self._base_vehicle_threshold
 
