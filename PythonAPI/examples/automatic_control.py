@@ -173,6 +173,7 @@ class World(object):
             actor.apply_physics_control(physics_control)
         except Exception:
             pass
+
     def tick(self, clock):
         """Method for every tick"""
         self.hud.tick(self, clock)
@@ -695,22 +696,18 @@ def game_loop(args):
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
 
+        spawn_points = world.map.get_spawn_points()
+        random.shuffle(spawn_points)
+        if spawn_points[0].location != world.player.get_location():
+            destination = spawn_points[0].location
+        else:
+            destination = spawn_points[1].location
+
         if args.agent == "Basic":
             agent = BasicAgent(world.player)
-            spawn_point = world.map.get_spawn_points()[0]
-            agent.set_destination(spawn_point.location)
+            agent.set_destination(destination)
         else:
-            # TODO: Change PIDS and target speed to make it on spped limti
             agent = BehaviorAgent(world.player, behavior=args.behavior)
-
-            spawn_points = world.map.get_spawn_points()
-            random.shuffle(spawn_points)
-
-            if spawn_points[0].location != agent.vehicle.get_location():
-                destination = spawn_points[0].location
-            else:
-                destination = spawn_points[1].location
-
             agent.set_destination(agent.vehicle.get_location(), destination)
 
         clock = pygame.time.Clock()
@@ -719,30 +716,16 @@ def game_loop(args):
             clock.tick_busy_loop(60)
             if controller.parse_events():
                 return
-
-            # As soon as the server is ready continue!
             if not world.world.wait_for_tick(10.0):
                 continue
 
-            if args.agent == "Basic":
-                if controller.parse_events():
-                    return
+            world.world.wait_for_tick(10.0)
+            world.tick(clock)
+            world.render(display)
+            pygame.display.flip()
 
-                # as soon as the server is ready continue!
-                world.world.wait_for_tick(10.0)
-
-                world.tick(clock)
-                world.render(display)
-                pygame.display.flip()
-                control = agent.run_step()
-                control.manual_gear_shift = False
-                world.player.apply_control(control)
-            else:
+            if args.agent == "Behavior":
                 agent.update_information()
-
-                world.tick(clock)
-                world.render(display)
-                pygame.display.flip()
 
                 # Set new destination when target has been reached
                 if len(agent.get_local_planner()._waypoints_queue) < num_min_waypoints and args.loop:
@@ -758,8 +741,9 @@ def game_loop(args):
                 speed_limit = world.player.get_speed_limit()
                 agent.get_local_planner().set_speed(speed_limit)
 
-                control = agent.run_step()
-                world.player.apply_control(control)
+            control = agent.run_step()
+            control.manual_gear_shift = False
+            world.player.apply_control(control)
 
     finally:
         if world is not None:
