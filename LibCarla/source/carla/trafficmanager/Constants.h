@@ -99,7 +99,7 @@ static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 static const double MAP_RESOLUTION = 5.0;
 static const double MAX_WPT_DISTANCE = MAP_RESOLUTION/2.0 + SQUARE(MAP_RESOLUTION);
 static const float INV_MAP_RESOLUTION = 0.2f;
-static const float SEVEN_DEG_TO_RAD = 0.122f;
+static const float TWENTY_DEG_TO_RAD = 0.35f;
 static float const DELTA = 25.0f;
 static float const Z_DELTA = 500.0f;
 } // namespace Map
