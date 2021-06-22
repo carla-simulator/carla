@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actor/CarlaActor.h"
 #include "GameFramework/Actor.h"
 
 #include "Engine/LevelStreamingDynamic.h"
