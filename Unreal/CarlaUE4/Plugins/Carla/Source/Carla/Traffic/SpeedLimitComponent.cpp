@@ -83,7 +83,7 @@ void USpeedLimitComponent::OnOverlapBeginSpeedLimitBox(UPrimitiveComponent *Over
     const FHitResult &SweepResult)
 {
   ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
-  if (OtherActor)
+  if (Vehicle)
   {
     auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
     if (Controller)
