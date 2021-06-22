@@ -47,7 +47,14 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
         {
           state.vehicle_data.has_traffic_light = true;
           auto* TrafficLightView = Registry.FindCarlaActor(TrafficLight);
-          state.vehicle_data.traffic_light_id = TrafficLightView->GetActorId();
+          if(TrafficLightView)
+          {
+            state.vehicle_data.traffic_light_id = TrafficLightView->GetActorId();
+          }
+          else
+          {
+            state.vehicle_data.has_traffic_light = false;
+          }
         }
         else
         {
