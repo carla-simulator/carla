@@ -18,6 +18,11 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
   const double epsilon = 0.00001;
 
   auto References = GetAllReferencesToThisSignal(Map);
+  auto* Signal = GetSignal(Map);
+  if (Signal)
+  {
+    SetSpeedLimit(Signal->GetValue());
+  }
 
   for (auto& Reference : References)
   {
@@ -38,7 +43,7 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
 
         // Get 90% of the half size of the width of the lane
         float BoxSize = static_cast<float>(
-            0.9f*Map.GetLaneWidth(signal_waypoint)*0.5);
+            0.7f*Map.GetLaneWidth(signal_waypoint)*0.5);
         // Prevent a situation where the road width is 0,
         // this could happen in a lane that is just appearing
         BoxSize = std::max(0.01f, BoxSize);
@@ -66,6 +71,7 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
       }
     }
   }
+
 }
 
 void USpeedLimitComponent::GenerateSpeedBox(const FTransform BoxTransform, float BoxSize)
