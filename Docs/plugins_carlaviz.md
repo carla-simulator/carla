@@ -126,7 +126,7 @@ Here is a list of options available for visualization. Additional elements may s
 Try to spawn some actors. These will be automatically updated in the visualization window.  
 ```sh
 cd PythonAPI/examples
-python3 spawn_npc.py -n 10 -w 5
+python3 generate_traffic.py -n 10 -w 5
 ```
 
 ![carlaviz_full](img/plugins_carlaviz_full.jpg)

@@ -52,8 +52,8 @@ The tutorial presents a wide set of options for the differents steps. All along,
 	* `carla/PythonAPI/util/config.py`
 * __dynamic_weather.py__ creates interesting weather conditions.  
 	* `carla/PythonAPI/examples/dynamic_weather.py`
-* __spawn_npc.py__ spawns some AI controlled vehicles and walkers.  
-	* `carla/PythonAPI/examples/spawn_npc.py`
+* __generate_traffic.py__ spawns some AI controlled vehicles and walkers.  
+	* `carla/PythonAPI/examples/generate_traffic.py`
 * __manual_control.py__ spawns an ego vehicle, and provides control over it.  
 	* `carla/PythonAPI/examples/manual_control.py`
 
@@ -178,14 +178,14 @@ Simulating traffic is one of the best ways to bring the map to life. It is also 
 
 The CARLA traffic is managed by the [Traffic Manager](adv_traffic_manager.md) module. As for pedestrians, each of them has their own [carla.WalkerAIController](python_api.md#carla.WalkerAIController). 
 
-Open a new terminal, and run __spawn_npc.py__ to spawn vehicles and walkers. Let's just spawn 50 vehicles and the same amount of walkers. 
+Open a new terminal, and run __generate_traffic.py__ to spawn vehicles and walkers. Let's just spawn 50 vehicles and the same amount of walkers. 
 
 ```sh
 cd /opt/carla/PythonAPI/examples
-python3 spawn_npc.py -n 50 -w 50 --safe
+python3 generate_traffic.py -n 50 -w 50 --safe
 ```
 <details>
-<summary> Optional arguments in <b>spawn_npc.py</b> </summary>
+<summary> Optional arguments in <b>generate_traffic.py</b> </summary>
 
 ```sh
   -h, --help            show this help message and exit
