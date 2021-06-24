@@ -341,7 +341,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    auto FileContents = UOpenDrive::LoadXODR(Episode->GetMapName());
+    auto FileContents = UOpenDrive::GetXODR(Episode->GetWorld());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
     return cr::MapInfo{
       cr::FromFString(Episode->GetMapName()),
@@ -369,14 +369,14 @@ void FCarlaServer::FPimpl::BindActions()
     }
     
     // Get the map's folder absolute path and check if it's in its own folder
-    auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath()) + "/" + folder.c_str();
-    auto fileName = mapDir.EndsWith(Episode->GetMapName() + "/") ? "*" : Episode->GetMapName();
+    const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    const auto folderDir = mapDir + "/" + folder.c_str();
+    const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
 
     // Find all the xodr and bin files from the map
     TArray<FString> Files;
-    auto &FileManager = IFileManager::Get();
-    FileManager.FindFilesRecursive(Files, *mapDir, *FString(fileName + ".xodr"), true, false, false);
-    FileManager.FindFilesRecursive(Files, *mapDir, *FString(fileName + ".bin"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".xodr"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".bin"), true, false, false);
 
     // Remove the start of the path until the content folder and put each file in the result
     std::vector<std::string> result;
