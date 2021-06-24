@@ -9,73 +9,40 @@
 
 #include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 
-FString UOpenDrive::FindPathToXODRFile(const FString &InMapName)
+
+FString UOpenDrive::GetXODR(const UWorld *World)
 {
-  FString MapName = InMapName;
-#if WITH_EDITOR
-    {
-      // When playing in editor the map name gets an extra prefix, here we
-      // remove it.
-      FString CorrectedMapName = MapName;
-      constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
-      CorrectedMapName.RemoveFromStart(PIEPrefix);
-      UE_LOG(LogCarla, Log, TEXT("UOpenDrive: Corrected map name from %s to %s"), *MapName, *CorrectedMapName);
-      MapName = CorrectedMapName;
-    }
-#endif // WITH_EDITOR
+  const auto mapName = World->GetMapName();
+  const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(World)->GetMapPath());
+  const auto folderDir = mapDir + "/OpenDrive/";
+  const auto fileName = mapDir.EndsWith(mapName) ? "*" : mapName;
 
-  MapName += TEXT(".xodr");
-
-  const FString DefaultFilePath =
-      FPaths::ProjectContentDir() +
-      TEXT("Carla/Maps/OpenDrive/") +
-      MapName;
-
-  auto &FileManager = IFileManager::Get();
-
-  if (FileManager.FileExists(*DefaultFilePath))
-  {
-    return DefaultFilePath;
-  }
-
-  TArray<FString> FilesFound;
-  FileManager.FindFilesRecursive(
-      FilesFound,
-      *FPaths::ProjectContentDir(),
-      *MapName,
-      true,
-      false,
-      false);
-
-  return FilesFound.Num() > 0 ? FilesFound[0u] : FString{};
-}
-
-FString UOpenDrive::LoadXODR(const FString &MapName)
-{
-  const auto FilePath = FindPathToXODRFile(MapName);
+  // Find all the xodr and bin files from the map
+  TArray<FString> Files;
+  IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".xodr"), true, false, false);
 
   FString Content;
 
-  if (FilePath.IsEmpty())
+  if (!Files.Num())
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *MapName);
+    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *mapName);
   }
-  else if (FFileHelper::LoadFileToString(Content, *FilePath))
+  else if (FFileHelper::LoadFileToString(Content, *Files[0]))
   {
-    UE_LOG(LogTemp, Log, TEXT("Loaded OpenDrive file '%s'"), *FilePath);
+    UE_LOG(LogTemp, Log, TEXT("Loaded OpenDrive file '%s'"), *Files[0]);
   }
   else
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to load OpenDrive file '%s'"), *FilePath);
+    UE_LOG(LogTemp, Error, TEXT("Failed to load OpenDrive file '%s'"), *Files[0]);
   }
 
   return Content;
 }
 
-UOpenDriveMap *UOpenDrive::LoadOpenDriveMap(const FString &MapName)
+UOpenDriveMap *UOpenDrive::LoadOpenDriveMap(const UWorld *World)
 {
   UOpenDriveMap *Map = nullptr;
-  auto XODRContent = LoadXODR(MapName);
+  auto XODRContent = GetXODR(World);
   if (!XODRContent.IsEmpty())
   {
     Map = NewObject<UOpenDriveMap>();
@@ -87,7 +54,5 @@ UOpenDriveMap *UOpenDrive::LoadOpenDriveMap(const FString &MapName)
 UOpenDriveMap *UOpenDrive::LoadCurrentOpenDriveMap(const UObject *WorldContextObject)
 {
   UWorld *World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-  return World != nullptr ?
-      LoadOpenDriveMap(World->GetMapName()) :
-      nullptr;
+  return World != nullptr ? LoadOpenDriveMap(World) : nullptr;
 }

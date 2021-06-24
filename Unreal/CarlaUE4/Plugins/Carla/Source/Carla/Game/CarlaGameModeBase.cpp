@@ -292,7 +292,7 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
 
 void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
 {
-  std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::LoadXODR(MapName));
+  std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::GetXODR(GetWorld()));
   Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
   if (!Map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
