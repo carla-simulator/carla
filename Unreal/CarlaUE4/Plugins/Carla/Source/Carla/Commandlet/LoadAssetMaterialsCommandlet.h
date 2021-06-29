@@ -27,9 +27,6 @@ struct CARLA_API FLargeMapTileData
   GENERATED_USTRUCT_BODY()
 
   UPROPERTY()
-  FString XODRName;
-
-  UPROPERTY()
   float FirstTileCenterX;
 
   UPROPERTY()
