@@ -34,6 +34,7 @@ nav:
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
   - 'Traffic Manager': 'adv_traffic_manager.md'
   - 'Benchmarking Performance': 'adv_benchmarking.md'
+  - 'CARLA Agents': 'adv_agents.md'
 - Traffic Simulation:
   - 'Traffic Simulation Overview': 'ts_traffic_simulation_overview.md'
 - References:
