@@ -5,23 +5,24 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Carla/Game/CarlaStatics.h"
-
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "MovementComponents/DefaultMovementComponent.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+
 #include "PhysXPublic.h"
 #include "PhysXVehicleManager.h"
 #include "TireConfig.h"
 #include "VehicleWheel.h"
+
+#include "Carla.h"
+#include "Carla/Game/CarlaHUD.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Trigger/FrictionTrigger.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
-#include "MovementComponents/DefaultMovementComponent.h"
-#include "Carla/Trigger/FrictionTrigger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
-
-#include "Rendering/SkeletalMeshRenderData.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -472,6 +473,31 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
   VelocityControl->Deactivate();
 }
 
+void ACarlaWheeledVehicle::EnableDebugTelemetry()
+{
+  if (GetWorld()->GetFirstPlayerController())
+  {
+    ACarlaHUD* hud = Cast<ACarlaHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+    if (hud)
+      hud->AddDebugVehicleForTelemetry(GetVehicleMovementComponent());
+    else
+      UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::EnableDebugTelemetry:: Cannot find HUD for debug info"));
+  }
+}
+
+void ACarlaWheeledVehicle::DisableDebugTelemetry()
+{
+  if (GetWorld()->GetFirstPlayerController())
+  {
+   ACarlaHUD* hud = Cast<ACarlaHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+
+   if (hud)
+     hud->AddDebugVehicleForTelemetry(nullptr);
+   else
+     UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::DisableDebugTelemetry:: Cannot find HUD for debug info"));
+  }
+}
+
 void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState &LightState)
 {
   InputControl.LightState = LightState;
@@ -561,4 +587,9 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 FVector ACarlaWheeledVehicle::GetVelocity() const
 {
   return BaseMovementComponent->GetVelocity();
+}
+
+void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  DisableDebugTelemetry();
 }
