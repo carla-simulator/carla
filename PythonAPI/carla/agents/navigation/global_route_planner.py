@@ -24,14 +24,13 @@ class GlobalRoutePlanner(object):
     This class provides a high level route planner.
     """
 
-    def __init__(self, wmap, sampling_resolution, world=None):
+    def __init__(self, wmap, sampling_resolution):
         """
         Constructor
         """
         self._previous_decision = RoadOption.VOID
 
         self._sampling_resolution = sampling_resolution
-        self._world = world  # TODO: remove it after debugging
         self._wmap = wmap
         self._initialize_map()
 
@@ -79,27 +78,11 @@ class GlobalRoutePlanner(object):
         from origin to destination
         """
         route = trace_route(origin, destination, self._wmap, self._sampling_resolution)
+        if not route:
+            return []
 
         # Add options
         route_with_options = self.add_options_to_route(route)
-
-        # TODO: remove it
-        for w in route_with_options:
-            wp = w[0].transform.location + carla.Location(z=0.1)
-            if w[1] == RoadOption.LEFT:  # Yellow
-                color = carla.Color(255, 255, 0)
-            elif w[1] == RoadOption.RIGHT:  # Cyan
-                color = carla.Color(0, 255, 255)
-            elif w[1] == RoadOption.CHANGELANELEFT:  # Orange
-                color = carla.Color(255, 64, 0)
-            elif w[1] == RoadOption.CHANGELANERIGHT:  # Dark Cyan
-                color = carla.Color(0, 64, 255)
-            elif w[1] == RoadOption.STRAIGHT:  # Gray
-                color = carla.Color(128, 128, 128)
-            else:  # LANEFOLLOW
-                color = carla.Color(0, 255, 0) # Green
-            self._world.debug.draw_point(wp, size=0.08, color=color, life_time=100)
-
         return route_with_options
 
     def add_options_to_route(self, route):
@@ -169,8 +152,11 @@ class GlobalRoutePlanner(object):
             route_direction = next_waypoint.transform.location - waypoint.transform.location
             np_route_direction = np.array([route_direction.x, route_direction.y, route_direction.z])
 
-            dot = np.dot(np_direction, np_route_direction)
-            dot /= np.linalg.norm(np_direction) * np.linalg.norm(np_route_direction)
+            if np.linalg.norm(np_route_direction):
+                dot = np.dot(np_direction, np_route_direction)
+                dot /= np.linalg.norm(np_direction) * np.linalg.norm(np_route_direction)
+            else:
+                dot = 1
 
             if 0 < dot < math.cos(math.radians(45)):
                 cross = np.cross(np_direction, np_route_direction)

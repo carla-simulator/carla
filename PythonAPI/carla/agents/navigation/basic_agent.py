@@ -12,10 +12,9 @@ import carla
 from enum import Enum
 
 from agents.navigation.agent import Agent
-from agents.navigation.local_planner import LocalPlanner
+from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.tools.misc import get_speed
-
 
 
 class AgentState(Enum):
@@ -76,6 +75,12 @@ class BasicAgent(Agent):
         """
         self._local_planner.set_speed(speed)
 
+    def follow_speed_limits(self, value=True):
+        """
+        (De)activates a flag to make the agent dynamically change the target speed according to the speed limits
+        """
+        self._local_planner.follow_speed_limits(value)
+
     def get_local_planner(self):
         """
         Get method for protected member local planner
@@ -104,6 +109,23 @@ class BasicAgent(Agent):
         route_trace = self.trace_route(start_waypoint, end_waypoint)
         self._local_planner.set_global_plan(route_trace, clean_queue=clean_queue)
 
+        for w in route_trace:
+            wp = w[0].transform.location + carla.Location(z=0.1)
+            if w[1] == RoadOption.LEFT:  # Yellow
+                color = carla.Color(255, 255, 0)
+            elif w[1] == RoadOption.RIGHT:  # Cyan
+                color = carla.Color(0, 255, 255)
+            elif w[1] == RoadOption.CHANGELANELEFT:  # Orange
+                color = carla.Color(255, 64, 0)
+            elif w[1] == RoadOption.CHANGELANERIGHT:  # Dark Cyan
+                color = carla.Color(0, 64, 255)
+            elif w[1] == RoadOption.STRAIGHT:  # Gray
+                color = carla.Color(128, 128, 128)
+            else:  # LANEFOLLOW
+                color = carla.Color(0, 255, 0) # Green
+            self._world.debug.draw_point(wp, size=0.08, color=color, life_time=100)
+
+
     def set_global_plan(self, plan, stop_waypoint_creation=True, clean_queue=True):
         """
         Adds a specific plan to the agent.
@@ -127,7 +149,7 @@ class BasicAgent(Agent):
             :param end_waypoint: final position
         """
         if self._grp is None:
-            self._grp = GlobalRoutePlanner(self._map, self._sampling_resolution, self._world)
+            self._grp = GlobalRoutePlanner(self._map, self._sampling_resolution)
         route = self._grp.trace_route(start_waypoint, end_waypoint)
         return route
 
