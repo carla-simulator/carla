@@ -3,23 +3,20 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-""" This module implements an agent that roams around a track following random
-waypoints and avoiding other vehicles.
-The agent also responds to traffic lights. """
+"""
+This module implements an agent that roams around a track following random
+waypoints and avoiding other vehicles. The agent also responds to traffic lights.
+"""
 
 import carla
-from agents.navigation.agent import Agent
-from agents.navigation.local_planner import LocalPlanner, RoadOption
-from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-from agents.tools.misc import get_speed
-
 from enum import Enum
 
-import os
-import xml.etree.ElementTree as ET
-from agents.tools.map_helper import get_shortest_route
-import ad_map_access as ad
+from agents.navigation.agent import Agent
+from agents.navigation.local_planner import LocalPlanner
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.tools.misc import get_speed
+
+
 
 class AgentState(Enum):
     """
@@ -51,54 +48,15 @@ class BasicAgent(Agent):
         self._base_tlight_threshold = 5.0  # meters
         self._base_vehicle_threshold = 5.0  # meters
         self._max_brake = 0.5
+        self._max_steering = 0.3
         self._local_planner = LocalPlanner(
             self._vehicle,
             opt_dict={
                 'target_speed' : target_speed,
-                'max_brake': self._max_brake
+                'max_brake': self._max_brake,
+                'max_steering': self._max_steering
             }
         )
-
-        self._initialize_map()
-
-    def _initialize_map(self):
-        """Initialize the AD map library and, creates the file needed to do so."""
-        lat_ref = 0.0
-        lon_ref = 0.0
-
-        opendrive_contents = self._map.to_opendrive()
-        xodr_name = 'BasicAgentMap.xodr'
-        txt_name = 'BasicAgentMap.txt'
-
-        # Save the opendrive data into a file
-        with open(xodr_name, 'w') as f:
-            f.write(opendrive_contents)
-
-        # Get geo reference
-        xml_tree = ET.parse(xodr_name)
-        for geo_elem in xml_tree.find('header').find('geoReference').text.split(' '):
-            if geo_elem.startswith('+lat_0'):
-                lat_ref = float(geo_elem.split('=')[-1])
-            elif geo_elem.startswith('+lon_0'):
-                lon_ref = float(geo_elem.split('=')[-1])
-
-        # Save the previous info
-        with open(txt_name, 'w') as f:
-            txt_content = "[ADMap]\n" \
-                          "map=" + xodr_name + "\n" \
-                          "[ENUReference]\n" \
-                          "default=" + str(lat_ref) + " " + str(lon_ref) + " 0.0"
-            f.write(txt_content)
-
-        # Intialize the map and remove created files
-        initialized = ad.map.access.init(txt_name)
-        if not initialized:
-            raise ValueError("Couldn't initialize the map")
-
-        for fname in [txt_name, xodr_name]:
-            if os.path.exists(fname):
-                os.remove(fname)
-
 
     def emergency_stop(self):
         """
@@ -134,12 +92,13 @@ class BasicAgent(Agent):
             :param start_location: starting location of the route
         """
         if not start_location:
-            start_location = self._vehicle.get_location()
+            start_location = self._local_planner.target_waypoint.transform.location
             clean_queue = True
         else:
+            start_location = self._vehicle.get_location()
             clean_queue = False
 
-        start_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        start_waypoint = self._map.get_waypoint(start_location)
         end_waypoint = self._map.get_waypoint(end_location)
 
         route_trace = self.trace_route(start_waypoint, end_waypoint)
@@ -159,7 +118,6 @@ class BasicAgent(Agent):
             clean_queue=clean_queue
         )
 
-    # AD Map version
     def trace_route(self, start_waypoint, end_waypoint):
         """
         This method sets up a global router and returns the
@@ -168,45 +126,10 @@ class BasicAgent(Agent):
             :param start_waypoint: initial position
             :param end_waypoint: final position
         """
-
-        route = get_shortest_route(
-            start_waypoint.transform.location,
-            end_waypoint.transform.location,
-            self._map,
-            sample_resolution=self._sampling_resolution,
-            distance=1,
-            world=self._vehicle.get_world()
-        )
-
-        route_with_options = []
-        for waypoint in route:
-            route_with_options.append([waypoint, RoadOption.LANEFOLLOW])
-
-        return route_with_options
-
-    # global route planner version
-    # def trace_route(self, start_waypoint, end_waypoint):
-    #     """
-    #     This method sets up a global router and returns the optimal route
-    #     from start_waypoint to end_waypoint
-
-    #         :param start_waypoint: initial position
-    #         :param end_waypoint: final position
-    #     """
-
-    #     # Setting up global router
-    #     if self._grp is None:
-    #         dao = GlobalRoutePlannerDAO(self._vehicle.get_world().get_map(), self._sampling_resolution)
-    #         grp = GlobalRoutePlanner(dao)
-    #         grp.setup()
-    #         self._grp = grp
-
-    #     # Obtain route plan
-    #     route = self._grp.trace_route(
-    #         start_waypoint.transform.location,
-    #         end_waypoint.transform.location)
-
-    #     return route
+        if self._grp is None:
+            self._grp = GlobalRoutePlanner(self._map, self._sampling_resolution, self._world)
+        route = self._grp.trace_route(start_waypoint, end_waypoint)
+        return route
 
     def run_step(self, debug=False):
         """

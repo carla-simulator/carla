@@ -11,20 +11,22 @@ import random
 
 import carla
 from agents.navigation.controller import VehiclePIDController
-from agents.tools.misc import draw_waypoints
+from agents.tools.misc import draw_waypoints, get_speed
 
 
 class RoadOption(Enum):
     """
     RoadOption represents the possible topological configurations when moving from a segment of lane to other.
+
     """
     VOID = -1
     LEFT = 1
     RIGHT = 2
     STRAIGHT = 3
-    LANEFOLLOW = 4
-    CHANGELANELEFT = 5
-    CHANGELANERIGHT = 6
+    HALFTURN = 4
+    LANEFOLLOW = 5
+    CHANGELANELEFT = 6
+    CHANGELANERIGHT = 7
 
 
 class LocalPlanner(object):
@@ -58,8 +60,8 @@ class LocalPlanner(object):
         self._map = self._world.get_map()
 
         self._target_speed = 20.0  # Km/h
-        self._sampling_radius = 1.0
-        self._min_distance = 8.0
+        self._sampling_radius = 2.0
+        self._base_min_distance = 3.0
         self._dt = 1.0 / 20.0
         self._max_brake = 0.3
         self._max_throt = 0.75
@@ -125,10 +127,7 @@ class LocalPlanner(object):
         # Compute the current vehicle waypoint
         current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
         self.target_waypoint, self.target_road_option = (current_waypoint, RoadOption.LANEFOLLOW)
-
-        # Fill the waypoint queue
         self._waypoints_queue.append((self.target_waypoint, self.target_road_option))
-        self._compute_next_waypoints(k=self._min_waypoint_queue_length)
 
 
     def set_speed(self, speed):
@@ -213,7 +212,6 @@ class LocalPlanner(object):
 
         self._stop_waypoint_creation = stop_waypoint_creation
 
-
     def run_step(self, debug=False):
         """
         Execute one step of local planning which involves running the longitudinal and lateral PID controllers to
@@ -229,24 +227,20 @@ class LocalPlanner(object):
         if not self._stop_waypoint_creation and len(self._waypoints_queue) < self._min_waypoint_queue_length:
             self._compute_next_waypoints(k=self._min_waypoint_queue_length)
 
-        if len(self._waypoints_queue) == 0:
-            control = carla.VehicleControl()
-            control.steer = 0.0
-            control.throttle = 0.0
-            control.brake = 1.0
-            control.hand_brake = False
-            control.manual_gear_shift = False
-            return control
-
-        # Get the target waypoint and move using the PID controllers
-        self.target_waypoint, self.target_road_option = self._waypoints_queue[0]
-        control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
-
-        # # Purge the queue of obsolete waypoints
+        # Purge the queue of obsolete waypoints
         veh_location = self._vehicle.get_location()
+        vehicle_speed = get_speed(self._vehicle) / 3.6
+        self._min_distance = self._base_min_distance + 0.5 *vehicle_speed
+
         num_waypoint_removed = 0
         for waypoint, _ in self._waypoints_queue:
-            if veh_location.distance(waypoint.transform.location) < self._min_distance:
+
+            if len(self._waypoints_queue) - num_waypoint_removed == 1:
+                min_distance = 1  # Don't remove the last waypoint until very close by
+            else:
+                min_distance = self._min_distance
+
+            if veh_location.distance(waypoint.transform.location) < min_distance:
                 num_waypoint_removed += 1
             else:
                 break
@@ -254,6 +248,18 @@ class LocalPlanner(object):
         if num_waypoint_removed > 0:
             for _ in range(num_waypoint_removed):
                 self._waypoints_queue.popleft()
+
+        # Get the target waypoint and move using the PID controllers. Stop if no target waypoint
+        if len(self._waypoints_queue) == 0:
+            control = carla.VehicleControl()
+            control.steer = 0.0
+            control.throttle = 0.0
+            control.brake = 1.0
+            control.hand_brake = False
+            control.manual_gear_shift = False
+        else:
+            self.target_waypoint, self.target_road_option = self._waypoints_queue[0]
+            control = self._vehicle_controller.run_step(self._target_speed, self.target_waypoint)
 
         if debug:
             draw_waypoints(self._vehicle.get_world(), [self.target_waypoint], 1.0)
@@ -303,13 +309,13 @@ def _retrieve_options(list_waypoints, current_waypoint):
         # the beggining of an intersection, therefore the
         # variation in angle is small
         next_next_waypoint = next_waypoint.next(3.0)[0]
-        link = _compute_connection(current_waypoint, next_next_waypoint)
+        link = compute_connection(current_waypoint, next_next_waypoint)
         options.append(link)
 
     return options
 
 
-def _compute_connection(current_waypoint, next_waypoint, threshold=35):
+def compute_connection(current_waypoint, next_waypoint, threshold=35):
     """
     Compute the type of topological connection between an active waypoint (current_waypoint) and a target waypoint
     (next_waypoint).
