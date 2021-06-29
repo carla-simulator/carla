@@ -127,7 +127,6 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
     if (FilledData == false) {
 
-      TileData.XODRName = LoadedMapName.LeftChop((LoadedMapName.GetCharArray().Num() - 1) - LoadedMapName.Find("_", ESearchCase::IgnoreCase, ESearchDir::Type::FromStart));
       // As the OpenDrive file has the same name as level, build the path to the
       // xodr file using the label name and the game content directory.
       const FString XodrContent = UOpenDrive::GetXODR(GetWorld());

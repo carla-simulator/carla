@@ -169,7 +169,6 @@ void AOpenDriveGenerator::BeginPlay()
 {
   Super::BeginPlay();
 
-  // Search for "{project_content_folder}/Carla/Maps/OpenDrive/{current_map_name}.xodr"
   const FString XodrContent = UOpenDrive::GetXODR(GetWorld());
   LoadOpenDrive(XodrContent);
 
