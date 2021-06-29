@@ -176,6 +176,12 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void DeactivateVelocityControl();
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void EnableDebugTelemetry();
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void DisableDebugTelemetry();
+
   /// @todo This function should be private to AWheeledVehicleAIController.
   void FlushVehicleControl();
 
@@ -240,6 +246,7 @@ public:
 protected:
 
   virtual void BeginPlay() override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
 
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshLightState(const FVehicleLightState &VehicleLightState);
