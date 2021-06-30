@@ -385,6 +385,10 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
   }
 
+  void Client::ShowVehicleDebugTelemetry(rpc::ActorId vehicle, const bool enabled) {
+    _pimpl->AsyncCall("show_vehicle_debug_telemetry", vehicle, enabled);
+  }
+
   void Client::ApplyControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleControl &control) {
     _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
   }
