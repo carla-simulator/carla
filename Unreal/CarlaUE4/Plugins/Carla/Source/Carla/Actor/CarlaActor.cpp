@@ -824,6 +824,23 @@ ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled, bool bKeepS
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::ShowVehicleDebugTelemetry(bool bEnabled)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->ShowDebugTelemetry(bEnabled);
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::EnableCarSim(const FString& SimfilePath)
 {
   if (IsDormant())
