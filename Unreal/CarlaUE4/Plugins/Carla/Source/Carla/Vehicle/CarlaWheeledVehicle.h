@@ -177,10 +177,7 @@ public:
   void DeactivateVelocityControl();
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void EnableDebugTelemetry();
-
-  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void DisableDebugTelemetry();
+  void ShowDebugTelemetry(bool Enabled);
 
   /// @todo This function should be private to AWheeledVehicleAIController.
   void FlushVehicleControl();

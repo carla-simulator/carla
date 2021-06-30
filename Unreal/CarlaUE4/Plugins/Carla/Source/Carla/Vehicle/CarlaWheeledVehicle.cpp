@@ -465,28 +465,26 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
   VelocityControl->Deactivate();
 }
 
-void ACarlaWheeledVehicle::EnableDebugTelemetry()
+void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 {
   if (GetWorld()->GetFirstPlayerController())
   {
     ACarlaHUD* hud = Cast<ACarlaHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
-    if (hud)
-      hud->AddDebugVehicleForTelemetry(GetVehicleMovementComponent());
-    else
-      UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::EnableDebugTelemetry:: Cannot find HUD for debug info"));
-  }
-}
+    if (hud) {
 
-void ACarlaWheeledVehicle::DisableDebugTelemetry()
-{
-  if (GetWorld()->GetFirstPlayerController())
-  {
-   ACarlaHUD* hud = Cast<ACarlaHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+      // Set/Unset the car movement component in HUD to show the temetry
+      if (Enabled) {
+        hud->AddDebugVehicleForTelemetry(GetVehicleMovementComponent());
+      }
+      else{
+        if (hud->DebugVehicle == GetVehicleMovementComponent())
+          hud->AddDebugVehicleForTelemetry(nullptr);
+      }
 
-   if (hud)
-     hud->AddDebugVehicleForTelemetry(nullptr);
-   else
-     UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::DisableDebugTelemetry:: Cannot find HUD for debug info"));
+    }
+    else {
+      UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ShowDebugTelemetry:: Cannot find HUD for debug info"));
+    }
   }
 }
 
@@ -583,5 +581,5 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  DisableDebugTelemetry();
+  ShowDebugTelemetry(false);
 }
