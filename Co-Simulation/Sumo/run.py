@@ -166,6 +166,59 @@ class Main:
         self.args = args
         self.env = env
         self.sumo_files = env["map_2_sumo_files"][args.carla_map_name]
+
+    def run(self):
+        procs = []
+        args = self.args
+        env = self.env
+        sumo_files = self.sumo_files
+
+        try:
+            print("Changing a carla map ...")
+            if check_port_listens(args.carla_unrealengine_port) is False:
+                raise Exception("Carla server is not standed.")
+            if bool(args.is_carla_change_map):
+                p = change_carla_map(args, env, sumo_files)
+                p.wait()
+
+            print("Starting SUMO-traci servers ...")
+            procs.append(start_sumo_for_carla(args, env, sumo_files))
+            time.sleep(5)
+
+            print("Starting synchronization processes ...")
+            procs.append(start_carla_sumo_synchronization(args, env, sumo_files))
+
+            switch_carla_rendering(args, env, args.is_carla_rendering)
+
+            print("Wait for running ...")
+            while is_processes_alive(procs) == True:
+                pass
+
+        except KeyboardInterrupt:
+            logging.info(CTRL_C_PRESSED_MESSAGE)
+
+        except Exception as e:
+            logging.error(e)
+
+        finally:
+            # switch on the calra rendering
+            switch_carla_rendering(args, env, 1)
+
+            # save veins result
+            save_dir_name = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+
+            if bool(args.is_dynamic_simulation):
+                Popen(f"vagrant ssh -c \"mkdir {args.veins_result_aggrigation_dir}/{save_dir_name} \"", cwd=args.veins_vagrant_path, shell=True).wait()
+                Popen(f"vagrant ssh -c \"cp -f {args.result_file_path_in_veins}/* {args.veins_result_aggrigation_dir}/{save_dir_name}/ \"", cwd=args.veins_vagrant_path, shell=True).wait()
+
+            kill_processes(procs)
+
+
+
+
+class MainWithVeins(Main):
+    def __init__(self, args, env):
+        super().__init__(args, env)
         self.veins_state_handler = VeinsStateHandler(args.veins_vagrant_path, [env["in_vagrant"]["ini_file_in_veins"]], 3)
 
         # ----- copy sumo files into Veins directory -----
@@ -175,7 +228,6 @@ class Main:
         copy_local_file_to_vagrant(self.sumo_files["net"], f"{env['in_vagrant']['sumo_files_name_in_veins']}.net.xml", env['in_vagrant']['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
         copy_local_file_to_vagrant(self.sumo_files["poly"], f"{env['in_vagrant']['sumo_files_name_in_veins']}.poly.xml", env['in_vagrant']['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
         copy_local_file_to_vagrant(self.sumo_files["sumocfg_for_veins"], f"{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg", env['in_vagrant']['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
-
 
     def run(self):
         procs = []
@@ -199,11 +251,11 @@ class Main:
             print("Starting synchronization processes ...")
             procs.append(start_carla_sumo_synchronization(args, env, sumo_files))
             procs.append(start_veins_sumo_synchronization(args, env, sumo_files))
-            procs.append(start_carla_veins_data_server(args, env, sumo_files))
             procs.append(start_tracis_synchronization(args, env, sumo_files))
 
-            print(f"Please run {env['in_vagrant']['ini_file_in_veins']} manually in Veins.")
             switch_carla_rendering(args, env, args.is_carla_rendering)
+
+            print("Please run Veins manually.")
             while is_processes_alive(procs) == True and self.veins_state_handler.run_time() <= 0:
                 pass
 
@@ -255,6 +307,7 @@ if __name__ == '__main__':
     parser.add_argument('--is_carla_change_map', type=int, default=env["is_carla_change_map"], choices=[0, 1])
     parser.add_argument('--is_carla_rendering', type=int, default=env["is_carla_rendering"], choices=[0, 1])
     parser.add_argument('--is_carla_standalone_mode', type=int, default=env["is_carla_standalone_mode"], choices=[0, 1])
+    parser.add_argument('--is_dynamic_simulation', type=int, default=env["is_dynamic_simulation"], choices=[0, 1])
     parser.add_argument('--main_mobility_handler', default=env["mobility_handler_choices"][0], choices=env["mobility_handler_choices"])
     parser.add_argument('--log_file_path', default="./log/carla_veins_logger.log")
     parser.add_argument('--result_file_path_in_veins', default=env["in_vagrant"]["result_file_path_in_veins"])
@@ -269,4 +322,7 @@ if __name__ == '__main__':
         level=logging.DEBUG
     )
 
-    Main(args, env).run()
+    if bool(args.is_dynamic_simulation):
+        MainWithVeins(args, env).run()
+    else:
+        Main(args, env).run()

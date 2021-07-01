@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<!-- generated on Wed Apr 28 17:25:49 2021 by Eclipse SUMO netconvert Version 1.7.0
+<!-- generated on Thu Jul  1 17:54:42 2021 by Eclipse SUMO netconvert Version 1.7.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
@@ -8,7 +8,7 @@
     </input>
 
     <output>
-        <output-file value="/tmp/tmpeguz5jtw/map.net.xml"/>
+        <output-file value="/tmp/tmprx2aagic/map.net.xml"/>
         <output.original-names value="true"/>
     </output>
 

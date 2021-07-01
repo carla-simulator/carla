@@ -12,30 +12,30 @@ from util.func import (
 
 
 
-def sumocfg_src(env):
-    return '''<?xml version="1.0" encoding="UTF-8"?>
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
-
-    <input>
-        <net-file value="''' + env["src_dir"]["net_file_name"] + ''''"/>
-        <route-files value="''' + env["src_dir"]["trip_file_name"] + '''"/>
-        <additional-files value="''' + env["src_dir"]["poly_file_name"] + '''"/>
-    </input>
-
-    <processing>
-        <ignore-route-errors value="true"/>
-    </processing>
-
-    <routing>
-        <device.rerouting.adaptation-steps value="180"/>
-    </routing>
-
-    <report>
-        <verbose value="true"/>
-        <duration-log.statistics value="true"/>
-        <no-step-log value="true"/>
-    </report>
-</configuration>'''
+# def sumocfg_src(env):
+#     return '''<?xml version="1.0" encoding="UTF-8"?>
+# <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+#
+#     <input>
+#         <net-file value="''' + env["src_dir"]["net_file_name"] + ''''"/>
+#         <route-files value="''' + env["src_dir"]["trip_file_name"] + '''"/>
+#         <additional-files value="''' + env["src_dir"]["poly_file_name"] + '''"/>
+#     </input>
+#
+#     <processing>
+#         <ignore-route-errors value="true"/>
+#     </processing>
+#
+#     <routing>
+#         <device.rerouting.adaptation-steps value="180"/>
+#     </routing>
+#
+#     <report>
+#         <verbose value="true"/>
+#         <duration-log.statistics value="true"/>
+#         <no-step-log value="true"/>
+#     </report>
+# </configuration>'''
 
 
 def import_info(args, env):
@@ -104,9 +104,13 @@ def main(args, env):
     src_dir = f"{env['examples_dir']}/{args.use_map_name}"
 
     # import_xodr.
-    run(f"cp {import_infos['origin_osm_path']} {args.osm2xodr_dir}/map.osm", shell=True)
-    run(f"python3 main.py", shell=True, cwd=args.osm2xodr_dir)
-    run(f"cp {args.osm2xodr_dir}/output.xodr {import_xodr_path}", shell=True)
+    if 'origin_osm_path' in import_infos.keys():
+        run(f"cp {import_infos['origin_osm_path']} {args.osm2xodr_dir}/map.osm", shell=True)
+        run(f"python3 main.py", shell=True, cwd=args.osm2xodr_dir)
+        run(f"cp {args.osm2xodr_dir}/output.xodr {import_xodr_path}", shell=True)
+    else: # use origin_fbx_path
+        run(f"cp {import_infos['origin_xodr_path']} {import_xodr_path}", shell=True)
+
 
     # import_fbx.
     run(f"cp {import_infos['origin_fbx_path']} {import_fbx_path}", shell=True)

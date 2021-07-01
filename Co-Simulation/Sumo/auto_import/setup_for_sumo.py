@@ -37,6 +37,30 @@ def sumocfg_src(env):
     </report>
 </configuration>'''
 
+def sumocfg_src_without_poly(env):
+    return '''<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
+
+    <input>
+        <net-file value="''' + env["src_dir"]["net_file_name"] + '''"/>
+        <route-files value="''' + env["src_dir"]["trip_file_name"] + '''"/>
+    </input>
+
+    <processing>
+        <ignore-route-errors value="true"/>
+    </processing>
+
+    <routing>
+        <device.rerouting.adaptation-steps value="180"/>
+    </routing>
+
+    <report>
+        <verbose value="true"/>
+        <duration-log.statistics value="true"/>
+        <no-step-log value="true"/>
+    </report>
+</configuration>'''
+
 
 def import_info(args, env):
     result = env["package2map2infos"][str(args.use_package_name)][str(args.use_map_name)]
@@ -64,14 +88,17 @@ def main(args, env):
     run(f"python3 netconvert_carla.py --guess-tls {import_xodr_path}", shell=True, cwd=os.path.expanduser(args.netconvert_carla_dir))
     run(f"mkdir {src_dir}", shell=True)
     run(f"cp {args.netconvert_carla_dir}/net.net.xml {src_dir}/{env['src_dir']['net_file_name']}", shell=True)
-    run(f"cp {args.osm2xodr_dir}/output.xodr {src_dir}/{env['src_dir']['xodr_file_name']}", shell=True)
-    run(f"cp {import_infos['origin_osm_path']} {src_dir}/{env['src_dir']['osm_file_name']}", shell=True)
+    run(f"cp {import_xodr_path} {src_dir}/{env['src_dir']['xodr_file_name']}", shell=True)
 
     # generate poly file from net and osm file
-    run(f"polyconvert --net-file {env['src_dir']['net_file_name']} --osm-files {env['src_dir']['osm_file_name']} -o {env['src_dir']['poly_file_name']}", shell=True, cwd=os.path.expanduser(src_dir))
+    if 'origin_osm_path' in import_infos.keys():
+        run(f"cp {import_infos['origin_osm_path']} {src_dir}/{env['src_dir']['osm_file_name']}", shell=True)
+        run(f"polyconvert --net-file {env['src_dir']['net_file_name']} --osm-files {env['src_dir']['osm_file_name']} -o {env['src_dir']['poly_file_name']}", shell=True, cwd=os.path.expanduser(src_dir))
+    else:
+        pass
 
     # generate trip file
-    run(f"python {args.sumo_home_dir}/tools/randomTrips.py -n {env['src_dir']['net_file_name']} -o {env['src_dir']['trip_file_name']}", shell=True, cwd=os.path.expanduser(src_dir))
+    run(f"python {args.sumo_home_dir}/tools/randomTrips.py --allow-fringe -n {env['src_dir']['net_file_name']} -o {env['src_dir']['trip_file_name']}", shell=True, cwd=os.path.expanduser(src_dir))
 
     # generate_sumocfg
     with open(f"{src_dir}/{env['src_dir']['sumocfg_file_name']}", mode='w') as f:
