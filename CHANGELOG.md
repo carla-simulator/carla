@@ -15,6 +15,7 @@
   * Added 'check_lidar_bb' util script
   * Added optional flag to `client.replay_file()` `replay_sensors` to enable or disable the replaying the sensors
   * Improved manual_control: now cameras are set in relation with car size
+  * Client required files are sent from the server to a local cache (OpenDRIVE, Traffic Manager...)
   * Added CHRONO library for vehicle dynamics simulation (https://projectchrono.org/)
     - Supported JSON vehicle definition
     - Unsupported collision dynamics
