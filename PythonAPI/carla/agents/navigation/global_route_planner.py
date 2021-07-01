@@ -8,15 +8,11 @@
 This module provides GlobalRoutePlanner implementation.
 """
 import math
-import os
 import numpy as np
-import xml.etree.ElementTree as ET
 import carla
 
 from agents.navigation.local_planner import RoadOption
-from agents.tools.global_route_planner_helper import trace_route
-from agents.tools.misc import vector
-
+from agents.tools.global_route_planner_helper import trace_route, initialize_map
 import ad_map_access as ad
 
 class GlobalRoutePlanner(object):
@@ -32,58 +28,28 @@ class GlobalRoutePlanner(object):
 
         self._sampling_resolution = sampling_resolution
         self._wmap = wmap
-        self._initialize_map()
+        initialize_map(self._wmap)
 
-    def _initialize_map(self):
-        """Initialize the AD map library and, creates the file needed to do so."""
-        lat_ref = 0.0
-        lon_ref = 0.0
-
-        opendrive_contents = self._wmap.to_opendrive()
-        xodr_name = 'RoutePlannerMap.xodr'
-        txt_name = 'RoutePlannerMap.txt'
-
-        # Save the opendrive data into a file
-        with open(xodr_name, 'w') as f:
-            f.write(opendrive_contents)
-
-        # Get geo reference
-        xml_tree = ET.parse(xodr_name)
-        for geo_elem in xml_tree.find('header').find('geoReference').text.split(' '):
-            if geo_elem.startswith('+lat_0'):
-                lat_ref = float(geo_elem.split('=')[-1])
-            elif geo_elem.startswith('+lon_0'):
-                lon_ref = float(geo_elem.split('=')[-1])
-
-        # Save the previous info
-        with open(txt_name, 'w') as f:
-            txt_content = "[ADMap]\n" \
-                          "map=" + xodr_name + "\n" \
-                          "[ENUReference]\n" \
-                          "default=" + str(lat_ref) + " " + str(lon_ref) + " 0.0"
-            f.write(txt_content)
-
-        # Intialize the map and remove created files
-        initialized = ad.map.access.init(txt_name)
-        if not initialized:
-            raise ValueError("Couldn't initialize the map")
-
-        for fname in [txt_name, xodr_name]:
-            if os.path.exists(fname):
-                os.remove(fname)
-
-    def trace_route(self, origin, destination):
+    def trace_route(self, origin, destination, with_options=True):
         """
-        This method returns list of (carla.Waypoint, RoadOption)
-        from origin to destination
+        This method traces a route between a starting and ending point.
+        IF 'with_options' is True (deafult behavior), returns a list of [carla.Waypoint, RoadOption],
+        being RoadOption a high level represnetation of what the direction of the route.
+        If 'with_options' is False, the road options are computed, returning a list of carla.Waypoint
+
+        :param origin (carla.Waypoint): starting point of the route
+        :param destination (carla.Waypoint): ending point of the route
+        :param with_options (bool): whether or not the road options will be added to the route info
         """
         route = trace_route(origin, destination, self._wmap, self._sampling_resolution)
         if not route:
             return []
 
-        # Add options
-        route_with_options = self.add_options_to_route(route)
-        return route_with_options
+        # Add options, or not
+        if with_options:
+            return self.add_options_to_route(route)
+        else:
+            return route
 
     def add_options_to_route(self, route):
         """
@@ -127,43 +93,54 @@ class GlobalRoutePlanner(object):
 
         # Route ended at a junction
         if self._prev_at_junction:
-            road_option = self._compute_options(route[-1], waypoint)
+            road_option = self._compute_options(route[entry_index], route[-1])
             for j in range(entry_index, len(route)):
                 route_with_options.append([route[j], road_option])
             entry_index = None
 
         # Part 2: Add lane changes
-        prev_lane_change = None
+        lane_change_type = None
 
-        for i in range(0, len(route_with_options) - 1):
+        for i in range(0, len(route_with_options)):
             waypoint, option = route_with_options[i]
-            next_waypoint, _ = route_with_options[i+1]
 
-            # Lane changes are set to both lanes
-            if prev_lane_change:
-                route_with_lane_changes.append([waypoint, prev_lane_change])
-                prev_lane_change = None
+            # Start and end cases
+            if i == len(route_with_options) - 1:
+                route_with_lane_changes.append([waypoint, lane_change_type if lane_change_type else option])
                 continue
+            if i == 0:
+                prev_direction = waypoint.transform.get_forward_vector()
+                np_prev_direction = np.array([prev_direction.x, prev_direction.y, prev_direction.z])
 
             # Check the dot product between the two consecutive waypoint
-            direction = waypoint.transform.get_forward_vector()
-            np_direction = np.array([direction.x, direction.y, direction.z])
-
-            route_direction = next_waypoint.transform.location - waypoint.transform.location
+            route_direction = route_with_options[i+1][0].transform.location - waypoint.transform.location
             np_route_direction = np.array([route_direction.x, route_direction.y, route_direction.z])
 
-            if np.linalg.norm(np_route_direction):
-                dot = np.dot(np_direction, np_route_direction)
-                dot /= np.linalg.norm(np_direction) * np.linalg.norm(np_route_direction)
+            if np.linalg.norm(np_route_direction) and np.linalg.norm(np_prev_direction):
+                dot = np.dot(np_prev_direction, np_route_direction)
+                dot /= np.linalg.norm(np_prev_direction) * np.linalg.norm(np_route_direction)
             else:
                 dot = 1
 
             if 0 < dot < math.cos(math.radians(45)):
-                cross = np.cross(np_direction, np_route_direction)
-                prev_lane_change = RoadOption.CHANGELANERIGHT if cross[2] > 0 else RoadOption.CHANGELANELEFT
-                route_with_lane_changes.append([waypoint, prev_lane_change])
+                if lane_change_type:
+                    # Last lane change waypoint
+                    new_option = lane_change_type
+                    lane_change_type = None
+                else:
+                    # First lane change waypoint
+                    cross = np.cross(np_prev_direction, np_route_direction)
+                    lane_change_type = RoadOption.CHANGELANERIGHT if cross[2] > 0 else RoadOption.CHANGELANELEFT
+                    new_option = lane_change_type
+
             else:
-                route_with_lane_changes.append([waypoint, option])
+                if lane_change_type:
+                    new_option = lane_change_type
+                else:
+                    new_option = option
+
+            route_with_lane_changes.append([waypoint, new_option])
+            np_prev_direction = np_route_direction
 
         return route_with_lane_changes
 
@@ -174,10 +151,8 @@ class GlobalRoutePlanner(object):
         diff = (exit_waypoint.transform.rotation.yaw - entry_waypoint.transform.rotation.yaw) % 360
         if diff > 315.0:
             option = RoadOption.STRAIGHT
-        elif diff > 225.0:
+        elif diff > 180.0:
             option = RoadOption.LEFT
-        elif diff > 135.0:
-            option = RoadOption.HALFTURN
         elif diff > 45.0:
             option = RoadOption.RIGHT
         else:
