@@ -93,12 +93,12 @@ def start_carla_veins_data_server(args, env, sumo_files):
     return Popen(f"python ./synch/carla_veins_data_server.py --host {args.data_server_host} --port {args.data_server_port}", shell=True)
 
 
-def start_sumo_for_carla(args, env, sumo_files):
-    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients 2 > /dev/null 2>&1", shell=True)
+def start_sumo_for_carla(args, env, sumo_files, client_num):
+    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients {client_num} > /dev/null 2>&1", shell=True)
 
 
-def start_sumo_for_veins(args, env, sumo_files):
-    return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients 2 > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
+def start_sumo_for_veins(args, env, sumo_files, client_num):
+    return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
 
 
 def start_tracis_synchronization(args, env, sumo_files):
@@ -182,7 +182,7 @@ class Main:
                 p.wait()
 
             print("Starting SUMO-traci servers ...")
-            procs.append(start_sumo_for_carla(args, env, sumo_files))
+            procs.append(start_sumo_for_carla(args, env, sumo_files, 1))
             time.sleep(5)
 
             print("Starting synchronization processes ...")
@@ -244,8 +244,8 @@ class MainWithVeins(Main):
                 p.wait()
 
             print("Starting SUMO-traci servers ...")
-            procs.append(start_sumo_for_carla(args, env, sumo_files))
-            procs.append(start_sumo_for_veins(args, env, sumo_files))
+            procs.append(start_sumo_for_carla(args, env, sumo_files, 2))
+            procs.append(start_sumo_for_veins(args, env, sumo_files, 2))
             time.sleep(5)
 
             print("Starting synchronization processes ...")

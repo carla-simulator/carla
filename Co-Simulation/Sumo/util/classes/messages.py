@@ -128,16 +128,48 @@ class MessagesHandler:
 
         return received_data
 
-class CAM:
-    def __init__(self):
-        pass
 
+class Message:
+    def dict_format(self):
+        return vars(self)
+
+
+class CAM(Message):
+    def __init__(self, timestamp, ITS_PDU_Header={}, Basic_Container={}, HF_Container={}, LF_Container={}, Special_Vehicle_Container={}, option):
+        # Easy implementation of a Cooprative Perception Message (CAM).
+        # If you want to use detail information of CPM, you should include the information in CAM.
+        self.timestamp = timestamp
+        self.ITS_PDU_Header = ITS_PDU_Header
+        self.Basic_Container = Basic_Container
+        self.HF_Container = HF_Container
+        self.LF_Container = LF_Container
+        self.Special_Vehicle_Container = Special_Vehicle_Container
+
+        # For convenience, we add optional data like payload size
+        self.option = option
+        self.update_option()
+
+
+    def update_option(self):
+        """
+        We fix the CAM size to 196 Byte.
+        """
+
+        self.option["size"] = 190
+
+class CAMGenerateHandler:
+    def __init__(self, init_time, init_location, init_speed):
+        self.init_location = init_location
+        self.init_speed = speed
+
+    def is_ready(self, current_time, current_location, current_speed):
+        pass
 
 class CAMsHandler(MessagesHandler):
     pass
 
 
-class CPM:
+class CPM(Message):
     MAX_SIZE = 800
 
     def __init__(self, timestamp, ITS_PDU_Header={}, Management_Container={}, Station_Data_Container={}, Sensor_Information_Container=[], Perceived_Object_Container=[], option={}):
@@ -154,8 +186,6 @@ class CPM:
         self.option = option
         self.update_option()
 
-    def dict_format(self):
-        return vars(self)
 
     def perceived_objects(self):
         return [PerceivedObject(**po) for po in self.Perceived_Object_Container]
