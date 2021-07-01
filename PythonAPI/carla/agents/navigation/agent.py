@@ -58,19 +58,19 @@ class Agent(object):
 
         return control
 
-    def ignore_traffic_lights(self, active):
+    def ignore_traffic_lights(self, active=True):
         """
         (De)activates the checks for traffic lights
         """
         self._ignore_traffic_lights = active
 
-    def ignore_stop_signs(self, active):
+    def ignore_stop_signs(self, active=True):
         """
         (De)activates the checks for stop signs
         """
         self._ignore_stop_signs = active
 
-    def ignore_vehicles(self, active):
+    def ignore_vehicles(self, active=True):
         """
         (De)activates the checks for stop signs
         """

@@ -9,9 +9,51 @@ This file has several useful functions related to the AD Map library
 
 from __future__ import print_function
 
-import carla
+from math import floor
+import os
 import numpy as np
+import xml.etree.ElementTree as ET
+
+import carla
 import ad_map_access as ad
+
+def initialize_map(wmap):
+    """Initialize the AD map library and, creates the file needed to do so."""
+    lat_ref = 0.0
+    lon_ref = 0.0
+
+    opendrive_contents = wmap.to_opendrive()
+    xodr_name = 'RoutePlannerMap.xodr'
+    txt_name = 'RoutePlannerMap.txt'
+
+    # Save the opendrive data into a file
+    with open(xodr_name, 'w') as f:
+        f.write(opendrive_contents)
+
+    # Get geo reference
+    xml_tree = ET.parse(xodr_name)
+    for geo_elem in xml_tree.find('header').find('geoReference').text.split(' '):
+        if geo_elem.startswith('+lat_0'):
+            lat_ref = float(geo_elem.split('=')[-1])
+        elif geo_elem.startswith('+lon_0'):
+            lon_ref = float(geo_elem.split('=')[-1])
+
+    # Save the previous info
+    with open(txt_name, 'w') as f:
+        txt_content = "[ADMap]\n" \
+                        "map=" + xodr_name + "\n" \
+                        "[ENUReference]\n" \
+                        "default=" + str(lat_ref) + " " + str(lon_ref) + " 0.0"
+        f.write(txt_content)
+
+    # Intialize the map and remove created files
+    initialized = ad.map.access.init(txt_name)
+    if not initialized:
+        raise ValueError("Couldn't initialize the map")
+
+    for fname in [txt_name, xodr_name]:
+        if os.path.exists(fname):
+            os.remove(fname)
 
 def carla_loc_to_enu(carla_location):
     """Transform a CARLA location into an ENU point"""
@@ -24,6 +66,26 @@ def carla_loc_to_ecef(carla_location):
 def enu_to_carla_loc(enu_point):
     """Transform an ENU point into a CARLA location"""
     return carla.Location(float(enu_point.x), float(-enu_point.y), float(enu_point.z))
+
+def para_point_to_carla_waypoint_2(para_point, town_map, lane_type=carla.LaneType.Driving):
+    """Transform a para point into a CARLA waypoint"""
+    ad_lane_id = para_point.laneId
+    num_lane_id = float(str(para_point.laneId))
+
+    road_id = floor(num_lane_id / 10000)
+    remnant = num_lane_id - road_id * 10000
+    lane_segment_id = floor(remnant / 100)
+    remnant = remnant - lane_segment_id * 100
+    lane_id = floor(remnant - 50)
+
+    length = float(ad.map.lane.calcLength(ad_lane_id))
+    is_positive_lane = ad.map.lane.isLaneDirectionPositive(ad_lane_id)
+    if is_positive_lane and not lane_id < 0 or not is_positive_lane and lane_id < 0:
+        s = length * (1 - float(para_point.parametricOffset))
+    else:
+        s = length * float(para_point.parametricOffset)
+
+    return  town_map.get_waypoint_xodr(road_id, lane_id, s)
 
 def para_point_to_carla_waypoint(para_point, town_map, lane_type=carla.LaneType.Driving):
     """Transform a para point into a CARLA waypoint"""
@@ -56,7 +118,7 @@ def to_ad_paraPoint(location, distance=1, probability=0):
     distance = [float(mmap.matchedPointDistance) for mmap in match_results]
     return match_results[distance.index(min(distance))].lanePoint.paraPoint
 
-def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, max_distance=0.5, probability=0):
+def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, max_distance=1.6, probability=0):
     """
     Gets the shortest route between a starting and end waypoint. This transforms the given location
     to AD map paraPoints, and iterates through all permutations to return the shortest route.
@@ -172,27 +234,27 @@ def _get_route_length(route):
 
 def _get_route_waypoints(route, resolution, town_map):
     """
-    Given a route, transforms it into a list of [carla.Waypoint, RoadOption]
+    Given a route, transforms it into a list of [carla.Waypoint, RoadOption].
+    Take into account that at locations where multiple lanes overlap,
+    while the waypoints will be correctly placed, they might be part of a different lane.
 
     :param route (ad.map.route.FullRoute): AD map route instance created with RouteCreationMode Undefined.
         Other creation modes return mode than one lane, which would need a prefiltering.
     :param resolution (float): Distance between the waypoints that form the route.
     :param town_map (carla.Map): CARLA map instance where the route will be computed
     """
+    # TODO: use para_point_to_carla_waypoint_2, which directly transforms from paraPoint to waypoint
+    # to ensure all waypoints correspond to the correct lane
+
     wp_route = []
     for road_segment in route.roadSegments:
         for lane_segment in road_segment.drivableLaneSegments:
             lane_id = lane_segment.laneInterval.laneId
             param_list = _get_lane_interval_list(lane_segment.laneInterval, resolution)
-            for i in range(len(param_list)):
-                para_point = ad.map.point.createParaPoint(lane_id, ad.physics.ParametricValue(param_list[i]))
+            for param in param_list:
+                para_point = ad.map.point.createParaPoint(lane_id, ad.physics.ParametricValue(param))
                 carla_waypoint = para_point_to_carla_waypoint(para_point, town_map)
                 wp_route.append(carla_waypoint)
-                # if i == 0:
-                #     world.debug.draw_point(
-                #         carla_waypoint.transform.location, size=0.2, life_time=10000, color=carla.Color(255,0,0))
-                # world.debug.draw_point(
-                #     carla_waypoint.transform.location, size=0.1, life_time=10000, color=carla.Color(255,255,0))
 
     return wp_route
 

@@ -23,10 +23,9 @@ class RoadOption(Enum):
     LEFT = 1
     RIGHT = 2
     STRAIGHT = 3
-    HALFTURN = 4
-    LANEFOLLOW = 5
-    CHANGELANELEFT = 6
-    CHANGELANERIGHT = 7
+    LANEFOLLOW = 4
+    CHANGELANELEFT = 5
+    CHANGELANERIGHT = 6
 
 
 class LocalPlanner(object):
