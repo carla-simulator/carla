@@ -64,16 +64,13 @@ class BasicAgent(object):
             }
         )
 
-    def emergency_stop(self):
+    def add_emergency_stop(self, control):
         """
         Send an emergency stop command to the vehicle
         """
-        control = carla.VehicleControl()
-        control.steer = 0.0
         control.throttle = 0.0
         control.brake = self._max_brake
         control.hand_brake = False
-
         return control
 
     def set_target_speed(self, speed):
@@ -116,22 +113,22 @@ class BasicAgent(object):
         route_trace = self.trace_route(start_waypoint, end_waypoint)
         self._local_planner.set_global_plan(route_trace, clean_queue=clean_queue)
 
-        # for i, w in enumerate(route_trace):
-        #     wp = w[0].transform.location + carla.Location(z=0.1)
-        #     if w[1] == RoadOption.LEFT:  # Yellow
-        #         color = carla.Color(255, 255, 0)
-        #     elif w[1] == RoadOption.RIGHT:  # Cyan
-        #         color = carla.Color(0, 255, 255)
-        #     elif w[1] == RoadOption.CHANGELANELEFT:  # Orange
-        #         color = carla.Color(255, 64, 0)
-        #     elif w[1] == RoadOption.CHANGELANERIGHT:  # Dark Cyan
-        #         color = carla.Color(0, 64, 255)
-        #     elif w[1] == RoadOption.STRAIGHT:  # Gray
-        #         color = carla.Color(128, 128, 128)
-        #     else:  # LANEFOLLOW
-        #         color = carla.Color(0, 255, 0) # Green
-        #     self._world.debug.draw_point(wp, size=0.08, color=color, life_time=100)
-        #     self._world.debug.draw_string(wp, str(i), color=color, life_time=100)
+        for i, w in enumerate(route_trace):
+            wp = w[0].transform.location + carla.Location(z=0.1)
+            if w[1] == RoadOption.LEFT:  # Yellow
+                color = carla.Color(255, 255, 0)
+            elif w[1] == RoadOption.RIGHT:  # Cyan
+                color = carla.Color(0, 255, 255)
+            elif w[1] == RoadOption.CHANGELANELEFT:  # Orange
+                color = carla.Color(255, 64, 0)
+            elif w[1] == RoadOption.CHANGELANERIGHT:  # Dark Cyan
+                color = carla.Color(0, 64, 255)
+            elif w[1] == RoadOption.STRAIGHT:  # Gray
+                color = carla.Color(128, 128, 128)
+            else:  # LANEFOLLOW
+                color = carla.Color(0, 255, 0) # Green
+            self._world.debug.draw_point(wp, size=0.08, color=color, life_time=100)
+            self._world.debug.draw_string(wp, str(i), color=color, life_time=100)
 
     def set_global_plan(self, plan, stop_waypoint_creation=True, clean_queue=True):
         """
@@ -194,11 +191,11 @@ class BasicAgent(object):
             self._state = AgentState.BLOCKED_RED_LIGHT
             hazard_detected = True
 
+        control = self._local_planner.run_step(debug=debug)
         if hazard_detected:
-            control = self.emergency_stop()
+            control = self.add_emergency_stop(control)
         else:
             self._state = AgentState.NAVIGATING
-            control = self._local_planner.run_step(debug=debug)
 
         return control
 
@@ -283,7 +280,7 @@ class BasicAgent(object):
     def _vehicle_obstacle_detected(self, vehicle_list, max_distance=None):
         """
         :param vehicle_list: list of potential obstacle to check
-        :param max_distance: max distance to check for obstacles
+        :param max_distance: max freespace to check for obstacles
         :return: a tuple given by (bool_flag, vehicle), where
                  - bool_flag is True if there is a vehicle ahead blocking us
                    and False otherwise
@@ -295,43 +292,34 @@ class BasicAgent(object):
         if not max_distance:
             max_distance = self._base_vehicle_threshold
 
-        ego_vehicle_transform = self._vehicle.get_transform()
-        ego_vehicle_forward_vector = ego_vehicle_transform.get_forward_vector()
-        ego_vehicle_extent = self._vehicle.bounding_box.extent.x
-        ego_vehicle_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+        ego_transform = self._vehicle.get_transform()
+        ego_wpt = self._map.get_waypoint(self._vehicle.get_location())
 
         # Get the transform of the front of the ego
-        ego_vehicle_front_transform = ego_vehicle_transform
-        ego_vehicle_front_transform.location += carla.Location(
-            x=ego_vehicle_extent * ego_vehicle_forward_vector.x,
-            y=ego_vehicle_extent * ego_vehicle_forward_vector.y,
+        ego_forward_vector = ego_transform.get_forward_vector()
+        ego_extent = self._vehicle.bounding_box.extent.x
+        ego_front_transform = ego_transform
+        ego_front_transform.location += carla.Location(
+            x=ego_extent * ego_forward_vector.x,
+            y=ego_extent * ego_forward_vector.y,
         )
+
         for target_vehicle in vehicle_list:
-            # Do not account for the ego vehicle
-            if target_vehicle.id == self._vehicle.id:
-                continue
+            target_transform = target_vehicle.get_transform()
+            target_wpt = self._map.get_waypoint(target_transform.location)
+            if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id:
+                next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=3)[0]
+                if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id:
+                    continue
 
-            # If the object is not in our lane it's not an obstacle
-            target_vehicle_transform = target_vehicle.get_transform()
-            target_vehicle_forward_vector = target_vehicle_transform.get_forward_vector()
-            target_vehicle_extent = target_vehicle.bounding_box.extent.x
-            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
-            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
-                    target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
-                continue
-
-            # Get the transform of the back of the vehicle
-            target_vehicle_rear_transform = target_vehicle_transform
-            target_vehicle_rear_transform.location -= carla.Location(
-                x=target_vehicle_extent * target_vehicle_forward_vector.x,
-                y=target_vehicle_extent * target_vehicle_forward_vector.y,
+            target_forward_vector = target_transform.get_forward_vector()
+            target_extent = target_vehicle.bounding_box.extent.x
+            target_rear_transform = target_transform
+            target_rear_transform.location -= carla.Location(
+                x=target_extent * target_forward_vector.x,
+                y=target_extent * target_forward_vector.y,
             )
 
-            if is_within_distance(target_vehicle_rear_transform,
-                                  ego_vehicle_front_transform,
-                                  max_distance,
-                                  [0, 90]):
-
+            if is_within_distance(target_rear_transform, ego_front_transform, max_distance, [0, 90]):
                 return (True, target_vehicle)
-
         return (False, None)
