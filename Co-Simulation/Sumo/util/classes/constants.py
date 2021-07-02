@@ -1,6 +1,11 @@
 import math
 
 class Constants:
+    CAM_DELTA_T = 1     # sec
+    CAM_DELTA_S = 0.5   # m/s
+    CAM_DELTA_P = 4     # meter
+    CAM_DELTA_Y = 4     # degree
+
     CPM_DELTA_T = 1
     CPM_DELTA_S = 0.5
     CPM_DELTA_P = 4

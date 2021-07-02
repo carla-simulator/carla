@@ -53,6 +53,7 @@ sumo-1.7.0
 sumo-1.2.0
 *.deb
 *.fbx
+!/Co-Simulation/Sumo/data/road_runner/3lane/3lane.fbx
 *.obj
 /ImportStash/*
 !/ImportStash/.gitkeep

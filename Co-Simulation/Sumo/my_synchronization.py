@@ -70,6 +70,7 @@ from util.classes.constants import (
 )
 from util.classes.messages import (
     CAM,
+    CAMGenerateHandler,
     CAMsHandler,
     CPM,
     CPMsHandler,
@@ -126,18 +127,19 @@ class VehicleData:
 
     def tick(self, time, actor):
         al = actor.get_transform().location
+        yaw = actor.get_transform().rotation.yaw
 
         if len(self.data) <= 0:
-            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(0, 0)))
+            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(0, 0), yaw))
         else:
             dT = time - self.data[-1]["time"]
             dX = al.x - self.data[-1]["location"].x
             dY = al.y - self.data[-1]["location"].y
 
-            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(dX / dT, dY / dT)))
+            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(dX / dT, dY / dT), yaw))
 
-    def formatted_data(self, time, location, speed):
-        return {"time": time, "location": location, "speed": speed}
+    def formatted_data(self, time, location, speed, yaw):
+        return {"time": time, "location": location, "speed": speed, "yaw": yaw}
 
 
 class CAV:
@@ -157,6 +159,7 @@ class CAV:
         self.carla = carla_sim
         self.sumo = sumo_sim
 
+        # print(carla_actor_id)
         self.carla_actor = self.carla.get_actor(carla_actor_id)
         self.carla_actor_id = carla_actor_id
         self.sumo_actor_id = sumo_actor_id
@@ -171,6 +174,7 @@ class CAV:
         self.CPMs_handler = CPMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
 
         self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id] = VehicleData(self.sumo_elapsed_seconds(), self.carla_actor)
+        self.CAM_generate_handler = CAMGenerateHandler(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw())
         self.load_sensors()
 
     def attach_bp(self, bp, transform):
@@ -184,8 +188,16 @@ class CAV:
 
         return bp
 
+    def latest_vehicle_data(self):
+        return self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].latest()
+
     def load_sensors(self):
         pass
+
+    def location(self):
+        d = self.latest_vehicle_data()
+
+        return d["location"]
 
     def new_perceived_objects_with_pseudonym(self):
         new_perceived_objects = self.sensor_data_handler.perceived_objects(self.sumo_elapsed_seconds(), Constants.VALID_TIME_DELTA)
@@ -203,6 +215,11 @@ class CAV:
 
     def sensor_num(self, sensor_dist, target_rad):
         return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(CAV.VEHICLE_WIDTH)) + 1
+
+    def speed(self):
+        d = self.latest_vehicle_data()
+
+        return d["speed"]
 
     def sumo_elapsed_seconds(self):
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
@@ -225,6 +242,21 @@ class CAV:
                 self.Sensor_Information_Container(),
                 perceived_object_container
             ))
+
+        # ----- send CAM -----
+        print(f"sumo_id: {self.sumo_actor_id}")
+        if self.CAM_generate_handler.is_ready(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw()):
+            self.CAMs_handler.send(self.sumo_actor_id, self.CAM_generate_handler.generate(
+                self.sumo_elapsed_seconds(),
+                self.location(),
+                self.speed(),
+                self.yaw()
+            ))
+
+    def yaw(self):
+        d = self.latest_vehicle_data()
+
+        return d["yaw"]
 
     def new_CPM(self):
         pass
@@ -307,10 +339,8 @@ class CAVWithObstacleSensors(CAV):
                 self.sim_synchronization.carlaid2vehicle_data[data.other_actor.id].latest()["speed"]
             ))
         except KeyError as e:
-            if str(data.other_actor.id) == '0':
-                pass
-            else:
-                raise KeyError(e)
+            # Since the key is not in carlaid2vehicle_data, the object is not vehicle, so we ignore the key.
+            pass
 
 ##### End: My code. #####
 
@@ -413,11 +443,12 @@ class SimulationSynchronization(object):
 
                 carla_actor_id = self.carla.spawn_actor(carla_blueprint, carla_transform)
 
-                ##### Begin: My code #####
-                self.sumoid2cav[sumo_actor_id] = CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
-                ##### End: My code #####
 
                 if carla_actor_id != INVALID_ACTOR_ID:
+                    ##### Begin: My code #####
+                    self.sumoid2cav[sumo_actor_id] = CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+                    ##### End: My code #####
+
                     self.sumo2carla_ids[sumo_actor_id] = carla_actor_id
 
 

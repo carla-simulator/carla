@@ -167,6 +167,8 @@ class Main:
         self.env = env
         self.sumo_files = env["map_2_sumo_files"][args.carla_map_name]
 
+        remove_cache(args.data_dir)
+
     def run(self):
         procs = []
         args = self.args
@@ -223,7 +225,6 @@ class MainWithVeins(Main):
 
         # ----- copy sumo files into Veins directory -----
         print("Initializing ...")
-        remove_cache(args.data_dir)
         copy_local_file_to_vagrant(self.sumo_files["rou"], f"{env['in_vagrant']['sumo_files_name_in_veins']}.rou.xml", env['in_vagrant']['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
         copy_local_file_to_vagrant(self.sumo_files["net"], f"{env['in_vagrant']['sumo_files_name_in_veins']}.net.xml", env['in_vagrant']['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
         copy_local_file_to_vagrant(self.sumo_files["poly"], f"{env['in_vagrant']['sumo_files_name_in_veins']}.poly.xml", env['in_vagrant']['veins_ini_dir_in_vagrant'], args.veins_vagrant_path)
