@@ -249,6 +249,25 @@ def _get_route_waypoints(route, resolution, town_map):
     wp_route = []
     for road_segment in route.roadSegments:
         for lane_segment in road_segment.drivableLaneSegments:
+            # print(" ----------------- ")
+            # border = ad.map.route.getENUBorder(lane_segment.laneInterval)
+            # for point in border.left:
+            #     world.debug.draw_point(enu_to_carla_loc(point), life_time=100, size=0.2)
+            # for point in border.right:
+            #     world.debug.draw_point(enu_to_carla_loc(point), life_time=100, size=0.2)
+            # border_ = ad.map.lane.getLateralAlignmentEdge(border, ad.physics.ParametricValue(0.5))
+            # length = 0
+            # for i in range(0, len(border_)-1):
+            #     p1 = border_[i]
+            #     p2 = border_[i+1]
+            #     dist = sqrt(pow(p2.x - p1.x, 2) + pow(p2.y - p1.y, 2) + pow(p2.z - p1.z, 2))
+            #     print("Adding: {}".format(dist))
+            #     length += dist
+            #     world.debug.draw_point(enu_to_carla_loc(p1), life_time=100, size=0.2, color=carla.Color(0,0,0))
+            #     world.debug.draw_arrow(enu_to_carla_loc(p1), enu_to_carla_loc(p2), life_time=100, color=carla.Color(0,0,0))
+            # print("Summ Length: {}".format(length))
+            # print("Calc Length: {}".format(ad.map.lane.calcLength(lane_segment.laneInterval.laneId)))
+
             lane_id = lane_segment.laneInterval.laneId
             param_list = _get_lane_interval_list(lane_segment.laneInterval, resolution)
             for param in param_list:

@@ -9,10 +9,9 @@ This module provides GlobalRoutePlanner implementation.
 """
 import math
 import numpy as np
-import carla
 
 from agents.navigation.local_planner import RoadOption
-from agents.tools.global_route_planner_helper import trace_route, initialize_map
+from agents.tools.route_helper import trace_route, initialize_map
 import ad_map_access as ad
 
 class GlobalRoutePlanner(object):
@@ -25,7 +24,6 @@ class GlobalRoutePlanner(object):
         Constructor
         """
         self._previous_decision = RoadOption.VOID
-
         self._sampling_resolution = sampling_resolution
         self._wmap = wmap
         initialize_map(self._wmap)

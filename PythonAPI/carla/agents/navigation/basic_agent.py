@@ -11,10 +11,9 @@ waypoints and avoiding other vehicles. The agent also responds to traffic lights
 import carla
 from enum import Enum
 
-from agents.navigation.agent import Agent
 from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.tools.misc import get_speed
+from agents.tools.misc import get_speed, is_within_distance, get_trafficlight_trigger_location
 
 
 class AgentState(Enum):
@@ -25,19 +24,27 @@ class AgentState(Enum):
     BLOCKED_BY_VEHICLE = 2
     BLOCKED_RED_LIGHT = 3
 
-class BasicAgent(Agent):
+class BasicAgent(object):
     """
     BasicAgent implements an agent that navigates the scene.
     This agent respects traffic lights and other vehicles, but ignores stop signs.
     It has several functions available to specify the route that the agent must follow
     """
 
-    def __init__(self, vehicle, target_speed=20):
+    def __init__(self, vehicle, target_speed=20, debug=False):
         """
         :param vehicle: actor to apply to local planner logic onto
         :param target_speed: speed (in Km/h) at which the vehicle will move
         """
-        super(BasicAgent, self).__init__(vehicle)
+        self._vehicle = vehicle
+        self._world = self._vehicle.get_world()
+        self._map = self._world.get_map()
+        self._debug = debug
+
+        self._ignore_traffic_lights = False
+        self._ignore_stop_signs = False
+        self._ignore_vehicles = False
+        self._last_traffic_light = None
 
         self._state = AgentState.NAVIGATING
         self._target_speed = target_speed
@@ -125,7 +132,6 @@ class BasicAgent(Agent):
                 color = carla.Color(0, 255, 0) # Green
             self._world.debug.draw_point(wp, size=0.08, color=color, life_time=100)
 
-
     def set_global_plan(self, plan, stop_waypoint_creation=True, clean_queue=True):
         """
         Adds a specific plan to the agent.
@@ -200,3 +206,131 @@ class BasicAgent(Agent):
         Check whether the agent has reached its destination.
         """
         return self._local_planner.done()
+
+    def ignore_traffic_lights(self, active=True):
+        """
+        (De)activates the checks for traffic lights
+        """
+        self._ignore_traffic_lights = active
+
+    def ignore_stop_signs(self, active=True):
+        """
+        (De)activates the checks for stop signs
+        """
+        self._ignore_stop_signs = active
+
+    def ignore_vehicles(self, active=True):
+        """
+        (De)activates the checks for stop signs
+        """
+        self._ignore_vehicles = active
+
+    def _affected_by_traffic_light(self, lights_list, max_distance=None):
+        """
+        Method to check if there is a red light affecting us. This version of
+        the method is compatible with both European and US style traffic lights.
+
+        :param lights_list: list containing TrafficLight objects
+        :return: a tuple given by (bool_flag, traffic_light), where
+                 - bool_flag is True if there is a traffic light in RED
+                   affecting us and False otherwise
+                 - traffic_light is the object itself or None if there is no
+                   red traffic light affecting us
+        """
+        if self._ignore_traffic_lights:
+            return (False, None)
+
+        if not max_distance:
+            max_distance = self._base_tlight_threshold
+
+        if self._last_traffic_light:
+            if self._last_traffic_light.state != carla.TrafficLightState.Red:
+                self._last_traffic_light = None
+            else:
+                return (True, self._last_traffic_light)
+
+        ego_vehicle_location = self._vehicle.get_location()
+        ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
+
+        for traffic_light in lights_list:
+            object_location = get_trafficlight_trigger_location(traffic_light)
+            object_waypoint = self._map.get_waypoint(object_location)
+
+            if object_waypoint.road_id != ego_vehicle_waypoint.road_id:
+                continue
+
+            ve_dir = ego_vehicle_waypoint.transform.get_forward_vector()
+            wp_dir = object_waypoint.transform.get_forward_vector()
+            dot_ve_wp = ve_dir.x * wp_dir.x + ve_dir.y * wp_dir.y + ve_dir.z * wp_dir.z
+
+            if dot_ve_wp < 0:
+                continue
+
+            if traffic_light.state != carla.TrafficLightState.Red:
+                continue
+
+            if is_within_distance(object_waypoint.transform,
+                                  self._vehicle.get_transform(),
+                                  max_distance,
+                                  [0, 90]):
+
+                self._last_traffic_light = traffic_light
+                return (True, traffic_light)
+
+        return (False, None)
+
+    def _vehicle_obstacle_detected(self, vehicle_list, max_distance=None):
+        """
+        :param vehicle_list: list of potential obstacle to check
+        :param max_distance: max distance to check for obstacles
+        :return: a tuple given by (bool_flag, vehicle), where
+                 - bool_flag is True if there is a vehicle ahead blocking us
+                   and False otherwise
+                 - vehicle is the blocker object itself
+        """
+        if self._ignore_vehicles:
+            return (False, None)
+
+        if not max_distance:
+            max_distance = self._base_vehicle_threshold
+
+        ego_vehicle_transform = self._vehicle.get_transform()
+        ego_vehicle_forward_vector = ego_vehicle_transform.get_forward_vector()
+        ego_vehicle_extent = self._vehicle.bounding_box.extent.x
+        ego_vehicle_waypoint = self._map.get_waypoint(self._vehicle.get_location())
+
+        # Get the transform of the front of the ego
+        ego_vehicle_front_transform = ego_vehicle_transform
+        ego_vehicle_front_transform.location += carla.Location(
+            x=ego_vehicle_extent * ego_vehicle_forward_vector.x,
+            y=ego_vehicle_extent * ego_vehicle_forward_vector.y,
+        )
+        for target_vehicle in vehicle_list:
+            # Do not account for the ego vehicle
+            if target_vehicle.id == self._vehicle.id:
+                continue
+
+            # If the object is not in our lane it's not an obstacle
+            target_vehicle_transform = target_vehicle.get_transform()
+            target_vehicle_forward_vector = target_vehicle_transform.get_forward_vector()
+            target_vehicle_extent = target_vehicle.bounding_box.extent.x
+            target_vehicle_waypoint = self._map.get_waypoint(target_vehicle.get_location())
+            if target_vehicle_waypoint.road_id != ego_vehicle_waypoint.road_id or \
+                    target_vehicle_waypoint.lane_id != ego_vehicle_waypoint.lane_id:
+                continue
+
+            # Get the transform of the back of the vehicle
+            target_vehicle_rear_transform = target_vehicle_transform
+            target_vehicle_rear_transform.location -= carla.Location(
+                x=target_vehicle_extent * target_vehicle_forward_vector.x,
+                y=target_vehicle_extent * target_vehicle_forward_vector.y,
+            )
+
+            if is_within_distance(target_vehicle_rear_transform,
+                                  ego_vehicle_front_transform,
+                                  max_distance,
+                                  [0, 90]):
+
+                return (True, target_vehicle)
+
+        return (False, None)
