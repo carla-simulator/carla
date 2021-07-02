@@ -164,4 +164,8 @@ private:
 
   bool ReadyToRegisterObjects = false;
 
+  // We keep a global uuid to allow the load/unload layer methods to be called 
+  // in the same tick
+  int32 LatentInfoUUID = 0;
+
 };
