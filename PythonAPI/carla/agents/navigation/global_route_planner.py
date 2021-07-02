@@ -59,6 +59,8 @@ class GlobalRoutePlanner(object):
         LANEFOLLOW is always used.
 
         This has been tested for sampling resolutions up to ~7 meters, and might fail for higher values.
+        As lane changes are marked in pairs, it will fail for even number of consecutive lane changes
+        (as they have an odd amount of lane change waypoints)
 
         :param route (list of carla.Waypoint): list of waypoints representing the route
         """
@@ -98,7 +100,8 @@ class GlobalRoutePlanner(object):
                 route_with_options.append([route[j], road_option])
             entry_index = None
 
-        # Part 2: Add lane changes
+        # Part 2: Add lane changes. Use the route direction and not the waypoint as waypoints might not
+        # correspond to the correct lane
         lane_change_type = None
 
         for i in range(0, len(route_with_options)):
@@ -112,6 +115,14 @@ class GlobalRoutePlanner(object):
                 prev_direction = waypoint.transform.get_forward_vector()
                 np_prev_direction = np.array([prev_direction.x, prev_direction.y, prev_direction.z])
 
+            # Lane changes are marked at both lanes
+            if lane_change_type:
+                route_with_lane_changes.append([waypoint, lane_change_type])
+                prev_direction = waypoint.transform.get_forward_vector()
+                np_prev_direction = np.array([prev_direction.x, prev_direction.y, prev_direction.z])
+                lane_change_type = None
+                continue
+
             # Check the dot product between the two consecutive waypoint
             route_direction = route_with_options[i+1][0].transform.location - waypoint.transform.location
             np_route_direction = np.array([route_direction.x, route_direction.y, route_direction.z])
@@ -123,21 +134,11 @@ class GlobalRoutePlanner(object):
                 dot = 1
 
             if dot < math.cos(math.radians(45)):
-                if lane_change_type:
-                    # Last lane change waypoint
-                    new_option = lane_change_type
-                    lane_change_type = None
-                else:
-                    # First lane change waypoint
-                    cross = np.cross(np_prev_direction, np_route_direction)
-                    lane_change_type = RoadOption.CHANGELANERIGHT if cross[2] > 0 else RoadOption.CHANGELANELEFT
-                    new_option = lane_change_type
-
+                cross = np.cross(np_prev_direction, np_route_direction)
+                lane_change_type = RoadOption.CHANGELANERIGHT if cross[2] > 0 else RoadOption.CHANGELANELEFT
+                new_option = lane_change_type
             else:
-                if lane_change_type:
-                    new_option = lane_change_type
-                else:
-                    new_option = option
+                new_option = option
 
             route_with_lane_changes.append([waypoint, new_option])
             np_prev_direction = np_route_direction
