@@ -150,7 +150,7 @@ bool UActorDispatcher::DestroyActor(FCarlaActor::IdType ActorId)
     }
   }
 
-  Registry.Deregister(ActorId, View->IsDormant());
+  Registry.Deregister(ActorId);
 
   return true;
 }
@@ -163,7 +163,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
   if (View)
   {
     // TODO: support external actor destruction
-    // Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
+    Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
   }
   return View;
 }
@@ -176,4 +176,16 @@ void UActorDispatcher::PutActorToSleep(FCarlaActor::IdType Id, UCarlaEpisode* Ca
 void UActorDispatcher::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode)
 {
   Registry.WakeActorUp(Id, CarlaEpisode);
+}
+
+void UActorDispatcher::OnActorDestroyed(AActor *Actor)
+{
+  FCarlaActor* CarlaActor = Registry.FindCarlaActor(Actor);
+  if (CarlaActor)
+  {
+    if (CarlaActor->IsActive())
+    {
+      Registry.Deregister(CarlaActor->GetActorId());
+    }
+  }
 }
