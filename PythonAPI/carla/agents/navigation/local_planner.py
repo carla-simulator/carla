@@ -308,13 +308,13 @@ def _retrieve_options(list_waypoints, current_waypoint):
         # the beggining of an intersection, therefore the
         # variation in angle is small
         next_next_waypoint = next_waypoint.next(3.0)[0]
-        link = compute_connection(current_waypoint, next_next_waypoint)
+        link = _compute_connection(current_waypoint, next_next_waypoint)
         options.append(link)
 
     return options
 
 
-def compute_connection(current_waypoint, next_waypoint, threshold=35):
+def _compute_connection(current_waypoint, next_waypoint, threshold=35):
     """
     Compute the type of topological connection between an active waypoint (current_waypoint) and a target waypoint
     (next_waypoint).

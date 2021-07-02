@@ -33,7 +33,9 @@ class GlobalRoutePlanner(object):
         This method traces a route between a starting and ending point.
         IF 'with_options' is True (deafult behavior), returns a list of [carla.Waypoint, RoadOption],
         being RoadOption a high level represnetation of what the direction of the route.
-        If 'with_options' is False, the road options are computed, returning a list of carla.Waypoint
+        If 'with_options' is False, the road options are computed, returning a list of carla.Waypoint.
+        This might be interseting, for example, when computing a route in chunks, getting all the waypoint
+        first and then adding the options
 
         :param origin (carla.Waypoint): starting point of the route
         :param destination (carla.Waypoint): ending point of the route
@@ -120,7 +122,7 @@ class GlobalRoutePlanner(object):
             else:
                 dot = 1
 
-            if 0 < dot < math.cos(math.radians(45)):
+            if dot < math.cos(math.radians(45)):
                 if lane_change_type:
                     # Last lane change waypoint
                     new_option = lane_change_type
