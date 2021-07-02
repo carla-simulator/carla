@@ -143,6 +143,11 @@ def main():
                 settings.fixed_delta_seconds = 0.05
             else:
                 synchronous_master = False
+        else:
+            print("You are currently in asynchronous mode. If this is a traffic simulation, \
+            you could experience some issues. If it's not working correctly, switch to synchronous \
+            mode by using traffic_manager.set_synchronous_mode(True)")
+
         if args.no_rendering:
             settings.no_rendering_mode = True
         world.apply_settings(settings)

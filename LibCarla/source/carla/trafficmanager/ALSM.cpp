@@ -230,6 +230,9 @@ void ALSM::UpdateData(const bool hybrid_physics_mode,
     if (hero_actors.find(actor_id) == hero_actors.end()) {
       vehicle->SetSimulatePhysics(enable_physics);
       has_physics_enabled[actor_id] = enable_physics;
+      if (enable_physics == true && simulation_state.ContainsActor(actor_id)) {
+        vehicle->SetTargetVelocity(simulation_state.GetVelocity(actor_id));
+      }
     }
   }
 

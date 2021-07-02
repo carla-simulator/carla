@@ -129,7 +129,7 @@ void TrafficManagerLocal::Run() {
 
     bool synchronous_mode = parameters.GetSynchronousMode();
     bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
-    parameters.SetMaxBoundaries(10.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
+    parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
