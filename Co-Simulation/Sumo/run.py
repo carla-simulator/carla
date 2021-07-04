@@ -94,11 +94,11 @@ def start_carla_veins_data_server(args, env, sumo_files):
 
 
 def start_sumo_for_carla(args, env, sumo_files, client_num):
-    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients {client_num} > /dev/null 2>&1", shell=True)
+    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1", shell=True)
 
 
 def start_sumo_for_veins(args, env, sumo_files, client_num):
-    return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
+    return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
 
 
 def start_tracis_synchronization(args, env, sumo_files):
@@ -166,6 +166,7 @@ class Main:
         self.args = args
         self.env = env
         self.sumo_files = env["map_2_sumo_files"][args.carla_map_name]
+        self.save_dir_name = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
         remove_cache(args.data_dir)
 
@@ -203,19 +204,19 @@ class Main:
             logging.error(e)
 
         finally:
-            # switch on the calra rendering
-            switch_carla_rendering(args, env, 1)
+            self.finally_proccess(args, env, procs)
 
-            # save veins result
-            save_dir_name = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    def finally_proccess(self, args, env, procs):
+        # save data if the simulation is statis.
+        if bool(args.is_dynamic_simulation):
+            pass
+        else:
+            Popen(f"mkdir {args.data_dir}/../{self.save_dir_name}", shell=True).wait()
+            Popen(f"cp -rf {args.data_dir}/* {args.data_dir}/../{self.save_dir_name}", shell=True).wait()
 
-            if bool(args.is_dynamic_simulation):
-                Popen(f"vagrant ssh -c \"mkdir {args.veins_result_aggrigation_dir}/{save_dir_name} \"", cwd=args.veins_vagrant_path, shell=True).wait()
-                Popen(f"vagrant ssh -c \"cp -f {args.result_file_path_in_veins}/* {args.veins_result_aggrigation_dir}/{save_dir_name}/ \"", cwd=args.veins_vagrant_path, shell=True).wait()
-
-            kill_processes(procs)
-
-
+        # switch on the calra rendering
+        switch_carla_rendering(args, env, 1)
+        kill_processes(procs)
 
 
 class MainWithVeins(Main):
@@ -267,14 +268,14 @@ class MainWithVeins(Main):
             logging.error(e)
 
         finally:
-            # switch on the calra rendering
-            switch_carla_rendering(args, env, 1)
+            self.finally_proccess(args, env, procs)
 
-            # save veins result
-            save_dir_name = str(datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
-            Popen(f"vagrant ssh -c \"mkdir {args.veins_result_aggrigation_dir}/{save_dir_name} \"", cwd=args.veins_vagrant_path, shell=True).wait()
-            Popen(f"vagrant ssh -c \"cp -f {args.result_file_path_in_veins}/* {args.veins_result_aggrigation_dir}/{save_dir_name}/ \"", cwd=args.veins_vagrant_path, shell=True).wait()
-            kill_processes(procs)
+    def finally_proccess(self, args, env, procs):
+        # save veins result
+        Popen(f"vagrant ssh -c \"mkdir {args.veins_result_aggrigation_dir}/{self.save_dir_name} \"", cwd=args.veins_vagrant_path, shell=True).wait()
+        Popen(f"vagrant ssh -c \"cp -f {args.result_file_path_in_veins}/* {args.veins_result_aggrigation_dir}/{self.save_dir_name}/ \"", cwd=args.veins_vagrant_path, shell=True).wait()
+
+        super().finally_proccess(args, env, procs)
 
 
 # ----- main -----
@@ -302,7 +303,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--data_server_host', default="localhost")
     parser.add_argument('--data_server_port', default=9998)
-    parser.add_argument('--data_dir', default='./../Veins/carla-veins-data/')
+    parser.add_argument('--data_dir', default=(env['carla_veins_dynamic_data_dir'] if bool(env['is_dynamic_simulation']) else env['carla_veins_static_data_dir']))
 
 
     parser.add_argument('--is_carla_change_map', type=int, default=env["is_carla_change_map"], choices=[0, 1])

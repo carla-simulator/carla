@@ -4,7 +4,6 @@
     <input>
         <net-file value="map.net.xml"/>
         <route-files value="map.trip.xml"/>
-        <!-- <additional-files value="map.poly.xml"/> -->
     </input>
 
     <processing>

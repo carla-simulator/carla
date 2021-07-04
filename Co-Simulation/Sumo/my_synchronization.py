@@ -244,7 +244,7 @@ class CAV:
             ))
 
         # ----- send CAM -----
-        print(f"sumo_id: {self.sumo_actor_id}")
+        # print(f"sumo_id: {self.sumo_actor_id}")
         if self.CAM_generate_handler.is_ready(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw()):
             self.CAMs_handler.send(self.sumo_actor_id, self.CAM_generate_handler.generate(
                 self.sumo_elapsed_seconds(),

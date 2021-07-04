@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- generated on 2021-07-01 17:57:40.115803 by randomTrips.py UNKNOWN
+<!-- generated on 2021-07-03 14:14:11.067233 by randomTrips.py UNKNOWN
   options: <doubleminus>allow-fringe -n map.net.xml -o map.trip.xml
 -->
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">

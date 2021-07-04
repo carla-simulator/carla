@@ -179,7 +179,7 @@ class CAMGenerateHandler:
         self.init_speed = current_speed
         self.init_yaw = current_yaw
 
-        return CAM(timestamp)
+        return CAM(timestamp, self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data())
 
     def is_ready(self, current_time, current_location, current_speed, current_yaw):
         delta_t, delta_s, delta_p, delta_y = self.__get_delta(current_time, current_location, current_speed, current_yaw)
@@ -200,9 +200,13 @@ class CAMGenerateHandler:
         delta_p_y = current_location.y - self.init_location.y
         delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
 
-        print(f"{current_time}, {self.init_time}, {vars(current_location)}, {vars(self.init_location)}, {vars(current_speed)}, {vars(self.init_speed)}, {current_yaw}, {self.init_yaw}")
+        # print(f"{current_time}, {self.init_time}, {vars(current_location)}, {vars(self.init_location)}, {vars(current_speed)}, {vars(self.init_speed)}, {current_yaw}, {self.init_yaw}")
         # print(f"delta_t: {delta_t}, delta_s: {delta_s}, delta_p: {delta_p}")
         return delta_t, delta_s, delta_p, delta_y
+
+
+    def __tmp_data(self):
+        return {"tmp": "tmp"}
 
 
 class CAMsHandler(MessagesHandler):
@@ -216,7 +220,7 @@ class CAMsHandler(MessagesHandler):
         # ----- file base -----
         data = super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
         dict_data = [json.loads(d) for d in data]
-        self.received_messages = self.received_messages + [CAM(**d) for d in dict_data]
+        self.received_messages = self.received_messages + [CAM(**d) for d in dict_data if d["option"]["type"] == "CAM"]
 
     def send(self, sumo_id, cam):
         # ----- socket base -----
@@ -228,6 +232,7 @@ class CAMsHandler(MessagesHandler):
         # ----- file base -----
         self.reserved_messages = self.reserved_messages + [cam]
         super().send(self.sensor_data_file_path(sumo_id), self.sensor_lock_file_path(sumo_id), json.dumps(cam.dict_format()))
+
 
 
 class CPM(Message):
@@ -275,7 +280,7 @@ class CPMsHandler(MessagesHandler):
         # ----- file base -----
         data = super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
         dict_data = [json.loads(d) for d in data]
-        self.received_messages = self.received_messages + [CPM(**d) for d in dict_data]
+        self.received_messages = self.received_messages + [CPM(**d) for d in dict_data if d["option"]["type"] == "CPM"]
 
     def send(self, sumo_id, cpm):
         # ----- socket base -----
