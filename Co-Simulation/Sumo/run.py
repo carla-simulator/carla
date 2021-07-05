@@ -280,7 +280,8 @@ class MainWithVeins(Main):
 
 # ----- main -----
 if __name__ == '__main__':
-    env = data_from_json("./env.json")
+    # env = data_from_json("./env.json")
+    env = data_from_json("./env_for_veins.json")
     maps = list(env["map_2_sumo_files"].keys())
 
     # ----- get args -----
@@ -298,7 +299,7 @@ if __name__ == '__main__':
     parser.add_argument('--carla_unrealengine_port', default=2000)
     parser.add_argument('--carla_sumo_port', default=env["carla_sumo_port"])
 
-    parser.add_argument('--veins_vagrant_path', default="./../Veins")
+    parser.add_argument('--veins_vagrant_path', default=env["veins_vagrant_path"])
     parser.add_argument('--veins_sumo_port', default=env["veins_sumo_port"])
 
     parser.add_argument('--data_server_host', default="localhost")

@@ -179,7 +179,7 @@ class CAMGenerateHandler:
         self.init_speed = current_speed
         self.init_yaw = current_yaw
 
-        return CAM(timestamp, self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data())
+        return CAM(timestamp, self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data())
 
     def is_ready(self, current_time, current_location, current_speed, current_yaw):
         delta_t, delta_s, delta_p, delta_y = self.__get_delta(current_time, current_location, current_speed, current_yaw)

@@ -1,2 +1,6 @@
-Veins/carla-veins-data/
+Veins/carla-veins-data/*.json
+Veins/carla-veins-data/dynamic/*
+!Veins/carla-veins-data/dynamic/.gitkeep
+Veins/carla-veins-data/static/*
+!Veins/carla-veins-data/static/.gitkeep
 Sumo/log/
