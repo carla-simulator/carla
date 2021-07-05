@@ -123,9 +123,10 @@ Here is a list of options available for visualization. Additional elements may s
 	*   `/stop_sign` — Show the map's stop signs in the visualization window.  
 
 
-Try to spawn some actors. These will be automatically updated in the visualization window.  
+Try to spawn some actors. These will be automatically updated in the visualization window.
 ```sh
 cd PythonAPI/examples
+# Spawns actors in a synchronous mode simulation
 python3 generate_traffic.py -n 10 -w 5
 ```
 
