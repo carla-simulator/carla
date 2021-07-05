@@ -265,7 +265,6 @@ class LocalPlanner(object):
 
         return control
 
-
     def get_incoming_waypoint_and_direction(self, steps=3):
         """
         Returns direction and waypoint at a distance ahead defined by the user.
@@ -281,7 +280,6 @@ class LocalPlanner(object):
                 return wpt, direction
             except IndexError as i:
                 return None, RoadOption.VOID
-
 
     def done(self):
         """

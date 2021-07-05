@@ -118,33 +118,46 @@ def to_ad_paraPoint(location, distance=1, probability=0):
     distance = [float(mmap.matchedPointDistance) for mmap in match_results]
     return match_results[distance.index(min(distance))].lanePoint.paraPoint
 
-def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, max_distance=1.6, probability=0):
+def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, match_dist=0.4, max_match_dist=10):
     """
     Gets the shortest route between a starting and end waypoint. This transforms the given location
-    to AD map paraPoints, and iterates through all permutations to return the shortest route.
-    This is useful to ensure that the correct route is chosen when starting / ending at intersections.
-
+    to AD map paraPoints, and iterates through all permutations to return the shortest route to ensure
+    that the correct route is chosen when starting / ending at intersections.
     Then, the route is transformed back to a list of [carla.Waypoint, RoadOption]
+
+    Due to some bugs at the altitude parsing, the matching distance isn't just one value,
+    but keeps increasing up to a max number, in order to increasing the probabilities of finding a match.
 
     :param start_waypoint (carla.Waypoint): Starting waypoint of the route
     :param end_waypoint (carla.Waypoint): Ending waypoint of the route
     :param town_map (carla.Map): CARLA map instance where the route will be computed
     :param sample_resolution (float): Distance between the waypoints that form the route
-    :param max_distance (float): Max distance between the given location and the matched AD map para points.
+    :param match_dist (float): Max distance between the given location and the matched AD map para points.
         If this value is too large, the matching might result in waypoints on different lanes.
+    :param max_match_dist (float): In case of failed match, the previous input keeps increasing up to this number.
     """
     wp_route = []
     start_location = start_waypoint.transform.location
     end_location = end_waypoint.transform.location
 
-    # Get starting point matches
-    start_matches = _waypoint_matches(start_waypoint, town_map, max_distance, probability)
+    # Get starting point matches. Due to errors in altitude parsing, iterate increasing the matching distance
+    added_dist = 0
+    start_matches = None
+    while not start_matches and added_dist < max_match_dist:
+        start_matches = _waypoint_matches(start_waypoint, town_map, match_dist + added_dist, 0)
+        added_dist += 0.2
+
     if not start_matches:
         print("WARNING: Couldn't find a paraPoint for location '{}'.".format(start_location))
         return wp_route
 
-    # Get ending point matches
-    end_matches = _waypoint_matches(end_waypoint, town_map, max_distance, probability)
+    # Get ending point matches. Due to errors in altitude parsing, iterate increasing the matching distance
+    added_dist = 0
+    end_matches = None
+    while not end_matches and added_dist < max_match_dist:
+        end_matches = _waypoint_matches(end_waypoint, town_map, match_dist + added_dist, 0)
+        added_dist += 0.2
+
     if not end_matches:
         print("WARNING: Couldn't find a paraPoint for location '{}'.".format(end_location))
         return wp_route

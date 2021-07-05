@@ -49,7 +49,7 @@ class BasicAgent(object):
         self._state = AgentState.NAVIGATING
         self._target_speed = target_speed
         self._sampling_resolution = 2.0
-        self._grp = None
+        self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
 
         self._base_tlight_threshold = 5.0  # meters
         self._base_vehicle_threshold = 5.0  # meters
@@ -90,6 +90,12 @@ class BasicAgent(object):
         Get method for protected member local planner
         """
         return self._local_planner
+
+    def get_global_planner(self):
+        """
+        Get method for protected member local planner
+        """
+        return self._global_planner
 
     def set_destination(self, end_location, start_location=None):
         """
@@ -152,9 +158,7 @@ class BasicAgent(object):
             :param start_waypoint: initial position
             :param end_waypoint: final position
         """
-        if self._grp is None:
-            self._grp = GlobalRoutePlanner(self._map, self._sampling_resolution)
-        route = self._grp.trace_route(start_waypoint, end_waypoint)
+        route = self._global_planner.trace_route(start_waypoint, end_waypoint)
         return route
 
     def run_step(self, debug=False):
