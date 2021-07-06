@@ -207,6 +207,8 @@ class TestVehicleFriction(SyncSmokeTest):
         print("TestVehicleFriction.test_vehicle_zero_friction")
 
         self.client.load_world("Town05_Opt", False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         for bp_veh in bp_vehicles:
@@ -273,6 +275,8 @@ class TestVehicleFriction(SyncSmokeTest):
         print("TestVehicleFriction.test_vehicle_friction_volume")
 
         self.client.load_world("Town05_Opt", False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
@@ -386,6 +390,8 @@ class TestVehicleFriction(SyncSmokeTest):
         print("TestVehicleFriction.test_vehicle_friction_values")
 
         self.client.load_world("Town05_Opt", False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
 
@@ -468,6 +474,8 @@ class TestVehicleTireConfig(SyncSmokeTest):
         print("TestVehicleTireConfig.test_vehicle_wheel_collision")
 
         self.client.load_world("Town05_Opt", False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
@@ -526,6 +534,8 @@ class TestVehicleTireConfig(SyncSmokeTest):
         print("TestVehicleTireConfig.test_vehicle_tire_long_stiff")
 
         self.client.load_world("Town05_Opt", False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]

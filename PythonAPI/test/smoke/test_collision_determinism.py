@@ -82,6 +82,8 @@ class Scenario(object):
         self.client.reload_world()
         if settings is not None:
             self.world.apply_settings(settings)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
     def reset_spectator(self, spectator_tr):
         spectator = self.world.get_spectator()
@@ -416,6 +418,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=TwoCarsHighSpeedCollision(self.client, self.world, True), output_path=output_path)
@@ -440,6 +444,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=ThreeCarsSlowSpeedCollision(self.client, self.world, True), output_path=output_path)
@@ -464,6 +470,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarBikeCollision(self.client, self.world, True), output_path=output_path)
@@ -488,6 +496,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarWalkerCollision(self.client, self.world, True), output_path=output_path)
@@ -500,4 +510,3 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Remove all the output files
         shutil.rmtree(output_path)
-
