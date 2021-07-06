@@ -77,7 +77,7 @@ namespace client {
   };
 
     #ifdef _WIN32
-      std::string FileTransfer::_filesBaseFolder = std::string(getenv("USER")) + "/carlaCache/";
+      std::string FileTransfer::_filesBaseFolder = std::string(getenv("USERPROFILE")) + "/carlaCache/";
     #else
       std::string FileTransfer::_filesBaseFolder = std::string(getenv("HOME")) + "/carlaCache/";
     #endif
