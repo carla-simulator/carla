@@ -12,20 +12,32 @@
 
 FString UOpenDrive::GetXODR(const UWorld *World)
 {
-  const auto mapName = World->GetMapName();
-  const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(World)->GetMapPath());
-  const auto folderDir = mapDir + "/OpenDrive/";
-  const auto fileName = mapDir.EndsWith(mapName) ? "*" : mapName;
+  auto MapName = World->GetMapName();
+
+  // When playing in editor the map name gets an extra prefix, here we
+  // remove it.
+  #if WITH_EDITOR
+  {
+    FString CorrectedMapName = MapName;
+    constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
+    CorrectedMapName.RemoveFromStart(PIEPrefix);
+    MapName = CorrectedMapName;
+  }
+  #endif // WITH_EDITOR
+
+  const auto MapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(World)->GetMapPath());
+  const auto FolderDir = MapDir + "/OpenDrive/";
+  const auto FileName = MapDir.EndsWith(MapName) ? "*" : MapName;
 
   // Find all the xodr and bin files from the map
   TArray<FString> Files;
-  IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".xodr"), true, false, false);
+  IFileManager::Get().FindFilesRecursive(Files, *FolderDir, *FString(FileName + ".xodr"), true, false, false);
 
   FString Content;
 
   if (!Files.Num())
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *mapName);
+    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *MapName);
   }
   else if (FFileHelper::LoadFileToString(Content, *Files[0]))
   {
