@@ -489,11 +489,17 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
 
 void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
 
-  check((uint8)WheelLocation >= 0)
-  check((uint8)WheelLocation < 4)
-  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
-  check(VehicleAnim != nullptr)
-  VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
+  if (bPhysicsEnabled == false) {
+    check((uint8)WheelLocation >= 0)
+    check((uint8)WheelLocation < 4)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
+  }
+  else {
+
+    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+  }
 }
 
 float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
@@ -502,7 +508,16 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   check((uint8)WheelLocation < 4)
   UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
   check(VehicleAnim != nullptr)
-  return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true) 
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
+  }
+  else 
+  {
+    return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
+  }
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
@@ -523,11 +538,20 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   RootComponent->SetSimulatePhysics(enabled);
   RootComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();
-  if(enabled)
+  if (enabled) {
+
     Vehicle4W->RecreatePhysicsState();
-  else
+    VehicleAnim->ResetWheelCustomRotations();
+  }
+  else {
+
     Vehicle4W->DestroyPhysicsState();
+  }
+
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockWrite();
 
   bPhysicsEnabled = enabled;
