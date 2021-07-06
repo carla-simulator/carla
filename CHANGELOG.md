@@ -18,10 +18,14 @@
     - Supported JSON vehicle definition
     - Unsupported collision dynamics
   * Added performance benchmarking section to documentation
+  * Added API functions to traffic light actor `get_effect_waypoints()`, `get_light_boxes()` and `get_opendrive_id()`
+  * Added API functions to world `get_traffic_lights_from_waypoint()` and `get_traffic_lights_in_junction`
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Extended make import process for applying road painter materials (carla art tool)
   * Added creation of custom JSON file for applying decals to imported roads
+  * Added ApplyVehiclePhysicsControl to commands
+  * Added flush in the sublevel loading to increase carla's determinism in Opt maps
   * Fix bug in carla.Transform.get_up_vector()
   * Fix bug in lidar channel point count
   * Fix imu: some weird cases were given nan values

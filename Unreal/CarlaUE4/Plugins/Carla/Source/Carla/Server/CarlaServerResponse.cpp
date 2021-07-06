@@ -34,6 +34,8 @@ FString GetStringError(ECarlaServerResponse Response)
       return "CarSim plugin is not enabled";
     case ECarlaServerResponse::NotATrafficLight:
       return "Actor is not a traffic light";
+    case ECarlaServerResponse::FunctionNotAvailiableWhenDormant:
+      return "Function not availiable when the actor is dormant";
   }
   return "unknown error";
 }
