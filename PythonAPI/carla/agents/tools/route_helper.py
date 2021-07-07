@@ -118,7 +118,7 @@ def to_ad_paraPoint(location, distance=1, probability=0):
     distance = [float(mmap.matchedPointDistance) for mmap in match_results]
     return match_results[distance.index(min(distance))].lanePoint.paraPoint
 
-def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, match_dist=0.4, max_match_dist=10):
+def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, match_dist=1, max_match_dist=10):
     """
     Gets the shortest route between a starting and end waypoint. This transforms the given location
     to AD map paraPoints, and iterates through all permutations to return the shortest route to ensure
@@ -144,7 +144,7 @@ def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, mat
     added_dist = 0
     start_matches = None
     while not start_matches and added_dist < max_match_dist:
-        start_matches = _waypoint_matches(start_waypoint, town_map, match_dist + added_dist, 0)
+        start_matches = _waypoint_matches(start_waypoint, town_map, match_dist + added_dist)
         added_dist += 0.2
 
     if not start_matches:
@@ -155,7 +155,7 @@ def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, mat
     added_dist = 0
     end_matches = None
     while not end_matches and added_dist < max_match_dist:
-        end_matches = _waypoint_matches(end_waypoint, town_map, match_dist + added_dist, 0)
+        end_matches = _waypoint_matches(end_waypoint, town_map, match_dist + added_dist)
         added_dist += 0.2
 
     if not end_matches:
