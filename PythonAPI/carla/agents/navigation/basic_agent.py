@@ -54,7 +54,7 @@ class BasicAgent(object):
         self._base_tlight_threshold = 5.0  # meters
         self._base_vehicle_threshold = 5.0  # meters
         self._max_brake = 0.5
-        self._max_steering = 0.3
+        self._max_steering = 0.5
         self._local_planner = LocalPlanner(
             self._vehicle,
             opt_dict={
