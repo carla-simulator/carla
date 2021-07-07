@@ -523,13 +523,13 @@ settings.actor_active_distance = 2000
 world.apply_settings(settings)
 ```
 
-In the TM, dormant actors can be configured to continually respawn around the hero vehicle instead of remaining dormant on other parts of the map. This option can be configured using the `set_respawn_dormant_vehicles` method in the Python API. Vehicles will be respawned within a user-definable distance of the hero vehicle. The upper and lower boundaries of the respawnable distance can be set using the `set_boundaries_respawn_dormant_vehicles` method. Note that the upper distance will not be bigger than the tile streaming distance of the large map.
+In the TM, dormant actors can be configured to continually respawn around the hero vehicle instead of remaining dormant on other parts of the map. This option can be configured using the `set_respawn_dormant_vehicles` method in the Python API. Vehicles will be respawned within a user-definable distance of the hero vehicle. The upper and lower boundaries of the respawnable distance can be set using the `set_boundaries_respawn_dormant_vehicles` method. Note that the upper distance will not be bigger than the tile streaming distance of the large map and the minimum lower distance is 20m.
 
-To enable respawning of dormant vehicles within 15 and 700 meters of the hero vehicle:
+To enable respawning of dormant vehicles within 25 and 700 meters of the hero vehicle:
 
 ```py
 my_tm.set_respawn_dormant_vehicles(True)
-my_tm.set_boundaries_respawn_dormant_vehicles(15,700)
+my_tm.set_boundaries_respawn_dormant_vehicles(25,700)
 ```
 
 If collisions prevent a dormant actor from being respawned, the TM will retry on the next simulation step.
