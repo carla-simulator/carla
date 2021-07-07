@@ -150,7 +150,7 @@ AActor* FTrafficSignData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActor
   FActorSpawnParameters SpawnParams;
   SpawnParams.SpawnCollisionHandlingOverride =
       ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-  return CarlaEpisode->GetWorld()->SpawnActor<ATrafficLightBase>(
+  return CarlaEpisode->GetWorld()->SpawnActor<ATrafficSignBase>(
         Model,
         SpawnTransform,
         SpawnParams);
