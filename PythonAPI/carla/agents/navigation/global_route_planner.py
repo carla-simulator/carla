@@ -12,7 +12,6 @@ import numpy as np
 
 from agents.navigation.local_planner import RoadOption
 from agents.tools.route_helper import trace_route, initialize_map
-import ad_map_access as ad
 
 class GlobalRoutePlanner(object):
     """
