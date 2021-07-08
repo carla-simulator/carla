@@ -234,13 +234,14 @@ namespace client {
   }
 
   std::vector<SharedPtr<Landmark>> Waypoint::GetLandmarksOfTypeInDistance(
-        double distance, std::string filter_type, bool stop_at_junction) const {
+        double distance, std::vector<std::string> filter_type, bool stop_at_junction) const {
     std::vector<SharedPtr<Landmark>> result;
     std::unordered_set<const road::element::RoadInfoSignal*> added_signals; // check for repeated signals
     auto signals = _parent->GetMap().GetSignalsInDistance(
         _waypoint, distance, stop_at_junction);
-    for(auto &signal_data : signals){
-      if(signal_data.signal->GetSignal()->GetType() == filter_type) {
+    for(auto &signal_data : signals) {
+      std::string signal = signal_data.signal->GetSignal()->GetType();
+      if(std::find(filter_type.begin(), filter_type.end(), signal) != filter_type.end()) {
         if(added_signals.count(signal_data.signal) > 0) {
           continue;
         }

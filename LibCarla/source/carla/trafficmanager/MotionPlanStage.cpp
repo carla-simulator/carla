@@ -1,4 +1,6 @@
 
+#include "carla/client/TrafficSign.h"
+
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/PIDController.h"
 
@@ -117,7 +119,43 @@ void MotionPlanStage::Update(const unsigned long index) {
 
     // Target velocity for vehicle.
     const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
+    // const std::vector<std::string> speed_limit_types = {"274"};
+    // auto waypoint = waypoint_buffer.at(0)->GetWaypoint();
+    // auto speed_limits = waypoint->GetLandmarksOfTypeInDistance(30.0, speed_limit_types, false);
+    // // auto traffic_lights = world.GetTrafficLightsFromWaypoint(*waypoint, 30.0);
+    // if (!speed_limits.empty()) {
+    //   for (auto &sl : speed_limits) {
+    //     auto sl_location = sl->GetWaypoint()->GetTransform().location;
+    //     std::cout << sl_location.Distance(vehicle_location) << std::endl;
+    //     if (sl_location.Distance(vehicle_location) < 30.0f) {
+    //       max_target_velocity = 5.0f/3.6f;
+    //       std::cout << "new speed_limit nearby" << std::endl;
+    //     }
+    //   }
+    // }
+
+    const std::vector<std::string> traffic_light_types =
+      {"1000001"};
+        // {"1000001", "206", "205"};
+        // {"1000001", "1000002", "1000009", "1000010", "1000011",
+        //  "1000007", "1000014", "1000015", "1000016", "1000017",
+        //  "1000018", "1000019", "1000013", "1000020", "1000008",
+        //  "1000012", "F", "W", "A", "206", "205"};
     float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
+    auto waypoint = waypoint_buffer.at(0)->GetWaypoint();
+    //auto traffic_lights = waypoint->GetLandmarksOfTypeInDistance(30.0, traffic_light_types, false);
+    auto traffic_lights = world.GetTrafficLightsFromWaypoint(*waypoint, 30.0);
+    if (!traffic_lights.empty()) {
+      for (auto &tl : traffic_lights) {
+        // cc::TrafficLight* tl = static_cast<cc::TrafficLight*>(actor.get());
+        auto tl_location = tl->GetBoundingBox().location; //->GetWaypoint()->GetTransform().location;
+        std::cout << tl_location.Distance(vehicle_location) << std::endl;
+        if (tl_location.Distance(vehicle_location) < 30.0f) {
+          max_target_velocity = 5.0f/3.6f;
+          std::cout << "new traffic_light/stop/yield nearby" << std::endl;
+        }
+      }
+    }
 
     // Collision handling and target velocity correction.
     std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, vehicle_velocity,

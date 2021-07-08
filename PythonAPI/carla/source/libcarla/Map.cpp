@@ -207,7 +207,7 @@ void export_map() {
     .def("get_left_lane", &cc::Waypoint::GetLeft)
     .def("get_junction", &cc::Waypoint::GetJunction)
     .def("get_landmarks", CALL_RETURNING_LIST_2(cc::Waypoint, GetAllLandmarksInDistance, double, bool), (arg("distance"), arg("stop_at_junction")=false))
-    .def("get_landmarks_of_type", CALL_RETURNING_LIST_3(cc::Waypoint, GetLandmarksOfTypeInDistance, double, std::string, bool), (arg("distance"), arg("type"), arg("stop_at_junction")=false))
+    .def("get_landmarks_of_type", CALL_RETURNING_LIST_3(cc::Waypoint, GetLandmarksOfTypeInDistance, double, std::vector<std::string>, bool), (arg("distance"), arg("type"), arg("stop_at_junction")=false))
     .def(self_ns::str(self_ns::self))
   ;
 
