@@ -98,7 +98,7 @@ namespace client {
     /// Returns a list of landmarks from the current position to a certain distance
     /// Filters by specified type
     std::vector<SharedPtr<Landmark>> GetLandmarksOfTypeInDistance(
-        double distance, std::vector<std::string> filter_type, bool stop_at_junction = false) const;
+        double distance, std::string filter_type, bool stop_at_junction = false) const;
 
   private:
 
