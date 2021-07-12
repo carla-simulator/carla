@@ -58,43 +58,28 @@ class LocalPlanner(object):
         self._world = self._vehicle.get_world()
         self._map = self._world.get_map()
 
-        self._target_speed = 20.0  # Km/h
-        self._sampling_radius = 2.0
-        self._base_min_distance = 3.0
-        self._dt = 1.0 / 20.0
-        self._max_brake = 0.3
-        self._max_throt = 0.75
-        self._max_steer = 0.8
-        self._offset = 0
-
-        self._args_lateral_dict = {'K_P': 1.95, 'K_D': 0.2, 'K_I': 0.05, 'dt': self._dt}
-        self._args_longitudinal_dict = {'K_P': 1.0, 'K_D': 0, 'K_I': 0.05, 'dt': self._dt}
-
         self._vehicle_controller = None
         self.target_waypoint = None
         self.target_road_option = None
 
         self._waypoints_queue = deque(maxlen=10000)
         self._min_waypoint_queue_length = 100
-
         self._stop_waypoint_creation = False
+
+        # Base parameters
+        self._dt = 1.0 / 20.0
+        self._target_speed = 20.0  # Km/h
+        self._sampling_radius = 2.0
+        self._args_lateral_dict = {'K_P': 1.95, 'K_D': 0.2, 'K_I': 0.05, 'dt': self._dt}
+        self._args_longitudinal_dict = {'K_P': 1.0, 'K_D': 0, 'K_I': 0.05, 'dt': self._dt}
+        self._max_throt = 0.75
+        self._max_brake = 0.3
+        self._max_steer = 0.8
+        self._offset = 0
+        self._base_min_distance = 3.0
         self._follow_speed_limits = False
 
-        # initializing controller
-        self._init_controller(opt_dict)
-
-    def reset_vehicle(self):
-        """Reset the ego-vehicle"""
-        self._vehicle = None
-
-    def _init_controller(self, opt_dict):
-        """
-        Controller initialization.
-
-        :param opt_dict: dictionary of arguments.
-        :return:
-        """
-        # parameters overload
+        # Overload parameters
         if opt_dict:
             if 'dt' in opt_dict:
                 self._dt = opt_dict['dt']
@@ -114,7 +99,20 @@ class LocalPlanner(object):
                 self._max_steer = opt_dict['max_steering']
             if 'offset' in opt_dict:
                 self._offset = opt_dict['offset']
+            if 'base_min_distance' in opt_dict:
+                self._base_min_distance = opt_dict['base_min_distance']
+            if 'follow_speed_limits' in opt_dict:
+                self._follow_speed_limits = opt_dict['follow_speed_limits']
 
+        # initializing controller
+        self._init_controller()
+
+    def reset_vehicle(self):
+        """Reset the ego-vehicle"""
+        self._vehicle = None
+
+    def _init_controller(self):
+        """Controller initialization"""
         self._vehicle_controller = VehiclePIDController(self._vehicle,
                                                         args_lateral=self._args_lateral_dict,
                                                         args_longitudinal=self._args_longitudinal_dict,
@@ -128,7 +126,6 @@ class LocalPlanner(object):
         self.target_waypoint, self.target_road_option = (current_waypoint, RoadOption.LANEFOLLOW)
         self._waypoints_queue.append((self.target_waypoint, self.target_road_option))
 
-
     def set_speed(self, speed):
         """
         Changes the target speed
@@ -141,7 +138,6 @@ class LocalPlanner(object):
                   "Use 'follow_speed_limits' to deactivate this")
         self._target_speed = speed
 
-
     def follow_speed_limits(self, value=True):
         """
         Activates a flag that makes the max speed dynamically vary according to the spped limits
@@ -150,7 +146,6 @@ class LocalPlanner(object):
         :return:
         """
         self._follow_speed_limits = value
-
 
     def _compute_next_waypoints(self, k=1):
         """
@@ -182,7 +177,6 @@ class LocalPlanner(object):
                     road_option)]
 
             self._waypoints_queue.append((next_waypoint, road_option))
-
 
     def set_global_plan(self, current_plan, stop_waypoint_creation=True, clean_queue=True):
         """

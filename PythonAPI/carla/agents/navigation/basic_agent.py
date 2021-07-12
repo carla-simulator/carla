@@ -31,38 +31,49 @@ class BasicAgent(object):
     It has several functions available to specify the route that the agent must follow
     """
 
-    def __init__(self, vehicle, target_speed=20, debug=False):
+    def __init__(self, vehicle, target_speed=20, opt_dict={}):
         """
         :param vehicle: actor to apply to local planner logic onto
         :param target_speed: speed (in Km/h) at which the vehicle will move
+        :param opt_dict: dictionary in case some of its parameters want to be changed.
+            This also applies to parameters related to the LocalPlanner.
         """
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         self._map = self._world.get_map()
-        self._debug = debug
+        self._state = AgentState.NAVIGATING
 
+        # Base values
         self._ignore_traffic_lights = False
         self._ignore_stop_signs = False
         self._ignore_vehicles = False
         self._last_traffic_light = None
-
-        self._state = AgentState.NAVIGATING
         self._target_speed = target_speed
         self._sampling_resolution = 2.0
-        self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
-
         self._base_tlight_threshold = 5.0  # meters
         self._base_vehicle_threshold = 5.0  # meters
         self._max_brake = 0.5
-        self._max_steering = 0.5
-        self._local_planner = LocalPlanner(
-            self._vehicle,
-            opt_dict={
-                'target_speed' : target_speed,
-                'max_brake': self._max_brake,
-                'max_steering': self._max_steering
-            }
-        )
+
+        # Change values according to the target speed
+        opt_dict['target_speed'] = target_speed
+        if 'ignore_traffic_lights' in opt_dict:
+            self._ignore_traffic_lights = opt_dict['ignore_traffic_lights']
+        if 'ignore_stop_signs' in opt_dict:
+            self._ignore_stop_signs = opt_dict['ignore_stop_signs']
+        if 'ignore_vehicles' in opt_dict:
+            self._ignore_vehicles = opt_dict['ignore_vehicles']
+        if 'sampling_resolution' in opt_dict:
+            self._sampling_resolution = opt_dict['sampling_resolution']
+        if 'base_tlight_threshold' in opt_dict:
+            self._base_tlight_threshold = opt_dict['base_tlight_threshold']
+        if 'base_vehicle_threshold' in opt_dict:
+            self._base_vehicle_threshold = opt_dict['base_vehicle_threshold']
+        if 'max_brake' in opt_dict:
+            self._max_steering = opt_dict['max_brake']
+
+        # Initialize the planners
+        self._local_planner = LocalPlanner(self._vehicle, opt_dict=opt_dict)
+        self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
 
     def add_emergency_stop(self, control):
         """
@@ -119,22 +130,22 @@ class BasicAgent(object):
         route_trace = self.trace_route(start_waypoint, end_waypoint)
         self._local_planner.set_global_plan(route_trace, clean_queue=clean_queue)
 
-        for i, w in enumerate(route_trace):
-            wp = w[0].transform.location + carla.Location(z=0.1)
-            if w[1] == RoadOption.LEFT:  # Yellow
-                color = carla.Color(255, 255, 0)
-            elif w[1] == RoadOption.RIGHT:  # Cyan
-                color = carla.Color(0, 255, 255)
-            elif w[1] == RoadOption.CHANGELANELEFT:  # Orange
-                color = carla.Color(255, 64, 0)
-            elif w[1] == RoadOption.CHANGELANERIGHT:  # Dark Cyan
-                color = carla.Color(0, 64, 255)
-            elif w[1] == RoadOption.STRAIGHT:  # Gray
-                color = carla.Color(128, 128, 128)
-            else:  # LANEFOLLOW
-                color = carla.Color(0, 255, 0) # Green
-            self._world.debug.draw_point(wp, size=0.08, color=color, life_time=100)
-            self._world.debug.draw_string(wp, str(i), color=color, life_time=100)
+        # for i, w in enumerate(route_trace):
+        #     wp = w[0].transform.location + carla.Location(z=0.1)
+        #     if w[1] == RoadOption.LEFT:  # Yellow
+        #         color = carla.Color(255, 255, 0)
+        #     elif w[1] == RoadOption.RIGHT:  # Cyan
+        #         color = carla.Color(0, 255, 255)
+        #     elif w[1] == RoadOption.CHANGELANELEFT:  # Orange
+        #         color = carla.Color(255, 64, 0)
+        #     elif w[1] == RoadOption.CHANGELANERIGHT:  # Dark Cyan
+        #         color = carla.Color(0, 64, 255)
+        #     elif w[1] == RoadOption.STRAIGHT:  # Gray
+        #         color = carla.Color(128, 128, 128)
+        #     else:  # LANEFOLLOW
+        #         color = carla.Color(0, 255, 0) # Green
+        #     self._world.debug.draw_point(wp, size=0.08, color=color, life_time=100)
+        #     self._world.debug.draw_string(wp, str(i), color=color, life_time=100)
 
     def set_global_plan(self, plan, stop_waypoint_creation=True, clean_queue=True):
         """
@@ -313,6 +324,8 @@ class BasicAgent(object):
             target_wpt = self._map.get_waypoint(target_transform.location)
             if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id:
                 next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=3)[0]
+                if not next_wpt:
+                    continue
                 if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id:
                     continue
 
