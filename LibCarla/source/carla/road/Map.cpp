@@ -345,8 +345,8 @@ namespace road {
         }
         bool is_valid = false;
         for (auto &validity : signal->GetValidities()) {
-          if (waypoint.lane_id > validity._from_lane &&
-              waypoint.lane_id < validity._to_lane) {
+          if (waypoint.lane_id >= validity._from_lane &&
+              waypoint.lane_id <= validity._to_lane) {
             is_valid = true;
             break;
           }
@@ -381,8 +381,8 @@ namespace road {
       }
       bool is_valid = false;
       for (auto &validity : signal->GetValidities()) {
-        if (waypoint.lane_id > validity._from_lane &&
-            waypoint.lane_id < validity._to_lane) {
+        if (waypoint.lane_id >= validity._from_lane &&
+            waypoint.lane_id <= validity._to_lane) {
           is_valid = true;
           break;
         }
