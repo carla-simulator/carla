@@ -343,6 +343,7 @@ namespace road {
         } else {
           distance_to_signal = waypoint.s - signal->GetDistance();
         }
+        // check that the signal affects the waypoint
         bool is_valid = false;
         for (auto &validity : signal->GetValidities()) {
           if (waypoint.lane_id >= validity._from_lane &&
@@ -379,6 +380,7 @@ namespace road {
       } else {
         distance_to_signal = waypoint.s - signal->GetDistance();
       }
+      // check that the signal affects the waypoint
       bool is_valid = false;
       for (auto &validity : signal->GetValidities()) {
         if (waypoint.lane_id >= validity._from_lane &&
