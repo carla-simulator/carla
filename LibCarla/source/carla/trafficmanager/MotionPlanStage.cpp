@@ -119,83 +119,21 @@ void MotionPlanStage::Update(const unsigned long index) {
 
   else {
 
-    auto debug = world.MakeDebugHelper();
-
     // Target velocity for vehicle.
     const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
-    // const std::vector<std::string> speed_limit_types = {"274"};
-    // auto waypoint = waypoint_buffer.at(0)->GetWaypoint();
-    // auto speed_limits = waypoint->GetLandmarksOfTypeInDistance(30.0, speed_limit_types, false);
-    // // auto traffic_lights = world.GetTrafficLightsFromWaypoint(*waypoint, 30.0);
-    // if (!speed_limits.empty()) {
-    //   for (auto &sl : speed_limits) {
-    //     auto sl_location = sl->GetWaypoint()->GetTransform().location;
-    //     std::cout << sl_location.Distance(vehicle_location) << std::endl;
-    //     if (sl_location.Distance(vehicle_location) < 30.0f) {
-    //       max_target_velocity = 5.0f/3.6f;
-    //       std::cout << "new speed_limit nearby" << std::endl;
-    //     }
-    //   }
-    // }
-
-    const std::vector<std::string> traffic_light_types =
-      {"1000001", "206", "205"};
-        // {"1000001", "206", "205"};
-        // {"1000001", "1000002", "1000009", "1000010", "1000011",
-        //  "1000007", "1000014", "1000015", "1000016", "1000017",
-        //  "1000018", "1000019", "1000013", "1000020", "1000008",
-        //  "1000012", "F", "W", "A", "206", "205"};
     float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
+    max_target_velocity = 100.0f / 3.6f;
+    max_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, max_target_velocity);
 
-    auto waypoint = waypoint_buffer.at(0)->GetWaypoint();
-    auto landmarks = waypoint->GetLandmarksOfTypeInDistance(30.0, "1000001", false);
-    //auto traffic_lights = world.GetTrafficLightsFromWaypoint(*waypoint, 30.0);
-    if (!landmarks.empty()) {
-      for (auto &landmark : landmarks) {
-        auto actor = world.GetTrafficLight(*landmark);
-        auto* tl = static_cast<carla::client::TrafficLight*>(actor.get());
+    //max_target_velocity = 100.0f / 3.6f;
 
-        //auto tl_location = landmark->GetWaypoint()->GetTransform().location;
-        auto tl_location = tl->GetTriggerVolume().location;
-        tl->GetTransform().TransformPoint(tl_location);
-        auto distance = tl_location.Distance(vehicle_location);
+    //max_target_velocity = std::min(max_target_velocity, max_landmark_target_velocity);
 
-        if (distance < 30.0f) {
-          std::cout << "TL detected distance: " << distance << std::endl;
-          debug.DrawPoint(tl_location, 0.2f, {0u, 0u, 0u}, 0.1f);
-          if (tl->GetState() == carla::rpc::TrafficLightState::Green) {
-            max_target_velocity = 50.0f / 3.6f;
-            } else if (tl->GetState() == carla::rpc::TrafficLightState::Yellow || tl->GetState() == carla::rpc::TrafficLightState::Red) {
-              max_target_velocity = 20.0f / 3.6f;
-          }
-        }
-      }
-    }
+    //std::cout << "---" << std::endl;
+    std::cout << "Target velocity: " << max_target_velocity*3.6f << std::endl;
+    //std::cout << "Landmark target velocity: " << max_landmark_target_velocity << std::endl;
+    //std::cout << "---" << std::endl;
 
-    const std::vector<std::string> stop_types =
-      {"206"};
-
-
-    auto waypoint_stop = waypoint_buffer.at(0)->GetWaypoint();
-    auto landmarks_stop = waypoint->GetLandmarksOfTypeInDistance(30.0, "206", false);
-    if (!landmarks_stop.empty()) {
-      for (auto &landmark : landmarks_stop) {
-        auto actor = world.GetTrafficSign(*landmark);
-        auto* tl = static_cast<carla::client::TrafficSign*>(actor.get());
-
-
-        auto tl_location = landmark->GetWaypoint()->GetTransform().location;
-        //auto tl_location = tl->GetTriggerVolume().location;
-        //tl->GetTransform().TransformPoint(tl_location);
-        auto distance = tl_location.Distance(vehicle_location);
-
-        if (distance < 30.0f) {
-          std::cout << "Stop detected distance: " << distance << std::endl;
-          debug.DrawPoint(tl_location, 0.2f, {0u, 0u, 0u}, 0.1f);
-          max_target_velocity = 20.0f / 3.6f;
-        }
-      }
-    }
 
     // Collision handling and target velocity correction.
     std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, vehicle_velocity,
@@ -409,6 +347,91 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
   dynamic_target_velocity = std::min(max_target_velocity, dynamic_target_velocity);
 
   return {collision_emergency_stop, dynamic_target_velocity};
+}
+
+float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
+                                                 const cg::Location vehicle_location,
+                                                 float max_target_velocity) {
+
+    auto debug = world.MakeDebugHelper();
+    float target_velocity = 100.0f / 3.6f;  // maximum value
+    float minimum_velocity = 15.0f / 3.6f;
+
+    // Landmark antipication
+    // auto all_landmarks = simulation_state->GetLandmarks(actor_id); (track_traffic)
+    auto all_landmarks = waypoint.GetWaypoint()->GetAllLandmarksInDistance(50.0, false);
+
+    for (auto &landmark: all_landmarks) {
+      if (landmark->GetType() == "1000001") {
+        //std::cout << "Detectado traffic light" << std::endl;
+
+        auto actor = world.GetTrafficLight(*landmark);
+        auto* tl = static_cast<carla::client::TrafficLight*>(actor.get());
+
+        auto tl_location = landmark->GetWaypoint()->GetTransform().location;
+        auto distance = tl_location.Distance(vehicle_location);
+
+        if (distance < 50.0f) {
+          debug.DrawPoint(tl_location, 0.2f, {0u, 0u, 0u}, 0.1f);
+          float v = 0.0f;
+          if (tl->GetState() == carla::rpc::TrafficLightState::Green) {
+            v = std::max(((max_target_velocity - minimum_velocity) / 50.0f) * distance + minimum_velocity, minimum_velocity);
+            target_velocity = std::min(target_velocity, v);
+
+          } else if (tl->GetState() == carla::rpc::TrafficLightState::Yellow || tl->GetState() == carla::rpc::TrafficLightState::Red) {
+            v = std::max(((max_target_velocity - minimum_velocity) / 50.0f) * distance + minimum_velocity, minimum_velocity);
+            target_velocity = std::min(target_velocity, v);
+          }
+          std::cout << " --> distance                 " << distance << std::endl;
+          std::cout << " --> landmark target velocity " << target_velocity << std::endl;
+          std::cout << " --> v                        " << v << std::endl;
+
+        }
+
+      } else if (landmark->GetType() == "206") {
+        //std::cout << "Detectado stop" << std::endl;
+
+        auto stop_location = landmark->GetWaypoint()->GetTransform().location;
+        auto distance = stop_location.Distance(vehicle_location);
+
+        if (distance < 50.0f) {
+          debug.DrawPoint(stop_location, 0.2f, {0u, 0u, 0u}, 0.1f);
+          float v = std::max(((max_target_velocity - minimum_velocity) / 50.0f) * distance + minimum_velocity, minimum_velocity);
+          target_velocity = std::min(target_velocity, v);
+        }
+
+      } else if (landmark->GetType() == "205") {
+        //std::cout << "Detectado el yield" << std::endl;
+
+        auto yield_location = landmark->GetWaypoint()->GetTransform().location;
+        auto distance = yield_location.Distance(vehicle_location);
+
+        if (distance < 50.0f) {
+          debug.DrawPoint(yield_location, 0.2f, {0u, 0u, 0u}, 0.1f);
+          float v = std::max(((max_target_velocity - minimum_velocity) / 50.0f) * distance + minimum_velocity, minimum_velocity);
+          target_velocity = std::min(target_velocity, v);
+        }
+
+      } else if (landmark->GetType() == "274") {
+        //std::cout << "Detectado speed limit" << std::endl;
+
+        auto speed_location = landmark->GetWaypoint()->GetTransform().location;
+        auto distance = speed_location.Distance(vehicle_location);
+
+        //std::cout << "SpeedLimit: " << landmark->GetValue() << std::endl;
+
+        if (distance < 50.0f) {
+          debug.DrawPoint(speed_location, 0.2f, {0u, 0u, 0u}, 0.1f);
+          // TODO
+          //target_velocity = std::min(target_velocity, static_cast<float>(landmark->GetValue()) / 3.6f);
+        }
+
+      } else {
+        continue;
+        //std::cout << "Otro landmark" << std::endl;
+      }
+    }
+    return target_velocity;
 }
 
 void MotionPlanStage::RemoveActor(const ActorId actor_id) {

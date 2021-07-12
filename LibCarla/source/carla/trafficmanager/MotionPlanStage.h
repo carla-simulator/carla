@@ -50,9 +50,13 @@ private:
                                            const cg::Vector3D ego_heading,
                                            const float max_target_velocity);
 
-bool SafeAfterJunction(const LocalizationData &localization,
-                       const bool tl_hazard,
-                       const bool collision_emergency_stop);
+  bool SafeAfterJunction(const LocalizationData &localization,
+                         const bool tl_hazard,
+                         const bool collision_emergency_stop);
+
+  float GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
+                                  const cg::Location vehicle_location,
+                                  float max_target_velocity);
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
