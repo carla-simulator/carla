@@ -64,7 +64,7 @@ class Scenario(object):
 
     def wait(self, frames=100):
         for _i in range(0, frames):
-            self.world.tick(1500.0)
+            self.world.tick()
             if self.active:
                 for _s in self.sensor_list:
                     self.sensor_queue.get(True, 15.0)
@@ -82,6 +82,8 @@ class Scenario(object):
         self.client.reload_world()
         if settings is not None:
             self.world.apply_settings(settings)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
     def reset_spectator(self, spectator_tr):
         spectator = self.world.get_spectator()
@@ -126,7 +128,7 @@ class Scenario(object):
         self.init_scene(prefix, run_settings, spectator_tr)
 
         for _i in range(0, tics):
-            self.world.tick(1500.0)
+            self.world.tick()
             self.sensor_syncronization()
             self.save_snapshots()
 
@@ -395,12 +397,12 @@ class TestCollisionDeterminism(SmokeTest):
             synchronous_mode=True,
             fixed_delta_seconds=0.05)
         self.world.apply_settings(settings)
-        self.world.tick(1500.0)
+        self.world.tick()
 
     def tearDown(self):
         self.settings.synchronous_mode = False
         self.world.apply_settings(self.settings)
-        self.world.tick(1500.0)
+        self.world.tick()
         self.settings = None
         self.world = None
         super(TestCollisionDeterminism, self).tearDown()
@@ -416,6 +418,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=TwoCarsHighSpeedCollision(self.client, self.world, True), output_path=output_path)
@@ -440,6 +444,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=ThreeCarsSlowSpeedCollision(self.client, self.world, True), output_path=output_path)
@@ -464,6 +470,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarBikeCollision(self.client, self.world, True), output_path=output_path)
@@ -488,6 +496,8 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Loading Town03 for test
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarWalkerCollision(self.client, self.world, True), output_path=output_path)
@@ -500,4 +510,3 @@ class TestCollisionDeterminism(SmokeTest):
 
         # Remove all the output files
         shutil.rmtree(output_path)
-

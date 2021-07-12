@@ -61,7 +61,7 @@ using namespace std::chrono_literals;
         auto prev = self->GetState();
 
         // TODO: Update how the map change is detected
-        // bool HasMapChanged = next->HasMapChanged();
+        bool HasMapChanged = next->HasMapChanged();
         bool UpdateLights = next->IsLightUpdatePending();
 
         /// Check for pending exceptions (Mainly TM server closed)
@@ -88,6 +88,10 @@ using namespace std::chrono_literals;
 
           if(UpdateLights) {
             self->_on_light_update_callbacks.Call(next);
+          }
+
+          if(HasMapChanged) {
+            self->_should_update_map = true;
           }
 
           /// Episode change
@@ -150,9 +154,17 @@ using namespace std::chrono_literals;
     traffic_manager::TrafficManager::Release();
   }
 
-void Episode::OnEpisodeChanged() {
-  traffic_manager::TrafficManager::Reset();
-}
+  void Episode::OnEpisodeChanged() {
+    traffic_manager::TrafficManager::Reset();
+  }
+
+  bool Episode::HasMapChangedSinceLastCall() {
+    if(_should_update_map) {
+      _should_update_map = false;
+      return true;
+    }
+    return false;
+  }
 
 } // namespace detail
 } // namespace client

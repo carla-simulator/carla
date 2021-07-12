@@ -572,6 +572,10 @@ namespace detail {
       _client.ResetAllTrafficLights();
     }
 
+    std::vector<geom::BoundingBox> GetLightBoxes(const TrafficLight &trafficLight) const {
+      return _client.GetLightBoxes(trafficLight.GetId());
+    }
+
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
       return _client.GetGroupTrafficLights(trafficLight.GetId());
     }
@@ -636,6 +640,8 @@ namespace detail {
 
   private:
 
+    bool ShouldUpdateMap(rpc::MapInfo& map_info);
+
     Client _client;
 
     SharedPtr<LightManager> _light_manager;
@@ -643,6 +649,8 @@ namespace detail {
     std::shared_ptr<Episode> _episode;
 
     const GarbageCollectionPolicy _gc_policy;
+
+    SharedPtr<Map> _cached_map;
   };
 
 } // namespace detail

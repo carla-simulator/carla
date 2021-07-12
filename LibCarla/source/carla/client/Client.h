@@ -134,13 +134,16 @@ namespace client {
     std::vector<rpc::CommandResponse> ApplyBatchSync(
         std::vector<rpc::Command> commands,
         bool do_tick_cue = false) const {
-      return _simulator->ApplyBatchSync(std::move(commands), do_tick_cue);
+      auto responses = _simulator->ApplyBatchSync(std::move(commands), false);
+      if (do_tick_cue)
+        _simulator->Tick(_simulator->GetNetworkingTimeout());
+
+      return responses;
     }
 
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;
-
   };
 
   inline Client::Client(
