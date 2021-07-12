@@ -96,7 +96,7 @@ while True:
 The __Basic Agent__ provides a few methods to manipulate agent behavior or program routes to follow:
 
 - __`set_target_speed(speed)`:__ Set the target speed in km/h
-- __`follow_speed_limits(value=True)`:__ Sets the agent to ignore or follow speed limits.
+- __`follow_speed_limits(value=True)`:__ Sets the agent to follow speed limits.
 - __`set_destination(end_location, start_location=None)`:__ The agent will travel from a specific start location to an end location via the shortest route possible. If no start location is provided, it will use the current agent location.
 - __`set_global_plan(plan, stop_waypoint_creation=True, clean_queue=True)`:__ Adds a specific plan for the agent to follow. The plan argument should consist of a list of `[carla.Waypoint, RoadOption]` that will be the path the agent needs to take. `stop_waypoint_creation` will prevent waypoints from being automatically created once the path has run its course. `clean_queue` will reset the agent's current plan.
 - __`trace_route(start_waypoint, end_waypoint)`:__ Gets the shortest distance between two waypoints from the Global Route Planner and returns the path as a list of `[carla.Waypoint, RoadOption]` for the agent to follow.
@@ -176,7 +176,7 @@ class CustomAgent(BasicAgent):
         :param vehicle: actor to apply to local planner logic onto
         :param target_speed: speed (in Km/h) at which the vehicle will move
         """
-        super(BasicAgent)
+        super().__init__(target_speed, debug)
 
     def run_step(self, debug=False):
         """
@@ -184,6 +184,8 @@ class CustomAgent(BasicAgent):
         :return: carla.VehicleControl
         """
         # Actions to take during each simulation step
+        control = carla.VehicleControl()
+        return control
 ```
 
 Check out the `basic_agent.py` and `behavior_agent.py` scripts to explore their structure and functions for more ideas on how to create your own.
