@@ -20,7 +20,8 @@ enum class ECarlaServerResponse
   WalkerIncompatibleController,
   AutoPilotNotSupported,
   CarSimPluginNotEnabled,
-  NotATrafficLight
+  NotATrafficLight,
+  FunctionNotAvailiableWhenDormant
 };
 
 static FString GetStringError(ECarlaServerResponse Response);

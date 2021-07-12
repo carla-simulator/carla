@@ -5,6 +5,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import carla
+import time
 
 from . import SyncSmokeTest
 
@@ -21,6 +22,9 @@ class TestSpawnpoints(SyncSmokeTest):
 
             # load the map
             self.client.load_world(m)
+            # workaround: give time to UE4 to clean memory after loading (old assets)
+            time.sleep(5)
+            
             self.world = self.client.get_world()
 
             # get all spawn points

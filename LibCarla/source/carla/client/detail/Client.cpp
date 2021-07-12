@@ -411,6 +411,11 @@ namespace detail {
     _pimpl->AsyncCall("freeze_all_traffic_lights", frozen);
   }
 
+  std::vector<geom::BoundingBox> Client::GetLightBoxes(rpc::ActorId traffic_light) const {
+    using return_t = std::vector<geom::BoundingBox>;
+    return _pimpl->CallAndWait<return_t>("get_light_boxes", traffic_light);
+  }
+
   rpc::VehicleLightStateList Client::GetVehiclesLightStates() {
     return _pimpl->CallAndWait<std::vector<std::pair<carla::ActorId, uint32_t>>>("get_vehicle_light_states");
   }
