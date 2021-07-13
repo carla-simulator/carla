@@ -59,6 +59,8 @@ public:
 
   FVehicleLightState LightState;
 
+  float SpeedLimit = 30;
+
   virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
   virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;

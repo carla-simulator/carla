@@ -47,7 +47,14 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
         {
           state.vehicle_data.has_traffic_light = true;
           auto* TrafficLightView = Registry.FindCarlaActor(TrafficLight);
-          state.vehicle_data.traffic_light_id = TrafficLightView->GetActorId();
+          if(TrafficLightView)
+          {
+            state.vehicle_data.traffic_light_id = TrafficLightView->GetActorId();
+          }
+          else
+          {
+            state.vehicle_data.has_traffic_light = false;
+          }
         }
         else
         {
@@ -164,7 +171,7 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
       state.vehicle_data.control = carla::rpc::VehicleControl{ActorData->Control};
       using TLS = carla::rpc::TrafficLightState;
       state.vehicle_data.traffic_light_state = TLS::Green;
-      state.vehicle_data.speed_limit = 30;
+      state.vehicle_data.speed_limit = ActorData->SpeedLimit;
       state.vehicle_data.has_traffic_light = false;
   }
   else if (AType::Walker == View.GetActorType())
