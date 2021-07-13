@@ -198,8 +198,12 @@ Optionally, to compile the PythonAPI for a specific version of Python, run the b
     make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
 ```
 
+Every time you run `make PythonAPI` a `.whl` file containing the CARLA client library will be built and installed for your system. This `.whl` cannot be distributed as it is specific for your OS. If you had a previous library installed, it will be uninstalled, and a new one will be installed according to the source code you are using. You can modify this behavior with the following flag:
+
+- `make PythonAPI --no-install-wheel` will only build the `.whl` file but not install it on your system.
+
 !!! Important
-    Previous versions of CARLA created a `.egg` file containing the CARLA client library. __In versions 0.9.12+ this behavior changes significantly; `.egg` files are no longer used.__ `make PythonAPI` will install the library using `pip` and a `.whl` file. Every time you run `make PythonAPI` the previous library you had installed will be uninstalled and a new one will be installed according to the source code you are using.
+    Previous versions of CARLA created a `.egg` file containing the CARLA client library. __In versions 0.9.12+ this behavior changes significantly; `.egg` files are no longer used.__ `make PythonAPI` will install the library using `pip` and a `.whl` file.
 
     If you are building a version of CARLA prior to 0.9.12, please select the correct version of the documentation in the bottom right-hand corner.
 
