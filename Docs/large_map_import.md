@@ -13,7 +13,7 @@ Large maps generated in RoadRunner can be imported into the source build of CARL
 
 All files to be imported should be placed in the `Import` folder of the root CARLA directory. These files should include:
 
-- The mesh of the map in multiple `.fbx` files, representing different tiles of the map.
+- The mesh of the map in multiple `.fbx` files representing different tiles of the map.
 - The OpenDRIVE definition in a single `.xodr` file.
 - Subfolders for each `.fbx` file containing textures for the assets if required.
 
@@ -67,16 +67,16 @@ Import
 
 ## Create the JSON description (Optional)
 
-The `.json` description is created automatically during the import process, but there is also the option to create one manually. An existing `.json` description will over ride any values passed as arguments in the import process. 
+The `.json` description is created automatically during the import process, but there is also the option to create one manually. An existing `.json` description will override any values passed as arguments in the import process.
 
 The `.json` file should be created in the root folder of the package. The file name will be the package distribution name. The content of the file describes a JSON array of __maps__ and __props__ with basic information for each one.
 
 __Maps__ need the following parameters:
 
-- __name__ of the map. This must be the same as the `.fbx` and `.xodr` files.
-- __xodr__ Path to the `.xodr` file.
-- __use_carla_materials__. If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.
-- __tiles__ a list of the `.fbx` tile files that make up the entire map.
+- __name:__ Name of the map. This must be the same as the `.fbx` and `.xodr` files.
+- __xodr:__ Path to the `.xodr` file.
+- __use_carla_materials:__ If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.
+- __tiles:__ A list of the `.fbx` tile files that make up the entire map.
 
 __Props__ are not part of this tutorial. Please see [this](tuto_A_add_props.md) tutorial for how to add new props.
 
@@ -133,10 +133,10 @@ make import  ARGS="--package=<package_name>"
 make import  ARGS="--no-carla-materials"
 ```
 
-All files will be imported and prepared to be used in the Unreal Editor. The map package will be created in `Unreal/CarlaUE4/Content`. A base map tile, `<mapName>`, will be created as a streaming level for all the tiles. The base tile will contain the sky, weather and large map actors and will be ready for using in a simulation.
+All files will be imported and prepared to be used in the Unreal Editor. The map package will be created in `Unreal/CarlaUE4/Content`. A base map tile, `<mapName>`, will be created as a streaming level for all the tiles. The base tile will contain the sky, weather, and large map actors and will be ready for use in a simulation.
 
 !!! Note
-    It is currently not recommended to use the customization tools provided for normal maps in the Unreal Editor, eg. road painter, procedural buildings, etc.
+    It is currently not recommended to use the customization tools provided for normal maps in the Unreal Editor, e.g., road painter, procedural buildings, etc.
 
 ---
 
@@ -152,7 +152,7 @@ This will create a standalone package compressed in a `.tar.gz` file. The files 
 
 ---
 
-If you have any questions about the process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+If you have any questions about the large map import and packaging process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
 
 <div class="build-buttons">
 <p>

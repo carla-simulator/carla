@@ -61,7 +61,7 @@ nav:
   - 'Generate pedestrian navigation': 'tuto_M_generate_pedestrian_navigation.md'
 - Large Maps:
   - 'Large Maps Overview': 'large_map_overview.md'
-  - 'Import a Large Map': 'large_map_import.md'
+  - 'Import/Package a Large Map': 'large_map_import.md'
   - 'Create Large Map': 'large_map_roadrunner.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
