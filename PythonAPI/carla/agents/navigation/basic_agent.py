@@ -6,6 +6,7 @@
 """
 This module implements an agent that roams around a track following random
 waypoints and avoiding other vehicles. The agent also responds to traffic lights.
+It can also make use of the global route planner to follow a specifed route
 """
 
 import carla
@@ -16,45 +17,39 @@ from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.tools.misc import get_speed, is_within_distance, get_trafficlight_trigger_location
 
 
-class AgentState(Enum):
-    """
-    AGENT_STATE represents the possible states of a roaming agent
-    """
-    NAVIGATING = 1
-    BLOCKED_BY_VEHICLE = 2
-    BLOCKED_RED_LIGHT = 3
-
 class BasicAgent(object):
     """
     BasicAgent implements an agent that navigates the scene.
     This agent respects traffic lights and other vehicles, but ignores stop signs.
-    It has several functions available to specify the route that the agent must follow
+    It has several functions available to specify the route that the agent must follow,
+    as well as to change its parameters in case a different driving mode is desired.
     """
 
     def __init__(self, vehicle, target_speed=20, opt_dict={}):
         """
-        :param vehicle: actor to apply to local planner logic onto
-        :param target_speed: speed (in Km/h) at which the vehicle will move
-        :param opt_dict: dictionary in case some of its parameters want to be changed.
-            This also applies to parameters related to the LocalPlanner.
+        Initialization the agent paramters, the local and the global planner.
+
+            :param vehicle: actor to apply to agent logic onto
+            :param target_speed: speed (in Km/h) at which the vehicle will move
+            :param opt_dict: dictionary in case some of its parameters want to be changed.
+                This also applies to parameters related to the LocalPlanner.
         """
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         self._map = self._world.get_map()
-        self._state = AgentState.NAVIGATING
+        self._last_traffic_light = None
 
-        # Base values
+        # Base parameters
         self._ignore_traffic_lights = False
         self._ignore_stop_signs = False
         self._ignore_vehicles = False
-        self._last_traffic_light = None
         self._target_speed = target_speed
         self._sampling_resolution = 2.0
         self._base_tlight_threshold = 5.0  # meters
         self._base_vehicle_threshold = 5.0  # meters
         self._max_brake = 0.5
 
-        # Change values according to the target speed
+        # Change parameters according to the dictionary
         opt_dict['target_speed'] = target_speed
         if 'ignore_traffic_lights' in opt_dict:
             self._ignore_traffic_lights = opt_dict['ignore_traffic_lights']
@@ -77,7 +72,10 @@ class BasicAgent(object):
 
     def add_emergency_stop(self, control):
         """
-        Send an emergency stop command to the vehicle
+        Overwrites the throttle a brake values of a control to perform an emergency stop.
+        The steering is kept the same to avoid going out of the lane when stopping during turns
+
+            :param speed (carl.VehicleControl): control to be modified
         """
         control.throttle = 0.0
         control.brake = self._max_brake
@@ -87,35 +85,35 @@ class BasicAgent(object):
     def set_target_speed(self, speed):
         """
         Changes the target speed of the agent
+            :param speed (float): target speed in Km/h
         """
         self._local_planner.set_speed(speed)
 
     def follow_speed_limits(self, value=True):
         """
-        (De)activates a flag to make the agent dynamically change the target speed according to the speed limits
+        If active, the agent will dynamically change the target speed according to the speed limits
+
+            :param value (bool): whether or not to activate this behavior
         """
         self._local_planner.follow_speed_limits(value)
 
     def get_local_planner(self):
-        """
-        Get method for protected member local planner
-        """
+        """Get method for protected member local planner"""
         return self._local_planner
 
     def get_global_planner(self):
-        """
-        Get method for protected member local planner
-        """
+        """Get method for protected member local planner"""
         return self._global_planner
 
     def set_destination(self, end_location, start_location=None):
         """
         This method creates a list of waypoints between a starting and ending location,
         based on the route returned by the global router, and adds it to the local planner.
-        If no starting location is passed, the vehicle location is chosen.
+        If no starting location is passed, the vehicle local planner's target location is chosen,
+        which corresponds (by default), to a location about 5 meters in front of the vehicle.
 
-            :param end_location: final location of the route
-            :param start_location: starting location of the route
+            :param end_location (carla.Location): final location of the route
+            :param start_location (carla.Location): starting location of the route
         """
         if not start_location:
             start_location = self._local_planner.target_waypoint.transform.location
@@ -135,7 +133,7 @@ class BasicAgent(object):
         Adds a specific plan to the agent.
 
             :param plan: list of [carla.Waypoint, RoadOption] representing the route to be followed
-            :param stop_waypoint_creation: stops the automatic creation of waypoints
+            :param stop_waypoint_creation: stops the automatic random creation of waypoints
             :param clean_queue: resets the current agent's plan
         """
         self._local_planner.set_global_plan(
@@ -146,20 +144,15 @@ class BasicAgent(object):
 
     def trace_route(self, start_waypoint, end_waypoint):
         """
-        This method sets up a global router and returns the
-        optimal route from start_waypoint to end_waypoint.
+        Calculates the shortest route between a starting and ending waypoint.
 
-            :param start_waypoint: initial position
-            :param end_waypoint: final position
+            :param start_waypoint (carla.Waypoint): initial waypoint
+            :param end_waypoint (carla.Waypoint): final waypoint
         """
-        route = self._global_planner.trace_route(start_waypoint, end_waypoint)
-        return route
+        return self._global_planner.trace_route(start_waypoint, end_waypoint)
 
-    def run_step(self, debug=False):
-        """
-        Execute one step of navigation.
-        :return: carla.VehicleControl
-        """
+    def run_step(self):
+        """Execute one step of navigation."""
         hazard_detected = False
 
         # Retrieve all relevant actors
@@ -169,72 +162,54 @@ class BasicAgent(object):
 
         vehicle_speed = get_speed(self._vehicle) / 3.6
 
-        # Check for possible obstacles
+        # Check for possible vehicle obstacles
         max_vehicle_distance = self._base_vehicle_threshold + vehicle_speed
-        vehicle_state, vehicle = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
-        if vehicle_state:
-            if debug:
-                print('!!! VEHICLE BLOCKING AHEAD [{}])'.format(vehicle.id))
-
-            self._state = AgentState.BLOCKED_BY_VEHICLE
+        affected_by_vehicle, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
+        if affected_by_vehicle:
             hazard_detected = True
 
         # Check if the vehicle is affected by a red traffic light
         max_tlight_distance = self._base_tlight_threshold + vehicle_speed
-        light_state, traffic_light = self._affected_by_traffic_light(lights_list, max_tlight_distance)
-        if light_state:
-            if debug:
-                print('=== RED LIGHT AHEAD [{}])'.format(traffic_light.id))
-
-            self._state = AgentState.BLOCKED_RED_LIGHT
+        affected_by_tlight, _ = self._affected_by_traffic_light(lights_list, max_tlight_distance)
+        if affected_by_tlight:
             hazard_detected = True
 
-        control = self._local_planner.run_step(debug=debug)
+        control = self._local_planner.run_step()
         if hazard_detected:
             control = self.add_emergency_stop(control)
-        else:
-            self._state = AgentState.NAVIGATING
 
         return control
 
     def done(self):
-        """
-        Check whether the agent has reached its destination.
-        """
+        """Check whether the agent has reached its destination."""
         return self._local_planner.done()
 
     def ignore_traffic_lights(self, active=True):
-        """
-        (De)activates the checks for traffic lights
-        """
+        """(De)activates the checks for traffic lights"""
         self._ignore_traffic_lights = active
 
     def ignore_stop_signs(self, active=True):
-        """
-        (De)activates the checks for stop signs
-        """
+        """(De)activates the checks for stop signs"""
         self._ignore_stop_signs = active
 
     def ignore_vehicles(self, active=True):
-        """
-        (De)activates the checks for stop signs
-        """
+        """(De)activates the checks for stop signs"""
         self._ignore_vehicles = active
 
-    def _affected_by_traffic_light(self, lights_list, max_distance=None):
+    def _affected_by_traffic_light(self, lights_list=None, max_distance=None):
         """
-        Method to check if there is a red light affecting us. This version of
-        the method is compatible with both European and US style traffic lights.
+        Method to check if there is a red light affecting the vehicle.
 
-        :param lights_list: list containing TrafficLight objects
-        :return: a tuple given by (bool_flag, traffic_light), where
-                 - bool_flag is True if there is a traffic light in RED
-                   affecting us and False otherwise
-                 - traffic_light is the object itself or None if there is no
-                   red traffic light affecting us
+            :param lights_list (list of carla.TrafficLight): list containing TrafficLight objects.
+                If None, all traffic lights in the scene are used
+            :param max_distance (float): max distance for traffic lights to be considered relevant.
+                If None, the base threshold value is used
         """
         if self._ignore_traffic_lights:
             return (False, None)
+
+        if not lights_list:
+            lights_list = self._world.get_actors().filter("*traffic_light*")
 
         if not max_distance:
             max_distance = self._base_tlight_threshold
@@ -265,27 +240,26 @@ class BasicAgent(object):
             if traffic_light.state != carla.TrafficLightState.Red:
                 continue
 
-            if is_within_distance(object_waypoint.transform,
-                                  self._vehicle.get_transform(),
-                                  max_distance,
-                                  [0, 90]):
-
+            if is_within_distance(object_waypoint.transform, self._vehicle.get_transform(), max_distance, [0, 90]):
                 self._last_traffic_light = traffic_light
                 return (True, traffic_light)
 
         return (False, None)
 
-    def _vehicle_obstacle_detected(self, vehicle_list, max_distance=None):
+    def _vehicle_obstacle_detected(self, vehicle_list=None, max_distance=None):
         """
-        :param vehicle_list: list of potential obstacle to check
-        :param max_distance: max freespace to check for obstacles
-        :return: a tuple given by (bool_flag, vehicle), where
-                 - bool_flag is True if there is a vehicle ahead blocking us
-                   and False otherwise
-                 - vehicle is the blocker object itself
+        Method to check if there is a vehicle in front of the agent blocking its path.
+
+            :param vehicle_list (list of carla.Vehicle): list contatining vehicle objects.
+                If None, all vehicle in the scene are used
+            :param max_distance: max freespace to check for obstacles.
+                If None, the base threshold value is used
         """
         if self._ignore_vehicles:
             return (False, None)
+
+        if not vehicle_list:
+            vehicle_list = self._world.get_actors().filter("*vehicle*")
 
         if not max_distance:
             max_distance = self._base_vehicle_threshold

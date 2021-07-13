@@ -9,7 +9,6 @@ This file has several useful functions related to the AD Map library
 
 from __future__ import print_function
 
-from math import floor, sqrt, pow
 import os
 import numpy as np
 import xml.etree.ElementTree as ET
@@ -238,18 +237,6 @@ def _get_route_waypoints(route, resolution, town_map):
                 wp_route.append(carla_waypoint)
 
     return wp_route
-
-def get_opendrive_ids(ad_lane_id):
-    """Given an AD map lane ID, returns the corresponding opendrive road and lane ids"""
-    num_lane_id = float(str(ad_lane_id))
-    road_id = floor(num_lane_id / 10000)
-
-    remnant = num_lane_id - road_id * 10000
-    lane_segment_id = floor(remnant / 100)
-
-    remnant = remnant - lane_segment_id * 100
-    lane_id = floor(remnant - 50)
-    return road_id, lane_id, lane_segment_id
 
 def _get_lane_para_points(lane_interval, distance=1):
     """
