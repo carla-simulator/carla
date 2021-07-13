@@ -29,6 +29,8 @@ class TestSynchronousMode(SyncSmokeTest):
         for _ in range(0, 4):
             self.world = self.client.reload_world()
             self.world.apply_settings(settings)
+            # workaround: give time to UE4 to clean memory after loading (old assets)
+            time.sleep(5)
 
     def _test_camera_on_synchronous_mode(self):
         print("TestSynchronousMode.test_camera_on_synchronous_mode")
