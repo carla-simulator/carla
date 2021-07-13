@@ -287,6 +287,9 @@ void export_world() {
     .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")))
     .def("get_traffic_sign", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficSign, cc::Landmark), arg("landmark"))
     .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
+    .def("get_traffic_light_from_opendrive_id", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLightFromOpenDRIVE, const carla::road::SignId&), arg("traffic_light_id"))
+    .def("get_traffic_lights_from_waypoint", CALL_RETURNING_LIST_2(cc::World, GetTrafficLightsFromWaypoint, const cc::Waypoint&, double), (arg("waypoint"), arg("distance")))
+    .def("get_traffic_lights_in_junction", CALL_RETURNING_LIST_1(cc::World, GetTrafficLightsInJunction, carla::road::JuncId), (arg("junction_id")))
     .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
     .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
@@ -296,7 +299,6 @@ void export_world() {
     .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
-
     .def(self_ns::str(self_ns::self))
   ;
 
