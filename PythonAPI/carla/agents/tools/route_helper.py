@@ -11,7 +11,6 @@ from __future__ import print_function
 
 from math import floor, sqrt, pow
 import os
-from re import L
 import numpy as np
 import xml.etree.ElementTree as ET
 
@@ -69,20 +68,6 @@ def enu_to_carla_loc(enu_point):
     """Transform an ENU point into a CARLA location"""
     return carla.Location(float(enu_point.x), float(-enu_point.y), float(enu_point.z))
 
-def para_point_to_carla_waypoint(para_point, town_map, lane_length):
-    """Transform a para point into a CARLA waypoint"""
-    ad_lane_id = para_point.laneId
-    road_id, lane_id, segment_id = get_opendrive_ids(ad_lane_id)
-
-    is_positive_lane = ad_map.lane.isLaneDirectionPositive(ad_lane_id)
-    if is_positive_lane and not lane_id < 0 or not is_positive_lane and lane_id < 0:
-        s = lane_length * (1 - float(para_point.parametricOffset))
-    else:
-        s = lane_length * float(para_point.parametricOffset)
-
-    # print("Road: {} - Lane: {} - Lane segment: {} - s: {} ".format(road_id, lane_id, segment_id, s))
-    return town_map.get_waypoint_xodr(road_id, lane_id, s)
-
 def is_point_at_driving_lane(para_point, town_map):
     """Checks if a parapoint is part of a CARLA driving lane"""
     enu_point = ad_map.lane.getENULanePoint(para_point)
@@ -109,7 +94,7 @@ def to_ad_paraPoint(location, distance=1, probability=0):
     distance = [float(mmap.matchedPointDistance) for mmap in match_results]
     return match_results[distance.index(min(distance))].lanePoint.paraPoint
 
-def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, match_dist=1, max_match_dist=10):
+def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, match_dist=1):
     """
     Gets the shortest route between a starting and end waypoint. This transforms the given location
     to AD map paraPoints, and iterates through all permutations to return the shortest route to ensure
@@ -132,23 +117,13 @@ def trace_route(start_waypoint, end_waypoint, town_map, sample_resolution=1, mat
     end_location = end_waypoint.transform.location
 
     # Get starting point matches. Due to errors in altitude parsing, iterate increasing the matching distance
-    added_dist = 0
-    start_matches = None
-    while not start_matches and added_dist < max_match_dist:
-        start_matches = _waypoint_matches(start_waypoint, town_map, match_dist + added_dist)
-        added_dist += 0.2
-
+    start_matches = _waypoint_matches(start_waypoint, town_map, match_dist)
     if not start_matches:
         print("WARNING: Couldn't find a paraPoint for location '{}'.".format(start_location))
         return wp_route
 
     # Get ending point matches. Due to errors in altitude parsing, iterate increasing the matching distance
-    added_dist = 0
-    end_matches = None
-    while not end_matches and added_dist < max_match_dist:
-        end_matches = _waypoint_matches(end_waypoint, town_map, match_dist + added_dist)
-        added_dist += 0.2
-
+    end_matches = _waypoint_matches(end_waypoint, town_map, match_dist)
     if not end_matches:
         print("WARNING: Couldn't find a paraPoint for location '{}'.".format(end_location))
         return wp_route
@@ -238,8 +213,6 @@ def _get_route_length(route):
 
     return route_length
 
-from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
-
 def _get_route_waypoints(route, resolution, town_map):
     """
     Given a route, transforms it into a list of [carla.Waypoint, RoadOption].
@@ -251,107 +224,20 @@ def _get_route_waypoints(route, resolution, town_map):
     :param resolution (float): Distance between the waypoints that form the route.
     :param town_map (carla.Map): CARLA map instance where the route will be computed
     """
-    # world = CarlaDataProvider.get_world()
     wp_route = []
-    # i = 0
     for road_segment in route.roadSegments:
         for lane_segment in road_segment.drivableLaneSegments:
             # Just one segment due to route mode 'Undefined'. If not, some filtering is needed
             if float(lane_segment.laneInterval.start) == float(lane_segment.laneInterval.end):
                 continue  # Lengthless interval
             para_points = _get_lane_para_points(lane_segment.laneInterval, resolution)
-            # lane_length = _get_opendrive_lane_length(lane_segment.laneInterval)
             for para_point in para_points:
-                # carla_waypoint = para_point_to_carla_waypoint(para_point, town_map, lane_length)
-                # if not carla_waypoint:
-                #     print("Failed the previous wp")
-                #     # Use its location instead
-                #     enu_point = ad_map.lane.getENULanePoint(para_point)
-                #     carla_point = enu_to_carla_loc(enu_point)
-                #     carla_waypoint = town_map.get_waypoint(carla_point)
                 enu_point = ad_map.lane.getENULanePoint(para_point)
                 carla_point = enu_to_carla_loc(enu_point)
                 carla_waypoint = town_map.get_waypoint(carla_point)
-
-                # world.debug.draw_string(carla_waypoint.transform.location, str(i), life_time=100, color=carla.Color(0,0,0))
                 wp_route.append(carla_waypoint)
-                # i += 1
 
     return wp_route
-
-def _get_opendrive_lane_length(lane_interval):
-    """Given a lane interval, gets the length of the lane"""
-    def create_interval(lane_id, start, end):
-        """Creates and returns laneInterval instance (as ad_map.route.LaneInterval() doesn't accept inputs)"""
-        interval = ad_map.route.LaneInterval()
-        interval.laneId = lane_id
-        interval.start = ad_physics.ParametricValue(start)
-        interval.end = ad_physics.ParametricValue(end)
-        return interval
-
-    # As the opendrive length is the center of the road, get the lane with id 1 / -1
-    _, lane_id, _ = get_opendrive_ids(lane_interval.laneId)
-    ad_lane_id = int(str(lane_interval.laneId))
-
-    if lane_id > 0:
-        lane_range = range(lane_id - 1, -1, -1)
-    else:
-        lane_range = range(lane_id + 1, 1, 1)
-
-    for lane_diff in lane_range:
-        center_lane_id = ad_lane_id - lane_diff
-        # print("OpenDrive key: {}*{} - AD lane ID: {} - Center Lane ID: {}".format(
-            # road_id, lane_id, ad_lane_id, center_lane_id))
-        if ad_map.lane.isValid(center_lane_id):
-            break
-
-    start = float(lane_interval.start)
-    end = float(lane_interval.end)
-    if end > start:
-        lane_interval = create_interval(center_lane_id, 0, 1)
-    elif start > end:
-        lane_interval = create_interval(center_lane_id, 1, 0)
-
-    is_positive_lane = ad_map.lane.isLaneDirectionPositive(lane_interval.laneId)
-    enu_border = ad_map.route.getENUBorder(lane_interval)
-
-    if is_positive_lane and not lane_id < 0 or not is_positive_lane and lane_id < 0:
-        border = ad_map.lane.getLateralAlignmentEdge(enu_border, ad_physics.ParametricValue(0))
-    else:
-        border = ad_map.lane.getLateralAlignmentEdge(enu_border, ad_physics.ParametricValue(1))
-
-    # world = CarlaDataProvider.get_world()
-    # for point in border:
-    #     world.debug.draw_point(enu_to_carla_loc(point)+carla.Location(z=1), life_time=1000, color=carla.Color(0,0,0))
-
-    # And its length
-    lane_length = 0
-    for i in range(1, len(border)):
-        prev_point = border[i-1]
-        point = border[i]
-        dist_sq = pow(prev_point.x - point.x, 2) + pow(prev_point.y - point.y, 2) + pow(prev_point.y - point.y, 2)
-        lane_length += sqrt(dist_sq)
-
-    # border = ad_map.lane.getLateralAlignmentEdge(enu_border, ad_physics.ParametricValue(0))
-    # lane_length = 0
-    # prev_p = None
-    # for p in border:
-    #     if prev_p:
-    #         lane_length += sqrt(pow(prev_p.x - p.x, 2) + pow(prev_p.y - p.y, 2) + pow(prev_p.z - p.z, 2))
-    #     prev_p = p
-
-    # border = ad_map.lane.getLateralAlignmentEdge(enu_border, ad_physics.ParametricValue(1))
-    # lane_length_ = 0
-    # prev_p = None
-    # for p in border:
-    #     if prev_p:
-    #         lane_length_ += sqrt(pow(prev_p.x - p.x, 2) + pow(prev_p.y - p.y, 2) + pow(prev_p.z - p.z, 2))
-    #     prev_p = p
-
-    # print("Permutation: {}*{} - R Length: {} - L Length: {}".format(
-    #     is_positive_lane, lane_id>0, lane_length, lane_length_))
-
-    return lane_length
 
 def get_opendrive_ids(ad_lane_id):
     """Given an AD map lane ID, returns the corresponding opendrive road and lane ids"""
@@ -382,8 +268,3 @@ def _get_lane_para_points(lane_interval, distance=1):
         para_points.append(para_point)
 
     return para_points
-
-
-"""
-laneInterval:LaneInterval(laneId:10310148, start:0.218181, end:1, wrongWay:0))
-"""
