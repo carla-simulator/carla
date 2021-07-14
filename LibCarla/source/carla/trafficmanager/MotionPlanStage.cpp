@@ -129,11 +129,11 @@ void MotionPlanStage::Update(const unsigned long index) {
     // Target velocity for vehicle.
     const float vehicle_speed_limit = simulation_state.GetSpeedLimit(actor_id);
     float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
-    max_target_velocity = 100.0f / 3.6f;
+    max_target_velocity = 150.0f / 3.6f;
     float max_landmark_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, max_target_velocity);
 
     max_target_velocity = std::min(max_target_velocity, max_landmark_target_velocity);
-    std::cout << "Target velocity: " << max_target_velocity*3.6f << std::endl;
+    // std::cout << "Target velocity: " << max_target_velocity*3.6f << std::endl;
 
     // Collision handling and target velocity correction.
     std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, vehicle_velocity,
@@ -358,8 +358,12 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
     float landmark_target_velocity = std::numeric_limits<float>::max();
 
     // auto all_landmarks = simulation_state->GetLandmarks(actor_id); (track_traffic)
-    auto all_landmarks = waypoint.GetWaypoint()->GetAllLandmarksInDistance(50.0, false);
+    // auto t_start = std::chrono::high_resolution_clock::now();
+    auto all_landmarks = waypoint.GetWaypoint()->GetAllLandmarksInDistance(150.0, false);
+    // auto t_end = std::chrono::high_resolution_clock::now();
+    // std::cout << "GetAllLandmarksInDistance: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << std::endl;
 
+    // t_start = std::chrono::high_resolution_clock::now();
     for (auto &landmark: all_landmarks) {
 
       auto landmark_location = landmark->GetWaypoint()->GetTransform().location;
@@ -370,19 +374,23 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
         continue;
       }
 
-      debug.DrawPoint(landmark_location, 0.2f, {0u, 0u, 0u}, 0.1f);
+      // debug.DrawPoint(landmark_location, 0.2f, {0u, 0u, 0u}, 0.1f);
 
-      float minimum_velocity;
+      float minimum_velocity = max_target_velocity;
       if (landmark_type == "1000001") {  // Traffic light
         auto actor = world.GetTrafficLight(*landmark);
-        auto* tl = static_cast<carla::client::TrafficLight*>(actor.get());
-        auto state = tl->GetState();
-
-        if (state == carla::rpc::TrafficLightState::Green) {
-          minimum_velocity = 30.0f / 3.6f;
-
-        } else if (state == carla::rpc::TrafficLightState::Yellow || state == carla::rpc::TrafficLightState::Red) {
+        if (actor == nullptr) {
           minimum_velocity = 15.0f / 3.6f;
+        } else {
+          auto* tl = static_cast<carla::client::TrafficLight*>(actor.get());
+          auto state = tl->GetState();
+
+          if (state == carla::rpc::TrafficLightState::Green) {
+            minimum_velocity = 30.0f / 3.6f;
+
+          } else if (state == carla::rpc::TrafficLightState::Yellow || state == carla::rpc::TrafficLightState::Red) {
+            minimum_velocity = 15.0f / 3.6f;
+          }
         }
       } else if (landmark_type == "206") {  // Stop
         minimum_velocity = 15.0f / 3.6f;
@@ -398,6 +406,8 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
       float v = std::max(((max_target_velocity - minimum_velocity) / 50.0f) * distance + minimum_velocity, minimum_velocity);
       landmark_target_velocity = std::min(landmark_target_velocity, v);
     }
+    // t_end = std::chrono::high_resolution_clock::now();
+    // std::cout << "For loop: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << std::endl;
 
     return landmark_target_velocity;
 }

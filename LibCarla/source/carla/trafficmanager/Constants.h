@@ -39,7 +39,7 @@ static const float PHYSICS_RADIUS = 50.0f;
 
 namespace SpeedThreshold {
 static const float HIGHWAY_SPEED = 50.0f / 3.6f;
-static const float ARBITRARY_MAX_SPEED = 100.0f / 3.6f;
+static const float ARBITRARY_MAX_SPEED = 150.0f / 3.6f;
 static const float AFTER_JUNCTION_MIN_SPEED = 5.0f / 3.6f;
 static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
 } // namespace SpeedThreshold
@@ -47,7 +47,7 @@ static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
 namespace PathBufferUpdate {
 static const float MAX_START_DISTANCE = 20.0f;
 static const float MINIMUM_HORIZON_LENGTH = 20.0f;
-static const float MAXIMUM_HORIZON_LENGTH = 40.0f;
+static const float MAXIMUM_HORIZON_LENGTH = 80.0f;
 static const float HORIZON_RATE = RATE(MAXIMUM_HORIZON_LENGTH,
                                        MINIMUM_HORIZON_LENGTH,
                                        SpeedThreshold::ARBITRARY_MAX_SPEED);
