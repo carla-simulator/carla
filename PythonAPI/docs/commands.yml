@@ -90,6 +90,33 @@
           Actor or its ID to whom the command will be applied to. 
     # --------------------------------------
 
+  - class_name: ApplyVehiclePhysicsControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">apply_physics_control()</font>__ in carla.Vehicle. Applies a new physics control to a vehicle,
+      modifying its physical parameters.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Vehicle actor affected by the command.
+    - var_name: control
+      type: carla.VehiclePhysicsControl
+      doc: >
+        Physics control to be applied.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: control
+        type: carla.VehiclePhysicsControl
+    # --------------------------------------
+
   - class_name: ApplyVehicleControl
     # - DESCRIPTION ------------------------
     doc: >
