@@ -104,6 +104,11 @@ void FVehicleData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carla
   }
   Control = Vehicle->GetVehicleControl();
   LightState = Vehicle->GetVehicleLightState();
+  auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+  if (Controller)
+  {
+    SpeedLimit = Controller->GetSpeedLimit();
+  }
 }
 
 void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
@@ -118,6 +123,11 @@ void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carl
   }
   Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
   Vehicle->SetVehicleLightState(LightState);
+  auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+  if (Controller)
+  {
+    Controller->SetSpeedLimit(SpeedLimit);
+  }
 }
 
 void FWalkerData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)
@@ -150,7 +160,7 @@ AActor* FTrafficSignData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActor
   FActorSpawnParameters SpawnParams;
   SpawnParams.SpawnCollisionHandlingOverride =
       ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-  return CarlaEpisode->GetWorld()->SpawnActor<ATrafficLightBase>(
+  return CarlaEpisode->GetWorld()->SpawnActor<ATrafficSignBase>(
         Model,
         SpawnTransform,
         SpawnParams);
