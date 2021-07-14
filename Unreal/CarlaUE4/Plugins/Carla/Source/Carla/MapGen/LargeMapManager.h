@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Actor/CarlaActor.h"
 #include "GameFramework/Actor.h"
 
 #include "Engine/LevelStreamingDynamic.h"
@@ -17,20 +18,20 @@
 // TODO: Cache CarlaEpisode
 
 USTRUCT()
-struct FGhostActor
+struct FActiveActor
 {
   GENERATED_BODY()
 
-  FGhostActor() {}
+  FActiveActor() {}
 
-  FGhostActor(
-    const FActorView* InActorView,
+  FActiveActor(
+    const FCarlaActor* InCarlaActor,
     const FTransform& InTransform)
-    : ActorView(InActorView),
+    : CarlaActor(InCarlaActor),
       WorldLocation(FDVector(InTransform.GetTranslation())),
       Rotation(InTransform.GetRotation()) {}
 
-  const FActorView* ActorView;
+  const FCarlaActor* CarlaActor;
 
   FDVector WorldLocation;
 
@@ -84,7 +85,7 @@ public:
 
   void RegisterInitialObjects();
 
-  void OnActorSpawned(const FActorView& ActorView);
+  void OnActorSpawned(const FCarlaActor& CarlaActor);
 
   UFUNCTION(Category="Large Map Manager")
   void OnActorDestroyed(AActor* DestroyedActor);
@@ -98,10 +99,21 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   void GenerateLargeMap();
 
-  void AddActorToUnloadedList(const FActorView& ActorView, const FTransform& Transform);
+  void GenerateMap(TArray<TPair<FString, FIntVector>> MapPathsIds);
+
+  UFUNCTION(BlueprintCallable, CallInEditor, Category = "Large Map Manager")
+  void ClearWorldAndTiles();
+
+  void AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform);
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FIntVector GetNumTilesInXY() const;
+
+  UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
+  int GetNumTiles() const
+  {
+    return MapTiles.Num();
+  }
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   bool IsLevelOfTileLoaded(FIntVector InTileID) const;
@@ -132,6 +144,18 @@ public:
   UPROPERTY(EditAnywhere, Category = "Large Map Manager")
   FString LargeMapName = "testmap";
 
+  void SetTile0Offset(const FVector& Offset);
+
+  void SetTileSize(float Size);
+
+  void SetLayerStreamingDistance(float Distance);
+
+  void SetActorStreamingDistance(float Distance);
+
+  float GetLayerStreamingDistance() const;
+
+  float GetActorStreamingDistance() const;
+
 protected:
 
   FIntVector GetTileVectorID(FVector TileLocation) const;
@@ -161,29 +185,27 @@ protected:
 
   FCarlaMapTile* GetCarlaMapTile(FIntVector TileVectorID);
 
-  ULevelStreamingDynamic* AddNewTile(FString TileName, FVector TileLocation);
-
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
 
   void UpdateTilesState();
 
   void RemovePendingActorsToRemove();
 
-  // Check if any ghost actor has to be converted into dormant actor
+  // Check if any active actor has to be converted into dormant actor
   // because it went out of range (ActorStreamingDistance)
   // Just stores the array of selected actors
-  void CheckGhostActors();
+  void CheckActiveActors();
 
-  // Converts ghost actors that went out of range to dormant actors
-  void ConvertGhostToDormantActors();
+  // Converts active actors that went out of range to dormant actors
+  void ConvertActiveToDormantActors();
 
-  // Check if any dormant actor has to be converted into ghost actor
+  // Check if any dormant actor has to be converted into active actor
   // because it enter in range (ActorStreamingDistance)
   // Just stores the array of selected actors
   void CheckDormantActors();
 
-  // Converts ghost actors that went out of range to dormant actors
-  void ConvertDormantToGhostActors();
+  // Converts active actors that went out of range to dormant actors
+  void ConvertDormantToActiveActors();
 
   void CheckIfRebaseIsNeeded();
 
@@ -215,19 +237,20 @@ protected:
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TArray<AActor*> ActorsToConsider;
   //UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
-  TArray<FActorView::IdType> GhostActors;
-  TArray<FActorView::IdType> DormantActors;
+  TArray<FCarlaActor::IdType> ActiveActors;
+  TArray<FCarlaActor::IdType> DormantActors;
 
   // Temporal sets to remove actors. Just to avoid removing them in the update loop
   TSet<AActor*> ActorsToRemove;
-  TSet<FActorView::IdType> GhostsToRemove;
-  TSet<FActorView::IdType> DormantsToRemove;
+  TSet<FCarlaActor::IdType> ActivesToRemove;
+  TSet<FCarlaActor::IdType> DormantsToRemove;
 
   // Helpers to move Actors from one array to another.
-  TSet<FActorView::IdType> GhostToDormantActors;
-  TSet<FActorView::IdType> DormantToGhostActors;
+  TSet<FCarlaActor::IdType> ActiveToDormantActors;
+  TSet<FCarlaActor::IdType> DormantToActiveActors;
 
-  TSet<TileID> CurrentTilesLoaded;
+  UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
+  TSet<uint64> CurrentTilesLoaded;
 
   // Current Origin after rebase
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
@@ -265,6 +288,8 @@ protected:
   {
     if (!LargeMapTilePath.IsEmpty()) GenerateMap(LargeMapTilePath);
   }
+
+  void RegisterTilesInWorldComposition();
 
   FString GenerateTileName(TileID TileID);
 

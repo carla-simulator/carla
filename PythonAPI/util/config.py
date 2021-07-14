@@ -183,6 +183,16 @@ def main():
         '--osm-path',
         metavar='OSM_FILE_PATH',
         help='load a new map with a minimum physical road representation of the provided OpenStreetMaps')
+    argparser.add_argument(
+        '--tile-stream-distance',
+        metavar='N',
+        type=float,
+        help='Set tile streaming distance (large maps only)')
+    argparser.add_argument(
+        '--actor-active-distance',
+        metavar='N',
+        type=float,
+        help='Set actor active distance (large maps only)')
     if len(sys.argv) < 2:
         argparser.print_help()
         return
@@ -282,6 +292,11 @@ def main():
         else:
             print('set variable frame rate.')
             settings.fixed_delta_seconds = None
+
+    if args.tile_stream_distance is not None:
+        settings.tile_stream_distance = args.tile_stream_distance
+    if args.actor_active_distance is not None:
+        settings.actor_active_distance = args.actor_active_distance
 
     world.apply_settings(settings)
 

@@ -18,6 +18,8 @@
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
 #include "MovementComponents/DefaultMovementComponent.h"
+#include "Carla/Trigger/FrictionTrigger.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
 

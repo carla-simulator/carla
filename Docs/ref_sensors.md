@@ -1,18 +1,19 @@
 # Sensors reference
 
-*   [__Collision detector__](#collision-detector)
-*   [__Depth camera__](#depth-camera)
-*   [__GNSS sensor__](#gnss-sensor)
-*   [__IMU sensor__](#imu-sensor)
-*   [__Lane invasion detector__](#lane-invasion-detector)
-*   [__LIDAR sensor__](#lidar-sensor)
-*   [__Obstacle detector__](#obstacle-detector)
-*   [__Radar sensor__](#radar-sensor)
-*   [__RGB camera__](#rgb-camera)
-*   [__RSS sensor__](#rss-sensor)
-*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
-*   [__Semantic segmentation camera__](#semantic-segmentation-camera)
-*   [__DVS camera__](#dvs-camera)
+- [__Collision detector__](#collision-detector)
+- [__Depth camera__](#depth-camera)
+- [__GNSS sensor__](#gnss-sensor)
+- [__IMU sensor__](#imu-sensor)
+- [__Lane invasion detector__](#lane-invasion-detector)
+- [__LIDAR sensor__](#lidar-sensor)
+- [__Obstacle detector__](#obstacle-detector)
+- [__Radar sensor__](#radar-sensor)
+- [__RGB camera__](#rgb-camera)
+- [__RSS sensor__](#rss-sensor)
+- [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
+- [__Semantic segmentation camera__](#semantic-segmentation-camera)
+- [__DVS camera__](#dvs-camera)
+- [__Optical Flow camera__](#optical-flow-camera)
 
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
@@ -842,5 +843,47 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 | `refractory_period_ns`             | int     | 0\.0    | Refractory period (time during which a pixel cannot fire events just after it fired one), in nanoseconds. It limits the highest frequency of triggering events.   |
 | `use_log`            | bool    | true    | Whether to work in the logarithmic intensity scale.  |
 | `log_eps`            | float   | 0\.001  | Epsilon value used to convert images to log: `L = log(eps + I / 255.0)`.<br>  Where `I` is the grayscale value of the RGB image: <br>`I = 0.2989*R + 0.5870*G + 0.1140*B`. |
+
+<br>
+
+---
+
+## Optical Flow Camera
+
+The Optical Flow camera captures the motion perceived from the point of view of the camera. Every pixel recorded by this sensor encodes the velocity of that point projected to the image plane. The velocity of a pixel is encoded in the range [-2,2]. To obtain the motion in pixel units, this information can be scaled with the image size to [-2 * image_size, 2 * image_size].
+
+![optical_flow](img/optical_flow.png)
+
+#### Optical Flow camera attributes
+
+| Blueprint attribute | Type | Default | Description |
+| ------------------- | ---- | ------- | ----------- |
+| `image_size_x` | int | 800 | Image width in pixels. |
+| `image_size_y` | int | 600 | Image height in pixels. |
+| `fov` | float | 90.0 | Horizontal field of view in degrees. |
+| `sensor_tick` | float | 0.0 | Simulation seconds between sensor captures (ticks). |
+
+#### Optical Flow camera lens distortion attributes
+
+| Blueprint attribute      | Type         | Default      | Description  |
+| ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
+| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
+| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
+| `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
+| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
+| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+
+#### Output attributes
+
+| Sensor data attribute | Type | Description |
+| --------------------- | ---- | ----------- |
+| `frame` | int | Frame number when the measurement took place. |
+| `timestamp` | double | Simulation time of the measurement in seconds since the beginning of the episode. |
+| `transform` | [carla.Transform](<../python_api#carlatransform>) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width` | int | Image width in pixels. |
+| `height` | int | Image height in pixels. |
+| `fov` | float | Horizontal field of view in degrees. |
+| `raw_data` | bytes | Array of BGRA 64-bit pixels containing two float values. |
 
 <br>

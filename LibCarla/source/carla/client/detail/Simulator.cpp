@@ -138,8 +138,24 @@ namespace detail {
     return EpisodeProxy{shared_from_this()};
   }
 
+  bool Simulator::ShouldUpdateMap(rpc::MapInfo& map_info) {
+    if (!_cached_map) {
+      return true;
+    }
+    if (map_info.name != _cached_map->GetName() ||
+        map_info.open_drive_file.size() != _cached_map->GetOpenDrive().size()) {
+      return true;
+    }
+    return false;
+  }
+
   SharedPtr<Map> Simulator::GetCurrentMap() {
-    return MakeShared<Map>(_client.GetMapInfo());
+    DEBUG_ASSERT(_episode != nullptr);
+    if (!_cached_map || _episode->HasMapChangedSinceLastCall()) {
+      rpc::MapInfo map_info = _client.GetMapInfo();
+      _cached_map = MakeShared<Map>(map_info);
+    }
+    return _cached_map;
   }
 
   // ===========================================================================

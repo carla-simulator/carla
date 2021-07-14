@@ -105,11 +105,15 @@ namespace client {
     rpc::ActorState GetActorState() const;
 
     bool IsAlive() const {
-      return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Alive;
+      return GetEpisode().IsValid() && (GetActorState() != rpc::ActorState::PendingKill && GetActorState() != rpc::ActorState::Invalid) ;
     }
 
     bool IsDormant() const {
       return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Dormant;
+    }
+
+    bool IsActive() const {
+      return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Active;
     }
 
     /// Tell the simulator to destroy this Actor, and return whether the actor

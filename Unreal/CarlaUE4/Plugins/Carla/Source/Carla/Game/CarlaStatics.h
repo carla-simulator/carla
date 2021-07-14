@@ -46,6 +46,9 @@ public:
   static ACarlaRecorder* GetRecorder(const UObject *WorldContextObject);
 
   static CarlaReplayer* GetReplayer(const UObject *WorldContextObject);
+
+  UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
+  static ALargeMapManager* GetLargeMapManager(const UObject *WorldContextObject);
 };
 
 // =============================================================================
@@ -90,6 +93,16 @@ inline CarlaReplayer* UCarlaStatics::GetReplayer(const UObject *WorldContextObje
   if (Episode)
   {
     return Episode->GetReplayer();
+  }
+  return nullptr;
+}
+
+inline ALargeMapManager* UCarlaStatics::GetLargeMapManager(const UObject *WorldContextObject)
+{
+  ACarlaGameModeBase* GameMode = GetGameMode(WorldContextObject);
+  if (GameMode)
+  {
+    return GameMode->GetLMManager();
   }
   return nullptr;
 }

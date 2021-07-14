@@ -16,6 +16,7 @@
 
 #include "Runtime/Core/Public/Misc/App.h"
 #include "PhysicsEngine/PhysicsSettings.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 #include <thread>
 
@@ -183,6 +184,14 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
   PhysSett->bSubstepping = Settings.bSubstepping;
   PhysSett->MaxSubstepDeltaTime = Settings.MaxSubstepDeltaTime;
   PhysSett->MaxSubsteps = Settings.MaxSubsteps;
+
+  UWorld* World = CurrentEpisode->GetWorld();
+  ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(World);
+  if (LargeMapManager)
+  {
+    LargeMapManager->SetLayerStreamingDistance(Settings.TileStreamingDistance);
+    LargeMapManager->SetActorStreamingDistance(Settings.ActorActiveDistance);
+  }
 }
 
 void FCarlaEngine::ResetSimulationState()

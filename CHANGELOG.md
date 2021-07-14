@@ -1,5 +1,6 @@
 ## Latest
 
+  * Changed the resolution of the cached map in Traffic Manager from 0.1 to 5 meters
   * Fixed import sumo_integration module from other scripts
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
@@ -17,10 +18,14 @@
     - Supported JSON vehicle definition
     - Unsupported collision dynamics
   * Added performance benchmarking section to documentation
+  * Added API functions to traffic light actor `get_effect_waypoints()`, `get_light_boxes()` and `get_opendrive_id()`
+  * Added API functions to world `get_traffic_lights_from_waypoint()` and `get_traffic_lights_in_junction`
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Extended make import process for applying road painter materials (carla art tool)
   * Added creation of custom JSON file for applying decals to imported roads
+  * Added ApplyVehiclePhysicsControl to commands
+  * Added flush in the sublevel loading to increase carla's determinism in Opt maps
   * Fix bug in carla.Transform.get_up_vector()
   * Fix bug in lidar channel point count
   * Fix imu: some weird cases were given nan values
@@ -28,9 +33,11 @@
   * Exposed tire parameters for longitudinal and lateral stiffness in the PhysicsControl. 
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
   * Improved agent's vehicle detection to also take into account the actor bounding boxes
+  * Added Optical Flow camera
   * API extensions:
   - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
-  - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle whee
+  - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle wheel
+  - Added `scattering_intensity` , `mie_scattering_scale` , `rayleigh_scattering_scale` to PythonAPI for changing weather attributes
 
 ## CARLA 0.9.11
 
