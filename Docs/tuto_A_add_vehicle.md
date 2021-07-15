@@ -21,7 +21,7 @@ __The positions of the skeleton bones can be changed but any other manipulation 
 
 ### Bind and model the vehicle
 
-This section details the minimum requirements in the modeling stage of your vehicle to make sure it can be used successfully in CARLA. The process involves binding the skeleton correctly to the base and wheels of the vehicle, creating Physical Asset and Collision meshes, and exporting to the correct format.
+This section details the minimum requirements in the modeling stage of your vehicle to make sure it can be used successfully in CARLA. The process involves binding the skeleton correctly to the base and wheels of the vehicle, creating Physical Asset and raycast sensor meshes, and exporting to the correct format.
 
 __1. Import the base skeleton.__
 
@@ -84,11 +84,11 @@ The Physical Asset mesh should be exported as a separate `.fbx` file. The final 
 
 Export the final mesh as an `.fbx` file with the name `SMC_<vehicle_name>.fbx`.
 
-__5. Create the Collision mesh.__
+__5. Create the mesh for the raycast sensor.__
 
-The Collision mesh allows Unreal Engine to identify the vehicle's shape and use that to calculate collisions. This mesh should have a slightly more defined geometry than the Physical Asset mesh.
+The raycast sensor mesh sets up the vehicle's shape that will be detected by the raycast sensors (RADAR, LiDAR, and Semantic LiDAR). This mesh should have a slightly more defined geometry than the Physical Asset mesh in order to increase the realism of sensor simulation but not as detailed as the car mesh for performance reasons.
 
-Consider the following points when creating the Collision mesh:
+Consider the following points when creating the raycast sensor mesh:
 
 - The mesh should cover all aspects of the vehicle, including wheels, side mirrors, and grilles.
 - The wheels should be cylinders of no more than 16 loops.
@@ -126,21 +126,24 @@ In the dialogue box that pops up:
 
 The Skeletal Mesh will appear along with two new files, `<vehicle_name>_PhysicsAssets` and `<vehicle_name>_Skeleton`.
 
-__3. Set the Collision mesh.__
+Import the rest of your `.fbx` files separately from the main vehicle skeleton `.fbx` file.
+
+__3. Set the physical asset mesh.__
 
 >1. Open `<vehicle_name>_PhysicsAssets` from the **_Content Browser_**.
 - Right-click on the `Vehicle_Base` mesh in the **_Skeleton Tree_** panel and go to **_Copy Collision from StaticMesh_**.
-- Search for and select your `SM_sc_<vehicle_name>` file. You should see the outline of the Collision mesh appear in the viewport.
+- Search for and select your `SMC_<vehicle_name>` file. You should see the outline of the physical asset mesh appear in the viewport.
 - Delete the default capsule shape from the `Vehicle_Base`.
 - Select all the wheels:
     - Go to the **_Tools_** panel and change the **_Primitive Type_** to `Sphere`.
     - Go to the **_Details_** panel and change **_Physics Type_** to `Kinematic`.
+    - Set **_Linear Damping_** to `0`. This will eliminate any extra friction on the wheels.
 - Enable **_Simulation Generates Hit Event_** for all meshes.
 - Click **_Re-generate Bodies_**.
 - Adjust the wheel sphere to the size of the wheel.
 - Save and close the window.
 
->>![Collision mesh](../img/collision_mesh_vehicle.png)
+>![Collision mesh](../img/collision_mesh_vehicle.png)
 
 __4. Create the Animation Blueprint.__
 
@@ -193,7 +196,7 @@ __8. Configure vehicle blueprint.__
 - In the **_Details_** panel, go to **_Skeletal Mesh_** and search for and select the base skeleton file of your vehicle (located in the `Carla/Static/Vehicles/4Wheeled/<vehicle_name>` folder).
 - Go to **_Anim Class_** in the **_Details_** panel. Search for and select your `AnimBP_<vehicle_name>` file.
 - In the **_Components_** panel, select **_Custom Collision (Inherited)_**.
-- Select **_Static Mesh_** in the **_Details_** panel and search for your `SM_sc_<vehicle_name>` collision mesh.
+- Select **_Static Mesh_** in the **_Details_** panel and search for your `SM_sc_<vehicle_name>` raycast sensor mesh.
 - In the **_Components_** panel, select **_VehicleMovement (MovementComp) (Inherited)_**.
 - In the **_Details_** panel, search for `wheel`. You will find settings for each of the wheels. For each one, click on **_Wheel Class_** and search for the `BP_<vehicle_name>_<wheel_name>` file that corresponds to the correct wheel position.
 

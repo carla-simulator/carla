@@ -225,7 +225,7 @@ Test the simulator using the example scripts inside `PythonAPI\examples`.  With 
         # Terminal A 
         cd PythonAPI/examples
         python3 -m pip install -r requirements.txt
-        python3 spawn_npc.py  
+        python3 generate_traffic.py  
 
         # Terminal B
         cd PythonAPI/examples
@@ -321,10 +321,10 @@ make launch
 # Terminal A 
 cd PythonAPI/examples
 python3 -m pip install -r requirements.txt
-python3 spawn_npc.py 
+python3 generate_traffic.py 
 # Terminal B
 cd PythonAPI/examples
-python3 spawn_npc.py
+python3 generate_traffic.py
 python3 dynamic_weather.py
 
 # Optionally, to compile the PythonAPI for Python2

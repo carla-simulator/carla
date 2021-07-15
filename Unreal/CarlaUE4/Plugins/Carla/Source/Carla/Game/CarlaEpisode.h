@@ -136,6 +136,11 @@ public:
     return ActorDispatcher->GetActorRegistry();
   }
 
+  FActorRegistry &GetActorRegistry()
+  {
+    return ActorDispatcher->GetActorRegistry();
+  }
+
   // ===========================================================================
   // -- Actor look up methods --------------------------------------------------
   // ===========================================================================
@@ -144,34 +149,18 @@ public:
   ///
   /// If the actor is not found or is pending kill, the returned view is
   /// invalid.
-  FActorView FindActor(FActorView::IdType ActorId) const
+  FCarlaActor* FindCarlaActor(FCarlaActor::IdType ActorId)
   {
-    return ActorDispatcher->GetActorRegistry().Find(ActorId);
-  }
-
-  FActorView* FindActorPtr(FActorView::IdType ActorId)
-  {
-    FActorRegistry& ActorRegistry = const_cast<FActorRegistry&>(ActorDispatcher->GetActorRegistry());
-    return ActorRegistry.FindPtr(ActorId);
+    return ActorDispatcher->GetActorRegistry().FindCarlaActor(ActorId);
   }
 
   /// Find the actor view of @a Actor.
   ///
   /// If the actor is not found or is pending kill, the returned view is
   /// invalid.
-  FActorView FindActor(AActor *Actor) const
+  FCarlaActor* FindCarlaActor(AActor *Actor) const
   {
-    return ActorDispatcher->GetActorRegistry().Find(Actor);
-  }
-
-  /// Find the actor view of @a Actor. If the actor is not found, a "fake" view
-  /// is returned emulating an existing Carla actor. Use this to return views
-  /// over static actors present in the map.
-  ///
-  /// If the actor is pending kill, the returned view is invalid.
-  FActorView FindOrFakeActor(AActor *Actor) const
-  {
-    return ActorDispatcher->GetActorRegistry().FindOrFake(Actor);
+    return ActorDispatcher->GetActorRegistry().FindCarlaActor(Actor);
   }
 
   // ===========================================================================
@@ -184,29 +173,10 @@ public:
   /// @return A pair containing the result of the spawn function and a view over
   /// the actor and its properties. If the status is different of Success the
   /// view is invalid.
-  TPair<EActorSpawnResultStatus, FActorView> SpawnActorWithInfo(
+  TPair<EActorSpawnResultStatus, FCarlaActor*> SpawnActorWithInfo(
       const FTransform &Transform,
       FActorDescription thisActorDescription,
-      FActorView::IdType DesiredId = 0)
-  {
-    FTransform NewTransform = Transform;
-    // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
-    auto result = ActorDispatcher->SpawnActor(NewTransform, thisActorDescription, DesiredId);
-    if (Recorder->IsEnabled())
-    {
-      if (result.Key == EActorSpawnResultStatus::Success)
-      {
-        Recorder->CreateRecorderEventAdd(
-          result.Value.GetActorId(),
-          static_cast<uint8_t>(result.Value.GetActorType()),
-          NewTransform,
-          std::move(thisActorDescription)
-        );
-      }
-    }
-
-    return result;
-  }
+      FCarlaActor::IdType DesiredId = 0);
 
   /// Spawns an actor based on @a ActorDescription at @a Transform.
   ///
@@ -236,7 +206,7 @@ public:
       const FTransform &Transform,
       FActorDescription ActorDescription)
   {
-    return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
+    return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value->GetActor();
   }
 
   /// Attach @a Child to @a Parent.
@@ -252,8 +222,13 @@ public:
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
   {
-    carla::rpc::ActorId ActorId = GetActorRegistry().Find(Actor).GetActorId();
-    return DestroyActor(ActorId);
+    FCarlaActor* CarlaActor = FindCarlaActor(Actor);
+    if (CarlaActor)
+    {
+      carla::rpc::ActorId ActorId = CarlaActor->GetActorId();
+      return DestroyActor(ActorId);
+    }
+    return false;
   }
 
   bool DestroyActor(carla::rpc::ActorId ActorId)
@@ -283,7 +258,11 @@ public:
   // ===========================================================================
 
   /// Create a serializable object describing the actor.
-  carla::rpc::Actor SerializeActor(FActorView ActorView) const;
+  carla::rpc::Actor SerializeActor(FCarlaActor* CarlaActor) const;
+
+  /// Create a serializable object describing the actor.
+  /// Can be used to serialized actors that are not in the registry
+  carla::rpc::Actor SerializeActor(AActor* Actor) const;
 
   // ===========================================================================
   // -- Private methods and members --------------------------------------------
@@ -324,13 +303,13 @@ private:
     ActorDispatcher->Bind(ActorFactory);
   }
 
-  std::pair<int, FActorView&> TryToCreateReplayerActor(
+  std::pair<int, FCarlaActor&> TryToCreateReplayerActor(
     FVector &Location,
     FVector &Rotation,
     FActorDescription &ActorDesc,
     unsigned int desiredId);
 
-  bool SetActorSimulatePhysics(FActorView &ActorView, bool bEnabled);
+  bool SetActorSimulatePhysics(FCarlaActor &CarlaActor, bool bEnabled);
 
   void TickTimers(float DeltaSeconds)
   {

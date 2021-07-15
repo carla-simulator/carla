@@ -12,6 +12,9 @@
 #include "carla/client/ActorList.h"
 #include "carla/client/detail/Simulator.h"
 #include "carla/StringUtil.h"
+#include "carla/road/SignalType.h"
+#include "carla/road/Junction.h"
+#include "carla/client/TrafficLight.h"
 
 #include <exception>
 
@@ -53,6 +56,10 @@ namespace client {
   uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout) {
     rpc::EpisodeSettings new_settings = settings;
     uint64_t id = _episode.Lock()->SetEpisodeSettings(settings);
+
+    time_duration local_timeout = timeout.milliseconds() == 0 ?
+        _episode.Lock()->GetNetworkingTimeout() : timeout;
+
     if (settings.fixed_delta_seconds.has_value()) {
       using namespace std::literals::chrono_literals;
 
@@ -68,7 +75,7 @@ namespace client {
         if (tics_correct >= 2)
           return id;
 
-        Tick(timeout);
+        Tick(local_timeout);
       }
 
       log_warning("World::ApplySettings: After", number_of_attemps, " attemps, the settings were not correctly set. Please check that everything is consistent.");
@@ -129,7 +136,10 @@ namespace client {
   }
 
   WorldSnapshot World::WaitForTick(time_duration timeout) const {
-    return _episode.Lock()->WaitForTick(timeout);
+    time_duration local_timeout = timeout.milliseconds() == 0 ?
+        _episode.Lock()->GetNetworkingTimeout() : timeout;
+
+    return _episode.Lock()->WaitForTick(local_timeout);
   }
 
   size_t World::OnTick(std::function<void(WorldSnapshot)> callback) {
@@ -141,7 +151,9 @@ namespace client {
   }
 
   uint64_t World::Tick(time_duration timeout) {
-    return _episode.Lock()->Tick(timeout);
+    time_duration local_timeout = timeout.milliseconds() == 0 ?
+        _episode.Lock()->GetNetworkingTimeout() : timeout;
+    return _episode.Lock()->Tick(local_timeout);
   }
 
   void World::SetPedestriansCrossFactor(float percentage) {
@@ -173,6 +185,21 @@ namespace client {
       if (StringUtil::Match(actor->GetTypeId(), "*traffic_light*")) {
         TrafficLight* tl = static_cast<TrafficLight*>(actor.get());
         if(tl && (tl->GetSignId() == landmark_id)) {
+          return actor;
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  SharedPtr<Actor> World::GetTrafficLightFromOpenDRIVE(const road::SignId& sign_id) const {
+    SharedPtr<ActorList> actors = GetActors();
+    SharedPtr<TrafficLight> result;
+    for (size_t i = 0; i < actors->size(); i++) {
+      SharedPtr<Actor> actor = actors->at(i);
+      if (StringUtil::Match(actor->GetTypeId(), "*traffic_light*")) {
+        TrafficLight* tl = static_cast<TrafficLight*>(actor.get());
+        if(tl && (tl->GetSignId() == sign_id)) {
           return actor;
         }
       }
@@ -224,6 +251,44 @@ namespace client {
   std::vector<rpc::LabelledPoint> World::CastRay(
       geom::Location start_location, geom::Location end_location) const {
     return _episode.Lock()->CastRay(start_location, end_location);
+  }
+
+  std::vector<SharedPtr<Actor>> World::GetTrafficLightsFromWaypoint(
+      const Waypoint& waypoint, double distance) const {
+    std::vector<SharedPtr<Actor>> Result;
+    std::vector<SharedPtr<Landmark>> landmarks =
+        waypoint.GetAllLandmarksInDistance(distance);
+    std::set<std::string> added_signals;
+    for (auto& landmark : landmarks) {
+      if (road::SignalType::IsTrafficLight(landmark->GetType())) {
+        SharedPtr<Actor> traffic_light = GetTrafficLight(*(landmark.get()));
+        if (traffic_light) {
+          if(added_signals.count(landmark->GetId()) == 0) {
+            Result.emplace_back(traffic_light);
+            added_signals.insert(landmark->GetId());
+          }
+        }
+      }
+    }
+    return Result;
+  }
+
+  std::vector<SharedPtr<Actor>> World::GetTrafficLightsInJunction(
+      const road::JuncId junc_id) const {
+    std::vector<SharedPtr<Actor>> Result;
+    SharedPtr<Map> map = GetMap();
+    const road::Junction* junction = map->GetMap().GetJunction(junc_id);
+    for (const road::ContId& cont_id : junction->GetControllers()) {
+      const std::unique_ptr<road::Controller>& controller =
+          map->GetMap().GetControllers().at(cont_id);
+      for (road::SignId sign_id : controller->GetSignals()) {
+        SharedPtr<Actor> traffic_light = GetTrafficLightFromOpenDRIVE(sign_id);
+        if (traffic_light) {
+          Result.emplace_back(traffic_light);
+        }
+      }
+    }
+    return Result;
   }
 
 } // namespace client

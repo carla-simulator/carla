@@ -106,6 +106,8 @@ namespace detail {
       _pending_exceptions_msg = e;
     }
 
+    bool HasMapChangedSinceLastCall();
+
   private:
 
     Episode(Client &client, const rpc::EpisodeInfo &info);
@@ -135,6 +137,8 @@ namespace detail {
     const streaming::Token _token;
 
     bool _pending_exceptions = false;
+
+    bool _should_update_map = true;
   };
 
 } // namespace detail
