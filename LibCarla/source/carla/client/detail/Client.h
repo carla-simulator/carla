@@ -208,6 +208,10 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    void ShowVehicleDebugTelemetry(
+        rpc::ActorId vehicle,
+        bool enabled);
+
     void ApplyControlToVehicle(
         rpc::ActorId vehicle,
         const rpc::VehicleControl &control);

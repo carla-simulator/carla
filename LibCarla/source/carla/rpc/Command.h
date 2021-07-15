@@ -208,6 +208,18 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 
+    struct ShowDebugTelemetry : CommandBase<ShowDebugTelemetry> {
+      ShowDebugTelemetry() = default;
+      ShowDebugTelemetry(
+          ActorId id,
+          bool value)
+        : actor(id),
+          enabled(value) {}
+      ActorId actor;
+      bool enabled;
+      MSGPACK_DEFINE_ARRAY(actor, enabled);
+    };
+
     struct SetVehicleLightState : CommandBase<SetVehicleLightState> {
       SetVehicleLightState() = default;
       SetVehicleLightState(
@@ -237,6 +249,7 @@ namespace rpc {
         SetSimulatePhysics,
         SetEnableGravity,
         SetAutopilot,
+        ShowDebugTelemetry,
         SetVehicleLightState>;
 
     CommandType command;

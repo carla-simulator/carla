@@ -194,6 +194,13 @@ void export_commands() {
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
   ;
 
+  class_<cr::Command::ShowDebugTelemetry>("ShowDebugTelemetry")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, bool, uint16_t>, (arg("actor"), arg("enabled")))
+    .def(init<cr::ActorId, bool>((arg("actor_id"), arg("enabled"))))
+    .def_readwrite("actor_id", &cr::Command::ShowDebugTelemetry::actor)
+    .def_readwrite("enabled", &cr::Command::ShowDebugTelemetry::enabled)
+  ;
+
   class_<cr::Command::SetVehicleLightState>("SetVehicleLightState")
     .def("__init__", &command_impl::CustomInit<ActorPtr, bool>, (arg("actor"), arg("light_state")))
     .def(init<cr::ActorId, cr::VehicleLightState::flag_type>((arg("actor_id"), arg("light_state"))))

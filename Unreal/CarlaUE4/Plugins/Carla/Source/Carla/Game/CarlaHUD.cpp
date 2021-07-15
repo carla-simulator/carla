@@ -17,6 +17,12 @@ void ACarlaHUD::DrawHUD()
     return;
   }
 
+  if(DebugVehicle) {
+    float YL = 1600.0f;
+    float Y0 = 0.0f;
+    DebugVehicle->DrawDebug(Canvas, YL, Y0);
+  }
+
   double Now = FPlatformTime::Seconds();
   int i = 0;
   while (i < StringList.Num())
