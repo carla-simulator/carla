@@ -354,23 +354,26 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
                                                  float max_target_velocity) {
 
     auto debug = world.MakeDebugHelper();
+    auto const max_distance = 2 * max_target_velocity;
 
     float landmark_target_velocity = std::numeric_limits<float>::max();
 
     // auto all_landmarks = simulation_state->GetLandmarks(actor_id); (track_traffic)
     // auto t_start = std::chrono::high_resolution_clock::now();
-    auto all_landmarks = waypoint.GetWaypoint()->GetAllLandmarksInDistance(150.0, false);
+    auto all_landmarks = waypoint.GetWaypoint()->GetAllLandmarksInDistance(max_distance, false);
     // auto t_end = std::chrono::high_resolution_clock::now();
     // std::cout << "GetAllLandmarksInDistance: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << std::endl;
 
     // t_start = std::chrono::high_resolution_clock::now();
+    // std::cout << "Landmark size: " << all_landmarks.size() << std::endl;
+
     for (auto &landmark: all_landmarks) {
 
       auto landmark_location = landmark->GetWaypoint()->GetTransform().location;
       auto landmark_type = landmark->GetType();
       auto distance = landmark_location.Distance(vehicle_location);
 
-      if (distance > 50.0f) {
+      if (distance > max_distance) {
         continue;
       }
 
@@ -403,7 +406,7 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
         continue;
       }
 
-      float v = std::max(((max_target_velocity - minimum_velocity) / 50.0f) * distance + minimum_velocity, minimum_velocity);
+      float v = std::max(((max_target_velocity - minimum_velocity) / max_distance) * distance + minimum_velocity, minimum_velocity);
       landmark_target_velocity = std::min(landmark_target_velocity, v);
     }
     // t_end = std::chrono::high_resolution_clock::now();

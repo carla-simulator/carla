@@ -39,7 +39,6 @@ static const float PHYSICS_RADIUS = 50.0f;
 
 namespace SpeedThreshold {
 static const float HIGHWAY_SPEED = 50.0f / 3.6f;
-static const float ARBITRARY_MAX_SPEED = 150.0f / 3.6f;
 static const float AFTER_JUNCTION_MIN_SPEED = 5.0f / 3.6f;
 static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
 } // namespace SpeedThreshold
@@ -47,14 +46,12 @@ static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
 namespace PathBufferUpdate {
 static const float MAX_START_DISTANCE = 20.0f;
 static const float MINIMUM_HORIZON_LENGTH = 20.0f;
-static const float MAXIMUM_HORIZON_LENGTH = 80.0f;
-static const float HORIZON_RATE = RATE(MAXIMUM_HORIZON_LENGTH,
-                                       MINIMUM_HORIZON_LENGTH,
-                                       SpeedThreshold::ARBITRARY_MAX_SPEED);
+static const float MAXIMUM_HORIZON_LENGTH = 100.0f;
+static const float HORIZON_RATE = 1.45f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 0.1f;
+static const float TARGET_WAYPOINT_TIME_HORIZON = 0.3f;
 static const float TARGET_WAYPOINT_HORIZON_LENGTH = 0.6f;
 static const float JUNCTION_LOOK_AHEAD = 6.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 6.0f;
@@ -70,15 +67,15 @@ static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
 } // namespace LaneChange
 
 namespace Collision {
-static const float BOUNDARY_EXTENSION_MAXIMUM = 40.0f;
+static const float BOUNDARY_EXTENSION_MAXIMUM = 100.0f;
 static const float BOUNDARY_EXTENSION_MINIMUM = 2.5f;
-static const float BOUNDARY_EXTENSION_RATE = RATE(BOUNDARY_EXTENSION_MAXIMUM,
-                                                  BOUNDARY_EXTENSION_MINIMUM,
-                                                  SpeedThreshold::ARBITRARY_MAX_SPEED);
+static const float BOUNDARY_EXTENSION_RATE = 1.35f;
 static const float COS_10_DEGREES = 0.9848f;
 static const float OVERLAP_THRESHOLD = 0.1f;
 static const float LOCKING_DISTANCE_PADDING = 4.0f;
-static const float MAX_COLLISION_RADIUS = 30.0f;
+// todo:
+// static const float COLLISION_RADIUS_MIN
+// static const float COLLISION_RADIUS_RATE
 static const float MAX_LOCKING_EXTENSION = 10.0f;
 static const float WALKER_TIME_EXTENSION = 1.5f;
 static const float SQUARE_ROOT_OF_TWO = 1.414f;
@@ -113,9 +110,7 @@ namespace MotionPlan {
 static const float RELATIVE_APPROACH_SPEED = 10.0f / 3.6f;
 static const float MIN_FOLLOW_LEAD_DISTANCE = 5.0f;
 static const float MAX_FOLLOW_LEAD_DISTANCE = 10.0f;
-static const float FOLLOW_DISTANCE_RATE = RATE(MAX_FOLLOW_LEAD_DISTANCE,
-                                               MIN_FOLLOW_LEAD_DISTANCE,
-                                               SpeedThreshold::ARBITRARY_MAX_SPEED);
+static const float FOLLOW_DISTANCE_RATE = 0.18f;
 static const float CRITICAL_BRAKING_MARGIN = 0.25f;
 static const float EPSILON_RELATIVE_SPEED = 0.001f;
 static const float MAX_JUNCTION_BLOCK_DISTANCE = 0.5f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
@@ -124,7 +119,7 @@ static const uint16_t ATTEMPTS_TO_TELEPORT = 5u;
 } // namespace MotionPlan
 
 namespace PID {
-static const float MAX_THROTTLE = 0.7f;
+static const float MAX_THROTTLE = 0.85f;
 static const float MAX_BRAKE = 1.0f;
 static const float STEERING_LIMIT = 0.8f;
 static const float VELOCITY_INTEGRAL_MAX = 5.0f;
