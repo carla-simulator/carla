@@ -337,7 +337,7 @@ The sensor creates a conic view that is translated to a 2D point map of the elem
 Points measured are contained in [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) as an array of [carla.RadarDetection](python_api.md#carla.RadarDetection), which specifies their polar coordinates, distance and velocity.
 This raw data provided by the radar sensor can be easily converted to a format manageable by __numpy__:
 ```py
-# To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
+# To get a numpy [[vel, azimuth, altitude, depth],...[,,,]]:
 points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
 points = np.reshape(points, (len(radar_data), 4))
 ```

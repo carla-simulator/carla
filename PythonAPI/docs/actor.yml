@@ -173,9 +173,7 @@
         type: carla.Vector3D
         param_units: deg/s
       doc: >
-        Sets the actor's angular velocity vector. The modification will be effective two frames after the setting. Also, this is applied before the physics step so the resulting angular velocity will be affected by external forces at this frame such as friction.
-      note: >
-        The update will not be effective until two frames after it is set.  
+        Sets the actor's angular velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
     # --------------------------------------
     - def_name: set_location
       params:
@@ -205,9 +203,7 @@
       - param_name: velocity
         type: carla.Vector3D
       doc: >
-        Sets the actor's velocity vector. The modification will be effective two frames after the setting. Also, this is applied before the physics step so the resulting velocity will be affected by external forces at this frame such as friction.  
-      note: >
-        The update will not be effective until two frames after it is set.  
+        Sets the actor's velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
