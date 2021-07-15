@@ -58,9 +58,12 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
         uint64_t buffer_size = buffer.size();
         uint64_t step_size = static_cast<uint64_t>(static_cast<float>(buffer_size) * INV_BUFFER_STEP_THROUGH);
         for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
-            GeoGridId ggid = buffer.at(std::min(i * step_size, buffer_size - 1u))->GetGeodesicGridId();
+            auto waypoint = buffer.at(std::min(i * step_size, buffer_size - 1u));
+            GeoGridId ggid = waypoint->GetGeodesicGridId();
             current_grids.insert(ggid);
-
+            if (i == 0u && taken_waypoints.find(waypoint->GetId()) == taken_waypoints.end()) {
+                taken_waypoints.insert(waypoint->GetId());
+            }
             // Add grid entry if not present.
             if (grid_to_actors.find(ggid) == grid_to_actors.end()) {
                 grid_to_actors.insert({ggid, {}});
@@ -74,6 +77,28 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
 
         actor_to_grids.insert({actor_id, current_grids});
     }
+}
+
+bool TrackTraffic::IsWaypointFree(const uint64_t waypoint_id) const {
+    return taken_waypoints.find(waypoint_id) == taken_waypoints.end();
+}
+
+void TrackTraffic::AddTakenWaypoint(const uint64_t waypoint_id) {
+    if (taken_waypoints.find(waypoint_id) == taken_waypoints.end()) {
+        taken_waypoints.insert(waypoint_id);
+    }
+}
+
+void TrackTraffic::ClearTakenWaypoints() {
+    taken_waypoints.clear();
+}
+
+void TrackTraffic::SetHeroLocation(const cg::Location _location) {
+    hero_location = _location;
+}
+
+cg::Location TrackTraffic::GetHeroLocation() const {
+    return hero_location;
 }
 
 ActorIdSet TrackTraffic::GetOverlappingVehicles(ActorId actor_id) const {

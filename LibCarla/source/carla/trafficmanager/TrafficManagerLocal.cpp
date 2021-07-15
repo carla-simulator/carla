@@ -71,7 +71,9 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       collision_frame,
                                       tl_frame,
                                       world,
-                                      control_frame)),
+                                      control_frame,
+                                      random_devices,
+                                      local_map)),
 
     alsm(ALSM(registered_vehicles,
               buffer_map,
@@ -127,6 +129,7 @@ void TrafficManagerLocal::Run() {
 
     bool synchronous_mode = parameters.GetSynchronousMode();
     bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+    parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
@@ -194,6 +197,7 @@ void TrafficManagerLocal::Run() {
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
+
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
@@ -201,7 +205,6 @@ void TrafficManagerLocal::Run() {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
-
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
@@ -285,7 +288,7 @@ void TrafficManagerLocal::Reset() {
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
-  //SetupLocalMap();
+  SetupLocalMap();
   Start();
 }
 
@@ -293,6 +296,11 @@ void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_
   std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
   for (const ActorPtr &vehicle: vehicle_list) {
+    if (!is_custom_seed) {
+      seed = vehicle->GetId() + seed;
+    } else {
+      seed = 1 + seed;
+    }
     random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
   }
 }
@@ -365,6 +373,18 @@ void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
   parameters.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
+  parameters.SetRespawnDormantVehicles(mode_switch);
+}
+
+void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+  parameters.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
+}
+
+void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
+  parameters.SetMaxBoundaries(lower, upper);
+}
+
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   for (auto &elem : tl_to_freeze) {
     if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
@@ -397,6 +417,7 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
+  is_custom_seed = true;
   world.ResetAllTrafficLights();
 }
 
