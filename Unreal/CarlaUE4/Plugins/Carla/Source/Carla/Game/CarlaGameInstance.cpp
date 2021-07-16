@@ -17,6 +17,8 @@ UCarlaGameInstance::UCarlaGameInstance() {
   check(CarlaSettings != nullptr);
   CarlaSettings->LoadSettings();
   CarlaSettings->LogSettings();
+
+  SetDefaultMapPath();
 }
 
 UCarlaGameInstance::~UCarlaGameInstance() = default;

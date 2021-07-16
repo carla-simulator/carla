@@ -109,7 +109,6 @@ def apply_weather_values(args, weather):
     if args.miescatteringscale is not None:
         weather.mie_scattering_scale = args.miescatteringscale
     if args.rayleighscatteringscale is not None:
-        print(weather.rayleigh_scattering_scale)
         weather.rayleigh_scattering_scale = args.rayleighscatteringscale
 
 
@@ -245,19 +244,19 @@ def main():
         type=float,
         help='Wetness intensity [0.0, 100.0]')
     argparser.add_argument(
-        '--scatteringintensity',
-        metavar='Si',
+        '--scatteringintensity', '-si'
+        metavar='si',
         default=None,
         type=float,
         help='Scattering intensity [0.0, inf]')
     argparser.add_argument(
-        '--rayleighscatteringscale',
+        '--rayleighscatteringscale', '-rss'
         metavar='rss',
         default=None,
         type=float,
         help='Rayleigh scattering scale [0.0, 2.0]')
     argparser.add_argument(
-        '--miescatteringscale',
+        '--miescatteringscale', '-mss'
         metavar='mss',
         default=None,
         type=float,

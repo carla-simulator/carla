@@ -123,6 +123,20 @@ namespace detail {
 
     /// @}
     // =========================================================================
+    /// @name Required files related methods
+    // =========================================================================
+    /// @{
+
+    bool SetFilesBaseFolder(const std::string &path);
+
+    std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const;
+
+    void RequestFile(const std::string &name) const;
+
+    std::vector<uint8_t> GetCacheFile(const std::string &name, const bool request_otherwise) const;
+
+    /// @}
+    // =========================================================================
     /// @name Garbage collection policy
     // =========================================================================
     /// @{
@@ -651,6 +665,8 @@ namespace detail {
     const GarbageCollectionPolicy _gc_policy;
 
     SharedPtr<Map> _cached_map;
+
+    std::string _open_drive_file;
   };
 
 } // namespace detail

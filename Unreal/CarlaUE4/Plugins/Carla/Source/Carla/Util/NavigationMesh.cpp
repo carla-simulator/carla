@@ -22,32 +22,24 @@ TArray<uint8> FNavigationMesh::Load(FString MapName)
     }
 #endif // WITH_EDITOR
 
-  FString FilePath =
-      FPaths::ProjectContentDir() +
-      TEXT("Carla/Maps/Nav/") +
-      MapName + TEXT(".bin");
+  const auto FileName = MapName + ".bin";
 
-  auto &FileManager = IFileManager::Get();
-  if (!FileManager.FileExists(*FilePath))
-  {
-    TArray<FString> FilesFound;
-    FileManager.FindFilesRecursive(
-      FilesFound,
-      *FPaths::ProjectContentDir(),
-      *(MapName + TEXT(".bin")),
-      true,
-      false,
-      false);
-    if (FilesFound.Num() > 0)
-      FilePath = FilesFound[0u];
-  }
+  TArray<FString> Files;
+  IFileManager::Get().FindFilesRecursive(Files, *FPaths::ProjectContentDir(), *FileName, true, false, false);
 
   TArray<uint8> Content;
-  UE_LOG(LogCarla, Log, TEXT("Loading Navigation Mesh file '%s'"), *FilePath);
 
-  if (!FFileHelper::LoadFileToArray(Content, *FilePath, 0))
+  if (!Files.Num())
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to load Navigation Mesh file '%s'"), *FilePath);
+    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *MapName);
+  }
+  else if (FFileHelper::LoadFileToArray(Content, *Files[0], 0))
+  {
+    UE_LOG(LogCarla, Log, TEXT("Loading Navigation Mesh file '%s'"), *Files[0]);
+  }
+  else
+  {
+    UE_LOG(LogTemp, Error, TEXT("Failed to load Navigation Mesh file '%s'"), *Files[0]);
   }
 
   return Content;

@@ -109,7 +109,7 @@ private:
 
   void GenerateSpawnPoints();
 
-  void ParseOpenDrive(const FString &MapName);
+  void ParseOpenDrive();
 
   void RegisterEnvironmentObjects();
 

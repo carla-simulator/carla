@@ -29,7 +29,7 @@ namespace client {
       private NonCopyable {
   public:
 
-    explicit Map(rpc::MapInfo description);
+    explicit Map(rpc::MapInfo description, std::string xodr_content);
 
     explicit Map(std::string name, std::string xodr_content);
 
@@ -44,7 +44,7 @@ namespace client {
     }
 
     const std::string &GetOpenDrive() const {
-      return _description.open_drive_file;
+      return open_drive_file;
     }
 
     const std::vector<geom::Transform> &GetRecommendedSpawnPoints() const {
@@ -95,6 +95,8 @@ namespace client {
     std::vector<SharedPtr<Landmark>> GetLandmarkGroup(const Landmark &landmark) const;
 
   private:
+
+    std::string open_drive_file;
 
     const rpc::MapInfo _description;
 
