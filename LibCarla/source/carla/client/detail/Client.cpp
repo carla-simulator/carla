@@ -188,9 +188,12 @@ namespace detail {
     if (download) {
 
       // For each required file, check if it exists and request it otherwise
-      for(auto requiredFile : requiredFiles) {
-        if(!FileTransfer::FileExists(requiredFile)) {
+      for (auto requiredFile : requiredFiles) {
+        if (!FileTransfer::FileExists(requiredFile)) {
           RequestFile(requiredFile);
+          log_info("Could not find the required file in cache, downloading... ", requiredFile);
+        } else {
+          log_info("Found the required file in cache! ", requiredFile)
         }
       }
     }
