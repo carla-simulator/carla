@@ -6,17 +6,18 @@
 
 DOC_STRING="Build and package CARLA Python API."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--clean] [--python-version=VERSION]"
+USAGE_STRING="Usage: $0 [-h|--help] [--rebuild] [--clean] [--python-version=VERSION] [--target-wheel-platform=PLATFORM]"
 
 REMOVE_INTERMEDIATE=false
 BUILD_RSS_VARIANT=false
 BUILD_PYTHONAPI=true
 
-OPTS=`getopt -o h --long help,config:,rebuild,clean,rss,carsim,python-version:,packages:,clean-intermediate,all,xml,target-archive:, -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,config:,rebuild,clean,rss,carsim,python-version:,target-wheel-platform:,packages:,clean-intermediate,all,xml,target-archive:, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 PY_VERSION_LIST=3
+TARGET_WHEEL_PLATFORM=
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -26,6 +27,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --python-version )
       PY_VERSION_LIST="$2"
+      shift 2 ;;
+    --target-wheel-platform )
+      TARGET_WHEEL_PLATFORM="$2"
       shift 2 ;;
     --rss )
       BUILD_RSS_VARIANT=true;
@@ -66,7 +70,7 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   log "Cleaning intermediate files and folders."
 
-  rm -Rf build dist carla.egg-info source/carla.egg-info
+  rm -Rf build dist source/carla.egg-info
 
   find source -name "*.so" -delete
   find source -name "__pycache__" -type d -exec rm -r "{}" \;
@@ -82,11 +86,22 @@ if ${BUILD_RSS_VARIANT} ; then
 fi
 
 if ${BUILD_PYTHONAPI} ; then
+  # Add patchelf to the path. Auditwheel relies on patchelf to repair ELF files.
+  export PATH="${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin:${PATH}"
 
   for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Building Python API for Python ${PY_VERSION}."
 
-    /usr/bin/env python${PY_VERSION} setup.py bdist_egg
+    if [[ -z ${TARGET_WHEEL_PLATFORM} ]] ; then
+      /usr/bin/env python${PY_VERSION} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp
+      cp dist/.tmp/$(ls dist/.tmp | grep .whl) dist
+    else
+      /usr/bin/env python${PY_VERSION} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp --plat ${TARGET_WHEEL_PLATFORM}
+      auditwheel repair --plat ${TARGET_WHEEL_PLATFORM} --wheel-dir dist dist/.tmp/$(ls dist/.tmp | grep .whl)
+    fi
+
+    rm -rf dist/.tmp
+
   done
 
 fi
