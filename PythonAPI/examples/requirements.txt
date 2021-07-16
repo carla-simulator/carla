@@ -5,3 +5,4 @@ pygame
 matplotlib
 open3d
 Pillow
+mayavi >= 4.7.2
