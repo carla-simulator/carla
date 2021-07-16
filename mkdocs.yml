@@ -55,13 +55,23 @@ nav:
   - 'CarSim Integration (Beta)': "tuto_G_carsim_integration.md"
   - 'RLlib Integration': "tuto_G_rllib_integration.md"
   - 'Scenic': 'tuto_G_scenic.md'
-  - 'Chrono Integration': 'tuto_G_chrono.md'
+- Tutorials (maps):
+  - 'Overview of custom maps in CARLA': 'tuto_M_custom_map_overview.md'
+  - 'Create a map in RoadRunner': 'tuto_M_generate_map.md'
+  - 'Import map in CARLA package': 'tuto_M_add_map_package.md'
+  - 'Import map in CARLA source build': 'tuto_M_add_map_source.md'
+  - 'Alternative ways to import maps': 'tuto_M_add_map_alternative.md'
+  - 'Manually prepare map package': 'tuto_M_manual_map_package.md'
+  - 'Customizing maps: Layered maps': 'tuto_M_custom_layers.md'
+  - 'Customizing maps: Traffic lights and signs': 'tuto_M_custom_add_tl.md'
+  - 'Customizing maps: Road painter': 'tuto_M_custom_road_painter.md'
+  - 'Customizing maps: Procedural Buildings': 'tuto_M_custom_buildings.md'
+  - 'Customizing maps: Weather and landscape': 'tuto_M_custom_weather_landscape.md'
+  - 'Generate pedestrian navigation': 'tuto_M_generate_pedestrian_navigation.md'
 - Tutorials (assets):
-  - 'Add a new map': 'tuto_A_add_map_overview.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
   - 'Add new props': 'tuto_A_add_props.md'
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
-  - 'Map customization tools': 'tuto_A_map_customization.md'
   - "Material customization": 'tuto_A_material_customization.md'
 - Tutorials (developers):
   - 'Contribute assets': 'tuto_D_contribute_assets.md'
@@ -70,7 +80,6 @@ nav:
   - 'Customize vehicle suspension': 'tuto_D_customize_vehicle_suspension.md'
   - 'Generate detailed colliders': 'tuto_D_generate_colliders.md'
   - 'Make a release': 'tuto_D_make_release.md'
-  - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
 - Contributing:
   - 'Contribution guidelines': 'cont_contribution_guidelines.md'
   - 'Code of conduct': 'cont_code_of_conduct.md'

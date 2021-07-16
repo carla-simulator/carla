@@ -45,7 +45,7 @@ Import
 
 Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
 
-__Maps__ are not part of this tutorial, so this definition will be empty. There is a specific tutorial to [__add a new map__](tuto_A_add_map_overview.md).  
+__Maps__ are not part of this tutorial, so this definition will be empty. There is a specific tutorial to [__add a new map__](tuto_M_custom_map_overview.md).  
 
 __Props__ need the following parameters.  
 
