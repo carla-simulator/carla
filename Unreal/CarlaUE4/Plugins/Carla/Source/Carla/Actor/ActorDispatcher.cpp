@@ -62,7 +62,6 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UActorDispatcher::SpawnActor(
     Result.Status = EActorSpawnResultStatus::UnknownError;
   }
 
-  UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor spawned DesiredId %d"), DesiredId);
   FCarlaActor* View = Result.IsValid() ?
       RegisterActor(*Result.Actor, std::move(Description), DesiredId) : nullptr;
   if (!View)
@@ -72,7 +71,6 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UActorDispatcher::SpawnActor(
   }
   else
   {
-    UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor registered with ID %d"), View->GetActorId());
     ATagger::TagActor(*View->GetActor(), true);
   }
 
