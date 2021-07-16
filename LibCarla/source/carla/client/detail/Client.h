@@ -111,6 +111,8 @@ namespace detail {
 
     std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const;
 
+    std::string GetMapData() const;
+
     void RequestFile(const std::string &name) const;
 
     std::vector<uint8_t> GetCacheFile(const std::string &name, const bool request_otherwise = true) const;

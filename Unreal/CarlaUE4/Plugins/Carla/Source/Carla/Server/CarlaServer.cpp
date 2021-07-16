@@ -341,12 +341,19 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    auto FileContents = UOpenDrive::GetXODR(Episode->GetWorld());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
+    FString FullMapPath = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    FString MapDir = FullMapPath.RightChop(FullMapPath.Find("Content/", ESearchCase::CaseSensitive) + 8);
+    MapDir += "/" + Episode->GetMapName();
     return cr::MapInfo{
-      cr::FromFString(Episode->GetMapName()),
-      cr::FromLongFString(FileContents),
+      cr::FromFString(MapDir),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
+  };
+
+  BIND_SYNC(get_map_data) << [this]() -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return cr::FromFString(UOpenDrive::GetXODR(Episode->GetWorld()));  
   };
 
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>

@@ -665,6 +665,8 @@ namespace detail {
     const GarbageCollectionPolicy _gc_policy;
 
     SharedPtr<Map> _cached_map;
+
+    std::string _open_drive_file;
   };
 
 } // namespace detail

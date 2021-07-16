@@ -1,4 +1,3 @@
-
 // Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
@@ -75,12 +74,6 @@ namespace client {
     static std::string _filesBaseFolder;
 
   };
-
-    #ifdef _WIN32
-      std::string FileTransfer::_filesBaseFolder = std::string(getenv("USERPROFILE")) + "/carlaCache/";
-    #else
-      std::string FileTransfer::_filesBaseFolder = std::string(getenv("HOME")) + "/carlaCache/";
-    #endif
 
 } // namespace client
 } // namespace carla
