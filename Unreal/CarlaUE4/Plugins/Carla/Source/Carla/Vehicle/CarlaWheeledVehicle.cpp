@@ -489,15 +489,16 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
 
 void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
 
-  if (bPhysicsEnabled == false) {
+  if (bPhysicsEnabled == false)
+  {
     check((uint8)WheelLocation >= 0)
     check((uint8)WheelLocation < 4)
     UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
     check(VehicleAnim != nullptr)
     VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
   }
-  else {
-
+  else
+  {
     UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
   }
 }
@@ -542,13 +543,13 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   check(VehicleAnim != nullptr)
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockWrite();
-  if (enabled) {
-
+  if (enabled)
+  {
     Vehicle4W->RecreatePhysicsState();
     VehicleAnim->ResetWheelCustomRotations();
   }
-  else {
-
+  else 
+  {
     Vehicle4W->DestroyPhysicsState();
   }
 
