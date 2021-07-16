@@ -196,6 +196,8 @@ void ACarlaGameModeBase::BeginPlay()
   if (LMManager) {
     LMManager->RegisterInitialObjects();
   }
+
+  EnableOverlapEvents();
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -307,6 +309,39 @@ ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
     }
   }
   return TrafficLightManager;
+}
+
+void ACarlaGameModeBase::CheckForEmptyMeshes()
+{
+  TArray<AActor*> WorldActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), WorldActors);
+
+  for(AActor *Actor : WorldActors)
+  {
+    AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
+    if(MeshActor->GetStaticMeshComponent()->GetStaticMesh() == NULL)
+    {
+      UE_LOG(LogTemp, Error, TEXT("The object : %s has no mesh"), *MeshActor->GetFullName());
+    }
+  }
+}
+
+void ACarlaGameModeBase::EnableOverlapEvents()
+{
+  TArray<AActor*> WorldActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), WorldActors);
+
+  for(AActor *Actor : WorldActors)
+  {
+    AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
+    if(MeshActor->GetStaticMeshComponent()->GetStaticMesh() != NULL)
+    {
+      if (MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
+      {
+        MeshActor->GetStaticMeshComponent()->SetGenerateOverlapEvents(true);
+      }
+    }
+  }
 }
 
 void ACarlaGameModeBase::DebugShowSignals(bool enable)
