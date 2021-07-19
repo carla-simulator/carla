@@ -96,7 +96,7 @@ if not exist %CHRONO_INSTALL_DIR% (
     cd "%CHRONO_BUILD_DIR%"
 
     echo %FILE_N% Compiling Chrono.
-    cmake -G "Visual Studio 15 2017 Win64"^
+    cmake -G "Visual Studio 16 2019" -A x64^
         -DCMAKE_BUILD_TYPE=Release^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DEIGEN3_INCLUDE_DIR="%EIGEN_INCLUDE%"^

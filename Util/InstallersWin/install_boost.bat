@@ -55,8 +55,8 @@ rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
-rem If not defined, use Visual Studio 2017 as tool set
-if "%TOOLSET%" == "" set TOOLSET=msvc-14.1
+rem If not defined, use Visual Studio 2019 as tool set
+if "%TOOLSET%" == "" set TOOLSET=msvc-14.2
 
 rem If is not set, set the number of parallel jobs to the number of CPU threads
 if "%NUMBER_OF_ASYNC_JOBS%" == "" set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%

@@ -58,7 +58,6 @@ void TrafficLightStage::Update(const unsigned long index) {
 
     traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_timestamp);
   }
-
   output_array.at(index) = traffic_light_hazard;
 }
 

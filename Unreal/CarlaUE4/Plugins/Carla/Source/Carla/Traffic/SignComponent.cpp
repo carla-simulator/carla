@@ -10,6 +10,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/element/RoadInfoSignal.h"
+#include "carla/rpc/String.h"
 #include <compiler/enable-ue4-macros.h>
 
 USignComponent::USignComponent()
@@ -73,6 +74,16 @@ TArray<std::pair<cr::RoadId, const cre::RoadInfoSignal*>>
     }
   }
   return Result;
+}
+
+const cr::Signal* USignComponent::GetSignal(const cr::Map &Map) const
+{
+  std::string std_signal_id = carla::rpc::FromFString(GetSignId());
+  if (Map.GetSignals().count(std_signal_id))
+  {
+    return Map.GetSignals().at(std_signal_id).get();
+  }
+  return nullptr;
 }
 
 UBoxComponent* USignComponent::GenerateTriggerBox(const FTransform &BoxTransform,
