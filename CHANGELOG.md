@@ -2,6 +2,7 @@
 
   * Changed the resolution of the cached map in Traffic Manager from 0.1 to 5 meters
   * Fixed import sumo_integration module from other scripts
+  * CARLA now is built with Visual Studio 2019 in Windows
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration

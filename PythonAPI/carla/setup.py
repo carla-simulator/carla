@@ -124,7 +124,7 @@ def get_libcarla_extensions():
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
         extra_compile_args = [
-            '/experimental:external', '/external:I', 'dependencies/include/system',
+            '/experimental:external', '/external:W0', '/external:I', 'dependencies/include/system',
             '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
             '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0600', '/DHAVE_SNPRINTF',
             '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true', '/MD']

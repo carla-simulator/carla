@@ -72,12 +72,6 @@ public:
 
   bool DestroyActor(FCarlaActor::IdType ActorId);
 
-  UFUNCTION()
-  void OnActorDestroyed(AActor *Actor)
-  {
-    Registry.Deregister(Actor);
-  }
-
   /// Register an actor that was not created using "SpawnActor" function but
   /// that should be kept in the registry.
   FCarlaActor* RegisterActor(
@@ -101,6 +95,9 @@ public:
   }
 
 private:
+
+  UFUNCTION()
+  void OnActorDestroyed(AActor *Actor);
 
   TArray<FActorDefinition> Definitions;
 
