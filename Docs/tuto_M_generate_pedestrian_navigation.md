@@ -36,7 +36,7 @@ The following steps are not necessary for generating a pedestrian navigation, bu
 
 - __Create new spawning points__.
 
-These spawning points will be used in scripts such as [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/spawn_npc.py):
+These spawning points will be used in scripts such as [`generate_traffic.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py):
 
 1. In the editor, go to the `Modes` panel and search for "spawn" in the `Search Classes` search bar.
 2. Choose the type of spawning point you would like to create and drag it on to the map.
@@ -86,7 +86,7 @@ build.bat <mapName> # <mapName> has no extension
 
 __6.__ A `<mapName>.bin` file will be created. This file contains the information for pedestrian navigation on your map. Move this file to the `Nav` folder of the package that contains the map.
 
-__7.__ Test the pedestrian navigation by starting a simulation and running the example script `spawn_npc.py` in `PythonAPI/examples`.
+__7.__ Test the pedestrian navigation by starting a simulation and running the example script `generate_traffic.py` in `PythonAPI/examples`.
 
 ---
 
