@@ -16,6 +16,13 @@ The large map feature in CARLA allows users to perform simulations at a vast sca
 
 The ego vehicle is integral to the loading and unloading of map tiles. Tiles are streamed in and out of the server based on the value of the streaming distance from the ego vehicle. For example, tiles located outside the streaming distance will not be rendered in the simulation, and tiles within the streaming distance will be rendered. The rendered tiles will change as the hero vehicle moves.
 
+To set a vehicle as ego, use the [`set_attribute`](python_api.md#carla.ActorBlueprint.set_attribute) method as shown below:
+
+```py
+blueprint.set_attribute('role_name', 'hero' )
+world.spawn_actor(blueprint, spawn_point)
+```
+
 Use the code snippet below to set the streaming distance so tiles will be loaded within a 2km radius of the ego vehicle:
 
 ```py
@@ -40,7 +47,9 @@ python3 config.py --tile-stream-distance 2000
 
 The large map feature introduces the concept of dormant actors to CARLA. Dormant actors exist within the context of large maps only. Dormant actors are non-ego-vehicle actors in the simulation that are located outside of the __actor active distance__ of the ego vehicle, e.g., vehicles far from the ego vehicle. The actor active distance can be equal to or less than the streaming distance.
 
-If an actor finds itself outside of the actor active distance of the ego vehicle, it will become dormant. The actor will still exist, but it will not be rendered. Physics will only be computed if [hybrid mode](adv_traffic_manager.md#hybrid-physics-mode) is set on that actor. A dormant actor's [location](python_api.md#carla.Actor.set_location) and [transformation](python_api.md#carla.Actor.set_transform) can still be set, even if their physics is not being calculated. Once the dormant actor comes within actor active distance of the ego vehicle again, it will wake up, and its rendering and physics will resume as normal.
+If an actor finds itself outside of the actor active distance of the ego vehicle, it will become dormant. The actor will still exist, but it will not be rendered. Physics will not be calculated (unless running in hybrid mode via the traffic manager), although [location](python_api.md#carla.Actor.set_location) and [transformation](python_api.md#carla.Actor.set_transform) can still be set. Once the dormant actor comes within actor active distance of the ego vehicle again, it will wake up, and its rendering and physics will resume as normal. 
+
+Actors controlled by the Traffic Manager have distinct behaviors that can be configured when operating within a large map. Read more in the [Traffic Manager documentation](adv_traffic_manager.md#traffic-manager-in-large-maps) to find out about how this works.
 
 An actor will become dormant or wake up on a [`world.tick()`](python_api.md#carla.World.tick).
 
@@ -64,8 +73,6 @@ To check if an actor is dormant, you can use the Python API:
 ```py
 actor.is_dormant
 ```
-
-Actors controlled by the Traffic Manager have distinct behaviors that can be configured when operating within a large map. Read more in the [Traffic Manager documentation](adv_traffic_manager.md#traffic-manager-in-large-maps) to find out about how this works.
 
 ---
 

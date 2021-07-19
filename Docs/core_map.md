@@ -159,7 +159,7 @@ waypoint = waypoint.next(2.0)
 
 ### Generating map navigation
 
-The client needs to make a request to the server to get the `.xodr` map file and parse it to a [`carla.Map`](python_api.md#carla.Map) object. This only needs to be done once. Maps are heavy and unneccessary calls can be expensive. 
+The client needs to make a request to the server to get the `.xodr` map file and parse it to a [`carla.Map`](python_api.md#carla.Map) object. This only needs to be done once.
 
 To get the map object:
 
