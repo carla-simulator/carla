@@ -204,9 +204,10 @@ namespace traffic_manager {
 
       // Adding simple waypoints to processed dense topology.
       for (auto swp: segment_waypoints) {
-        // Checking whether the waypoint is a real junction.
-        auto road_id = swp->GetWaypoint()->GetRoadId();
-        if (swp->GetWaypoint()->IsJunction() && !is_real_junction.count(road_id)) {
+        // Checking whether the waypoint is in a real junction.
+        auto wpt = swp->GetWaypoint();
+        auto road_id = wpt->GetRoadId();
+        if (wpt->IsJunction() && !is_real_junction.count(road_id)) {
           swp->SetIsJunction(false);
         } else {
           swp->SetIsJunction(swp->GetWaypoint()->IsJunction());
@@ -377,6 +378,11 @@ namespace traffic_manager {
     assert(_world_map != nullptr && "No map reference found.");
     return _world_map->GetName();
   }
+
+  cc::Map& InMemoryMap::GetMap() const {
+    return *_world_map;
+  }
+
 
 } // namespace traffic_manager
 } // namespace carla

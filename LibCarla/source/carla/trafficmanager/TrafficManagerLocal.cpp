@@ -160,10 +160,7 @@ void TrafficManagerLocal::Run() {
 
     std::unique_lock<std::mutex> registration_lock(registration_mutex);
     // Updating simulation state, actor life cycle and performing necessary cleanup.
-    auto t_start = std::chrono::high_resolution_clock::now();
     alsm.Update();
-    auto t_end = std::chrono::high_resolution_clock::now();
-    std::cout << "ALSM: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << std::endl;
 
 
     // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
@@ -201,28 +198,17 @@ void TrafficManagerLocal::Run() {
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
-    // t_start = std::chrono::high_resolution_clock::now();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
-    // t_end = std::chrono::high_resolution_clock::now();
-    // std::cout << "Localization: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << std::endl;
-
-    // t_start = std::chrono::high_resolution_clock::now();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
-    // t_end = std::chrono::high_resolution_clock::now();
-    // std::cout << "Collision: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << std::endl;
-
-    // t_start = std::chrono::high_resolution_clock::now();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
     }
-    // t_end = std::chrono::high_resolution_clock::now();
-    // std::cout << "TL & MP: " << std::chrono::duration<double, std::milli>(t_end - t_start).count() << std::endl;
 
     registration_lock.unlock();
 

@@ -67,15 +67,14 @@ static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
 } // namespace LaneChange
 
 namespace Collision {
-static const float BOUNDARY_EXTENSION_MAXIMUM = 100.0f;
 static const float BOUNDARY_EXTENSION_MINIMUM = 2.5f;
 static const float BOUNDARY_EXTENSION_RATE = 1.35f;
 static const float COS_10_DEGREES = 0.9848f;
 static const float OVERLAP_THRESHOLD = 0.1f;
 static const float LOCKING_DISTANCE_PADDING = 4.0f;
-// todo:
-// static const float COLLISION_RADIUS_MIN
-// static const float COLLISION_RADIUS_RATE
+static const float COLLISION_RADIUS_STOP = 8.0f;
+static const float COLLISION_RADIUS_MIN = 20.0f;
+static const float COLLISION_RADIUS_RATE = 0.9f;
 static const float MAX_LOCKING_EXTENSION = 10.0f;
 static const float WALKER_TIME_EXTENSION = 1.5f;
 static const float SQUARE_ROOT_OF_TWO = 1.414f;
