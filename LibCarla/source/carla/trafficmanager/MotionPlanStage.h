@@ -61,6 +61,13 @@ private:
                                   const ActorId actor_id,
                                   float max_target_velocity);
 
+  float GetTurnTargetVelocity(const Buffer &waypoint_buffer,
+                              float max_target_velocity);
+
+  float GetThreePointCircleRadius(cg::Location first_location,
+                                  cg::Location middle_location,
+                                  cg::Location last_location);
+
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
                   const SimulationState &simulation_state,

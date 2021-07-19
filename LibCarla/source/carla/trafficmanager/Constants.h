@@ -115,6 +115,8 @@ static const float EPSILON_RELATIVE_SPEED = 0.001f;
 static const float MAX_JUNCTION_BLOCK_DISTANCE = 0.5f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
 static const float TWO_KM = 2000.0f;
 static const uint16_t ATTEMPTS_TO_TELEPORT = 5u;
+static const float FRICTION = 0.6f;
+static const float GRAVITY = 9.81f;
 } // namespace MotionPlan
 
 namespace PID {
