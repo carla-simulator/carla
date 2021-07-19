@@ -46,28 +46,46 @@ sudo apt-get update
     The following commands depend on your Ubuntu version. Make sure to choose accordingly. 
 
 __Ubuntu 18.04__.
+
 ```sh
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git &&
-pip2 install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1 &&
-pip2 install --user distro &&
-pip3 install --user distro
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
 ```
 __Previous Ubuntu__ versions.
+
 ```sh
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git &&
-pip2 install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1 &&
-pip2 install --user distro &&
-pip3 install --user distro
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
 ```
 
-__All Ubuntu systems__.  
+__All Ubuntu systems__.
+
 To avoid compatibility issues between Unreal Engine and the CARLA dependencies, use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
 
 ```sh
 sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
 sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
+```
+
+CARLA requires some Python dependencies to be installed with `pip version >= 20.3`. Ensure you have a compatible version by running:
+
+```sh
+pip -V
+```
+
+If you need to upgrade:
+
+```sh
+pip install --upgrade pip
+```
+
+Once you have the correct version of `pip`, you can install the dependencies:
+
+```sh
+pip install --user setuptools &&
+pip3 install --user -Iv setuptools==47.3.1 &&
+pip install --user distro &&
+pip3 install --user distro &&
+pip install --user wheel &&
+pip3 install --user wheel auditwheel
 ```
 
 ---
@@ -195,14 +213,22 @@ The following command compiles the Python API client:
     make PythonAPI
 ```
 
-Optionally, to compile the PythonAPI for Python 2, run the following command in the root CARLA directory.
+Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory. Python versions 2.7, 3.6, 3.7, and 3.8 are supported.
 
 ```sh
-    make PythonAPI ARGS="--python-version=2"
+    # Delete versions as required
+    make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
 ```
 
-!!! Note
-    __Note that when the compilation is done, you may see a successful output in the terminal even if the compilation of the Python API client was unsuccessful.__ Check for any errors in the terminal output and check that a `.egg` file exists in `PythonAPI\carla\dist`. If you come across any errors, check the [F.A.Q.](build_faq.md) or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions).
+Every time you run `make PythonAPI` a `.whl` file containing the CARLA client library will be built and installed for your system. This `.whl` cannot be distributed as it is specific for your OS. If you had a previous library installed, it will be uninstalled, and a new one will be installed according to the source code you are using. You can modify this behavior with the following flags:
+
+- `make PythonAPI --no-install-wheel` will only build the `.whl` file but not install it on your system.
+- `make PythonAPI --target-wheel-platform="<platform>"` will build and repair the `.whl` file using `auditwheel` for a specific [platform](https://github.com/pypa/manylinux). External shared dependencies will be included in the file. The distributed CARLA `.whl` targets the `manylinux_2_27_x86_64` platform.
+
+!!! Important
+    Previous versions of CARLA created a `.egg` file containing the CARLA client library. __In versions 0.9.12+ this behavior changes significantly; `.egg` files are no longer used.__ `make PythonAPI` will install the library using `pip` and a `.whl` file.
+
+    If you are building a version of CARLA prior to 0.9.12, please select the correct version of the documentation in the bottom right-hand corner.
 
 __2.__ __Compile the server__:
 
@@ -231,10 +257,6 @@ Test the simulator using the example scripts inside `PythonAPI\examples`.  With 
         cd PythonAPI/examples
         python3 dynamic_weather.py 
 ```
-
-!!! Note
-    If you encounter the error `ModuleNotFoundError: No module named 'carla'` while running a script, you may be running a different version of Python than the one used to install the client. Go to `PythonAPI\carla\dist` and check the version of Python used in the `.egg` file.
-    
 
 !!! Important
     If the simulation is running at a very low FPS rate, go to `Edit -> Editor preferences -> Performance` in the Unreal Engine editor and disable `Use less CPU when in background`.
@@ -266,23 +288,23 @@ Below is a summary of the requirements and commands needed to build CARLA on Lin
 
 # Install dependencies
 sudo apt-get update &&
-sudo apt-get install wget software-properties-common &&
+sudo apt-get install wget software-properties-common build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git &&
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - &&
-sudo apt-add-repository "deb http://apt.llvm.org/$(lsb_release -c --short)/ llvm-toolchain-$(lsb_release -c --short)-8 main" &&
+sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main" &&
 sudo apt-get update
 
-# Additional dependencies for Ubuntu 18.04
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git &&
-pip2 install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1
+# Make sure you have pip>=20.3
+pip install --upgrade pip
 
-# Additional dependencies for previous Ubuntu versions
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git &&
-pip2 install --user setuptools &&
+# Install Python library dependencies
+
+pip install --user setuptools &&
 pip3 install --user -Iv setuptools==47.3.1 &&
-pip2 install --user distro &&
-pip3 install --user distro
+pip install --user distro &&
+pip3 install --user distro &&
+pip install --user wheel &&
+pip3 install --user wheel auditwheel
 
 # Change default clang version
 sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&

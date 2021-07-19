@@ -841,18 +841,20 @@ Hereunder are the two scripts gathering the fragments of code for this tutorial.
 
 ```py
 
-import glob
-import os
-import sys
+# Commented import areas only required if running versions of CARLA prior to 0.9.12
+
+# import glob
+# import os
+# import sys
 import time
 
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+# try:
+#     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+#         sys.version_info.major,
+#         sys.version_info.minor,
+#         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+# except IndexError:
+#     pass
 
 import carla
 
@@ -1077,20 +1079,22 @@ if __name__ == '__main__':
 
 ```py
 
-import glob
-import os
-import sys
+# Commented import areas only required if running versions of CARLA prior to 0.9.12
+
+# import glob
+# import os
+# import sys
 import time
 import math
 import weakref
 
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+# try:
+#     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+#         sys.version_info.major,
+#         sys.version_info.minor,
+#         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+# except IndexError:
+#     pass
 
 import carla
 

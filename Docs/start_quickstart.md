@@ -1,6 +1,6 @@
 # Quick start package installation
 
-This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and the Python API client library ready to run out of the box and does not require any build process. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows.md) or [Linux](build_linux.md).
+This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and a Python wheel for the client library that needs to be installed with __pip__. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows.md) or [Linux](build_linux.md).
 
 * __[Before you begin](#before-you-begin)__  
 * __[CARLA installation](#carla-installation)__  
@@ -17,16 +17,43 @@ This guide shows how to download and install the packaged version of CARLA. The 
 
 The following requirements should be fulfilled before installing CARLA:
 
-* __System requirements.__ Any 64-bits OS should run CARLA.
+* __System requirements.__ CARLA is built for Windows and Linux systems. If running on Linux, the OS must support __glibc >= 2.27__ (Ubuntu 18.04+)
 * __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although we would recommend 8 GB. A dedicated GPU is highly recommended for machine learning. 
 * __Disk space.__ CARLA will use about 20 GB of space.
-* __Python.__ [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports both Python 2 and Python 3.7.
+* __Python.__ [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports Python 2.7, 3.6, 3.7 and 3.8.
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
-* __Other requirements.__  Two Python modules: [Pygame](https://pypi.org/project/pygame/) to create graphics directly with Python, and [Numpy](https://pypi.org/project/numpy/) for calculus. Install them using:
+* __Other requirements.__  CARLA requires some dependencies for the client library. These dependencies must be installed using __pip>=20.3__. To check your __pip__ version:
 
 ```sh
-        python3 -m pip install --user pygame numpy  # Support for Python2 is provided in the CARLA release packages
-```    
+pip -V
+```
+
+If you need to upgrade:
+
+```sh
+pip install --upgrade pip
+```
+
+Once you have the correct version of __pip__, you can install the dependencies according to your operating system:
+
+### Windows
+
+```sh
+pip install --user pygame numpy &&
+pip3 install --user pygame numpy &&
+pip install --user wheel &&
+pip3 install --user wheel
+```
+
+### Linux
+
+```sh
+pip install --user pygame numpy &&
+pip3 install --user pygame numpy &&
+pip install --user wheel &&
+pip3 install --user wheel auditwheel
+```
+
 ---
 ## CARLA installation
 
@@ -97,6 +124,27 @@ __2.__ Extract the package:
 - __On Windows__:
 
     - Extract the contents directly in the root folder. 
+
+---
+
+## Install Python library
+
+### CARLA versions prior to 0.9.12
+
+Previous versions of CARLA did not require the Python library to be installed, they came with an `.egg` file that was ready to use out of the box. __CARLA versions 0.9.12+ change this behaviour significantly; `.egg` files are no longer supported.__ If you are using a version of CARLA prior to 0.9.12, please select that version in the bottom right corner of the screen to see the relevant documentation.
+
+### CARLA 0.9.12+
+
+CARLA provides `.whl` files for Python versions 2.7, 3.6, 3.7 and 3.8. To be able to use the Python client library you will need to install the `.whl` file. The `.whl` file is found in `PythonAPI/carla/dist/`. There is one file per supported Python version, indicated by the file name (e.g., carla-0.9.12-__cp36__-cp36m-manylinux_2_27_x86_64.whl indicates Python 3.6).
+
+__It is recommended to install the CARLA client library in a virtual environment to avoid conflicts when working with muliple versions.__
+
+To install the CARLA client library, run the following command, choosing the file appropriate to your desired Python version:
+
+```sh
+pip install <wheel-file-name>.whl
+```
+
 
 ---
 ## Running CARLA
@@ -182,8 +230,19 @@ There is no way to update the packaged version of CARLA. When a new version is r
 ## Installation summary
 
 ```sh
+# Make sure you are running pip>=20.3
+pip install --upgrade pip
+
 # Install required modules Pygame and Numpy
 python3 -m pip install --user pygame numpy # Support for Python 2 is provided in the CARLA release packages
+
+# Install client library requirements - Windows
+pip install --user wheel &&
+pip3 install --user wheel
+
+# Install client library requirements - Linux
+pip install --user wheel &&
+pip3 install --user wheel auditwheel
 
 # There are two different ways to install CARLA
 
@@ -202,6 +261,10 @@ cd /opt/carla-simulator
 #   Download the desired package and additional assets
 #   Extract the package
 #   Extract the additional assets in `/Import`
+
+# Install the client library
+pip install <PythonAPI/carla/dist/wheel-file>.whl
+
 #   Run CARLA (Linux).
 ./CarlaUE.sh
 #   Run CARLA (Windows)
