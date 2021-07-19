@@ -41,9 +41,9 @@ public:
   /// @warning Undefined if an actor is registered more than once.
   FCarlaActor* Register(AActor &Actor, FActorDescription Description, IdType DesiredId = 0);
 
-  void Deregister(IdType Id, bool KeepId = false);
+  void Deregister(IdType Id);
 
-  void Deregister(AActor *Actor, bool KeepId = false);
+  void Deregister(AActor *Actor);
 
   /// @}
   // ===========================================================================

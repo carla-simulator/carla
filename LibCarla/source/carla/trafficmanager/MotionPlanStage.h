@@ -5,8 +5,10 @@
 #pragma once
 
 #include "carla/trafficmanager/DataStructures.h"
+#include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
+#include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 #include "carla/trafficmanager/TrackTraffic.h"
@@ -14,13 +16,15 @@
 namespace carla {
 namespace traffic_manager {
 
+using LocalMapPtr = std::shared_ptr<InMemoryMap>;
+
 class MotionPlanStage: Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;
   const Parameters &parameters;
   const BufferMap &buffer_map;
-  const TrackTraffic &track_traffic;
+  TrackTraffic &track_traffic;
   // PID paramenters for various road conditions.
   const std::vector<float> urban_longitudinal_parameters;
   const std::vector<float> highway_longitudinal_parameters;
@@ -37,6 +41,8 @@ private:
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
+  RandomGeneratorMap &random_devices;
+  const LocalMapPtr &local_map;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
                                            const bool tl_hazard,
@@ -53,7 +59,7 @@ public:
                   const SimulationState &simulation_state,
                   const Parameters &parameters,
                   const BufferMap &buffer_map,
-                  const TrackTraffic &track_traffic,
+                  TrackTraffic &track_traffic,
                   const std::vector<float> &urban_longitudinal_parameters,
                   const std::vector<float> &highway_longitudinal_parameters,
                   const std::vector<float> &urban_lateral_parameters,
@@ -62,7 +68,9 @@ public:
                   const CollisionFrame &collision_frame,
                   const TLFrame &tl_frame,
                   const cc::World &world,
-                  ControlFrame &output_array);
+                  ControlFrame &output_array,
+                  RandomGeneratorMap &random_devices,
+                  const LocalMapPtr &local_map);
 
   void Update(const unsigned long index);
 
