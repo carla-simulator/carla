@@ -34,6 +34,7 @@ inline StateEntry StateUpdate(StateEntry previous_state,
       angular_deviation,
       (current_velocity - target_velocity) / target_velocity,
       0.0f,
+      0.0f,
       0.0f};
 
   // Calculating integrals.
@@ -77,7 +78,8 @@ inline ActuationSignal RunStep(StateEntry present_state,
       lateral_parameters[1] * present_state.deviation_integral +
       lateral_parameters[2] * (present_state.deviation - previous_state.deviation) * INV_DT;
 
-  steer = std::max(-STEERING_LIMIT, std::min(steer, STEERING_LIMIT));
+  steer = std::max(previous_state.steer - MAX_STEERING_DIFF, std::min(steer, previous_state.steer + MAX_STEERING_DIFF));
+  steer = std::max(-MAX_STEERING, std::min(steer, MAX_STEERING));
 
   return ActuationSignal{throttle, brake, steer};
 }

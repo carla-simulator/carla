@@ -94,7 +94,8 @@ void MotionPlanStage::Update(const unsigned long index) {
     // Flushing controller state for vehicle.
     current_state = {current_timestamp,
                     0.0f, 0.0f,
-                    0.0f, 0.0f};
+                    0.0f, 0.0f,
+                    0.0f};
 
     // Add entry to teleportation duration clock table if not present.
     if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
@@ -174,7 +175,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       const float current_deviation = dot_product;
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f, 0.0f};
+        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
         pid_state_map.insert({actor_id, initial_state});
       }
 
@@ -220,6 +221,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
 
       // Updating PID state.
+      current_state.steer = actuation_signal.steer;
       StateEntry &state = pid_state_map.at(actor_id);
       state = current_state;
 
@@ -229,7 +231,8 @@ void MotionPlanStage::Update(const unsigned long index) {
       // Flushing controller state for vehicle.
       current_state = {current_timestamp,
                       0.0f, 0.0f,
-                      0.0f, 0.0f};
+                      0.0f, 0.0f,
+                      0.0f};
 
       // Add entry to teleportation duration clock table if not present.
       if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
@@ -417,6 +420,9 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
         }
       } else if (landmark_type == "274") {  // Speed limit
         auto value = static_cast<float>(landmark->GetValue()) / 3.6f;
+        float percentage_difference = parameters.GetVehiclePercentageSpeed(actor_id);
+        value = value * (1.0f - percentage_difference / 100);
+
         minimum_velocity = (value < max_target_velocity) ? value : max_target_velocity;
       } else {
         continue;

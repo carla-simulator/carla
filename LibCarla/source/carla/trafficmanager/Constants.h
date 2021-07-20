@@ -123,15 +123,16 @@ static const float PI = 3.1415927f;
 namespace PID {
 static const float MAX_THROTTLE = 0.85f;
 static const float MAX_BRAKE = 1.0f;
-static const float STEERING_LIMIT = 0.8f;
+static const float MAX_STEERING = 0.8f;
+static const float MAX_STEERING_DIFF = 0.15f;
 static const float VELOCITY_INTEGRAL_MAX = 5.0f;
 static const float VELOCITY_INTEGRAL_MIN = -5.0f;
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
 static const std::vector<float> LONGITUDIAL_PARAM = {2.0f, 0.01f, 0.4f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {4.0f, 0.02f, 0.2f};
-static const std::vector<float> LATERAL_PARAM = {9.0f, 0.02f, 1.0f};
-static const std::vector<float> LATERAL_HIGHWAY_PARAM = {7.0f, 0.02f, 1.0f};
+static const std::vector<float> LATERAL_PARAM = {5.0f, 0.02f, 1.0f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {3.0f, 0.02f, 1.0f};
 } // namespace PID
 
 namespace TrackTraffic {

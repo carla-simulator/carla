@@ -179,6 +179,17 @@ float Parameters::GetVehicleTargetVelocity(const ActorId &actor_id, const float 
   return speed_limit * (1.0f - percentage_difference / 100.0f);
 }
 
+float Parameters::GetVehiclePercentageSpeed(const ActorId &actor_id) const {
+
+  float percentage_difference;
+  if (percentage_difference_from_speed_limit.Contains(actor_id)) {
+    percentage_difference = percentage_difference_from_speed_limit.GetValue(actor_id);
+  } else {
+    percentage_difference = global_percentage_difference_from_limit;
+  }
+  return percentage_difference;
+}
+
 bool Parameters::GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const {
 
   bool avoid_collision = true;
