@@ -172,7 +172,7 @@ namespace detail {
       _open_drive_file = _client.GetMapData();
       _cached_map = MakeShared<Map>(map_info, _open_drive_file);
     }
-    
+
     return _cached_map;
   }
 

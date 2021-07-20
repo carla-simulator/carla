@@ -16,7 +16,7 @@
 
 namespace carla {
 namespace client {
-  
+
   static auto MakeMap(const std::string &opendrive_contents) {
     auto stream = std::istringstream(opendrive_contents);
     auto map = opendrive::OpenDriveParser::Load(stream.str());
@@ -29,7 +29,6 @@ namespace client {
   Map::Map(rpc::MapInfo description, std::string xodr_content)
     : _description(std::move(description)),
       _map(MakeMap(xodr_content)){}
-      
 
   Map::Map(std::string name, std::string xodr_content)
     : Map(rpc::MapInfo{
