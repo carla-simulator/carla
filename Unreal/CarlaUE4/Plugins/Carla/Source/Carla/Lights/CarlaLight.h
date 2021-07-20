@@ -104,4 +104,6 @@ protected:
   private:
 
   void RecordLightChange() const;
+
+  bool bRegistered = false;
 };
