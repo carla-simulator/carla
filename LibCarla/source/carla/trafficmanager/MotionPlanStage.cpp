@@ -141,7 +141,10 @@ void MotionPlanStage::Update(const unsigned long index) {
 
     // Algorithm to reduce speed near landmarks
     float max_landmark_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, actor_id, max_target_velocity);
-    max_target_velocity = std::min(max_target_velocity, max_landmark_target_velocity);
+
+    // Algorithm to reduce speed near turns
+    float max_turn_target_velocity = GetTurnTargetVelocity(waypoint_buffer, max_target_velocity);
+    max_target_velocity = std::min(std::min(max_target_velocity, max_landmark_target_velocity), max_turn_target_velocity);
 
     // Collision handling and target velocity correction.
     std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, vehicle_velocity,
