@@ -62,7 +62,9 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.whl'
                                     stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
+                                    stash includes: 'PythonAPI/carla/dist/*.whl', name: 'ubuntu_wheels'
                                 }
                             }
                         }
@@ -126,6 +128,7 @@ pipeline
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
+                                unstash name: 'ubuntu_wheels'
                                 unstash name: 'ubuntu_package'
                                 unstash name: 'ubuntu_package2'
                                 unstash name: 'ubuntu_examples'
@@ -271,7 +274,7 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'windows_eggs'
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.whl'
                                 }
                             }
                         }
