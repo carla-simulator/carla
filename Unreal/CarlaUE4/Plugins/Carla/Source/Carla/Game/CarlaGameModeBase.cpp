@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
+#include "Carla/Lights/CarlaLight.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
@@ -195,6 +196,19 @@ void ACarlaGameModeBase::BeginPlay()
 
   if (LMManager) {
     LMManager->RegisterInitialObjects();
+  }
+
+  // Manually run begin play on lights as it may not run on sublevels
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
+  for(AActor* Actor : FoundActors)
+  {
+    TArray<UCarlaLight*> Lights;
+    Actor->GetComponents(Lights, false);
+    for(UCarlaLight* Light : Lights)
+    {
+      Light->BeginPlay();
+    }
   }
 }
 
