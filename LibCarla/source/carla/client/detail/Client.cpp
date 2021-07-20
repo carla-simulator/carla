@@ -193,7 +193,7 @@ namespace detail {
           RequestFile(requiredFile);
           log_info("Could not find the required file in cache, downloading... ", requiredFile);
         } else {
-          log_info("Found the required file in cache! ", requiredFile)
+          log_info("Found the required file in cache! ", requiredFile);
         }
       }
     }
