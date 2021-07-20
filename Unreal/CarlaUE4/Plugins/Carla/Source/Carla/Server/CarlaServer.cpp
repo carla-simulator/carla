@@ -374,7 +374,7 @@ void FCarlaServer::FPimpl::BindActions()
     if (folder[folder.size() - 1] != '/' && folder[folder.size() - 1] != '\\') {
       folder += "/";
     }
-    
+
     // Get the map's folder absolute path and check if it's in its own folder
     const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
     const auto folderDir = mapDir + "/" + folder.c_str();
@@ -394,7 +394,7 @@ void FCarlaServer::FPimpl::BindActions()
 
     return result;
   };
-  
+
   BIND_SYNC(request_file) << [this](std::string name) -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();
