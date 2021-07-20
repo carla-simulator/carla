@@ -167,7 +167,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       const cg::Location target_location = target_waypoint->GetLocation();
       float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
       float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
-      dot_product = 1.0f - dot_product;
+      dot_product = acos(dot_product) / PI;
       if (cross_product < 0.0f) {
         dot_product *= -1.0f;
       }
@@ -365,7 +365,7 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
                                                  const ActorId actor_id,
                                                  float max_target_velocity) {
 
-    auto const max_distance = 2 * max_target_velocity;
+    auto const max_distance = LANDMARK_DETECTION_TIME * max_target_velocity;
 
     float landmark_target_velocity = std::numeric_limits<float>::max();
 

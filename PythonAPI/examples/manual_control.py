@@ -1110,10 +1110,26 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
+    sim_world = None
+    original_settings = None
 
+    if args.seed is not None:
+        random.seed(args.seed)
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(20.0)
+
+        sim_world = client.get_world()
+        if args.sync:
+            settings = sim_world.get_settings()
+            original_settings = sim_world.get_settings()
+            if not settings.synchronous_mode:
+                settings.synchronous_mode = True
+                settings.fixed_delta_seconds = 0.05
+            sim_world.apply_settings(settings)
+
+            traffic_manager = client.get_trafficmanager()
+            traffic_manager.set_synchronous_mode(True)
 
         display = pygame.display.set_mode(
             (args.width, args.height),
@@ -1122,7 +1138,7 @@ def game_loop(args):
         pygame.display.flip()
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args)
+        world = World(sim_world, hud, args)
         controller = KeyboardControl(world, args.autopilot)
 
         clock = pygame.time.Clock()
@@ -1132,9 +1148,14 @@ def game_loop(args):
                 return
             world.tick(clock)
             world.render(display)
+            if args.sync:
+                sim_world.tick()
             pygame.display.flip()
 
     finally:
+
+        if sim_world and original_settings and args.sync:
+            sim_world.apply_settings(original_settings)
 
         if (world and world.recording_enabled):
             client.stop_recorder()
@@ -1193,6 +1214,15 @@ def main():
         default=2.2,
         type=float,
         help='Gamma correction of the camera (default: 2.2)')
+    argparser.add_argument(
+        '-s', '--seed',
+        help='Set seed for repeating executions (default: None)',
+        default=None,
+        type=int)
+    argparser.add_argument(
+        '--sync',
+        action='store_true',
+        help='Activate synchronous mode execution')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

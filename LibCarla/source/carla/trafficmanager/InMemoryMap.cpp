@@ -166,7 +166,7 @@ namespace traffic_manager {
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
           float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
           double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().rotation.GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().rotation.GetForwardVector());
-          int16_t angle_splits = static_cast<int16_t>(angle/TWENTY_DEG_TO_RAD);
+          int16_t angle_splits = static_cast<int16_t>(angle/MAX_WPT_RADIANS);
           int16_t distance_splits = static_cast<int16_t>(distance/MAX_WPT_DISTANCE);
           auto max_splits = max(angle_splits, distance_splits);
           if (max_splits >= 1) {

@@ -46,7 +46,6 @@ static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
 namespace PathBufferUpdate {
 static const float MAX_START_DISTANCE = 20.0f;
 static const float MINIMUM_HORIZON_LENGTH = 20.0f;
-static const float MAXIMUM_HORIZON_LENGTH = 100.0f;
 static const float HORIZON_RATE = 1.45f;
 } // namespace PathBufferUpdate
 
@@ -92,10 +91,10 @@ static const float INV_GROWTH_STEP_SIZE = 1.0f / static_cast<float>(GROWTH_STEP_
 namespace Map {
 static const float INFINITE_DISTANCE = std::numeric_limits<float>::max();
 static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
-static const double MAP_RESOLUTION = 5.0;
+static const float MAP_RESOLUTION = 5.0f;
+static const float INV_MAP_RESOLUTION = 1.0f / MAP_RESOLUTION;
 static const double MAX_WPT_DISTANCE = MAP_RESOLUTION/2.0 + SQUARE(MAP_RESOLUTION);
-static const float INV_MAP_RESOLUTION = 0.2f;
-static const float TWENTY_DEG_TO_RAD = 0.35f;
+static const float MAX_WPT_RADIANS = 0.1745f;  // 10º
 static float const DELTA = 25.0f;
 static float const Z_DELTA = 500.0f;
 } // namespace Map
@@ -115,8 +114,10 @@ static const float EPSILON_RELATIVE_SPEED = 0.001f;
 static const float MAX_JUNCTION_BLOCK_DISTANCE = 0.5f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
 static const float TWO_KM = 2000.0f;
 static const uint16_t ATTEMPTS_TO_TELEPORT = 5u;
+static const float LANDMARK_DETECTION_TIME = 2.5f;
 static const float FRICTION = 0.6f;
 static const float GRAVITY = 9.81f;
+static const float PI = 3.1415927f;
 } // namespace MotionPlan
 
 namespace PID {
@@ -135,7 +136,7 @@ static const std::vector<float> LATERAL_HIGHWAY_PARAM = {7.0f, 0.02f, 1.0f};
 
 namespace TrackTraffic {
 static const uint64_t BUFFER_STEP_THROUGH = 5;
-static const float INV_BUFFER_STEP_THROUGH = 0.2f;
+static const float INV_BUFFER_STEP_THROUGH = 1.0f / static_cast<float>(BUFFER_STEP_THROUGH);
 } // namespace TrackTraffic
 
 } // namespace constants
