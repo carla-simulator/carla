@@ -198,6 +198,7 @@ void TrafficManagerLocal::Run() {
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
+
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }

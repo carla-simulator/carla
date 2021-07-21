@@ -2,6 +2,7 @@
 
   * Changed the resolution of the cached map in Traffic Manager from 0.1 to 5 meters
   * Fixed import sumo_integration module from other scripts
+  * CARLA now is built with Visual Studio 2019 in Windows
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
@@ -14,6 +15,7 @@
   * Added 'check_lidar_bb' util script
   * Added optional flag to `client.replay_file()` `replay_sensors` to enable or disable the replaying the sensors
   * Improved manual_control: now cameras are set in relation with car size
+  * Client required files are sent from the server to a local cache (OpenDRIVE, Traffic Manager...)
   * Added CHRONO library for vehicle dynamics simulation (https://projectchrono.org/)
     - Supported JSON vehicle definition
     - Unsupported collision dynamics

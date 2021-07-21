@@ -83,6 +83,9 @@ void ALSM::Update() {
     }
   }
 
+  // Remove taken waypoints from last frame.
+  track_traffic.ClearTakenWaypoints();
+
   // Scan for new unregistered actors.
   IdentifyNewActors(world_actors);
 
