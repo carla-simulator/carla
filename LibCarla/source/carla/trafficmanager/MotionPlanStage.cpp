@@ -73,6 +73,7 @@ void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
   const cg::Location vehicle_location = simulation_state.GetLocation(actor_id);
   const cg::Vector3D vehicle_velocity = simulation_state.GetVelocity(actor_id);
+  const cg::Rotation vehicle_rotation = simulation_state.GetRotation(actor_id);
   const float vehicle_speed = vehicle_velocity.Length();
   const cg::Vector3D vehicle_heading = simulation_state.GetHeading(actor_id);
   const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(actor_id);
@@ -83,8 +84,8 @@ void MotionPlanStage::Update(const unsigned long index) {
   current_timestamp = world.GetSnapshot().GetTimestamp();
   StateEntry current_state;
 
-  // Instanciating teleportation transform.
-  cg::Transform teleportation_transform;
+  // Instanciating teleportation transform as current vehicle transform.
+  cg::Transform teleportation_transform = cg::Transform(vehicle_location, vehicle_rotation);
 
   // Get information about the hero location from the actor_id state.
   cg::Location hero_location = track_traffic.GetHeroLocation();
@@ -114,22 +115,16 @@ void MotionPlanStage::Update(const unsigned long index) {
       float random_sample = (static_cast<float>(random_devices.at(actor_id).next())*dilate_factor) + lower_bound;
       NodeList teleport_waypoint_list = local_map->GetWaypointsInDelta(hero_location, ATTEMPTS_TO_TELEPORT, random_sample);
       if (!teleport_waypoint_list.empty()) {
-        teleportation_transform = teleport_waypoint_list.at(0)->GetTransform();
         for (auto &teleport_waypoint : teleport_waypoint_list) {
-          uint64_t waypoint_id = teleport_waypoint->GetId();
-          if (track_traffic.IsWaypointFree(waypoint_id)) {
+          GeoGridId geogrid_id = teleport_waypoint->GetGeodesicGridId();
+          if (track_traffic.IsGeoGridFree(geogrid_id)) {
             teleportation_transform = teleport_waypoint->GetTransform();
-            track_traffic.AddTakenWaypoint(waypoint_id);
+            teleportation_transform.location.z += 0.5f;
+            track_traffic.AddTakenGrid(geogrid_id, actor_id);
             break;
           }
         }
-      } else {
-          // No possible points were found, stay dormant.
-          teleportation_transform = cg::Transform(vehicle_location, simulation_state.GetRotation(actor_id));
-        }
-    } else {
-      // Teleport only once every dt in asynchronous mode.
-      teleportation_transform = cg::Transform(vehicle_location, simulation_state.GetRotation(actor_id));
+      }
     }
     output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
   }
