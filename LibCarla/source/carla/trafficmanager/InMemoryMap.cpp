@@ -103,28 +103,6 @@ namespace traffic_manager {
     return;
   }
 
-  // bool InMemoryMap::Load(const std::string& filename) {
-
-  //   auto directory = "/home/jmoriana/carlaCache/" + filename;
-  //   std::cout << "Loading from " << directory << std::endl;
-
-  //   std::ifstream in_file;
-  //   std::istream_iterator<uint8_t> start(in_file), end;
-
-  //   // read the whole file
-  //   in_file.open(directory, std::ios::binary);
-  //   if (!in_file.is_open()) {
-  //     log_warning("Cache InMemoryMap not found");
-  //     return false;
-  //   }
-  //   std::vector<uint8_t> content(start, end);
-  //   std::cout << "Iep " << content.size() << std::endl;
-  //   in_file.close();
-
-  //   // parse the content
-  //   return Load(std::move(content));
-  // }
-
   bool InMemoryMap::Load(const std::vector<uint8_t>& content) {
     unsigned long pos = 0;
     std::vector<CachedSimpleWaypoint> cached_waypoints;
