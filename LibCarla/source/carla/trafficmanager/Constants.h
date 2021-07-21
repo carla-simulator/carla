@@ -50,8 +50,8 @@ static const float HORIZON_RATE = 1.45f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 0.4f;
-static const float TARGET_WAYPOINT_HORIZON_LENGTH = 0.8f;
+static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
+static const float TARGET_WAYPOINT_HORIZON_LENGTH = 1.0f;
 static const float JUNCTION_LOOK_AHEAD = 6.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 6.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
@@ -134,10 +134,10 @@ static const float VELOCITY_INTEGRAL_MAX = 5.0f;
 static const float VELOCITY_INTEGRAL_MIN = -5.0f;
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
-static const std::vector<float> LONGITUDIAL_PARAM = {3.6f, 0.01f, 0.1f};
-static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {3.6f, 0.01f, 0.1f};
+static const std::vector<float> LONGITUDIAL_PARAM = {3.6f, 0.01f, 0.05f};
+static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {3.6f, 0.01f, 0.05f};
 static const std::vector<float> LATERAL_PARAM = {5.0f, 0.02f, 1.0f};
-static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 1.0f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {3.0f, 0.02f, 0.5f};
 } // namespace PID
 
 namespace TrackTraffic {

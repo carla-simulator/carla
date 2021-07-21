@@ -1140,6 +1140,11 @@ def game_loop(args):
         world = World(sim_world, hud, args)
         controller = KeyboardControl(world, args.autopilot)
 
+        if args.sync:
+            sim_world.tick()
+        else:
+            sim_world.wait_for_tick()
+
         clock = pygame.time.Clock()
         while True:
             if args.sync:
