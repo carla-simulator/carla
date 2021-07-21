@@ -510,6 +510,23 @@ class SumoSimulation(object):
         self.spawned_actors = set(traci.simulation.getDepartedIDList())
         self.destroyed_actors = set(traci.simulation.getArrivedIDList())
 
+
+
+    ##### Begin My Code #####
+    def tick_at(self, time_to_start):
+        """
+        Tick to sumo simulation.
+        """
+        traci.simulationStep(time_to_start)
+        self.traffic_light_manager.tick()
+
+        # Update data structures for the current frame.
+        self.spawned_actors = set(traci.simulation.getDepartedIDList())
+        self.destroyed_actors = set(traci.simulation.getArrivedIDList())
+
+        self.spawned_actors = self.spawned_actors - self.destroyed_actors
+    ##### End My Code #####
+
     @staticmethod
     def close():
         """

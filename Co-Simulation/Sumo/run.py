@@ -82,7 +82,7 @@ def switch_carla_rendering(args, env, is_carla_rendering):
 
 
 def start_carla_sumo_synchronization(args, env, sumo_files):
-    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} --carla_veins_data_dir {args.data_dir}", shell=True)
+    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} --carla_veins_data_dir {args.data_dir} --time_to_start {args.time_to_start}", shell=True)
 
 
 def start_veins_sumo_synchronization(args, env, sumo_files):
@@ -98,14 +98,14 @@ def start_sumo_for_carla(args, env, sumo_files, client_num):
 
 
 def start_sumo_for_veins(args, env, sumo_files, client_num):
-    return Popen(f"vagrant ssh -c \"{args.sumocmd} -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
+    return Popen(f"vagrant ssh -c \"sumo -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
 
 
 def start_tracis_synchronization(args, env, sumo_files):
     if args.main_mobility_handler == "carla":
-        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} ", shell=True)
+        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start}", shell=True)
     else:
-        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2}  ", shell=True)
+        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start}", shell=True)
 
 class VeinsStateHandler:
     class VeinsState:
@@ -290,6 +290,7 @@ if __name__ == '__main__':
     parser.add_argument('--python_api_util_path', default="./../../PythonAPI/util/")
     parser.add_argument('--carla_map_name', default=maps[0], choices=maps)
     parser.add_argument('--time_step', default=float(env["time_step"]))
+    parser.add_argument('--time_to_start', type=float, default=float(env["time_to_start"]))
 
     parser.add_argument('--sumocmd', default=env["sumocmd"], choices=env["sumocmd_choices"])
     parser.add_argument('--sumo_host', default="127.0.0.1")

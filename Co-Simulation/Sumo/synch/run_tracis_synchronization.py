@@ -34,7 +34,13 @@ class TracisSyncronizer:
         for tmp_traci in self.tracis:
             tmp_traci.setOrder(order)
 
-    def start(self):
+    def start(self, time_to_start):
+        for tmp_traci in self.tracis:
+            if tmp_traci.simulation.getTime() < time_to_start:
+                tmp_traci.simulationStep(time_to_start)
+            else:
+                pass
+
         while self.check_sumo_finish() is False:
             self.main_traci.simulationStep()
 
@@ -120,11 +126,11 @@ class TracisSyncronizer:
                 continue
 
 # ----- function -----
-def start_tracis_syncronizer(main_sumo_host_port, other_sumo_host_ports, order):
+def start_tracis_syncronizer(main_sumo_host_port, other_sumo_host_ports, order, time_to_start):
     tracis_syncronizer = TracisSyncronizer(main_sumo_host_port, other_sumo_host_ports, order)
 
     try:
-        tracis_syncronizer.start()
+        tracis_syncronizer.start(time_to_start)
     except KeyboardInterrupt:
         logging.info(CTRL_C_PRESSED_MESSAGE)
     except Exception as e:
@@ -142,6 +148,7 @@ if __name__ == "__main__":
     parser.add_argument('--main_sumo_host_port', default=f"127.0.0.1:{env['carla_sumo_port']}")
     parser.add_argument('--other_sumo_host_ports', nargs='*', default=f"{env['vagrant_ip']}:{env['veins_sumo_port']}")
     parser.add_argument('--sumo_order', type=int, default=1)
+    parser.add_argument('--time_to_start', type=float, default=0)
     parser.add_argument('--log_file_path', default="./log/tracis_logger.log")
 
     args = parser.parse_args()
@@ -156,5 +163,6 @@ if __name__ == "__main__":
     start_tracis_syncronizer(
         main_sumo_host_port=args.main_sumo_host_port,
         other_sumo_host_ports=args.other_sumo_host_ports,
-        order=args.sumo_order
+        order=args.sumo_order,
+        time_to_start=args.time_to_start
     )

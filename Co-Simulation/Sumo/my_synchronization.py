@@ -42,6 +42,8 @@ except IndexError:
 DATA_SERVER_HOST = "localhost"
 DATA_SERVER_PORT = 9998
 DATA_DIR = "./../Veins/carla-veins-data/"
+TIME_TO_START = 0
+TIME_STEP = 0.05
 ##### End: My code #####
 
 # ==================================================================================================
@@ -424,7 +426,15 @@ class SimulationSynchronization(object):
         # -----------------
         # sumo-->carla sync
         # -----------------
-        self.sumo.tick()
+        if self.sumo_elapsed_seconds() < TIME_TO_START:
+            self.sumo.tick_at(TIME_TO_START)
+
+            # To obtain acurate time from sumo_elapsed_seconds, correct init time.
+            # self.sumo_elapsed_seconds - self.init_time = TIME_TO_START - TIME_STEP
+            # At the nest step of carla, the time becomes TIME_TO_START
+            self.init_time = self.init_time - TIME_TO_START + TIME_STEP
+        else:
+            self.sumo.tick()
 
         ##### Begin: My code #####
         self.current_time = self.sumo.current_time()
@@ -670,6 +680,7 @@ if __name__ == '__main__':
     argparser.add_argument('--carla_veins_data_server_host', default=DATA_SERVER_HOST)
     argparser.add_argument('--carla_veins_data_server_port', default=DATA_SERVER_PORT)
     argparser.add_argument('--carla_veins_data_dir', default=DATA_DIR)
+    argparser.add_argument('--time_to_start', type=float, default=TIME_TO_START)
     ###### End: My codes #####
 
     arguments = argparser.parse_args()
@@ -678,6 +689,8 @@ if __name__ == '__main__':
     DATA_SERVER_HOST = arguments.carla_veins_data_server_host
     DATA_SERVER_PORT = arguments.carla_veins_data_server_port
     DATA_DIR = arguments.carla_veins_data_dir
+    TIME_TO_START = arguments.time_to_start
+    TIME_STEP = arguments.step_length
     ###### End: My codes #####
 
     if arguments.sync_vehicle_all is True:

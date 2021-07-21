@@ -10,9 +10,10 @@
   "mobility_handler_choices": ["carla", "veins"],
   "veins_vagrant_path": "./../OpenCV2X",
   "veins_result_aggrigation_dir": "/home/yoshida/carla/Co-Simulation/OpenCV2X/veins_results/",
-  "sumocmd": "sumo",
+  "sumocmd": "sumo-gui",
   "sumocmd_choices": ["sumo, sumo-gui"],
   "time_step": 0.1,
+  "time_to_start": 150,
   "vagrant_ip": "192.168.33.10",
   "in_vagrant": {
     "ini_file_in_veins": "vfc.ini",
