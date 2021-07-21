@@ -8,10 +8,10 @@
 
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/InMemoryMap.h"
+#include <boost/geometry/geometries/box.hpp>
 
 namespace carla {
 namespace traffic_manager {
-
 
   namespace cg = carla::geom;
   using namespace constants::Map;
@@ -30,9 +30,10 @@ namespace traffic_manager {
     return GetSegmentId(swp->GetWaypoint());
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetSuccessors(const SegmentId segment_id,
-  const SegmentTopology &segment_topology, const SegmentMap &segment_map) {
-    std::vector<SimpleWaypointPtr> result;
+  NodeList InMemoryMap::GetSuccessors(const SegmentId segment_id,
+                                      const SegmentTopology &segment_topology,
+                                      const SegmentMap &segment_map) {
+    NodeList result;
     if (segment_topology.find(segment_id) == segment_topology.end()) {
       return result;
     }
@@ -48,9 +49,10 @@ namespace traffic_manager {
     return result;
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetPredecessors(const SegmentId segment_id,
-  const SegmentTopology &segment_topology, const SegmentMap &segment_map) {
-    std::vector<SimpleWaypointPtr> result;
+  NodeList InMemoryMap::GetPredecessors(const SegmentId segment_id,
+                                        const SegmentTopology &segment_topology,
+                                        const SegmentMap &segment_map) {
+    NodeList result;
     if (segment_topology.find(segment_id) == segment_topology.end()) {
       return result;
     }
@@ -249,7 +251,7 @@ namespace traffic_manager {
     auto compare_s = [](const SimpleWaypointPtr &swp1, const SimpleWaypointPtr &swp2) {
       return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
     };
-    auto wpt_angle = [](cg::Location l1, cg::Location l2) {
+    auto wpt_angle = [](cg::Vector3D l1, cg::Vector3D l2) {
       return cg::Math::GetVectorAngle(l1, l2);
     };
     auto max = [](int16_t x, int16_t y) {
@@ -273,13 +275,13 @@ namespace traffic_manager {
       // Adding more waypoints if the angle is too tight or if they are too distant.
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
           float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
-          double angle = wpt_angle(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
-          int16_t angle_splits = static_cast<int16_t>(angle/SEVEN_DEG_TO_RAD);
+          double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().rotation.GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().rotation.GetForwardVector());
+          int16_t angle_splits = static_cast<int16_t>(angle/TWENTY_DEG_TO_RAD);
           int16_t distance_splits = static_cast<int16_t>(distance/MAX_WPT_DISTANCE);
           auto max_splits = max(angle_splits, distance_splits);
           if (max_splits >= 1) {
             // Compute how many waypoints do we need to generate.
-            for (auto j = 0; j < max_splits; ++j) {
+            for (uint16_t j = 0; j < max_splits; ++j) {
               auto next_waypoints = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/(max_splits+1));
               if (next_waypoints.size() != 0) {
                 auto new_waypoint = next_waypoints.front();
@@ -379,13 +381,42 @@ namespace traffic_manager {
     std::vector<SpatialTreeEntry> result_1;
 
     rtree.query(bgi::nearest(query_point, 1), std::back_inserter(result_1));
+
     SpatialTreeEntry &closest_entry = result_1.front();
     SimpleWaypointPtr &closest_point = closest_entry.second;
 
     return closest_point;
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetDenseTopology() const {
+  NodeList InMemoryMap::GetWaypointsInDelta(const cg::Location loc, const uint16_t n_points, const float random_sample) const {
+    Point3D query_point(loc.x, loc.y, loc.z);
+
+    Point3D lower_p1(loc.x + random_sample, loc.y + random_sample, loc.z + Z_DELTA);
+    Point3D lower_p2(loc.x - random_sample, loc.y - random_sample, loc.z - Z_DELTA);
+    Point3D upper_p1(loc.x + random_sample + DELTA, loc.y + random_sample + DELTA, loc.z + Z_DELTA);
+    Point3D upper_p2(loc.x - random_sample - DELTA, loc.y - random_sample - DELTA, loc.z - Z_DELTA);
+
+    Box lower_query_box(lower_p2, lower_p1);
+    Box upper_query_box(upper_p2, upper_p1);
+
+    NodeList result;
+    uint8_t x = 0;
+    for (Rtree::const_query_iterator
+        it = rtree.qbegin(bgi::within(upper_query_box)
+        && !bgi::within(lower_query_box)
+        && bgi::satisfies([&](SpatialTreeEntry const& v) { return !v.second->CheckJunction();}));
+        it != rtree.qend();
+        ++it) {
+    x++;
+    result.push_back(it->second);
+    if (x >= n_points)
+        break;
+    }
+
+    return result;
+  }
+
+  NodeList InMemoryMap::GetDenseTopology() const {
     return dense_topology;
   }
 

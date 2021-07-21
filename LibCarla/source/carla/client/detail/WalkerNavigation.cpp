@@ -23,7 +23,9 @@ namespace detail {
   WalkerNavigation::WalkerNavigation(Client &client) : _client(client), _next_check_index(0) {
     // Here call the server to retrieve the navmesh data.
     auto files = _client.GetRequiredFiles("Nav");
-    _nav.Load(_client.GetCacheFile(files[0]));
+    if (!files.empty()) {
+      _nav.Load(_client.GetCacheFile(files[0]));
+    }
   }
 
   void WalkerNavigation::Tick(std::shared_ptr<Episode> episode) {
@@ -103,7 +105,7 @@ namespace detail {
     // optional debug info
     if (show_debug) {
       if (_nav.GetCrowd() == nullptr) return;
-      
+
       // draw bounding boxes for debug
       for (int i = 0; i < _nav.GetCrowd()->getAgentCount(); ++i) {
         // get the agent

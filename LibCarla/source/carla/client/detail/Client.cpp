@@ -169,6 +169,10 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::MapInfo>("get_map_info");
   }
 
+  std::string Client::GetMapData() const{
+    return _pimpl->CallAndWait<std::string>("get_map_data");
+  }
+
   std::vector<uint8_t> Client::GetNavigationMesh() const {
     return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
   }
@@ -184,9 +188,12 @@ namespace detail {
     if (download) {
 
       // For each required file, check if it exists and request it otherwise
-      for(auto requiredFile : requiredFiles) {
-        if(!FileTransfer::FileExists(requiredFile)) {
+      for (auto requiredFile : requiredFiles) {
+        if (!FileTransfer::FileExists(requiredFile)) {
           RequestFile(requiredFile);
+          log_info("Could not find the required file in cache, downloading... ", requiredFile);
+        } else {
+          log_info("Found the required file in cache! ", requiredFile);
         }
       }
     }
@@ -448,6 +455,11 @@ namespace detail {
 
   void Client::FreezeAllTrafficLights(bool frozen) {
     _pimpl->AsyncCall("freeze_all_traffic_lights", frozen);
+  }
+
+  std::vector<geom::BoundingBox> Client::GetLightBoxes(rpc::ActorId traffic_light) const {
+    using return_t = std::vector<geom::BoundingBox>;
+    return _pimpl->CallAndWait<return_t>("get_light_boxes", traffic_light);
   }
 
   rpc::VehicleLightStateList Client::GetVehiclesLightStates() {

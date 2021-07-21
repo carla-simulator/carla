@@ -109,7 +109,7 @@ private:
 
   void GenerateSpawnPoints();
 
-  void ParseOpenDrive(const FString &MapName);
+  void ParseOpenDrive();
 
   void RegisterEnvironmentObjects();
 
@@ -163,5 +163,9 @@ private:
   int PendingLevelsToUnLoad = 0;
 
   bool ReadyToRegisterObjects = false;
+
+  // We keep a global uuid to allow the load/unload layer methods to be called 
+  // in the same tick
+  int32 LatentInfoUUID = 0;
 
 };

@@ -8,7 +8,7 @@ import carla
 import random
 
 from . import SmokeTest
-
+import time
 
 class TestMap(SmokeTest):
     def test_reload_world(self):
@@ -24,8 +24,10 @@ class TestMap(SmokeTest):
         for map_name in map_names:
             if map_name != '/Game/Carla/Maps/BaseMap/BaseMap':
                 world = self.client.load_world(map_name)
+                # workaround: give time to UE4 to clean memory after loading (old assets)
+                time.sleep(5)
                 m = world.get_map()
-                self.assertEqual(map_name.split('/')[-1], m.name)
+                self.assertEqual(map_name.split('/')[-1], m.name.split('/')[-1])
                 self._check_map(m)
 
     def _check_map(self, m):

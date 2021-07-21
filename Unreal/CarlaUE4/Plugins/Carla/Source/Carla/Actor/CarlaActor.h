@@ -58,7 +58,13 @@ public:
 
   bool IsAlive() const
   {
-    return (carla::rpc::ActorState::Alive == State);
+    return (carla::rpc::ActorState::PendingKill != State &&
+            carla::rpc::ActorState::Invalid != State);
+  }
+
+  bool IsActive() const
+  {
+    return (carla::rpc::ActorState::Active == State);
   }
 
   bool IsDormant() const
@@ -301,6 +307,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ETrafficLightState GetTrafficLightState() const
+  {
+    return ETrafficLightState::Off;
+  }
+
   virtual UTrafficLightController* GetTrafficLightController()
   {
     return nullptr;
@@ -477,6 +488,8 @@ public:
       UWorld* World);
 
   virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState& State) final;
+
+  virtual ETrafficLightState GetTrafficLightState() const final;
 
   virtual UTrafficLightController* GetTrafficLightController() final;
 

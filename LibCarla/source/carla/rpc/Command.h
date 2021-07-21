@@ -12,6 +12,7 @@
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerControl.h"
 
@@ -81,6 +82,16 @@ namespace rpc {
       ActorId actor;
       WalkerControl control;
       MSGPACK_DEFINE_ARRAY(actor, control);
+    };
+
+    struct ApplyVehiclePhysicsControl : CommandBase<ApplyVehiclePhysicsControl> {
+      ApplyVehiclePhysicsControl() = default;
+      ApplyVehiclePhysicsControl(ActorId id, const VehiclePhysicsControl &value)
+        : actor(id),
+          physics_control(value) {}
+      ActorId actor;
+      VehiclePhysicsControl physics_control;
+      MSGPACK_DEFINE_ARRAY(actor, physics_control);
     };
 
     struct ApplyTransform : CommandBase<ApplyTransform> {
@@ -214,6 +225,7 @@ namespace rpc {
         DestroyActor,
         ApplyVehicleControl,
         ApplyWalkerControl,
+        ApplyVehiclePhysicsControl,
         ApplyTransform,
         ApplyWalkerState,
         ApplyTargetVelocity,

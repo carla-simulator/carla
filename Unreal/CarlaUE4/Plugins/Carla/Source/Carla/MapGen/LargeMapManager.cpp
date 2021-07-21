@@ -9,15 +9,12 @@
 #include "UncenteredPivotPointMesh.h"
 
 #include "Walker/WalkerBase.h"
+#include "Carla/Game/Tagger.h"
 
 #include "FileHelper.h"
 #include "Paths.h"
 
-#if WITH_EDITOR
 #define LARGEMAP_LOGS 1
-#else
-#define LARGEMAP_LOGS 0
-#endif // WITH_EDITOR
 
 #if LARGEMAP_LOGS
 #define LM_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
@@ -48,6 +45,7 @@ ALargeMapManager::~ALargeMapManager()
 void ALargeMapManager::BeginPlay()
 {
   Super::BeginPlay();
+  RegisterTilesInWorldComposition();
 
   UWorld* World = GetWorld();
   /// Setup delegates
@@ -110,6 +108,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
   LM_LOG(Warning, "OnLevelAddedToWorld");
+  ATagger::TagActorsInLevel(*InLevel, true);
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
@@ -186,11 +185,11 @@ void ALargeMapManager::OnActorSpawned(
     LM_LOG(Error, "... not hero vehicle ...");
     if(IsValid(Actor))
     { // Actor was spwaned succesfully
-      // TODO: not dormant but not hero => GhostActor
-      //       LM: Map<AActor* FGhostActor>  maybe per tile and in a tile sublevel?
+      // TODO: not dormant but not hero => ActiveActor
+      //       LM: Map<AActor* FActiveActor>  maybe per tile and in a tile sublevel?
 
-      LM_LOG(Error, "GHOST VEHICLE DETECTED");
-      GhostActors.Add(CarlaActor.GetActorId());
+      LM_LOG(Error, "ACTIVE VEHICLE DETECTED");
+      ActiveActors.Add(CarlaActor.GetActorId());
     }
     else
     { // Actor was spawned as dormant
@@ -223,6 +222,40 @@ void ALargeMapManager::OnActorDestroyed(AActor* DestroyedActor)
   // Hero has been removed?
   //
 
+}
+
+void ALargeMapManager::SetTile0Offset(const FVector& Offset)
+{
+  Tile0Offset = Offset;
+}
+
+void ALargeMapManager::SetTileSize(float Size)
+{
+  TileSide = Size;
+}
+
+void ALargeMapManager::SetLayerStreamingDistance(float Distance)
+{
+  LayerStreamingDistance = Distance;
+  LayerStreamingDistanceSquared =
+      LayerStreamingDistance*LayerStreamingDistance;
+}
+
+void ALargeMapManager::SetActorStreamingDistance(float Distance)
+{
+  ActorStreamingDistance = Distance;
+  ActorStreamingDistanceSquared =
+      ActorStreamingDistance*ActorStreamingDistance;
+}
+
+float ALargeMapManager::GetLayerStreamingDistance() const
+{
+  return LayerStreamingDistance;
+}
+
+float ALargeMapManager::GetActorStreamingDistance() const
+{
+  return ActorStreamingDistance;
 }
 
 FTransform ALargeMapManager::GlobalToLocalTransform(const FTransform& InTransform) const
@@ -261,8 +294,8 @@ void ALargeMapManager::Tick(float DeltaTime)
   // Also, to avoid looping over the heros again, it checks if any actor to consider has been removed
   UpdateTilesState();
 
-  // Check if ghost actors are still in range and inside a loaded tile or have to be converted to dormant
-  CheckGhostActors();
+  // Check if active actors are still in range and inside a loaded tile or have to be converted to dormant
+  CheckActiveActors();
 
   // Check if dormant actors have been moved to the load range
   CheckDormantActors();
@@ -270,9 +303,9 @@ void ALargeMapManager::Tick(float DeltaTime)
   // Remove the hero actors that doesn't exits any more from the ActorsToConsider vector
   RemovePendingActorsToRemove();
 
-  ConvertGhostToDormantActors();
+  ConvertActiveToDormantActors();
 
-  ConvertDormantToGhostActors();
+  ConvertDormantToActiveActors();
 
   CheckIfRebaseIsNeeded();
 
@@ -290,6 +323,7 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GenerateMap);
   LM_LOG(Warning, "Generating Map %s ...", *InAssetsPath);
+  ClearWorldAndTiles();
 
   AssetsPath = InAssetsPath;
 
@@ -309,6 +343,10 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
       // LM_LOG(Warning, "Asset class: %s", *(AssetData.AssetClass.ToString()));
     #endif
     FString TileName = AssetData.AssetName.ToString();
+    if (!TileName.Contains("_Tile_"))
+    {
+      continue;
+    }
     FString TileName_X = "";
     FString TileName_Y = "";
     size_t i = TileName.Len()-1;
@@ -345,10 +383,50 @@ void ALargeMapManager::GenerateMap(FString InAssetsPath)
 #endif // WITH_EDITOR
 }
 
+void ALargeMapManager::GenerateMap(TArray<TPair<FString, FIntVector>> MapPathsIds)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::GenerateMap);
+  LM_LOG(Warning, "Generating Large Map");
+  ClearWorldAndTiles();
+
+  for (TPair<FString, FIntVector>& PathId : MapPathsIds)
+  {
+    FIntVector& TileVectorID = PathId.Value;
+    FString& Path = PathId.Key;
+    TileID TileId = GetTileID(TileVectorID);
+    LoadCarlaMapTile(Path, TileId);
+  }
+
+  #if WITH_EDITOR
+  LM_LOG(Warning, "GenerateMap num Tiles generated %d", MapTiles.Num());
+  #endif // WITH_EDITOR
+}
+
+void ALargeMapManager::ClearWorldAndTiles()
+{
+  MapTiles.Empty();
+}
+
+void ALargeMapManager::RegisterTilesInWorldComposition()
+{
+  UWorld* World = GetWorld();
+  UWorldComposition* WorldComposition = World->WorldComposition;
+  World->ClearStreamingLevels();
+  WorldComposition->TilesStreaming.Empty();
+  WorldComposition->GetTilesList().Empty();
+
+  for (auto& It : MapTiles)
+  {
+    ULevelStreamingDynamic* StreamingLevel = It.Value.StreamingLevel;
+    World->AddStreamingLevel(StreamingLevel);
+    WorldComposition->TilesStreaming.Add(StreamingLevel);
+  }
+}
+
 // TODO: maybe remove this, I think I will not need it any more
 void ALargeMapManager::AddActorToUnloadedList(const FCarlaActor& CarlaActor, const FTransform& Transform)
 {
-  // GhostActors.Add(CarlaActor.GetActorId(), {Transform, CarlaActor});
+  // ActiveActors.Add(CarlaActor.GetActorId(), {Transform, CarlaActor});
 }
 
 FIntVector ALargeMapManager::GetNumTilesInXY() const
@@ -460,28 +538,6 @@ ALargeMapManager::TileID ALargeMapManager::GetTileID(FDVector TileLocation) cons
   return GetTileID(TileID);
 }
 
-FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FVector Location)
-{
-  // Asset Location -> TileID
-  TileID TileID = GetTileID(Location);
-
-  FCarlaMapTile* Tile = MapTiles.Find(TileID);
-  if (Tile) return *Tile; // Tile found
-
-  // Need to generate a new Tile
-  FCarlaMapTile NewTile;
-  // 1 - Calculate the Tile position
-  NewTile.Location = GetTileLocation(TileID);
-#if WITH_EDITOR
-  // 2 - Generate Tile name
-  NewTile.Name = GenerateTileName(TileID);
-#endif // WITH_EDITOR
-  // 3 - Generate the StreamLevel
-  NewTile.StreamingLevel = AddNewTile(NewTile.Name, NewTile.Location);
-  // 4 - Add it to the map
-  return MapTiles.Add(TileID, NewTile);
-}
-
 FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(ULevel* InLevel)
 {
   FCarlaMapTile* Tile = nullptr;
@@ -506,15 +562,25 @@ FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
   return Tile;
 }
 
-ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector TileLocation)
-{
+FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID TileId) {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::LoadCarlaMapTile);
+  // Need to generate a new Tile
+  FCarlaMapTile NewTile;
+  // 1 - Calculate the Tile position
+  FIntVector VTileID = GetTileVectorID(TileId);
+  NewTile.Location = GetTileLocation(TileId);
+  NewTile.Name = TileMapPath;
+
+  // 3 - Generate the StreamLevel
+  FVector TileLocation = NewTile.Location;
+  FString TileName = NewTile.Name;
   UWorld* World = GetWorld();
   UWorldComposition* WorldComposition = World->WorldComposition;
 
-  FString FullName = BaseTileMapPath;
+  FString FullName = TileMapPath;
   FString PackageFileName = FullName;
   FString LongLevelPackageName = FPackageName::FilenameToLongPackageName(PackageFileName);
-  FString UniqueLevelPackageName = LongLevelPackageName + TileName;
+  FString UniqueLevelPackageName = LongLevelPackageName;
 
   ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName);
   check(StreamingLevel);
@@ -551,111 +617,6 @@ ULevelStreamingDynamic* ALargeMapManager::AddNewTile(FString TileName, FVector T
 
   //Actual map package to load
   StreamingLevel->PackageNameToLoad = *LongLevelPackageName;
-
-
-  World->AddStreamingLevel(StreamingLevel);
-  WorldComposition->TilesStreaming.Add(StreamingLevel);
-
-
-  FWorldTileInfo Info;
-  Info.AbsolutePosition = FIntVector(TileLocation);
-  Info.Position = Info.AbsolutePosition;
-  FWorldTileLayer WorldTileLayer;
-  WorldTileLayer.Name = "CarlaLayer";
-  WorldTileLayer.StreamingDistance = LayerStreamingDistance;
-  WorldTileLayer.DistanceStreamingEnabled = false; // we will handle this, not unreal
-  Info.Layer = WorldTileLayer;
-
-  FWorldCompositionTile NewTile;
-  NewTile.PackageName = *LongLevelPackageName;
-  NewTile.Info = Info;
-  WorldComposition->GetTilesList().Add(NewTile);
-
-  return StreamingLevel;
-}
-
-FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID TileId) {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::LoadCarlaMapTile);
-  // Need to generate a new Tile
-  FCarlaMapTile NewTile;
-  // 1 - Calculate the Tile position
-  FIntVector VTileID = GetTileVectorID(TileId);
-  // FVector OriginOffset = FVector(FMath::Sign(VTileID.X + 0.5f), FMath::Sign(VTileID.Y + 0.5f), FMath::Sign(VTileID.Z)) * 0.5f;
-  // NewTile.Location = (FVector(VTileID) + OriginOffset)* TileSide * 0.5f;
-  NewTile.Location = GetTileLocation(TileId);
-#if WITH_EDITOR
-  // 2 - Generate Tile name
-  NewTile.Name = GenerateTileName(TileId);
-  // LM_LOG(Warning, "Tile idd: %d, %d", VTileID.X, VTileID.Y);
-  // LM_LOG(Warning, "Tile location: %f, %f", NewTile.Location.X, NewTile.Location.Y);
-#endif // WITH_EDITOR
-
-  // 3 - Generate the StreamLevel
-  FVector TileLocation = NewTile.Location;
-  FString TileName = NewTile.Name;
-  UWorld* World = GetWorld();
-  UWorldComposition* WorldComposition = World->WorldComposition;
-
-  FString FullName = TileMapPath;
-  FString PackageFileName = FullName;
-  FString LongLevelPackageName = FPackageName::FilenameToLongPackageName(PackageFileName);
-  FString UniqueLevelPackageName = LongLevelPackageName + TileName;
-
-  ULevelStreamingDynamic* StreamingLevel = NewObject<ULevelStreamingDynamic>(World, *TileName, RF_Transient);
-  check(StreamingLevel);
-
-  StreamingLevel->SetWorldAssetByPackageName(*UniqueLevelPackageName);
-
-#if WITH_EDITOR
-  if (World->IsPlayInEditor())
-  {
-    FWorldContext WorldContext = GEngine->GetWorldContextFromWorldChecked(World);
-    StreamingLevel->RenameForPIE(WorldContext.PIEInstance);
-  }
-  StreamingLevel->SetShouldBeVisibleInEditor(true);
-  StreamingLevel->LevelColor = FColor::MakeRandomColor();
-#endif // WITH_EDITOR
-
-  StreamingLevel->SetShouldBeLoaded(false);
-  StreamingLevel->SetShouldBeVisible(false);
-  StreamingLevel->bShouldBlockOnLoad = ShouldTilesBlockOnLoad;
-  StreamingLevel->bInitiallyLoaded = false;
-  StreamingLevel->bInitiallyVisible = false;
-  StreamingLevel->LevelTransform = FTransform(TileLocation);
-  StreamingLevel->PackageNameToLoad = *FullName;
-
-  if (!FPackageName::DoesPackageExist(FullName, NULL, &PackageFileName))
-  {
-    LM_LOG(Error, "Level does not exist in package with FullName variable -> %s", *FullName);
-  }
-
-  if (!FPackageName::DoesPackageExist(LongLevelPackageName, NULL, &PackageFileName))
-  {
-    LM_LOG(Error, "Level does not exist in package with LongLevelPackageName variable -> %s", *LongLevelPackageName);
-  }
-
-  //Actual map package to load
-  StreamingLevel->PackageNameToLoad = *LongLevelPackageName;
-
-
-  World->AddStreamingLevel(StreamingLevel);
-  WorldComposition->TilesStreaming.Add(StreamingLevel);
-
-
-  // FWorldTileInfo Info;
-  // Info.AbsolutePosition = FIntVector(TileLocation);
-  // Info.Position = Info.AbsolutePosition;
-  // LM_LOG(Warning, "Absolute level position %s", *Info.AbsolutePosition.ToString());
-  // FWorldTileLayer WorldTileLayer;
-  // WorldTileLayer.Name = "CarlaLayer";
-  // WorldTileLayer.StreamingDistance = LayerStreamingDistance;
-  // WorldTileLayer.DistanceStreamingEnabled = false; // we will handle this, not unreal
-  // Info.Layer = WorldTileLayer;
-
-  // FWorldCompositionTile WorldCompositionTile;
-  // WorldCompositionTile.PackageName = *FullName;
-  // WorldCompositionTile.Info = Info;
-  // WorldComposition->GetTilesList().Add(WorldCompositionTile);
 
   NewTile.StreamingLevel = StreamingLevel;
 
@@ -697,9 +658,9 @@ void ALargeMapManager::UpdateTilesState()
 void ALargeMapManager::RemovePendingActorsToRemove()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::RemovePendingActorsToRemove);
-  if(ActorsToRemove.Num() > 0 || GhostsToRemove.Num() > 0)
+  if(ActorsToRemove.Num() > 0 || ActivesToRemove.Num() > 0)
   {
-    LM_LOG(Error, "ActorsToRemove %d GhostsToRemove %d", ActorsToRemove.Num(), GhostsToRemove.Num());
+    LM_LOG(Error, "ActorsToRemove %d ActivesToRemove %d", ActorsToRemove.Num(), ActivesToRemove.Num());
   }
 
   for (AActor* ActorToRemove : ActorsToRemove)
@@ -709,11 +670,11 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   ActorsToRemove.Reset();
 
 
-  for (FCarlaActor::IdType ActorToRemove : GhostsToRemove)
+  for (FCarlaActor::IdType ActorToRemove : ActivesToRemove)
   {
-    GhostActors.Remove(ActorToRemove);
+    ActiveActors.Remove(ActorToRemove);
   }
-  GhostsToRemove.Reset();
+  ActivesToRemove.Reset();
 
   for(FCarlaActor::IdType Id : DormantsToRemove)
   {
@@ -722,13 +683,13 @@ void ALargeMapManager::RemovePendingActorsToRemove()
   DormantsToRemove.Reset();
 }
 
-void ALargeMapManager::CheckGhostActors()
+void ALargeMapManager::CheckActiveActors()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckGhostActors);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::CheckActiveActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
   // Check if they have to be destroyed
-  for(FCarlaActor::IdType Id : GhostActors)
+  for(FCarlaActor::IdType Id : ActiveActors)
   {
     FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
     if (View)
@@ -740,8 +701,8 @@ void ALargeMapManager::CheckGhostActors()
       if(!IsTileLoaded(WorldLocation))
       {
         // Save to temporal container. Later will be converted to dormant
-        GhostToDormantActors.Add(Id);
-        GhostsToRemove.Add(Id);
+        ActiveToDormantActors.Add(Id);
+        ActivesToRemove.Add(Id);
         continue;
       }
 
@@ -753,47 +714,40 @@ void ALargeMapManager::CheckGhostActors()
 
         if (DistanceSquared > ActorStreamingDistanceSquared)
         {
-          LM_LOG(Warning, "CheckGhostActors Tile not loaded %s %s (%s)-> Ghost To Dormant %s", \
-            *TileIDToString(GetTileID(WorldLocation)),\
-            *WorldLocation.ToString(), \
-            *CurrentOriginD.ToString(), \
-            *Actor->GetName() \
-          );
-
           // Save to temporal container. Later will be converted to dormant
-          GhostToDormantActors.Add(Id);
-          GhostsToRemove.Add(Id);
+          ActiveToDormantActors.Add(Id);
+          ActivesToRemove.Add(Id);
         }
       }
     }
     else
     {
-      LM_LOG(Warning, "CheckGhostActors Actor does not exist -> Remove actor");
-      GhostsToRemove.Add(Id);
+      LM_LOG(Warning, "CheckActiveActors Actor does not exist -> Remove actor");
+      ActivesToRemove.Add(Id);
     }
   }
 }
 
-void ALargeMapManager::ConvertGhostToDormantActors()
+void ALargeMapManager::ConvertActiveToDormantActors()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertGhostToDormantActors);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertActiveToDormantActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
-  // These actors are on dormant state so remove them from ghost actors
+  // These actors are on dormant state so remove them from active actors
   // But save them on the dormant array first
-  for(FCarlaActor::IdType Id : GhostToDormantActors)
+  for(FCarlaActor::IdType Id : ActiveToDormantActors)
   {
     // To dormant state
     CarlaEpisode->PutActorToSleep(Id);
 
-    LM_LOG(Warning, "Converting Ghost To Dormant... %d", Id);
+    LM_LOG(Warning, "Converting Active To Dormant... %d", Id);
 
     // Need the ID of the dormant actor and save it
     DormantActors.Add(Id);
   }
 
-  GhostToDormantActors.Reset();
+  ActiveToDormantActors.Reset();
 }
 
 void ALargeMapManager::CheckDormantActors()
@@ -808,9 +762,21 @@ void ALargeMapManager::CheckDormantActors()
     FCarlaActor* CarlaActor = CarlaEpisode->FindCarlaActor(Id);
 
     // If the Ids don't match, the actor has been removed
-    if(!CarlaActor || CarlaActor->GetActorId() != Id || !CarlaActor->IsDormant())
+    if(!CarlaActor)
     {
-      LM_LOG(Error, "CheckDormantActors IDs doesn't much!! Wanted = %d Received = %d", Id, CarlaActor?CarlaActor->GetActorId():0);
+      LM_LOG(Error, "CheckDormantActors Carla Actor %d not found", Id);
+      DormantsToRemove.Add(Id);
+      continue;
+    }
+    if(CarlaActor->GetActorId() != Id)
+    {
+      LM_LOG(Error, "CheckDormantActors IDs doesn't match!! Wanted = %d Received = %d", Id, CarlaActor->GetActorId());
+      DormantsToRemove.Add(Id);
+      continue;
+    }
+    if (!CarlaActor->IsDormant())
+    {
+      LM_LOG(Error, "CheckDormantActors Carla Actor %d is not dormant", Id);
       DormantsToRemove.Add(Id);
       continue;
     }
@@ -826,19 +792,9 @@ void ALargeMapManager::CheckDormantActors()
 
       float DistanceSquared = (RelativeLocation - HeroLocation).SizeSquared();
 
-      // LM_LOG(Warning, "CheckDormantActors\n\t%d\n\tWorldLoc: %s\n\tRelLoc: %s\n\tOrigin: %s\n\tTile %s\n\tDist %.2f (%.2f)", \
-      //     Id,\
-      //     *WorldLocation.ToString(), \
-      //     *RelativeLocation.ToString(), \
-      //     *CurrentOriginD.ToString(), \
-      //     *TileIDToString(GetTileID(WorldLocation)),\
-      //     (RelativeLocation - HeroLocation).Size(), ActorStreamingDistance \
-      //   );
-
       if(DistanceSquared < ActorStreamingDistanceSquared && IsTileLoaded(WorldLocation))
       {
-        LM_LOG(Warning, "Need to spawn a dormant actor with Id %d", Id);
-        DormantToGhostActors.Add(Id);
+        DormantToActiveActors.Add(Id);
         DormantsToRemove.Add(Id);
         break;
       }
@@ -846,35 +802,35 @@ void ALargeMapManager::CheckDormantActors()
   }
 }
 
-void ALargeMapManager::ConvertDormantToGhostActors()
+void ALargeMapManager::ConvertDormantToActiveActors()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertDormantToGhostActors);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ALargeMapManager::ConvertDormantToActiveActors);
   UWorld* World = GetWorld();
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
 
-  for(FCarlaActor::IdType Id : DormantToGhostActors)
+  for(FCarlaActor::IdType Id : DormantToActiveActors)
   {
-    LM_LOG(Warning, "Converting %d Dormant To Ghost", Id);
+    LM_LOG(Warning, "Converting %d Dormant To Active", Id);
 
     CarlaEpisode->WakeActorUp(Id);
 
     FCarlaActor* View = CarlaEpisode->FindCarlaActor(Id);
 
-    if (View->GetActor()){
+    if (View->IsActive()){
       LM_LOG(Warning, "Spawning dormant at %s\n\tOrigin: %s\n\tRel. location: %s", \
         *((CurrentOriginD + View->GetActor()->GetActorLocation()).ToString()), \
         *(CurrentOriginD.ToString()), \
         *((View->GetActor()->GetActorLocation()).ToString()) \
       );
-      GhostActors.Add(Id);
+      ActiveActors.Add(Id);
     }
     else
     {
-      LM_LOG(Warning, "FAIL Actor %d could not be woken up", Id);
-      CarlaEpisode->DestroyActor(Id);
+      LM_LOG(Warning, "Actor %d could not be woken up, keeping sleep state", Id);
+      DormantActors.Add(Id);
     }
   }
-  DormantToGhostActors.Reset();
+  DormantToActiveActors.Reset();
 }
 
 void ALargeMapManager::CheckIfRebaseIsNeeded()
@@ -914,15 +870,18 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
   // Calculate Current Tile
   FIntVector CurrentTile = GetTileVectorID(ActorLocation);
 
-  // Calculate the number of tiles in range based on LayerStreamingDistance
-  int32 TilesToConsider = (int32)(LayerStreamingDistance / TileSide) + 1;
-  for (int Y = -TilesToConsider; Y < TilesToConsider; Y++)
+  // Calculate tile bounds
+  FDVector UpperPos = ActorLocation + FDVector(LayerStreamingDistance,LayerStreamingDistance,0);
+  FDVector LowerPos = ActorLocation + FDVector(-LayerStreamingDistance,-LayerStreamingDistance,0);
+  FIntVector UpperTileId = GetTileVectorID(UpperPos);
+  FIntVector LowerTileId = GetTileVectorID(LowerPos);
+  for (int Y = UpperTileId.Y; Y <= LowerTileId.Y; Y++)
   {
-    for (int X = -TilesToConsider; X < TilesToConsider; X++)
+    for (int X = LowerTileId.X; X <= UpperTileId.X; X++)
     {
       // I don't check the bounds of the Tile map, if the Tile does not exist
       // I just simply discard it
-      FIntVector TileToCheck = CurrentTile + FIntVector(X, Y, 0);
+      FIntVector TileToCheck = FIntVector(X, Y, 0);
 
       TileID TileID = GetTileID(TileToCheck);
       FCarlaMapTile* Tile = MapTiles.Find(TileID);
@@ -932,14 +891,7 @@ void ALargeMapManager::GetTilesToConsider(const AActor* ActorToConsider,
         continue; // Tile does not exist, discard
       }
 
-      // Calculate distance between actor and tile
-      float Distance2 = FDVector::DistSquared(Tile->Location, ActorLocation);
-
-      // Load level if we are in range
-      if (Distance2 < LayerStreamingDistanceSquared)
-      {
         OutTilesToConsider.Add(TileID);
-      }
     }
   }
 }
@@ -1084,7 +1036,7 @@ void ALargeMapManager::PrintMapInfo()
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
     FString::Printf(TEXT("\nOrigin: %s km"), *(FDVector(CurrentOriginInt) / (1000.0 * 100.0)).ToString()) );
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
-     FString::Printf(TEXT("Num ghost actors (%d)"), GhostActors.Num()) );
+     FString::Printf(TEXT("Num active actors (%d)"), ActiveActors.Num()) );
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,
      FString::Printf(TEXT("Num dormant actors (%d)"), DormantActors.Num()));
   GEngine->AddOnScreenDebugMessage(LastMsgIndex++, MsgTime, FColor::White,

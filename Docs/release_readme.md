@@ -23,7 +23,7 @@ Let's start by adding some live to the city, open a new terminal window and
 execute
 
 ```sh
-./spawn_npc.py -n 80
+./generate_traffic.py -n 80
 ```
 
 This adds 80 vehicles to the world driving in "autopilot" mode. Back to the

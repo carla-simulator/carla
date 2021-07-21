@@ -23,6 +23,7 @@
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Actor/ActorData.h"
 #include "CarlaServerResponse.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
 #include "Misc/FileHelper.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -262,7 +263,7 @@ void FCarlaServer::FPimpl::BindActions()
         continue;
       if (MapName.Contains("/BaseMap/"))
         continue;
-      if (MapName.Contains("/LargeMap/"))
+      if (MapName.Contains("/BaseLargeMap/"))
         continue;
       if (MapName.Contains("_Tile_"))
         continue;
@@ -340,12 +341,19 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    auto FileContents = UOpenDrive::LoadXODR(Episode->GetMapName());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
+    FString FullMapPath = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    FString MapDir = FullMapPath.RightChop(FullMapPath.Find("Content/", ESearchCase::CaseSensitive) + 8);
+    MapDir += "/" + Episode->GetMapName();
     return cr::MapInfo{
-      cr::FromFString(Episode->GetMapName()),
-      cr::FromLongFString(FileContents),
+      cr::FromFString(MapDir),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
+  };
+
+  BIND_SYNC(get_map_data) << [this]() -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return cr::FromFString(UOpenDrive::GetXODR(Episode->GetWorld()));
   };
 
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
@@ -366,16 +374,16 @@ void FCarlaServer::FPimpl::BindActions()
     if (folder[folder.size() - 1] != '/' && folder[folder.size() - 1] != '\\') {
       folder += "/";
     }
-    
+
     // Get the map's folder absolute path and check if it's in its own folder
-    auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath()) + "/" + folder.c_str();
-    auto fileName = mapDir.EndsWith(Episode->GetMapName() + "/") ? "*" : Episode->GetMapName();
+    const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    const auto folderDir = mapDir + "/" + folder.c_str();
+    const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
 
     // Find all the xodr and bin files from the map
     TArray<FString> Files;
-    auto &FileManager = IFileManager::Get();
-    FileManager.FindFilesRecursive(Files, *mapDir, *FString(fileName + ".xodr"), true, false, false);
-    FileManager.FindFilesRecursive(Files, *mapDir, *FString(fileName + ".bin"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".xodr"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".bin"), true, false, false);
 
     // Remove the start of the path until the content folder and put each file in the result
     std::vector<std::string> result;
@@ -386,7 +394,6 @@ void FCarlaServer::FPimpl::BindActions()
 
     return result;
   };
-  
   BIND_SYNC(request_file) << [this](std::string name) -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();
@@ -547,16 +554,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-
-    FTransform UETransform = Transform;
-    if(LargeMap)
-    {
-      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
-    }
-
-    auto Result = Episode->SpawnActorWithInfo(UETransform, std::move(Description));
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
 
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
@@ -564,6 +562,7 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
     }
 
+    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(Episode->GetWorld());
     if(LargeMap)
     {
       LargeMap->OnActorSpawned(*Result.Value);
@@ -580,16 +579,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-
-    FTransform UETransform = Transform;
-    if(LargeMap)
-    {
-      UETransform = LargeMap->GlobalToLocalTransform(UETransform);
-    }
-
-    auto Result = Episode->SpawnActorWithInfo(UETransform, std::move(Description));
+    auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
     if (Result.Key != EActorSpawnResultStatus::Success)
     {
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
@@ -602,7 +592,6 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     FCarlaActor* ParentCarlaActor = Episode->FindCarlaActor(ParentId);
-    carla::log_warning(CarlaActor->GetActorId(), ParentId);
 
     if (!ParentCarlaActor)
     {
@@ -1621,6 +1610,44 @@ void FCarlaServer::FPimpl::BindActions()
     }
   };
 
+  BIND_SYNC(get_light_boxes) << [this](
+      const cr::ActorId ActorId) -> R<std::vector<cg::BoundingBox>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (CarlaActor)
+    {
+      return RespondError(
+          "get_light_boxes",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "get_light_boxes",
+          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(CarlaActor->GetActor());
+      if (!TrafficLight)
+      {
+        return RespondError(
+          "get_light_boxes",
+          ECarlaServerResponse::NotATrafficLight,
+          " Actor Id: " + FString::FromInt(ActorId));
+      }
+      TArray<FBoundingBox> Result;
+      TArray<uint8> OutTag;
+      UBoundingBoxCalculator::GetTrafficLightBoundingBox(
+          TrafficLight, Result, OutTag,
+          static_cast<uint8>(carla::rpc::CityObjectLabel::TrafficLight));
+      return MakeVectorFromTArray<cg::BoundingBox>(Result);
+    }
+  };
+
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData) -> R<std::string>
@@ -1758,6 +1785,7 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
+      [=](auto, const C::ApplyVehiclePhysicsControl &c) {  MAKE_RESULT(apply_physics_control(c.actor, c.physics_control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
       [=](auto, const C::ApplyTargetVelocity &c) {  MAKE_RESULT(set_actor_target_velocity(c.actor, c.velocity)); },
       [=](auto, const C::ApplyTargetAngularVelocity &c) { MAKE_RESULT(set_actor_target_angular_velocity(c.actor, c.angular_velocity)); },
