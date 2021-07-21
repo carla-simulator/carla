@@ -244,19 +244,19 @@ def main():
         type=float,
         help='Wetness intensity [0.0, 100.0]')
     argparser.add_argument(
-        '--scatteringintensity', '-si'
+        '--scatteringintensity', '-si',
         metavar='si',
         default=None,
         type=float,
         help='Scattering intensity [0.0, inf]')
     argparser.add_argument(
-        '--rayleighscatteringscale', '-rss'
+        '--rayleighscatteringscale', '-rss',
         metavar='rss',
         default=None,
         type=float,
         help='Rayleigh scattering scale [0.0, 2.0]')
     argparser.add_argument(
-        '--miescatteringscale', '-mss'
+        '--miescatteringscale', '-mss',
         metavar='mss',
         default=None,
         type=float,
