@@ -97,7 +97,7 @@ if ${BUILD_PYTHONAPI} ; then
       cp dist/.tmp/$(ls dist/.tmp | grep .whl) dist
     else
       /usr/bin/env python${PY_VERSION} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp --plat ${TARGET_WHEEL_PLATFORM}
-      auditwheel repair --plat ${TARGET_WHEEL_PLATFORM} --wheel-dir dist dist/.tmp/$(ls dist/.tmp | grep .whl)
+      /usr/bin/env python3 -m auditwheel repair --plat ${TARGET_WHEEL_PLATFORM} --wheel-dir dist dist/.tmp/$(ls dist/.tmp | grep .whl)
     fi
 
     rm -rf dist/.tmp
