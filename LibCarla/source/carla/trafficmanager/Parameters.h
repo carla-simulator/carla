@@ -152,9 +152,6 @@ public:
 
   ///////////////////////////////// GETTERS /////////////////////////////////////
 
-  /// Method to retrieve vehicle percentage speed.
-  float GetVehiclePercentageSpeed(const ActorId &actor_id) const;
-
   /// Method to retrieve hybrid physics radius.
   float GetHybridPhysicsRadius() const;
 

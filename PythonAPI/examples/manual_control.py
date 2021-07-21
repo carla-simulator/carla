@@ -1110,7 +1110,6 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
-    sim_world = None
     original_settings = None
 
     if args.seed is not None:
@@ -1121,8 +1120,8 @@ def game_loop(args):
 
         sim_world = client.get_world()
         if args.sync:
-            settings = sim_world.get_settings()
             original_settings = sim_world.get_settings()
+            settings = sim_world.get_settings()
             if not settings.synchronous_mode:
                 settings.synchronous_mode = True
                 settings.fixed_delta_seconds = 0.05
@@ -1143,18 +1142,18 @@ def game_loop(args):
 
         clock = pygame.time.Clock()
         while True:
+            if args.sync:
+                sim_world.tick()
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return
             world.tick(clock)
             world.render(display)
-            if args.sync:
-                sim_world.tick()
             pygame.display.flip()
 
     finally:
 
-        if sim_world and original_settings and args.sync:
+        if original_settings:
             sim_world.apply_settings(original_settings)
 
         if (world and world.recording_enabled):

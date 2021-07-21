@@ -386,43 +386,39 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
 
       float minimum_velocity = max_target_velocity;
       if (landmark_type == "1000001") {  // Traffic light
-        if (parameters.GetPercentageRunningLight(actor_id) <= random_devices.at(actor_id).next()) {
-          auto landmark_id = landmark->GetId();
-          if (tl_map.find(landmark_id) != tl_map.end()) {
-            auto actor = tl_map.at(landmark_id);
-            if (actor != nullptr) {
+        auto landmark_id = landmark->GetId();
+        if (tl_map.find(landmark_id) != tl_map.end()) {
+          auto actor = tl_map.at(landmark_id);
+          if (actor != nullptr) {
 
-              cc::TrafficLight* tl = static_cast<cc::TrafficLight*>(actor.get());
-              auto state = tl->GetState();
+            cc::TrafficLight* tl = static_cast<cc::TrafficLight*>(actor.get());
+            auto state = tl->GetState();
 
-              if (state == carla::rpc::TrafficLightState::Green) {
-                minimum_velocity = 20.0f / 3.6f;
-
-              } else {
-                minimum_velocity = 15.0f / 3.6f;
-              }
+            if (state == carla::rpc::TrafficLightState::Green) {
+              minimum_velocity = TL_GREEN_TARGET_VELOCITY;
+            } else if (state == carla::rpc::TrafficLightState::Yellow || state == carla::rpc::TrafficLightState::Red){
+              minimum_velocity = TL_RED_TARGET_VELOCITY;
+            } else if (state == carla::rpc::TrafficLightState::Unknown){
+              minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
             } else {
-            // It is a traffic light, but it's not present in our structure
-            minimum_velocity = 15.0f / 3.6f;
+              // Traffic light is off
+              continue;
             }
           } else {
             // It is a traffic light, but it's not present in our structure
-            minimum_velocity = 15.0f / 3.6f;
+            minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
           }
+        } else {
+          // It is a traffic light, but it's not present in our structure
+          minimum_velocity = TL_UNKNOWN_TARGET_VELOCITY;
         }
       } else if (landmark_type == "206") {  // Stop
-        if (parameters.GetPercentageRunningSign(actor_id) <= random_devices.at(actor_id).next()) {
-          minimum_velocity = 15.0f / 3.6f;
-        }
+        minimum_velocity = STOP_TARGET_VELOCITY;
       } else if (landmark_type == "205") {  // Yield
-        if (parameters.GetPercentageRunningSign(actor_id) <= random_devices.at(actor_id).next()) {
-          minimum_velocity = 15.0f / 3.6f;
-        }
+        minimum_velocity = YIELD_TARGET_VELOCITY;
       } else if (landmark_type == "274") {  // Speed limit
-        auto value = static_cast<float>(landmark->GetValue()) / 3.6f;
-        float percentage_difference = parameters.GetVehiclePercentageSpeed(actor_id);
-        value = value * (1.0f - percentage_difference / 100);
-
+        float value = static_cast<float>(landmark->GetValue()) / 3.6f;
+        value = parameters.GetVehicleTargetVelocity(actor_id, value);
         minimum_velocity = (value < max_target_velocity) ? value : max_target_velocity;
       } else {
         continue;
