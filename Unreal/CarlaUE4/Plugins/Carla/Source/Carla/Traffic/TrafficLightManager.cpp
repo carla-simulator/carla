@@ -271,8 +271,7 @@ void ATrafficLightManager::MatchTrafficLightActorsWithOpenDriveSignals()
   TArray<AActor*> Actors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficLightBase::StaticClass(), Actors);
 
-  FString MapName = GetWorld()->GetName();
-  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::GetXODR(GetWorld()));
   auto Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
 
   if (!Map)

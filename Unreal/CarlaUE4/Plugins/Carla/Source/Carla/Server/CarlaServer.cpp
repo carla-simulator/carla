@@ -24,6 +24,7 @@
 #include "Carla/Actor/ActorData.h"
 #include "CarlaServerResponse.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Misc/FileHelper.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
@@ -340,12 +341,19 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    auto FileContents = UOpenDrive::LoadXODR(Episode->GetMapName());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
+    FString FullMapPath = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    FString MapDir = FullMapPath.RightChop(FullMapPath.Find("Content/", ESearchCase::CaseSensitive) + 8);
+    MapDir += "/" + Episode->GetMapName();
     return cr::MapInfo{
-      cr::FromFString(Episode->GetMapName()),
-      cr::FromLongFString(FileContents),
+      cr::FromFString(MapDir),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
+  };
+
+  BIND_SYNC(get_map_data) << [this]() -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return cr::FromFString(UOpenDrive::GetXODR(Episode->GetWorld()));  
   };
 
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
@@ -355,6 +363,52 @@ void FCarlaServer::FPimpl::BindActions()
     // make a mem copy (from TArray to std::vector)
     std::vector<uint8_t> Result(FileContents.Num());
     memcpy(&Result[0], FileContents.GetData(), FileContents.Num());
+    return Result;
+  };
+
+  BIND_SYNC(get_required_files) << [this](std::string folder = "") -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    // Check that the path ends in a slash, add it otherwise
+    if (folder[folder.size() - 1] != '/' && folder[folder.size() - 1] != '\\') {
+      folder += "/";
+    }
+
+    // Get the map's folder absolute path and check if it's in its own folder
+    const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    const auto folderDir = mapDir + "/" + folder.c_str();
+    const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
+
+    // Find all the xodr and bin files from the map
+    TArray<FString> Files;
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".xodr"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".bin"), true, false, false);
+
+    // Remove the start of the path until the content folder and put each file in the result
+    std::vector<std::string> result;
+    for (auto File : Files) {
+      File.RemoveFromStart(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()));
+      result.emplace_back(TCHAR_TO_UTF8(*File));
+    }
+
+    return result;
+  };
+
+  BIND_SYNC(request_file) << [this](std::string name) -> R<std::vector<uint8_t>>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    // Get the absolute path of the file
+    FString path(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()));
+    path.Append(name.c_str());
+
+    // Copy the binary data of the file into the result and return it
+    TArray<uint8_t> Content;
+    FFileHelper::LoadFileToArray(Content, *path, 0);
+    std::vector<uint8_t> Result(Content.Num());
+    memcpy(&Result[0], Content.GetData(), Content.Num());
+
     return Result;
   };
 
