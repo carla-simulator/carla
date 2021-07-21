@@ -28,12 +28,15 @@ namespace client {
 
   Map::Map(rpc::MapInfo description, std::string xodr_content)
     : _description(std::move(description)),
-      _map(MakeMap(xodr_content)){}
-
+      _map(MakeMap(xodr_content)){
+    open_drive_file = xodr_content;
+  }
   Map::Map(std::string name, std::string xodr_content)
     : Map(rpc::MapInfo{
     std::move(name),
-    std::vector<geom::Transform>{}}, xodr_content) {}
+    std::vector<geom::Transform>{}}, xodr_content) {
+    open_drive_file = xodr_content;
+  }
 
   Map::~Map() = default;
 
