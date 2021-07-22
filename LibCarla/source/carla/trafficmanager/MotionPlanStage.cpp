@@ -273,36 +273,35 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
 
   SimpleWaypointPtr junction_end_point = localization.junction_end_point;
   SimpleWaypointPtr safe_point = localization.safe_point;
+  auto debug_helper = world.MakeDebugHelper();
+  if (junction_end_point != nullptr && safe_point != nullptr && localization.is_at_junction_entrance) {
+    std::cout << junction_end_point->DistanceSquared(safe_point) << std::endl;
+  }
 
   bool safe_after_junction = true;
-
   if (!tl_hazard && !collision_emergency_stop
       && localization.is_at_junction_entrance
       && junction_end_point != nullptr && safe_point != nullptr
       && junction_end_point->DistanceSquared(safe_point) > SQUARE(MIN_SAFE_INTERVAL_LENGTH)) {
 
-    ActorIdSet initial_set = track_traffic.GetPassingVehicles(junction_end_point->GetId());
+    ActorIdSet passing_safe_point = track_traffic.GetPassingVehicles(safe_point->GetId());
+    ActorIdSet passing_junction_end_point = track_traffic.GetPassingVehicles(junction_end_point->GetId());
     float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
     cg::Location mid_point = (junction_end_point->GetLocation() + safe_point->GetLocation())/2.0f;
 
-    // Scan through the safe interval and find if any vehicles are present in it
-    // by finding their occupied waypoints.
-    for (SimpleWaypointPtr current_waypoint = junction_end_point;
-         current_waypoint->DistanceSquared(junction_end_point) < safe_interval_length_squared && safe_after_junction;
-         current_waypoint = current_waypoint->GetNextWaypoint().front()) {
-
-      ActorIdSet current_set = track_traffic.GetPassingVehicles(current_waypoint->GetId());
-      ActorIdSet difference;
-      std::set_difference(current_set.begin(), current_set.end(),
-                          initial_set.begin(), initial_set.end(),
-                          std::inserter(difference, difference.begin()));
-      if (difference.size() > 0) {
-        for (const ActorId &blocking_id: difference) {
-          cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
-          if (cg::Math::DistanceSquared(blocking_actor_location, mid_point) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
-              && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)) {
-            safe_after_junction = false;
-          }
+    // Only check for vehicles that have the safe point in their passing waypoint, but not
+    // the junction end point.
+    ActorIdSet difference;
+    std::set_difference(passing_safe_point.begin(), passing_safe_point.end(),
+                        passing_junction_end_point.begin(), passing_junction_end_point.end(),
+                        std::inserter(difference, difference.begin()));
+    if (difference.size() > 0) {
+      for (const ActorId &blocking_id: difference) {
+        cg::Location blocking_actor_location = simulation_state.GetLocation(blocking_id);
+        if (cg::Math::DistanceSquared(blocking_actor_location, mid_point) < SQUARE(MAX_JUNCTION_BLOCK_DISTANCE)
+            && simulation_state.GetVelocity(blocking_id).SquaredLength() < SQUARE(AFTER_JUNCTION_MIN_SPEED)) {
+          safe_after_junction = false;
+          break;
         }
       }
     }
@@ -332,8 +331,8 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
     if (vehicle_relative_speed > EPSILON_RELATIVE_SPEED) {
       // If other vehicle is approaching lead vehicle and lead vehicle is further
       // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
-      float follow_lead_distance = vehicle_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE;
-      if (available_distance_margin > follow_lead_distance) {
+      float follow_lead_distance = std::min(vehicle_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE, MAX_FOLLOW_LEAD_DISTANCE);
+      if (available_distance_margin > follow_lead_distance && other_velocity.Length() < 1.0f) {
         // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
         // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
         dynamic_target_velocity = other_speed_along_heading + RELATIVE_APPROACH_SPEED;

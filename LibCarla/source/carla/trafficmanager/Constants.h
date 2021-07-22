@@ -50,16 +50,16 @@ static const float HORIZON_RATE = 1.45f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
+static const float TARGET_WAYPOINT_TIME_HORIZON = 0.4f;
 static const float TARGET_WAYPOINT_HORIZON_LENGTH = 1.0f;
-static const float JUNCTION_LOOK_AHEAD = 6.0f;
-static const float SAFE_DISTANCE_AFTER_JUNCTION = 6.0f;
+static const float JUNCTION_LOOK_AHEAD = 5.0f;
+static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
-static const float MIN_SAFE_INTERVAL_LENGTH = 1.5f * SAFE_DISTANCE_AFTER_JUNCTION;
+static const float MIN_SAFE_INTERVAL_LENGTH = 0.5f * SAFE_DISTANCE_AFTER_JUNCTION;
 } // namespace WaypointSelection
 
 namespace LaneChange {
-static const float MINIMUM_LANE_CHANGE_DISTANCE = 18.0f;
+static const float MINIMUM_LANE_CHANGE_DISTANCE = 15.0f;
 static const float MAXIMUM_LANE_OBSTACLE_DISTANCE = 50.0f;
 static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
 static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
@@ -108,10 +108,10 @@ namespace MotionPlan {
 static const float RELATIVE_APPROACH_SPEED = 10.0f / 3.6f;
 static const float MIN_FOLLOW_LEAD_DISTANCE = 5.0f;
 static const float MAX_FOLLOW_LEAD_DISTANCE = 10.0f;
-static const float FOLLOW_DISTANCE_RATE = 0.18f;
+static const float FOLLOW_DISTANCE_RATE = 0.1f;
 static const float CRITICAL_BRAKING_MARGIN = 0.25f;
 static const float EPSILON_RELATIVE_SPEED = 0.001f;
-static const float MAX_JUNCTION_BLOCK_DISTANCE = 0.5f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
+static const float MAX_JUNCTION_BLOCK_DISTANCE = 1.0f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
 static const float TWO_KM = 2000.0f;
 static const uint16_t ATTEMPTS_TO_TELEPORT = 5u;
 static const float LANDMARK_DETECTION_TIME = 2.5f;
@@ -126,7 +126,7 @@ static const float PI = 3.1415927f;
 } // namespace MotionPlan
 
 namespace PID {
-static const float MAX_THROTTLE = 1.0f;
+static const float MAX_THROTTLE = 0.85f;
 static const float MAX_BRAKE = 1.0f;
 static const float MAX_STEERING = 0.8f;
 static const float MAX_STEERING_DIFF = 0.15f;
@@ -134,7 +134,7 @@ static const float VELOCITY_INTEGRAL_MAX = 5.0f;
 static const float VELOCITY_INTEGRAL_MIN = -5.0f;
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
-static const std::vector<float> LONGITUDIAL_PARAM = {3.6f, 0.01f, 0.05f};
+static const std::vector<float> LONGITUDIAL_PARAM = {3.0f, 0.01f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {3.6f, 0.01f, 0.05f};
 static const std::vector<float> LATERAL_PARAM = {5.0f, 0.02f, 1.0f};
 static const std::vector<float> LATERAL_HIGHWAY_PARAM = {3.0f, 0.02f, 0.5f};
