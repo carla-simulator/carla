@@ -1,4 +1,4 @@
-# Large maps
+# Large maps overview
 
 - [__Large maps overview__](#large-maps-overview)
 - [__Tile streaming__](#tile-streaming)

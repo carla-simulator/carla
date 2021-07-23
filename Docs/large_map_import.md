@@ -1,4 +1,4 @@
-# Import a Large Map
+# Import/Package a Large Map
 
 Large maps generated in RoadRunner can be imported into the source build of CARLA and packaged for distribution and usage in a CARLA standalone package. The process is very simlar to that of normal maps with the addition of specific nomenclature for tiles and batch importing.
 

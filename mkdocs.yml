@@ -60,9 +60,9 @@ nav:
   - 'Customizing maps: Weather and landscape': 'tuto_M_custom_weather_landscape.md'
   - 'Generate pedestrian navigation': 'tuto_M_generate_pedestrian_navigation.md'
 - Large Maps:
-  - 'Large Maps Overview': 'large_map_overview.md'
-  - 'Import/Package a Large Map': 'large_map_import.md'
-  - 'Create Large Map': 'large_map_roadrunner.md'
+  - 'Large maps overview': 'large_map_overview.md'
+  - 'Create a large map in RoadRunner': 'large_map_roadrunner.md'
+  - 'Import/Package a large map': 'large_map_import.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"

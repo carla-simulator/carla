@@ -1,4 +1,4 @@
-# Generating Large Maps in RoadRunner
+# Create a Large Map in RoadRunner
 
 RoadRunner is the recommended software to create large maps to be imported into CARLA. This guide outlines what RoadRunner is, things to consider when building the large map and how to export custom large maps ready for importing into CARLA. 
 
@@ -61,7 +61,9 @@ Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize
 !!! note
     _OpenDrive Preview Tool_ makes it easier to test the integrity of the map. If there are any errors with junctions, click on `Maneuver Tool`, and `Rebuild Maneuver Roads`.
 
-Make sure the full map is selected for export by clicking on the [_World settings tool_](https://www.mathworks.com/help/roadrunner/ref/worldsettingstool.html) and dragging the edges of the blue boundary box to encompass the full area you would like to export.
+Make sure the full map is selected for export by clicking on the [_World settings tool_](https://www.mathworks.com/help/roadrunner/ref/worldsettingstool.html) and dragging the edges of the blue boundary box to encompass the full area you would like to export. when it's ready, click on _Apply World Changes_.
+
+![world_bounds_settings](img/rr_world_settings.png)
 
 When you are ready to export:
 
@@ -75,12 +77,14 @@ __2.__ In the window that pops up:
     - _Split by Segmentation_: Divides the mesh by semantic segmentation and imroves pedestrian navigation.
     - _Power of Two Texture Dimensions_: Improves performance.
     - _Embed Textures_: Ensures textures are embedded in the mesh.
-    - _Export to Tiles_: Choose the size of the tile. The maximum size that can be used by CARLA is 2000 x 2000.
+    - _Export to Tiles_: Choose the size of the tiles. The maximum size that can be used by CARLA is 2000 x 2000.
     - _Export Individual Tiles_: Generates the individual tiles needed for streaming large maps in CARLA.
+
+>>>>>>![export_large_map_fbx](../img/large_map_export_fbx.png)
 
 __3.__ Export the `.xodr`:
 
-  - In the main toolbar, select `File` -> `Export` -> `OpendDrive (.xodr)`
+  - In the main toolbar, select `File` -> `Export` -> `OpendDRIVE (.xodr)`
 
 !!! Warning
     Make sure that the `.xodr` and the `.fbx` files have the same name.
