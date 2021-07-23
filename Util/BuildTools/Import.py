@@ -421,8 +421,8 @@ def import_assets_from_json_list(json_list):
             package_name = filename.replace(".json", "")
 
             # we need to build the binary file for navigation of pedestrians
-#            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
-#            thr.start()
+            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
+            thr.start()
 
             if ("tiles" in maps[0]):
                 import_assets(package_name, dirname, props, maps, 1, tile_size)
@@ -440,7 +440,7 @@ def import_assets_from_json_list(json_list):
             if len(maps) > 0:
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
                 load_asset_materials_commandlet(package_name)
-#            thr.join()
+            thr.join()
 
             build_binary_for_tm(package_name, dirname, maps)
 
@@ -477,8 +477,9 @@ def build_binary_for_navigation(package_name, dirname, maps):
         # get the sources for the map (single or tiles)
         if ("source" in umap):
             tiles = [umap["source"]]
-        elif ("tiles" in umap):
-            tiles = umap["tiles"]
+        # disabled until we have a new Recast adapted to work with tiles
+        # elif ("tiles" in umap):
+        #     tiles = umap["tiles"]
         else:
             continue
 
