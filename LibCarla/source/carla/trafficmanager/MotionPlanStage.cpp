@@ -273,10 +273,6 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
 
   SimpleWaypointPtr junction_end_point = localization.junction_end_point;
   SimpleWaypointPtr safe_point = localization.safe_point;
-  auto debug_helper = world.MakeDebugHelper();
-  if (junction_end_point != nullptr && safe_point != nullptr && localization.is_at_junction_entrance) {
-    std::cout << junction_end_point->DistanceSquared(safe_point) << std::endl;
-  }
 
   bool safe_after_junction = true;
   if (!tl_hazard && !collision_emergency_stop
