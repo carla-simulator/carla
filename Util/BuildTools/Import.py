@@ -566,8 +566,8 @@ def build_binary_for_tm(package_name, dirname, maps):
         if not os.path.exists(tm_folder_target):
             os.makedirs(tm_folder_target)
 
-        m = carla.Map(target_name, data)
-        m.cook_in_memory_map(os.path.join(tm_folder_target, "%s.bin" % target_name))
+        m = carla.Map(str(target_name), data)
+        m.cook_in_memory_map(str(os.path.join(tm_folder_target, "%s.bin" % target_name)))
 
 
 def main():
