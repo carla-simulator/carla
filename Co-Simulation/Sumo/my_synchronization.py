@@ -42,6 +42,7 @@ except IndexError:
 DATA_SERVER_HOST = "localhost"
 DATA_SERVER_PORT = 9998
 DATA_DIR = "./../Veins/carla-veins-data/"
+SENSOR_TYPE = "360"
 TIME_TO_START = 0
 TIME_STEP = 0.05
 ##### End: My code #####
@@ -216,6 +217,8 @@ class CAV:
         pass
 
     def sensor_num(self, sensor_dist, target_rad):
+        # This sensor numbers captur the object with at least vehicle width.
+
         return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(CAV.VEHICLE_WIDTH)) + 1
 
     def speed(self):
@@ -309,25 +312,45 @@ class CAVWithObstacleSensors(CAV):
 
 
     def load_sensors(self):
-        # 360 sensor
-        rads_360 = self.rads(Constants.SENSOR_RANGE_360, Constants.SENSOR_DEGREE_360)
-        rads_front = self.rads(Constants.SENSOR_RANGE_FRONT, Constants.SENSOR_DEGREE_FRONT)
-        rads_back = self.rads(Constants.SENSOR_RANGE_BACK, Constants.SENSOR_DEGREE_BACK, 180)
 
-        for z_rad in rads_360:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
-            sensor.listen(lambda data: self.receive_sensor_data(data))
-            self.sensors.append(sensor)
+        self.load_obstacle_sensors(
+            ranges =[Constants.SENSOR_RANGE_360,    Constants.SENSOR_RANGE_FRONT,   Constants.SENSOR_RANGE_BACK],
+            degrees=[Constants.SENSOR_DEGREE_360,   Constants.SENSOR_DEGREE_FRONT,  Constants.SENSOR_DEGREE_BACK],
+            phases =[0,                             0,                              180]
+        )
 
-        for z_rad in rads_front:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
-            sensor.listen(lambda data: self.receive_sensor_data(data))
-            self.sensors.append(sensor)
+        # # 360 sensor
+        # rads_360 = self.rads(Constants.SENSOR_RANGE_360, Constants.SENSOR_DEGREE_360)
+        # rads_front = self.rads(Constants.SENSOR_RANGE_FRONT, Constants.SENSOR_DEGREE_FRONT)
+        # rads_back = self.rads(Constants.SENSOR_RANGE_BACK, Constants.SENSOR_DEGREE_BACK, 180)
+        #
+        # for z_rad in rads_360:
+        #     sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+        #     sensor.listen(lambda data: self.receive_sensor_data(data))
+        #     self.sensors.append(sensor)
+        #
+        # for z_rad in rads_front:
+        #     sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+        #     sensor.listen(lambda data: self.receive_sensor_data(data))
+        #     self.sensors.append(sensor)
+        #
+        # for z_rad in rads_back:
+        #     sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+        #     sensor.listen(lambda data: self.receive_sensor_data(data))
+        #     self.sensors.append(sensor)
 
-        for z_rad in rads_back:
-            sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
-            sensor.listen(lambda data: self.receive_sensor_data(data))
-            self.sensors.append(sensor)
+    def load_obstacle_sensors(self, ranges=[], degrees=[], phases=[]):
+        for i in range(0, min([len(ranges), len(degrees), len(phases)])):
+            sensor_range = ranges[i]
+            sensor_degree = degrees[i]
+            sensor_phase = phases[i]
+            rads = self.rads(sensor_range, sensor_degree, sensor_phase)
+
+            for z_rad in rads:
+                sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(sensor_range), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+                sensor.listen(lambda data: self.receive_sensor_data(data))
+                self.sensors.append(sensor)
+
 
     def receive_sensor_data(self, data):
         if "static" in data.actor.type_id:
@@ -343,6 +366,35 @@ class CAVWithObstacleSensors(CAV):
         except KeyError as e:
             # Since the key is not in carlaid2vehicle_data, the object is not vehicle, so we ignore the key.
             pass
+
+class CAVWith360ObstacleSensors(CAVWithObstacleSensors):
+    RANGES =    [150]
+    DEGREES =   [360]
+    PHASES =    [0]
+    # Cite from:
+    # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
+
+    def load_sensors(self):
+        self.load_obstacle_sensors(
+            ranges= CAVWith360ObstacleSensors.RANGES,
+            degrees=CAVWith360ObstacleSensors.DEGREES,
+            phases= CAVWith360ObstacleSensors.PHASES
+        )
+
+
+class CAVWithForwardObstacleSensors(CAVWithObstacleSensors):
+    RANGES =    [65,    150]
+    DEGREES =   [40*2,  5*2]
+    PHASES =    [0,     0]
+    # Cite from:
+    # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
+
+    def load_sensors(self):
+        self.load_obstacle_sensors(
+            ranges= CAVWithForwardObstacleSensors.RANGES,
+            degrees=CAVWithForwardObstacleSensors.DEGREES,
+            phases= CAVWithForwardObstacleSensors.PHASES
+        )
 
 ##### End: My code. #####
 
@@ -390,7 +442,6 @@ class SimulationSynchronization(object):
         self.sumoid2cav = {}
         self.sumoid2sensors = {}
         self.carlaid2vehicle_data = {}
-        self.current_time = 0
         self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
         self.cav_procs = []
 
@@ -436,10 +487,6 @@ class SimulationSynchronization(object):
         else:
             self.sumo.tick()
 
-        ##### Begin: My code #####
-        self.current_time = self.sumo.current_time()
-        ##### End: My code #####
-
         # Spawning new sumo actors in carla (i.e, not controlled by carla).
         sumo_spawned_actors = self.sumo.spawned_actors - set(self.carla2sumo_ids.values())
         for sumo_actor_id in sumo_spawned_actors:
@@ -456,7 +503,12 @@ class SimulationSynchronization(object):
 
                 if carla_actor_id != INVALID_ACTOR_ID:
                     ##### Begin: My code #####
-                    self.sumoid2cav[sumo_actor_id] = CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+                    if SENSOR_TYPE == "360":
+                        self.sumoid2cav[sumo_actor_id] = CAVWith360ObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+                    elif SENSOR_TYPE == "forward":
+                        self.sumoid2cav[sumo_actor_id] = CAVWithForwardObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+                    else:
+                        raise Exception(f"No such sensor: {SENSOR_TYPE}")
                     ##### End: My code #####
 
                     self.sumo2carla_ids[sumo_actor_id] = carla_actor_id
@@ -677,10 +729,11 @@ if __name__ == '__main__':
     argparser.add_argument('--debug', action='store_true', help='enable debug messages')
 
     ###### Begin: My codes. #####
-    argparser.add_argument('--carla_veins_data_server_host', default=DATA_SERVER_HOST)
-    argparser.add_argument('--carla_veins_data_server_port', default=DATA_SERVER_PORT)
-    argparser.add_argument('--carla_veins_data_dir', default=DATA_DIR)
-    argparser.add_argument('--time_to_start', type=float, default=TIME_TO_START)
+    argparser.add_argument('--carla_veins_data_server_host',                            default=DATA_SERVER_HOST)
+    argparser.add_argument('--carla_veins_data_server_port',                            default=DATA_SERVER_PORT)
+    argparser.add_argument('--carla_veins_data_dir',                                    default=DATA_DIR)
+    argparser.add_argument('--sensor_type',     type=str,   choices=["360", "forward"], default=SENSOR_TYPE)
+    argparser.add_argument('--time_to_start',   type=float,                             default=TIME_TO_START)
     ###### End: My codes #####
 
     arguments = argparser.parse_args()
@@ -691,6 +744,7 @@ if __name__ == '__main__':
     DATA_DIR = arguments.carla_veins_data_dir
     TIME_TO_START = arguments.time_to_start
     TIME_STEP = arguments.step_length
+    SENSOR_TYPE = arguments.sensor_type
     ###### End: My codes #####
 
     if arguments.sync_vehicle_all is True:
