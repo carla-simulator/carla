@@ -4,9 +4,9 @@ This guide details how to build CARLA from source on Windows. There are two part
 
 The build process is long (4 hours or more) and involves several kinds of software. It is highly recommended to read through the guide fully before starting. 
 
-If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://forum.carla.org/c/installation-issues/linux) to post any queries you may have.
+If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://github.com/carla-simulator/carla/discussions) to post any queries you may have.
 
-- [Part One: Prerequisites](#part-one-prerequisites)
+- [__Part One: Prerequisites__](#part-one-prerequisites)
     - [System requirements](#system-requirements)
     - [Software requirements](#software-requirements)
         - [Minor installations](#minor-installations)
@@ -14,13 +14,13 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
         - [Major installations](#major-installations)
             - [Visual Studio 2017](#visual-studio-2017)
             - [Unreal Engine](#unreal-engine)
-- [Part Two: Build CARLA](#part-two-build-carla)
+- [__Part Two: Build CARLA__](#part-two-build-carla)
     - [Clone the CARLA repository](#clone-the-carla-repository)
     - [Get assets](#get-assets)
     - [Set Unreal Engine environment variable](#set-unreal-engine-environment-variable)
     - [Build CARLA](#build-carla)
     - [Other make commands](#other-make-commands)
-- [Summary](#summary)
+- [__Summary__](#summary)
 
 
 ---
@@ -31,7 +31,7 @@ In this section you will find details of system requirements, minor and major so
 
 * __x64 system.__ The simulator should run in any 64 bits Windows system.  
 * __165 GB disk space.__ CARLA itself will take around 32 GB and the related major software installations (including Unreal Engine) will take around 133 GB.
-* __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU though we would recommend 8 GB. A dedicated GPU is highly recommended for machine learning. 
+* __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although 8 GB is recommended. A dedicated GPU is highly recommended for machine learning. 
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
 
 ### Software requirements
@@ -41,6 +41,7 @@ In this section you will find details of system requirements, minor and major so
 * [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files.  
 * [__Git__](https://git-scm.com/downloads) is a version control system to manage CARLA repositories.  
 * [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables. It is necessary to use __Make version 3.81__, otherwise the build may fail. If you have multiple versions of Make installed, check that you are using version 3.81 in your PATH when building CARLA. You can check your default version of Make by running `make --version`.
+* [__7Zip__](https://www.7-zip.org/) is a file compression software. This is required for automatic decompression of asset files and prevents errors during build time due to large files being extracted incorrectly or partially.
 * [__Python3 x64__](https://www.python.org/downloads/) is the main scripting language in CARLA. Having a x32 version installed may cause conflict, so it is highly advisable to have it uninstalled.
 
 !!! Important
@@ -56,7 +57,7 @@ Run the following command to install the dependencies for the Python API client:
 
 Get the 2017 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2017-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
 
-* __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.  
+* __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.
 * __x64 Visual C++ Toolset.__ In the _Workloads_ section, choose __Desktop development with C++__. This will enable a x64 command prompt that will be used for the build. Check that it has been installed correctly by pressing the `Windows` button and searching for `x64`. Be careful __not to open a `x86_x64` prompt__.  
 * __.NET framework 4.6.2__. In the _Workloads_ section, choose __.NET desktop development__ and then in the _Installation details_ panel on the right, select `.NET Framework 4.6.2 development tools`. This is required to build Unreal Engine. 
 
@@ -65,44 +66,40 @@ Get the 2017 version of Visual Studio from [here](https://developerinsider.co/do
 
 ##### Unreal Engine
 
-From CARLA 0.9.11 onwards we have included fixes to Unreal Engine that require modification to the engine itself. This means that it is no longer possible to use the Unreal Engine version provided by Epic Games Launcher with CARLA and instead we need to build a modified version. 
+Starting with version 0.9.12, CARLA uses a modified fork of Unreal Engine 4.26. This fork contains patches specific to CARLA.
 
-To build the modified version, follow the commands listed below to download the engine's code from source and apply the patches that we provide. Be aware that to download Unreal Engine's source code, __you need to have a GitHub account linked to Unreal Engine's account__. If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further.
+Be aware that to download this fork of Unreal Engine, __you need to have a GitHub account linked to Unreal Engine's account__. If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further.
 
 To build the modified version of Unreal Engine:
 
-1. In a terminal, navigate to the location you want to save Unreal Engine and clone the 4.24 branch:
+__1.__ In a terminal, navigate to the location you want to save Unreal Engine and clone the _carla_ branch:
 
-        git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git
+```sh
+    git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git .
+```
 
+!!! Note 
+    Keep the Unreal Engine folder as close as `C:\\` as you can because if the path exceeds a certain length then `Setup.bat` will return errors in step 3.
 
-    !!! Note 
-        Keep the Unreal Engine folder as close as `C:\\` as you can because if the path exceeds a certain length then `Setup.bat` will return errors in step 3.
+__2.__ Run the configuration scripts:
 
-2. Inside Unreal Engine's source folder, download the patch and apply it:
+```sh
+    Setup.bat
+    GenerateProjectFiles.bat
+```
 
-        cd UnrealEngine
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/UE4_patch_wheels.patch', 'UE4_patch_wheels.patch')"
-        git apply UE4_patch_wheels.patch
+__3.__ Compile the modified engine:
 
+>1. Open the `UE4.sln` file inside the source folder with Visual Studio 2017.
 
-3. Run the configuration scripts:
-
-        Setup.bat
-        GenerateProjectFiles.bat
-
-4. Compile the modified engine:
-
-    1. Open the `UE4.sln` file inside the source folder with Visual Studio 2017.
-
-    2. In the build bar ensure that you have selected 'Development Editor', 'Win64' and 'UnrealBuildTool' options. Check [this guide](https://docs.unrealengine.com/en-US/ProductionPipelines/DevelopmentSetup/BuildingUnrealEngine/index.html) if you need any help. 
+>2. In the build bar ensure that you have selected 'Development Editor', 'Win64' and 'UnrealBuildTool' options. Check [this guide](https://docs.unrealengine.com/en-US/ProductionPipelines/DevelopmentSetup/BuildingUnrealEngine/index.html) if you need any help. 
         
-    3. In the solution explorer, right-click `UE4` and select `Build`.
+>3. In the solution explorer, right-click `UE4` and select `Build`.
 
-5. Once the solution is compiled you can open the engine to check that everything was correct by launching the executable `Engine\Binaries\Win64\UE4Editor.exe`.
+__4.__ Once the solution is compiled you can open the engine to check that everything was installed correctly by launching the executable `Engine\Binaries\Win64\UE4Editor.exe`.
 
-    !!! Note
-        If the installation was successful, this should be recognised by Unreal Engine's version selector. You can check this by right-clicking on any `.uproject` file and selecting `Switch Unreal Engine version`. You should see a pop-up showing `Source Build at PATH` where PATH is the installation path that you have chosen. If you can not see this selector or the `Generate Visual Studio project files` when you right-click on `.uproject` files, something went wrong with the Unreal Engine installation and you will likely need to reinstall it correctly.
+!!! Note
+    If the installation was successful, this should be recognised by Unreal Engine's version selector. You can check this by right-clicking on any `.uproject` file and selecting `Switch Unreal Engine version`. You should see a pop-up showing `Source Build at PATH` where PATH is the installation path that you have chosen. If you can not see this selector or the `Generate Visual Studio project files` when you right-click on `.uproject` files, something went wrong with the Unreal Engine installation and you will likely need to reinstall it correctly.
 
 !!! Important
     A lot has happened so far. It is highly advisable to restart the computer before continuing.
@@ -119,23 +116,24 @@ To build the modified version of Unreal Engine:
 </p>
 </div>
 
-The button above will take you to the official repository of the project. Either download from there and extract it or clone it using the following command:
+The button above will take you to the official repository of the project. Either download from there and extract it locally or clone it using the following command:
 
-
-        git clone https://github.com/carla-simulator/carla
+```sh
+    git clone https://github.com/carla-simulator/carla
+```
 
 !!! Note
-    The `master` branch contains the current release of CARLA with the latest fixes and features. Previous CARLA versions have their own branch. Always remember to check the current branch in git with the command `git branch`. 
+    The `master` branch contains the current release of CARLA with the latest fixes and features. Previous CARLA versions are tagged with the version name. Always remember to check the current branch in git with the command `git branch`. 
 
 ### Get assets
 
 Download the __latest__ assets to work with the current version of CARLA by running the following command in the CARLA root folder:
 
-```shell
-Update.bat
+```sh
+    Update.bat
 ```
 
-The assets will be downloaded and extracted to the appropriate location.
+The assets will be downloaded and extracted to the appropriate location if have 7zip installed. If you do not have this software installed, you will need to manually extract the file contents to `Unreal\CarlaUE4\Content\Carla`.
 
 To download the assets for a __specific version__ of CARLA:
 
@@ -143,7 +141,9 @@ To download the assets for a __specific version__ of CARLA:
 2. Extract the assets in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
 3. Extract the file with a command similar to the following:
 
-        tar -xvzf <assets_file_name>.tar.gz.tar -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
+```sh
+    tar -xvzf <assets_file_name>.tar.gz.tar -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
+```
 
 ### Set Unreal Engine environment variable
 
@@ -154,7 +154,7 @@ To set the environment variable:
 1. Open Windows Control Panel and go to `Advanced System Settings` or search for `Advanced System Settings` in the Windows search bar.  
 2. On the `Advanced` panel open `Environment Variables...`.  
 3. Click `New...` to create the variable.  
-4. Name the variable `UE4_ROOT` and choose the path to the installation folder of the desired UE4 installation.  
+4. Name the variable `UE4_ROOT` and choose the path to the installation folder of the desired Unreal Engine installation.  
 
 
 ### Build CARLA
@@ -166,41 +166,52 @@ This section outlines the commands to build CARLA.
 
 There are two parts to the build process for CARLA, compiling the client and compiling the server.
 
-1. __Compile the Python API client__:
+__1.__ __Compile the Python API client__:
 
-    The Python API client grants control over the simulation. Compilation of the Python API client is required the first time you build CARLA and again after you perform any updates. After the client is compiled, you will be able to run scripts to interact with the simulation.
+The Python API client grants control over the simulation. Compilation of the Python API client is required the first time you build CARLA and again after you perform any updates. After the client is compiled, you will be able to run scripts to interact with the simulation.
 
-    The following command compiles the Python API client:
+The following command compiles the Python API client:
 
-        make PythonAPI
+```sh
+    make PythonAPI
+```
 
-    __Note that when the compilation is done, you may see a successful output in the terminal even if the compilation of the Python API client was unsuccessful.__ Check for any errors in the terminal output and check that a `.egg` file exists in `PythonAPI\carla\dist`. If you come across any errors, check the [F.A.Q.](build_faq.md) or post in the [CARLA forum](https://forum.carla.org/c/installation-issues/linux).
+Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
 
+```sh
+    make PythonAPI ARGS="--python-version=2"
+```
 
-2. __Compile the server__:
-
-    The following command compiles and launches Unreal Engine. Run this command each time you want to launch the server or use the Unreal Engine editor:
-
-        make launch
-
-    The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the map will not show properly until then.
-
-3. __Start the simulation__:
-
-    Press **Play** to start the server simulation. The camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
-
-    Test the simulator using the example scripts inside `PythonAPI\examples`.  With the simulator running, open a new terminal for each script and run the following commands to spawn some life into the town and create a weather cycle:
+!!! Note
+    __Note that when the compilation is done, you may see a successful output in the terminal even if the compilation of the Python API client was unsuccessful.__ Check for any errors in the terminal output and check that a `.egg` file exists in `PythonAPI\carla\dist`. If you come across any errors, check the [F.A.Q.](build_faq.md) or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions).
 
 
+__2.__ __Compile the server__:
 
+The following command compiles and launches Unreal Engine. Run this command each time you want to launch the server or use the Unreal Engine editor:
+
+```sh
+    make launch
+```
+
+The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the map will not show properly until then.
+
+__3.__ __Start the simulation__:
+
+Press **Play** to start the server simulation. The camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
+
+Test the simulator using the example scripts inside `PythonAPI\examples`.  With the simulator running, open a new terminal for each script and run the following commands to spawn some life into the town and create a weather cycle:
+
+```sh
         # Terminal A 
         cd PythonAPI\examples
         pip install -r requirements.txt
-        python3 spawn_npc.py  
+        python3 generate_traffic.py  
 
         # Terminal B
         cd PythonAPI\examples
         python3 dynamic_weather.py 
+```
 
 !!! Note
     If you encounter the error `ModuleNotFoundError: No module named 'carla'` while running a script, you may be running a different version of Python than the one used to install the client. Go to `PythonAPI\carla\dist` and check the version of Python used in the `.egg` file.
@@ -229,45 +240,49 @@ There are more `make` commands that you may find useful. Find them in the table 
 
 Below is a summary of the requirements and commands needed to build CARLA on Windows:
 
-    # Make sure to meet the minimum requirements:
-    #
-    # x64 system
-    # 165 GB disk space
-    # 6 - 8 GB GPU
-    # Two TCP ports and good internet connection
+```sh
+# Make sure to meet the minimum requirements:
+#
+# x64 system
+# 165 GB disk space
+# 6 - 8 GB GPU
+# Two TCP ports and good internet connection
 
-    # Necessary software: 
-    #   CMake
-    #   Git
-    #   Make
-    #   Python3 x64
-    #   Modified Unreal Engine 4.24
-    #   Visual Studio 2017 with Windows 8.1 SDK, x64 Visual C++ Toolset and .NET framework 4.6.2
+# Necessary software: 
+#   CMake
+#   Git
+#   Make
+#   Python3 x64
+#   Modified Unreal Engine 4.24
+#   Visual Studio 2017 with Windows 8.1 SDK, x64 Visual C++ Toolset and .NET framework 4.6.2
 
-    # Set environment variables for the software
+# Set environment variables for the software
 
-    # Clone the CARLA repository
-    git clone https://github.com/carla-simulator/carla
+# Clone the CARLA repository
+git clone https://github.com/carla-simulator/carla
 
-    # Get assets
-    # Set UE4_ROOT environment variable 
+# Get assets
+# Set UE4_ROOT environment variable 
 
-    # make the CARLA client and the CARLA server
-    # open the x64 Native Tools Command Prompt for VS 2017 to execute the following commands
-    make PythonAPI
-    make launch
+# make the CARLA client and the CARLA server
+# open the x64 Native Tools Command Prompt for VS 2017 to execute the following commands
+make PythonAPI
+make launch
 
-    # Press play in the Editor to initialize the server
-    # Run example scripts to test CARLA
-    # Terminal A 
-    cd PythonAPI\examples
-    pip install -r requirements.txt
-    python3 spawn_npc.py 
-    # Terminal B
-    cd PythonAPI\examples
-    python3 dynamic_weather.py 
+# Press play in the Editor to initialize the server
+# Run example scripts to test CARLA
+# Terminal A 
+cd PythonAPI\examples
+pip install -r requirements.txt
+python3 generate_traffic.py 
+# Terminal B
+cd PythonAPI\examples
+python3 dynamic_weather.py 
+```
 
-Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://forum.carla.org/c/installation-issues/linux) for any issues regarding this guide.  
+---
+
+Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues regarding this guide.  
 
 Now that you have built CARLA, learn how to update the CARLA build or take your first steps in the simulation, and learn some core concepts.
 

@@ -199,7 +199,7 @@ python3 spawn_npc.py -n 50 -w 50 --safe
   --filterv PATTERN     vehicles filter (default: "vehicle.*")
   --filterw PATTERN     pedestrians filter (default: "walker.pedestrian.*")
   -tm_p P, --tm-port P  port to communicate with TM (default: 8000)
-  --sync                Synchronous mode execution
+  --async               Asynchronous mode execution
 ```
 </details>
 <br>
@@ -1338,7 +1338,7 @@ Visit the forum to post any doubts or suggestions that have come to mind during 
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
 CARLA forum</a>
 </p>
 </div>

@@ -4,6 +4,7 @@ docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
 theme: readthedocs
 extra_css: [extra.css]
+extra_javascript: [extra.js]
 
 nav:
 - Home: 'index.md'
@@ -33,6 +34,8 @@ nav:
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
   - 'Traffic Manager': 'adv_traffic_manager.md'
   - 'Benchmarking Performance': 'adv_benchmarking.md'
+- Traffic Simulation:
+  - 'Traffic Simulation Overview': 'ts_traffic_simulation_overview.md'
 - References:
   - 'Python API reference': 'python_api.md'
   - 'Blueprint Library': 'bp_library.md'
@@ -42,9 +45,7 @@ nav:
 - Plugins:
   - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
 - ROS bridge:
-  - 'ROS bridge installation': 'ros_installation.md'
-  - 'CARLA messages reference': 'ros_msgs.md'
-  - 'Launchfiles reference': 'ros_launchs.md'
+  - 'ROS bridge documentation': 'ros_documentation.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
@@ -53,14 +54,15 @@ nav:
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
   - 'CarSim Integration (Beta)': "tuto_G_carsim_integration.md"
   - 'RLlib Integration': "tuto_G_rllib_integration.md"
+  - 'Scenic': 'tuto_G_scenic.md'
+  - 'Chrono Integration': 'tuto_G_chrono.md'
 - Tutorials (assets):
-  - 'Add a new map': 'tuto_A_add_map.md'
+  - 'Add a new map': 'tuto_A_add_map_overview.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
   - 'Add new props': 'tuto_A_add_props.md'
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
   - 'Map customization tools': 'tuto_A_map_customization.md'
   - "Material customization": 'tuto_A_material_customization.md'
-  - 'Vehicle modelling': 'tuto_A_vehicle_modelling.md'
 - Tutorials (developers):
   - 'Contribute assets': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'

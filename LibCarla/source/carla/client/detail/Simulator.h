@@ -123,6 +123,20 @@ namespace detail {
 
     /// @}
     // =========================================================================
+    /// @name Required files related methods
+    // =========================================================================
+    /// @{
+
+    bool SetFilesBaseFolder(const std::string &path);
+
+    std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const;
+
+    void RequestFile(const std::string &name) const;
+
+    std::vector<uint8_t> GetCacheFile(const std::string &name, const bool request_otherwise) const;
+
+    /// @}
+    // =========================================================================
     /// @name Garbage collection policy
     // =========================================================================
     /// @{
@@ -338,6 +352,10 @@ namespace detail {
       return GetActorSnapshot(actor.GetId());
     }
 
+    rpc::ActorState GetActorState(const Actor &actor) const {
+      return GetActorSnapshot(actor).actor_state;
+    }
+
     geom::Location GetActorLocation(const Actor &actor) const {
       return GetActorSnapshot(actor).transform.location;
     }
@@ -423,6 +441,10 @@ namespace detail {
       _client.SetActorAutopilot(vehicle.GetId(), enabled);
     }
 
+    void ShowVehicleDebugTelemetry(Vehicle &vehicle, bool enabled = true) {
+      _client.ShowVehicleDebugTelemetry(vehicle.GetId(), enabled);
+    }
+
     void SetLightsToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
       _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
@@ -505,8 +527,9 @@ namespace detail {
       return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
-      return _client.ReplayFile(std::move(name), start, duration, follow_id);
+    std::string ReplayFile(std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors);
     }
 
     void SetReplayerTimeFactor(double time_factor) {
@@ -565,6 +588,10 @@ namespace detail {
 
     void ResetAllTrafficLights() {
       _client.ResetAllTrafficLights();
+    }
+
+    std::vector<geom::BoundingBox> GetLightBoxes(const TrafficLight &trafficLight) const {
+      return _client.GetLightBoxes(trafficLight.GetId());
     }
 
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
@@ -631,6 +658,8 @@ namespace detail {
 
   private:
 
+    bool ShouldUpdateMap(rpc::MapInfo& map_info);
+
     Client _client;
 
     SharedPtr<LightManager> _light_manager;
@@ -638,6 +667,10 @@ namespace detail {
     std::shared_ptr<Episode> _episode;
 
     const GarbageCollectionPolicy _gc_policy;
+
+    SharedPtr<Map> _cached_map;
+
+    std::string _open_drive_file;
   };
 
 } // namespace detail

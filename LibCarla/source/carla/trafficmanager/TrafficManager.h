@@ -65,6 +65,29 @@ public:
     }
   }
 
+  /// Method to set if we are automatically respawning vehicles.
+  void SetRespawnDormantVehicles(const bool mode_switch) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetRespawnDormantVehicles(mode_switch);
+    }
+  }
+  /// Method to set boundaries for respawning vehicles.
+  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
+    }
+  }
+
+  /// Method to set boundaries for respawning vehicles.
+  void SetMaxBoundaries(const float lower, const float upper) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetMaxBoundaries(lower, upper);
+    }
+  }
+
   /// This method sets the hybrid physics mode.
   void SetHybridPhysicsMode(const bool mode_switch) {
     TrafficManagerBase* tm_ptr = GetTM(_port);

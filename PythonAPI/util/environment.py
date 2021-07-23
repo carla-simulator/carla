@@ -25,9 +25,9 @@ SUN_PRESETS = {
     'sunset': (0.5, 180.0)}
 
 WEATHER_PRESETS = {
-    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.2, 0.0],
-    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.0, 0.9, 10.0],
-    'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 0.0, 0.9, 100.0]}
+    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0331],
+    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.0, 0.9, 10.0, 0.0, 0.0, 0.0331],
+    'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 0.0, 0.9, 100.0, 0.0, 0.0, 0.0331]}
 
 CAR_LIGHTS = {
     'None' : [carla.VehicleLightState.NONE],
@@ -74,6 +74,9 @@ def apply_weather_presets(args, weather):
             weather.fog_distance = WEATHER_PRESETS[args.weather][5]
             weather.fog_falloff = WEATHER_PRESETS[args.weather][6]
             weather.wetness = WEATHER_PRESETS[args.weather][7]
+            weather.scattering_intensity = WEATHER_PRESETS[args.weather][8]
+            weather.mie_scattering_scale = WEATHER_PRESETS[args.weather][9]
+            weather.rayleigh_scattering_scale = WEATHER_PRESETS[args.weather][10]
         else:
             print("[ERROR]: Command [--weather | -w] '" + args.weather + "' not known")
             sys.exit(1)
@@ -101,6 +104,12 @@ def apply_weather_values(args, weather):
         weather.fog_falloff = args.fogfalloff
     if args.wetness is not None:
         weather.wetness = args.wetness
+    if args.scatteringintensity is not None:
+        weather.scattering_intensity = args.scatteringintensity
+    if args.miescatteringscale is not None:
+        weather.mie_scattering_scale = args.miescatteringscale
+    if args.rayleighscatteringscale is not None:
+        weather.rayleigh_scattering_scale = args.rayleighscatteringscale
 
 
 def apply_lights_to_cars(args, world):
@@ -234,6 +243,24 @@ def main():
         default=None,
         type=float,
         help='Wetness intensity [0.0, 100.0]')
+    argparser.add_argument(
+        '--scatteringintensity', '-si',
+        metavar='si',
+        default=None,
+        type=float,
+        help='Scattering intensity [0.0, inf]')
+    argparser.add_argument(
+        '--rayleighscatteringscale', '-rss',
+        metavar='rss',
+        default=None,
+        type=float,
+        help='Rayleigh scattering scale [0.0, 2.0]')
+    argparser.add_argument(
+        '--miescatteringscale', '-mss',
+        metavar='mss',
+        default=None,
+        type=float,
+        help='Mie scattering scale [0.0, 5.0]')
     argparser.add_argument(
         '--cars',
         metavar='Cars',

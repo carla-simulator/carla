@@ -102,6 +102,7 @@ pipeline
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
+                                    stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
                                 success
@@ -126,9 +127,11 @@ pipeline
                             {
                                 unstash name: 'ubuntu_eggs'
                                 unstash name: 'ubuntu_package'
+                                unstash name: 'ubuntu_package2'
                                 unstash name: 'ubuntu_examples'
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
-                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
+                                sh 'tar -xvzf Dist/AdditionalMaps*.tar.gz -C Dist/'
+                                sh 'DISPLAY= ./Dist/CarlaUE4.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
                                 sh 'make smoke_tests ARGS="--xml --python-version=3.7,2"'
                                 sh 'make run-examples ARGS="localhost 3654"'
                             }

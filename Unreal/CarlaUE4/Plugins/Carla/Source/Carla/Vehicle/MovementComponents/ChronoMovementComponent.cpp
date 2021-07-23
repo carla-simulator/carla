@@ -6,6 +6,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "ChronoMovementComponent.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vehicle/MovementComponents/DefaultMovementComponent.h"
+
 #include "compiler/disable-ue4-macros.h"
 #include <carla/rpc/String.h>
 #ifdef WITH_CHRONO
@@ -148,6 +151,21 @@ void UChronoMovementComponent::BeginPlay()
   Sys.SetSolverMaxIterations(150);
   Sys.SetMaxPenetrationRecoverySpeed(4.0);
 
+  InitializeChronoVehicle();
+
+  // Create the terrain
+  Terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, Vehicle.get());
+
+  CarlaVehicle->OnActorHit.AddDynamic(
+      this, &UChronoMovementComponent::OnVehicleHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.AddDynamic(
+      this, &UChronoMovementComponent::OnVehicleOverlap);
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+}
+
+void UChronoMovementComponent::InitializeChronoVehicle()
+{
   // Initial location with small offset to prevent falling through the ground
   FVector VehicleLocation = CarlaVehicle->GetActorLocation() + FVector(0,0,25);
   FQuat VehicleRotation = CarlaVehicle->GetActorRotation().Quaternion();
@@ -195,9 +213,6 @@ void UChronoMovementComponent::BeginPlay()
           Vehicle->InitializeTire(tire, wheel, VisualizationType::MESH);
       }
   }
-
-  // Create the terrain
-  Terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, Vehicle.get());
 }
 
 void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)
@@ -221,6 +236,7 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
       ELevelTick TickType,
       FActorComponentTickFunction* ThisTickFunction)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(UChronoMovementComponent::TickComponent);
   if (DeltaTime > MaxSubstepDeltaTime)
   {
     uint64_t NumberSubSteps =
@@ -310,4 +326,58 @@ float UChronoMovementComponent::GetVehicleForwardSpeed() const
   }
   return 0.f;
 }
+
+void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  if(!CarlaVehicle)
+  {
+    return;
+  }
+  // reset callbacks to react to collisions
+  CarlaVehicle->OnActorHit.RemoveDynamic(
+      this, &UChronoMovementComponent::OnVehicleHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(
+      this, &UChronoMovementComponent::OnVehicleOverlap);
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+}
 #endif
+
+void UChronoMovementComponent::DisableChronoPhysics()
+{
+  this->SetComponentTickEnabled(false);
+  EnableUE4VehiclePhysics(true);
+  CarlaVehicle->OnActorHit.RemoveDynamic(this, &UChronoMovementComponent::OnVehicleHit);
+  CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(
+      this, &UChronoMovementComponent::OnVehicleOverlap);
+  CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
+  carla::log_warning("Chrono physics does not support collisions yet, reverting to default PhysX physics.");
+}
+
+void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
+    AActor *OtherActor,
+    FVector NormalImpulse,
+    const FHitResult &Hit)
+{
+  DisableChronoPhysics();
+}
+
+// On car mesh overlap, only works when carsim is enabled
+// (this event triggers when overlapping with static environment)
+void UChronoMovementComponent::OnVehicleOverlap(
+    UPrimitiveComponent* OverlappedComponent,
+    AActor* OtherActor,
+    UPrimitiveComponent* OtherComp,
+    int32 OtherBodyIndex,
+    bool bFromSweep,
+    const FHitResult & SweepResult)
+{
+  if (OtherComp->GetCollisionResponseToChannel(
+      ECollisionChannel::ECC_WorldDynamic) ==
+      ECollisionResponse::ECR_Block)
+  {
+    DisableChronoPhysics();
+  }
+}

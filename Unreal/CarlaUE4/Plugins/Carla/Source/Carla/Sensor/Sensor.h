@@ -43,6 +43,11 @@ public:
     Stream = std::move(InStream);
   }
 
+  FDataStream MoveDataStream()
+  {
+    return std::move(Stream);
+  }
+
   /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {

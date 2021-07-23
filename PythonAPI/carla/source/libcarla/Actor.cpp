@@ -64,11 +64,25 @@ static void ApplyControl(carla::client::Walker &self, const ControlT &control) {
   self.ApplyControl(control);
 }
 
+static auto GetLightBoxes(const carla::client::TrafficLight &self) {
+  boost::python::list result;
+  for (const auto &bb : self.GetLightBoxes()) {
+    result.append(bb);
+  }
+  return result;
+}
+
 void export_actor() {
   using namespace boost::python;
   namespace cc = carla::client;
   namespace cr = carla::rpc;
   namespace ctm = carla::traffic_manager;
+
+  enum_<cr::ActorState>("ActorState")
+    .value("Invalid", cr::ActorState::Invalid)
+    .value("Active", cr::ActorState::Active)
+    .value("Dormant", cr::ActorState::Dormant)
+  ;
 
   class_<std::vector<int>>("vector_of_ints")
       .def(vector_indexing_suite<std::vector<int>>())
@@ -81,7 +95,10 @@ void export_actor() {
       .add_property("type_id", CALL_RETURNING_COPY(cc::Actor, GetTypeId))
       .add_property("parent", CALL_RETURNING_COPY(cc::Actor, GetParent))
       .add_property("semantic_tags", &GetSemanticTags)
+      .add_property("actor_state", CALL_WITHOUT_GIL(cc::Actor, GetActorState))
       .add_property("is_alive", CALL_WITHOUT_GIL(cc::Actor, IsAlive))
+      .add_property("is_dormant", CALL_WITHOUT_GIL(cc::Actor, IsDormant))
+      .add_property("is_active", CALL_WITHOUT_GIL(cc::Actor, IsActive))
       .add_property("attributes", +[] (const cc::Actor &self) {
         boost::python::dict attribute_dict;
         for (auto &&attribute_value : self.GetAttributes()) {
@@ -136,7 +153,7 @@ void export_actor() {
     .value("Front_Wheel", cr::VehicleWheelLocation::Front_Wheel)
     .value("Back_Wheel", cr::VehicleWheelLocation::Back_Wheel)
   ;
-  
+
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
@@ -148,6 +165,7 @@ void export_actor() {
       .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
       .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
       .def("set_autopilot", CALL_WITHOUT_GIL_2(cc::Vehicle, SetAutopilot, bool, uint16_t), (arg("enabled") = true, arg("tm_port") = ctm::TM_DEFAULT_PORT))
+      .def("show_debug_telemetry", &cc::Vehicle::ShowDebugTelemetry, (arg("enabled") = true))
       .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
       .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
       .def("is_at_traffic_light", &cc::Vehicle::IsAtTrafficLight)
@@ -205,6 +223,10 @@ void export_actor() {
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
       .def("reset_group", &cc::TrafficLight::ResetGroup)
+      .def("get_affected_lane_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetAffectedLaneWaypoints))
+      .def("get_light_boxes", &GetLightBoxes)
+      .def("get_opendrive_id", &cc::TrafficLight::GetOpenDRIVEID)
+      .def("get_stop_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetStopWaypoints))
       .def(self_ns::str(self_ns::self))
   ;
 }

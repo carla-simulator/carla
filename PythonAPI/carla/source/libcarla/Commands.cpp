@@ -108,6 +108,13 @@ void export_commands() {
     .def_readwrite("control", &cr::Command::ApplyWalkerControl::control)
   ;
 
+  class_<cr::Command::ApplyVehiclePhysicsControl>("ApplyVehiclePhysicsControl")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cr::VehiclePhysicsControl>, (arg("actor"), arg("physics_control")))
+    .def(init<cr::ActorId, cr::VehiclePhysicsControl>((arg("actor_id"), arg("physics_control"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyVehiclePhysicsControl::actor)
+    .def_readwrite("physics_control", &cr::Command::ApplyVehiclePhysicsControl::physics_control)
+  ;
+
   class_<cr::Command::ApplyTransform>("ApplyTransform")
     .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Transform>, (arg("actor"), arg("transform")))
     .def(init<cr::ActorId, cg::Transform>((arg("actor_id"), arg("transform"))))
@@ -187,6 +194,13 @@ void export_commands() {
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
   ;
 
+  class_<cr::Command::ShowDebugTelemetry>("ShowDebugTelemetry")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, bool, uint16_t>, (arg("actor"), arg("enabled")))
+    .def(init<cr::ActorId, bool>((arg("actor_id"), arg("enabled"))))
+    .def_readwrite("actor_id", &cr::Command::ShowDebugTelemetry::actor)
+    .def_readwrite("enabled", &cr::Command::ShowDebugTelemetry::enabled)
+  ;
+
   class_<cr::Command::SetVehicleLightState>("SetVehicleLightState")
     .def("__init__", &command_impl::CustomInit<ActorPtr, bool>, (arg("actor"), arg("light_state")))
     .def(init<cr::ActorId, cr::VehicleLightState::flag_type>((arg("actor_id"), arg("light_state"))))
@@ -198,6 +212,7 @@ void export_commands() {
   implicitly_convertible<cr::Command::DestroyActor, cr::Command>();
   implicitly_convertible<cr::Command::ApplyVehicleControl, cr::Command>();
   implicitly_convertible<cr::Command::ApplyWalkerControl, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyVehiclePhysicsControl, cr::Command>();
   implicitly_convertible<cr::Command::ApplyTransform, cr::Command>();
   implicitly_convertible<cr::Command::ApplyWalkerState, cr::Command>();
   implicitly_convertible<cr::Command::ApplyTargetVelocity, cr::Command>();

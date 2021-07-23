@@ -45,7 +45,7 @@ Import
 
 Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
 
-__Maps__ are not part of this tutorial, so this definition will be empty. There is a specific tutorial to [__add a new map__](tuto_A_add_map.md).  
+__Maps__ are not part of this tutorial, so this definition will be empty. There is a specific tutorial to [__add a new map__](tuto_A_add_map_overview.md).  
 
 __Props__ need the following parameters.  
 
@@ -161,7 +161,7 @@ That is all there is to know about the different ways to import new props into C
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

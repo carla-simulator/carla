@@ -4,6 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <thread>
+
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerRemote.h"
@@ -183,6 +185,18 @@ void TrafficManagerRemote::SetHybridPhysicsRadius(const float radius) {
 
 void TrafficManagerRemote::SetOSMMode(const bool mode_switch) {
   client.SetOSMMode(mode_switch);
+}
+
+void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
+  client.SetRespawnDormantVehicles(mode_switch);
+}
+
+void TrafficManagerRemote::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+  client.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
+}
+
+void TrafficManagerRemote::SetMaxBoundaries(const float lower, const float upper) {
+  client.SetMaxBoundaries(lower, upper);
 }
 
 void TrafficManagerRemote::ShutDown() {

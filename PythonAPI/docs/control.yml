@@ -423,6 +423,22 @@
       type: carla.Vector3D
       doc: >
         World position of the wheel. This is a read-only parameter.
+    # --------------------------------------
+    - var_name: long_stiff_value
+      type: float
+      var_units: kg per radian
+      doc: >
+        Tire longitudinal stiffness per unit gravitational acceleration. __Default__ is `1000.0`.
+    # --------------------------------------
+    - var_name: lat_stiff_max_load
+      type: float
+      doc: >
+        Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. __Default__ is `2.0`.
+    # --------------------------------------
+    - var_name: lat_stiff_value
+      type: float
+      doc: >
+        Maximum stiffness per unit of lateral slip. __Default__ is `17.0`.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__

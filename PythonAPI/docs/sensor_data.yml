@@ -150,6 +150,56 @@
     - def_name: __str__
     # --------------------------------------
 
+  - class_name: OpticalFlowImage
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines an optical flow image of 2-Dimension float (32-bit) vectors representing the optical flow detected in the field of view. The components of the vector represents the displacement of an object in the image plane. Each component outputs values in the normalized range [-2,2] which scales to [-2 size, 2 size] with size being the total resolution in the corresponding component.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: fov
+      type: float
+      var_units: degrees
+      doc: >
+        Horizontal field of view of the image.
+    - var_name: height
+      type: int
+      doc: >
+        Image height in pixels.
+    - var_name: width
+      type: int
+      doc: >
+        Image width in pixels.
+    - var_name: raw_data
+      type: bytes
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_color_coded_flow
+      return: carla.Image
+      doc: >
+        Visualization helper. Converts the optical flow image to an RGB image.
+    # --------------------------------------
+    - def_name: __getitem__
+      params:
+      - param_name: pos
+        type: int
+    # --------------------------------------
+    - def_name: __iter__
+      doc: >
+        Iterate over the carla.OpticalFlowPixel that form the image. 
+    # --------------------------------------
+    - def_name: __len__
+    # --------------------------------------
+    - def_name: __setitem__
+      params:
+      - param_name: pos
+        type: int
+      - param_name: color
+        type: carla.Color
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
   - class_name: LidarMeasurement
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
@@ -161,11 +211,13 @@
       type: int
       doc: >
         Number of lasers shot.
+    # --------------------------------------
     - var_name: horizontal_angle
       type: float
       var_units: radians
       doc: >
         Horizontal angle the LIDAR is rotated at the time of the measurement.
+    # --------------------------------------
     - var_name: raw_data
       type: bytes
       doc: >
@@ -207,6 +259,7 @@
     - def_name: __str__
     # --------------------------------------
 
+
   - class_name: LidarDetection
     # - DESCRIPTION ------------------------
     doc: >
@@ -239,11 +292,13 @@
       type: int
       doc: >
         Number of lasers shot.
+    # --------------------------------------
     - var_name: horizontal_angle
       type: float
       var_units: radians
       doc: >
         Horizontal angle the LIDAR is rotated at the time of the measurement.
+    # --------------------------------------
     - var_name: raw_data
       type: bytes
       doc: >

@@ -455,6 +455,7 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 }
 
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
   CaptureComponent2D->CaptureScene();
 }
@@ -466,7 +467,8 @@ void ASceneCaptureSensor::BeginPlay()
   // Determine the gamma of the player.
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
 
-  CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
+  CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
+                                        bInForceLinearGamma);
 
   if (bEnablePostProcessingEffects)
   {

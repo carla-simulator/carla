@@ -137,7 +137,7 @@ This is the server simulator which is now running and waiting for a client to co
 
         python3 -m pip install -r requirements.txt # Support for Python2 is provided in the CARLA release packages
 
-        python3 spawn_npc.py  
+        python3 generate_traffic.py  
 
         # Terminal B
         cd PythonAPI\examples
@@ -210,14 +210,14 @@ CarlaUE4.exe
 # Run a script to test CARLA.
 cd PythonAPI/examples
 python3 -m pip install -r requirements.txt
-python3 spawn_npc.py # Support for Python 2 is provided in the CARLA release packages
+python3 generate_traffic.py # Support for Python 2 is provided in the CARLA release packages
 
 ```
 
 ---
 ## Follow-up
 
-By now you should have a packaged version of CARLA up and running. If you came across any difficulties during the installation process, feel free to post in the [CARLA forum](https://forum.carla.org/) or in the [Discord](https://discord.gg/8kqACuC) channel.
+By now you should have a packaged version of CARLA up and running. If you came across any difficulties during the installation process, feel free to post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/) or in the [Discord](https://discord.gg/8kqACuC) channel.
 
 The next step is to learn more about the core concepts in CARLA. Read the __First steps__ section to start learning. You can also find all the information about the Python API classes and methods in the [Python API reference](python_api.md).
 

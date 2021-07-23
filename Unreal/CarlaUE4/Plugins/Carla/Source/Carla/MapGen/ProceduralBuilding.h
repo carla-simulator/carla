@@ -94,6 +94,9 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
   void Reset();
 
+  UFUNCTION(BlueprintCallable, CallInEditor, Category="Procedural Building")
+  void FixMobility();
+
   // TODO: AdvancedDisplay
   // Map containing the pair with the name of the mesh and the component that uses it
   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Procedural Building|Debug")

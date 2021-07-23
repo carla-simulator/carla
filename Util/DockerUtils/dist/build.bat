@@ -13,7 +13,14 @@ if exist "%1.xodr" (
     rem parse openDRIVE crosswalks (generate crosswalks.obj)
     python get_xodr_crosswalks.py -f %1.xodr
 ) else (
-    echo "XODR file doesn't exist, ignoring crosswalks from openDRIVE"
+    if not "%~2"=="" (
+        if exist "%2.xodr" (
+            rem parse openDRIVE crosswalks (generate crosswalks.obj)
+            python get_xodr_crosswalks.py -f %2.xodr
+        )
+    ) else (
+        echo "XODR file doesn't exist, ignoring crosswalks from openDRIVE"
+    )
 )
 
 if exist "crosswalks.obj" (
