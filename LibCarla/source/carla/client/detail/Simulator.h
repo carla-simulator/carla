@@ -441,6 +441,10 @@ namespace detail {
       _client.SetActorAutopilot(vehicle.GetId(), enabled);
     }
 
+    void ShowVehicleDebugTelemetry(Vehicle &vehicle, bool enabled = true) {
+      _client.ShowVehicleDebugTelemetry(vehicle.GetId(), enabled);
+    }
+
     void SetLightsToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
       _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
