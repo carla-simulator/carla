@@ -40,6 +40,7 @@ class MessagesHandler:
         self.received_messages = []
         self.reserved_messages = []
 
+
     def sensor_data_file_path(self, veh_id):
         return self.data_sync_dir + f"{veh_id}_sensor.json"
 
@@ -136,6 +137,10 @@ class MessagesHandler:
         return received_data
 
 
+    def __tmp_data(self):
+        return {"tmp": "tmp"}
+
+
 class Message:
     def dict_format(self):
         return vars(self)
@@ -166,74 +171,144 @@ class CAM(Message):
         self.option["size"] = 190
         self.option["type"] = "CAM"
 
-class CAMGenerateHandler:
-    def __init__(self, init_time, init_location, init_speed, init_yaw):
-        self.init_time = init_time
-        self.init_location = init_location
-        self.init_speed = init_speed
-        self.init_yaw = init_yaw
-
-    def generate(self, timestamp, current_location, current_speed, current_yaw):
-        self.init_time = timestamp
-        self.init_location = current_location
-        self.init_speed = current_speed
-        self.init_yaw = current_yaw
-
-        return CAM(timestamp, self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data())
-
-    def is_ready(self, current_time, current_location, current_speed, current_yaw):
-        delta_t, delta_s, delta_p, delta_y = self.__get_delta(current_time, current_location, current_speed, current_yaw)
-
-        # ETSI Standard
-        return Constants.CAM_DELTA_T < delta_t or Constants.CAM_DELTA_S < delta_s or Constants.CAM_DELTA_P < delta_p or Constants.CAM_DELTA_Y < delta_y
-
-    def __get_delta(self, current_time, current_location, current_speed, current_yaw):
-        delta_t = current_time - self.init_time
-
-        delta_y = current_yaw - self.init_yaw
-
-        delta_s_x = current_speed.x - self.init_speed.x
-        delta_s_y = current_speed.y - self.init_speed.y
-        delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y)
-
-        delta_p_x = current_location.x - self.init_location.x
-        delta_p_y = current_location.y - self.init_location.y
-        delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
-
-        # print(f"{current_time}, {self.init_time}, {vars(current_location)}, {vars(self.init_location)}, {vars(current_speed)}, {vars(self.init_speed)}, {current_yaw}, {self.init_yaw}")
-        # print(f"delta_t: {delta_t}, delta_s: {delta_s}, delta_p: {delta_p}")
-        return delta_t, delta_s, delta_p, delta_y
-
-
-    def __tmp_data(self):
-        return {"tmp": "tmp"}
+# class CAMGenerateHandler:
+#     def __init__(self, init_time, init_location, init_speed, init_yaw):
+#         self.init_time = init_time
+#         self.init_location = init_location
+#         self.init_speed = init_speed
+#         self.init_yaw = init_yaw
+#
+#
+#     def generate(self, timestamp, current_location, current_speed, current_yaw):
+#         self.init_time = timestamp
+#         self.init_location = current_location
+#         self.init_speed = current_speed
+#         self.init_yaw = current_yaw
+#
+#         return CAM(timestamp, self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data())
+#
+#
+#     def is_ready(self, current_time, current_location, current_speed, current_yaw):
+#         return True
+#
+#
+#     def __get_delta(self, current_time, current_location, current_speed, current_yaw):
+#         delta_t = current_time - self.init_time
+#
+#         delta_y = current_yaw - self.init_yaw
+#
+#         delta_s_x = current_speed.x - self.init_speed.x
+#         delta_s_y = current_speed.y - self.init_speed.y
+#         delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y)
+#
+#         delta_p_x = current_location.x - self.init_location.x
+#         delta_p_y = current_location.y - self.init_location.y
+#         delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
+#
+#         # print(f"{current_time}, {self.init_time}, {vars(current_location)}, {vars(self.init_location)}, {vars(current_speed)}, {vars(self.init_speed)}, {current_yaw}, {self.init_yaw}")
+#         # print(f"delta_t: {delta_t}, delta_s: {delta_s}, delta_p: {delta_p}")
+#         return delta_t, delta_s, delta_p, delta_y
+#
+#
+#     def __tmp_data(self):
+#         return {"tmp": "tmp"}
 
 
 class CAMsHandler(MessagesHandler):
-    def receive(self, sumo_id):
-        # ----- socket base -----
-        # resp = json.loads(str(self.access_data_server(sumo_id, "get_received_CPMs"), 'ascii'))
-        # data = resp["data"]
-        #
-        # self.received_messages = self.received_messages + [CPM(**d) for d in data]
+    def generate(self, current_time, current_location, current_speed, current_yaw):
+        return CAM(
+            timestamp=timestamp,
+            ITS_PDU_Header=self.__tmp_data(),
+            Basic_Container=self.__tmp_data(),
+            HF_Container=self.__new_hf_container(current_location, current_speed, current_yaw),
+            LF_Container=self.__tmp_data(),
+            Special_Vehicle_Container=self.__tmp_data()
+        )
 
+    def is_generate(self, current_time, current_location, current_speed, current_yaw):
+        pass
+
+    def receive(self, sumo_id):
         # ----- file base -----
         data = super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
         dict_data = [json.loads(d) for d in data]
         self.received_messages = self.received_messages + [CAM(**d) for d in dict_data if d["option"]["type"] == "CAM"]
 
-    def send(self, sumo_id, cam):
-        # ----- socket base -----
-        # resp = json.loads(str(self.access_data_server(sumo_id, "post_reserved_CPMs", {"data": [cpm.dict_format() for cpm in CPMs_list]}), 'ascii'))
-        # data = resp["data"]
-        #
-        # self.reserved_messages = self.reserved_messages + CPMs_list
 
+    def send(self, sumo_id, cam):
         # ----- file base -----
         self.reserved_messages = self.reserved_messages + [cam]
         super().send(self.sensor_data_file_path(sumo_id), self.sensor_lock_file_path(sumo_id), json.dumps(cam.dict_format()))
 
 
+    def has_latest_cam(self):
+        if len(self.reserved_messages) <= 0:
+            return False
+        else:
+            return True
+
+    def get_delta_by_latest_cam(self, current_time, current_location, current_speed, current_yaw):
+        latest_cam = self.__latest_cam()
+
+        hf = latest_cam.HF_Container
+
+        delta_t = current_time - latest_cam.timestamp
+
+        delta_s_x = current_speed.x - hf["speed"][0]
+        delta_s_y = current_speed.y - hf["speed"][1]
+        delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y)
+
+        delta_p_x = current_location.x - hf["location"][0]
+        delta_p_y = current_location.y - hf["location"][1]
+        delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
+
+        delta_y = current_yaw - hf["yaw"]
+
+        return delta_t, delta_s, delta_p, delta_y
+
+    def __latest_cam(self):
+        return reduce(lambda c_a, c_b: c_b if c_a.timestamp <= c_b.timestamp else c_a, self.reserved_messages)
+
+    def __new_hf_container(self, location, speed, yaw):
+        return {
+            "location": [location.x, location.y],
+            "speed": [speed.x, speed.y],
+            "yaw": yaw
+        }
+
+class CAMsHandlerWithNoSend(CAMsHandler):
+    """
+    This class is used when users do not want to send CAMs.
+    """
+    def is_generate(self, current_time, current_location, current_speed, current_yaw):
+        return False
+
+class CAMsHandlerWithEtsi(CAMsHandler):
+    def is_generate(self, current_time, current_location, current_speed, current_yaw):
+        if self.has_latest_cam():
+            delta_t, delta_s, delta_p, delta_y = self.get_delta_by_latest_cam(current_time, current_location, current_speed, current_yaw)
+
+            # ETSI Standard
+            if Constants.CAM_DELTA_T_MIN <= delta_t:
+                return Constants.CAM_DELTA_T_MAX <= delta_t or Constants.CAM_DELTA_S < delta_s or Constants.CAM_DELTA_P < delta_p or Constants.CAM_DELTA_Y < delta_y
+            else:
+                return False
+
+        else:
+            return True
+
+
+class CAMsHandlerWithInterval(CAMsHandler):
+    INTERVAL = 0.1
+
+    def is_generate(self, current_time, current_location, current_speed, current_yaw):
+        if self.has_latest_cam():
+            delta_t, delta_s, delta_p, delta_y = self.get_delta_by_latest_cam(current_time, current_location, current_speed, current_yaw)
+
+            return (CAMsHandlerWithInterval.INTERVAL <= delta_t)
+
+        else:
+            return True
 
 class CPM(Message):
     MAX_SIZE = 800
@@ -270,28 +345,22 @@ class CPM(Message):
 
 
 class CPMsHandler(MessagesHandler):
-    def receive(self, sumo_id):
-        # ----- socket base -----
-        # resp = json.loads(str(self.access_data_server(sumo_id, "get_received_CPMs"), 'ascii'))
-        # data = resp["data"]
-        #
-        # self.received_messages = self.received_messages + [CPM(**d) for d in data]
+    def new_perceived_object_container(self, new_perceived_objects_with_pseudonym):
+        pass
 
+
+    def receive(self, sumo_id):
         # ----- file base -----
         data = super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
         dict_data = [json.loads(d) for d in data]
         self.received_messages = self.received_messages + [CPM(**d) for d in dict_data if d["option"]["type"] == "CPM"]
 
-    def send(self, sumo_id, cpm):
-        # ----- socket base -----
-        # resp = json.loads(str(self.access_data_server(sumo_id, "post_reserved_CPMs", {"data": [cpm.dict_format() for cpm in CPMs_list]}), 'ascii'))
-        # data = resp["data"]
-        #
-        # self.reserved_messages = self.reserved_messages + CPMs_list
 
+    def send(self, sumo_id, cpm):
         # ----- file base -----
         self.reserved_messages = self.reserved_messages + [cpm]
         super().send(self.sensor_data_file_path(sumo_id), self.sensor_lock_file_path(sumo_id), json.dumps(cpm.dict_format()))
+
 
     def similar_reserved_perceived_object(self, new_time, new_pseudonym):
         srpo = None
@@ -330,3 +399,44 @@ class CPMsHandler(MessagesHandler):
             delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
 
         return is_already_sent, delta_t, delta_s, delta_p
+
+
+class CPMsHandlerWithNoSend(CPMsHandler):
+    """
+    This class is used when users do not want to send CAMs.
+    """
+    def new_perceived_object_container(self, new_perceived_objects_with_pseudonym):
+        return []
+
+
+class CPMsHandlerWithEtsi(CPMsHandler):
+    def new_perceived_object_container(self, new_perceived_objects_with_pseudonym):
+        """
+        This method will be called every SENSOR_TICK(= 0.1 sec).
+        """
+
+        detected_objects_for_new_CPM = []
+
+        for the_latest_detected_object in new_perceived_objects_with_pseudonym:
+            is_already_sent, delta_t, delta_s, delta_p = self.is_already_sent(the_latest_detected_object)
+
+            if is_already_sent:
+                # ETSI Standard
+                if Constants.CPM_DELTA_T_MAX <= delta_t or Constants.CPM_DELTA_S < delta_s or Constants.CPM_DELTA_P < delta_p:
+                    detected_objects_for_new_CPM.append(the_latest_detected_object)
+                else:
+                    pass
+
+            else:
+                detected_objects_for_new_CPM.append(the_latest_detected_object)
+
+        return [obj.dict_format() for obj in detected_objects_for_new_CPM]
+
+
+class CPMsHandlerWithInterval(CPMsHandler):
+    def new_perceived_object_container(self, new_perceived_objects_with_pseudonym):
+        """
+        This method will be called every SENSOR_TICK(= 0.1 sec).
+        """
+
+        return [obj.dict_format() for obj in new_perceived_objects_with_pseudonym]

@@ -1,16 +1,18 @@
 import math
 
 class Constants:
-    CAM_DELTA_T = 1     # sec
-    CAM_DELTA_S = 0.5   # m/s
-    CAM_DELTA_P = 4     # meter
-    CAM_DELTA_Y = 4     # degree
+    CAM_DELTA_T_MIN = 0.1   # sec
+    CAM_DELTA_T_MAX = 1     # sec
+    CAM_DELTA_S = 0.5       # m/s
+    CAM_DELTA_P = 4         # meter
+    CAM_DELTA_Y = 4         # degree
 
-    CPM_DELTA_T = 1
+    CPM_DELTA_T_MIN = 0.1
+    CPM_DELTA_T_MAX = 1
     CPM_DELTA_S = 0.5
     CPM_DELTA_P = 4
     """
-    CPM_DELTA_T: 1 (sec)
+    CPM_DELTA_T_MAX: 1 (sec)
     CPM_DELTA_S: 0.5 (m/sec)
     CPM_DELTA_P: 4 (m)
     cite from: Thandavarayan, G., Sepulcre, M., & Gozalvez, J. (2020). Generation of Cooperative Perception Messages for Connected and Automated Vehicles. IEEE Transactions on Vehicular Technology, 9545(c). https://doi.org/10.1109/TVT.2020.3036165
@@ -34,7 +36,7 @@ class Constants:
 
     VALID_TIME_DELTA = 8
     LOCATION_THRESHOLD = max([VEHICLE_WIDTH, VEHICLE_LENGTH])
-    SENSOR_TICK = 0.1
+    SENSOR_TICK = CPM_DELTA_T_MIN
 
     SENSOR_RANGE_360 = max([TARGET_ROAD_WIDTH, 65])
     SENSOR_DEGREE_360 = 360.0

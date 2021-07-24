@@ -42,6 +42,8 @@ except IndexError:
 DATA_SERVER_HOST = "localhost"
 DATA_SERVER_PORT = 9998
 DATA_DIR = "./../Veins/carla-veins-data/"
+CAM_MESSAGE_STANDARD = "etsi"
+CPM_MESSAGE_STANDARD = "etsi"
 SENSOR_TYPE = "360"
 TIME_TO_START = 0
 TIME_STEP = 0.05
@@ -73,10 +75,13 @@ from util.classes.constants import (
 )
 from util.classes.messages import (
     CAM,
-    CAMGenerateHandler,
-    CAMsHandler,
+    CAMsHandlerWithNoSend,
+    CAMsHandlerWithEtsi,
+    CAMsHandlerWithInterval,
     CPM,
-    CPMsHandler,
+    CPMsHandlerWithNoSend,
+    CPMsHandlerWithEtsi,
+    CPMsHandlerWithInterval,
 )
 from util.classes.perceived_objects import (
     PerceivedObject,
@@ -91,6 +96,9 @@ from util.classes.sensor_data import (
 from util.classes.utils import (
     Location,
     Speed,
+    VehicleData,
+    location,
+    speed,
 )
 ##### End: My code. #####
 
@@ -99,60 +107,7 @@ from util.classes.utils import (
 # ==================================================================================================
 
 ##### Begin: My code. #####
-def location(actor, distance):
-    x = actor.get_transform().location.x + distance * math.cos(math.radians(actor.get_transform().rotation.yaw))
-    y = actor.get_transform().location.y + distance * math.sin(math.radians(actor.get_transform().rotation.yaw))
-
-    return Location(x, y)
-
-def speed(actor, abs_speed):
-    x = abs_speed * math.cos(math.radians(actor.get_transform().rotation.yaw))
-    y = abs_speed * math.sin(math.radians(actor.get_transform().rotation.yaw))
-
-    return Speed(x, y)
-
-class VehicleData:
-    """
-    This class is essential for obtaining veihicle data such as location and speed of vehicles.
-    In Co-simulation of Carla and SUMO, we cannot obtain vehicle speeds from Carla.
-    Specifically, Carla always returns [0, 0, 0] as vehicle speed.
-    """
-
-    def __init__(self, time, actor):
-        self.data = []
-        self.tick(time, actor)
-
-    def latest(self):
-        if len(self.data) <= 0:
-            return None
-        else:
-            return self.data[-1]
-
-    def tick(self, time, actor):
-        al = actor.get_transform().location
-        yaw = actor.get_transform().rotation.yaw
-
-        if len(self.data) <= 0:
-            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(0, 0), yaw))
-        else:
-            dT = time - self.data[-1]["time"]
-            dX = al.x - self.data[-1]["location"].x
-            dY = al.y - self.data[-1]["location"].y
-
-            self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(dX / dT, dY / dT), yaw))
-
-    def formatted_data(self, time, location, speed, yaw):
-        return {"time": time, "location": location, "speed": speed, "yaw": yaw}
-
-
 class CAV:
-    TARGET_ROAD_WIDTH = Constants.TARGET_ROAD_WIDTH
-    TARGET_ROAD_LENGTH = Constants.TARGET_ROAD_LENGTH
-    VEHICLE_WIDTH = Constants.VEHICLE_WIDTH
-    VEHICLE_LENGTH = Constants.VEHICLE_LENGTH
-    SENSOR_TICK = Constants.SENSOR_TICK
-
-
     def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization):
         global DATA_SERVER_HOST
         global DATA_SERVER_PORT
@@ -173,11 +128,10 @@ class CAV:
         self.sensor_data_handler = SensorDataHandler()
         self.perceived_objects_handler = PerceivedObjectsHandler()
 
-        self.CAMs_handler = CAMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
-        self.CPMs_handler = CPMsHandler(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        self.CAMs_handler = CAMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        self.CPMs_handler = CPMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
 
         self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id] = VehicleData(self.sumo_elapsed_seconds(), self.carla_actor)
-        self.CAM_generate_handler = CAMGenerateHandler(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw())
         self.load_sensors()
 
     def attach_bp(self, bp, transform):
@@ -209,17 +163,17 @@ class CAV:
 
 
     def rads(self, sensor_dist, target_rad, center_rad=0):
-        sensor_num = self.sensor_num(sensor_dist, target_rad)
+        sensor_num = self.sensor_num_in_range(sensor_dist, target_rad)
 
         return [float(target_rad) / sensor_num * i - float(target_rad * (sensor_num - 1) / sensor_num / 2.0 + center_rad) for i in range(0, sensor_num)]
 
     def receive_sensor_data(self, data):
         pass
 
-    def sensor_num(self, sensor_dist, target_rad):
+    def sensor_num_in_range(self, sensor_dist, target_rad, target_width=Constants.VEHICLE_WIDTH):
         # This sensor numbers captur the object with at least vehicle width.
 
-        return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(CAV.VEHICLE_WIDTH)) + 1
+        return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(target_width)) + 1
 
     def speed(self):
         d = self.latest_vehicle_data()
@@ -236,26 +190,29 @@ class CAV:
         # ----- update perceived_objects -----
         self.CPMs_handler.receive(self.sumo_actor_id)
 
-        # ----- send perceived objects -----
-        perceived_object_container = self.Perceived_Object_Container(self.new_perceived_objects_with_pseudonym())
+
+        # ----- send CPM -----
+        perceived_object_container = self.CPMs_handler.new_perceived_object_container(self.new_perceived_objects_with_pseudonym())
         if 1 <= len(perceived_object_container):
             self.CPMs_handler.send(self.sumo_actor_id, CPM(
-                self.sumo_elapsed_seconds(),
-                self.ITS_PDU_Header(),
-                self.Management_Container(),
-                self.Station_Data_Container(),
-                self.Sensor_Information_Container(),
-                perceived_object_container
-            ))
+                    timestamp=self.sumo_elapsed_seconds(),
+                    ITS_PDU_Header=self.__tmp_data(),
+                    Management_Container=self.__tmp_data(),
+                    Station_Data_Container=self.__Station_Data_Container(),
+                    Sensor_Information_Container=self.__Sensor_Information_Container(),
+                    Perceived_Object_Container=perceived_object_container
+                ))
 
         # ----- send CAM -----
         # print(f"sumo_id: {self.sumo_actor_id}")
-        if self.CAM_generate_handler.is_ready(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw()):
-            self.CAMs_handler.send(self.sumo_actor_id, self.CAM_generate_handler.generate(
-                self.sumo_elapsed_seconds(),
-                self.location(),
-                self.speed(),
-                self.yaw()
+        if self.CAMs_handler.is_generate(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw()):
+            self.CAMs_handler.send(self.sumo_actor_id, CAM(
+                timestamp=self.sumo_elapsed_seconds(),
+                ITS_PDU_Header=self.__tmp_data(),
+                Basic_Container=self.__tmp_data(),
+                HF_Container=self.__Station_Data_Container(),
+                LF_Container=self.__tmp_data(),
+                Special_Vehicle_Container=self.__tmp_data()
             ))
 
     def yaw(self):
@@ -272,37 +229,32 @@ class CAV:
     def Management_Container(self):
         return {"tmp": "tmp"}
 
-    def Station_Data_Container(self):
-        location = self.carla_actor.get_transform().location
-        speed = self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].latest()["speed"]
+    def __tmp_data(self):
+        return {"tmp": "tmp"}
+
+    def __Station_Data_Container(self):
+        location = self.location()
+        speed = self.speed()
+        yaw = self.yaw()
 
         data = {
             "sumo_id": self.sumo_actor_id,
             "location" : [location.x, location.y],
-            "speed" : [speed.x, speed.y, speed.z]
+            "speed" : [speed.x, speed.y, speed.z],
+            "yaw" : yaw
         }
 
         return data
 
-    def Sensor_Information_Container(self):
-        return ["360_sensor", "forward_sensor", "backward_sensor"]
+    def __Sensor_Information_Container(self):
+        """
+        Now, the container is only used to calculate CPM size.
+        Since we only use the number of sensors, we simply return list with the number of the sensors.
+        """
+        return list(range(0, self.sensor_num()))
 
-    def Perceived_Object_Container(self, new_perceived_objects_with_pseudonym):
-        detected_objects_for_new_CPM = []
-
-        for the_latest_detected_object in new_perceived_objects_with_pseudonym:
-            is_already_sent, delta_t, delta_s, delta_p = self.CPMs_handler.is_already_sent(the_latest_detected_object)
-
-            if is_already_sent:
-                # ETSI Standard
-                if Constants.CPM_DELTA_T < delta_t or Constants.CPM_DELTA_S < delta_s or Constants.CPM_DELTA_P < delta_p:
-                    detected_objects_for_new_CPM.append(the_latest_detected_object)
-
-            else:
-                detected_objects_for_new_CPM.append(the_latest_detected_object)
-
-        return [obj.dict_format() for obj in detected_objects_for_new_CPM]
-
+    def sensor_num(self):
+        return len(self.sensors)
 
 
 class CAVWithObstacleSensors(CAV):
@@ -312,32 +264,12 @@ class CAVWithObstacleSensors(CAV):
 
 
     def load_sensors(self):
-
         self.load_obstacle_sensors(
             ranges =[Constants.SENSOR_RANGE_360,    Constants.SENSOR_RANGE_FRONT,   Constants.SENSOR_RANGE_BACK],
             degrees=[Constants.SENSOR_DEGREE_360,   Constants.SENSOR_DEGREE_FRONT,  Constants.SENSOR_DEGREE_BACK],
             phases =[0,                             0,                              180]
         )
 
-        # # 360 sensor
-        # rads_360 = self.rads(Constants.SENSOR_RANGE_360, Constants.SENSOR_DEGREE_360)
-        # rads_front = self.rads(Constants.SENSOR_RANGE_FRONT, Constants.SENSOR_DEGREE_FRONT)
-        # rads_back = self.rads(Constants.SENSOR_RANGE_BACK, Constants.SENSOR_DEGREE_BACK, 180)
-        #
-        # for z_rad in rads_360:
-        #     sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_WIDTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
-        #     sensor.listen(lambda data: self.receive_sensor_data(data))
-        #     self.sensors.append(sensor)
-        #
-        # for z_rad in rads_front:
-        #     sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
-        #     sensor.listen(lambda data: self.receive_sensor_data(data))
-        #     self.sensors.append(sensor)
-        #
-        # for z_rad in rads_back:
-        #     sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(CAV.TARGET_ROAD_LENGTH), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
-        #     sensor.listen(lambda data: self.receive_sensor_data(data))
-        #     self.sensors.append(sensor)
 
     def load_obstacle_sensors(self, ranges=[], degrees=[], phases=[]):
         for i in range(0, min([len(ranges), len(degrees), len(phases)])):
@@ -347,7 +279,7 @@ class CAVWithObstacleSensors(CAV):
             rads = self.rads(sensor_range, sensor_degree, sensor_phase)
 
             for z_rad in rads:
-                sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(sensor_range), 'only_dynamics': 'True', 'sensor_tick': str(CAV.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
+                sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(sensor_range), 'only_dynamics': 'True', 'sensor_tick': str(Constants.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
                 sensor.listen(lambda data: self.receive_sensor_data(data))
                 self.sensors.append(sensor)
 
@@ -367,6 +299,10 @@ class CAVWithObstacleSensors(CAV):
             # Since the key is not in carlaid2vehicle_data, the object is not vehicle, so we ignore the key.
             pass
 
+
+    def sensor_num(self):
+        return 3
+
 class CAVWith360ObstacleSensors(CAVWithObstacleSensors):
     RANGES =    [150]
     DEGREES =   [360]
@@ -382,6 +318,10 @@ class CAVWith360ObstacleSensors(CAVWithObstacleSensors):
         )
 
 
+    def sensor_num(self):
+        return 1
+
+
 class CAVWithForwardObstacleSensors(CAVWithObstacleSensors):
     RANGES =    [65,    150]
     DEGREES =   [40*2,  5*2]
@@ -395,6 +335,10 @@ class CAVWithForwardObstacleSensors(CAVWithObstacleSensors):
             degrees=CAVWithForwardObstacleSensors.DEGREES,
             phases= CAVWithForwardObstacleSensors.PHASES
         )
+
+
+    def sensor_num(self):
+        return 2
 
 ##### End: My code. #####
 
@@ -440,10 +384,8 @@ class SimulationSynchronization(object):
 
         ##### Begin: My code #####
         self.sumoid2cav = {}
-        self.sumoid2sensors = {}
         self.carlaid2vehicle_data = {}
         self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
-        self.cav_procs = []
 
 
     def sumoid_from_carlaid(self, carlaid):
@@ -503,12 +445,12 @@ class SimulationSynchronization(object):
 
                 if carla_actor_id != INVALID_ACTOR_ID:
                     ##### Begin: My code #####
-                    if SENSOR_TYPE == "360":
-                        self.sumoid2cav[sumo_actor_id] = CAVWith360ObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
-                    elif SENSOR_TYPE == "forward":
-                        self.sumoid2cav[sumo_actor_id] = CAVWithForwardObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
-                    else:
-                        raise Exception(f"No such sensor: {SENSOR_TYPE}")
+                    # ----- load sensors -----
+                    self.sumoid2cav[sumo_actor_id] = self.get_cav_by_sensor_type(sumo_actor_id, carla_actor_id, SENSOR_TYPE)
+
+                    # ----- load message standard -----
+                    self.sumoid2cav[sumo_actor_id].CAMs_handler = self.get_cams_handler_by_standard(CAM_MESSAGE_STANDARD)
+                    self.sumoid2cav[sumo_actor_id].CPMs_handler = self.get_cpms_handler_by_standard(CPM_MESSAGE_STANDARD)
                     ##### End: My code #####
 
                     self.sumo2carla_ids[sumo_actor_id] = carla_actor_id
@@ -545,10 +487,6 @@ class SimulationSynchronization(object):
 
             self.carla.synchronize_vehicle(carla_actor_id, carla_transform, carla_lights)
 
-            # ----- listen sensors -----
-            # for name, sensor in self.sumoid2sensors[sumo_actor_id].items():
-            #     sensor.listen(lambda data: save_into_data_server(data))
-
         # Updates traffic lights in carla based on sumo information.
         if self.tls_manager == 'sumo':
             common_landmarks = self.sumo.traffic_light_ids & self.carla.traffic_light_ids
@@ -561,12 +499,6 @@ class SimulationSynchronization(object):
         # -----------------
         # carla-->sumo sync
         # -----------------
-
-        ##### Start: My code. #####
-        # for p in self.cav_procs:
-        #     p.join()
-        # self.cav_procs = []
-        ##### End: My code. #####
 
         self.carla.tick()
 
@@ -647,6 +579,39 @@ class SimulationSynchronization(object):
         self.sumo.close()
 
 
+    # My Code Begin
+    def get_cav_by_sensor_type(self, sumo_actor_id, carla_actor_id, sensor_type):
+        if sensor_type == "init":
+            return CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+        elif sensor_type == "360":
+            return CAVWith360ObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+        elif sensor_type == "forward":
+            return CAVWithForwardObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+        else:
+            raise Exception(f"No such sensor: {sensor_type}")
+
+    def get_cams_handler_by_standard(self, std):
+        if std == "etsi":
+            return CAMsHandlerWithEtsi(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        elif std == "periodic":
+            return CAMsHandlerWithInterval(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        elif std == "no":
+            return CAMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        else:
+            raise Exception(f"No such CAM standard: {std}")
+
+    def get_cpms_handler_by_standard(self, std):
+        if std == "etsi":
+            return CPMsHandlerWithEtsi(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        elif std == "periodic":
+            return CPMsHandlerWithInterval(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        elif std == "no":
+            return CPMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
+        else:
+            raise Exception(f"No such CAM standard: {std}")
+    # My Code End
+
+
 def synchronization_loop(args):
     """
     Entry point for sumo-carla co-simulation.
@@ -678,9 +643,6 @@ def synchronization_loop(args):
 
 
 if __name__ == '__main__':
-    # global DATA_SERVER_HOST
-    # global DATA_SERVER_PORT
-    # global DATA_DIR
 
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument('sumo_cfg_file', type=str, help='sumo configuration file')
@@ -729,11 +691,13 @@ if __name__ == '__main__':
     argparser.add_argument('--debug', action='store_true', help='enable debug messages')
 
     ###### Begin: My codes. #####
-    argparser.add_argument('--carla_veins_data_server_host',                            default=DATA_SERVER_HOST)
-    argparser.add_argument('--carla_veins_data_server_port',                            default=DATA_SERVER_PORT)
-    argparser.add_argument('--carla_veins_data_dir',                                    default=DATA_DIR)
-    argparser.add_argument('--sensor_type',     type=str,   choices=["360", "forward"], default=SENSOR_TYPE)
-    argparser.add_argument('--time_to_start',   type=float,                             default=TIME_TO_START)
+    argparser.add_argument('--carla_veins_data_server_host',                                            default=DATA_SERVER_HOST)
+    argparser.add_argument('--carla_veins_data_server_port',                                            default=DATA_SERVER_PORT)
+    argparser.add_argument('--carla_veins_data_dir',                                                    default=DATA_DIR)
+    argparser.add_argument('--sensor_type',             type=str,   choices=["init", "360", "forward"], default=SENSOR_TYPE)
+    argparser.add_argument('--cam_message_standard',    type=str,   choices=["etsi", "periodic", "no"], default=CAM_MESSAGE_STANDARD)
+    argparser.add_argument('--cpm_message_standard',    type=str,   choices=["etsi", "periodic", "no"], default=CPM_MESSAGE_STANDARD)
+    argparser.add_argument('--time_to_start',           type=float,                                     default=TIME_TO_START)
     ###### End: My codes #####
 
     arguments = argparser.parse_args()
@@ -745,6 +709,8 @@ if __name__ == '__main__':
     TIME_TO_START = arguments.time_to_start
     TIME_STEP = arguments.step_length
     SENSOR_TYPE = arguments.sensor_type
+    CAM_MESSAGE_STANDARD = arguments.cam_message_standard
+    CPM_MESSAGE_STANDARD = arguments.cpm_message_standard
     ###### End: My codes #####
 
     if arguments.sync_vehicle_all is True:
