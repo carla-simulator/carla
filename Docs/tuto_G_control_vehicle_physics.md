@@ -70,4 +70,4 @@ Vehicle telemetry can be visualised by calling the [`Actor.enable_debug_telemetr
 
 ![vehicle_telemetry](img/vehicle_telemetry.png)
 
-You can try the telemetry visualisation tool in the example script `manual_control.py` located in `PythonAPI/examples`.
+You can try the telemetry visualisation tool in the example script `manual_control.py` located in `PythonAPI/examples`. Activate the telemetry view by pressing `T`.
