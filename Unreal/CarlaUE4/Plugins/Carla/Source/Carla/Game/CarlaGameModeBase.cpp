@@ -50,6 +50,13 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
+const FString ACarlaGameModeBase::GetMapPath() const
+{
+  UWorld* World = GetWorld();
+  TSoftObjectPtr<UWorld> AssetPtr (World);
+  return AssetPtr.GetLongPackageName();
+}
+
 void ACarlaGameModeBase::InitGame(
     const FString &MapName,
     const FString &Options,
