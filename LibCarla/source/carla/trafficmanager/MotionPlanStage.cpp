@@ -282,7 +282,6 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
 
     ActorIdSet passing_safe_point = track_traffic.GetPassingVehicles(safe_point->GetId());
     ActorIdSet passing_junction_end_point = track_traffic.GetPassingVehicles(junction_end_point->GetId());
-    float safe_interval_length_squared = junction_end_point->DistanceSquared(safe_point);
     cg::Location mid_point = (junction_end_point->GetLocation() + safe_point->GetLocation())/2.0f;
 
     // Only check for vehicles that have the safe point in their passing waypoint, but not
