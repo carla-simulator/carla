@@ -48,19 +48,27 @@ In this section you will find details of system requirements, minor and major so
     Be sure that the above programs are added to the [environment path](https://www.java.com/en/download/help/path.xml). Remember that the path added should correspond to the progam's `bin` directory.  
 #### Python dependencies
 
-CARLA requires some Python dependencies to be installed with `pip version >= 20.3`. Ensure you have a compatible version by running:
+Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip` or `pip3`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
 
 ```sh
+# For Python 3
+pip3 -V
+
+# For Python 2
 pip -V
 ```
 
 If you need to upgrade:
 
 ```sh
+# For Python 3
+pip3 install --upgrade pip
+
+# For Python 2
 pip install --upgrade pip
 ```
 
-Once you have the correct version of `pip`, you can install the dependencies:
+You must then install the following Python dependencies:
 
 ```sh
 pip3 install --user setuptools
@@ -198,15 +206,30 @@ Optionally, to compile the PythonAPI for a specific version of Python, run the b
     make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
 ```
 
-Every time you run `make PythonAPI` a `.whl` file containing the CARLA client library will be built and installed for your system. This `.whl` cannot be distributed as it is specific for your OS. If you had a previous library installed, it will be uninstalled, and a new one will be installed according to the source code you are using. You can modify this behavior with the following flag:
+The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
 
-- `make PythonAPI --no-install-wheel` will only build the `.whl` file but not install it on your system.
+__A. `.egg` file__
 
-!!! Important
-    Previous versions of CARLA created a `.egg` file containing the CARLA client library. __In versions 0.9.12+ this behavior changes significantly; `.egg` files are no longer used.__ `make PythonAPI` will install the library using `pip` and a `.whl` file.
+The `.egg` file will automatically be added to your `PYTHONPATH`. All of CARLA's example scripts automatically look for this file when importing CARLA.
 
-    If you are building a version of CARLA prior to 0.9.12, please select the correct version of the documentation in the bottom right-hand corner.
+>If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
 
+__B. `.whl` file__
+
+>The `.whl` file should be installed using `pip` or `pip3`:
+
+```sh
+# Python 3
+pip3 install <path/to/wheel>.whl
+
+# Python 2
+pip install <path/to/wheel>.whl
+```
+
+>This `.whl` file cannot be distributed as it is built specifically for your OS.
+
+!!! Warning
+    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. Read the [F.A.Q.](build_faq.md) to learn more about how to avoid these issues.
 
 __2.__ __Compile the server__:
 
