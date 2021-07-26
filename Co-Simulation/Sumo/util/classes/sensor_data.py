@@ -9,43 +9,44 @@ from util.classes.perceived_objects import PerceivedObject
 from util.classes.utils import Location
 from util.classes.constants import Constants
 
-class SensorData:
-    def __init__(self, data, time, location, speed):
-        self.actor = data.actor
-        self.other_actor = data.other_actor
-        self.distance = data.distance
-        self.time = time
-
-        self.l = location
-        self.s = speed
-
-
 class SensorDataHandler:
     def __init__(self):
         self.data = deque()
 
 
+    def perceived_objects(self, current_time, duration):
+        """
+        This method is used to create Percevec Objects (POs) based on SensorData.
+        POs have to belong to PerceivedObject class.
+        Furthermore, this method have to return the list of POs.
+        """
+        pass
+
+
     def save(self, data):
         self.data.append(data)
 
-class ObstacleSensorData(SensorData):
 
+class ObstacleSensorData:
     """
     This class is the ease implimantation of radar sensor data.
     We assume that we can get obstacles' speeds and distances [1].
-    the distances are used to calculate the obstacles' locations.
+    The distances are used to calculate the obstacles' locations.
 
     [1] cite: https://carla.readthedocs.io/en/latest/ref_sensors/
     """
+    def __init__(self, data, time, location, speed):
+        self.raw_sensor_data = data
+
+        # We use the three data.
+        self.time = time
+        self.l = location
+        self.s = speed
 
 
     def location(self):
-        # x = self.actor.get_transform().location.x + self.distance * math.cos(math.radians(self.actor.get_transform().rotation.yaw))
-        # y = self.actor.get_transform().location.y + self.distance * math.sin(math.radians(self.actor.get_transform().rotation.yaw))
-        #
-        # return Location(x, y)
-
         return self.l
+
 
     def predicted_location(self, delta_t):
         speed = self.speed()
@@ -53,9 +54,8 @@ class ObstacleSensorData(SensorData):
 
         return Location(location.x + delta_t * speed.x, location.y + delta_t * speed.y)
 
-    def speed(self):
-        # return self.other_actor.get_velocity()
 
+    def speed(self):
         return self.s
 
 
@@ -100,3 +100,20 @@ class ObstacleSensorDataHandler(SensorDataHandler):
 
     def __is_futher_than_sensor_tick(self, osd, nop):
         return (Constants.SENSOR_TICK <= math.fabs(osd.time - nop.time))
+
+
+
+class RaderSensorData(ObstacleSensorData):
+    """
+    In curent phases, we do not have needs to implement new features for rader sensors.
+    Therefore, we only inheritance the ObstacleSensorData
+    """
+    pass
+
+
+class RaderSensorDataHandler(ObstacleSensorDataHandler):
+    """
+    In curent phases, we do not have needs to implement new features for rader sensors.
+    Therefore, we only inheritance the ObstacleSensorDataHandler
+    """
+    pass

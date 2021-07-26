@@ -37,6 +37,9 @@ tar -xzvf inet-3.6.6-src.tgz
 # ----- for OpenCV2X -----
 cd ~/Downloads/
 git clone https://github.com/uruzahe/simulte.git
+# ----- for My Veins -----
+cd ~/Downloads/
+git clone https://github.com/uruzahe/veins.git
 # ----- for veins -----
 cd ~/Downloads/
 wget https://veins.car2x.org/download/veins-5.0.zip

@@ -44,7 +44,8 @@ DATA_SERVER_PORT = 9998
 DATA_DIR = "./../Veins/carla-veins-data/"
 CAM_MESSAGE_STANDARD = "etsi"
 CPM_MESSAGE_STANDARD = "etsi"
-SENSOR_TYPE = "360"
+SENSOR_TYPE = "ra_360"
+# SENSOR_TYPE = "ra_forward"
 TIME_TO_START = 0
 TIME_STEP = 0.05
 ##### End: My code #####
@@ -88,10 +89,11 @@ from util.classes.perceived_objects import (
     PerceivedObjectsHandler,
 )
 from util.classes.sensor_data import (
-    SensorData,
     SensorDataHandler,
     ObstacleSensorData,
     ObstacleSensorDataHandler,
+    RaderSensorData,
+    RaderSensorDataHandler,
 )
 from util.classes.utils import (
     Location,
@@ -132,10 +134,35 @@ class CAV:
         self.CPMs_handler = CPMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
 
         self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id] = VehicleData(self.sumo_elapsed_seconds(), self.carla_actor)
+        self.generate_sensors()
         self.load_sensors()
 
     def attach_bp(self, bp, transform):
         return self.carla.world.spawn_actor(bp, transform, attach_to=self.carla_actor)
+
+
+    def generate_sensors(self):
+        """
+        This method is used to crease sensors and append the sensors into self.sensors.
+        Therefore, we have to override the method in child classes.
+        """
+
+        self.sensors = []
+
+
+    def load_sensors(self):
+        for sensor in self.sensors:
+            sensor.listen(lambda data: self.receive_sensor_data(data))
+
+
+    def receive_sensor_data(self, data):
+        """
+        This method is called when sensors obtain new data.
+        Therefore, we have to override the method in child classes.
+        """
+
+        pass
+
 
     def sensor_bp(self, sensor_name="", attributes={}):
         bp = self.carla.world.get_blueprint_library().find(sensor_name)
@@ -145,35 +172,22 @@ class CAV:
 
         return bp
 
+
     def latest_vehicle_data(self):
         return self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].latest()
 
-    def load_sensors(self):
-        pass
 
     def location(self):
         d = self.latest_vehicle_data()
 
         return d["location"]
 
+
     def new_perceived_objects_with_pseudonym(self):
         new_perceived_objects = self.sensor_data_handler.perceived_objects(self.sumo_elapsed_seconds(), Constants.VALID_TIME_DELTA)
 
         return [self.perceived_objects_handler.save(new_perceived_object) for new_perceived_object in new_perceived_objects]
 
-
-    def rads(self, sensor_dist, target_rad, center_rad=0):
-        sensor_num = self.sensor_num_in_range(sensor_dist, target_rad)
-
-        return [float(target_rad) / sensor_num * i - float(target_rad * (sensor_num - 1) / sensor_num / 2.0 + center_rad) for i in range(0, sensor_num)]
-
-    def receive_sensor_data(self, data):
-        pass
-
-    def sensor_num_in_range(self, sensor_dist, target_rad, target_width=Constants.VEHICLE_WIDTH):
-        # This sensor numbers captur the object with at least vehicle width.
-
-        return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(target_width)) + 1
 
     def speed(self):
         d = self.latest_vehicle_data()
@@ -220,17 +234,10 @@ class CAV:
 
         return d["yaw"]
 
-    def new_CPM(self):
-        pass
-
-    def ITS_PDU_Header(self):
-        return {"tmp": "tmp"}
-
-    def Management_Container(self):
-        return {"tmp": "tmp"}
 
     def __tmp_data(self):
         return {"tmp": "tmp"}
+
 
     def __Station_Data_Container(self):
         location = self.location()
@@ -257,30 +264,143 @@ class CAV:
         return len(self.sensors)
 
 
+
+    def sensor_num_in_range(self, sensor_dist, target_rad, target_width=Constants.VEHICLE_WIDTH):
+        # This sensor numbers captur the object with at least vehicle width.
+
+        return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(target_width)) + 1
+
+
+class CAVWithRaderSensors(CAV):
+    def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization):
+        self.set_sensor_attributes()
+
+        super().__init__(sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization)
+        self.sensor_data_handler = RaderSensorDataHandler()
+
+
+
+    def set_sensor_attributes(self):
+        self.horizontal_fovs = []
+        self.points_per_seconds = []
+        self.ranges = []
+        self.vertical_fovs = []
+        self.phases = []
+        self.x = []
+        self.z = []
+
+
+    def generate_sensors(self):
+
+        for i in range(0, self.sensor_num()):
+            hf = self.horizontal_fovs[i]
+            pps = self.points_per_seconds[i]
+            ra = self.ranges[i]
+            vf = self.vertical_fovs[i]
+            ph = self.phases[i]
+            s_x = self.x[i]
+            s_z = self.z[i]
+
+            print(f"tick: {Constants.SENSOR_TICK}")
+            sensor = self.attach_bp(
+                self.sensor_bp(
+                    'sensor.other.radar',
+                    {
+                        'horizontal_fov': str(hf),
+                        'points_per_second': str(pps),
+                        'range': str(ra),
+                        'sensor_tick': str(Constants.SENSOR_TICK),
+                        'vertical_fov': str(vf)
+                    }
+                ),
+                carla.Transform(
+                    carla.Location(x=s_x, z=s_z),
+                    carla.Rotation(yaw=ph)
+                )
+            )
+            self.sensors.append(sensor)
+
+
+    def receive_sensor_data(self, data):
+        if self.sumo_actor_id == 0:
+            for d in data:
+                print(f"sumo_id: {self.sumo_actor_id}, time: {self.sumo_elapsed_seconds()}, location: {data.transform.location}, rotation: {data.transform.rotation}")
+                print(f"altitude: {d.altitude}, azimuth: {d.azimuth}, depth: {d.depth}, velocity: {d.velocity}")
+
+
+    def sensor_num(self):
+        return min([
+            len(self.horizontal_fovs),
+            len(self.points_per_seconds),
+            len(self.ranges),
+            len(self.vertical_fovs),
+            len(self.phases),
+            len(self.x),
+            len(self.z)
+        ])
+
+
+class CAVWith360RaderSensors(CAVWithRaderSensors):
+    def set_sensor_attributes(self):
+        # Cite from:
+        # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
+        self.horizontal_fovs =      [360, 360]
+        self.points_per_seconds =   [self.sensor_num_in_range(150, 360) / Constants.SENSOR_TICK, self.sensor_num_in_range(150, 360) / Constants.SENSOR_TICK]
+        self.ranges =               [150, 150]
+        self.vertical_fovs =        [0, 0]
+        self.phases =               [0, 180]
+        self.x =                    [2.5, -2.5]
+        self.z =                    [1.0, 1.0]
+
+
+class CAVWithForwardRaderSensors(CAVWithRaderSensors):
+    def set_sensor_attributes(self):
+        # Cite from:
+        # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
+        self.horizontal_fovs =      [40*2,                                                          5*2]
+        self.points_per_seconds =   [self.sensor_num_in_range(65, 40*2) / Constants.SENSOR_TICK,    self.sensor_num_in_range(150, 5*2)/ Constants.SENSOR_TICK]
+        self.ranges =               [65,                                                            150]
+        self.vertical_fovs =        [math.degrees(math.asin(1.7 / 65)),                       math.degrees(math.asin(1.7 / 150))]
+        self.phases =               [0,                                                             0]
+
 class CAVWithObstacleSensors(CAV):
     def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization):
+        self.set_sensor_attributes()
+
         super().__init__(sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization)
         self.sensor_data_handler = ObstacleSensorDataHandler()
 
 
-    def load_sensors(self):
-        self.load_obstacle_sensors(
-            ranges =[Constants.SENSOR_RANGE_360,    Constants.SENSOR_RANGE_FRONT,   Constants.SENSOR_RANGE_BACK],
-            degrees=[Constants.SENSOR_DEGREE_360,   Constants.SENSOR_DEGREE_FRONT,  Constants.SENSOR_DEGREE_BACK],
-            phases =[0,                             0,                              180]
-        )
+
+    def set_sensor_attributes(self):
+        self.ranges =[Constants.SENSOR_RANGE_360,    Constants.SENSOR_RANGE_FRONT,   Constants.SENSOR_RANGE_BACK]
+        self.degrees=[Constants.SENSOR_DEGREE_360,   Constants.SENSOR_DEGREE_FRONT,  Constants.SENSOR_DEGREE_BACK]
+        self.phases =[0,                             0,                              180]
 
 
-    def load_obstacle_sensors(self, ranges=[], degrees=[], phases=[]):
-        for i in range(0, min([len(ranges), len(degrees), len(phases)])):
-            sensor_range = ranges[i]
-            sensor_degree = degrees[i]
-            sensor_phase = phases[i]
+    def generate_sensors(self):
+        for i in range(0, self.sensor_num()):
+            sensor_range = self.ranges[i]
+            sensor_degree = self.degrees[i]
+            sensor_phase = self.phases[i]
             rads = self.rads(sensor_range, sensor_degree, sensor_phase)
 
             for z_rad in rads:
-                sensor = self.attach_bp(self.sensor_bp('sensor.other.obstacle', {'distance': str(sensor_range), 'only_dynamics': 'True', 'sensor_tick': str(Constants.SENSOR_TICK)}), carla.Transform(carla.Location(x=0.0, z=1.7), carla.Rotation(yaw=z_rad)))
-                sensor.listen(lambda data: self.receive_sensor_data(data))
+                sensor = self.attach_bp(
+                    self.sensor_bp(
+                        'sensor.other.obstacle',
+                        {
+                            'distance': str(sensor_range),
+                            'only_dynamics': 'True',
+                            'sensor_tick': str(Constants.SENSOR_TICK)
+                        }
+                    ),
+                    carla.Transform(
+                        carla.Location(x=0.0, z=1.7),
+                        carla.Rotation(yaw=z_rad)
+                    )
+                )
+
                 self.sensors.append(sensor)
 
 
@@ -300,45 +420,38 @@ class CAVWithObstacleSensors(CAV):
             pass
 
 
+    def rads(self, sensor_dist, target_rad, center_rad=0):
+        sensor_num = self.sensor_num_in_range(sensor_dist, target_rad)
+
+        return [float(target_rad) / sensor_num * i - float(target_rad * (sensor_num - 1) / sensor_num / 2.0 + center_rad) for i in range(0, sensor_num)]
+
+
+    def sensor_num_in_range(self, sensor_dist, target_rad, target_width=Constants.VEHICLE_WIDTH):
+        # This sensor numbers captur the object with at least vehicle width.
+
+        return int(2 * math.pi * float(sensor_dist) * (target_rad / 360.0) / float(target_width)) + 1
+
+
     def sensor_num(self):
-        return 3
+        return min([len(self.ranges), len(self.degrees), len(self.phases)])
 
 class CAVWith360ObstacleSensors(CAVWithObstacleSensors):
-    RANGES =    [150]
-    DEGREES =   [360]
-    PHASES =    [0]
-    # Cite from:
-    # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
-
-    def load_sensors(self):
-        self.load_obstacle_sensors(
-            ranges= CAVWith360ObstacleSensors.RANGES,
-            degrees=CAVWith360ObstacleSensors.DEGREES,
-            phases= CAVWith360ObstacleSensors.PHASES
-        )
-
-
-    def sensor_num(self):
-        return 1
+    def set_sensor_attributes(self):
+        # Cite from:
+        # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
+        self.ranges =[150]
+        self.degrees=[360]
+        self.phases =[0]
 
 
 class CAVWithForwardObstacleSensors(CAVWithObstacleSensors):
-    RANGES =    [65,    150]
-    DEGREES =   [40*2,  5*2]
-    PHASES =    [0,     0]
-    # Cite from:
-    # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
+    def set_sensor_attributes(self):
+        # Cite from:
+        # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
+        self.ranges =[65,    150]
+        self.degrees=[40*2,  5*2]
+        self.phases =[0,     0]
 
-    def load_sensors(self):
-        self.load_obstacle_sensors(
-            ranges= CAVWithForwardObstacleSensors.RANGES,
-            degrees=CAVWithForwardObstacleSensors.DEGREES,
-            phases= CAVWithForwardObstacleSensors.PHASES
-        )
-
-
-    def sensor_num(self):
-        return 2
 
 ##### End: My code. #####
 
@@ -581,11 +694,15 @@ class SimulationSynchronization(object):
 
     # My Code Begin
     def get_cav_by_sensor_type(self, sumo_actor_id, carla_actor_id, sensor_type):
-        if sensor_type == "init":
+        if sensor_type == "ra_360":
+            return CAVWith360RaderSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+        elif sensor_type == "ra_forward":
+            return CAVWithForwardRaderSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
+        elif sensor_type == "ob_init":
             return CAVWithObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
-        elif sensor_type == "360":
+        elif sensor_type == "ob_360":
             return CAVWith360ObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
-        elif sensor_type == "forward":
+        elif sensor_type == "ob_forward":
             return CAVWithForwardObstacleSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)
         else:
             raise Exception(f"No such sensor: {sensor_type}")
@@ -608,7 +725,7 @@ class SimulationSynchronization(object):
         elif std == "no":
             return CPMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
         else:
-            raise Exception(f"No such CAM standard: {std}")
+            raise Exception(f"No such CPM standard: {std}")
     # My Code End
 
 
@@ -694,7 +811,7 @@ if __name__ == '__main__':
     argparser.add_argument('--carla_veins_data_server_host',                                            default=DATA_SERVER_HOST)
     argparser.add_argument('--carla_veins_data_server_port',                                            default=DATA_SERVER_PORT)
     argparser.add_argument('--carla_veins_data_dir',                                                    default=DATA_DIR)
-    argparser.add_argument('--sensor_type',             type=str,   choices=["init", "360", "forward"], default=SENSOR_TYPE)
+    argparser.add_argument('--sensor_type',             type=str,   choices=["ra_360", "ra_forward", "ob_init", "ob_360", "ob_forward"], default=SENSOR_TYPE)
     argparser.add_argument('--cam_message_standard',    type=str,   choices=["etsi", "periodic", "no"], default=CAM_MESSAGE_STANDARD)
     argparser.add_argument('--cpm_message_standard',    type=str,   choices=["etsi", "periodic", "no"], default=CPM_MESSAGE_STANDARD)
     argparser.add_argument('--time_to_start',           type=float,                                     default=TIME_TO_START)

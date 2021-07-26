@@ -12,8 +12,8 @@
   "veins_result_aggrigation_dir": "/home/yoshida/carla/Co-Simulation/OpenCV2X/veins_results/",
   "sumocmd": "sumo-gui",
   "sumocmd_choices": ["sumo, sumo-gui"],
-  "time_step": 0.01,
-  "time_to_start": 0,
+  "time_step": 0.1,
+  "time_to_start": 150,
   "time_to_finish": 170,
   "vagrant_ip": "192.168.33.10",
   "in_vagrant": {
