@@ -17,6 +17,7 @@ namespace carla {
 namespace traffic_manager {
 
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
+using TLMap = std::unordered_map<std::string, SharedPtr<client::Actor>>;
 
 class MotionPlanStage: Stage {
 private:
@@ -43,6 +44,7 @@ private:
   cc::Timestamp current_timestamp;
   RandomGeneratorMap &random_devices;
   const LocalMapPtr &local_map;
+  TLMap tl_map;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
                                            const bool tl_hazard,
@@ -50,9 +52,21 @@ private:
                                            const cg::Vector3D ego_heading,
                                            const float max_target_velocity);
 
-bool SafeAfterJunction(const LocalizationData &localization,
-                       const bool tl_hazard,
-                       const bool collision_emergency_stop);
+  bool SafeAfterJunction(const LocalizationData &localization,
+                         const bool tl_hazard,
+                         const bool collision_emergency_stop);
+
+  float GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
+                                  const cg::Location vehicle_location,
+                                  const ActorId actor_id,
+                                  float max_target_velocity);
+
+  float GetTurnTargetVelocity(const Buffer &waypoint_buffer,
+                              float max_target_velocity);
+
+  float GetThreePointCircleRadius(cg::Location first_location,
+                                  cg::Location middle_location,
+                                  cg::Location last_location);
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,

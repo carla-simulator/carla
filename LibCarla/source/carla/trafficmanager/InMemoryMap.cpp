@@ -166,7 +166,7 @@ namespace traffic_manager {
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
           float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
           double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().rotation.GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().rotation.GetForwardVector());
-          int16_t angle_splits = static_cast<int16_t>(angle/TWENTY_DEG_TO_RAD);
+          int16_t angle_splits = static_cast<int16_t>(angle/MAX_WPT_RADIANS);
           int16_t distance_splits = static_cast<int16_t>(distance/MAX_WPT_DISTANCE);
           auto max_splits = max(angle_splits, distance_splits);
           if (max_splits >= 1) {
@@ -204,9 +204,10 @@ namespace traffic_manager {
 
       // Adding simple waypoints to processed dense topology.
       for (auto swp: segment_waypoints) {
-        // Checking whether the waypoint is a real junction.
-        auto road_id = swp->GetWaypoint()->GetRoadId();
-        if (swp->GetWaypoint()->IsJunction() && !is_real_junction.count(road_id)) {
+        // Checking whether the waypoint is in a real junction.
+        auto wpt = swp->GetWaypoint();
+        auto road_id = wpt->GetRoadId();
+        if (wpt->IsJunction() && !is_real_junction.count(road_id)) {
           swp->SetIsJunction(false);
         } else {
           swp->SetIsJunction(swp->GetWaypoint()->IsJunction());
@@ -377,6 +378,11 @@ namespace traffic_manager {
     assert(_world_map != nullptr && "No map reference found.");
     return _world_map->GetName();
   }
+
+  cc::Map& InMemoryMap::GetMap() const {
+    return *_world_map;
+  }
+
 
 } // namespace traffic_manager
 } // namespace carla
