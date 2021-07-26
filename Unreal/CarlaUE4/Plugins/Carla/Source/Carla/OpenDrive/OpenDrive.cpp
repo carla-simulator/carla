@@ -6,6 +6,8 @@
 
 #include "Carla.h"
 #include "Carla/OpenDrive/OpenDrive.h"
+#include "Carla/Game/CarlaGameModeBase.h"
+#include "GenericPlatform/GenericPlatformProcess.h"
 
 #include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 
@@ -66,7 +68,11 @@ FString UOpenDrive::GetXODR(const UWorld *World)
   }
   #endif // WITH_EDITOR
 
-  const auto MapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(World)->GetMapPath());
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
+
+  auto RelativePath = FPaths::GetPath(GameMode->GetMapPath());
+  RelativePath.RemoveFromStart("/Game/");
+  auto MapDir = FPaths::ProjectContentDir() + RelativePath;
   const auto FolderDir = MapDir + "/OpenDrive/";
   const auto FileName = MapDir.EndsWith(MapName) ? "*" : MapName;
 
