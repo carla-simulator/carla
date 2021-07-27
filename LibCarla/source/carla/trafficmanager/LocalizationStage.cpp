@@ -20,7 +20,7 @@ LocalizationStage::LocalizationStage(
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
   RandomGeneratorMap &random_devices)
-  : vehicle_id_list(vehicle_id_list),
+    : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
     track_traffic(track_traffic),
@@ -39,7 +39,7 @@ void LocalizationStage::Update(const unsigned long index) {
   const float vehicle_speed = vehicle_velocity_vector.Length();
 
   // Speed dependent waypoint horizon length.
-  float horizon_length = std::min(vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH, MAXIMUM_HORIZON_LENGTH);
+  float horizon_length = vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH;
   const float horizon_square = SQUARE(horizon_length);
 
   if (buffer_map.find(actor_id) == buffer_map.end()) {
@@ -59,12 +59,10 @@ void LocalizationStage::Update(const unsigned long index) {
   }
 
   bool is_at_junction_entrance = false;
-
   if (!waypoint_buffer.empty()) {
     // Purge passed waypoints.
     float dot_product = DeviationDotProduct(vehicle_location, heading_vector, waypoint_buffer.front()->GetLocation());
     while (dot_product <= 0.0f && !waypoint_buffer.empty()) {
-
       PopWaypoint(actor_id, track_traffic, waypoint_buffer);
       if (!waypoint_buffer.empty()) {
         dot_product = DeviationDotProduct(vehicle_location, heading_vector, waypoint_buffer.front()->GetLocation());
@@ -74,10 +72,18 @@ void LocalizationStage::Update(const unsigned long index) {
     if (!waypoint_buffer.empty()) {
       // Determine if the vehicle is at the entrance of a junction.
       SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
-      is_at_junction_entrance = !waypoint_buffer.front()->CheckJunction() && look_ahead_point->CheckJunction();
+      SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
+      bool front_waypoint_junction = front_waypoint->CheckJunction();
+      is_at_junction_entrance = !front_waypoint_junction && look_ahead_point->CheckJunction();
+      if (!is_at_junction_entrance) {
+        std::vector<SimpleWaypointPtr> last_passed_waypoints = front_waypoint->GetPreviousWaypoint();
+        if (last_passed_waypoints.size() == 1) {
+          is_at_junction_entrance = !last_passed_waypoints.front()->CheckJunction() && front_waypoint_junction;
+        }
+      }
       if (is_at_junction_entrance
           // Exception for roundabout in Town03.
-          && local_map->GetMapName() == "Town03"
+          && local_map->GetMapName() == "Carla/Maps/Town03"
           && vehicle_location.SquaredLength() < SQUARE(30)) {
         is_at_junction_entrance = false;
       }

@@ -110,6 +110,11 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(ChannelCount, [&](int32 idxChannel) {
       TRACE_CPUPROFILER_EVENT_SCOPE(ParallelForTask);
+
+      FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
+      TraceParams.bTraceComplex = true;
+      TraceParams.bReturnPhysicalMaterial = false;
+
       for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
         FHitResult HitResult;
         const float VertAngle = LaserAngles[idxChannel];
@@ -117,7 +122,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
             * idxPtsOneLaser, Description.HorizontalFov) - Description.HorizontalFov / 2;
         const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
 
-        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
+        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams)) {
           WritePointAsync(idxChannel, HitResult);
         }
       };
@@ -153,11 +158,13 @@ void ARayCastSemanticLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPoints
 }
 
 void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
+	TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   DEBUG_ASSERT(GetChannelCount() > channel);
   RecordedHits[channel].emplace_back(detection);
 }
 
 void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
+	TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
     PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
   SemanticLidarData.ResetMemory(PointsPerChannel);
@@ -200,22 +207,22 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 }
 
 
-bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult) const
+bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult, FCollisionQueryParams& TraceParams) const
 {
-  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
-  TraceParams.bTraceComplex = true;
-  TraceParams.bReturnPhysicalMaterial = false;
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
 
   FHitResult HitInfo(ForceInit);
 
   FTransform ActorTransf = GetTransform();
   FVector LidarBodyLoc = ActorTransf.GetLocation();
   FRotator LidarBodyRot = ActorTransf.Rotator();
+
   FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
   FRotator ResultRot = UKismetMathLibrary::ComposeRotators(
     LaserRot,
     LidarBodyRot
   );
+
   const auto Range = Description.Range;
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
