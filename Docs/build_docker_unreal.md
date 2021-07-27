@@ -30,21 +30,9 @@ __Python__:
 
 You will need to have Python 3.6 or higher installed and properly set in your system Path. For installation instructions and Python documentation, check [here](https://www.python.org/downloads/).
 
-__ue4-docker:__ 
+__Unreal Engine GitHub Access__:
 
-_ue4-docker_ is a Python package that contains Dockerfiles and build infrastructure to facilitate the building of Docker images for Unreal Engine 4. You can find more information and documentation [here](https://docs.adamrehn.com/ue4-docker/read-these-first/introduction-to-ue4-docker).
-
-To install _ue4-docker_, run the following command:
-
-```sh
-pip3 install ue4-docker
-```
-
-Access to port 9876 is required during the build of the Unreal Engine image. If the host system is running an active firewall that blocks that port, you can run the following command to automatically configure access:
-
-```sh
-ue4-docker setup
-```
+Starting with version 0.9.12, CARLA uses a modified fork of Unreal Engine 4.26. This fork contains patches specific to CARLA. This will be downloaded during the Docker build process. For this download, __you need to have a GitHub account linked to Unreal Engine's account__. If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further. You will need to log in to your account during the build process.
 
 __CARLA:__
 
@@ -62,25 +50,15 @@ git clone https://github.com/carla-simulator/carla
 
 The following steps will each take a long time.
 
-__1. Build Unreal Engine.__
+__1. Build the CARLA prerequisites image.__
 
-Run the following command to create a Docker image containing a compiled version of Unreal Engine 4.24.3. Change the version if needed:
-
-```sh
-cd Util/Docker
-
-ue4-docker build 4.24.3 --no-engine --no-minimal
-```
-
-__2. Build the CARLA prerequisites image.__
-
-The following command will build an image called `carla-prerequisites` using `Prerequisites.Dockerfile`:
+The following command will build an image called `carla-prerequisites` using `Prerequisites.Dockerfile`. In this build we install the compiler and required tools, download the Unreal Engine 4.26 fork and compile it. You will need to provide your login details as build arguments for the download of Unreal Engine to be successful:
 
 ```sh
-docker build -t carla-prerequisites -f Prerequisites.Dockerfile .
+docker build --build-arg EPIC_USER=<GitHubUserName> --build-arg EPIC_PASS=<GitHubPassword> -t carla-prerequisites -f Prerequisites.Dockerfile .
 ```
 
-__3. Build the final CARLA image.__
+__2. Build the final CARLA image.__
 
 The following command will use the image created in the previous step to build the final CARLA image based on the current master branch (latest release) of the CARLA repository:
 
@@ -92,14 +70,6 @@ If you would like to build a specific branch or tag of the CARLA repository, run
 
 ```sh
 docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=<branch_or_tag_name>
-```
-
-__4. Clean up intermediate build images.__
-
-Run the following command to remove intermediate images left over from the Unreal Engine build process:
-
-```sh
-ue4-docker clean
 ```
 
 ---
