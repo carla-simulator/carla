@@ -87,7 +87,7 @@ Command:
 make PythonAPI
 ```
 
-Creates two files that each contain the client library and correspond to the supported Python version on the system. Python 2.7, 3.6, 3.7, and 3.8 are supported. One file is a `.whl` file and the other is an `.egg` file. This allows for the option of two different, mutually exclusive ways to use the client library. 
+Creates two files that each contain the client library and correspond to the supported Python version on the system. One file is a `.whl` file and the other is an `.egg` file. This allows for the option of two different, mutually exclusive ways to use the client library. 
 
 >__A. .whl file__
 
