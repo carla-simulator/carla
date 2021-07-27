@@ -17,8 +17,8 @@ All files to be imported should be placed in the `Import` folder of the root CAR
 - The OpenDRIVE definition in a single `.xodr` file.
 - Subfolders for each `.fbx` file containing textures for the assets if required.
 
-!!! Note
-    It is not recommended to import large maps and normal maps at the same time.
+!!! Warning
+    You cannot import large maps and normal maps at the same time.
 
 The naming convention of map tiles is very important. Each map tile should be named according to the following convention:
 
@@ -76,6 +76,7 @@ __Maps__ need the following parameters:
 - __name:__ Name of the map. This must be the same as the `.fbx` and `.xodr` files.
 - __xodr:__ Path to the `.xodr` file.
 - __use_carla_materials:__ If __True__, the map will use CARLA materials. Otherwise, it will use RoadRunner materials.
+- __tile_size:__ The size of the tiles. Default value is 2000 (2kmx2km).
 - __tiles:__ A list of the `.fbx` tile files that make up the entire map.
 
 __Props__ are not part of this tutorial. Please see [this](tuto_A_add_props.md) tutorial for how to add new props.
@@ -89,7 +90,8 @@ The resulting `.json` file should resemble the following:
         "name": "Map01",
         "xodr": "./Map01.xodr",
         "use_carla_materials": true,
-        "tiles": [
+        "tile_size": 2000,
+        "tiles": [ 
         "./Map01_Tile_0_0.fbx",
         "./Map01_Tile_0_1.fbx",
         "./Map01_Tile_1_0.fbx",
