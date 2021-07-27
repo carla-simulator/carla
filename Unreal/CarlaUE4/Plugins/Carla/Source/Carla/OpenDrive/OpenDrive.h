@@ -24,10 +24,21 @@ public:
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
   static FString GetXODR(const UWorld *World);
 
+  /// Return the OpenDrive XML associated to @a MapName, or empty if the file
+  /// is not found.
+  UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
+  static FString GetXODRByPath(FString XODRPath, FString MapName);
+
+  UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
+  static FString FindPathToXODRFile(const FString &InMapName);
+
+  UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
+  static FString LoadXODR(const FString &MapName);
+
   /// Load OpenDriveMap associated to the given MapName. Return nullptr if no
   /// XODR can be found with same MapName.
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
-  static UOpenDriveMap *LoadOpenDriveMap(const UWorld *World);
+  static UOpenDriveMap *LoadOpenDriveMap(const FString &MapName);
 
   /// Load OpenDriveMap associated to the currently loaded map. Return nullptr
   /// if no XODR can be found that matches the current map.

@@ -48,6 +48,11 @@ public:
     return Map;
   }
 
+  const FString GetFullMapPath() const;
+
+  // get path relative to Content folder
+  const FString GetRelativeMapPath() const;
+
   UFUNCTION(Exec, Category = "CARLA Game Mode")
   void DebugShowSignals(bool enable);
 
@@ -164,7 +169,7 @@ private:
 
   bool ReadyToRegisterObjects = false;
 
-  // We keep a global uuid to allow the load/unload layer methods to be called 
+  // We keep a global uuid to allow the load/unload layer methods to be called
   // in the same tick
   int32 LatentInfoUUID = 0;
 
