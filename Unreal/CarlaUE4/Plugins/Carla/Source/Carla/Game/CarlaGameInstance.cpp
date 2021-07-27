@@ -13,12 +13,10 @@ UCarlaGameInstance::UCarlaGameInstance() {
   CarlaSettings = CreateDefaultSubobject<UCarlaSettings>(TEXT("CarlaSettings"));
   Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
   CarlaEngine.SetRecorder(Recorder);
-  
+
   check(CarlaSettings != nullptr);
   CarlaSettings->LoadSettings();
   CarlaSettings->LogSettings();
-
-  SetDefaultMapPath();
 }
 
 UCarlaGameInstance::~UCarlaGameInstance() = default;
