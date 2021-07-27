@@ -284,6 +284,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse EnableCarSim(const FString&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -443,6 +448,8 @@ public:
   virtual ECarlaServerResponse GetVehicleControl(FVehicleControl&) final;
 
   virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) final;
+
+  virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool bEnabled) final;
 
   virtual ECarlaServerResponse EnableCarSim(const FString& SimfilePath) final;
 

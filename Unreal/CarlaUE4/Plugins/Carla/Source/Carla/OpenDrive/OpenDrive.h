@@ -19,19 +19,15 @@ class CARLA_API UOpenDrive : public UBlueprintFunctionLibrary
 
 public:
 
-  /// Find the path to the XODR file associated to MapName. Return empty if no
-  /// such file is found.
-  static FString FindPathToXODRFile(const FString &MapName);
-
   /// Return the OpenDrive XML associated to @a MapName, or empty if the file
   /// is not found.
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
-  static FString LoadXODR(const FString &MapName);
+  static FString GetXODR(const UWorld *World);
 
   /// Load OpenDriveMap associated to the given MapName. Return nullptr if no
   /// XODR can be found with same MapName.
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
-  static UOpenDriveMap *LoadOpenDriveMap(const FString &MapName);
+  static UOpenDriveMap *LoadOpenDriveMap(const UWorld *World);
 
   /// Load OpenDriveMap associated to the currently loaded map. Return nullptr
   /// if no XODR can be found that matches the current map.

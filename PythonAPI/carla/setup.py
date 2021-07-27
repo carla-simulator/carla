@@ -52,9 +52,7 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
                 os.path.join(pwd, 'dependencies/lib/libosm2odr.a'),
-                os.path.join(pwd, 'dependencies/lib/libxerces-c.a'),
-                os.path.join(pwd, 'dependencies/lib/libproj.a'),
-                os.path.join(pwd, 'dependencies/lib/libsqlite3.a')]
+                os.path.join(pwd, 'dependencies/lib/libxerces-c.a')]
             extra_link_args += ['-lz']
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
@@ -79,11 +77,14 @@ def get_libcarla_extensions():
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_opendrive_reader.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_program_options.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libspdlog.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libproj.a')]
                 extra_link_args += ['-lrt']
                 extra_link_args += ['-ltbb']
 
-            extra_link_args += [os.path.join(pwd, 'dependencies/lib', pylib)]
+            # libproj, libsqlite and python libs are also required for rss_variant, therefore
+            # place them after the rss_variant linked libraries
+            extra_link_args += [os.path.join(pwd, 'dependencies/lib/libproj.a'),
+                                os.path.join(pwd, 'dependencies/lib/libsqlite3.a'),
+                                os.path.join(pwd, 'dependencies/lib', pylib)]
 
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
