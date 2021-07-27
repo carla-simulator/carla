@@ -470,7 +470,7 @@ namespace traffic_manager {
     return _world_map->GetName();
   }
 
-  cc::Map& InMemoryMap::GetMap() const {
+  const cc::Map& InMemoryMap::GetMap() const {
     return *_world_map;
   }
 
