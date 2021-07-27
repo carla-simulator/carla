@@ -19,7 +19,7 @@ This guide shows how to download and install the packaged version of CARLA. The 
 
 The following requirements should be fulfilled before installing CARLA:
 
-* __System requirements.__ CARLA is built for Windows and Linux systems. If running on Linux, the OS must support __glibc >= 2.27__ (Ubuntu 18.04+)
+* __System requirements.__ CARLA is built for Windows and Linux systems.
 * __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although we would recommend 8 GB. A dedicated GPU is highly recommended for machine learning. 
 * __Disk space.__ CARLA will use about 20 GB of space.
 * __Python.__ [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports Python 2.7, 3.6, 3.7, and 3.8.
@@ -40,24 +40,20 @@ The following requirements should be fulfilled before installing CARLA:
 >>      pip install --upgrade pip
 
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
-* __Other requirements.__  CARLA requires some dependencies for the client library. Install the dependencies according to your operating system:
+* __Other requirements.__  CARLA requires some Python dependencies. Install the dependencies according to your operating system:
 
 ### Windows
 
 ```sh
 pip install --user pygame numpy &&
-pip3 install --user pygame numpy &&
-pip install --user wheel &&
-pip3 install --user wheel
+pip3 install --user pygame numpy
 ```
 
 ### Linux
 
 ```sh
 pip install --user pygame numpy &&
-pip3 install --user pygame numpy &&
-pip install --user wheel &&
-pip3 install --user wheel auditwheel
+pip3 install --user pygame numpy
 ```
 
 ---
@@ -157,7 +153,7 @@ Read more below about the requirements and limitations of each method before dec
 
 >__B. .whl files__
 
->>CARLA provides `.whl` files for Python versions 2.7, 3.6, 3.7, and 3.8. You will need to install the `.whl` file. The `.whl` file is found in `PythonAPI/carla/dist/`. There is one file per supported Python version, indicated by the file name (e.g., carla-0.9.12-__cp36__-cp36m-manylinux_2_27_x86_64.whl indicates Python 3.6).
+>>CARLA provides `.whl` files for different Python versions. You will need to install the `.whl` file. The `.whl` file is found in `PythonAPI/carla/dist/`. There is one file per supported Python version, indicated by the file name (e.g., carla-0.9.12-__cp36__-cp36m-manylinux_2_27_x86_64.whl indicates Python 3.6).
 
 >>__It is recommended to install the CARLA client library in a virtual environment to avoid conflicts when working with multiple versions.__
 
@@ -269,16 +265,6 @@ There is no way to update the packaged version of CARLA. When a new version is r
 If you installed the client library using __pip/pip3__, you should uninstall it by running:
 
 ```sh
-# If you installed the .whl
-
-# Python 3
-pip3 uninstall <wheel-file-name>.whl
-
-# Python 2
-pip uninstall <wheel-file-name>.whl
-
-# If you installed the PyPi package
-
 # Python 3
 pip3 uninstall carla
 

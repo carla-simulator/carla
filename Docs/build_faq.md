@@ -408,16 +408,6 @@ CARLA forum</a>
 >If you installed the client library using __pip/pip3__, you should uninstall it by running:
 
 ```sh
-# If you installed the .whl
-
-# Python 3
-pip3 uninstall <wheel-file-name>.whl
-
-# Python 2
-pip uninstall <wheel-file-name>.whl
-
-# If you installed the PyPi package
-
 # Python 3
 pip3 uninstall carla
 

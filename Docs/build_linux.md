@@ -220,7 +220,7 @@ The following command compiles the Python API client:
     make PythonAPI
 ```
 
-Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory. Python versions 2.7, 3.6, 3.7, and 3.8 are supported.
+Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory.
 
 ```sh
     # Delete versions as required
@@ -231,7 +231,7 @@ The CARLA client library will be built in two distinct, mutually exclusive forms
 
 __A. `.egg` file__
 
->The `.egg` file should be added to your `PYTHONPATH`. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
+>The `.egg` file does not need to be installed. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
 
 >If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
 
