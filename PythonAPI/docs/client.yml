@@ -526,6 +526,31 @@
       warning: >
         If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick. 
     # --------------------------------------
+    - def_name: set_respawn_dormant_vehicles
+      params:
+      - param_name: mode_switch
+        type: bool
+        default: false
+      doc: >
+        If __True__, vehicles in large maps will respawn near the hero vehicle when they become dormant. Otherwise, they will stay dormant until they are within `actor_active_distance` of the hero vehicle again.
+    # --------------------------------------
+    - def_name: set_boundaries_respawn_dormant_vehicles
+      params:
+      - param_name: lower_bound
+        type: float
+        default: 25.0
+        doc: >
+          The minimum distance in meters from the hero vehicle that a dormant actor will be respawned in.
+      - param_name: upper_bound
+        type: float
+        default: actor_active_distance
+        doc: >
+          The maximum distance in meters from the hero vehicle that a dormant actor will be respawned in.
+      doc: >
+        Sets the upper and lower boundaries for dormant actors to be respawned near the hero vehicle.
+      warning: >
+        The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than 25.
+    # --------------------------------------
 
   - class_name: OpendriveGenerationParameters
     # - DESCRIPTION ------------------------
