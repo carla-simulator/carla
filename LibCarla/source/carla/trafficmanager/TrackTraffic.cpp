@@ -61,9 +61,6 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
             auto waypoint = buffer.at(std::min(i * step_size, buffer_size - 1u));
             GeoGridId ggid = waypoint->GetGeodesicGridId();
             current_grids.insert(ggid);
-            if (i == 0u && taken_waypoints.find(waypoint->GetId()) == taken_waypoints.end()) {
-                taken_waypoints.insert(waypoint->GetId());
-            }
             // Add grid entry if not present.
             if (grid_to_actors.find(ggid) == grid_to_actors.end()) {
                 grid_to_actors.insert({ggid, {}});
@@ -79,19 +76,20 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
     }
 }
 
-bool TrackTraffic::IsWaypointFree(const uint64_t waypoint_id) const {
-    return taken_waypoints.find(waypoint_id) == taken_waypoints.end();
+
+bool TrackTraffic::IsGeoGridFree(const GeoGridId geogrid_id) const {
+    if (grid_to_actors.find(geogrid_id) != grid_to_actors.end()) {
+        return grid_to_actors.at(geogrid_id).empty();
+    }
+    return true;
 }
 
-void TrackTraffic::AddTakenWaypoint(const uint64_t waypoint_id) {
-    if (taken_waypoints.find(waypoint_id) == taken_waypoints.end()) {
-        taken_waypoints.insert(waypoint_id);
+void TrackTraffic::AddTakenGrid(const GeoGridId geogrid_id, const ActorId actor_id) {
+    if (grid_to_actors.find(geogrid_id) == grid_to_actors.end()) {
+        grid_to_actors.insert({geogrid_id, {actor_id}});
     }
 }
 
-void TrackTraffic::ClearTakenWaypoints() {
-    taken_waypoints.clear();
-}
 
 void TrackTraffic::SetHeroLocation(const cg::Location _location) {
     hero_location = _location;

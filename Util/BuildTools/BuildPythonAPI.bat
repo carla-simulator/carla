@@ -109,8 +109,8 @@ rem Build for Python 3
 rem
 if %BUILD_FOR_PYTHON3%==true (
     echo Building Python API for Python 3.
-    py -3 setup.py bdist_egg
-    if %errorlevel% neq 0 goto error_build_egg
+    py -3 setup.py bdist_egg bdist_wheel
+    if %errorlevel% neq 0 goto error_build_wheel
 )
 
 goto success
@@ -143,9 +143,9 @@ rem ============================================================================
     echo %FILE_N% [ERROR]  - Make sure it is available on your Windows "py".
     goto bad_exit
 
-:error_build_egg
+:error_build_wheel
     echo.
-    echo %FILE_N% [ERROR] An error occurred while building the egg file.
+    echo %FILE_N% [ERROR] An error occurred while building the wheel file.
     goto bad_exit
 
 :good_exit
@@ -155,4 +155,4 @@ rem ============================================================================
 :bad_exit
     endlocal
     exit /b %errorlevel%
-    
+

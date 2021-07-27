@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
+#include "Carla/Lights/CarlaLight.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
@@ -47,6 +48,21 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
+}
+
+const FString ACarlaGameModeBase::GetRelativeMapPath() const
+{
+  UWorld* World = GetWorld();
+  TSoftObjectPtr<UWorld> AssetPtr (World);
+  FString Path = FPaths::GetPath(AssetPtr.GetLongPackageName());
+  Path.RemoveFromStart("/Game/");
+  return Path;
+}
+
+const FString ACarlaGameModeBase::GetFullMapPath() const
+{
+  FString Path = GetRelativeMapPath();
+  return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + Path;
 }
 
 void ACarlaGameModeBase::InitGame(
@@ -127,7 +143,7 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
-  ParseOpenDrive(Episode->MapName);
+  ParseOpenDrive();
 
   if(Map.has_value())
   {
@@ -195,6 +211,19 @@ void ACarlaGameModeBase::BeginPlay()
 
   if (LMManager) {
     LMManager->RegisterInitialObjects();
+  }
+
+  // Manually run begin play on lights as it may not run on sublevels
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
+  for(AActor* Actor : FoundActors)
+  {
+    TArray<UCarlaLight*> Lights;
+    Actor->GetComponents(Lights, false);
+    for(UCarlaLight* Light : Lights)
+    {
+      Light->BeginPlay();
+    }
   }
 }
 
@@ -276,9 +305,9 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
   }
 }
 
-void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
+void ACarlaGameModeBase::ParseOpenDrive()
 {
-  std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::LoadXODR(MapName));
+  std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::GetXODR(GetWorld()));
   Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
   if (!Map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));

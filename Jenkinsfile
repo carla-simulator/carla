@@ -52,7 +52,7 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI ARGS="--python-version=3.7,2"'
+                                sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make CarlaUE4Editor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
@@ -62,7 +62,9 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.whl'
                                     stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
+                                    stash includes: 'PythonAPI/carla/dist/*.whl', name: 'ubuntu_wheels'
                                 }
                             }
                         }
@@ -93,7 +95,7 @@ pipeline
                             steps
                             {
                                 sh 'make package ARGS="--python-version=3.7,2 --chrono"'
-                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
+                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -126,6 +128,7 @@ pipeline
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
+                                unstash name: 'ubuntu_wheels'
                                 unstash name: 'ubuntu_package'
                                 unstash name: 'ubuntu_package2'
                                 unstash name: 'ubuntu_examples'
@@ -271,7 +274,7 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'windows_eggs'
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.whl'
                                 }
                             }
                         }
@@ -295,7 +298,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate"
+                                    make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt --target-archive=AdditionalMaps --clean-intermediate"
                                 """
                             }
                             post {
