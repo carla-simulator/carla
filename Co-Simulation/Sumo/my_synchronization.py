@@ -45,7 +45,6 @@ DATA_DIR = "./../Veins/carla-veins-data/"
 CAM_MESSAGE_STANDARD = "etsi"
 CPM_MESSAGE_STANDARD = "etsi"
 SENSOR_TYPE = "ra_360"
-# SENSOR_TYPE = "ra_forward"
 TIME_TO_START = 0
 TIME_STEP = 0.05
 ##### End: My code #####
@@ -92,15 +91,20 @@ from util.classes.sensor_data import (
     SensorDataHandler,
     ObstacleSensorData,
     ObstacleSensorDataHandler,
-    RaderSensorData,
-    RaderSensorDataHandler,
+    RadarSensorData,
+    RadarSensorDataHandler,
 )
 from util.classes.utils import (
     Location,
     Speed,
     VehicleData,
     location,
+    location_from_transform,
     speed,
+)
+from util.classes.errors import (
+    NoCavWithCarlaIdException,
+    NoCavException
 )
 ##### End: My code. #####
 
@@ -133,7 +137,7 @@ class CAV:
         self.CAMs_handler = CAMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
         self.CPMs_handler = CPMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
 
-        self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id] = VehicleData(self.sumo_elapsed_seconds(), self.carla_actor)
+        self.vehicle_data = VehicleData(self.sumo_elapsed_seconds(), self.carla_actor)
         self.generate_sensors()
         self.load_sensors()
 
@@ -174,7 +178,7 @@ class CAV:
 
 
     def latest_vehicle_data(self):
-        return self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].latest()
+        return self.vehicle_data.latest()
 
 
     def location(self):
@@ -199,7 +203,7 @@ class CAV:
 
     def tick(self):
         # ----- update vehicle data -----
-        self.sim_synchronization.carlaid2vehicle_data[self.carla_actor_id].tick(self.sumo_elapsed_seconds(), self.carla_actor)
+        self.vehicle_data.tick(self.sumo_elapsed_seconds(), self.carla_actor)
 
         # ----- update perceived_objects -----
         self.CPMs_handler.receive(self.sumo_actor_id)
@@ -276,7 +280,7 @@ class CAVWithRaderSensors(CAV):
         self.set_sensor_attributes()
 
         super().__init__(sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization)
-        self.sensor_data_handler = RaderSensorDataHandler()
+        self.sensor_data_handler = RadarSensorDataHandler()
 
 
 
@@ -287,6 +291,7 @@ class CAVWithRaderSensors(CAV):
         self.vertical_fovs = []
         self.phases = []
         self.x = []
+        self.y = []
         self.z = []
 
 
@@ -299,9 +304,9 @@ class CAVWithRaderSensors(CAV):
             vf = self.vertical_fovs[i]
             ph = self.phases[i]
             s_x = self.x[i]
+            s_y = self.y[i]
             s_z = self.z[i]
 
-            print(f"tick: {Constants.SENSOR_TICK}")
             sensor = self.attach_bp(
                 self.sensor_bp(
                     'sensor.other.radar',
@@ -314,7 +319,7 @@ class CAVWithRaderSensors(CAV):
                     }
                 ),
                 carla.Transform(
-                    carla.Location(x=s_x, z=s_z),
+                    carla.Location(x=s_x, y=s_y, z=s_z),
                     carla.Rotation(yaw=ph)
                 )
             )
@@ -322,10 +327,29 @@ class CAVWithRaderSensors(CAV):
 
 
     def receive_sensor_data(self, data):
-        if self.sumo_actor_id == 0:
-            for d in data:
-                print(f"sumo_id: {self.sumo_actor_id}, time: {self.sumo_elapsed_seconds()}, location: {data.transform.location}, rotation: {data.transform.rotation}")
-                print(f"altitude: {d.altitude}, azimuth: {d.azimuth}, depth: {d.depth}, velocity: {d.velocity}")
+        for d in data:
+            # print(f"sumo_id: {self.sumo_actor_id}, time: {self.sumo_elapsed_seconds()}, location: {data.transform.location}, rotation: {data.transform.rotation}")
+            # print(f"altitude: {math.degrees(d.altitude)}, azimuth: {math.degrees(d.azimuth)}, depth: {d.depth}, velocity: {d.velocity}")
+            sensor_transform = data.transform
+            detected_point_location = location_from_transform(
+                carla.Transform(
+                    sensor_transform.location,
+                    carla.Rotation(yaw=sensor_transform.rotation.yaw + math.degrees(d.azimuth))
+                ),
+                d.depth
+            )
+
+            try:
+                self.sensor_data_handler.save(RadarSensorData(
+                    d,
+                    self.sumo_elapsed_seconds(),
+                    detected_point_location,
+                    self.sim_synchronization.get_cav_by_location(detected_point_location).speed(),
+                    sensor_transform
+                ))
+
+            except NoCavException:
+                pass
 
 
     def sensor_num(self):
@@ -336,6 +360,7 @@ class CAVWithRaderSensors(CAV):
             len(self.vertical_fovs),
             len(self.phases),
             len(self.x),
+            len(self.y),
             len(self.z)
         ])
 
@@ -344,24 +369,44 @@ class CAVWith360RaderSensors(CAVWithRaderSensors):
     def set_sensor_attributes(self):
         # Cite from:
         # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
-        self.horizontal_fovs =      [360, 360]
-        self.points_per_seconds =   [self.sensor_num_in_range(150, 360) / Constants.SENSOR_TICK, self.sensor_num_in_range(150, 360) / Constants.SENSOR_TICK]
-        self.ranges =               [150, 150]
-        self.vertical_fovs =        [0, 0]
-        self.phases =               [0, 180]
-        self.x =                    [2.5, -2.5]
-        self.z =                    [1.0, 1.0]
+        self.horizontal_fovs =      [
+            90,
+            90,
+            90,
+            90
+        ]
+        self.ranges =               [150,   150,    150,    150]
+        self.vertical_fovs =        [0,     0,      0,      0]
+        self.phases =               [0,     90,     180,    270]
+        self.x =                    [2.5,   0,      -2.5,   0]
+        self.y =                    [0,     0.9,   0,      -0.9]
+        self.z =                    [1.3,   1.3,    1.3,    1.3]
+
+        self.points_per_seconds = [
+            self.sensor_num_in_range(150, 90) / Constants.SENSOR_TICK,
+            self.sensor_num_in_range(150, 90) / Constants.SENSOR_TICK,
+            self.sensor_num_in_range(150, 90) / Constants.SENSOR_TICK,
+            self.sensor_num_in_range(150, 90) / Constants.SENSOR_TICK
+        ]
 
 
 class CAVWithForwardRaderSensors(CAVWithRaderSensors):
     def set_sensor_attributes(self):
         # Cite from:
         # https://www.etsi.org/deliver/etsi_tr/103500_103599/103562/02.01.01_60/tr_103562v020101p.pdf
-        self.horizontal_fovs =      [40*2,                                                          5*2]
-        self.points_per_seconds =   [self.sensor_num_in_range(65, 40*2) / Constants.SENSOR_TICK,    self.sensor_num_in_range(150, 5*2)/ Constants.SENSOR_TICK]
-        self.ranges =               [65,                                                            150]
-        self.vertical_fovs =        [math.degrees(math.asin(1.7 / 65)),                       math.degrees(math.asin(1.7 / 150))]
-        self.phases =               [0,                                                             0]
+        self.horizontal_fovs =      [40*2,  5*2]
+        self.ranges =               [65,    150]
+        self.vertical_fovs =        [0,     0]
+        self.phases =               [0,     0]
+        self.x =                    [2.5,   2.5]
+        self.y =                    [0,     0]
+        self.z =                    [1.0,   1.0]
+
+
+        self.points_per_seconds = [
+            self.sensor_num_in_range(65, 40*2) / Constants.SENSOR_TICK,
+            self.sensor_num_in_range(150, 5*2)/ Constants.SENSOR_TICK
+        ]
 
 class CAVWithObstacleSensors(CAV):
     def __init__(self, sumo_actor_id, carla_actor_id, carla_sim, sumo_sim, carla_init_time, sim_synchronization):
@@ -413,9 +458,9 @@ class CAVWithObstacleSensors(CAV):
                 data,
                 self.sumo_elapsed_seconds(),
                 location(data.actor, data.distance),
-                self.sim_synchronization.carlaid2vehicle_data[data.other_actor.id].latest()["speed"]
+                self.sim_synchronization.get_cav_by_carla_id(data.other_actor.id).speed()
             ))
-        except KeyError as e:
+        except NoCavWithCarlaIdException:
             # Since the key is not in carlaid2vehicle_data, the object is not vehicle, so we ignore the key.
             pass
 
@@ -497,7 +542,6 @@ class SimulationSynchronization(object):
 
         ##### Begin: My code #####
         self.sumoid2cav = {}
-        self.carlaid2vehicle_data = {}
         self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
 
 
@@ -693,6 +737,33 @@ class SimulationSynchronization(object):
 
 
     # My Code Begin
+    def cavs(self):
+        return self.sumoid2cav.values()
+
+
+    def get_cav_by_carla_id(self, carla_id):
+        for cav in self.cavs():
+            if str(cav.carla_actor_id) == str(carla_id):
+                return cav
+
+            else:
+                continue
+
+        raise NoCavWithCarlaIdException
+
+
+    def get_cav_by_location(self, other_location):
+        for cav in self.cavs():
+            distance = cav.location().distance(other_location)
+            # print(f"d, cav_x, cav_y, lx, ly: {distance}, {cav.location().x}, {cav.location().y}, {other_location.x}, {other_location.y}")
+            if cav.location().distance(other_location) <= Constants.LOCATION_THRESHOLD:
+                return cav
+            else:
+                continue
+
+        raise NoCavException
+
+
     def get_cav_by_sensor_type(self, sumo_actor_id, carla_actor_id, sensor_type):
         if sensor_type == "ra_360":
             return CAVWith360RaderSensors(sumo_actor_id, carla_actor_id, self.carla, self.sumo, self.init_time, self)

@@ -5,6 +5,14 @@ class Location:
         self.x = x
         self.y = y
 
+
+    def distance(self, other_location):
+        dx = self.x - other_location.x
+        dy = self.y - other_location.y
+
+        return math.sqrt(dx * dx + dy * dy)
+
+
     def is_close_to(self, other_location, threshold):
         diff_x = (self.x - other_location.x)
         diff_y = (self.y - other_location.y)
@@ -28,11 +36,13 @@ class VehicleData:
         self.data = []
         self.tick(time, actor)
 
+
     def latest(self):
         if len(self.data) <= 0:
             return None
         else:
             return self.data[-1]
+
 
     def tick(self, time, actor):
         al = actor.get_transform().location
@@ -47,14 +57,21 @@ class VehicleData:
 
             self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(dX / dT, dY / dT), yaw))
 
+
     def formatted_data(self, time, location, speed, yaw):
         return {"time": time, "location": location, "speed": speed, "yaw": yaw}
 
+
 def location(actor, distance):
-    x = actor.get_transform().location.x + distance * math.cos(math.radians(actor.get_transform().rotation.yaw))
-    y = actor.get_transform().location.y + distance * math.sin(math.radians(actor.get_transform().rotation.yaw))
+    return location_from_transform(actor.get_transform(), distance)
+
+
+def location_from_transform(transform, distance):
+    x = transform.location.x + distance * math.cos(math.radians(transform.rotation.yaw))
+    y = transform.location.y + distance * math.sin(math.radians(transform.rotation.yaw))
 
     return Location(x, y)
+
 
 def speed(actor, abs_speed):
     x = abs_speed * math.cos(math.radians(actor.get_transform().rotation.yaw))

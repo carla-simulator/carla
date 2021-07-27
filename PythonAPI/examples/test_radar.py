@@ -845,16 +845,16 @@ class RadarSensor(object):
         self.sensor = world.spawn_actor(
             bp,
             carla.Transform(
-                carla.Location(x=2.8, z=1.0),
-                carla.Rotation(pitch=5)),
-            attach_to=self._parent)
-
-        self.sensor = world.spawn_actor(
-            bp,
-            carla.Transform(
-                carla.Location(x=-2.8, z=1.0),
+                carla.Location(x=0, z=1.0),
                 carla.Rotation(pitch=5, yaw=180)),
             attach_to=self._parent)
+
+        # self.sensor = world.spawn_actor(
+        #     bp,
+        #     carla.Transform(
+        #         carla.Location(x=-2.8, z=1.0),
+        #         carla.Rotation(pitch=5, yaw=180)),
+        #     attach_to=self._parent)
         # We need a weak reference to self to avoid circular reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(
@@ -873,6 +873,7 @@ class RadarSensor(object):
         for detect in radar_data:
             azi = math.degrees(detect.azimuth)
             alt = math.degrees(detect.altitude)
+            print(f"depth: {detect.depth}, azi: {azi}, alt: {alt}")
             # The 0.25 adjusts a bit the distance so the dots can
             # be properly seen
             fw_vec = carla.Vector3D(x=detect.depth - 0.25)

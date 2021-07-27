@@ -1,24 +1,26 @@
 ***Starting server on port 10001 ***
+  waiting for 2 clients...
+  client connected
+  client connected
 Loading net-file from './examples/3lane/map.net.xml' ... done (1ms).
 Loading done.
 Simulation started with time: 0.00
-Simulation ended at time: 193.70
-Reason: The final simulation step has been reached.
+Simulation ended at time: 151.00
 Performance: 
- Duration: 36411.24s
- Real time factor: 0.00531979
- UPS: 3.560742
+ Duration: 129.30s
+ Real time factor: 1.16785
+ UPS: 654.029096
 Vehicles: 
- Inserted: 149 (Loaded: 203)
- Running: 114
- Waiting: 45
+ Inserted: 115 (Loaded: 203)
+ Running: 98
+ Waiting: 36
 Statistics (avg):
  RouteLength: 1994.90
- Speed: 17.20
- Duration: 116.61
+ Speed: 17.51
+ Duration: 114.43
  WaitingTime: 0.00
- TimeLoss: 6.00
- DepartDelay: 8.72
+ TimeLoss: 6.14
+ DepartDelay: 4.60
 
-DijkstraRouter answered 194 queries and explored 1.45 edges on average.
+DijkstraRouter answered 151 queries and explored 1.43 edges on average.
 DijkstraRouter spent 0.00s answering queries (0.00ms on average).
