@@ -342,10 +342,10 @@ def main(arg):
         settings.fixed_delta_seconds = delta
         settings.synchronous_mode = True
         world.apply_settings(settings)
+
         if world.get_map().name != "Town05":
             client.load_world("Town05", False)
 
-       
         for bp_veh in world.get_blueprint_library().filter(args.filter):
             print("-------------------------------------------")
             print(bp_veh.id, end="", flush=True)
@@ -360,6 +360,9 @@ def main(arg):
                     vehicle.destroy()
                 except:
                     pass
+
+            if args.none:
+                continue
 
             if args.accel or args.all:
                 accel_scenario(world, bp_veh, 50)
@@ -410,31 +413,37 @@ if __name__ == "__main__":
         '--accel',
         dest='accel',
         action='store_true',
-        help='Show accel scenarios')
+        help='Execute accel scenarios')
     argparser.set_defaults(brake=False)
     argparser.add_argument(
         '--brake',
         dest='brake',
         action='store_true',
-        help='Show brake scenarios')
+        help='Execute brake scenarios')
     argparser.set_defaults(uturn=False)
     argparser.add_argument(
         '--uturn',
         dest='uturn',
         action='store_true',
-        help='Show brake scenarios')
+        help='Execute brake scenarios')
     argparser.set_defaults(turn=False)
     argparser.add_argument(
         '--turn',
         dest='turn',
         action='store_true',
-        help='Show basic scenarios')
+        help='Execute basic scenarios')
     argparser.set_defaults(all=True)
     argparser.add_argument(
         '--all',
         dest='all',
         action='store_true',
-        help='Show all scenearios scenarios')
+        help='Execute all scenarios')
+    argparser.set_defaults(none=False)
+    argparser.add_argument(
+        '--none',
+        dest='none',
+        action='store_true',
+        help='Do not execute any scenarios')
     argparser.set_defaults(show_physics_control=False)
     argparser.add_argument(
         '--show_physics_control',

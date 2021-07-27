@@ -171,6 +171,7 @@ void TrafficManagerLocal::Run() {
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
 
+
     // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();

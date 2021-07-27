@@ -32,13 +32,14 @@ inline StateEntry StateUpdate(StateEntry previous_state,
   StateEntry current_state = {
       current_time,
       angular_deviation,
-      (current_velocity - target_velocity) / target_velocity,
+      target_velocity - current_velocity,
+      0.0f,
       0.0f,
       0.0f};
 
   // Calculating integrals.
   current_state.deviation_integral = angular_deviation * DT + previous_state.deviation_integral;
-  current_state.velocity_integral = DT * current_state.velocity + previous_state.velocity_integral;
+  current_state.velocity_integral = current_state.velocity * DT + previous_state.velocity_integral;
 
   // Clamp velocity integral to avoid accumulating over-compensation
   // with time for vehicles that take a long time to reach target velocity.
@@ -63,12 +64,12 @@ inline ActuationSignal RunStep(StateEntry present_state,
   float throttle;
   float brake;
 
-  if (expr_v < 0.0f) {
-    throttle = std::min(std::abs(expr_v), MAX_THROTTLE);
+  if (expr_v > 0.0f) {
+    throttle = std::min(expr_v, MAX_THROTTLE);
     brake = 0.0f;
   } else {
     throttle = 0.0f;
-    brake = std::min(expr_v, MAX_BRAKE);
+    brake = std::min(std::abs(expr_v), MAX_BRAKE);
   }
 
   // Lateral PID calculation.
@@ -77,7 +78,8 @@ inline ActuationSignal RunStep(StateEntry present_state,
       lateral_parameters[1] * present_state.deviation_integral +
       lateral_parameters[2] * (present_state.deviation - previous_state.deviation) * INV_DT;
 
-  steer = std::max(-STEERING_LIMIT, std::min(steer, STEERING_LIMIT));
+  steer = std::max(previous_state.steer - MAX_STEERING_DIFF, std::min(steer, previous_state.steer + MAX_STEERING_DIFF));
+  steer = std::max(-MAX_STEERING, std::min(steer, MAX_STEERING));
 
   return ActuationSignal{throttle, brake, steer};
 }

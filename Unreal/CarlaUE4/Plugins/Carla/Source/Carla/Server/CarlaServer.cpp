@@ -341,8 +341,9 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
-    FString FullMapPath = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    FString FullMapPath = GameMode->GetFullMapPath();
     FString MapDir = FullMapPath.RightChop(FullMapPath.Find("Content/", ESearchCase::CaseSensitive) + 8);
     MapDir += "/" + Episode->GetMapName();
     return cr::MapInfo{
@@ -353,7 +354,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_data) << [this]() -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
-    return cr::FromFString(UOpenDrive::GetXODR(Episode->GetWorld()));
+    return cr::FromLongFString(UOpenDrive::GetXODR(Episode->GetWorld()));
   };
 
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
@@ -376,14 +377,15 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     // Get the map's folder absolute path and check if it's in its own folder
-    const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
-    const auto folderDir = mapDir + "/" + folder.c_str();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    const auto mapDir = GameMode->GetFullMapPath();
+    const auto folderDir = mapDir + folder.c_str();
     const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
 
     // Find all the xodr and bin files from the map
     TArray<FString> Files;
-    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".xodr"), true, false, false);
-    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".bin"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".xodr"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
 
     // Remove the start of the path until the content folder and put each file in the result
     std::vector<std::string> result;
@@ -1284,6 +1286,31 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(show_vehicle_debug_telemetry) << [this](
+      cr::ActorId ActorId,
+      bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "show_vehicle_debug_telemetry",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->ShowVehicleDebugTelemetry(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "show_vehicle_debug_telemetry",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(enable_carsim) << [this](
       cr::ActorId ActorId,
       std::string SimfilePath) -> R<void>
@@ -1797,6 +1824,7 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::SetEnableGravity &c) {   MAKE_RESULT(set_actor_enable_gravity(c.actor, c.enabled)); },
       // TODO: SetAutopilot should be removed. This is the old way to control the vehicles
       [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },
+      [=](auto, const C::ShowDebugTelemetry &c) {   MAKE_RESULT(show_vehicle_debug_telemetry(c.actor, c.enabled)); },
       [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },
       [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
 

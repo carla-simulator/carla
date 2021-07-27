@@ -91,6 +91,8 @@ namespace bgi = boost::geometry::index;
 
     std::string GetMapName();
 
+    cc::Map& GetMap() const;
+
   private:
     void Save(const std::string& path);
 
