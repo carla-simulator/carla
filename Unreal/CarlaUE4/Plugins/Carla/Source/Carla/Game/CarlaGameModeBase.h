@@ -48,7 +48,10 @@ public:
     return Map;
   }
 
-  const FString GetMapPath() const;
+  const FString GetFullMapPath() const;
+
+  // get path relative to Content folder
+  const FString GetRelativeMapPath() const;
 
   UFUNCTION(Exec, Category = "CARLA Game Mode")
   void DebugShowSignals(bool enable);

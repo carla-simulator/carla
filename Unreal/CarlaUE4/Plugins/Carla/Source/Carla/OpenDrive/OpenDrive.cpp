@@ -70,9 +70,7 @@ FString UOpenDrive::GetXODR(const UWorld *World)
 
   ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
 
-  auto RelativePath = FPaths::GetPath(GameMode->GetMapPath());
-  RelativePath.RemoveFromStart("/Game/");
-  auto MapDir = FPaths::ProjectContentDir() + RelativePath;
+  auto MapDir = GameMode->GetFullMapPath();
   const auto FolderDir = MapDir + "/OpenDrive/";
   const auto FileName = MapDir.EndsWith(MapName) ? "*" : MapName;
 
