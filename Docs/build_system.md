@@ -79,7 +79,7 @@ make launch
 ### Versions 0.9.12+
 
 Compiled using Python's `setuptools` ("setup.py"). Currently requires the following to be installed in the machine: Python, libpython-dev, and
-libboost-python-dev, pip>=20.3, wheel and auditwheel.
+libboost-python-dev, pip>=20.3, wheel, and auditwheel.
 
 Command:
 
@@ -87,15 +87,19 @@ Command:
 make PythonAPI
 ```
 
-Installs a `.whl` file according to the supported Python version on the system. Python 2.7, 3.6, 3.7 and 3.8 are supported. The wheel is installed using the command:
+Creates two files that each contain the client library and correspond to the supported Python version on the system. Python 2.7, 3.6, 3.7, and 3.8 are supported. One file is a `.whl` file and the other is an `.egg` file. This allows for the option of two different, mutually exclusive ways to use the client library. 
 
-```
-pip install <wheel_file>.whl
-```
+>__A. .whl file__
 
-If previous libraries are found, they will be uninstalled and the new one will be installed.
+>>The `.whl` is installed using the command:
 
-There is no need to import the library path directly in scripts as was required in previous versions (see section [__Versions prior to 0.9.12__](#versions-prior-to-0912)); `import carla` is sufficient.
+>>      pip install <wheel_file>.whl
+
+>>There is no need to import the library path directly in scripts as is required in previous versions or `.egg` files (see section [__Versions prior to 0.9.12__](#versions-prior-to-0912)); `import carla` is sufficient.
+
+>__B. .egg file__
+
+>>See the section [__Versions prior to 0.9.12__](#versions-prior-to-0912) for more information.
 
 
 ### Versions prior to 0.9.12

@@ -68,11 +68,16 @@ pip3 install --upgrade pip
 pip install --upgrade pip
 ```
 
-You must then install the following Python dependencies:
+You must install the following Python dependencies:
 
 ```sh
+# Python 3
 pip3 install --user setuptools
 pip3 install --user wheel
+
+# Python 2
+pip install --user setuptools
+pip install --user wheel
 ```
 
 #### Major installations
@@ -210,7 +215,7 @@ The CARLA client library will be built in two distinct, mutually exclusive forms
 
 __A. `.egg` file__
 
-The `.egg` file will automatically be added to your `PYTHONPATH`. All of CARLA's example scripts automatically look for this file when importing CARLA.
+>The `.egg` file will automatically be added to your `PYTHONPATH`. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
 
 >If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
 
@@ -229,7 +234,7 @@ pip install <path/to/wheel>.whl
 >This `.whl` file cannot be distributed as it is built specifically for your OS.
 
 !!! Warning
-    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. Read the [F.A.Q.](build_faq.md) to learn more about how to avoid these issues.
+    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
 
 __2.__ __Compile the server__:
 

@@ -58,6 +58,7 @@ CARLA forum</a>
 * [Fatal error: 'version.h' has been modified since the precompiled header.](#fatal-error-versionh-has-been-modified-since-the-precompiled-header)
 * [Create a binary version of CARLA.](#create-a-binary-version-of-carla)
 * [Can I package CARLA for Windows on a Linux machine and vice versa?](#can-i-package-carla-for-windows-on-a-linux-machine-and-vice-versa)
+* [How do I uninstall the CARLA client library?](#how-do-i-uninstall-the-carla-client-library)
 
 ---
 
@@ -342,7 +343,9 @@ CARLA forum</a>
 >
 
 !!! Important
-    CARLA used `.egg` files for the client library in versions prior to 0.9.12. If you are using 0.9.12+, `.whl` files are used instead and the information in this section will not be relevant to you.
+    CARLA only used `.egg` files for the client library in versions prior to 0.9.12. If you are using 0.9.12+, there are several methods to use/install the client library. If you are using one of the newer methods for the client library (`.whl` or PyPi download) the information in this section will not be relevant to you.
+
+    Read more about the newer methods to use/install the client library in the [__Quickstart tutorial__](start_quickstart.md#carla-0912).
 
 >If you are using a packaged version of CARLA, there will be several `.egg` files, corresponding to different versions of Python, depending on the version of CARLA. Make sure you are running the scripts with one of these Python versions. To check the default Python version, type the following into the command line:
 >
@@ -398,5 +401,28 @@ CARLA forum</a>
 ###### Can I package CARLA for Windows on a Linux machine and vice versa?
 
 >Although this feature is available for Unreal Engine, it is not available in CARLA. We have a number of dependencies that are not supported to be cross compiled.
+
+<!-- ======================================================================= -->
+###### How do I uninstall the CARLA client library?
+
+>If you installed the client library using __pip/pip3__, you should uninstall it by running:
+
+```sh
+# If you installed the .whl
+
+# Python 3
+pip3 uninstall <wheel-file-name>.whl
+
+# Python 2
+pip uninstall <wheel-file-name>.whl
+
+# If you installed the PyPi package
+
+# Python 3
+pip3 uninstall carla
+
+# Python 2
+pip uninstall carla
+```
 
 ---
