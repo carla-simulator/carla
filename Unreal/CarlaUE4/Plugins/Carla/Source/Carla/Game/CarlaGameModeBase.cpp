@@ -50,11 +50,19 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
-const FString ACarlaGameModeBase::GetMapPath() const
+const FString ACarlaGameModeBase::GetRelativeMapPath() const
 {
   UWorld* World = GetWorld();
   TSoftObjectPtr<UWorld> AssetPtr (World);
-  return AssetPtr.GetLongPackageName();
+  FString Path = FPaths::GetPath(AssetPtr.GetLongPackageName());
+  Path.RemoveFromStart("/Game/");
+  return Path;
+}
+
+const FString ACarlaGameModeBase::GetFullMapPath() const
+{
+  FString Path = GetRelativeMapPath();
+  return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + Path;
 }
 
 void ACarlaGameModeBase::InitGame(
