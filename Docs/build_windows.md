@@ -203,13 +203,6 @@ The following command compiles the Python API client:
     make PythonAPI
 ```
 
-Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory.
-
-```sh
-    # Delete versions as required
-    make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
-```
-
 The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
 
 __A. `.egg` file__

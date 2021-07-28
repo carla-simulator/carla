@@ -144,7 +144,7 @@ CARLA forum</a>
 > If running a script returns an output similar to this, there is a problem with the `.egg` file in the PythonAPI. 
 
 !!! Important
-    CARLA used `.egg` files for the client library in versions prior to 0.9.12. If you are using 0.9.12+, `.whl` files are used instead and the information in this section will not be relevant to you.
+    If you are using 0.9.12+, there are several methods to use/install the client library. If you are using one of the newer methods for the client library (`.whl` or PyPi download) the information in this section will not be relevant to you.
 > 
 > First of all, open `<root_carla>/PythonAPI/carla/dist`. There should be an `.egg` file for the corresponding CARLA and Python version you are using (similar to `carla-0.X.X-pyX.X-linux-x86_64.egg`). Make sure the file matches the Python version you are using. To check your Python version use the following command.  
 > 
