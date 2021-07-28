@@ -106,8 +106,7 @@ class PIDLongitudinalController():
     PIDLongitudinalController implements longitudinal control using a PID.
     """
 
-
-    def __init__(self, vehicle, K_P=1.0, K_D=0.0, K_I=0.0, dt=0.03):
+    def __init__(self, vehicle, K_P=1.0, K_I=0.0, K_D=0.0, dt=0.03):
         """
         Constructor method.
 
@@ -119,8 +118,8 @@ class PIDLongitudinalController():
         """
         self._vehicle = vehicle
         self._k_p = K_P
-        self._k_d = K_D
         self._k_i = K_I
+        self._k_d = K_D
         self._dt = dt
         self._error_buffer = deque(maxlen=10)
 
@@ -160,11 +159,11 @@ class PIDLongitudinalController():
 
         return np.clip((self._k_p * error) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
 
-    def change_parameters(self, K_P, K_D, K_I, dt):
+    def change_parameters(self, K_P, K_I, K_D, dt):
         """Changes the PID parameters"""
         self._k_p = K_P
-        self._k_d = K_D
         self._k_i = K_I
+        self._k_d = K_D
         self._dt = dt
 
 
@@ -173,7 +172,7 @@ class PIDLateralController():
     PIDLateralController implements lateral control using a PID.
     """
 
-    def __init__(self, vehicle, offset=0, K_P=1.0, K_D=0.0, K_I=0.0, dt=0.03):
+    def __init__(self, vehicle, offset=0, K_P=1.0, K_I=0.0, K_D=0.0, dt=0.03):
         """
         Constructor method.
 
@@ -187,8 +186,8 @@ class PIDLateralController():
         """
         self._vehicle = vehicle
         self._k_p = K_P
-        self._k_d = K_D
         self._k_i = K_I
+        self._k_d = K_D
         self._dt = dt
         self._offset = offset
         self._e_buffer = deque(maxlen=10)
@@ -251,9 +250,9 @@ class PIDLateralController():
 
         return np.clip((self._k_p * _dot) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
 
-    def change_parameters(self, K_P, K_D, K_I, dt):
+    def change_parameters(self, K_P, K_I, K_D, dt):
         """Changes the PID parameters"""
         self._k_p = K_P
-        self._k_d = K_D
         self._k_i = K_I
+        self._k_d = K_D
         self._dt = dt
