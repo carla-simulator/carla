@@ -149,7 +149,7 @@ class BasicAgent(object):
             :param start_waypoint (carla.Waypoint): initial waypoint
             :param end_waypoint (carla.Waypoint): final waypoint
         """
-        return self._global_planner.trace_route(start_waypoint, end_waypoint)
+        return self._global_planner.trace_route(start_waypoint.transform.location, end_waypoint.transform.location)
 
     def run_step(self):
         """Execute one step of navigation."""
