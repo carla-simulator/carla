@@ -73,7 +73,7 @@ static const float OVERLAP_THRESHOLD = 0.1f;
 static const float LOCKING_DISTANCE_PADDING = 4.0f;
 static const float COLLISION_RADIUS_STOP = 8.0f;
 static const float COLLISION_RADIUS_MIN = 20.0f;
-static const float COLLISION_RADIUS_RATE = 0.5f;
+static const float COLLISION_RADIUS_RATE = 0.65f;
 static const float MAX_LOCKING_EXTENSION = 10.0f;
 static const float WALKER_TIME_EXTENSION = 1.5f;
 static const float SQUARE_ROOT_OF_TWO = 1.414f;
@@ -106,8 +106,8 @@ static const double DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL = 5.0;
 
 namespace MotionPlan {
 static const float RELATIVE_APPROACH_SPEED = 10.0f / 3.6f;
-static const float MIN_FOLLOW_LEAD_DISTANCE = 5.0f;
-static const float MAX_FOLLOW_LEAD_DISTANCE = 10.0f;
+static const float MIN_FOLLOW_LEAD_DISTANCE = 2.0f;
+static const float MAX_FOLLOW_LEAD_DISTANCE = 5.0f;
 static const float FOLLOW_DISTANCE_RATE = 0.1f;
 static const float CRITICAL_BRAKING_MARGIN = 0.25f;
 static const float EPSILON_RELATIVE_SPEED = 0.001f;
