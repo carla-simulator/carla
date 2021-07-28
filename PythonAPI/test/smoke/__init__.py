@@ -18,7 +18,7 @@ except IndexError:
     pass
 
 import carla
-
+import time
 
 TESTING_ADDRESS = ('localhost', 3654)
 
@@ -32,6 +32,8 @@ class SmokeTest(unittest.TestCase):
 
     def tearDown(self):
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
         self.world = None
         self.client = None
 
@@ -49,6 +51,6 @@ class SyncSmokeTest(SmokeTest):
 
     def tearDown(self):
         self.world.apply_settings(self.settings)
-        self.world.tick(120)
+        self.world.tick()
         self.settings = None
         super(SyncSmokeTest, self).tearDown()

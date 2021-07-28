@@ -176,6 +176,9 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void DeactivateVelocityControl();
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ShowDebugTelemetry(bool Enabled);
+
   /// @todo This function should be private to AWheeledVehicleAIController.
   void FlushVehicleControl();
 
@@ -240,6 +243,7 @@ public:
 protected:
 
   virtual void BeginPlay() override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
 
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshLightState(const FVehicleLightState &VehicleLightState);
@@ -274,8 +278,7 @@ public:
 
   /// Set the rotation of the car wheels indicated by the user
   /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
-  /// An enum could be used, but this is something situational. An uint8 does the trick just fine
-  ///NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
+  /// NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg);
 
@@ -288,6 +291,7 @@ public:
   UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
   float CarSimOriginOffset = 150.f;
 //-------------------------------------------
+
 private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)

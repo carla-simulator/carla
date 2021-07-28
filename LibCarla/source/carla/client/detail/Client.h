@@ -107,6 +107,16 @@ namespace detail {
 
     std::vector<uint8_t> GetNavigationMesh() const;
 
+    bool SetFilesBaseFolder(const std::string &path);
+
+    std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const;
+
+    std::string GetMapData() const;
+
+    void RequestFile(const std::string &name) const;
+
+    std::vector<uint8_t> GetCacheFile(const std::string &name, const bool request_otherwise = true) const;
+
     std::vector<std::string> GetAvailableMaps();
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
@@ -208,6 +218,10 @@ namespace detail {
         rpc::ActorId vehicle,
         bool enabled);
 
+    void ShowVehicleDebugTelemetry(
+        rpc::ActorId vehicle,
+        bool enabled);
+
     void ApplyControlToVehicle(
         rpc::ActorId vehicle,
         const rpc::VehicleControl &control);
@@ -274,6 +288,9 @@ namespace detail {
     void ResetAllTrafficLights();
 
     void FreezeAllTrafficLights(bool frozen);
+
+    std::vector<geom::BoundingBox> GetLightBoxes(
+        rpc::ActorId traffic_light) const;
 
     /// Returns a list of pairs where the firts element is the vehicle ID
     /// and the second one is the light state

@@ -46,10 +46,10 @@ public:
   /// @return A pair containing the result of the spawn function and a view over
   /// the actor and its properties. If the status is different of Success the
   /// view is invalid.
-  TPair<EActorSpawnResultStatus, FActorView> SpawnActor(
+  TPair<EActorSpawnResultStatus, FCarlaActor*> SpawnActor(
       const FTransform &Transform,
       FActorDescription ActorDescription,
-      FActorView::IdType DesiredId = 0);
+      FCarlaActor::IdType DesiredId = 0);
 
   /// ReSpawns an actor based on @a ActorDescription at @a Transform. To properly
   /// despawn an actor created with this function call DestroyActor.
@@ -60,9 +60,9 @@ public:
       const FTransform &Transform,
       FActorDescription ActorDescription);
 
-  void PutActorToSleep(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode);
+  void PutActorToSleep(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode);
 
-  void WakeActorUp(FActorView::IdType Id, UCarlaEpisode* CarlaEpisode);
+  void WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode);
 
   /// Destroys an actor, properly removing it from the registry.
   ///
@@ -70,17 +70,14 @@ public:
   /// destruction, false if indestructible or nullptr.
   //bool DestroyActor(AActor *Actor);
 
-  bool DestroyActor(FActorView::IdType ActorId);
-
-  UFUNCTION()
-  void OnActorDestroyed(AActor *Actor)
-  {
-    Registry.Deregister(Actor);
-  }
+  bool DestroyActor(FCarlaActor::IdType ActorId);
 
   /// Register an actor that was not created using "SpawnActor" function but
   /// that should be kept in the registry.
-  FActorView RegisterActor(AActor &Actor, FActorDescription ActorDescription, FActorRegistry::IdType DesiredId = 0);
+  FCarlaActor* RegisterActor(
+      AActor &Actor,
+      FActorDescription ActorDescription,
+      FActorRegistry::IdType DesiredId = 0);
 
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
@@ -92,7 +89,15 @@ public:
     return Registry;
   }
 
+  FActorRegistry &GetActorRegistry()
+  {
+    return Registry;
+  }
+
 private:
+
+  UFUNCTION()
+  void OnActorDestroyed(AActor *Actor);
 
   TArray<FActorDefinition> Definitions;
 

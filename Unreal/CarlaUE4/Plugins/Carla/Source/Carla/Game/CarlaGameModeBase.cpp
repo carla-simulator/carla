@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaHUD.h"
+#include "Carla/Lights/CarlaLight.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
@@ -49,6 +50,21 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
+const FString ACarlaGameModeBase::GetRelativeMapPath() const
+{
+  UWorld* World = GetWorld();
+  TSoftObjectPtr<UWorld> AssetPtr (World);
+  FString Path = FPaths::GetPath(AssetPtr.GetLongPackageName());
+  Path.RemoveFromStart("/Game/");
+  return Path;
+}
+
+const FString ACarlaGameModeBase::GetFullMapPath() const
+{
+  FString Path = GetRelativeMapPath();
+  return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + Path;
+}
+
 void ACarlaGameModeBase::InitGame(
     const FString &MapName,
     const FString &Options,
@@ -69,7 +85,10 @@ void ACarlaGameModeBase::InitGame(
       UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
   LMManager = Cast<ALargeMapManager>(LMManagerActor);
   if (LMManager) {
-    LMManager->GenerateLargeMap();
+    if (LMManager->GetNumTiles() == 0)
+    {
+      LMManager->GenerateLargeMap();
+    }
     InMapName = LMManager->LargeMapName;
   }
 
@@ -124,7 +143,7 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
-  ParseOpenDrive(Episode->MapName);
+  ParseOpenDrive();
 
   if(Map.has_value())
   {
@@ -148,12 +167,6 @@ void ACarlaGameModeBase::BeginPlay()
 
   UWorld* World = GetWorld();
   check(World != nullptr);
-
-  if(LMManager)
-  {
-    //ULocalPlayer* Player = GEngine->GetGamePlayer(World, 0);
-    //LMManager->AddActorToConsider(Player->GetPlayerController(World)->GetPawn());
-  }
 
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
   ReadyToRegisterObjects = true;
@@ -199,6 +212,20 @@ void ACarlaGameModeBase::BeginPlay()
   if (LMManager) {
     LMManager->RegisterInitialObjects();
   }
+
+  // Manually run begin play on lights as it may not run on sublevels
+  TArray<AActor*> FoundActors;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), FoundActors);
+  for(AActor* Actor : FoundActors)
+  {
+    TArray<UCarlaLight*> Lights;
+    Actor->GetComponents(Lights, false);
+    for(UCarlaLight* Light : Lights)
+    {
+      Light->BeginPlay();
+    }
+  }
+  EnableOverlapEvents();
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)
@@ -279,9 +306,9 @@ void ACarlaGameModeBase::GenerateSpawnPoints()
   }
 }
 
-void ACarlaGameModeBase::ParseOpenDrive(const FString &MapName)
+void ACarlaGameModeBase::ParseOpenDrive()
 {
-  std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::LoadXODR(MapName));
+  std::string opendrive_xml = carla::rpc::FromLongFString(UOpenDrive::GetXODR(GetWorld()));
   Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
   if (!Map.has_value()) {
     UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
@@ -310,6 +337,39 @@ ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
     }
   }
   return TrafficLightManager;
+}
+
+void ACarlaGameModeBase::CheckForEmptyMeshes()
+{
+  TArray<AActor*> WorldActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), WorldActors);
+
+  for (AActor *Actor : WorldActors)
+  {
+    AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
+    if (MeshActor->GetStaticMeshComponent()->GetStaticMesh() == NULL)
+    {
+      UE_LOG(LogTemp, Error, TEXT("The object : %s has no mesh"), *MeshActor->GetFullName());
+    }
+  }
+}
+
+void ACarlaGameModeBase::EnableOverlapEvents()
+{
+  TArray<AActor*> WorldActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AStaticMeshActor::StaticClass(), WorldActors);
+
+  for(AActor *Actor : WorldActors)
+  {
+    AStaticMeshActor *MeshActor = CastChecked<AStaticMeshActor>(Actor);
+    if(MeshActor->GetStaticMeshComponent()->GetStaticMesh() != NULL)
+    {
+      if (MeshActor->GetStaticMeshComponent()->GetGenerateOverlapEvents() == false)
+      {
+        MeshActor->GetStaticMeshComponent()->SetGenerateOverlapEvents(true);
+      }
+    }
+  }
 }
 
 void ACarlaGameModeBase::DebugShowSignals(bool enable)
@@ -444,6 +504,7 @@ void ACarlaGameModeBase::EnableEnvironmentObjects(
 void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
 {
   const UWorld* World = GetWorld();
+  UGameplayStatics::FlushLevelStreaming(World);
 
   TArray<FName> LevelsToLoad;
   ConvertMapLayerMaskToMapNames(MapLayers, LevelsToLoad);
@@ -452,16 +513,17 @@ void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
   LatentInfo.CallbackTarget = this;
   LatentInfo.ExecutionFunction = "OnLoadStreamLevel";
   LatentInfo.Linkage = 0;
-  LatentInfo.UUID = 1;
+  LatentInfo.UUID = LatentInfoUUID;
 
   PendingLevelsToLoad = LevelsToLoad.Num();
 
   for(FName& LevelName : LevelsToLoad)
   {
+    LatentInfoUUID++;
     UGameplayStatics::LoadStreamLevel(World, LevelName, true, true, LatentInfo);
-    LatentInfo.UUID++;
+    LatentInfo.UUID = LatentInfoUUID;
+    UGameplayStatics::FlushLevelStreaming(World);
   }
-
 }
 
 void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
@@ -474,15 +536,17 @@ void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
   FLatentActionInfo LatentInfo;
   LatentInfo.CallbackTarget = this;
   LatentInfo.ExecutionFunction = "OnUnloadStreamLevel";
-  LatentInfo.UUID = 1;
+  LatentInfo.UUID = LatentInfoUUID;
   LatentInfo.Linkage = 0;
 
   PendingLevelsToUnLoad = LevelsToUnLoad.Num();
 
   for(FName& LevelName : LevelsToUnLoad)
   {
+    LatentInfoUUID++;
     UGameplayStatics::UnloadStreamLevel(World, LevelName, LatentInfo, false);
-    LatentInfo.UUID++;
+    LatentInfo.UUID = LatentInfoUUID;
+    UGameplayStatics::FlushLevelStreaming(World);
   }
 
 }

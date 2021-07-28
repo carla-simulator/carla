@@ -343,6 +343,18 @@ namespace road {
         } else {
           distance_to_signal = waypoint.s - signal->GetDistance();
         }
+        // check that the signal affects the waypoint
+        bool is_valid = false;
+        for (auto &validity : signal->GetValidities()) {
+          if (waypoint.lane_id >= validity._from_lane &&
+              waypoint.lane_id <= validity._to_lane) {
+            is_valid = true;
+            break;
+          }
+        }
+        if(!is_valid){
+          continue;
+        }
         if (distance_to_signal == 0) {
           result.emplace_back(SignalSearchData
               {signal, waypoint,
@@ -367,6 +379,18 @@ namespace road {
         distance_to_signal = signal->GetDistance() - waypoint.s;
       } else {
         distance_to_signal = waypoint.s - signal->GetDistance();
+      }
+      // check that the signal affects the waypoint
+      bool is_valid = false;
+      for (auto &validity : signal->GetValidities()) {
+        if (waypoint.lane_id >= validity._from_lane &&
+            waypoint.lane_id <= validity._to_lane) {
+          is_valid = true;
+          break;
+        }
+      }
+      if(!is_valid){
+        continue;
       }
       if (distance_to_signal == 0) {
         result.emplace_back(SignalSearchData

@@ -316,7 +316,7 @@ def main():
         sensor_queue = Queue()
 
         # Spawning ego vehicle
-        actor_BP = world.get_blueprint_library().filter("vehicle.lincoln.mkz2017")[0]
+        actor_BP = world.get_blueprint_library().filter("vehicle.lincoln.mkz_2017")[0]
         car_tr = carla.Transform(carla.Location(x=239, y=125, z=0.9), carla.Rotation(yaw=-88.5))
         actor = world.spawn_actor(actor_BP, car_tr)
 
@@ -368,4 +368,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print(' - Exited by user.')
-

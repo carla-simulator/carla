@@ -40,7 +40,7 @@ rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
-rem If not defined, use Visual Studio 2017 as tool set
+rem If not defined, use Visual Studio 2019 as tool set
 if "%TOOLSET%" == "" set TOOLSET=""
 
 rem ============================================================================

@@ -42,7 +42,6 @@ if [[ ! -d "${ADRSS_SRC_DIR}" ]]; then
 
   pushd "${ADRSS_SRC_DIR}" >/dev/null
   git clone --depth=1 -b v1.7.0 https://github.com/gabime/spdlog.git
-  git clone --depth=1 -b 4.9.3 https://github.com/OSGeo/PROJ.git
   git clone --depth=1 -b v2.3.0 https://github.com/carla-simulator/map.git
   git clone --depth=1 -b v${ADRSS_VERSION} https://github.com/intel/ad-rss-lib.git
   popd
@@ -50,9 +49,6 @@ if [[ ! -d "${ADRSS_SRC_DIR}" ]]; then
   cat >"${ADRSS_COLCON_WORKSPACE}/colcon.meta" <<EOL
 {
     "names": {
-        "PROJ4": {
-            "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_LIBPROJ_SHARED=OFF"]
-        },
         "ad_physics": {
             "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
         },
@@ -60,8 +56,7 @@ if [[ ! -d "${ADRSS_SRC_DIR}" ]]; then
             "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
         },
         "ad_map_opendrive_reader": {
-            "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"],
-            "dependencies": ["PROJ4"]
+            "cmake-args": ["-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
         },
         "ad_rss": {
             "cmake-args": ["-DBUILD_PYTHON_BINDING=ON", "-DCMAKE_POSITION_INDEPENDENT_CODE=ON", "-DBUILD_SHARED_LIBS=OFF", "-DDISABLE_WARNINGS_AS_ERRORS=ON"]
@@ -97,9 +92,9 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd "${ADRSS_COLCON_WORKSPACE}" >/dev/null
     if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
-      export CMAKE_PREFIX_PATH=${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install;${CARLA_BUILD_FOLDER}/proj-install"
     else
-      export CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install
+      CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH};${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install;${CARLA_BUILD_FOLDER}/proj-install"
     fi
 
     # get the python version of the binding to be built
@@ -108,7 +103,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     echo "PYTHON_BINDING_VERSIONS=${PYTHON_BINDING_VERSIONS}"
 
     # enforce sequential executor to reduce the required memory for compilation
-    colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
+    colcon build --executor sequential --packages-up-to ad_rss_map_integration --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_TOOLCHAIN_FILE="${CARLA_BUILD_FOLDER}/LibStdCppToolChain.cmake" -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH}" -DPYTHON_BINDING_VERSIONS="${PYTHON_BINDING_VERSIONS}" --build-base ${ADRSS_BUILD_DIR} --install-base ${ADRSS_INSTALL_DIR}
 
     COLCON_RESULT=$?
     if (( COLCON_RESULT )); then

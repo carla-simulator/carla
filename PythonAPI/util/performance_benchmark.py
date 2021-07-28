@@ -96,18 +96,28 @@ def define_sensors():
 
   else:
     sensors00 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': '0. cam-300x200'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '0. cam-1920x1080'}]
 
     sensors01 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 800, 'height': 600, 'fov': 100, 'label': '1. cam-800x600'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '1. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors02 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 1900, 'height': 1080, 'fov': 100, 'label': '2. cam-1900x1080'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '2. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 90.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors03 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': '3. cam-300x200'},
-                 {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.4, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': 'cam-300x200'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '3. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 90.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 270.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors04 = [{'type': 'sensor.lidar.ray_cast', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0,
                   'pts_per_sec': '100000', 'label': '4. LIDAR: 100k'}]
@@ -183,7 +193,7 @@ class CallBack(object):
             return self._current_fps
 
 
-def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, client):
+def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, client, tick):
   global sensors_callback
   sensors_ret = []
   blueprint_library = world.get_blueprint_library()
@@ -319,8 +329,8 @@ def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, clie
     all_id.append(walkers_list[i]["id"])
   all_actors = world.get_actors(all_id)
 
-  # wait for a tick to ensure client receives the last transform of the walkers we have just created
-  world.wait_for_tick()
+  # ensures client has received the last transform of the walkers we have just created
+  tick()
 
   # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
   # set how many pedestrians can cross the road
@@ -369,7 +379,7 @@ def run_benchmark(world, sensors, n_vehicles, n_walkers, client, debug=False):
   tick = world.tick if args.sync else world.wait_for_tick
   set_world_settings(world, args)
 
-  vehicles_list, walkers_list, all_id, all_actors, sensors_ret = create_environment(world, sensors, n, n_walkers, spawn_points, client)
+  vehicles_list, walkers_list, all_id, all_actors, sensors_ret = create_environment(world, sensors, n, n_walkers, spawn_points, client, tick)
 
   if sensors_ret:
     sensor_list = sensors_ret
@@ -461,7 +471,7 @@ def get_total(records):
 def get_system_specs():
   str_system = ""
   cpu_info = cpuinfo.get_cpu_info()
-  str_system += "CPU {} {}. ".format(cpu_info['brand'], cpu_info['family'])
+  str_system += "CPU {} {}. ".format(cpu_info.get('brand', 'Unknown'), cpu_info.get('family', 'Unknown'))
 
   memory_info = psutil.virtual_memory()
   str_system += "{:03.2f} GB RAM memory. ".format(memory_info.total / (1024 * 1024 * 1024))

@@ -20,7 +20,7 @@ set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [-
 set REMOVE_INTERMEDIATE=false
 set BUILD_OSM2ODR=false
 set GIT_PULL=true
-set CURRENT_OSM2ODR_COMMIT=6cb290c1a4024e6c04cef055f24e30735f46448d
+set CURRENT_OSM2ODR_COMMIT=ee0c2b9241fef5365a6bc044ac82e6580b8ce936
 set OSM2ODR_BRANCH=carla_osm2odr
 set OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
@@ -95,7 +95,7 @@ if %BUILD_OSM2ODR% == true (
     if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
     cd "%OSM2ODR_VSPROJECT_PATH%"
 
-    cmake -G "Visual Studio 15 2017 Win64"^
+    cmake -G "Visual Studio 16 2019" -A x64^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
         -DPROJ_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\proj-install\include^
@@ -130,7 +130,7 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
+    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
     echo           [ERROR] Possible causes:
     echo           [ERROR]  - Make sure you have Visual Studio installed.
     echo           [ERROR]  - Make sure you have the "x64 Visual C++ Toolset" in your path.
