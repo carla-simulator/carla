@@ -133,6 +133,14 @@
       warning: >
         Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
     # --------------------------------------
+    - def_name: enable_debug_telemetry
+      params:
+      - param_name: enabled
+        type: bool
+        default: True
+      doc: >
+        Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so if you enable a second one, the previous will be automatically disabled.
+    # --------------------------------------
     - def_name: get_acceleration
       return: carla.Vector3D
       return_units: m/s<sup>2</sup>
@@ -572,6 +580,26 @@
         param_units: seconds
       doc: >
         Sets a given time for the yellow light to be active.
+    # --------------------------------------
+    - def_name: get_affected_lane_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the positions and lanes where the traffic light is having an effect.
+    # --------------------------------------
+    - def_name: get_light_boxes
+      return: list(carla.BoundingBox)
+      doc: >
+        Returns a list of the bounding boxes encapsulating each light box of the traffic light.
+    # --------------------------------------
+    - def_name: get_opendrive_id
+      return: str
+      doc: >
+        Returns the OpenDRIVE id of this traffic light.
+    # --------------------------------------
+    - def_name: get_stop_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the stop position for the traffic light. These waypoints are computed from the trigger boxes of the traffic light that indicate where a vehicle should stop.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

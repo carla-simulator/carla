@@ -58,3 +58,36 @@
       var_units: meters
       doc: >
         Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.
+    - var_name: center_map
+      type: bool
+      doc: >
+        When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounding box of the entire road map.
+    - var_name: proj_string
+      type: str
+      doc: >
+        Defines the [proj4](https://github.com/OSGeo/proj.4) string that will be used to compute the projection from geocoordinates to cartesian coordinates. This string will be written in the resulting OpenDRIVE unless the options `use_offsets` or `center_map` are enabled as these options override some of the definitions in the string.
+    - var_name: generate_traffic_lights
+      type: bool
+      doc: >
+        Indicates wether to generate traffic light data in the OpenDRIVE. Road types defined by `set_traffic_light_excluded_way_types(way_types)` will not generate traffic lights.
+    - var_name: all_junctions_with_traffic_lights
+      type: bool
+      doc: >
+        When disabled, the converter will generate traffic light data from the OpenStreetMaps data only. When enabled, all junctions will generate traffic lights.
+    methods:
+    - def_name: set_osm_way_types
+      doc: >
+        Defines the OpenStreetMaps road types that will be imported to OpenDRIVE. By default the road types imported are `motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link, unclassified, residential`. For a full list of road types check [here](https://wiki.openstreetmap.org/wiki/Main_Page).
+      params:
+      - param_name: way_types
+        type: list(str)
+        doc: >
+          The list of road types.
+    - def_name: set_traffic_light_excluded_way_types
+      doc: >
+        Defines the OpenStreetMaps road types that will not generate traffic lights even if `generate_traffic_lights` is enabled. By default the road types excluded are `motorway_link, primary_link, secondary_link, tertiary_link`
+      params:
+      - param_name: way_types
+        type: list(str)
+        doc: >
+          The list of road types.

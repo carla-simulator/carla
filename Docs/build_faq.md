@@ -93,9 +93,9 @@ CARLA forum</a>
 
 > Many different issues can be dragged out during the build installation and will manifest themselves like this. Here is a list of the most likely reasons why:  
 > 
-> * __Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Try running UE editor on its own and check that it is the 4.24 release.  
+> * __Run Unreal Engine 4.26.__ Something may have failed when building Unreal Engine. Try running UE editor on its own and check that it is the 4.26 release.  
 > * __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
-> * __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=~/UnrealEngine_4.24` to set the variable this time.  
+> * __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=<path_to_unreal_4-26>` to set the variable this time.  
 > * __Check dependencies.__ Make sure that everything was installed properly. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
 > * __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 170GB of disk space and a dedicated GPU (or at least one with 6GB) to run.
@@ -202,7 +202,7 @@ CARLA forum</a>
 >
 > __1.__ Go to `carla/Unreal/CarlaUE4` and right-click the `CarlaUE4.uproject`.  
 > __2.__ Click on __Generate Visual Studio project files__.  
-> __3.__ Open the file generated with Visual Studio 2017.  
+> __3.__ Open the file generated with Visual Studio 2019.  
 > __4.__ Compile the project with Visual Studio. The shortcut is F7. The build will fail, but the issues found will be shown below.
 >
 > Different issues may result in this specific error message. The user [@tamakoji](https://github.com/tamakoji) solved a recurrent case where the source code hadn't been cloned properly and the CARLA version could not be set (when downloading this as a .zip from git).  
@@ -229,13 +229,13 @@ CARLA forum</a>
 
 > This issue occurs when trying to use the _make_ command either to build the server or the client. Even if CMake is installed, updated and added to the environment path. There may be a conflict between Visual Studio versions.  
 >
-> Leave only VS2017 and completely erase the rest.  
+> Leave only VS2019 and completely erase the rest.  
 
 <!-- ======================================================================= -->
 
 ###### Error C2440, C2672: compiler version.
 
-> The build is not using the 2017 compiler due to conflicts with other Visual Studio or Microsoft Compiler versions. Uninstall these and rebuild again.  
+> The build is not using the 2019 compiler due to conflicts with other Visual Studio or Microsoft Compiler versions. Uninstall these and rebuild again.  
 >
 > Visual Studio is not good at getting rid of itself. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`. This may need admin permissions.  
 >
@@ -243,13 +243,13 @@ CARLA forum</a>
 >
 > ```
 >  <VCProjectFileGenerator>
->    <Version>VisualStudio2017</Version>
+>    <Version>VisualStudio2019</Version>
 > </VCProjectFileGenerator>
 > ```
 > 
 > ``` 
 >  <WindowsPlatform>
->    <Compiler>VisualStudio2017</Compiler>
+>    <Compiler>VisualStudio2019</Compiler>
 > </WindowsPlatform>
 > ```  
 
@@ -260,9 +260,9 @@ CARLA forum</a>
 > Many different issues can be dragged out during the build installation and manifest themselves like this. Here is a list of the most likely reasons why: 
 > 
 > * __Restart the computer.__ There is a lot going on during the Windows build. Restart and make sure that everything is updated properly.  
-> * __Run Unreal Engine 4.24.__ Something may have failed when building Unreal Engine. Run the Editor and check that version 4.24 is being used.  
+> * __Run Unreal Engine 4.26.__ Something may have failed when building Unreal Engine. Run the Editor and check that version 4.26 is being used.  
 > * __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
-> * __Visual Studio 2017.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.  
+> * __Visual Studio 2019.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.  
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
 > * __Meet system requirements.__ CARLA needs around 170GB of disk space and a dedicated GPU (or at least one with 6GB) to run.  
 >

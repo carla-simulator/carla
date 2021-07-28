@@ -30,35 +30,36 @@ void TrafficLightStage::Update(const unsigned long index) {
   bool traffic_light_hazard = false;
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
-  const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
-  const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
+  if (!simulation_state.IsDormant(ego_actor_id)) {
+    const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
+    const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
 
-  const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
-  current_timestamp = world.GetSnapshot().GetTimestamp();
+    const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
+    current_timestamp = world.GetSnapshot().GetTimestamp();
 
-  const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
-  const TLS traffic_light_state = tl_state.tl_state;
-  const bool is_at_traffic_light = tl_state.at_traffic_light;
+    const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
+    const TLS traffic_light_state = tl_state.tl_state;
+    const bool is_at_traffic_light = tl_state.at_traffic_light;
 
-  // We determine to stop if the current position of the vehicle is not a
-  // junction and there is a red or yellow light.
-  if (is_at_traffic_light &&
-      traffic_light_state != TLS::Green &&
-      traffic_light_state != TLS::Off &&
-      parameters.GetPercentageRunningLight(ego_actor_id) <= random_devices.at(ego_actor_id).next()) {
+    // We determine to stop if the current position of the vehicle is not a
+    // junction and there is a red or yellow light.
+    if (is_at_traffic_light &&
+        traffic_light_state != TLS::Green &&
+        traffic_light_state != TLS::Off &&
+        parameters.GetPercentageRunningLight(ego_actor_id) <= random_devices.at(ego_actor_id).next()) {
 
-    traffic_light_hazard = true;
+      traffic_light_hazard = true;
+    }
+    // Handle entry negotiation at non-signalised junction.
+    else if (look_ahead_point->CheckJunction() &&
+            !is_at_traffic_light &&
+            traffic_light_state != TLS::Green &&
+            traffic_light_state != TLS::Off &&
+            parameters.GetPercentageRunningSign(ego_actor_id) <= random_devices.at(ego_actor_id).next()) {
+
+      traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_timestamp);
+    }
   }
-  // Handle entry negotiation at non-signalised junction.
-  else if (look_ahead_point->CheckJunction() &&
-          !is_at_traffic_light &&
-          traffic_light_state != TLS::Green &&
-          traffic_light_state != TLS::Off &&
-          parameters.GetPercentageRunningSign(ego_actor_id) <= random_devices.at(ego_actor_id).next()) {
-
-    traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_timestamp);
-  }
-
   output_array.at(index) = traffic_light_hazard;
 }
 

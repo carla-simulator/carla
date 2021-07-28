@@ -58,49 +58,42 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
-  FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
   bool bIsFileFound = false;
+
+  FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
+  FinalPath += !MapString.EndsWith(".umap") ? ".umap" : "";
+
   if (MapString.StartsWith("/Game"))
   {
-    // Full path
-    if (!MapString.EndsWith(".umap"))
-    {
-      FinalPath += ".umap";
-    }
     // Some conversions...
-    FinalPath = FinalPath.Replace(TEXT("/Game/"), *FPaths::ProjectContentDir());
-    if (FPaths::FileExists(IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath)))
-    {
+    FinalPath.RemoveFromStart(TEXT("/Game/"));
+    FinalPath = FPaths::ProjectContentDir() + FinalPath;
+    FinalPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath);
+
+    if (FPaths::FileExists(FinalPath)) {
       bIsFileFound = true;
       FinalPath = MapString;
     }
   }
   else
   {
-    if (MapString.Contains("/"))
+    if (MapString.Contains("/")) return false;
+
+    // Find the full path under Carla
+    TArray<FString> TempStrArray, PathList;
+    IFileManager::Get().FindFilesRecursive(PathList, *FPaths::ProjectContentDir(), *FinalPath, true, false, false);
+    if (PathList.Num() > 0)
     {
-      bIsFileFound = false;
-    }
-    else
-    {
-      // Find the full path under Carla
-      TArray<FString> TempStrArray, PathList;
-      if (!MapString.EndsWith(".umap"))
-      {
-        FinalPath += ".umap";
-      }
-      IFileManager::Get().FindFilesRecursive(PathList, *FPaths::ProjectContentDir(), *FinalPath, true, false, false);
-      if (PathList.Num() > 0)
-      {
-        FinalPath = PathList[0];
-        FinalPath.ParseIntoArray(TempStrArray, TEXT("Content/"), true);
-        FinalPath = TempStrArray[1];
-        FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
-        FinalPath = "/Game/" + TempStrArray[0];
-        bIsFileFound = true;
-      }
+      FinalPath = PathList[0];
+      FinalPath.ParseIntoArray(TempStrArray, TEXT("Content/"), true);
+      FinalPath = TempStrArray[1];
+      FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
+      FinalPath = "/Game/" + TempStrArray[0];
+
+      return LoadNewEpisode(FinalPath, ResetSettings);
     }
   }
+
   if (bIsFileFound)
   {
     UE_LOG(LogCarla, Warning, TEXT("Loading a new episode: %s"), *FinalPath);
@@ -251,6 +244,8 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FCarlaActor *CarlaActor) const
   return Actor;
 }
 
+static FString GetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags);
+
 carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
 {
   FCarlaActor* CarlaActor = FindCarlaActor(Actor);
@@ -262,10 +257,12 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
   {
     carla::rpc::Actor SerializedActor;
     SerializedActor.id = 0u;
-    SerializedActor.description = FActorDescription();
     SerializedActor.bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(Actor);
     TSet<crp::CityObjectLabel> SemanticTags;
     ATagger::GetTagsOfTaggedActor(*Actor, SemanticTags);
+    FActorDescription Description;
+    Description.Id = TEXT("static.") + GetRelevantTagAsString(SemanticTags);
+    SerializedActor.description = Description;
     SerializedActor.semantic_tags.reserve(SemanticTags.Num());
     for (auto &&Tag : SemanticTags)
     {

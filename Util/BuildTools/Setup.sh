@@ -640,6 +640,48 @@ fi
 cp ${PROJ_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
 # ==============================================================================
+# -- Get and compile patchelf --------------------------------------------------
+# ==============================================================================
+
+PATCHELF_VERSION=0.12
+PATCHELF_REPO=https://github.com/NixOS/patchelf/archive/${PATCHELF_VERSION}.tar.gz
+
+PATCHELF_TAR=${PATCHELF_VERSION}.tar.gz
+PATCHELF_SOURCE_DIR=patchelf-src
+PATCHELF_INSTALL_DIR=patchelf-install
+
+PATCHELF_INCLUDE_DIR=${PWD}/${PATCHELF_INSTALL_DIR}/include
+PATCHELF_EXE=${PWD}/${PATCHELF_INSTALL_DIR}/bin/patchelf
+
+if [[ -d ${PATCHELF_INSTALL_DIR} ]] ; then
+  log "Patchelf already installed."
+else
+  log "Retrieving patchelf"
+  wget ${PATCHELF_REPO}
+
+  log "Extracting patchelf"
+  tar -xzf ${PATCHELF_TAR}
+  mv patchelf-${PATCHELF_VERSION} ${PATCHELF_SOURCE_DIR}
+
+  mkdir ${PATCHELF_INSTALL_DIR}
+
+  pushd ${PATCHELF_SOURCE_DIR} >/dev/null
+
+  ./bootstrap.sh
+  ./configure --prefix=${PWD}/../${PATCHELF_INSTALL_DIR}
+  make
+  make install
+
+  popd >/dev/null
+
+  rm -Rf ${PATCHELF_TAR}
+  rm -Rf ${PATCHELF_SOURCE_DIR}
+fi
+
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
+cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 

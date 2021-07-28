@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Game/CarlaHUD.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
 
 #include "DrawDebugHelpers.h"
