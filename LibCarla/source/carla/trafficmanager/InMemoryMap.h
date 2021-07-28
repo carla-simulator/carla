@@ -85,6 +85,8 @@ namespace bgi = boost::geometry::index;
 
     std::string GetMapName();
 
+    cc::Map& GetMap() const;
+
   private:
 
     /// This method is used to find and place lane change links.
