@@ -341,8 +341,9 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>
   {
     REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
-    FString FullMapPath = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    FString FullMapPath = GameMode->GetFullMapPath();
     FString MapDir = FullMapPath.RightChop(FullMapPath.Find("Content/", ESearchCase::CaseSensitive) + 8);
     MapDir += "/" + Episode->GetMapName();
     return cr::MapInfo{
@@ -353,7 +354,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_map_data) << [this]() -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
-    return cr::FromFString(UOpenDrive::GetXODR(Episode->GetWorld()));  
+    return cr::FromLongFString(UOpenDrive::GetXODR(Episode->GetWorld()));
   };
 
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
@@ -376,14 +377,15 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     // Get the map's folder absolute path and check if it's in its own folder
-    const auto mapDir = FPaths::GetPath(UCarlaStatics::GetGameInstance(Episode->GetWorld())->GetMapPath());
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    const auto mapDir = GameMode->GetFullMapPath();
     const auto folderDir = mapDir + "/" + folder.c_str();
     const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
 
     // Find all the xodr and bin files from the map
     TArray<FString> Files;
-    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".xodr"), true, false, false);
-    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *FString(fileName + ".bin"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".xodr"), true, false, false);
+    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
 
     // Remove the start of the path until the content folder and put each file in the result
     std::vector<std::string> result;
@@ -394,7 +396,6 @@ void FCarlaServer::FPimpl::BindActions()
 
     return result;
   };
-
   BIND_SYNC(request_file) << [this](std::string name) -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();

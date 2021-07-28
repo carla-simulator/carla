@@ -71,7 +71,6 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     FinalPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath);
 
     if (FPaths::FileExists(FinalPath)) {
-      UCarlaStatics::GetGameInstance(GetWorld())->SetMapPath(FinalPath);
       bIsFileFound = true;
       FinalPath = MapString;
     }
@@ -90,7 +89,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
       FinalPath = TempStrArray[1];
       FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
       FinalPath = "/Game/" + TempStrArray[0];
-      
+
       return LoadNewEpisode(FinalPath, ResetSettings);
     }
   }
@@ -245,6 +244,8 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FCarlaActor *CarlaActor) const
   return Actor;
 }
 
+static FString GetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags);
+
 carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
 {
   FCarlaActor* CarlaActor = FindCarlaActor(Actor);
@@ -256,10 +257,12 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
   {
     carla::rpc::Actor SerializedActor;
     SerializedActor.id = 0u;
-    SerializedActor.description = FActorDescription();
     SerializedActor.bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(Actor);
     TSet<crp::CityObjectLabel> SemanticTags;
     ATagger::GetTagsOfTaggedActor(*Actor, SemanticTags);
+    FActorDescription Description;
+    Description.Id = TEXT("static.") + GetRelevantTagAsString(SemanticTags);
+    SerializedActor.description = Description;
     SerializedActor.semantic_tags.reserve(SemanticTags.Num());
     for (auto &&Tag : SemanticTags)
     {

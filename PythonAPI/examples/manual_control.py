@@ -227,8 +227,7 @@ class World(object):
         if blueprint.has_attribute('speed'):
             self.player_max_speed = float(blueprint.get_attribute('speed').recommended_values[1])
             self.player_max_speed_fast = float(blueprint.get_attribute('speed').recommended_values[2])
-        else:
-            print("No recommended values for 'speed' attribute")
+
         # Spawn the player.
         if self.player is not None:
             spawn_point = self.player.get_transform()
@@ -526,7 +525,7 @@ class KeyboardControl(object):
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
-            self._control.throttle = min(self._control.throttle + 0.01, 1)
+            self._control.throttle = min(self._control.throttle + 0.01, 0.85)
         else:
             self._control.throttle = 0.0
 
@@ -918,6 +917,10 @@ class RadarSensor(object):
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
+        bound_x = 0.5 + self._parent.bounding_box.extent.x
+        bound_y = 0.5 + self._parent.bounding_box.extent.y
+        bound_z = 0.5 + self._parent.bounding_box.extent.z
+
         self.velocity_range = 7.5 # m/s
         world = self._parent.get_world()
         self.debug = world.debug
@@ -927,7 +930,7 @@ class RadarSensor(object):
         self.sensor = world.spawn_actor(
             bp,
             carla.Transform(
-                carla.Location(x=2.8, z=1.0),
+                carla.Location(x=bound_x + 0.05, z=bound_z+0.05),
                 carla.Rotation(pitch=5)),
             attach_to=self._parent)
         # We need a weak reference to self to avoid circular reference.
