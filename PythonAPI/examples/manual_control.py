@@ -164,6 +164,7 @@ def get_actor_display_name(actor, truncate=250):
 class World(object):
     def __init__(self, carla_world, hud, args):
         self.world = carla_world
+        self.sync = args.sync
         self.actor_role_name = args.rolename
         try:
             self.map = self.world.get_map()
@@ -256,6 +257,11 @@ class World(object):
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
 
+        if self.sync:
+            self.world.tick()
+        else:
+            self.world.wait_for_tick()
+
     def next_weather(self, reverse=False):
         self._weather_index += -1 if reverse else 1
         self._weather_index %= len(self._weather_presets)
@@ -330,8 +336,9 @@ class World(object):
 
 class KeyboardControl(object):
     """Class that handles keyboard input."""
-    def __init__(self, world, start_in_autopilot):
+    def __init__(self, world, start_in_autopilot, sync_mode):
         self._autopilot_enabled = start_in_autopilot
+        self._sync_mode = sync_mode
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
             self._lights = carla.VehicleLightState.NONE
@@ -462,6 +469,8 @@ class KeyboardControl(object):
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
                     elif event.key == K_p and not pygame.key.get_mods() & KMOD_CTRL:
+                        if not self._autopilot_enabled and not self._sync_mode:
+                            print("WARNING: It is recommended to use the autopilot in synchronous mode")
                         self._autopilot_enabled = not self._autopilot_enabled
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
@@ -1156,7 +1165,7 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         world = World(sim_world, hud, args)
-        controller = KeyboardControl(world, args.autopilot)
+        controller = KeyboardControl(world, args.autopilot, args.sync)
 
         if args.sync:
             sim_world.tick()
@@ -1255,6 +1264,9 @@ def main():
     logging.info('listening to server %s:%s', args.host, args.port)
 
     print(__doc__)
+
+    if args.autopilot and not args.sync:
+        print("WARNING: it is recommended to use the autopilot in synchronous mode")
 
     try:
 
