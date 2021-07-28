@@ -1481,6 +1481,9 @@ Returns the landmarks of a specific type. Landmarks retrieved using this method 
     - **Parameters:**
         - `type` (_string_) – The type of the landmarks.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_crosswalks"></a>**<font color="#7fb800">get_crosswalks</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a list of locations with all crosswalk zones in the form of closed polygons. The first point is repeated, symbolizing where the polygon begins and ends.  
+    - **Return:** _list([carla.Location](#carla.Location))_  
 - <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
 Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.  
     - **Parameters:**
