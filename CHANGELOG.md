@@ -5,6 +5,7 @@
   * CARLA now is built with Visual Studio 2019 in Windows
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
+  * Added generation attribute to vehicles and pedestrians
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
   * Enabling the **no_delay** option to RPC and stream sockets
   * The special nomenclature to define roads (ROAD_ROAD), sidewalks (ROAD_SIDEWALK)... can be at any position of the asset name
