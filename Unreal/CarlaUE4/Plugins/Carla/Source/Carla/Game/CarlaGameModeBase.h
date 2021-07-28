@@ -75,6 +75,10 @@ public:
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
+  void EnableOverlapEvents();
+
+  void CheckForEmptyMeshes();
+
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   void LoadMapLayer(int32 MapLayers);
 
