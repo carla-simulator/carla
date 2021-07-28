@@ -11,6 +11,7 @@
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
 #include "carla/client/BlueprintLibrary.h"
+#include "carla/client/FileTransfer.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/TimeoutException.h"
@@ -143,7 +144,7 @@ namespace detail {
       return true;
     }
     if (map_info.name != _cached_map->GetName() ||
-        map_info.open_drive_file.size() != _cached_map->GetOpenDrive().size()) {
+        _open_drive_file.size() != _cached_map->GetOpenDrive().size()) {
       return true;
     }
     return false;
@@ -153,10 +154,48 @@ namespace detail {
     DEBUG_ASSERT(_episode != nullptr);
     if (!_cached_map || _episode->HasMapChangedSinceLastCall()) {
       rpc::MapInfo map_info = _client.GetMapInfo();
-      _cached_map = MakeShared<Map>(map_info);
+      std::string map_name;
+      std::string map_base_path;
+      bool fill_base_string = false;
+      for (int i = map_info.name.size() - 1; i >= 0; --i) {
+        if (fill_base_string == false && map_info.name[i] != '/') {
+          map_name += map_info.name[i];
+        } else {
+          map_base_path += map_info.name[i];
+          fill_base_string = true;
+        }
+      }
+      std::reverse(map_name.begin(), map_name.end());
+      std::reverse(map_base_path.begin(), map_base_path.end());
+      std::string XODRFolder = map_base_path + "/OpenDrive/" + map_name + ".xodr";
+      if (FileTransfer::FileExists(XODRFolder) == false) _client.GetRequiredFiles();
+      _open_drive_file = _client.GetMapData();
+      _cached_map = MakeShared<Map>(map_info, _open_drive_file);
     }
+
     return _cached_map;
   }
+
+  // ===========================================================================
+  // -- Required files ---------------------------------------------------------
+  // ===========================================================================
+
+
+    bool Simulator::SetFilesBaseFolder(const std::string &path) {
+      return _client.SetFilesBaseFolder(path);
+    }
+
+    std::vector<std::string> Simulator::GetRequiredFiles(const std::string &folder, const bool download) const {
+      return _client.GetRequiredFiles(folder, download);
+    }
+
+    void Simulator::RequestFile(const std::string &name) const {
+      _client.RequestFile(name);
+    }
+
+    std::vector<uint8_t> Simulator::GetCacheFile(const std::string &name, const bool request_otherwise) const {
+      return _client.GetCacheFile(name, request_otherwise);
+    }
 
   // ===========================================================================
   // -- Tick -------------------------------------------------------------------
