@@ -10,7 +10,7 @@ launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
 
 import: CarlaUE4Editor PythonAPI
-	@${CARLA_BUILD_TOOLS_FOLDER}/Import.py $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/Import.sh $(ARGS)
 
 package: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)

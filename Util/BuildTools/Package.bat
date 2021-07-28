@@ -347,6 +347,14 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
                 mkdir "!TRG!"
                 copy "!SRC!" "!TRG!"
             )
+
+            REM # copy the traffic manager map file
+            set SRC=!BASE_CONTENT!!MAP_FOLDER!\TM\!MAP_NAME!.bin
+            set TRG=!BUILD_FOLDER!\CarlaUE4\Content\!MAP_FOLDER!\TM\
+            if exist "!SRC!" (
+                mkdir "!TRG!"
+                copy "!SRC!" "!TRG!"
+            )
         )
 
         rmdir /S /Q "!BUILD_FOLDER!\CarlaUE4\Metadata"
