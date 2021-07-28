@@ -29,6 +29,25 @@ import argparse
 import logging
 from numpy import random
 
+def get_actor_blueprints(world, filter, generation):
+    bps = world.get_blueprint_library().filter(filter)
+
+    if generation == "All":
+        return bps
+
+    try:
+        int_generation = int(generation)
+        # Check if generation is in available generations
+        if int_generation in [1, 2]:
+            bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
+            return bps
+        else:
+            print("   Warning! Actor Generation is not valid. No actor will be spawned.")
+            return []
+    except:
+        print("   Warning! Actor Generation is not valid. No actor will be spawned.")
+        return []
+
 def main():
     argparser = argparse.ArgumentParser(
         description=__doc__)
@@ -65,10 +84,20 @@ def main():
         default='vehicle.*',
         help='Filter vehicle model (default: "vehicle.*")')
     argparser.add_argument(
+        '--generationv',
+        metavar='G',
+        default='All',
+        help='restrict to certain vehicle generation (values: "1","2","All" - default: "2")')
+    argparser.add_argument(
         '--filterw',
         metavar='PATTERN',
         default='walker.pedestrian.*',
         help='Filter pedestrian type (default: "walker.pedestrian.*")')
+    argparser.add_argument(
+        '--generationw',
+        metavar='G',
+        default='2',
+        help='restrict to certain pedestrian generation (values: "1","2","All" - default: "2")')
     argparser.add_argument(
         '--tm-port',
         metavar='P',
@@ -152,8 +181,8 @@ def main():
             settings.no_rendering_mode = True
         world.apply_settings(settings)
 
-        blueprints = world.get_blueprint_library().filter(args.filterv)
-        blueprintsWalkers = world.get_blueprint_library().filter(args.filterw)
+        blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
+        blueprintsWalkers = get_actor_blueprints(world, args.filterw, args.generationw)
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
