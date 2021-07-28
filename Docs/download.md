@@ -39,13 +39,13 @@
 
 ### Docker
 
-All the versions are also available to pull from DockerHub
+All versions are available to pull from DockerHub:
 
 ```sh
 docker pull carlasim/carla:X.X.X
 ```
 
-Use tag "latest" for the nightly build
+Use tag "latest" for the most recent release:
 
 ```sh
 docker pull carlasim/carla:latest
