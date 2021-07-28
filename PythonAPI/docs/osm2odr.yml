@@ -58,6 +58,10 @@
       var_units: meters
       doc: >
         Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.
+    - var_name: center_map
+      type: bool
+      doc: >
+        When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounsing box of the entire road map.
     - var_name: proj_string
       type: str
       doc: >
