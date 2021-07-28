@@ -76,18 +76,40 @@ class ObstacleSensorDataHandler(SensorDataHandler):
 
     def perceived_objects(self, current_time, duration):
         new_perceived_objects = []
-        data = self.data
+        data = deque(self.data)
         self.data = []
 
-        for indexes in self.get_grouped_indexes(current_time, duration, data):
+        tmp_groups = []
+        while data:
+            osd = data.popleft()  # obstacle_sensor_data (osd)
+
+            # validation
+            if osd.time + duration < current_time:
+                continue
+
+            is_in_group = False
+            for tmp_group in tmp_groups:
+                is_in_group = reduce((lambda x, y: x or y), [self.__is_predictable_location(osd, osd_in_group) for osd_in_group in tmp_group], False)
+
+                if is_in_group:
+                    tmp_group.append(osd)
+                    break
+                else:
+                    continue
+
+            if is_in_group:
+                continue
+            else:
+                tmp_groups.append([osd])
+
+
+        for tmp_group in tmp_groups:
             latest_time = 0
             latest_data = None
             total_x_pos = 0
             total_y_pos = 0
-            
-            for index in indexes:
-                d = data[index]
 
+            for d in tmp_group:
                 if latest_time < d.time:
                     latest_time = d.time
                     latest_data = d
@@ -95,17 +117,43 @@ class ObstacleSensorDataHandler(SensorDataHandler):
                 total_x_pos = total_x_pos + d.location().x
                 total_y_pos = total_y_pos + d.location().y
 
-            if latest_time + duration < current_time:
-                continue
-
-            else:
-                new_perceived_objects.append(
-                    PerceivedObject(
-                        time=latest_time,
-                        location=Location(total_x_pos / len(indexes), total_y_pos / len(indexes)),
-                        speed=latest_data.speed()
-                    )
+            new_perceived_objects.append(
+                PerceivedObject(
+                    time=latest_time,
+                    location=Location(total_x_pos / len(tmp_group), total_y_pos / len(tmp_group)),
+                    speed=latest_data.speed()
                 )
+            )
+
+
+        # ----- too slow codes -----
+        # for indexes in self.get_grouped_indexes(current_time, duration, data):
+        #     latest_time = 0
+        #     latest_data = None
+        #     total_x_pos = 0
+        #     total_y_pos = 0
+        #
+        #     for index in indexes:
+        #         d = data[index]
+        #
+        #         if latest_time < d.time:
+        #             latest_time = d.time
+        #             latest_data = d
+        #
+        #         total_x_pos = total_x_pos + d.location().x
+        #         total_y_pos = total_y_pos + d.location().y
+        #
+        #     if latest_time + duration < current_time:
+        #         continue
+        #
+        #     else:
+        #         new_perceived_objects.append(
+        #             PerceivedObject(
+        #                 time=latest_time,
+        #                 location=Location(total_x_pos / len(indexes), total_y_pos / len(indexes)),
+        #                 speed=latest_data.speed()
+        #             )
+        #         )
 
 
         # ----- deplicated codes -----

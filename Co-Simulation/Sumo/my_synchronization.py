@@ -101,6 +101,8 @@ from util.classes.utils import (
     location,
     location_from_transform,
     speed,
+    unlock,
+    lock,
 )
 from util.classes.errors import (
     NoCavWithCarlaIdException,
@@ -576,6 +578,8 @@ class SimulationSynchronization(object):
         # -----------------
         # sumo-->carla sync
         # -----------------
+
+        ##### Begin My Code #####
         if self.sumo_elapsed_seconds() < TIME_TO_START:
             self.sumo.tick_at(TIME_TO_START)
 
@@ -585,6 +589,7 @@ class SimulationSynchronization(object):
             self.init_time = self.init_time - TIME_TO_START + TIME_STEP
         else:
             self.sumo.tick()
+        ##### End My Code #####
 
         # Spawning new sumo actors in carla (i.e, not controlled by carla).
         sumo_spawned_actors = self.sumo.spawned_actors - set(self.carla2sumo_ids.values())
@@ -660,8 +665,10 @@ class SimulationSynchronization(object):
         self.carla.tick()
 
         ##### Start: My code. #####
+        # lock(self.__file_path_for_carla_lock(), self.__carla_lock_file_path())
         for cav in self.sumoid2cav.values():
             cav.tick()
+        # unlock(self.__carla_lock_file_path())
         ##### End: My code. #####
 
         # Spawning new carla actors (not controlled by sumo)
@@ -742,7 +749,7 @@ class SimulationSynchronization(object):
 
 
     def get_cav_by_carla_id(self, carla_id):
-        for cav in self.cavs():
+        for _, cav in list(self.sumoid2cav.items()):
             if str(cav.carla_actor_id) == str(carla_id):
                 return cav
 
@@ -753,7 +760,7 @@ class SimulationSynchronization(object):
 
 
     def get_cav_by_location(self, other_location):
-        for cav in self.cavs():
+        for _, cav in list(self.sumoid2cav.items()):
             distance = cav.location().distance(other_location)
             # print(f"d, cav_x, cav_y, lx, ly: {distance}, {cav.location().x}, {cav.location().y}, {other_location.x}, {other_location.y}")
             if cav.location().distance(other_location) <= Constants.LOCATION_THRESHOLD:
@@ -797,6 +804,17 @@ class SimulationSynchronization(object):
             return CPMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
         else:
             raise Exception(f"No such CPM standard: {std}")
+
+
+    def __carla_lock_file_path(self):
+        return f"{self.__file_path_for_carla_lock()}.lock"
+
+
+    def __file_path_for_carla_lock(self):
+        global DATA_DIR
+
+        return f"{DATA_DIR}/carla.txt"
+
     # My Code End
 
 

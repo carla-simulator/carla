@@ -11,24 +11,10 @@ from util.classes.constants import (
 from util.classes.utils import (
     Location,
     Speed,
+    unlock,
+    make_symlink,
+    lock,
 )
-
-def unlock(dst):
-    os.unlink(dst)
-
-
-def make_symlink(src, dst):
-    try:
-        os.symlink(src, dst)
-        return True
-    except Exception as e:
-        # print(e)
-        return False
-
-def lock(src, dst):
-    while make_symlink(src, dst) is False:
-        continue
-
 
 
 class MessagesHandler:

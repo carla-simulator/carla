@@ -4,7 +4,7 @@
   "is_carla_change_map": 1,
   "is_carla_rendering": 1,
   "is_carla_standalone_mode": 0,
-  "is_dynamic_simulation": 1,
+  "is_dynamic_simulation": 0,
   "carla_veins_dynamic_data_dir": "./../OpenCV2X/carla-veins-data/dynamic/",
   "carla_veins_static_data_dir": "./../OpenCV2X/carla-veins-data/static/",
   "mobility_handler_choices": ["carla", "veins"],
@@ -13,7 +13,7 @@
   "sumocmd": "sumo-gui",
   "sumocmd_choices": ["sumo, sumo-gui"],
   "time_step": 0.1,
-  "time_to_start": 150,
+  "time_to_start": 30,
   "time_to_finish": 170,
   "vagrant_ip": "192.168.33.10",
   "in_vagrant": {

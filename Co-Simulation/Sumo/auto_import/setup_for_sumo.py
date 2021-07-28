@@ -98,7 +98,7 @@ def main(args, env):
         pass
 
     # generate trip file
-    run(f"python {args.sumo_home_dir}/tools/randomTrips.py --allow-fringe -n {env['src_dir']['net_file_name']} -o {env['src_dir']['trip_file_name']}", shell=True, cwd=os.path.expanduser(src_dir))
+    run(f"python {args.sumo_home_dir}/tools/randomTrips.py --allow-fringe --seed {args.seed} -n {env['src_dir']['net_file_name']} -o {env['src_dir']['trip_file_name']}", shell=True, cwd=os.path.expanduser(src_dir))
 
     # generate_sumocfg
     with open(f"{src_dir}/{env['src_dir']['sumocfg_file_name']}", mode='w') as f:
@@ -121,6 +121,7 @@ if __name__ == "__main__":
     parser.add_argument('--netconvert_carla_dir', default=env["netconvert_carla_dir"])
     parser.add_argument('--osm2xodr_dir', default=env["osm2xodr_dir"])
     parser.add_argument('--sumo_home_dir', default=env["sumo_home_dir"])
+    parser.add_argument('--seed', type=int, default=0)
 
     #  ----- for sumo -----
     args = parser.parse_args()

@@ -27,6 +27,10 @@ class CarlaSimulation(object):
     CarlaSimulation is responsible for the management of the carla simulation.
     """
     def __init__(self, host, port, step_length):
+        ##### Begin My Code #####
+        self.world_time_out = 10
+        ##### End My Code #####
+
         self.client = carla.Client(host, port)
         self.client.set_timeout(2.0)
 
@@ -166,7 +170,7 @@ class CarlaSimulation(object):
         """
         Tick to carla simulation.
         """
-        self.world.tick()
+        self.world.tick(self.world_time_out)
 
         # Update data structures for the current frame.
         current_actors = set(

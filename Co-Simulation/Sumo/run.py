@@ -102,10 +102,12 @@ def start_sumo_for_veins(args, env, sumo_files, client_num):
 
 
 def start_tracis_synchronization(args, env, sumo_files):
+    dev_null = "> /dev/null 2>&1"
+
     if args.main_mobility_handler == "carla":
-        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start}", shell=True)
+        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start} {dev_null}", shell=True)
     else:
-        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start}", shell=True)
+        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start} {dev_null}", shell=True)
 
 class VeinsStateHandler:
     class VeinsState:
@@ -211,8 +213,9 @@ class Main:
         if bool(args.is_dynamic_simulation):
             pass
         else:
-            Popen(f"mkdir {args.data_dir}/../{self.save_dir_name}", shell=True).wait()
-            Popen(f"cp -rf {args.data_dir}/* {args.data_dir}/../{self.save_dir_name}", shell=True).wait()
+            static_save_dir = f"{args.data_dir}/../static_past/{self.save_dir_name}"
+            Popen(f"mkdir {static_save_dir}", shell=True).wait()
+            Popen(f"cp -rf {args.data_dir}/* {static_save_dir}", shell=True).wait()
 
         # switch on the calra rendering
         switch_carla_rendering(args, env, 1)
