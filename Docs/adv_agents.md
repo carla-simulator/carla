@@ -14,13 +14,12 @@ CARLA Agent scripts allow a vehicle to either follow a random, endless route or 
 
 ## Overview of agent scripts
 
-The main scripts involved in the CARLA Agents are found in `PythonAPI/carla/agents/navigation`. They fall into two categories; __planning and control__ and __agent behaviors__. There are also some calculus helper scripts found in `PythonAPI/carla/agents/tools`.
+The main scripts involved in the CARLA Agents are found in `PythonAPI/carla/agents/navigation`. They fall into two categories; __planning and control__ and __agent behaviors__.
 
 ### Planning and control
 
 - __`controller.py`:__ Combines longitudinal and lateral PID controllers into a single class, __VehiclePIDController__, used for low-level control of vehicles from the client side of CARLA.
 - __`global_route_planner.py`:__ Gets detailed topology from the CARLA server to build a graph representation of the world map, providing waypoint and road option information for the __Local Planner__.
-- __`global_route_planner_dao.py`:__ Accesses the information from the server-side instance of the __Global Route Planner__.
 - __`local_planner.py`:__ Follows waypoints based on control inputs from the __VehiclePIDController__. Waypoints can either be provided by the __Global Route Planner__ or be calculated dynamically, choosing random paths at junctions, similar to the [Traffic Manager](adv_traffic_manager.md).
 
 ### Agent behaviors
