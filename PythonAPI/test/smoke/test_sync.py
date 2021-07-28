@@ -68,7 +68,7 @@ class TestSynchronousMode(SyncSmokeTest):
         spawn_points = self.world.get_map().get_spawn_points()
         self.assertNotEqual(len(spawn_points), 0)
 
-        car_bp = bp_lib.find('vehicle.mustang.mustang')
+        car_bp = bp_lib.find('vehicle.ford.mustang')
         car = self.world.spawn_actor(car_bp, spawn_points[0])
         # List of sensors that are not events, these are retrieved every frame
         sensor_ids = [

@@ -12,10 +12,12 @@ from __future__ import print_function
 
 import errno
 import fnmatch
+import glob
 import json
 import os
 import shutil
 import subprocess
+import sys
 import argparse
 import threading
 import copy
@@ -26,6 +28,16 @@ SCRIPT_NAME = os.path.basename(__file__)
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 # Go two directories above the current script
 CARLA_ROOT_PATH = os.path.normpath(SCRIPT_DIR + '/../..')
+
+try:
+    sys.path.append(glob.glob(os.path.join(CARLA_ROOT_PATH, "PythonAPI/carla/dist/carla-*%d.%d-%s.egg" % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64')))[0])
+except IndexError:
+    pass
+
+import carla
 
 
 def get_packages_json_list(folder):
@@ -470,6 +482,8 @@ def import_assets_from_json_list(json_list, batch_size):
                 load_asset_materials_commandlet(package_name)
             thr.join()
 
+            build_binary_for_tm(package_name, dirname, maps)
+
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
     commandlet_arguments = ["-PackageName=%s" % package_name]
@@ -503,8 +517,9 @@ def build_binary_for_navigation(package_name, dirname, maps):
         # get the sources for the map (single or tiles)
         if ("source" in umap):
             tiles = [umap["source"]]
-        elif ("tiles" in umap):
-            tiles = umap["tiles"]
+        # disabled until we have a new Recast adapted to work with tiles
+        # elif ("tiles" in umap):
+        #     tiles = umap["tiles"]
         else:
             continue
 
@@ -566,6 +581,34 @@ def build_binary_for_navigation(package_name, dirname, maps):
                 os.remove(fbx_path_target)
 
         os.remove(xodr_path_target)
+
+
+def build_binary_for_tm(package_name, dirname, maps):
+
+    xodrs = set(
+        (map["name"], map["xodr"]) for map in maps if "xodr" in map)
+
+    for target_name, xodr in xodrs:
+        with open(os.path.join(dirname, xodr), "rt") as f:
+            data = f.read()
+
+        # copy the binary file
+        tm_folder_target = os.path.join(
+            CARLA_ROOT_PATH,
+            "Unreal",
+            "CarlaUE4",
+            "Content",
+            package_name,
+            "Maps",
+            target_name,
+            "TM")
+
+        if not os.path.exists(tm_folder_target):
+            os.makedirs(tm_folder_target)
+
+        m = carla.Map(str(target_name), data)
+        m.cook_in_memory_map(str(os.path.join(tm_folder_target, "%s.bin" % target_name)))
+
 
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)

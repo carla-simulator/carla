@@ -1,4 +1,4 @@
-# How to control vehicle physics
+# Control and monitor vehicle physics
 
 Physics properties can be tuned for vehicles and their wheels.
 These changes are applied **only** on runtime, and values are set back to default when the execution ends.
@@ -8,8 +8,11 @@ These properties are controlled through a
 which also provides the control of each wheel's physics through a
 [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) object.
 
+- [__Vehicle control code example__](#vehicle-control-code-example)
+- [__Viewing vehicle telemetry__](#viewing-vehicle-telemetry)
+
 ---
-## Example
+## Vehicle control code example
 
 ```py
 import carla
@@ -58,3 +61,13 @@ def main():
 if __name__ == '__main__':
     main()
 ```
+
+---
+
+## Viewing vehicle telemetry
+
+Vehicle telemetry can be visualised by calling the [`Actor.enable_debug_telemetry`](python_api.md#carla.Actor.enable_debug_telemetry) method. This will provide graph views of several metrics on the server window as well as vehicle reference points on the simulation window.
+
+![vehicle_telemetry](img/vehicle_telemetry.png)
+
+You can try the telemetry visualisation tool in the example script `manual_control.py` located in `PythonAPI/examples`. Activate the telemetry view by pressing `T`.

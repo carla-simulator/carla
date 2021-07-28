@@ -11,6 +11,7 @@
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/Map.h"
 #include "carla/road/RoadTypes.h"
+#include "carla/trafficmanager/InMemoryMap.h"
 
 #include <sstream>
 
@@ -181,6 +182,10 @@ namespace client {
       }
     }
     return result;
+  }
+
+  void Map::CookInMemoryMap(const std::string& path) const {
+    traffic_manager::InMemoryMap::Cook(shared_from_this(), path);
   }
 
 } // namespace client

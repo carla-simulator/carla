@@ -76,7 +76,7 @@ def tutorial(args):
 
     try:
         # Search the desired blueprints
-        vehicle_bp = bp_lib.filter("vehicle.lincoln.mkz2017")[0]
+        vehicle_bp = bp_lib.filter("vehicle.lincoln.mkz_2017")[0]
         camera_bp = bp_lib.filter("sensor.camera.rgb")[0]
         lidar_bp = bp_lib.filter("sensor.lidar.ray_cast")[0]
 

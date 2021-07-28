@@ -379,7 +379,7 @@ void FCarlaServer::FPimpl::BindActions()
     // Get the map's folder absolute path and check if it's in its own folder
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     const auto mapDir = GameMode->GetFullMapPath();
-    const auto folderDir = mapDir + folder.c_str();
+    const auto folderDir = mapDir + "/" + folder.c_str();
     const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
 
     // Find all the xodr and bin files from the map
@@ -396,7 +396,6 @@ void FCarlaServer::FPimpl::BindActions()
 
     return result;
   };
-
   BIND_SYNC(request_file) << [this](std::string name) -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();
