@@ -1078,7 +1078,7 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
 
   FTransform NewTransform = Transform;
   NewTransform.SetLocation(NewLocation);
-  SetActorGlobalTransform(NewTransform);
+
   if (IsDormant())
   {
     FWalkerData* WalkerData = GetActorData<FWalkerData>();
@@ -1105,6 +1105,7 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
     }
     Controller->ApplyWalkerControl(WalkerControl);
   }
+  SetActorGlobalTransform(NewTransform);
   return ECarlaServerResponse::Success;
 }
 
