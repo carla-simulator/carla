@@ -40,6 +40,7 @@ Use ARROWS or WASD keys for control.
     B            : Load current selected map layer (Shift+B to unload)
 
     R            : toggle recording images to disk
+    T            : toggle vehicle's telemetry
 
     CTRL + R     : toggle recording of simulation (replacing any previous)
     CTRL + P     : start replaying last recorded simulation
@@ -123,6 +124,7 @@ try:
     from pygame.locals import K_q
     from pygame.locals import K_r
     from pygame.locals import K_s
+    from pygame.locals import K_t
     from pygame.locals import K_v
     from pygame.locals import K_w
     from pygame.locals import K_x
@@ -187,6 +189,7 @@ class World(object):
         self.recording_enabled = False
         self.recording_start = 0
         self.constant_velocity_enabled = False
+        self.show_vehicle_telemetry = False
         self.current_map_layer = 0
         self.map_layer_names = [
             carla.MapLayer.NONE,
@@ -223,8 +226,7 @@ class World(object):
         if blueprint.has_attribute('speed'):
             self.player_max_speed = float(blueprint.get_attribute('speed').recommended_values[1])
             self.player_max_speed_fast = float(blueprint.get_attribute('speed').recommended_values[2])
-        else:
-            print("No recommended values for 'speed' attribute")
+
         # Spawn the player.
         if self.player is not None:
             spawn_point = self.player.get_transform()
@@ -393,6 +395,18 @@ class KeyboardControl(object):
                         world.player.enable_constant_velocity(carla.Vector3D(17, 0, 0))
                         world.constant_velocity_enabled = True
                         world.hud.notification("Enabled Constant Velocity Mode at 60 km/h")
+                elif event.key == K_t:
+                    if world.show_vehicle_telemetry:
+                        world.player.show_debug_telemetry(False)
+                        world.show_vehicle_telemetry = False
+                        world.hud.notification("Disabled Vehicle Telemetry")
+                    else:
+                        try:
+                            world.player.show_debug_telemetry(True)
+                            world.show_vehicle_telemetry = True
+                            world.hud.notification("Enabled Vehicle Telemetry")
+                        except Exception:
+                            pass
                 elif event.key > K_0 and event.key <= K_9:
                     index_ctrl = 0
                     if pygame.key.get_mods() & KMOD_CTRL:
@@ -502,7 +516,7 @@ class KeyboardControl(object):
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
-            self._control.throttle = min(self._control.throttle + 0.01, 1)
+            self._control.throttle = min(self._control.throttle + 0.01, 0.85)
         else:
             self._control.throttle = 0.0
 
@@ -894,6 +908,10 @@ class RadarSensor(object):
     def __init__(self, parent_actor):
         self.sensor = None
         self._parent = parent_actor
+        bound_x = 0.5 + self._parent.bounding_box.extent.x
+        bound_y = 0.5 + self._parent.bounding_box.extent.y
+        bound_z = 0.5 + self._parent.bounding_box.extent.z
+
         self.velocity_range = 7.5 # m/s
         world = self._parent.get_world()
         self.debug = world.debug
@@ -903,7 +921,7 @@ class RadarSensor(object):
         self.sensor = world.spawn_actor(
             bp,
             carla.Transform(
-                carla.Location(x=2.8, z=1.0),
+                carla.Location(x=bound_x + 0.05, z=bound_z+0.05),
                 carla.Rotation(pitch=5)),
             attach_to=self._parent)
         # We need a weak reference to self to avoid circular reference.
@@ -1110,10 +1128,25 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
+    original_settings = None
 
+    if args.seed is not None:
+        random.seed(args.seed)
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(20.0)
+
+        sim_world = client.get_world()
+        if args.sync:
+            original_settings = sim_world.get_settings()
+            settings = sim_world.get_settings()
+            if not settings.synchronous_mode:
+                settings.synchronous_mode = True
+                settings.fixed_delta_seconds = 0.05
+            sim_world.apply_settings(settings)
+
+            traffic_manager = client.get_trafficmanager()
+            traffic_manager.set_synchronous_mode(True)
 
         display = pygame.display.set_mode(
             (args.width, args.height),
@@ -1122,11 +1155,18 @@ def game_loop(args):
         pygame.display.flip()
 
         hud = HUD(args.width, args.height)
-        world = World(client.get_world(), hud, args)
+        world = World(sim_world, hud, args)
         controller = KeyboardControl(world, args.autopilot)
+
+        if args.sync:
+            sim_world.tick()
+        else:
+            sim_world.wait_for_tick()
 
         clock = pygame.time.Clock()
         while True:
+            if args.sync:
+                sim_world.tick()
             clock.tick_busy_loop(60)
             if controller.parse_events(client, world, clock):
                 return
@@ -1135,6 +1175,9 @@ def game_loop(args):
             pygame.display.flip()
 
     finally:
+
+        if original_settings:
+            sim_world.apply_settings(original_settings)
 
         if (world and world.recording_enabled):
             client.stop_recorder()
@@ -1193,6 +1236,15 @@ def main():
         default=2.2,
         type=float,
         help='Gamma correction of the camera (default: 2.2)')
+    argparser.add_argument(
+        '-s', '--seed',
+        help='Set seed for repeating executions (default: None)',
+        default=None,
+        type=int)
+    argparser.add_argument(
+        '--sync',
+        action='store_true',
+        help='Activate synchronous mode execution')
     args = argparser.parse_args()
 
     args.width, args.height = [int(x) for x in args.res.split('x')]

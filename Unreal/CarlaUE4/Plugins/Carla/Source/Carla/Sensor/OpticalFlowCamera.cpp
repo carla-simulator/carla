@@ -1,5 +1,6 @@
 #include "Carla.h"
 #include "Carla/Sensor/OpticalFlowCamera.h"
+#include "HAL/IConsoleManager.h"
 
 #include "Carla/Sensor/PixelReader.h"
 
@@ -20,5 +21,9 @@ AOpticalFlowCamera::AOpticalFlowCamera(const FObjectInitializer &ObjectInitializ
 
 void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
+  auto CVarForceOutputsVelocity = IConsoleManager::Get().FindConsoleVariable(TEXT("r.BasePassForceOutputsVelocity"));
+  int32 OldValue = CVarForceOutputsVelocity->GetInt();
+  CVarForceOutputsVelocity->Set(1);
   FPixelReader::SendPixelsInRenderThread(*this, true);
+  CVarForceOutputsVelocity->Set(OldValue);
 }

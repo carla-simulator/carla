@@ -62,7 +62,6 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UActorDispatcher::SpawnActor(
     Result.Status = EActorSpawnResultStatus::UnknownError;
   }
 
-  UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor spawned DesiredId %d"), DesiredId);
   FCarlaActor* View = Result.IsValid() ?
       RegisterActor(*Result.Actor, std::move(Description), DesiredId) : nullptr;
   if (!View)
@@ -72,7 +71,6 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UActorDispatcher::SpawnActor(
   }
   else
   {
-    UE_LOG(LogCarla, Error, TEXT("Dispatcher -> Actor registered with ID %d"), View->GetActorId());
     ATagger::TagActor(*View->GetActor(), true);
   }
 
@@ -150,7 +148,7 @@ bool UActorDispatcher::DestroyActor(FCarlaActor::IdType ActorId)
     }
   }
 
-  Registry.Deregister(ActorId, View->IsDormant());
+  Registry.Deregister(ActorId);
 
   return true;
 }
@@ -163,7 +161,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
   if (View)
   {
     // TODO: support external actor destruction
-    // Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
+    Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
   }
   return View;
 }
@@ -176,4 +174,16 @@ void UActorDispatcher::PutActorToSleep(FCarlaActor::IdType Id, UCarlaEpisode* Ca
 void UActorDispatcher::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode)
 {
   Registry.WakeActorUp(Id, CarlaEpisode);
+}
+
+void UActorDispatcher::OnActorDestroyed(AActor *Actor)
+{
+  FCarlaActor* CarlaActor = Registry.FindCarlaActor(Actor);
+  if (CarlaActor)
+  {
+    if (CarlaActor->IsActive())
+    {
+      Registry.Deregister(CarlaActor->GetActorId());
+    }
+  }
 }

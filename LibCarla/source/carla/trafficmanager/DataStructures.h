@@ -65,6 +65,7 @@ struct StateEntry {
   float velocity;
   float deviation_integral;
   float velocity_integral;
+  float steer;
 };
 
 } // namespace traffic_manager
