@@ -24,16 +24,16 @@
         "vehicle.jeep.wrangler_rubicon": {
             "vClass": "passenger"
         },
-        "vehicle.lincoln.mkz2017": {
+        "vehicle.lincoln.mkz_2017": {
             "vClass": "passenger"
         },
-        "vehicle.mercedes-benz.coupe": {
+        "vehicle.mercedes.coupe": {
             "vClass": "passenger"
         },
-        "vehicle.mini.cooperst": {
+        "vehicle.mini.cooper_s": {
             "vClass": "passenger"
         },
-        "vehicle.mustang.mustang": {
+        "vehicle.ford.mustang": {
             "vClass": "passenger"
         },
         "vehicle.nissan.micra": {
@@ -49,11 +49,11 @@
             "vClass": "passenger",
             "guiShape": "passenger/van"
         },
-        "vehicle.dodge_charger.police": {
+        "vehicle.dodge.charger_police": {
             "vClass": "authority",
             "guiShape": "police"
         },
-        "vehicle.bmw.isetta": {
+        "vehicle.micro.microlino": {
             "vClass": "evehicle"
         },
         "vehicle.toyota.prius": {
