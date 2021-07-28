@@ -164,7 +164,7 @@ pipeline
                             steps
                             {
                                 sh 'git checkout .'
-                                sh 'make deploy ARGS="--replace-latest --docker-push"'
+                                sh 'make deploy ARGS="--replace-latest"'
                             }
                         }
                         stage('ubuntu deploy master')
