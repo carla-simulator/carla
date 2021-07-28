@@ -493,7 +493,7 @@
   - class_name: SetEnableGravity
     # - DESCRIPTION ------------------------
     doc: >
-      Command adaptation of __<font color="#7fb800">set_enable_gravity()</font>__ in carla.Actor. Enables or disables gravity on an object.
+      Command adaptation of __<font color="#7fb800">set_enable_gravity()</font>__ in carla.Actor. Enables or disables gravity on an actor.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: actor_id

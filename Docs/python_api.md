@@ -92,7 +92,7 @@ Returns the world this actor belongs to.
 
 ##### Setters
 - <a name="carla.Actor.set_enable_gravity"></a>**<font color="#7fb800">set_enable_gravity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**</font>)  
-Enables or disables gravity for the object. __Default__ is True.  
+Enables or disables gravity for the actor. __Default__ is True.  
     - **Parameters:**
         - `enabled` (_bool_)  
 - <a name="carla.Actor.set_location"></a>**<font color="#7fb800">set_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
@@ -3428,7 +3428,7 @@ Port of the Traffic Manager where the vehicle is to be registered or unlisted.
 ---
 
 ## command.SetEnableGravity<a name="command.SetEnableGravity"></a>
-Command adaptation of __<font color="#7fb800">set_enable_gravity()</font>__ in [carla.Actor](#carla.Actor). Enables or disables gravity on an object.  
+Command adaptation of __<font color="#7fb800">set_enable_gravity()</font>__ in [carla.Actor](#carla.Actor). Enables or disables gravity on an actor.  
 
 ### Instance Variables
 - <a name="command.SetEnableGravity.actor_id"></a>**<font color="#f8805a">actor_id</font>** (_[carla.Actor](#carla.Actor) or int_)  

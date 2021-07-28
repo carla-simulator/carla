@@ -224,7 +224,7 @@
       - param_name: enabled
         type: bool
       doc: >
-        Enables or disables gravity for the object. __Default__ is True.
+        Enables or disables gravity for the actor. __Default__ is True.
 
   - class_name: VehicleLightState
     # - DESCRIPTION ------------------------
