@@ -61,7 +61,7 @@
     - var_name: center_map
       type: bool
       doc: >
-        When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounsing box of the entire road map.
+        When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounding box of the entire road map.
     - var_name: proj_string
       type: str
       doc: >
