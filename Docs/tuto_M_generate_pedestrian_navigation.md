@@ -32,17 +32,7 @@ Pedestrians can only navigate specific meshes. You need to name the meshes you w
 
 ## Optional pedestrian navigation options
 
-The following steps are not necessary for generating a pedestrian navigation, but allow you to customize pedestrian activity to a certain extent.
-
-- __Create new spawning points__.
-
-These spawning points will be used in scripts such as [`generate_traffic.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py):
-
-1. In the editor, go to the `Modes` panel and search for "spawn" in the `Search Classes` search bar.
-2. Choose the type of spawning point you would like to create and drag it on to the map.
-3. Place the spawn point about 0.5-1m above the ground to prevent collisions with the road.
-
-<br>
+The following step is not necessary for generating a pedestrian navigation, but allows you to customize pedestrian activity to a certain extent.
 
 - __Generate new crosswalks__.
 

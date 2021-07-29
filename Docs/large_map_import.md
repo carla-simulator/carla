@@ -1,6 +1,6 @@
 # Import/Package a Large Map
 
-Large maps generated in RoadRunner can be imported into the source build of CARLA and packaged for distribution and usage in a CARLA standalone package. The process is very simlar to that of normal maps with the addition of specific nomenclature for tiles and batch importing.
+Large maps generated in RoadRunner can be imported into the source build of CARLA and packaged for distribution and usage in a CARLA standalone package. The process is very simlar to that of standard maps with the addition of specific nomenclature for tiles and batch importing.
 
 - [__Files and folders__](#files-and-folders)
 - [__Create the JSON description (Optional)__](#create-the-json-description-optional)
@@ -15,10 +15,9 @@ All files to be imported should be placed in the `Import` folder of the root CAR
 
 - The mesh of the map in multiple `.fbx` files representing different tiles of the map.
 - The OpenDRIVE definition in a single `.xodr` file.
-- Subfolders for each `.fbx` file containing textures for the assets if required.
 
 !!! Warning
-    You cannot import large maps and normal maps at the same time.
+    You cannot import large maps and standard maps at the same time.
 
 The naming convention of map tiles is very important. Each map tile should be named according to the following convention:
 
@@ -41,23 +40,8 @@ Import
   ├── Map01_Tile_0_1.fbx
   ├── Map01_Tile_1_0.fbx
   ├── Map01_Tile_1_1.fbx
-  ├── Map01.xodr
-  ├── Map01_Tile_0_0.fbm
-  |   ├── Grass1_Diff.jpg
-  |   ├── Grass1_Norm.jpg
-  |   └── Grass1_Spec.jpg
-  ├── Map01_Tile_0_1.fbm
-  |   ├── Grass1_Diff.jpg
-  |   ├── Grass1_Norm.jpg
-  |   └── Grass1_Spec.jpg
-  ├── Map01_Tile_1_0.fbm
-  |   ├── Grass1_Diff.jpg
-  |   ├── Grass1_Norm.jpg
-  |   └── Grass1_Spec.jpg
-  └── Map01_Tile_1_1.fbm
-      ├── Grass1_Diff.jpg
-      ├── Grass1_Norm.jpg
-      └── Grass1_Spec.jpg
+  └── Map01.xodr
+
 ```
 
 !!! Note
@@ -138,7 +122,7 @@ make import  ARGS="--no-carla-materials"
 All files will be imported and prepared to be used in the Unreal Editor. The map package will be created in `Unreal/CarlaUE4/Content`. A base map tile, `<mapName>`, will be created as a streaming level for all the tiles. The base tile will contain the sky, weather, and large map actors and will be ready for use in a simulation.
 
 !!! Note
-    It is currently not recommended to use the customization tools provided for normal maps in the Unreal Editor, e.g., road painter, procedural buildings, etc.
+    It is currently not recommended to use the customization tools provided for standard maps in the Unreal Editor, e.g., road painter, procedural buildings, etc.
 
 ---
 
