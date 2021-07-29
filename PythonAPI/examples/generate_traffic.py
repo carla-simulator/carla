@@ -87,7 +87,7 @@ def main():
         '--generationv',
         metavar='G',
         default='All',
-        help='restrict to certain vehicle generation (values: "1","2","All" - default: "2")')
+        help='restrict to certain vehicle generation (values: "1","2","All" - default: "All")')
     argparser.add_argument(
         '--filterw',
         metavar='PATTERN',

@@ -357,9 +357,8 @@ class World(object):
 
 class KeyboardControl(object):
     """Class that handles keyboard input."""
-    def __init__(self, world, start_in_autopilot, sync_mode):
+    def __init__(self, world, start_in_autopilot):
         self._autopilot_enabled = start_in_autopilot
-        self._sync_mode = sync_mode
         if isinstance(world.player, carla.Vehicle):
             self._control = carla.VehicleControl()
             self._lights = carla.VehicleLightState.NONE
@@ -374,7 +373,7 @@ class KeyboardControl(object):
         self._steer_cache = 0.0
         world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
 
-    def parse_events(self, client, world, clock):
+    def parse_events(self, client, world, clock, sync_mode):
         if isinstance(self._control, carla.VehicleControl):
             current_lights = self._lights
         for event in pygame.event.get():
@@ -490,8 +489,9 @@ class KeyboardControl(object):
                     elif self._control.manual_gear_shift and event.key == K_PERIOD:
                         self._control.gear = self._control.gear + 1
                     elif event.key == K_p and not pygame.key.get_mods() & KMOD_CTRL:
-                        if not self._autopilot_enabled and not self._sync_mode:
-                            print("WARNING: It is recommended to use the autopilot in synchronous mode")
+                        if not self._autopilot_enabled and not sync_mode:
+                            print("WARNING: You are currently in asynchronous mode and could "
+                                  "experience some issues with the traffic simulation")
                         self._autopilot_enabled = not self._autopilot_enabled
                         world.player.set_autopilot(self._autopilot_enabled)
                         world.hud.notification(
@@ -1160,8 +1160,6 @@ def game_loop(args):
     world = None
     original_settings = None
 
-    if args.seed is not None:
-        random.seed(args.seed)
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(20.0)
@@ -1178,6 +1176,10 @@ def game_loop(args):
             traffic_manager = client.get_trafficmanager()
             traffic_manager.set_synchronous_mode(True)
 
+        if args.autopilot and not sim_world.get_settings().synchronous_mode:
+            print("WARNING: You are currently in asynchronous mode and could "
+                  "experience some issues with the traffic simulation")
+
         display = pygame.display.set_mode(
             (args.width, args.height),
             pygame.HWSURFACE | pygame.DOUBLEBUF)
@@ -1186,7 +1188,7 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         world = World(sim_world, hud, args)
-        controller = KeyboardControl(world, args.autopilot, args.sync)
+        controller = KeyboardControl(world, args.autopilot)
 
         if args.sync:
             sim_world.tick()
@@ -1198,7 +1200,7 @@ def game_loop(args):
             if args.sync:
                 sim_world.tick()
             clock.tick_busy_loop(60)
-            if controller.parse_events(client, world, clock):
+            if controller.parse_events(client, world, clock, args.sync):
                 return
             world.tick(clock)
             world.render(display)
@@ -1272,11 +1274,6 @@ def main():
         type=float,
         help='Gamma correction of the camera (default: 2.2)')
     argparser.add_argument(
-        '-s', '--seed',
-        help='Set seed for repeating executions (default: None)',
-        default=None,
-        type=int)
-    argparser.add_argument(
         '--sync',
         action='store_true',
         help='Activate synchronous mode execution')
@@ -1290,9 +1287,6 @@ def main():
     logging.info('listening to server %s:%s', args.host, args.port)
 
     print(__doc__)
-
-    if args.autopilot and not args.sync:
-        print("WARNING: it is recommended to use the autopilot in synchronous mode")
 
     try:
 
