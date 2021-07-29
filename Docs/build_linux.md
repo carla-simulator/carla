@@ -247,9 +247,7 @@ pip3 install <path/to/wheel>.whl
 pip install <path/to/wheel>.whl
 ```
 
->This `.whl` file cannot be distributed as it is built specifically for your OS. To build a `.whl` for distribution, you can target a different system by using the following flag:
-
->- `make PythonAPI --target-wheel-platform="<platform>"` will build and repair the `.whl` file using `auditwheel` for a specific [platform](https://github.com/pypa/manylinux). External shared dependencies will be included in the file. The packaged version of the CARLA `.whl` targets the `manylinux_2_27_x86_64` platform.
+>This `.whl` file cannot be distributed as it is built specifically for your OS.
 
 !!! Warning
     Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
