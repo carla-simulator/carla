@@ -29,8 +29,8 @@ __2.__ Search for your desired location and zoom in to a specific area.
 
 ![openstreetmap_view](img/tuto_g_osm_web.jpg)
 
-!!! Warning
-    Due to limitations in Unreal Engine, CARLA can ingest maps of limited size (large cities like Paris will push the limits of the engine). The bigger the map, the longer the conversion to OpenDRIVE will take.
+!!! Note
+    If you would like to use a map of a large area, for example, Paris, you may consider using CARLA's [__Large Map__ feature](large_map_overview.md).
 
 __3.__ Click on _Export_ on the upper left side of the window to open the _Export_ panel.
 
