@@ -94,9 +94,15 @@ namespace traffic_manager {
     out_file.write(reinterpret_cast<const char *>(&total), sizeof(uint32_t));
 
     // write simple waypoints
+    std::unordered_set<uint64_t> used_ids;
     for (auto& wp: dense_topology) {
+      if (used_ids.find(wp->GetId()) != used_ids.end()) {
+        log_error("Could not generate the binary file. There are repeated waypoints");
+      }
       CachedSimpleWaypoint cached_wp(wp);
       cached_wp.Write(out_file);
+
+      used_ids.insert(wp->GetId());
     }
 
     out_file.close();
@@ -252,15 +258,15 @@ namespace traffic_manager {
 
       // Adding more waypoints if the angle is too tight or if they are too distant.
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
-          float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
+          double distance = std::abs(segment_waypoints.at(i)->GetWaypoint()->GetDistance() - segment_waypoints.at(i+1)->GetWaypoint()->GetDistance());
           double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().rotation.GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().rotation.GetForwardVector());
           int16_t angle_splits = static_cast<int16_t>(angle/MAX_WPT_RADIANS);
-          int16_t distance_splits = static_cast<int16_t>(distance/MAX_WPT_DISTANCE);
+          int16_t distance_splits = static_cast<int16_t>((distance*distance)/MAX_WPT_DISTANCE);
           auto max_splits = max(angle_splits, distance_splits);
           if (max_splits >= 1) {
             // Compute how many waypoints do we need to generate.
             for (uint16_t j = 0; j < max_splits; ++j) {
-              auto next_waypoints = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/(max_splits+1));
+              auto next_waypoints = segment_waypoints.at(i)->GetWaypoint()->GetNext(distance/(max_splits+1));
               if (next_waypoints.size() != 0) {
                 auto new_waypoint = next_waypoints.front();
                 i++;
