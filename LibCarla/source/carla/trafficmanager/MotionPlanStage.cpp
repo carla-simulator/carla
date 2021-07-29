@@ -95,7 +95,6 @@ void MotionPlanStage::Update(const unsigned long index) {
     // Flushing controller state for vehicle.
     current_state = {current_timestamp,
                     0.0f, 0.0f,
-                    0.0f, 0.0f,
                     0.0f};
 
     // Add entry to teleportation duration clock table if not present.
@@ -167,10 +166,11 @@ void MotionPlanStage::Update(const unsigned long index) {
       if (cross_product < 0.0f) {
         dot_product *= -1.0f;
       }
-      const float current_deviation = dot_product;
+      const float angular_deviation = dot_product;
+      const float velocity_deviation = (dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity;
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
         pid_state_map.insert({actor_id, initial_state});
       }
 
@@ -191,17 +191,13 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // If physics is enabled for the vehicle, use PID controller.
       // State update for vehicle.
-      current_state = PID::StateUpdate(previous_state, vehicle_speed, dynamic_target_velocity,
-                                      current_deviation, current_timestamp);
+      current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
 
       // Controller actuation.
       actuation_signal = PID::RunStep(current_state, previous_state,
                                       longitudinal_parameters, lateral_parameters);
 
       if (emergency_stop) {
-
-        current_state.deviation_integral = 0.0f;
-        current_state.velocity_integral = 0.0f;
         actuation_signal.throttle = 0.0f;
         actuation_signal.brake = 1.0f;
       }
@@ -225,7 +221,6 @@ void MotionPlanStage::Update(const unsigned long index) {
     else {
       // Flushing controller state for vehicle.
       current_state = {current_timestamp,
-                      0.0f, 0.0f,
                       0.0f, 0.0f,
                       0.0f};
 
@@ -334,10 +329,10 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
       }
       // If vehicle is approaching a lead vehicle and the lead vehicle is further
       // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
-      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) {
+      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN && other_velocity.Length() < 1.0f) {
         // Then follow the lead vehicle by acquiring it's speed along current heading.
         dynamic_target_velocity = std::max(other_speed_along_heading, RELATIVE_APPROACH_SPEED);
-      } else {
+      } else if (available_distance_margin < CRITICAL_BRAKING_MARGIN) {
         // If lead vehicle closer than CRITICAL_BRAKING_MARGIN, initiate emergency stop.
         collision_emergency_stop = true;
       }

@@ -588,6 +588,26 @@
       doc: >
         Sets a given time for the yellow light to be active.
     # --------------------------------------
+    - def_name: get_affected_lane_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the positions and lanes where the traffic light is having an effect.
+    # --------------------------------------
+    - def_name: get_light_boxes
+      return: list(carla.BoundingBox)
+      doc: >
+        Returns a list of the bounding boxes encapsulating each light box of the traffic light.
+    # --------------------------------------
+    - def_name: get_opendrive_id
+      return: str
+      doc: >
+        Returns the OpenDRIVE id of this traffic light.
+    # --------------------------------------
+    - def_name: get_stop_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the stop position for the traffic light. These waypoints are computed from the trigger boxes of the traffic light that indicate where a vehicle should stop.
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
   - class_name: VehicleWheelLocation

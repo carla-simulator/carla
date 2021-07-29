@@ -61,10 +61,8 @@ struct ActuationSignal {
 /// Structure to hold the controller state.
 struct StateEntry {
   cc::Timestamp time_instance;
-  float deviation;
-  float velocity;
-  float deviation_integral;
-  float velocity_integral;
+  float angular_deviation;
+  float velocity_deviation;
   float steer;
 };
 
