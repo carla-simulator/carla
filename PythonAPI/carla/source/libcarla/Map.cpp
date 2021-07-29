@@ -170,6 +170,7 @@ void export_map() {
     .def("get_all_landmarks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetLandmarksFromId, std::string), (args("opendrive_id")))
     .def("get_all_landmarks_of_type", CALL_RETURNING_LIST_1(cc::Map, GetAllLandmarksOfType, std::string), (args("type")))
     .def("get_landmark_group", CALL_RETURNING_LIST_1(cc::Map, GetLandmarkGroup, cc::Landmark), args("landmark"))
+    .def("cook_in_memory_map", &cc::Map::CookInMemoryMap, (arg("path")=""))
     .def(self_ns::str(self_ns::self))
   ;
 

@@ -5,6 +5,7 @@
   * CARLA now is built with Visual Studio 2019 in Windows
   * Fixed bug causing the RoadOptions at the BehaviorAgent to not work as intended
   * Upgrading to Unreal Engine 4.26
+  * Added generation attribute to vehicles and pedestrians
   * Added Lincoln 2020 vehicle dimensions for CarSim integration
   * Enabling the **no_delay** option to RPC and stream sockets
   * The special nomenclature to define roads (ROAD_ROAD), sidewalks (ROAD_SIDEWALK)... can be at any position of the asset name
@@ -21,11 +22,14 @@
     - Unsupported collision dynamics
   * Added performance benchmarking section to documentation
   * Added API functions to traffic light actor `get_effect_waypoints()`, `get_light_boxes()` and `get_opendrive_id()`
-  * Added API functions to world `get_traffic_lights_from_waypoint()` and `get_traffic_lights_in_junction`
+  * Added API functions to world `get_traffic_lights_from_waypoint()`, `get_traffic_lights_in_junction` and `get_traffic_light_from_opendrive_id`
+  * Added API parameters to `WorldSettings`: `tile_stream_distance` and `actor_active_distance`
+  * Added API parameters and functions to `Osm2OdrSettings`: `proj_string`, `center_map`, `generate_traffic_lights`, `all_junctions_with_traffic_lights`, `set_osm_way_types`, and `set_traffic_light_excluded_way_types`
   * Added API function to enable car telemetry
   * CARLA is compatible with the last RoadRunner nomenclature for road assets
   * Fixed a bug when importing a FBX map with some **_** in the FBX name
   * Extended make import process for applying road painter materials (carla art tool)
+  * Added Large Map feature to CARLA, alowing to import large maps divided in square tiles (at most 2kmx2km per tile). Only section of a Large Map can be loaded at a time which introduces a sleep state for actors that are far away from the hero vehicle
   * Added creation of custom JSON file for applying decals to imported roads
   * Added ApplyVehiclePhysicsControl to commands
   * Added flush in the sublevel loading to increase carla's determinism in Opt maps

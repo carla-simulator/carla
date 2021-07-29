@@ -105,7 +105,7 @@ namespace detail {
     // optional debug info
     if (show_debug) {
       if (_nav.GetCrowd() == nullptr) return;
-      
+
       // draw bounding boxes for debug
       for (int i = 0; i < _nav.GetCrowd()->getAgentCount(); ++i) {
         // get the agent
