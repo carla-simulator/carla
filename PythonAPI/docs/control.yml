@@ -349,9 +349,6 @@
       - param_name: forward_gears
         default: list()
         type: list(carla.GearPhysicsControl)
-      - param_name: mass
-        default: 1000.0
-        param_units: kilograms
       - param_name: drag_coefficient
         default: 0.3
         type: float
@@ -364,6 +361,13 @@
       - param_name: wheels
         default: list()
         type: list(carla.WheelPhysicsControl)
+      - param_name: use_sweep_wheel_collision
+        default: False
+        type: bool
+      - param_name: mass
+        default: 1000.0
+        type: float
+        param_units: kilograms
       doc: >
         VehiclePhysicsControl constructor
     # --------------------------------------
