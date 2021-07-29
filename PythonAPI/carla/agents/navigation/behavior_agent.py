@@ -23,12 +23,11 @@ class BehaviorAgent(BasicAgent):
     target destination, by computing the shortest possible path to it.
     This agent can correctly follow traffic signs, speed limitations,
     traffic lights, while also taking into account nearby vehicles. Lane changing
-    decisions can be taken by analyzing the surrounding environment,
-    such as overtaking or tailgating avoidance. Adding to these are possible
-    behaviors, the agent can also keep safety distance from a car in front of it
-    by tracking the instantaneous time to collision and keeping it in a certain range.
-    Finally, different sets of behaviors are encoded in the agent, from cautious
-    to a more aggressive ones.
+    decisions can be taken by analyzing the surrounding environment such as tailgating avoidance.
+    Adding to these are possible behaviors, the agent can also keep safety distance
+    from a car in front of it by tracking the instantaneous time to collision
+    and keeping it in a certain range. Finally, different sets of behaviors
+    are encoded in the agent, from cautious to a more aggressive ones.
     """
 
     def __init__(self, vehicle, behavior='normal'):
@@ -148,41 +147,6 @@ class BehaviorAgent(BasicAgent):
 
         return affected
 
-    def _overtake(self, waypoint, vehicle_list):
-        """
-        This method is in charge of overtaking behaviors.
-
-            :param location: current location of the agent
-            :param waypoint: current waypoint of the agent
-            :param vehicle_list: list of all the nearby vehicles
-        """
-
-        left_turn = waypoint.left_lane_marking.lane_change
-        right_turn = waypoint.right_lane_marking.lane_change
-
-        left_wpt = waypoint.get_left_lane()
-        right_wpt = waypoint.get_right_lane()
-
-        if (left_turn == carla.LaneChange.Left or left_turn ==
-                carla.LaneChange.Both) and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
-            new_vehicle_state, _, _ = self._vehicle_obstacle_detected(vehicle_list, max(
-                self._behavior.min_proximity_threshold, self._speed_limit / 3), up_angle_th=180, lane_offset=-1)
-            if not new_vehicle_state:
-                print("Overtaking to the left!")
-                end_waypoint = self._local_planner.target_waypoint
-                self._behavior.overtake_counter = 200
-                self.set_destination(end_waypoint.transform.location,
-                                     left_wpt.transform.location)
-        elif right_turn == carla.LaneChange.Right and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
-            new_vehicle_state, _, _ = self._vehicle_obstacle_detected(vehicle_list, max(
-                self._behavior.min_proximity_threshold, self._speed_limit / 3), up_angle_th=180, lane_offset=1)
-            if not new_vehicle_state:
-                print("Overtaking to the right!")
-                end_waypoint = self._local_planner.target_waypoint
-                self._behavior.overtake_counter = 200
-                self.set_destination(end_waypoint.transform.location,
-                                     right_wpt.transform.location)
-
     def _tailgating(self, waypoint, vehicle_list):
         """
         This method is in charge of tailgating behaviors.
@@ -224,7 +188,7 @@ class BehaviorAgent(BasicAgent):
     def collision_and_car_avoid_manager(self, waypoint):
         """
         This module is in charge of warning in case of a collision
-        and managing possible overtaking or tailgating chances.
+        and managing possible tailgating chances.
 
             :param location: current location of the agent
             :param waypoint: current waypoint of the agent
@@ -250,16 +214,8 @@ class BehaviorAgent(BasicAgent):
                 vehicle_list, max(
                     self._behavior.min_proximity_threshold, self._speed_limit / 3), up_angle_th=30)
 
-            # Check for overtaking
-
-            if vehicle_state and self._direction == RoadOption.LANEFOLLOW and \
-                    not waypoint.is_junction and self._speed > 10 \
-                    and self._behavior.overtake_counter == 0 and self._speed > get_speed(vehicle):
-                self._overtake(waypoint, vehicle_list)
-
             # Check for tailgating
-
-            elif not vehicle_state and self._direction == RoadOption.LANEFOLLOW \
+            if not vehicle_state and self._direction == RoadOption.LANEFOLLOW \
                     and not waypoint.is_junction and self._speed > 10 \
                     and self._behavior.tailgate_counter == 0:
                 self._tailgating(waypoint, vehicle_list)
@@ -349,8 +305,6 @@ class BehaviorAgent(BasicAgent):
         control = None
         if self._behavior.tailgate_counter > 0:
             self._behavior.tailgate_counter -= 1
-        if self._behavior.overtake_counter > 0:
-            self._behavior.overtake_counter -= 1
 
         ego_vehicle_loc = self._vehicle.get_location()
         ego_vehicle_wp = self._map.get_waypoint(ego_vehicle_loc)
