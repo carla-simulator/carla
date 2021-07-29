@@ -611,6 +611,9 @@
     - var_name: Highway
       doc: >
         Type 330.
+    - var_name: DeadEnd
+      doc: >
+        Type 357.
     - var_name: RecomendedSpeed
       doc: >
         Type 380.
