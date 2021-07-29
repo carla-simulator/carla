@@ -1,6 +1,6 @@
 # CARLA Agents
 
-CARLA Agent scripts allow a vehicle to either follow a random, endless route or take the shortest route to a given destination. Agents obey traffic lights and react to other obstacles in the road. There are three agent types available. Parameters such as target speed, braking distance, overtaking behavior, tailgating behavior, and more can be modified. Actor classes can be modified or used as a base class to create custom agents according to the user's needs.
+CARLA Agent scripts allow a vehicle to either follow a random, endless route or take the shortest route to a given destination. Agents obey traffic lights and react to other obstacles in the road. There are three agent types available. Parameters such as target speed, braking distance, tailgating behavior, and more can be modified. Actor classes can be modified or used as a base class to create custom agents according to the user's needs.
 
 - [__Overview of agent scripts__](#overview-of-agent-scripts)
     - [Planning and control](#planning-and-control)
@@ -25,7 +25,7 @@ The main scripts involved in the CARLA Agents are found in `PythonAPI/carla/agen
 ### Agent behaviors
 
 - __`basic_agent.py`:__ Contains an agent base class that implements a __Basic Agent__ that roams around the map or reaches a target destination in the shortest distance possible, avoiding other vehicles, responding to traffic lights but ignoring stop signs.
-- __`behavior_agent.py`:__ Contains a class that implements a more complex __Behavior Agent__ that can reach a target destination in the shortest distance possible, following traffic lights, signs, and speed limits while making overtaking or tailgating decisions. There are three predefined types that condition how the agent behaves.
+- __`behavior_agent.py`:__ Contains a class that implements a more complex __Behavior Agent__ that can reach a target destination in the shortest distance possible, following traffic lights, signs, and speed limits while tailgating other vehicles. There are three predefined types that condition how the agent behaves.
 - __`behavior_types.py`:__ Contains the parameters for the behavior types that condition the __Behavior Agent__; Cautious, Normal, and Aggressive.
 
 ---
@@ -123,9 +123,8 @@ Behavior types for the behavior agent are defined in `behavior_types.py`. The th
 - __`speed_lim_dist`__: Value in km/h that defines how far your vehicle's target speed will be from the current speed limit (e.g., if the speed limit is 30km/h and `speed_lim_dist` is 10km/h, then the target speed will be 20km/h)
 - __`speed_decrease`__: How quickly in km/h your vehicle will slow down when approaching a slower vehicle ahead.
 - __`safety_time`__: Time-to-collision; an approximation of the time it will take for your vehicle to collide with one in front if it brakes suddenly.
-- __`min_proximity_threshold`__: The minimum distance in meters from another vehicle or pedestrian before your vehicle performs a maneuver such as overtaking, avoidance, or tailgating.
+- __`min_proximity_threshold`__: The minimum distance in meters from another vehicle or pedestrian before your vehicle performs a maneuver such as avoidance, or tailgating.
 - __`braking_distance`__: The distance from a pedestrian or vehicle at which your vehicle will perform an emergency stop.
-- __`overtake_counter`__: A counter to avoid overtaking too quickly after the last overtake.
 - __`tailgate_counter`__: A counter to avoid tailgating too quickly after the last tailgate.
 
 ## Create your own behavior type
