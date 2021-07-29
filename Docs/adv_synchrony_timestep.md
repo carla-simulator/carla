@@ -11,6 +11,7 @@ This section deals with two fundamental concepts in CARLA. Their configuration d
 	*   [Setting synchronous mode](#setting-synchronous-mode)
 	*   [Using synchronous mode](#using-synchronous-mode)
 *   [__Possible configurations__](#possible-configurations)
+* [__Physics determinism__](#physics-determinism)
 
 ---
 ## Simulation time-step
@@ -194,6 +195,17 @@ The configuration of time-step and synchrony, leads for different settings. Here
 
 !!! Warning 
     __In synchronous mode, always use a fixed time-step__. If the server has to wait for the user, and it is using a variable time-step, time-steps will be too big. Physics will not be reliable. This issue is better explained in the __time-step limitations__ section. 
+
+---
+
+## Physics determinism
+
+CARLA supports physics and collision determinism under specific circumstances:
+
+- __Synchronous mode and fixed delta seconds must be enabled:__ Determinism requires the client to be in perfect sync with the server to ensure that commands are applied correctly and to produce accurate and reproducible results. A constant time step must be enforced by setting `fixed_delta_seconds`. If this is not set, the time step will be automatically computed at each step depending on the simulation performance.
+- __Synchronous mode must be enabled before loading or reloading the world:__ Differing timestamps can arise if the world is not in synchronous mode from the very beginning. This can generate small differences in physics simulation and in the life cycle of objects such as traffics lights.
+- __The world must be reloaded for each new repetition:__ Reload the world each time you want to reproduce a simulation.
+- __Commands should be batched instead of issued one at a time:__ Although rare, in a busy simulation or overloaded server, single issued commands can become lost. If commands are batched in a [`apply_batch_sync`](python_api.md/#carla.Client.apply_batch_sync) command, the command is guaranteed to be executed or return a failure response.
 
 
 ---

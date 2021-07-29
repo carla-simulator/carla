@@ -110,7 +110,7 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
   return Result.Get();
 }
 
-void FActorRegistry::Deregister(IdType Id, bool KeepId)
+void FActorRegistry::Deregister(IdType Id)
 {
   check(Contains(Id));
   FCarlaActor* CarlaActor = FindCarlaActor(Id);
@@ -119,19 +119,8 @@ void FActorRegistry::Deregister(IdType Id, bool KeepId)
 
   AActor *Actor = CarlaActor->GetActor();
 
-  // If the ID will be reused again by other actor (like dormant actors)
-  // we need to keep the ID <-> FCarlaActor relation
-  // but we need to remove all AActor pointers since they will not be valid anymore
-  if(KeepId)
-  {
-    Actors[Id] = nullptr;
-  }
-  else
-  {
-    ActorDatabase.Remove(Id);
-    Actors.Remove(Id);
-  }
-
+  ActorDatabase.Remove(Id);
+  Actors.Remove(Id);
   Ids.Remove(Actor);
 
   CarlaActor->TheActor = nullptr;
@@ -139,12 +128,12 @@ void FActorRegistry::Deregister(IdType Id, bool KeepId)
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
 }
 
-void FActorRegistry::Deregister(AActor *Actor, bool KeepId)
+void FActorRegistry::Deregister(AActor *Actor)
 {
   check(Actor != nullptr);
   FCarlaActor* CarlaActor = FindCarlaActor(Actor);
   check(CarlaActor->GetActor() == Actor);
-  Deregister(CarlaActor->GetActorId(), KeepId);
+  Deregister(CarlaActor->GetActorId());
 }
 
 TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(

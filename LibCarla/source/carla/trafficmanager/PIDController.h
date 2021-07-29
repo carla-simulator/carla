@@ -22,31 +22,6 @@ using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 
 namespace PID {
 
-/// This function calculates the present state of the vehicle including
-/// the accumulated integral component of the PID system.
-inline StateEntry StateUpdate(StateEntry previous_state,
-                       float current_velocity,
-                       float target_velocity,
-                       float angular_deviation,
-                       cc::Timestamp current_time) {
-  StateEntry current_state = {
-      current_time,
-      angular_deviation,
-      (current_velocity - target_velocity) / target_velocity,
-      0.0f,
-      0.0f};
-
-  // Calculating integrals.
-  current_state.deviation_integral = angular_deviation * DT + previous_state.deviation_integral;
-  current_state.velocity_integral = DT * current_state.velocity + previous_state.velocity_integral;
-
-  // Clamp velocity integral to avoid accumulating over-compensation
-  // with time for vehicles that take a long time to reach target velocity.
-  current_state.velocity_integral = std::min(VELOCITY_INTEGRAL_MAX, std::max(current_state.velocity_integral, VELOCITY_INTEGRAL_MIN));
-
-  return current_state;
-}
-
 /// This function calculates the actuation signals based on the resent state
 /// change of the vehicle to minimize PID error.
 inline ActuationSignal RunStep(StateEntry present_state,
@@ -56,28 +31,29 @@ inline ActuationSignal RunStep(StateEntry present_state,
 
   // Longitudinal PID calculation.
   const float expr_v =
-      longitudinal_parameters[0] * present_state.velocity +
-      longitudinal_parameters[1] * present_state.velocity_integral +
-      longitudinal_parameters[2] * (present_state.velocity - previous_state.velocity) * INV_DT;
+      longitudinal_parameters[0] * present_state.velocity_deviation +
+      longitudinal_parameters[1] * (present_state.velocity_deviation + previous_state.velocity_deviation) * DT +
+      longitudinal_parameters[2] * (present_state.velocity_deviation - previous_state.velocity_deviation) * INV_DT;
 
   float throttle;
   float brake;
 
-  if (expr_v < 0.0f) {
-    throttle = std::min(std::abs(expr_v), MAX_THROTTLE);
+  if (expr_v > 0.0f) {
+    throttle = std::min(expr_v, MAX_THROTTLE);
     brake = 0.0f;
   } else {
     throttle = 0.0f;
-    brake = std::min(expr_v, MAX_BRAKE);
+    brake = std::min(std::abs(expr_v), MAX_BRAKE);
   }
 
   // Lateral PID calculation.
   float steer =
-      lateral_parameters[0] * present_state.deviation +
-      lateral_parameters[1] * present_state.deviation_integral +
-      lateral_parameters[2] * (present_state.deviation - previous_state.deviation) * INV_DT;
+      lateral_parameters[0] * present_state.angular_deviation +
+      lateral_parameters[1] * (present_state.angular_deviation + previous_state.angular_deviation) * DT +
+      lateral_parameters[2] * (present_state.angular_deviation - previous_state.angular_deviation) * INV_DT;
 
-  steer = std::max(-STEERING_LIMIT, std::min(steer, STEERING_LIMIT));
+  steer = std::max(previous_state.steer - MAX_STEERING_DIFF, std::min(steer, previous_state.steer + MAX_STEERING_DIFF));
+  steer = std::max(-MAX_STEERING, std::min(steer, MAX_STEERING));
 
   return ActuationSignal{throttle, brake, steer};
 }

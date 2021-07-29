@@ -43,7 +43,7 @@
           A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
       doc: >
         Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.  
-        [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.
+        [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in carla.ActorList all at once.
     # --------------------------------------
     - def_name: apply_batch_sync
       params:
@@ -58,7 +58,7 @@
           A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default.
       return: list(command.Response)
       doc: >
-        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.
+        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.
     # --------------------------------------
     - def_name: generate_opendrive_world
       params:

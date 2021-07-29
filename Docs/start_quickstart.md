@@ -137,7 +137,7 @@ This is the server simulator which is now running and waiting for a client to co
 
         python3 -m pip install -r requirements.txt # Support for Python2 is provided in the CARLA release packages
 
-        python3 spawn_npc.py  
+        python3 generate_traffic.py  
 
         # Terminal B
         cd PythonAPI\examples
@@ -210,7 +210,7 @@ CarlaUE4.exe
 # Run a script to test CARLA.
 cd PythonAPI/examples
 python3 -m pip install -r requirements.txt
-python3 spawn_npc.py # Support for Python 2 is provided in the CARLA release packages
+python3 generate_traffic.py # Support for Python 2 is provided in the CARLA release packages
 
 ```
 

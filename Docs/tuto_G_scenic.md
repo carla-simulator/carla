@@ -66,7 +66,7 @@ The scenario involves two vehicles, the leading vehicle and the ego vehicle. We 
 
 ```scenic
 ## CONSTANTS
-EGO_MODEL = "vehicle.lincoln.mkz2017"
+EGO_MODEL = "vehicle.lincoln.mkz_2017"
 EGO_SPEED = 10
 EGO_BRAKING_THRESHOLD = 12
 

@@ -48,6 +48,11 @@ public:
     return Map;
   }
 
+  const FString GetFullMapPath() const;
+
+  // get path relative to Content folder
+  const FString GetRelativeMapPath() const;
+
   UFUNCTION(Exec, Category = "CARLA Game Mode")
   void DebugShowSignals(bool enable);
 
@@ -69,6 +74,10 @@ public:
   }
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
+
+  void EnableOverlapEvents();
+
+  void CheckForEmptyMeshes();
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   void LoadMapLayer(int32 MapLayers);
@@ -109,7 +118,7 @@ private:
 
   void GenerateSpawnPoints();
 
-  void ParseOpenDrive(const FString &MapName);
+  void ParseOpenDrive();
 
   void RegisterEnvironmentObjects();
 
@@ -164,7 +173,7 @@ private:
 
   bool ReadyToRegisterObjects = false;
 
-  // We keep a global uuid to allow the load/unload layer methods to be called 
+  // We keep a global uuid to allow the load/unload layer methods to be called
   // in the same tick
   int32 LatentInfoUUID = 0;
 

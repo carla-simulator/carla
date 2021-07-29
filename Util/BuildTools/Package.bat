@@ -176,6 +176,7 @@ if %DO_COPY_FILES%==true (
     echo f | xcopy /y "!XCOPY_FROM!Docs\release_readme.md"                          "!XCOPY_TO!README"
     echo f | xcopy /y "!XCOPY_FROM!Util\Docker\Release.Dockerfile"                  "!XCOPY_TO!Dockerfile"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\dist\*.egg"                      "!XCOPY_TO!PythonAPI\carla\dist\"
+    echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\dist\*.whl"                      "!XCOPY_TO!PythonAPI\carla\dist\"
     echo d | xcopy /y /s "!XCOPY_FROM!Co-Simulation"                                "!XCOPY_TO!Co-Simulation"
     echo d | xcopy /y /s "!XCOPY_FROM!PythonAPI\carla\agents"                       "!XCOPY_TO!PythonAPI\carla\agents"
     echo f | xcopy /y "!XCOPY_FROM!PythonAPI\carla\scene_layout.py"                 "!XCOPY_TO!PythonAPI\carla\"
@@ -342,6 +343,14 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
             REM # copy the navigation file
             set SRC=!BASE_CONTENT!!MAP_FOLDER!\Nav\!MAP_NAME!.bin
             set TRG=!BUILD_FOLDER!\CarlaUE4\Content\!MAP_FOLDER!\Nav\
+            if exist "!SRC!" (
+                mkdir "!TRG!"
+                copy "!SRC!" "!TRG!"
+            )
+
+            REM # copy the traffic manager map file
+            set SRC=!BASE_CONTENT!!MAP_FOLDER!\TM\!MAP_NAME!.bin
+            set TRG=!BUILD_FOLDER!\CarlaUE4\Content\!MAP_FOLDER!\TM\
             if exist "!SRC!" (
                 mkdir "!TRG!"
                 copy "!SRC!" "!TRG!"

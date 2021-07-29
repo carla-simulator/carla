@@ -94,9 +94,9 @@ python3 run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
 
 The co-simulation with SUMO makes for an additional feature. Vehicles can be spawned in CARLA through SUMO, and managed by the later as the Traffi Manager would do.  
 
-The script `spawn_npc_sumo.py` is almost equivalent to the already-known `spawn_npc.py`. This script automatically generates a SUMO network in a temporal folder, based on the active town in CARLA. The script will create random routes and let the vehicles roam around.
+The script `spawn_npc_sumo.py` is almost equivalent to the already-known `generate_traffic.py`. This script automatically generates a SUMO network in a temporal folder, based on the active town in CARLA. The script will create random routes and let the vehicles roam around.
 
-As the script runs a synchronous simulation, and spawns vehicles in it, the arguments are the same that appear in `run_synchronization.py` and `spawn_npc.py`.
+As the script runs a synchronous simulation, and spawns vehicles in it, the arguments are the same that appear in `run_synchronization.py` and `generate_traffic.py`.
 
 *   __`--host`__ *(default: 127.0.0.1)* — IP of the host server.  
 *   __`--port`__ *(default: 2000)* — TCP port to listen to.  

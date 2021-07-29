@@ -27,7 +27,7 @@ class TestMap(SmokeTest):
                 # workaround: give time to UE4 to clean memory after loading (old assets)
                 time.sleep(5)
                 m = world.get_map()
-                self.assertEqual(map_name.split('/')[-1], m.name)
+                self.assertEqual(map_name.split('/')[-1], m.name.split('/')[-1])
                 self._check_map(m)
 
     def _check_map(self, m):
