@@ -53,6 +53,7 @@ CARLA forum</a>
 [__SUMO co-simulation__](adv_sumo.md) — Run a synchronous simulation between CARLA and SUMO.  
 [__Synchrony and time-step__](adv_synchrony_timestep.md) — Client-server communication and simulation time.  
 [__Traffic Manager__](adv_traffic_manager.md) — Simulate urban traffic by setting vehicles to autopilot mode.  
+[__CARLA Agents__](adv_agents.md) — Agents scripts allow single vehicles to roam the map or drive to a set destination. 
 
 ## References
 [__Python API reference__](python_api.md) — Classes and methods in the Python API.  
