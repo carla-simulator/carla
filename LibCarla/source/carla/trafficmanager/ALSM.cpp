@@ -125,11 +125,11 @@ void ALSM::IdentifyNewActors(const ActorList &actor_list) {
         }
       }
     }
-      if (!registered_vehicles.Contains(actor_id)
-          && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
+  }
+    if (!registered_vehicles.Contains(actor_id)
+        && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
 
-        unregistered_actors.insert({actor_id, actor});
-      }
+      unregistered_actors.insert({actor_id, actor});
     }
   }
 }

@@ -12,7 +12,7 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
         - [Minor installations](#minor-installations)
         - [Python dependencies](#python-dependencies)
         - [Major installations](#major-installations)
-            - [Visual Studio 2017](#visual-studio-2017)
+            - [Visual Studio 2019](#visual-studio-2019)
             - [Unreal Engine](#unreal-engine)
 - [__Part Two: Build CARLA__](#part-two-build-carla)
     - [Clone the CARLA repository](#clone-the-carla-repository)
@@ -80,9 +80,9 @@ pip install --user wheel
 ```
 
 #### Major installations
-##### Visual Studio 2017
+##### Visual Studio 2019
 
-Get the 2017 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2017-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
+Get the 2019 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2019-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
 
 * __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.
 * __x64 Visual C++ Toolset.__ In the _Workloads_ section, choose __Desktop development with C++__. This will enable a x64 command prompt that will be used for the build. Check that it has been installed correctly by pressing the `Windows` button and searching for `x64`. Be careful __not to open a `x86_x64` prompt__.  
@@ -117,7 +117,7 @@ __2.__ Run the configuration scripts:
 
 __3.__ Compile the modified engine:
 
->1. Open the `UE4.sln` file inside the source folder with Visual Studio 2017.
+>1. Open the `UE4.sln` file inside the source folder with Visual Studio 2019.
 
 >2. In the build bar ensure that you have selected 'Development Editor', 'Win64' and 'UnrealBuildTool' options. Check [this guide](https://docs.unrealengine.com/en-US/ProductionPipelines/DevelopmentSetup/BuildingUnrealEngine/index.html) if you need any help. 
         
@@ -189,7 +189,7 @@ To set the environment variable:
 This section outlines the commands to build CARLA. 
 
 - All commands should be run in the root CARLA folder. 
-- Commands should be executed via the __x64 Native Tools Command Prompt for VS 2017__. Open this by clicking the `Windows` key and searching for `x64`.
+- Commands should be executed via the __x64 Native Tools Command Prompt for VS 2019__. Open this by clicking the `Windows` key and searching for `x64`.
 
 There are two parts to the build process for CARLA, compiling the client and compiling the server.
 
