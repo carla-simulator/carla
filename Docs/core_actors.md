@@ -4,25 +4,25 @@ Actors not only include vehicles and walkers, but also sensors, traffic signs, t
 
 This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the __tutorials__ in this documentation and share doubts and ideas in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/).  
 
-*   [__Blueprints__](#blueprints)  
-	*   [Managing the blueprint library](#managing-the-blueprint-library)  
-*   [__Actor life cycle__](#actor-life-cycle)  
-	*   [Spawning](#spawning)  
-	*   [Handling](#handling)  
-	*   [Destruction](#destruction)  
-*   [__Types of actors__](#types-of-actors)  
-	*   [Sensors](#sensors)  
-	*   [Spectator](#spectator)  
-	*   [Traffic signs and traffic lights](#traffic-signs-and-traffic-lights)  
-	*   [Vehicles](#vehicles)  
-	*   [Walkers](#walkers)  
+- [__Blueprints__](#blueprints)  
+	- [Managing the blueprint library](#managing-the-blueprint-library)  
+- [__Actor life cycle__](#actor-life-cycle)  
+	- [Spawning](#spawning)  
+	- [Handling](#handling)  
+	- [Destruction](#destruction)  
+- [__Types of actors__](#types-of-actors)  
+	- [Sensors](#sensors)  
+	- [Spectator](#spectator)  
+	- [Traffic signs and traffic lights](#traffic-signs-and-traffic-lights)  
+	- [Vehicles](#vehicles)  
+	- [Walkers](#walkers)  
 
 ---
 ## Blueprints
 
-These layouts allow the user to smoothly incorporate new actors into the simulation. They are already-made models with animations and a series of attributes. Some of these are modifiable and others are not. These attributes include, among others, vehicle color, amount of channels in a lidar sensor, a walker's speed, and much more.  
+These layouts allow the user to smoothly incorporate new actors into the simulation. They are already-made models with animations and a series of attributes. Some of these are modifiable and others are not. These attributes include, among others, vehicle color, amount of channels in a lidar sensor, a walker's speed, and much more.
 
-Available blueprints are listed in the [blueprint library](bp_library.md), along with their attributes.  
+Available blueprints are listed in the [blueprint library](bp_library.md), along with their attributes. Vehicle and walker blueprints have a generation attribute that indicates if they are a new (gen 2) or old (gen 1) asset.
 
 ### Managing the blueprint library
 
