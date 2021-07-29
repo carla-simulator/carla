@@ -133,7 +133,7 @@
       warning: >
         Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
     # --------------------------------------
-    - def_name: enable_debug_telemetry
+    - def_name: show_debug_telemetry
       params:
       - param_name: enabled
         type: bool
@@ -215,6 +215,13 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+    - def_name: set_enable_gravity
+      params:
+      - param_name: enabled
+        type: bool
+      doc: >
+        Enables or disables gravity for the actor. __Default__ is True.
+
   - class_name: VehicleLightState
     # - DESCRIPTION ------------------------
     doc: >
