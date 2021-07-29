@@ -105,7 +105,7 @@ def main():
         type=int,
         help='Port to communicate with TM (default: 8000)')
     argparser.add_argument(
-        '--asynch',
+        '--async',
         action='store_true',
         help='Activate asynchronous mode execution')
     argparser.add_argument(
@@ -164,7 +164,7 @@ def main():
             traffic_manager.set_random_device_seed(args.seed)
 
         settings = world.get_settings()
-        if not args.asynch:
+        if not args.async:
             traffic_manager.set_synchronous_mode(True)
             if not settings.synchronous_mode:
                 synchronous_master = True
@@ -309,7 +309,7 @@ def main():
         all_actors = world.get_actors(all_id)
 
         # wait for a tick to ensure client receives the last transform of the walkers we have just created
-        if args.asynch or not synchronous_master:
+        if args.async or not synchronous_master:
             world.wait_for_tick()
         else:
             world.tick()
@@ -331,14 +331,14 @@ def main():
         traffic_manager.global_percentage_speed_difference(30.0)
 
         while True:
-            if not args.asynch and synchronous_master:
+            if not args.async and synchronous_master:
                 world.tick()
             else:
                 world.wait_for_tick()
 
     finally:
 
-        if not args.asynch and synchronous_master:
+        if not args.async and synchronous_master:
             settings = world.get_settings()
             settings.synchronous_mode = False
             settings.no_rendering_mode = False
