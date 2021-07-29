@@ -37,7 +37,7 @@
   * Fix bug in lidar channel point count
   * Fix imu: some weird cases were given nan values
   * Fix bugs in apply_physics_control and friction trigger
-  * Exposed tire parameters for longitudinal and lateral stiffness in the PhysicsControl. 
+  * Exposed tire parameters for longitudinal and lateral stiffness in the PhysicsControl.
   * When setting a global plan at the LocalPlanner, it is now optional to stop the automatic fill of the waypoint buffer
   * Improved agent's vehicle detection to also take into account the actor bounding boxes
   * Added Optical Flow camera
@@ -45,6 +45,7 @@
   - Added `set_wheel_steer_direction()` function to change the bone angle of each wheel of a vehicle
   - Added `get_wheel_steer_angle()` function to get the steer angle of a vehicle wheel
   - Added `scattering_intensity` , `mie_scattering_scale` , `rayleigh_scattering_scale` to PythonAPI for changing weather attributes
+  - Improved the python agents API. Old behaviors have been improved and new ones have also been added, improving the functionalities of the agents. Several bugs have also been fixed
 
 ## CARLA 0.9.11
 

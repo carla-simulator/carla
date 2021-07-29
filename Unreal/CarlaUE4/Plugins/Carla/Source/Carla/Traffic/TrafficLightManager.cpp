@@ -394,6 +394,16 @@ bool MatchSignalAndActor(const carla::road::Signal &Signal, ATrafficSignBase* Cl
       {
         return true;
       }
+      else if (Signal.GetSubtype() == "70" &&
+        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60)
+      {
+        return true;
+      }
+      else if (Signal.GetSubtype() == "80" &&
+        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90)
+      {
+        return true;
+      }
       else if (Signal.GetSubtype() == "90" &&
         ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90)
       {
