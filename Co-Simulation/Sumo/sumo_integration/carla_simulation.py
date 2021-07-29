@@ -28,7 +28,7 @@ class CarlaSimulation(object):
     """
     def __init__(self, host, port, step_length):
         ##### Begin My Code #####
-        self.world_time_out = 10
+        self.world_time_out = 3600
         ##### End My Code #####
 
         self.client = carla.Client(host, port)

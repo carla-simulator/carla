@@ -101,8 +101,6 @@ from util.classes.utils import (
     location,
     location_from_transform,
     speed,
-    unlock,
-    lock,
 )
 from util.classes.errors import (
     NoCavWithCarlaIdException,
@@ -500,9 +498,23 @@ class CAVWithForwardObstacleSensors(CAVWithObstacleSensors):
         self.phases =[0,     0]
 
 
+class CarlaLockHandler:
+    def __init__(self):
+        global DATA_DIR
+
+        self.lock_file_path = f"{DATA_DIR}/carla.lock"
+
+
+    def lock(self):
+        with open(self.lock_file_path, "w", encoding="UTF-8") as f:
+            pass
+
+
+    def unlock(self):
+        os.remove(self.lock_file_path)
+
+
 ##### End: My code. #####
-
-
 class SimulationSynchronization(object):
     """
     SimulationSynchronization class is responsible for the synchronization of sumo and carla
@@ -545,6 +557,7 @@ class SimulationSynchronization(object):
         ##### Begin: My code #####
         self.sumoid2cav = {}
         self.init_time = self.carla.world.get_snapshot().timestamp.elapsed_seconds
+        self.carla_lock_handler = CarlaLockHandler()
 
 
     def sumoid_from_carlaid(self, carlaid):
@@ -589,6 +602,7 @@ class SimulationSynchronization(object):
             self.init_time = self.init_time - TIME_TO_START + TIME_STEP
         else:
             self.sumo.tick()
+
         ##### End My Code #####
 
         # Spawning new sumo actors in carla (i.e, not controlled by carla).
@@ -663,12 +677,9 @@ class SimulationSynchronization(object):
         # -----------------
 
         self.carla.tick()
-
         ##### Start: My code. #####
-        # lock(self.__file_path_for_carla_lock(), self.__carla_lock_file_path())
         for cav in self.sumoid2cav.values():
             cav.tick()
-        # unlock(self.__carla_lock_file_path())
         ##### End: My code. #####
 
         # Spawning new carla actors (not controlled by sumo)
@@ -806,14 +817,14 @@ class SimulationSynchronization(object):
             raise Exception(f"No such CPM standard: {std}")
 
 
-    def __carla_lock_file_path(self):
-        return f"{self.__file_path_for_carla_lock()}.lock"
-
-
-    def __file_path_for_carla_lock(self):
-        global DATA_DIR
-
-        return f"{DATA_DIR}/carla.txt"
+    # def __carla_lock_file_path(self):
+    #     return f"{self.__file_path_for_carla_lock()}.lock"
+    #
+    #
+    # def __file_path_for_carla_lock(self):
+    #     global DATA_DIR
+    #
+    #     return f"{DATA_DIR}/carla.txt"
 
     # My Code End
 

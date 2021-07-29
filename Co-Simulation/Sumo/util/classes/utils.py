@@ -78,21 +78,3 @@ def speed(actor, abs_speed):
     y = abs_speed * math.sin(math.radians(actor.get_transform().rotation.yaw))
 
     return Speed(x, y)
-
-
-def unlock(dst):
-    os.unlink(dst)
-
-
-def make_symlink(src, dst):
-    try:
-        os.symlink(src, dst)
-        return True
-    except Exception as e:
-        # print(e)
-        return False
-
-
-def lock(src, dst):
-    while make_symlink(src, dst) is False:
-        continue
