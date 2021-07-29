@@ -2,17 +2,17 @@
 
 A map package follows a certain folder structure and must contain a `.json` file describing that structure. Our automatic map import processes create this `.json` file automatically, but you also have the option to prepare it yourself. Including your own `.json` file will overwrite any arguments passed to the `make import` command.
 
-- [__Normal Maps__](#normal-maps)
-    - [Create the folder structure for the normal maps](#create-the-folder-structure-for-the-normal-maps)
-    - [Create the JSON description for the normal maps](#create-the-json-description-for-the-normal-maps)
+- [__Standard Maps__](#standard-maps)
+    - [Create the folder structure for the standard maps](#create-the-folder-structure-for-the-standard-maps)
+    - [Create the JSON description for the standard maps](#create-the-json-description-for-the-standard-maps)
 - [__Large Maps__](#large-maps)
     - [Create the folder structure for the large maps](#create-the-folder-structure-for-the-large-maps)
     - [Create the JSON description for the large maps](#create-the-json-description-for-the-large-maps)
 
 ---
 
-## Normal maps
-### Create the folder structure for the normal maps
+## Standard maps
+### Create the folder structure for the standard maps
 
 __1. Create a folder inside `carla/Import`.__ The name of the folder is not important.  
 
@@ -49,7 +49,7 @@ Import
 
 ---
 
-### Create the JSON description for the normal maps
+### Create the JSON description for the standard maps
 
 Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
 
