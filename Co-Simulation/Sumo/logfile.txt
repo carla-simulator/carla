@@ -1,26 +1,25 @@
 ***Starting server on port 10001 ***
-  waiting for 2 clients...
-  client connected
-  client connected
-Loading net-file from './examples/3lane/map.net.xml' ... done (1ms).
+Loading net-file from './examples/3lane/map.net.xml' ... done (2ms).
 Loading done.
 Simulation started with time: 0.00
-Simulation ended at time: 138.90
+Error: tcpip::Socket::recvAndCheck @ recv: peer shutdown
+Quitting (on error).
+Simulation ended at time: 120.00
 Performance: 
- Duration: 14703.91s
- Real time factor: 0.00944647
- UPS: 22.276731
+ Duration: 581.92s
+ Real time factor: 0.206214
+ UPS: 2100.080767
 Vehicles: 
- Inserted: 555 (Loaded: 803)
- Running: 428
- Waiting: 1
+ Inserted: 240 (Loaded: 403)
+ Running: 184
+ Waiting: 0
 Statistics (avg):
- RouteLength: 768.68
- Speed: 13.95
- Duration: 51.05
- WaitingTime: 0.00
- TimeLoss: 7.84
- DepartDelay: 0.03
+ RouteLength: 622.13
+ Speed: 13.85
+ Duration: 41.91
+ WaitingTime: 0.03
+ TimeLoss: 7.23
+ DepartDelay: 0.00
 
-DijkstraRouter answered 556 queries and explored 1.54 edges on average.
+DijkstraRouter answered 240 queries and explored 1.53 edges on average.
 DijkstraRouter spent 0.00s answering queries (0.00ms on average).

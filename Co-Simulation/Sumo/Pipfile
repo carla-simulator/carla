@@ -13,6 +13,7 @@ numpy = "*"
 pyproj = "*"
 pillow = "*"
 osmread = "*"
+joblib = "*"
 
 [requires]
 python_version = "3.6"

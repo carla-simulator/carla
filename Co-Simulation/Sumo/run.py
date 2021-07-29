@@ -94,11 +94,11 @@ def start_carla_veins_data_server(args, env, sumo_files):
 
 
 def start_sumo_for_carla(args, env, sumo_files, client_num):
-    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1", shell=True)
+    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --seed {args.sumo_seed} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1", shell=True)
 
 
 def start_sumo_for_veins(args, env, sumo_files, client_num):
-    return Popen(f"vagrant ssh -c \"sumo -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
+    return Popen(f"vagrant ssh -c \"sumo -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --seed {args.sumo_seed} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
 
 
 def start_tracis_synchronization(args, env, sumo_files):
@@ -300,6 +300,8 @@ if __name__ == '__main__':
     parser.add_argument('--sumo_begin_time', default=0)
     # parser.add_argument('--sumo_end_time', default=(24 * 60 * 60))
     parser.add_argument('--sumo_end_time', default=env["time_to_finish"])
+    parser.add_argument('--sumo_seed', type=int, default=env["sumo_seed"])
+
 
     parser.add_argument('--carla_unrealengine_port', default=2000)
     parser.add_argument('--carla_sumo_port', default=env["carla_sumo_port"])

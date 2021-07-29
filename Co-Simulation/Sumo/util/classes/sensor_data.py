@@ -1,4 +1,5 @@
 import math
+import time
 import numpy as np
 from collections import deque
 from functools import reduce
@@ -39,9 +40,7 @@ class ObstacleSensorData:
 
     [1] cite: https://carla.readthedocs.io/en/latest/ref_sensors/
     """
-    def __init__(self, data, time, location, speed):
-        self.raw_data = data
-
+    def __init__(self, time, location, speed):
         # We use the three data.
         self.time = time
         self.l = location
@@ -75,11 +74,13 @@ class ObstacleSensorData:
 class ObstacleSensorDataHandler(SensorDataHandler):
 
     def perceived_objects(self, current_time, duration):
+        start = time.time()
         new_perceived_objects = []
         data = deque(self.data)
         self.data = []
 
         tmp_groups = []
+        t1 = time.time()
         while data:
             osd = data.popleft()  # obstacle_sensor_data (osd)
 
@@ -102,7 +103,7 @@ class ObstacleSensorDataHandler(SensorDataHandler):
             else:
                 tmp_groups.append([osd])
 
-
+        t2 = time.time()
         for tmp_group in tmp_groups:
             latest_time = 0
             latest_data = None
@@ -124,6 +125,9 @@ class ObstacleSensorDataHandler(SensorDataHandler):
                     speed=latest_data.speed()
                 )
             )
+        t3 = time.time()
+
+        print(f"new_perceived_objects, t1: {t1 - start}, t2: {t2 - t1}, t3: {t3 - t2}")
 
 
         # ----- too slow codes -----
@@ -241,10 +245,7 @@ class ObstacleSensorDataHandler(SensorDataHandler):
 
 
 class RadarSensorData(ObstacleSensorData):
-    def __init__(self, data, time, location, speed, sensor_transform):
-        self.sensor_transform = sensor_transform
-
-        super().__init__(data, time, location, speed)
+    pass
 
     # ----- deplicated codes -----
     # def detected_depth(self):

@@ -18,9 +18,11 @@ import json
 import logging
 import time
 import math
+import threading
 from collections import deque
 from copy import deepcopy
 from multiprocessing import Process
+from joblib import Parallel, delayed
 # ==================================================================================================
 # -- find carla module -----------------------------------------------------------------------------
 # ==================================================================================================
@@ -44,7 +46,7 @@ DATA_SERVER_PORT = 9998
 DATA_DIR = "./../Veins/carla-veins-data/"
 CAM_MESSAGE_STANDARD = "etsi"
 CPM_MESSAGE_STANDARD = "etsi"
-SENSOR_TYPE = "ra_360"
+SENSOR_TYPE = "ob_360"
 TIME_TO_START = 0
 TIME_STEP = 0.05
 ##### End: My code #####
@@ -205,12 +207,20 @@ class CAV:
         # ----- update vehicle data -----
         self.vehicle_data.tick(self.sumo_elapsed_seconds(), self.carla_actor)
 
+
+        # ----- to remove redandant procedures, we check sensor data numbers -----
+        if self.sensor_data_handler.data_num() <= 0:
+            return
+
+
+        start = time.time()
         # ----- update perceived_objects -----
         self.CPMs_handler.receive(self.sumo_actor_id)
 
 
         # ----- send CPM -----
         perceived_object_container = self.CPMs_handler.new_perceived_object_container(self.new_perceived_objects_with_pseudonym())
+        t1 = time.time()
         if 1 <= len(perceived_object_container):
             self.CPMs_handler.send(self.sumo_actor_id, CPM(
                     timestamp=self.sumo_elapsed_seconds(),
@@ -221,6 +231,7 @@ class CAV:
                     Perceived_Object_Container=perceived_object_container
                 ))
 
+        t2 = time.time()
         # ----- send CAM -----
         # print(f"sumo_id: {self.sumo_actor_id}")
         if self.CAMs_handler.is_generate(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw()):
@@ -232,6 +243,9 @@ class CAV:
                 LF_Container=self.__tmp_data(),
                 Special_Vehicle_Container=self.__tmp_data()
             ))
+        t3 = time.time()
+
+        print(f"sumo_id: {self.sumo_actor_id}, t1: {t1 - start}, t2: {t2 - t1}, t3: {t3 - t2}")
 
     def yaw(self):
         d = self.latest_vehicle_data()
@@ -341,11 +355,9 @@ class CAVWithRaderSensors(CAV):
 
             try:
                 self.sensor_data_handler.save(RadarSensorData(
-                    d,
                     self.sumo_elapsed_seconds(),
                     detected_point_location,
                     self.sim_synchronization.get_cav_by_location(detected_point_location).speed(),
-                    sensor_transform
                 ))
 
             except NoCavException:
@@ -455,7 +467,6 @@ class CAVWithObstacleSensors(CAV):
 
         try:
             self.sensor_data_handler.save(ObstacleSensorData(
-                data,
                 self.sumo_elapsed_seconds(),
                 location(data.actor, data.distance),
                 self.sim_synchronization.get_cav_by_carla_id(data.other_actor.id).speed()
@@ -576,11 +587,6 @@ class SimulationSynchronization(object):
     def sumo_elapsed_seconds(self):
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
-    def cav_tick(self):
-        for cav in self.sumoid2cav.values():
-            cav.tick()
-
-        return 0
     ##### End: My code #####
 
 
@@ -676,10 +682,21 @@ class SimulationSynchronization(object):
         # carla-->sumo sync
         # -----------------
 
+        start = time.time()
         self.carla.tick()
         ##### Start: My code. #####
+        cav_tick = time.time()
+        threads = [] # speed up for IO
         for cav in self.sumoid2cav.values():
-            cav.tick()
+            threads.append(threading.Thread(target=cav.tick))
+
+        for th in threads:
+            th.start()
+
+        for th in threads:
+            th.join()
+
+        print(f"carla_tick: {cav_tick - start}, cav_tick: {time.time() - cav_tick}")
         ##### End: My code. #####
 
         # Spawning new carla actors (not controlled by sumo)
