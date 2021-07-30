@@ -77,8 +77,16 @@ CARLA forum</a>
 [__RLlib Integration__](tuto_G_rllib_integration.md) — Find out how to run your own experiment using the RLlib library.  
 [__Scenic__](tuto_G_scenic.md) — Follow an example of defining different scenarios using the Scenic library.  
 
+## Tutorials — Maps
+[__Overview of custom maps__](tuto_M_custom_map_overview.md)  
+[__Create a map in RoadRunner__](tuto_M_generate_map.md)  
+[__Import map in CARLA package__](tuto_M_add_map_package.md)  
+[__Import map in CARLA source build__](tuto_M_add_map_source.md)  
+[__Manually prepare map package__](tuto_M_manual_map_package.md)
+[__Alternative map section__](tuto_M_add_map_alternative.md)  
+[__Generate pedestrian navigation__](tuto_M_generate_pedestrian_navigation.md) — Obtain the information needed for walkers to move around.  
+
 ## Tutorials — Assets
-[__Add a new map__](tuto_A_add_map_overview.md) — Create and ingest a new map.  
 [__Add a new vehicle__](tuto_A_add_vehicle.md) — Prepare a vehicle to be used in CARLA.  
 [__Add new props__](tuto_A_add_props.md) — Import additional props into CARLA.  
 [__Create standalone packages__](tuto_A_create_standalone.md) — Generate and handle standalone packages for assets.  
@@ -91,8 +99,6 @@ CARLA forum</a>
 [__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define customized tags for semantic segmentation.  
 [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Modify the suspension system of a vehicle.  
 [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Create detailed colliders for vehicles.  
-[__Make a release__](tuto_D_make_release.md) — For developers who want to publish a release.  
-[__Generate pedestrian navigation__](tuto_D_generate_pedestrian_navigation.md) — Obtain the information needed for walkers to move around.  
 
 ## Contributing
 [__Contribution guidelines__](cont_contribution_guidelines.md) — The different ways to contribute to CARLA.  

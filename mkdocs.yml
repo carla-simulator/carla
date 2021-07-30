@@ -47,9 +47,26 @@ nav:
   - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
 - ROS bridge:
   - 'ROS bridge documentation': 'ros_documentation.md'
+- Custom Maps:
+  - 'Overview of custom maps in CARLA': 'tuto_M_custom_map_overview.md'
+  - 'Create a map in RoadRunner': 'tuto_M_generate_map.md'
+  - 'Import map in CARLA package': 'tuto_M_add_map_package.md'
+  - 'Import map in CARLA source build': 'tuto_M_add_map_source.md'
+  - 'Alternative ways to import maps': 'tuto_M_add_map_alternative.md'
+  - 'Manually prepare map package': 'tuto_M_manual_map_package.md'
+  - 'Customizing maps: Layered maps': 'tuto_M_custom_layers.md'
+  - 'Customizing maps: Traffic lights and signs': 'tuto_M_custom_add_tl.md'
+  - 'Customizing maps: Road painter': 'tuto_M_custom_road_painter.md'
+  - 'Customizing maps: Procedural Buildings': 'tuto_M_custom_buildings.md'
+  - 'Customizing maps: Weather and landscape': 'tuto_M_custom_weather_landscape.md'
+  - 'Generate pedestrian navigation': 'tuto_M_generate_pedestrian_navigation.md'
+- Large Maps:
+  - 'Large maps overview': 'large_map_overview.md'
+  - 'Create a large map in RoadRunner': 'large_map_roadrunner.md'
+  - 'Import/Package a large map': 'large_map_import.md'
 - Tutorials (general):
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
-  - 'Control and monitor vehicle physics': "tuto_G_control_vehicle_physics.md"
+  - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
   - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
   - 'Generate maps with OpenStreetMap': 'tuto_G_openstreetmap.md'
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
@@ -59,11 +76,9 @@ nav:
   - 'Chrono Integration': 'tuto_G_chrono.md'
   - 'Build Unreal and CARLA in Docker': 'build_docker_unreal.md'
 - Tutorials (assets):
-  - 'Add a new map': 'tuto_A_add_map_overview.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
   - 'Add new props': 'tuto_A_add_props.md'
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
-  - 'Map customization tools': 'tuto_A_map_customization.md'
   - "Material customization": 'tuto_A_material_customization.md'
 - Tutorials (developers):
   - 'Contribute assets': 'tuto_D_contribute_assets.md'
@@ -72,7 +87,6 @@ nav:
   - 'Customize vehicle suspension': 'tuto_D_customize_vehicle_suspension.md'
   - 'Generate detailed colliders': 'tuto_D_generate_colliders.md'
   - 'Make a release': 'tuto_D_make_release.md'
-  - 'Generate pedestrian navigation': 'tuto_D_generate_pedestrian_navigation.md'
 - Contributing:
   - 'Contribution guidelines': 'cont_contribution_guidelines.md'
   - 'Code of conduct': 'cont_code_of_conduct.md'
