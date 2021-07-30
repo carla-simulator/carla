@@ -1,4 +1,5 @@
 import math
+import os
 import time
 import numpy as np
 from collections import deque
@@ -11,9 +12,94 @@ from util.classes.perceived_objects import PerceivedObject
 from util.classes.utils import Location
 from util.classes.constants import Constants
 
+from numba import jit, njit
+
+
+os.environ['NUMBA_OPT'] = str(3)
+
+
+@njit
+def perceived_objects_by_jit(data, current_time, duration, distance_threshold):
+    """
+    sensor_data = [
+        [x_pos, y_pos, x_speed, y_speed, time] of point 1,
+        [x_pos, y_pos, x_speed, y_speed, time] of point 2,
+        ...,
+        [x_pos, y_pos, x_speed, y_speed, time] of point N,
+    ]
+
+    new_perceived_objects = [
+        [x_pos, y_pos, x_speed, y_speed, time] of object 1,
+        [x_pos, y_pos, x_speed, y_speed, time] of object 2,
+        ...,
+        [x_pos, y_pos, x_speed, y_speed, time] of object N,
+    ]
+
+    return perceived_objects
+    """
+
+    new_perceived_objects = [[0, 0, 0, 0]]
+    new_perceived_objects.pop()
+    tmp_groups = [[0, 0, 0, 0]]
+    tmp_groups.pop()
+
+    while data:
+        osd = data.pop()  # obstacle_sensor_data (osd)
+
+        # validation
+        if data[4] + duration < current_time:
+            continue
+
+        is_in_group = False
+        for tmp_group in tmp_groups:
+            for nop in tmp_group:
+                dT = nop[4] - osd[4]
+                osd_x = osd[0] + osd[2] * dt
+                osd_y = osd[1] + osd[3] * dt
+                dx = osd_x - nop[0]
+                dy = osd_y - nop[1]
+
+                if math.sqrt(dx * dx + dy * dy) <= distance_threshold:
+                    is_grouped = True
+                    break
+                else:
+                    continue
+
+            if is_grouped:
+                tmp_group.append(osd)
+                break
+            else:
+                continue
+
+        if is_in_group:
+            continue
+        else:
+            tmp_groups.append([osd])
+
+    for tmp_group in tmp_groups:
+        latest_data = [0, 0, 0, 0]
+        total_x_pos = 0
+        total_y_pos = 0
+        group_length = 0
+
+        for d in tmp_group:
+            if latest_time < d[4]:
+                latest_data = d
+
+            group_length = group_length + 1
+            total_x_pos = total_x_pos + d[0]
+            total_y_pos = total_y_pos + d[1]
+
+        new_perceived_objects.append([total_x_pos/group_length, total_y_pos/group_length, latest_data[2], latest_data[3], latest_data[4]])
+
+
+    return new_perceived_objects
+
+
 class SensorDataHandler:
     def __init__(self):
         self.data = deque()
+        self.data_for_jit = []
 
 
     def data_num(self):
@@ -29,6 +115,9 @@ class SensorDataHandler:
 
 
     def save(self, data):
+        self.data.append(data)
+
+    def save_for_jit(self, data):
         self.data.append(data)
 
 
@@ -73,7 +162,31 @@ class ObstacleSensorData:
 
 class ObstacleSensorDataHandler(SensorDataHandler):
 
+    def perceived_objects_by_jit(self, current_time, duration):
+        new_perceived_objects = []
+
+        if len(self.data_for_jit) <= 0:
+            pass
+        else:
+            for p in perceived_objects_by_jit(self.data_for_jit, current_time, duration, Constants.LOCATION_THRESHOLD):
+                new_perceived_objects.append(
+                    PerceivedObject(
+                        time=p[4],
+                        location=Location(p[0], p[1]),
+                        speed=Speed(p[2], p[3])
+                    )
+                )
+
+        return new_perceived_objects
+
+
     def perceived_objects(self, current_time, duration):
+        # The original method becomes too slow when the number of data is increased.
+        # Therefore, we utilize function with jit.
+        # return self.perceived_objects_by_jit(current_time, duration)
+
+
+        # ----- original codes -----
         start = time.time()
         new_perceived_objects = []
         data = deque(self.data)
@@ -129,54 +242,6 @@ class ObstacleSensorDataHandler(SensorDataHandler):
 
         print(f"new_perceived_objects, t1: {t1 - start}, t2: {t2 - t1}, t3: {t3 - t2}")
 
-
-        # ----- too slow codes -----
-        # for indexes in self.get_grouped_indexes(current_time, duration, data):
-        #     latest_time = 0
-        #     latest_data = None
-        #     total_x_pos = 0
-        #     total_y_pos = 0
-        #
-        #     for index in indexes:
-        #         d = data[index]
-        #
-        #         if latest_time < d.time:
-        #             latest_time = d.time
-        #             latest_data = d
-        #
-        #         total_x_pos = total_x_pos + d.location().x
-        #         total_y_pos = total_y_pos + d.location().y
-        #
-        #     if latest_time + duration < current_time:
-        #         continue
-        #
-        #     else:
-        #         new_perceived_objects.append(
-        #             PerceivedObject(
-        #                 time=latest_time,
-        #                 location=Location(total_x_pos / len(indexes), total_y_pos / len(indexes)),
-        #                 speed=latest_data.speed()
-        #             )
-        #         )
-
-
-        # ----- deplicated codes -----
-        # while self.data:
-        #     osd = self.data.popleft()   # obstacle_sensor_data (osd)
-        #
-        #     # validation
-        #     if osd.time + duration < current_time:
-        #         continue
-        #
-        #     if self.__is_futher_than_all_the_new_perceived_objects_more_than_or_equal_to_sensor_tick(osd, new_perceived_objects):
-        #         new_perceived_objects.append(PerceivedObject(time=osd.time, location=osd.location(), speed=osd.speed()))
-        #
-        #     elif not self.__is_predictable_location_compared_with_all_the_new_perceived_objects(osd, new_perceived_objects):
-        #         new_perceived_objects.append(PerceivedObject(time=osd.time, location=osd.location(), speed=osd.speed()))
-        #
-        # ----- deplicated codes, end -----
-
-
         return new_perceived_objects
 
     def clear_data(self):
@@ -225,6 +290,13 @@ class ObstacleSensorDataHandler(SensorDataHandler):
                 continue
 
         return result
+
+
+    def save(self, data):
+        super().save(data)
+        l = data.location()
+        s = data.speed()
+        super().save_for_jit([l.x, l.y, s.x, s.y, data.time])
 
 
     def __is_predictable_location(self, osd, nop):

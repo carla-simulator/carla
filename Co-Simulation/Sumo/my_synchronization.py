@@ -46,7 +46,7 @@ DATA_SERVER_PORT = 9998
 DATA_DIR = "./../Veins/carla-veins-data/"
 CAM_MESSAGE_STANDARD = "etsi"
 CPM_MESSAGE_STANDARD = "etsi"
-SENSOR_TYPE = "ob_360"
+SENSOR_TYPE = "ra_360"
 TIME_TO_START = 0
 TIME_STEP = 0.05
 ##### End: My code #####

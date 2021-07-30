@@ -14,6 +14,8 @@ pyproj = "*"
 pillow = "*"
 osmread = "*"
 joblib = "*"
+nuitka = "*"
+numba = "*"
 
 [requires]
 python_version = "3.6"

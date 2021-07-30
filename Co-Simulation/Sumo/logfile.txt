@@ -4,22 +4,22 @@ Loading done.
 Simulation started with time: 0.00
 Error: tcpip::Socket::recvAndCheck @ recv: peer shutdown
 Quitting (on error).
-Simulation ended at time: 120.00
+Simulation ended at time: 120.30
 Performance: 
- Duration: 581.92s
- Real time factor: 0.206214
- UPS: 2100.080767
+ Duration: 299.07s
+ Real time factor: 0.402252
+ UPS: 8346.254673
 Vehicles: 
- Inserted: 240 (Loaded: 403)
- Running: 184
+ Inserted: 482 (Loaded: 803)
+ Running: 384
  Waiting: 0
 Statistics (avg):
- RouteLength: 622.13
- Speed: 13.85
- Duration: 41.91
+ RouteLength: 620.84
+ Speed: 13.58
+ Duration: 42.62
  WaitingTime: 0.03
- TimeLoss: 7.23
+ TimeLoss: 8.36
  DepartDelay: 0.00
 
-DijkstraRouter answered 240 queries and explored 1.53 edges on average.
+DijkstraRouter answered 482 queries and explored 1.54 edges on average.
 DijkstraRouter spent 0.00s answering queries (0.00ms on average).
