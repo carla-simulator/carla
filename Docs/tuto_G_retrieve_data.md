@@ -840,7 +840,6 @@ Hereunder are the two scripts gathering the fragments of code for this tutorial.
 <summary><b>tutorial_ego.py</b> </summary>
 
 ```py
-
 import glob
 import os
 import sys
@@ -1076,7 +1075,6 @@ if __name__ == '__main__':
 <summary><b>tutorial_replay.py</b></summary>
 
 ```py
-
 import glob
 import os
 import sys
