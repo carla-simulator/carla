@@ -24,19 +24,20 @@ nav:
   - '2nd- Actors and blueprints': 'core_actors.md'
   - '3rd- Maps and navigation': 'core_map.md'
   - '4th- Sensors and data': 'core_sensors.md'
-- Advanced steps:
+- Advanced concepts:
   - 'OpenDRIVE standalone mode': 'adv_opendrive.md'
   - 'PTV-Vissim co-simulation': 'adv_ptv.md'
   - 'Recorder': 'adv_recorder.md'
   - 'Rendering options': 'adv_rendering_options.md'
   - 'RSS': 'adv_rss.md'
-  - 'SUMO co-simulation': 'adv_sumo.md'
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
-  - 'Traffic Manager': 'adv_traffic_manager.md'
   - 'Benchmarking Performance': 'adv_benchmarking.md'
   - 'CARLA Agents': 'adv_agents.md'
 - Traffic Simulation:
   - 'Traffic Simulation Overview': 'ts_traffic_simulation_overview.md'
+  - 'Traffic Manager': 'adv_traffic_manager.md'
+  - 'SUMO co-simulation': 'adv_sumo.md'
+  - 'Scenic': 'tuto_G_scenic.md'
 - References:
   - 'Python API reference': 'python_api.md'
   - 'Blueprint Library': 'bp_library.md'
@@ -72,7 +73,6 @@ nav:
   - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
   - 'CarSim Integration (Beta)': "tuto_G_carsim_integration.md"
   - 'RLlib Integration': "tuto_G_rllib_integration.md"
-  - 'Scenic': 'tuto_G_scenic.md'
   - 'Chrono Integration': 'tuto_G_chrono.md'
   - 'Build Unreal and CARLA in Docker': 'build_docker_unreal.md'
 - Tutorials (assets):
@@ -81,12 +81,14 @@ nav:
   - 'Create standalone packages': 'tuto_A_create_standalone.md'
   - "Material customization": 'tuto_A_material_customization.md'
 - Tutorials (developers):
-  - 'Contribute assets': 'tuto_D_contribute_assets.md'
+  - 'How to upgrade content': 'tuto_D_contribute_assets.md'
   - 'Create a sensor': 'tuto_D_create_sensor.md'
   - 'Create semantic tags': 'tuto_D_create_semantic_tags.md'
   - 'Customize vehicle suspension': 'tuto_D_customize_vehicle_suspension.md'
   - 'Generate detailed colliders': 'tuto_D_generate_colliders.md'
   - 'Make a release': 'tuto_D_make_release.md'
+- CARLA Ecosystem:
+  - 'Ansys Real Time Radar Model': 'ecosys_ansys.md'
 - Contributing:
   - 'Contribution guidelines': 'cont_contribution_guidelines.md'
   - 'Code of conduct': 'cont_code_of_conduct.md'

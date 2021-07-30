@@ -48,7 +48,7 @@ __4. Re-calibrate the _Map Size (Cm)_ so that it is equal to the actual size of 
 1. Select the `RoadPainter` actor in the scene.
 2. Go to the _Details_ panel and press the _Z-Size_ button. You will see the value in _Map Size (Cm)_ change.
 
->>>>>![map size](/img/map_size.png)
+>>>>>![map size](../img/map_size.png)
 
 __5. Synchronize the map size between the `RoadPainter` and `Tutorial_RoadMaster`.__
 
@@ -56,7 +56,7 @@ __5. Synchronize the map size between the `RoadPainter` and `Tutorial_RoadMaster
 2. Copy the value _Map Size (Cm)_ from the previous step and paste it to _Global Scalar Parameter Values -> Map units (CM)_ in the `Tutorial_RoadMaster` window.
 3. Press save.
 
->>>>>>![img](/img/map_size_sync.png)
+>>>>>>![img](../img/map_size_sync.png)
 
 __6. Create the communication link between the road painter and the master material.__
 
@@ -72,7 +72,7 @@ The `Tutorial_RenderTarget` will be the communication link between the road pain
 
 The `Tutorial_RoadMaster` material you created holds the base material, extra material information, and parameters that will be applied via your `Tutorial_RenderTarget`. You can configure one base material and up to three additional materials.
 
->>![master materials](/img/master_material.png)
+>>![master materials](../img/master_material.png)
 
 To configure the materials, double-click the `Tutorial_RoadMaster` file. In the window that appears, you can select and adjust the following values for each material according to your needs:
 
@@ -109,7 +109,7 @@ Each of the materials we added to `Tutorial_RoadMaster` are applied to the roads
 1. Select the road painter actor
 2. In the _Details_ panel, select the material to work with in the _Mask Color_ dropdown menu.
 
->>>>>>![choose material](/img/choose_material.png)
+>>>>>>![choose material](../img/choose_material.png)
 
 __3. Set the brush and stencil parameters.__
 
