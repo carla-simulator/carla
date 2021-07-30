@@ -58,6 +58,7 @@ CARLA forum</a>
 * [Fatal error: 'version.h' has been modified since the precompiled header.](#fatal-error-versionh-has-been-modified-since-the-precompiled-header)
 * [Create a binary version of CARLA.](#create-a-binary-version-of-carla)
 * [Can I package CARLA for Windows on a Linux machine and vice versa?](#can-i-package-carla-for-windows-on-a-linux-machine-and-vice-versa)
+* [How do I uninstall the CARLA client library?](#how-do-i-uninstall-the-carla-client-library)
 
 ---
 
@@ -141,11 +142,16 @@ CARLA forum</a>
 > ![faq_rpc_error](img/faq_rpc_error.jpg)
 >
 > If running a script returns an output similar to this, there is a problem with the `.egg` file in the PythonAPI. 
+
+!!! Important
+    If you are using 0.9.12+, there are several methods to use/install the client library. If you are using one of the newer methods for the client library (`.whl` or PyPi download) the information in this section will not be relevant to you.
 > 
 > First of all, open `<root_carla>/PythonAPI/carla/dist`. There should be an `.egg` file for the corresponding CARLA and Python version you are using (similar to `carla-0.X.X-pyX.X-linux-x86_64.egg`). Make sure the file matches the Python version you are using. To check your Python version use the following command.  
 > 
 > 
->       python3 --version # CARLA no longer provides support for Python2, so we are dismissing it here
+>       python3 --version
+>       # or for Python 2
+>       python --version
 > 
 >
 > If either the file is missing or you think it could be corrupted, try rebuilding again.  
@@ -335,6 +341,12 @@ CARLA forum</a>
 
 > This error occurs because Python cannot find the CARLA library. The CARLA library is contained in an `.egg` file, located in the directory `PythonAPI/carla/dist` and all the example scripts will look for it in this directory. The `.egg` file follows the nomenclature of `carla-<carla-version>-py<python-version>-<operating-system>.egg`.
 >
+
+!!! Important
+    CARLA only used `.egg` files for the client library in versions prior to 0.9.12. If you are using 0.9.12+, there are several methods to use/install the client library. If you are using one of the newer methods for the client library (`.whl` or PyPi download) the information in this section will not be relevant to you.
+
+    Read more about the newer methods to use/install the client library in the [__Quickstart tutorial__](start_quickstart.md#carla-0912).
+
 >If you are using a packaged version of CARLA, there will be several `.egg` files, corresponding to different versions of Python, depending on the version of CARLA. Make sure you are running the scripts with one of these Python versions. To check the default Python version, type the following into the command line:
 >
 >
@@ -389,5 +401,18 @@ CARLA forum</a>
 ###### Can I package CARLA for Windows on a Linux machine and vice versa?
 
 >Although this feature is available for Unreal Engine, it is not available in CARLA. We have a number of dependencies that are not supported to be cross compiled.
+
+<!-- ======================================================================= -->
+###### How do I uninstall the CARLA client library?
+
+>If you installed the client library using __pip/pip3__, you should uninstall it by running:
+
+```sh
+# Python 3
+pip3 uninstall carla
+
+# Python 2
+pip uninstall carla
+```
 
 ---
