@@ -127,7 +127,7 @@ Every object on a CARLA map has a set of associated variables which can be found
 
 See an example of distinct objects being toggled:
 
-![toggle_objects_gif](/img/objects_small.gif)
+![toggle_objects_gif](img/objects_small.gif)
 
 [env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject
 [env_obj_id]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject.id

@@ -26,7 +26,7 @@ __2. Create a new level.__
 2. Choose _Empty Level_.
 3. Save the level in `Content/Carla/Maps/Sublevels/<map_name>/`. To integrate the level with the CARLA Python API, use the naming convention `<map_name>_<layer_name>`, e.g., `TutorialMap_Buildings`. For a list of available layers, check [here](core_map.md#carla-maps).
 
->>>>>>![create new level](/img/new_level.png)
+>>>>>>![create new level](../img/new_level.png)
 
 ---
 
@@ -46,7 +46,7 @@ __3. Save the level.__
 
 If a level has pending changes to save, you will see a pencil icon next to it in the _Levels_ panel. Click this to save the changes.
 
-![moving assets](/img/move_assets.png)
+![moving assets](../img/move_assets.png)
 
 ---
 
@@ -61,7 +61,7 @@ Levels can be configured to be able to be toggled or to be always loaded. To con
 
 Regardless of the setting, you will still be able to toggle the level in the editor by pressing the eye icon.
 
->>>>>>![levels](/img/levels.png)
+>>>>>>![levels](../img/levels.png)
 
 ---
 

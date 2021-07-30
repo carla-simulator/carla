@@ -73,9 +73,4 @@ __7.__ To run a simulation with the new map, run CARLA and then change the map u
 
 ---
 
-
-<<<<<<< HEAD:Docs/tuto_M_add_map_package.md
 Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions) or you can try running some of our [example scripts](https://github.com/carla-simulator/carla/tree/master/PythonAPI/examples) on your new map to test it out.
-=======
-Your map is now ready to run simulations in CARLA. If you have any questions about the process then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions/) or you can try running some of our [example scripts](https://github.com/carla-simulator/carla/tree/master/PythonAPI/examples) on your new map to test it out.
->>>>>>> ae0ba81b9fb32ac8a09adf1a1ad77564f3174a15:Docs/tuto_A_add_map/add_map_package.md

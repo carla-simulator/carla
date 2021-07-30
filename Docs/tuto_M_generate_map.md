@@ -79,7 +79,7 @@ __2.__ In the window that pops up:
 >- Leave unchecked:
     - _Export Individual Tiles_: Generates one `.fbx` file with all map pieces. 
 
->>>>![roadrunner_export](/img/roadrunner_export.png)
+>>>>![roadrunner_export](../img/roadrunner_export.png)
 
 __3.__ Choose the directory where you want to export your files and click `Export`. This will generate `<mapName>.fbx` and `<mapName>.xodr` files among others. 
   
