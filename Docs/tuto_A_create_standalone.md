@@ -54,7 +54,7 @@ cd Import
 ```
 
 !!! Note
-    Standalone packages cannot be directly imported into a CARLA build. Follow the tutorials to import [props](tuto_A_add_props.md), [maps](tuto_A_add_map_overview.md) or [vehicles](tuto_A_add_vehicle.md).
+    Standalone packages cannot be directly imported into a CARLA build. Follow the tutorials to import [props](tuto_A_add_props.md), [maps](tuto_M_custom_map_overview.md) or [vehicles](tuto_A_add_vehicle.md).
 
 ---
 

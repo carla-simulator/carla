@@ -155,7 +155,7 @@ __7. Run CARLA:__
 DISPLAY=:0.GPU ./CarlaUE4.sh -vulkan
 ```
 
-CARLA provides a Dockerfile that performs all the above steps [here](https://github.com/carla-simulator/carla/blob/0.9.11/Util/Docker/Release.Dockerfile).
+CARLA provides a Dockerfile that performs all the above steps [here](https://github.com/carla-simulator/carla/blob/0.9.12/Util/Docker/Release.Dockerfile).
 
 ---
 
