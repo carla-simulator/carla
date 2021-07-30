@@ -485,10 +485,12 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
     const FString &PropsMapPath)
 {
   FString MapPathData;
+  FString MapPathDataLinux;
   IFileManager &FileManager = IFileManager::Get();
   for (const auto &Map : AssetsPaths.MapsPaths)
   {
-    MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
+    MapPathData.Append(Map.Path + TEXT("/") + Map.Name + TEXT("\n"));
+    MapPathDataLinux.Append(Map.Path + TEXT("/") + Map.Name + TEXT("+"));
     TArray<FAssetData> AssetsData;
     UObjectLibrary* ObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), true, true);
     ObjectLibrary->LoadAssetDataFromPath(Map.Path);
@@ -499,7 +501,8 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
       FString AssetName = AssetData.AssetName.ToString();
       if (AssetName.Contains(Map.Name + "_Tile_"))
       {
-        MapPathData.Append(Map.Path + TEXT("/") + AssetName + TEXT("+"));
+        MapPathData.Append(Map.Path + TEXT("/") + AssetName + TEXT("\n"));
+        MapPathDataLinux.Append(Map.Path + TEXT("/") + AssetName + TEXT("+"));
         NumTiles++;
       }
     }
@@ -512,12 +515,14 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
   }
   else
   {
-    MapPathData.RemoveFromEnd(TEXT("+"));
+    MapPathDataLinux.RemoveFromEnd(TEXT("+"));
   }
 
   const FString SaveDirectory = FPaths::ProjectContentDir();
   const FString FileName = FString("MapPaths.txt");
+  const FString FileNameLinux = FString("MapPathsLinux.txt");
   SaveStringTextToFile(SaveDirectory, FileName, MapPathData, true);
+  SaveStringTextToFile(SaveDirectory, FileNameLinux, MapPathDataLinux, true);
 }
 
 void UPrepareAssetsForCookingCommandlet::GeneratePackagePathFile(const FString &PackageName)

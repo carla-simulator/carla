@@ -157,14 +157,19 @@ def get_license():
         return 'LGPL-v2.1-only License'
     return 'MIT License'
 
+with open("README.md") as f:
+    long_description = f.read()
+
 setup(
     name='carla',
-    version='0.9.11',
+    version='0.9.12',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),
     license=get_license(),
     description='Python API for communicating with the CARLA server.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/carla-simulator/carla',
     author='The CARLA team',
     author_email='carla.simulator@gmail.com',

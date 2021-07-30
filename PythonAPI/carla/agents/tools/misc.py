@@ -85,12 +85,16 @@ def is_within_distance(target_transform, reference_transform, max_distance, angl
     if norm_target < 0.001:
         return True
 
+    # Further than the max distance
     if norm_target > max_distance:
         return False
 
-    if angle_interval:
-        min_angle = angle_interval[0]
-        max_angle = angle_interval[1]
+    # We don't care about the angle, nothing else to check
+    if not angle_interval:
+        return True
+
+    min_angle = angle_interval[0]
+    max_angle = angle_interval[1]
 
     fwd = reference_transform.get_forward_vector()
     forward_vector = np.array([fwd.x, fwd.y])

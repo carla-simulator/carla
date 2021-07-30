@@ -12,6 +12,13 @@
     text-align: center;
 }
 
+/************************* NAV BAR **************************/
+
+.caption {
+	/* background-color: #d6d6d6;
+	color: #404040; */
+	text-decoration: underline;
+}
 
 /************************* DEFAULT TABLES **************************/
 
