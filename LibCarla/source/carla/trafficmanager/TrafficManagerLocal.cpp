@@ -113,7 +113,13 @@ void TrafficManagerLocal::SetupLocalMap() {
 
   auto files = episode_proxy.Lock()->GetRequiredFiles("TM");
   if (!files.empty()) {
-    local_map->Load(episode_proxy.Lock()->GetCacheFile(files[0], true));
+    auto content = episode_proxy.Lock()->GetCacheFile(files[0], true);
+    if (content.size() != 0) {
+      local_map->Load(content);
+    } else {
+      log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
+      local_map->SetUp();
+    }
   } else {
     log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
     local_map->SetUp();
