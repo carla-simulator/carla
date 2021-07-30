@@ -215,7 +215,7 @@ fi
 # ==============================================================================
 
 PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
-MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths.txt
+MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPathsLinux.txt
 
 for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
 
