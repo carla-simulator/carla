@@ -32,7 +32,12 @@ from numpy import random
 def get_actor_blueprints(world, filter, generation):
     bps = world.get_blueprint_library().filter(filter)
 
-    if generation == "All":
+    if generation.lower() == "all":
+        return bps
+
+    # If the filter returns only one bp, we assume that this one needed
+    # and therefore, we ignore the generation
+    if len(bps) == 1:
         return bps
 
     try:

@@ -159,7 +159,12 @@ def get_actor_display_name(actor, truncate=250):
 def get_actor_blueprints(world, filter, generation):
     bps = world.get_blueprint_library().filter(filter)
 
-    if generation == "All":
+    if generation.lower() == "all":
+        return bps
+
+    # If the filter returns only one bp, we assume that this one needed
+    # and therefore, we ignore the generation
+    if len(bps) == 1:
         return bps
 
     try:
@@ -546,7 +551,7 @@ class KeyboardControl(object):
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
-            self._control.throttle = min(self._control.throttle + 0.01, 0.85)
+            self._control.throttle = min(self._control.throttle + 0.01, 1.00)
         else:
             self._control.throttle = 0.0
 
