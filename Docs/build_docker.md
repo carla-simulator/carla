@@ -35,7 +35,7 @@ You can pull either the latest CARLA image or a specific release version. The la
 docker pull carlasim/carla:latest
 
 # Pull a specific version
-docker pull carlasim/carla:0.9.11
+docker pull carlasim/carla:0.9.12
 ```
 
 __2. Run the CARLA container.__

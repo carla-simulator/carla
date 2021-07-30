@@ -2,7 +2,7 @@
 
 ### Latest Release [Documentation](https://carla.readthedocs.io/en/latest/)
 
-- [CARLA 0.9.11](https://github.com/carla-simulator/carla/releases/tag/0.9.11)
+- [CARLA 0.9.12](https://github.com/carla-simulator/carla/releases/tag/0.9.12)
 
 ### Nightly build
 
@@ -17,6 +17,7 @@
 
 > Here are the previous versions of CARLA with links to the specific documentation for each version:
 
+- [CARLA 0.9.11](https://github.com/carla-simulator/carla/releases/tag/0.9.11) - [Documentation](https://carla.readthedocs.io/en/0.9.11/)
 - [CARLA 0.9.10](https://github.com/carla-simulator/carla/releases/tag/0.9.10) - [Documentation](https://carla.readthedocs.io/en/0.9.10/)
 - [CARLA 0.9.9](https://github.com/carla-simulator/carla/releases/tag/0.9.9) - [Documentation](https://carla.readthedocs.io/en/0.9.9/)
 - [CARLA 0.9.8](https://github.com/carla-simulator/carla/releases/tag/0.9.8) - [Documentation](https://carla.readthedocs.io/en/0.9.8/)
