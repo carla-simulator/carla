@@ -99,15 +99,15 @@ be below `0.01666` and ideally below `0.01`.
 
 To demonstrate the effect of optimal physical sub-stepping, consider the following graphs. The first graph shown below illustrates velocity over time in simulations with different fixed simulation time steps. The physical delta time is constant in all simulations at the default value of `0.01`. We can see that velocity is not affected by the difference in simulation time steps only.
 
->>>>>![velocity with fixed physical delta time](/img/physics_convergence_fixed_pdt.png)
+>>>>>![velocity with fixed physical delta time](../img/physics_convergence_fixed_pdt.png)
 
 The second graph shows velocity over time in simulations with a fixed simulation time step of `0.04`. We can see that once the physical delta time surpasses `0.01`, deviations start to occur in the constancy of velocity, increasing in severity as physical delta time increases.
 
->>>>>![velocity with varied physical delta time](/img/physics_convergence_fixed_dt.png)
+>>>>>![velocity with varied physical delta time](../img/physics_convergence_fixed_dt.png)
 
 We can demonstrate this deviation again by showing the effect of the same difference in physical delta time with a fixed simulation time step in the measurement of z-acceleration, with convergence occurring only when the physical delta time is `0.01` or less.
 
->>>>>![physics convergence z acceleration](/img/physics_convergence_z_acceleration.png)
+>>>>>![physics convergence z acceleration](../img/physics_convergence_z_acceleration.png)
 
 ---
 ## Client-server synchrony 

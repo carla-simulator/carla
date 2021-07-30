@@ -16,7 +16,7 @@ nav:
   - 'Windows build': 'build_windows.md'
   - 'Update CARLA': 'build_update.md'
   - 'Build system': 'build_system.md'
-  - 'Running in a Docker': 'build_docker.md'
+  - 'CARLA in Docker': 'build_docker.md'
   - 'F.A.Q.': 'build_faq.md'
 - First steps:
   - 'Core concepts': 'core_concepts.md'
@@ -34,6 +34,7 @@ nav:
   - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
   - 'Traffic Manager': 'adv_traffic_manager.md'
   - 'Benchmarking Performance': 'adv_benchmarking.md'
+  - 'CARLA Agents': 'adv_agents.md'
 - Traffic Simulation:
   - 'Traffic Simulation Overview': 'ts_traffic_simulation_overview.md'
 - References:
@@ -56,6 +57,7 @@ nav:
   - 'RLlib Integration': "tuto_G_rllib_integration.md"
   - 'Scenic': 'tuto_G_scenic.md'
   - 'Chrono Integration': 'tuto_G_chrono.md'
+  - 'Build Unreal and CARLA in Docker': 'build_docker_unreal.md'
 - Tutorials (assets):
   - 'Add a new map': 'tuto_A_add_map_overview.md'
   - 'Add a new vehicle': 'tuto_A_add_vehicle.md'

@@ -62,7 +62,21 @@
       type: float
       doc: >
         Density of the fog (as in specific mass) from 0 to infinity. The bigger the value, the more dense and heavy it will be, and the fog will reach smaller heights. Corresponds to <a href="https://docs.unrealengine.com/en-US/Engine/Actors/FogEffects/HeightFog/index.html#:~:text=Using%20Exponential%20Height%20Fog%20Features,-The%20sections%20below&text=Add%20a%20second%20fog%20layer,height%20falloff%2C%20and%20height%20offset">Fog Height Falloff</a> in the UE docs. <br> If the value is 0, the fog will be lighter than air, and will cover the whole scene. <br> A value of 1 is approximately as dense as the air, and reaches normal-sized buildings. <br> For values greater than 5, the air will be so dense that it will be compressed on ground level. 
-
+    # --------------------------------------
+    - var_name: scattering_intensity
+      type: float
+      doc: >
+        Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.
+    # --------------------------------------
+    - var_name: mie_scattering_scale
+      type: float
+      doc: >
+        Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.
+    # --------------------------------------
+    - var_name: rayleigh_scattering_scale
+      type: float
+      doc: >
+          Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -117,9 +131,24 @@
           Humidity percentages of the road, from 0 to 100.  
       - param_name: fog_falloff
         type: float
-        default: 0.2
+        default: 0.0
         doc: >
           Density (specific mass) of the fog, from 0 to infinity.  
+      - param_name: scattering_intensity
+        type: float
+        default: 0.0
+        doc: >
+          Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.
+      - param_name: mie_scattering_scale
+        type: float
+        default: 0.0
+        doc: >
+          Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.
+      - param_name: rayleigh_scattering_scale
+        type: float
+        default: 0.0331
+        doc: >
+          Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
       note: >
         ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
       doc: >
