@@ -143,10 +143,13 @@ def main(args):
             blueprints = [
                 x for x in blueprints if vtypes[x]['vClass'] not in ('motorcycle', 'bicycle')
             ]
-            blueprints = [x for x in blueprints if not x.endswith('isetta')]
-            blueprints = [x for x in blueprints if not x.endswith('carlacola')]
-            blueprints = [x for x in blueprints if not x.endswith('cybertruck')]
-            blueprints = [x for x in blueprints if not x.endswith('t2')]
+            blueprints = [x for x in blueprints if not x.id.endswith('microlino')]
+            blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
+            blueprints = [x for x in blueprints if not x.id.endswith('cybertruck')]
+            blueprints = [x for x in blueprints if not x.id.endswith('t2')]
+            blueprints = [x for x in blueprints if not x.id.endswith('sprinter')]
+            blueprints = [x for x in blueprints if not x.id.endswith('firetruck')]
+            blueprints = [x for x in blueprints if not x.id.endswith('ambulance')]
 
         if not blueprints:
             raise RuntimeError('No blueprints available due to user restrictions.')
