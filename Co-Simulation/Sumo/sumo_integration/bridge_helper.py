@@ -14,6 +14,7 @@
 import json
 import logging
 import math
+import os
 import random
 
 import carla  # pylint: disable=import-error
@@ -34,7 +35,9 @@ class BridgeHelper(object):
     blueprint_library = []
     offset = (0, 0)
 
-    with open('data/vtypes.json') as f:
+    _vtypes_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "data",
+                                "vtypes.json")
+    with open(_vtypes_path) as f:
         _VTYPES = json.load(f)['carla_blueprints']
 
     @staticmethod

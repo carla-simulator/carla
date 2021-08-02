@@ -10,9 +10,9 @@ launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
 
 import: CarlaUE4Editor PythonAPI
-	@${CARLA_BUILD_TOOLS_FOLDER}/Import.py $(ARGS)
+	@${CARLA_BUILD_TOOLS_FOLDER}/Import.sh $(ARGS)
 
-package: CarlaUE4Editor PythonAPI.rebuild
+package: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 package.rss: CarlaUE4Editor PythonAPI.rss.rebuild
@@ -149,4 +149,4 @@ build.utils: PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildUtilsDocker.sh
 
 osm2odr:
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --build $(ARGS)

@@ -10,7 +10,7 @@ import sys
 import unittest
 
 try:
-    sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -18,7 +18,7 @@ except IndexError:
     pass
 
 import carla
-
+import time
 
 TESTING_ADDRESS = ('localhost', 3654)
 
@@ -28,15 +28,19 @@ class SmokeTest(unittest.TestCase):
         self.testing_address = TESTING_ADDRESS
         self.client = carla.Client(*TESTING_ADDRESS)
         self.client.set_timeout(120.0)
+        self.world = self.client.get_world()
 
     def tearDown(self):
+        self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
+        self.world = None
         self.client = None
 
 
 class SyncSmokeTest(SmokeTest):
     def setUp(self):
         super(SyncSmokeTest, self).setUp()
-        self.world = self.client.get_world()
         self.settings = self.world.get_settings()
         settings = carla.WorldSettings(
             no_rendering_mode=False,
@@ -49,5 +53,4 @@ class SyncSmokeTest(SmokeTest):
         self.world.apply_settings(self.settings)
         self.world.tick()
         self.settings = None
-        self.world = None
         super(SyncSmokeTest, self).tearDown()

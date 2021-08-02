@@ -82,6 +82,10 @@ namespace road {
       return _road_conflicts.at(road_id);
     }
 
+    const std::set<ContId>& GetControllers() const {
+      return _controllers;
+    }
+
   private:
 
     friend MapBuilder;

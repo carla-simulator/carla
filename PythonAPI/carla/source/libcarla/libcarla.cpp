@@ -47,6 +47,12 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
       return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3), std::forward<T4_>(t4)); \
     }
 
+// Convenient for requests with 5 arguments.
+#define CALL_WITHOUT_GIL_5(cls, fn, T1_, T2_, T3_, T4_, T5_) +[](cls &self, T1_ t1, T2_ t2, T3_ t3, T4_ t4, T5_ t5) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3), std::forward<T4_>(t4), std::forward<T5_>(t5)); \
+    }
+
 // Convenient for const requests without arguments.
 #define CONST_CALL_WITHOUT_GIL(cls, fn) CALL_WITHOUT_GIL(const cls, fn)
 #define CONST_CALL_WITHOUT_GIL_1(cls, fn, T1_) CALL_WITHOUT_GIL_1(const cls, fn, T1_)
@@ -65,6 +71,16 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
         -> std::decay_t<std::result_of_t<decltype(&cls::fn)(cls*, T1_)>> { \
       return self.fn(std::forward<T1_>(t1)); \
     }
+
+template<typename T>
+std::vector<T> PythonLitstToVector(boost::python::list &input) {
+  std::vector<T> result;
+  boost::python::ssize_t list_size = boost::python::len(input);
+  for (boost::python::ssize_t i = 0; i < list_size; ++i) {
+    result.emplace_back(boost::python::extract<T>(input[i]));
+  }
+  return result;
+}
 
 // Convenient for const requests that needs to convert the return value to a
 // Python list.

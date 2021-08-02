@@ -167,19 +167,23 @@ float AInertialMeasurementUnit::ComputeCompass()
 {
   // Magnetometer: orientation with respect to the North in rad
   const FVector ForwVect = GetActorForwardVector().GetSafeNormal2D();
-  float Compass = std::acos(FVector::DotProduct(CarlaNorthVector, ForwVect));
+  const float DotProd = FVector::DotProduct(CarlaNorthVector, ForwVect);
 
+  // We check if the dot product is higher than 1.0 due to numerical error
+  if (DotProd >= 1.00f)
+    return 0.0f;
+
+  const float Compass = std::acos(DotProd);
   // Keep the angle between [0, 2pi)
   if (FVector::CrossProduct(CarlaNorthVector, ForwVect).Z < 0.0f)
-  {
-    Compass = carla::geom::Math::Pi2<float>() - Compass;
-  }
+    return carla::geom::Math::Pi2<float>() - Compass;
 
   return Compass;
 }
 
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
   auto Stream = GetDataStream(*this);
   Stream.Send(
       *this,

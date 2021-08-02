@@ -478,7 +478,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMinBright;
     ExposureMinBright.Id = TEXT("exposure_min_bright");
     ExposureMinBright.Type = EActorAttributeType::Float;
-    ExposureMinBright.RecommendedValues = { TEXT("7.0") };
+    ExposureMinBright.RecommendedValues = { TEXT("10.0") };
     ExposureMinBright.bRestrictToRecommended = false;
 
     // The maximum brightness for auto exposure that limits the upper
@@ -486,7 +486,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMaxBright;
     ExposureMaxBright.Id = TEXT("exposure_max_bright");
     ExposureMaxBright.Type = EActorAttributeType::Float;
-    ExposureMaxBright.RecommendedValues = { TEXT("9.0") };
+    ExposureMaxBright.RecommendedValues = { TEXT("12.0") };
     ExposureMaxBright.bRestrictToRecommended = false;
 
     // The speed at which the adaptation occurs from a dark environment
@@ -1044,6 +1044,12 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     EActorAttributeType::Int,
     FString::FromInt(Parameters.NumberOfWheels)});
   Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("generation"),
+    EActorAttributeType::Int,
+    FString::FromInt(Parameters.Generation)});
+  Success = CheckActorDefinition(Definition);
 }
 
 template <typename T, typename Functor>
@@ -1104,6 +1110,11 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     TEXT("gender"),
     EActorAttributeType::String,
     GetGender(Parameters.Gender)});
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("generation"),
+    EActorAttributeType::Int,
+    FString::FromInt(Parameters.Generation)});
 
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("age"),

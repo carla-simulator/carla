@@ -143,10 +143,13 @@ def main(args):
             blueprints = [
                 x for x in blueprints if vtypes[x]['vClass'] not in ('motorcycle', 'bicycle')
             ]
-            blueprints = [x for x in blueprints if not x.endswith('isetta')]
+            blueprints = [x for x in blueprints if not x.endswith('microlino')]
             blueprints = [x for x in blueprints if not x.endswith('carlacola')]
             blueprints = [x for x in blueprints if not x.endswith('cybertruck')]
             blueprints = [x for x in blueprints if not x.endswith('t2')]
+            blueprints = [x for x in blueprints if not x.endswith('sprinter')]
+            blueprints = [x for x in blueprints if not x.endswith('firetruck')]
+            blueprints = [x for x in blueprints if not x.endswith('ambulance')]
 
         if not blueprints:
             raise RuntimeError('No blueprints available due to user restrictions.')
@@ -165,10 +168,15 @@ def main(args):
             vclass = vtypes[type_id]['vClass']
 
             allowed_edges = [e for e in sumo_edges if e.allows(vclass)]
-            edge = random.choice(allowed_edges)
+            if allowed_edges:
+                edge = random.choice(allowed_edges)
 
-            traci.route.add('route_{}'.format(i), [edge.getID()])
-            traci.vehicle.add('sumo_{}'.format(i), 'route_{}'.format(i), typeID=type_id)
+                traci.route.add('route_{}'.format(i), [edge.getID()])
+                traci.vehicle.add('sumo_{}'.format(i), 'route_{}'.format(i), typeID=type_id)
+            else:
+                logging.error(
+                    'Could not found a route for %s. No vehicle will be spawned in sumo',
+                    type_id)
 
         while True:
             start = time.time()

@@ -12,7 +12,6 @@
 #include <thread>
 #include <vector>
 
-#include "carla/client/DebugHelper.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/World.h"
@@ -71,8 +70,6 @@ private:
   LocalMapPtr local_map;
   /// Structures to hold waypoint buffers for all vehicles.
   BufferMap buffer_map;
-  /// Carla's debug helper object.
-  cc::DebugHelper debug_helper;
   /// Object for tracking paths of the traffic vehicles.
   TrackTraffic track_traffic;
   /// Type containing the current state of all actors involved in the simulation.
@@ -115,6 +112,7 @@ private:
   RandomGeneratorMap random_devices;
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
+  bool is_custom_seed {false};
   std::vector<ActorId> marked_for_removal;
   /// Mutex to prevent vehicle registration during frame array re-allocation.
   std::mutex registration_mutex;
@@ -226,6 +224,17 @@ public:
 
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
+
+  /// Method to set automatic respawn of dormant vehicles.
+  void SetRespawnDormantVehicles(const bool mode_switch);
+
+  // Method to set boundaries to respawn of dormant vehicles.
+  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
+
+  // Method to set limits for boundaries when respawning dormant vehicles.
+  void SetMaxBoundaries(const float lower, const float upper);
+
+  void ShutDown() {};
 };
 
 } // namespace traffic_manager

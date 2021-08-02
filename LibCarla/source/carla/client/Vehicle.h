@@ -11,6 +11,7 @@
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleWheels.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
 using carla::traffic_manager::constants::Networking::TM_DEFAULT_PORT;
@@ -32,11 +33,16 @@ namespace client {
     using PhysicsControl = rpc::VehiclePhysicsControl;
     using LightState = rpc::VehicleLightState::LightState;
     using TM = traffic_manager::TrafficManager;
+    using WheelLocation = carla::rpc::VehicleWheelLocation;
+
 
     explicit Vehicle(ActorInitializer init);
 
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true, uint16_t tm_port = TM_DEFAULT_PORT);
+
+    /// Switch on/off this vehicle's autopilot.
+    void ShowDebugTelemetry(bool enabled = true);
 
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);
@@ -46,6 +52,14 @@ namespace client {
 
     /// Sets a @a LightState to this vehicle.
     void SetLightState(const LightState &light_state);
+
+    /// Sets a @a Rotation to a wheel of the vehicle (affects the bone of the car skeleton, not the physics)
+    void SetWheelSteerDirection(WheelLocation wheel_location, float angle_in_deg);
+
+    /// Return a @a Rotation from a wheel of the vehicle
+    ///
+    /// @note The function returns the rotation of the vehicle based on the it's physics
+    float GetWheelSteerAngle(WheelLocation wheel_location);
 
     /// Return the control last applied to this vehicle.
     ///
@@ -93,12 +107,20 @@ namespace client {
     /// Enables the use of CarSim internal road definition instead of unreal's
     void UseCarSimRoad(bool enabled);
 
+    void EnableChronoPhysics(
+        uint64_t MaxSubsteps,
+        float MaxSubstepDeltaTime,
+        std::string VehicleJSON = "",
+        std::string PowertrainJSON = "",
+        std::string TireJSON = "",
+        std::string BaseJSONPath = "");
+
   private:
 
     const bool _is_control_sticky;
 
     Control _control;
   };
-
+  
 } // namespace client
 } // namespace carla

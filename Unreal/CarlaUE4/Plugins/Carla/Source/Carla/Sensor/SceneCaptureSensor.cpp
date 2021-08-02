@@ -118,7 +118,7 @@ void ASceneCaptureSensor::SetExposureCompensation(float Compensation)
 #if PLATFORM_LINUX
   // Looks like Windows and Linux have different outputs with the
   // same exposure compensation, this fixes it.
-  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation - 1.5f;
+  CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation + 0.75f;
 #else
   CaptureComponent2D->PostProcessSettings.AutoExposureBias = Compensation;
 #endif
@@ -337,13 +337,13 @@ float ASceneCaptureSensor::GetExposureSpeedUp() const
 void ASceneCaptureSensor::SetExposureCalibrationConstant(float Constant)
 {
   check(CaptureComponent2D != nullptr);
-  CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant = Constant;
+  CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant_DEPRECATED = Constant;
 }
 
 float ASceneCaptureSensor::GetExposureCalibrationConstant() const
 {
   check(CaptureComponent2D != nullptr);
-  return CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant;
+  return CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant_DEPRECATED;
 }
 
 void ASceneCaptureSensor::SetMotionBlurIntensity(float Intensity)
@@ -455,6 +455,7 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 }
 
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
   CaptureComponent2D->CaptureScene();
 }
@@ -466,7 +467,8 @@ void ASceneCaptureSensor::BeginPlay()
   // Determine the gamma of the player.
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
 
-  CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, PF_B8G8R8A8, bInForceLinearGamma);
+  CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
+                                        bInForceLinearGamma);
 
   if (bEnablePostProcessingEffects)
   {
@@ -511,15 +513,11 @@ void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
       CaptureComponent2D->GetComponentLocation(),
       ImageWidth,
       ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
-
-  // Allows the sensor to tick with the tick rate from UE4.
-  ReadyToCapture = true;
 }
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   Super::PostPhysTick(World, TickType, DeltaTime);
-  ReadyToCapture = true;
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -546,7 +544,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
     PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
     PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
-    PostProcessSettings.bOverride_AutoExposureCalibrationConstant = true;
+    PostProcessSettings.bOverride_AutoExposureCalibrationConstant_DEPRECATED = true;
     PostProcessSettings.bOverride_HistogramLogMin = true;
     PostProcessSettings.HistogramLogMin = 1.0f;
     PostProcessSettings.bOverride_HistogramLogMax = true;
@@ -757,7 +755,6 @@ namespace SceneCaptureSensor_local_ns {
     // ShowFlags.SetVisualizeBloom(false);
     ShowFlags.SetVisualizeBuffer(false);
     ShowFlags.SetVisualizeDistanceFieldAO(false);
-    ShowFlags.SetVisualizeDistanceFieldGI(false);
     ShowFlags.SetVisualizeDOF(false);
     ShowFlags.SetVisualizeHDR(false);
     ShowFlags.SetVisualizeLightCulling(false);

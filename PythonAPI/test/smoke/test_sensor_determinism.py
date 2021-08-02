@@ -4,7 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from __init__ import SyncSmokeTest
+from . import SmokeTest
 
 import carla
 import time
@@ -47,6 +47,8 @@ class Scenario(object):
         self.sensor_queue = Queue()
 
         self.reload_world(settings, spectator_tr)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         # Init timestamp
         snapshot = self.world.get_snapshot()
@@ -67,7 +69,7 @@ class Scenario(object):
             self.world.tick()
             if self.active:
                 for _s in self.sensor_list:
-                    self.sensor_queue.get(True, 1.0)
+                    self.sensor_queue.get(True, 15.0)
 
     def clear_scene(self):
         for sensor in self.sensor_list:
@@ -79,11 +81,14 @@ class Scenario(object):
         self.active = False
 
     def reload_world(self, settings = None, spectator_tr = None):
-        self.client.reload_world()
         if settings is not None:
             self.world.apply_settings(settings)
         if spectator_tr is not None:
             self.reset_spectator(spectator_tr)
+
+        self.client.reload_world(False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
     def reset_spectator(self, spectator_tr):
         spectator = self.world.get_spectator()
@@ -189,9 +194,14 @@ class Scenario(object):
         # Sensor Syncronization
         w_frame = self.world.get_snapshot().frame
         for sensor in self.sensor_list:
-            s_frame = self.sensor_queue.get(True, 1.0)[0]
+            s_frame = self.sensor_queue.get(True, 15.0)[0]
+
+            while s_frame < w_frame:
+                s_frame = self.sensor_queue.get(True, 15.0)[0]
+
             if w_frame != s_frame:
-                raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d" % (sensor[0], w_frame, s_frame))
+                raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d"
+                                       % (sensor[0], w_frame, s_frame))
 
 class SpawnAllRaycastSensors(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
@@ -311,18 +321,17 @@ class SensorScenarioTester():
             raise DeterminismError("SensorOutputError: Scenario %s is not deterministic: %d / %d" % (self.scenario_name, determ_repet[0], repetitions))
 
 
-class TestSensorDeterminism(SyncSmokeTest):
+class TestSensorDeterminism(SmokeTest):
     def test_all_sensors(self):
         print("TestSensorDeterminism.test_all_sensors")
+
+        orig_settings = self.world.get_settings()
 
         # Setting output temporal folder
         output_path = os.path.dirname(os.path.realpath(__file__))
         output_path = os.path.join(output_path, "_sensors") + os.path.sep
         if not os.path.exists(output_path):
             os.mkdir(output_path)
-
-        # Loading Town03 for test
-        self.client.load_world("Town03")
 
         try:
             test_sensors = SensorScenarioTester(SpawnAllRaycastSensors(self.client, self.world), output_path)
@@ -332,6 +341,8 @@ class TestSensorDeterminism(SyncSmokeTest):
             # Remove all the output files
             shutil.rmtree(output_path)
             self.fail(err)
+
+        self.world.apply_settings(orig_settings)
 
         # Remove all the output files
         shutil.rmtree(output_path)

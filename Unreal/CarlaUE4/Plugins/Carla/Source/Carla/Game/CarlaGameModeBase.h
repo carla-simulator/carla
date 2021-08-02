@@ -24,6 +24,7 @@
 #include "Carla/Traffic/TrafficLightManager.h"
 #include "Carla/Util/ObjectRegister.h"
 #include "Carla/Weather/Weather.h"
+#include "MapGen/LargeMapManager.h"
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -47,11 +48,21 @@ public:
     return Map;
   }
 
+  const FString GetFullMapPath() const;
+
+  // get path relative to Content folder
+  const FString GetRelativeMapPath() const;
+
   UFUNCTION(Exec, Category = "CARLA Game Mode")
   void DebugShowSignals(bool enable);
 
   UFUNCTION(BlueprintCallable, Category = "CARLA Game Mode")
   ATrafficLightManager* GetTrafficLightManager();
+
+  UFUNCTION(Category = "Carla Game Mode", BlueprintCallable)
+  const TArray<FTransform>& GetSpawnPointsTransforms() const{
+    return SpawnPointsTransforms;
+  }
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   TArray<FBoundingBox> GetAllBBsOfLevel(uint8 TagQueried = 0xFF) const;
@@ -63,6 +74,10 @@ public:
   }
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
+
+  void EnableOverlapEvents();
+
+  void CheckForEmptyMeshes();
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable, CallInEditor, Exec)
   void LoadMapLayer(int32 MapLayers);
@@ -78,6 +93,10 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
   void OnUnloadStreamLevel();
+
+  ALargeMapManager* GetLMManager() const {
+    return LMManager;
+  }
 
 protected:
 
@@ -95,7 +114,11 @@ private:
 
   void SpawnActorFactories();
 
-  void ParseOpenDrive(const FString &MapName);
+  void StoreSpawnPoints();
+
+  void GenerateSpawnPoints();
+
+  void ParseOpenDrive();
 
   void RegisterEnvironmentObjects();
 
@@ -131,10 +154,15 @@ private:
   TSet<TSubclassOf<ACarlaActorFactory>> ActorFactories;
 
   UPROPERTY()
+  TArray<FTransform> SpawnPointsTransforms;
+
+  UPROPERTY()
   TArray<ACarlaActorFactory *> ActorFactoryInstances;
 
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
+
+  ALargeMapManager* LMManager = nullptr;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
@@ -144,5 +172,9 @@ private:
   int PendingLevelsToUnLoad = 0;
 
   bool ReadyToRegisterObjects = false;
+
+  // We keep a global uuid to allow the load/unload layer methods to be called
+  // in the same tick
+  int32 LatentInfoUUID = 0;
 
 };

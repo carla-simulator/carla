@@ -26,12 +26,12 @@ void CarlaRecorderEventParent::Write(std::ofstream &OutFile) const
 
 //---------------------------------------------
 
-inline void CarlaRecorderEventsParent::Clear(void)
+void CarlaRecorderEventsParent::Clear(void)
 {
     Events.clear();
 }
 
-inline void CarlaRecorderEventsParent::Add(const CarlaRecorderEventParent &Event)
+void CarlaRecorderEventsParent::Add(const CarlaRecorderEventParent &Event)
 {
     Events.push_back(std::move(Event));
 }

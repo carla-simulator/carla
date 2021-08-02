@@ -10,6 +10,7 @@
 #include "carla/Sockets.h"
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerBase.h"
 #include "carla/trafficmanager/TrafficManagerLocal.h"
@@ -20,6 +21,9 @@
 
 namespace carla {
 namespace traffic_manager {
+
+using namespace constants::SpeedThreshold;
+using namespace constants::PID;
 
 std::map<uint16_t, TrafficManagerBase*> TrafficManager::_tm_map;
 std::mutex TrafficManager::_mutex;
@@ -59,6 +63,19 @@ void TrafficManager::Tick() {
   std::lock_guard<std::mutex> lock(_mutex);
   for(auto& tm : _tm_map) {
     tm.second->SynchronousTick();
+  }
+}
+
+void TrafficManager::ShutDown() {
+  TrafficManagerBase* tm_ptr = GetTM(_port);
+  std::lock_guard<std::mutex> lock(_mutex);
+  auto it = _tm_map.find(_port);
+  if (it != _tm_map.end()) {
+    _tm_map.erase(it);
+  }
+  if(tm_ptr != nullptr) {
+    tm_ptr->ShutDown();
+    delete tm_ptr;
   }
 }
 
@@ -119,11 +136,11 @@ void TrafficManager::CreateTrafficManagerServer(
   };
 
   /// Define local constants
-  const std::vector<float> longitudinal_param = {2.0f, 0.01f, 0.4f};
-  const std::vector<float> longitudinal_highway_param = {4.0f, 0.02f, 0.2f};
-  const std::vector<float> lateral_param = {9.0f, 0.02f, 1.0f};
-  const std::vector<float> lateral_highway_param = {7.0f, 0.02f, 1.0f};
-  const float perc_difference_from_limit = 30.0f;
+  const std::vector<float> longitudinal_param = LONGITUDIAL_PARAM;
+  const std::vector<float> longitudinal_highway_param = LONGITUDIAL_HIGHWAY_PARAM;
+  const std::vector<float> lateral_param = LATERAL_PARAM;
+  const std::vector<float> lateral_highway_param = LATERAL_HIGHWAY_PARAM;
+  const float perc_difference_from_limit = INITIAL_PERCENTAGE_SPEED_DIFFERENCE;
 
   std::pair<std::string, uint16_t> serverTM;
 

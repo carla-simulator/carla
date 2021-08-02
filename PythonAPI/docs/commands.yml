@@ -90,6 +90,33 @@
           Actor or its ID to whom the command will be applied to. 
     # --------------------------------------
 
+  - class_name: ApplyVehiclePhysicsControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">apply_physics_control()</font>__ in carla.Vehicle. Applies a new physics control to a vehicle,
+      modifying its physical parameters.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Vehicle actor affected by the command.
+    - var_name: control
+      type: carla.VehiclePhysicsControl
+      doc: >
+        Physics control to be applied.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: control
+        type: carla.VehiclePhysicsControl
+    # --------------------------------------
+
   - class_name: ApplyVehicleControl
     # - DESCRIPTION ------------------------
     doc: >
@@ -461,5 +488,53 @@
         type: carla.VehicleLightState
         doc: >
           Recaps the state of the lights of a vehicle, these can be used as a flags.
+    # --------------------------------------
+
+  - class_name: SetEnableGravity
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_enable_gravity()</font>__ in carla.Actor. Enables or disables gravity on an actor.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: carla.Actor or int
+      doc: >
+        Actor that is affected by the command.
+    - var_name: enabled
+      type: bool
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or Actor ID to which the command will be applied to. 
+      - param_name: enabled
+        type: bool
+    # --------------------------------------
+
+  - class_name: ShowDebugTelemetry
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">show_debug_telemetry()</font>__ in carla.Actor. Displays vehicle control telemetry data.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: carla.Actor or int
+      doc: >
+        Actor that is affected by the command.
+    - var_name: enabled
+      type: bool
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or Actor ID to which the command will be applied to. 
+      - param_name: enabled
+        type: bool
     # --------------------------------------
 ...

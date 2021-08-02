@@ -1,18 +1,19 @@
 # Sensors reference
 
-*   [__Collision detector__](#collision-detector)
-*   [__Depth camera__](#depth-camera)
-*   [__GNSS sensor__](#gnss-sensor)
-*   [__IMU sensor__](#imu-sensor)
-*   [__Lane invasion detector__](#lane-invasion-detector)
-*   [__LIDAR sensor__](#lidar-sensor)
-*   [__Obstacle detector__](#obstacle-detector)
-*   [__Radar sensor__](#radar-sensor)
-*   [__RGB camera__](#rgb-camera)
-*   [__RSS sensor__](#rss-sensor)
-*   [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
-*   [__Semantic segmentation camera__](#semantic-segmentation-camera)
-*   [__DVS camera__](#dvs-camera)
+- [__Collision detector__](#collision-detector)
+- [__Depth camera__](#depth-camera)
+- [__GNSS sensor__](#gnss-sensor)
+- [__IMU sensor__](#imu-sensor)
+- [__Lane invasion detector__](#lane-invasion-detector)
+- [__LIDAR sensor__](#lidar-sensor)
+- [__Obstacle detector__](#obstacle-detector)
+- [__Radar sensor__](#radar-sensor)
+- [__RGB camera__](#rgb-camera)
+- [__RSS sensor__](#rss-sensor)
+- [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
+- [__Semantic segmentation camera__](#semantic-segmentation-camera)
+- [__DVS camera__](#dvs-camera)
+- [__Optical Flow camera__](#optical-flow-camera)
 
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
@@ -265,6 +266,7 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 | `rotation_frequency`            | float  | 10.0  | LIDAR rotation frequency.       |
 | `upper_fov`        | float  | 10.0  | Angle in degrees of the highest laser.        |
 | `lower_fov`        | float  | -30.0 | Angle in degrees of the lowest laser.         |
+| `horizontal_fov`   | float | 360.0 | Horizontal field of view in degrees, 0 - 360. |
 | `atmosphere_attenuation_rate`     | float  | 0.004 | Coefficient that measures the LIDAR instensity loss per meter. Check the intensity computation above. |
 | `dropoff_general_rate`          | float  | 0.45  | General proportion of points that are randomy dropped.    |
 | `dropoff_intensity_limit`       | float  | 0.8   | For the intensity based drop-off, the threshold intensity value above which no points are dropped.    |
@@ -335,7 +337,7 @@ The sensor creates a conic view that is translated to a 2D point map of the elem
 Points measured are contained in [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) as an array of [carla.RadarDetection](python_api.md#carla.RadarDetection), which specifies their polar coordinates, distance and velocity.
 This raw data provided by the radar sensor can be easily converted to a format manageable by __numpy__:
 ```py
-# To get a numpy [[vel, altitude, azimuth, depth],...[,,,]]:
+# To get a numpy [[vel, azimuth, altitude, depth],...[,,,]]:
 points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
 points = np.reshape(points, (len(radar_data), 4))
 ```
@@ -449,9 +451,9 @@ Since these effects are provided by UE, please make sure to check their document
 | `min_fstop`    | float          | 1\.2           | Maximum aperture.    |
 | `blade_count`  | int            | 5  | Number of blades that make up the diaphragm mechanism.     |
 | `exposure_mode`      | str            | `histogram`    | Can be `manual` or `histogram`. More in [UE4 docs](<https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html>).  |
-| `exposure_compensation`          | float          | **Linux:** \-1.5<br>**Windows:** 0\.0        | Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.   |
-| `exposure_min_bright`            | float          | 7\.0           | In `exposure_mode: "histogram"`. Minimum brightness for auto exposure. The lowest the eye can adapt within. Must be greater than 0 and less than or equal to `exposure_max_bright`.  |
-| `exposure_max_bright`            | float          | 9\.0           | In \`exposure\_mode: "histogram"\`. Maximum brightness for auto exposure. The highestthe eye can adapt within. Must be greater than 0 and greater than or equal to \`exposure\_min\_bright\`.          |
+| `exposure_compensation`          | float          | **Linux:** \+0.75<br>**Windows:** 0\.0        | Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.   |
+| `exposure_min_bright`            | float          | 10\.0           | In `exposure_mode: "histogram"`. Minimum brightness for auto exposure. The lowest the eye can adapt within. Must be greater than 0 and less than or equal to `exposure_max_bright`.  |
+| `exposure_max_bright`            | float          | 12\.0           | In \`exposure\_mode: "histogram"\`. Maximum brightness for auto exposure. The highestthe eye can adapt within. Must be greater than 0 and greater than or equal to \`exposure\_min\_bright\`.          |
 | `exposure_speed_up`  | float          | 3\.0           | In `exposure_mode: "histogram"`. Speed at which the adaptation occurs from dark to bright environment.  |
 | `exposure_speed_down`            | float          | 1\.0           | In `exposure_mode: "histogram"`. Speed at which the adaptation occurs from bright to dark environment.  |
 | `calibration_constant`           | float          | 16\.0          | Calibration constant for 18% albedo.           |
@@ -660,14 +662,15 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 
 <br>
 
-| Blueprint attribute  | Type           | Description    |
-| ------------------------------------- | ------------------------------------- | ------------------------------------- |
+| Blueprint attribute  | Type           | Default | Description    |
+| ------------------------------------- | ------------------ | ------------------- | ------------------------------------- |
 | `channels`         | int   | 32    | Number of lasers.  |
 | `range`            | float | 10.0 | Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous). |
 | `points_per_second`    | int   | 56000 | Points generated by all lasers per second.   |
 | `rotation_frequency`   | float | 10.0 | LIDAR rotation frequency.       |
 | `upper_fov`        | float | 10.0 | Angle in degrees of the highest laser.    |
 | `lower_fov`        | float | -30.0 | Angle in degrees of the lowest laser.     |
+| `horizontal_fov`   | float | 360.0 | Horizontal field of view in degrees, 0 - 360. |
 | `sensor_tick`      | float | 0.0  | Simulation seconds between sensor captures (ticks).   |
 
 
@@ -793,7 +796,7 @@ The following tags are currently available:
 
 A Dynamic Vision Sensor (DVS) or Event camera is a sensor that works radically differently from a conventional camera. Instead of capturing
 intensity images at a fixed rate, event cameras measure changes of intensity asynchronously, in the form of a stream of events, which encode per-pixel
-brightness changes. Event cameras possess outstanding properties when compared to standard cameras. They have a very high dynamic range (140 dB
+brightness changes. Event cameras possess distinct properties when compared to standard cameras. They have a very high dynamic range (140 dB
 versus 60 dB), no motion blur, and high temporal resolution (in the order of microseconds). Event cameras are thus sensors that can provide high-quality
 visual information even in challenging high-speed scenarios and high dynamic range environments, enabling new application domains for vision-based
 algorithms.
@@ -816,10 +819,14 @@ contrast threshold `C` for one dimension `x` over time `t`. Observe how the even
 
 The current implementation of the DVS camera works in a uniform sampling manner between two consecutive synchronous frames. Therefore, in order to
 emulate the high temporal resolution (order of microseconds) of a real event camera, the sensor requires to execute at a high frequency (much higher
-frequency than a conventional camera). Effectively, the number of events increases as faster a CARLA car drives. Therefore, the sensor frequency
-should increase accordingly with the dynamic of the scene. The user should find their balance between time accuracy and computational cost.
+frequency than a conventional camera). Effectively, the number of events increases the faster a CARLA car drives. Therefore, the sensor frequency
+should increase accordingly with the dynamics of the scene. The user should find a balance between time accuracy and computational cost.
 
-The provided script `manual_control.py` uses the DVS camera in order to show how to configure the sensor, how to get the stream of events and how to depict such events in an image format, usually called event frame.
+The provided script [`manual_control.py`][manual_control] uses the DVS camera in order to show how to configure the sensor, how to get the stream of events and how to depict such events in an image format, usually called event frame.
+
+[manual_control]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/manual_control.py
+
+Note that due to the sampling method of the DVS camera, if there is no pixel difference between two consecutive synchronous frames the camera will not return an image. This will always occur in the first frame, as there is no previous frame to compare to and also in the event that there has been no movement between frames. 
 
 ![DVSCameraWorkingPrinciple](img/sensor_dvs.gif)
 
@@ -836,5 +843,47 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 | `refractory_period_ns`             | int     | 0\.0    | Refractory period (time during which a pixel cannot fire events just after it fired one), in nanoseconds. It limits the highest frequency of triggering events.   |
 | `use_log`            | bool    | true    | Whether to work in the logarithmic intensity scale.  |
 | `log_eps`            | float   | 0\.001  | Epsilon value used to convert images to log: `L = log(eps + I / 255.0)`.<br>  Where `I` is the grayscale value of the RGB image: <br>`I = 0.2989*R + 0.5870*G + 0.1140*B`. |
+
+<br>
+
+---
+
+## Optical Flow Camera
+
+The Optical Flow camera captures the motion perceived from the point of view of the camera. Every pixel recorded by this sensor encodes the velocity of that point projected to the image plane. The velocity of a pixel is encoded in the range [-2,2]. To obtain the motion in pixel units, this information can be scaled with the image size to [-2 * image_size, 2 * image_size].
+
+![optical_flow](img/optical_flow.png)
+
+#### Optical Flow camera attributes
+
+| Blueprint attribute | Type | Default | Description |
+| ------------------- | ---- | ------- | ----------- |
+| `image_size_x` | int | 800 | Image width in pixels. |
+| `image_size_y` | int | 600 | Image height in pixels. |
+| `fov` | float | 90.0 | Horizontal field of view in degrees. |
+| `sensor_tick` | float | 0.0 | Simulation seconds between sensor captures (ticks). |
+
+#### Optical Flow camera lens distortion attributes
+
+| Blueprint attribute      | Type         | Default      | Description  |
+| ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
+| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
+| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
+| `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
+| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
+| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+
+#### Output attributes
+
+| Sensor data attribute | Type | Description |
+| --------------------- | ---- | ----------- |
+| `frame` | int | Frame number when the measurement took place. |
+| `timestamp` | double | Simulation time of the measurement in seconds since the beginning of the episode. |
+| `transform` | [carla.Transform](<../python_api#carlatransform>) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width` | int | Image width in pixels. |
+| `height` | int | Image height in pixels. |
+| `fov` | float | Horizontal field of view in degrees. |
+| `raw_data` | bytes | Array of BGRA 64-bit pixels containing two float values. |
 
 <br>
