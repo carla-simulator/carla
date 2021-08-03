@@ -27,10 +27,10 @@
   "map_2_sumo_files": {
     "3lane": {
       "xodr":              "./examples/3lane/map.xodr",
-      "rou":               "./examples/3lane/map_p_6.trip.xml",
+      "rou":               "./examples/3lane/map_p_4.trip.xml",
       "net":               "./examples/3lane/map.net.xml",
       "poly":              "./examples/poly/empty.poly.xml",
-      "sumocfg":           "./examples/3lane/map_p_6.sumocfg",
+      "sumocfg":           "./examples/3lane/map_p_4.sumocfg",
       "sumocfg_for_veins": "./examples/for_veins.sumocfg"
     },
     "Town04": {

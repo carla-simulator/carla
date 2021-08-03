@@ -40,6 +40,7 @@ def is_processes_alive(procs):
         if p.poll() is None:
             is_alive = is_alive & True
         else:
+            print(f"p: {p.pid}")
             is_alive = is_alive & False
 
     return is_alive
@@ -82,7 +83,10 @@ def switch_carla_rendering(args, env, is_carla_rendering):
 
 
 def start_carla_sumo_synchronization(args, env, sumo_files):
-    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} --carla_veins_data_dir {args.data_dir} --time_to_start {args.time_to_start}", shell=True)
+    dev_null = "> /dev/null 2>&1"
+    dev_null = ""
+
+    return Popen(f"python my_synchronization.py {sumo_files['sumocfg']} --step-length {args.time_step} --carla-port {args.carla_unrealengine_port} --sumo-port {args.carla_sumo_port} --sumo-host {args.sumo_host} --carla_veins_data_dir {args.data_dir} --time_to_start {args.time_to_start} {dev_null}", shell=True)
 
 
 def start_veins_sumo_synchronization(args, env, sumo_files):
@@ -103,7 +107,7 @@ def start_sumo_for_veins(args, env, sumo_files, client_num):
 
 def start_tracis_synchronization(args, env, sumo_files):
     dev_null = "> /dev/null 2>&1"
-    dev_null = ""
+    # dev_null = ""
 
     if args.main_mobility_handler == "carla":
         return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start} {dev_null}", shell=True)
@@ -262,6 +266,7 @@ class MainWithVeins(Main):
             switch_carla_rendering(args, env, args.is_carla_rendering)
 
             print("Please run Veins manually.")
+            print([p.pid for p in procs])
             while is_processes_alive(procs) == True and self.veins_state_handler.run_time() <= 0:
                 pass
 

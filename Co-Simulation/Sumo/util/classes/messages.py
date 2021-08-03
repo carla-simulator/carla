@@ -1,5 +1,6 @@
 import math
 import json
+import pathlib
 import socket
 
 from os import symlink, unlink
@@ -67,35 +68,37 @@ class MessagesHandler:
     def receive(self, data_file, lock_file):
         data = []
         # ----- file base -----
-        # lock(data_file, lock_file)
-        try:
-            with open(data_file) as f:
+        with open(data_file, mode='r') as f:
+            line = f.readline()
+
+            while line:
+                if '\x00' not in line:
+                    data.append(line)
+                else:
+                    pass
 
                 line = f.readline()
-                while line:
-                    if '\x00' not in line:
-                        data.append(line)
-                    else:
-                        pass
 
-                    line = f.readline()
-
-        except:
-            pass
 
         with open(data_file, mode="w") as f:
             f.write("")
 
-        # unlock(lock_file)
-
         return data
 
     def send(self, data_file, lock_file, data):
-        # ----- file base -----
         # lock(data_file, lock_file)
+        # ----- file base -----
         with open(data_file, mode="a") as f:
             f.write(data + "\n")
         # unlock(lock_file)
+
+    def touch(self, veh_id):
+        sf = pathlib.Path(self.sensor_data_file_path(veh_id))
+        sf.touch()
+
+        pf = pathlib.Path(self.packet_data_file_path(veh_id))
+        pf.touch()
+
 
     def access_data_server(self, sumo_vehid, method_name, args=None):
         """
@@ -329,11 +332,7 @@ class CPMsHandler(MessagesHandler):
     def receive(self, sumo_id):
         # ----- file base -----
         data = super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
-        try:
-            dict_data = [json.loads(d) for d in data]
-        except Exception:
-            dict_data = []
-            print(data)
+        dict_data = [json.loads(d) for d in data]
 
         self.received_messages = self.received_messages + [CPM(**d) for d in dict_data if d["option"]["type"] == "CPM"]
 

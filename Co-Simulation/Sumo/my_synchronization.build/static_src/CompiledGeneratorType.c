@@ -1,1 +1,0 @@
-/home/yoshida/.local/share/virtualenvs/Sumo-L7lr_wDv/lib/python3.6/site-packages/nuitka/build/static_src/CompiledGeneratorType.c

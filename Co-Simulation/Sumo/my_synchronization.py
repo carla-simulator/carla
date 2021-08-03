@@ -106,10 +106,6 @@ from util.classes.utils import (
     location_from_transform,
     speed,
 )
-from util.classes.errors import (
-    NoCavWithCarlaIdException,
-    NoCavException
-)
 
 ##### End: My code. #####
 
@@ -380,14 +376,15 @@ class CAVWithRaderSensors(CAV):
                 d.depth
             )
 
-            try:
+            detected_cav = self.sim_synchronization.get_cav_by_location(detected_point_location)
+            if detected_cav is not None:
                 self.sensor_data_handler.save(RadarSensorData(
                     self.sumo_elapsed_seconds(),
                     detected_point_location,
-                    self.sim_synchronization.get_cav_by_location(detected_point_location).speed(),
+                    detected_cav.speed()
                 ))
 
-            except NoCavException:
+            else:
                 pass
 
 
@@ -492,14 +489,15 @@ class CAVWithObstacleSensors(CAV):
         if "static" in data.actor.type_id:
             return
 
-        try:
+        detected_cav = self.sim_synchronization.get_cav_by_carla_id(data.other_actor.id)
+        if detected_cav is not None:
             self.sensor_data_handler.save(ObstacleSensorData(
                 self.sumo_elapsed_seconds(),
                 location(data.actor, data.distance),
-                self.sim_synchronization.get_cav_by_carla_id(data.other_actor.id).speed()
+                detected_cav.speed()
             ))
-        except NoCavWithCarlaIdException:
-            # Since the key is not in carlaid2vehicle_data, the object is not vehicle, so we ignore the key.
+
+        else:
             pass
 
 
@@ -663,6 +661,7 @@ class SimulationSynchronization(object):
                     # ----- load message standard -----
                     self.sumoid2cav[sumo_actor_id].CAMs_handler = self.get_cams_handler_by_standard(CAM_MESSAGE_STANDARD)
                     self.sumoid2cav[sumo_actor_id].CPMs_handler = self.get_cpms_handler_by_standard(CPM_MESSAGE_STANDARD)
+                    self.sumoid2cav[sumo_actor_id].CPMs_handler.touch(sumo_actor_id)
                     ##### End: My code #####
 
                     self.sumo2carla_ids[sumo_actor_id] = carla_actor_id
@@ -719,6 +718,7 @@ class SimulationSynchronization(object):
         # ----- normal -----
         # for cav in self.sumoid2cav.values():
         #     cav.tick()
+        #     print(f"t: {time.time() - start}")
 
         # ----- threads -----
         threads = [] # speed up for IO
@@ -733,8 +733,7 @@ class SimulationSynchronization(object):
 
         # print("---- unlock_for_veins")
         self.unlock_for_veins(DATA_DIR)
-        # if 1 <= time.time() - cav_tick:
-        #     print(f"\nsim_time: {self.sumo_elapsed_seconds()}, carla_tick: {cav_tick - start}, cav_tick: {time.time() - cav_tick}\n")
+        print(f"\nsim_time: {self.sumo_elapsed_seconds()}, carla_tick: {cav_tick - start}, cav_tick: {time.time() - cav_tick}\n")
 
         ##### End: My code. #####
 
@@ -823,7 +822,7 @@ class SimulationSynchronization(object):
             else:
                 continue
 
-        raise NoCavWithCarlaIdException
+        return None
 
 
     def get_cav_by_location(self, other_location):
@@ -835,7 +834,7 @@ class SimulationSynchronization(object):
             else:
                 continue
 
-        raise NoCavException
+        return None
 
 
     def get_cav_by_sensor_type(self, sumo_actor_id, carla_actor_id, sensor_type):
