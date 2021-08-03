@@ -21,7 +21,7 @@ import math
 import threading
 from collections import deque
 from copy import deepcopy
-from multiprocessing import Process
+from multiprocessing import Process, Pool
 from joblib import Parallel, delayed
 # ==================================================================================================
 # -- find carla module -----------------------------------------------------------------------------
@@ -84,6 +84,8 @@ from util.classes.messages import (
     CPMsHandlerWithNoSend,
     CPMsHandlerWithEtsi,
     CPMsHandlerWithInterval,
+    lock,
+    unlock,
 )
 from util.classes.perceived_objects import (
     PerceivedObject,
@@ -108,6 +110,7 @@ from util.classes.errors import (
     NoCavWithCarlaIdException,
     NoCavException
 )
+
 ##### End: My code. #####
 
 # ==================================================================================================
@@ -139,7 +142,11 @@ class CAV:
         self.CAMs_handler = CAMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
         self.CPMs_handler = CPMsHandlerWithNoSend(DATA_SERVER_HOST, DATA_SERVER_PORT, DATA_DIR)
 
-        self.vehicle_data = VehicleData(self.sumo_elapsed_seconds(), self.carla_actor)
+        self.vehicle_data = VehicleData(
+            init_time=self.sumo_elapsed_seconds(),
+            init_location=self.location_from_carla_actor(self.carla_actor),
+            init_yaw=self.yaw_from_carla_actor(self.carla_actor)
+        )
         self.generate_sensors()
         self.load_sensors()
 
@@ -189,10 +196,16 @@ class CAV:
         return d["location"]
 
 
+    def location_from_carla_actor(self, actor):
+        l = actor.get_transform().location
+
+        return Location(l.x, l.y)
+
+
     def new_perceived_objects_with_pseudonym(self):
         new_perceived_objects = self.sensor_data_handler.perceived_objects(self.sumo_elapsed_seconds(), Constants.VALID_TIME_DELTA)
 
-        return [self.perceived_objects_handler.save(new_perceived_object) for new_perceived_object in new_perceived_objects]
+        return self.perceived_objects_handler.save_all(new_perceived_objects)
 
 
     def speed(self):
@@ -204,34 +217,16 @@ class CAV:
         return self.carla.world.get_snapshot().timestamp.elapsed_seconds - self.init_time
 
     def tick(self):
+        procs = []
         # ----- update vehicle data -----
-        self.vehicle_data.tick(self.sumo_elapsed_seconds(), self.carla_actor)
-
-
-        # ----- to remove redandant procedures, we check sensor data numbers -----
-        if self.sensor_data_handler.data_num() <= 0:
-            return
-
-
         start = time.time()
-        # ----- update perceived_objects -----
-        self.CPMs_handler.receive(self.sumo_actor_id)
-
-
-        # ----- send CPM -----
-        perceived_object_container = self.CPMs_handler.new_perceived_object_container(self.new_perceived_objects_with_pseudonym())
+        self.vehicle_data.tick(
+            time=self.sumo_elapsed_seconds(),
+            location=self.location_from_carla_actor(self.carla_actor),
+            yaw=self.yaw_from_carla_actor(self.carla_actor)
+        )
         t1 = time.time()
-        if 1 <= len(perceived_object_container):
-            self.CPMs_handler.send(self.sumo_actor_id, CPM(
-                    timestamp=self.sumo_elapsed_seconds(),
-                    ITS_PDU_Header=self.__tmp_data(),
-                    Management_Container=self.__tmp_data(),
-                    Station_Data_Container=self.__Station_Data_Container(),
-                    Sensor_Information_Container=self.__Sensor_Information_Container(),
-                    Perceived_Object_Container=perceived_object_container
-                ))
 
-        t2 = time.time()
         # ----- send CAM -----
         # print(f"sumo_id: {self.sumo_actor_id}")
         if self.CAMs_handler.is_generate(self.sumo_elapsed_seconds(), self.location(), self.speed(), self.yaw()):
@@ -243,14 +238,46 @@ class CAV:
                 LF_Container=self.__tmp_data(),
                 Special_Vehicle_Container=self.__tmp_data()
             ))
-        t3 = time.time()
 
-        print(f"sumo_id: {self.sumo_actor_id}, t1: {t1 - start}, t2: {t2 - t1}, t3: {t3 - t2}")
+
+        t2 = time.time()
+        # ----- to remove redandant procedures, we check sensor data numbers -----
+        # if self.sensor_data_handler.data_num() <= 0:
+        #     print(f"sumo_id: {self.sumo_actor_id}, t1: {t1 - start}, t2: {t2 - t1}")
+        #     return
+
+        # ----- update perceived_objects -----
+        self.CPMs_handler.receive(self.sumo_actor_id)
+
+        t3 = time.time()
+        # ----- send CPM -----
+        perceived_object_container = self.CPMs_handler.new_perceived_object_container(self.new_perceived_objects_with_pseudonym())
+
+        t4 = time.time()
+        if 1 <= len(perceived_object_container):
+            self.CPMs_handler.send(self.sumo_actor_id, CPM(
+                    timestamp=self.sumo_elapsed_seconds(),
+                    ITS_PDU_Header=self.__tmp_data(),
+                    Management_Container=self.__tmp_data(),
+                    Station_Data_Container=self.__Station_Data_Container(),
+                    Sensor_Information_Container=self.__Sensor_Information_Container(),
+                    Perceived_Object_Container=perceived_object_container
+                ))
+
+        t5 = time.time()
+
+        # T = 0.001
+        # if T <= t1 - start or T <= t2 - t1 or T <= t3 - t2 or T <= t4 - t3 or T <= t5 - t4:
+        #     print(f"sumo_id: {self.sumo_actor_id}, t1: {t1 - start}, t2: {t2 - t1}, t3: {t3 - t2}, t4: {t4 - t3}, t5: {t5 - t4}")
 
     def yaw(self):
         d = self.latest_vehicle_data()
 
         return d["yaw"]
+
+
+    def yaw_from_carla_actor(self, actor):
+        return actor.get_transform().rotation.yaw
 
 
     def __tmp_data(self):
@@ -599,6 +626,7 @@ class SimulationSynchronization(object):
         # -----------------
 
         ##### Begin My Code #####
+
         if self.sumo_elapsed_seconds() < TIME_TO_START:
             self.sumo.tick_at(TIME_TO_START)
 
@@ -608,6 +636,8 @@ class SimulationSynchronization(object):
             self.init_time = self.init_time - TIME_TO_START + TIME_STEP
         else:
             self.sumo.tick()
+
+        self.lock_for_veins()
 
         ##### End My Code #####
 
@@ -686,6 +716,11 @@ class SimulationSynchronization(object):
         self.carla.tick()
         ##### Start: My code. #####
         cav_tick = time.time()
+        # ----- normal -----
+        # for cav in self.sumoid2cav.values():
+        #     cav.tick()
+
+        # ----- threads -----
         threads = [] # speed up for IO
         for cav in self.sumoid2cav.values():
             threads.append(threading.Thread(target=cav.tick))
@@ -696,7 +731,11 @@ class SimulationSynchronization(object):
         for th in threads:
             th.join()
 
-        print(f"carla_tick: {cav_tick - start}, cav_tick: {time.time() - cav_tick}")
+        # print("---- unlock_for_veins")
+        self.unlock_for_veins(DATA_DIR)
+        # if 1 <= time.time() - cav_tick:
+        #     print(f"\nsim_time: {self.sumo_elapsed_seconds()}, carla_tick: {cav_tick - start}, cav_tick: {time.time() - cav_tick}\n")
+
         ##### End: My code. #####
 
         # Spawning new carla actors (not controlled by sumo)
@@ -748,6 +787,10 @@ class SimulationSynchronization(object):
                 # Updates all the sumo links related to this landmark.
                 self.sumo.synchronize_traffic_light(landmark_id, sumo_tl_state)
 
+        ##### Begin My Code #####
+
+        ##### Eegin My Code #####
+
 
     def close(self):
         """
@@ -771,11 +814,7 @@ class SimulationSynchronization(object):
         self.sumo.close()
 
 
-    # My Code Begin
-    def cavs(self):
-        return self.sumoid2cav.values()
-
-
+    ##### My Code Begin #####
     def get_cav_by_carla_id(self, carla_id):
         for _, cav in list(self.sumoid2cav.items()):
             if str(cav.carla_actor_id) == str(carla_id):
@@ -833,17 +872,24 @@ class SimulationSynchronization(object):
         else:
             raise Exception(f"No such CPM standard: {std}")
 
+    def lock_for_veins(self):
+        for sumo_id, cav in list(self.sumoid2cav.items()):
+            sdfh = cav.CPMs_handler.sensor_data_file_path(sumo_id)
+            slfh = cav.CPMs_handler.sensor_lock_file_path(sumo_id)
+            lock(sdfh, slfh)
 
-    # def __carla_lock_file_path(self):
-    #     return f"{self.__file_path_for_carla_lock()}.lock"
-    #
-    #
-    # def __file_path_for_carla_lock(self):
-    #     global DATA_DIR
-    #
-    #     return f"{DATA_DIR}/carla.txt"
+            break
 
-    # My Code End
+            pdfh = cav.CPMs_handler.packet_data_file_path(sumo_id)
+            plfh = cav.CPMs_handler.packet_lock_file_path(sumo_id)
+            lock(pdfh, plfh)
+
+
+    def unlock_for_veins(self, data_dir):
+        for i in glob.glob(f"{data_dir}/*.lock"):
+            os.unlink(i)
+
+    ##### My Code End #####
 
 
 def synchronization_loop(args):

@@ -103,6 +103,7 @@ def start_sumo_for_veins(args, env, sumo_files, client_num):
 
 def start_tracis_synchronization(args, env, sumo_files):
     dev_null = "> /dev/null 2>&1"
+    dev_null = ""
 
     if args.main_mobility_handler == "carla":
         return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start} {dev_null}", shell=True)

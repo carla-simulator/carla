@@ -68,7 +68,7 @@ Vagrant.configure("2") do |config|
   # end
   config.vm.provider :virtualbox do |vb|
    vb.name = "openCV2X"
-   vb.cpus = 3
+   vb.cpus = 2
    vb.gui = true  # デスクトップ環境を使うので、GUIを有効にする
    vb.memory = "8192"
    vb.customize [

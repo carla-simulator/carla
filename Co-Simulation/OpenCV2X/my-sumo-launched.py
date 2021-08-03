@@ -112,6 +112,11 @@ def forward_connection(client_socket, server_socket, process):
 
     client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    ##### My Code, Begin
+    client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    ##### My Code, End
+
 
     do_exit = False
     while not do_exit:
@@ -125,8 +130,10 @@ def forward_connection(client_socket, server_socket, process):
             try:
                 data = client_socket.recv(65535)
                 if data == "":
+                    print("client: do_exit")
                     do_exit = True
             except:
+                print("client error: do_exit")
                 do_exit = True
             finally:
                 server_socket.send(data)
@@ -134,8 +141,10 @@ def forward_connection(client_socket, server_socket, process):
             try:
                 data = server_socket.recv(65535)
                 if data == "":
+                    print("server: do_exit")
                     do_exit = True
             except:
+                print("server error: do_exit")
                 do_exit = True
             finally:
                 client_socket.send(data)

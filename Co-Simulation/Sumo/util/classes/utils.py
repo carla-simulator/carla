@@ -1,5 +1,7 @@
 import math
 
+from functools import reduce
+
 class Location:
     def __init__(self, x, y):
         self.x = x
@@ -32,9 +34,9 @@ class VehicleData:
     Specifically, Carla always returns [0, 0, 0] as vehicle speed.
     """
 
-    def __init__(self, time, actor):
+    def __init__(self, init_time, init_location, init_yaw):
         self.data = []
-        self.tick(time, actor)
+        self.tick(init_time, init_location, init_yaw)
 
 
     def latest(self):
@@ -44,12 +46,12 @@ class VehicleData:
             return self.data[-1]
 
 
-    def tick(self, time, actor):
-        al = actor.get_transform().location
-        yaw = actor.get_transform().rotation.yaw
+    def tick(self, time, location, yaw):
+        al = location
 
         if len(self.data) <= 0:
             self.data.append(self.formatted_data(time, Location(al.x, al.y), Speed(0, 0), yaw))
+
         else:
             dT = time - self.data[-1]["time"]
             dX = al.x - self.data[-1]["location"].x

@@ -14,7 +14,7 @@ Plugins/Carla/Intermediate
 Plugins/Carla/Saved
 
 /Content
-Config/CarlaSettings.ini
+# Config/CarlaSettings.ini
 Config/DefaultEditor.ini
 
 *.code-workspace

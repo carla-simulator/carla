@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# kill actors of the ray library.
+pgrep ray | xargs kill -9
+
 # kill sumo-traci servers
 ps awx | grep sumo | awk '{print $1}' | xargs kill -9
 

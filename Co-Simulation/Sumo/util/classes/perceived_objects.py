@@ -73,6 +73,10 @@ class PerceivedObjectsHandler:
 
         return obj
 
+    def save_all(self, obj_list):
+        return [self.save(obj) for obj in obj_list]
+
+
     def remove_unused_objects(self, current_time, duration):
         unused_psues = [pseu for pseu, objects in self.pseudonym2objects.items() if max([obj.time for obj in objects.list]) + duration < current_time]
 

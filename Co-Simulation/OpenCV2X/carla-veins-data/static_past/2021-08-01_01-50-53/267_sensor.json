@@ -1,0 +1,4 @@
+{"timestamp": 119.99999999977648, "ITS_PDU_Header": {"tmp": "tmp"}, "Basic_Container": {"tmp": "tmp"}, "HF_Container": {"sumo_id": "267", "location": [-894.2661743164062, -9.25], "speed": [-89426.61943048133, -925.0000206753616, 0], "yaw": -179.99996948242188}, "LF_Container": {"tmp": "tmp"}, "Special_Vehicle_Container": {"tmp": "tmp"}, "option": {"size": 190, "type": "CAM"}}
+
+{"timestamp": 119.99999999977648, "ITS_PDU_Header": {"tmp": "tmp"}, "Management_Container": {"tmp": "tmp"}, "Station_Data_Container": {"sumo_id": "267", "location": [-894.2661743164062, -9.25], "speed": [-89426.61943048133, -925.0000206753616, 0], "yaw": -179.99996948242188}, "Sensor_Information_Container": [0, 1, 2, 3], "Perceived_Object_Container": [{"time": 119.99999999977648, "location": {"x": -919.6312079685082, "y": 2.52335397790846}, "speed": {"x": -92008.24180263821, "y": 200.00000447034847, "z": 0}, "pseudonym": 0}], "option": {"size": 296, "type": "CPM"}}
+

@@ -1,9 +1,11 @@
 import math
 import json
-import os
 import socket
 
+from os import symlink, unlink
+from subprocess import Popen, PIPE
 from functools import reduce
+
 from util.classes.perceived_objects import PerceivedObject
 from util.classes.constants import (
     Constants,
@@ -15,12 +17,12 @@ from util.classes.utils import (
 
 
 def unlock(dst):
-    os.unlink(dst)
+    unlink(dst)
 
 
 def make_symlink(src, dst):
     try:
-        os.symlink(src, dst)
+        symlink(src, dst)
         return True
     except Exception as e:
         # print(e)
@@ -30,6 +32,13 @@ def make_symlink(src, dst):
 def lock(src, dst):
     while make_symlink(src, dst) is False:
         continue
+
+
+def write_by_os(data, path):
+    return Popen(f"echo '{data}' >> {path}", shell=True)
+
+def overwrite_by_os(data, path):
+    return Popen(f"echo '{data}' > {path}", shell=True)
 
 
 class MessagesHandler:
@@ -58,26 +67,35 @@ class MessagesHandler:
     def receive(self, data_file, lock_file):
         data = []
         # ----- file base -----
-        lock(data_file, lock_file)
+        # lock(data_file, lock_file)
         try:
             with open(data_file) as f:
-                data = f.readlines()
+
+                line = f.readline()
+                while line:
+                    if '\x00' not in line:
+                        data.append(line)
+                    else:
+                        pass
+
+                    line = f.readline()
+
         except:
             pass
 
         with open(data_file, mode="w") as f:
             f.write("")
 
-        unlock(lock_file)
+        # unlock(lock_file)
 
         return data
 
     def send(self, data_file, lock_file, data):
         # ----- file base -----
-        lock(data_file, lock_file)
+        # lock(data_file, lock_file)
         with open(data_file, mode="a") as f:
             f.write(data + "\n")
-        unlock(lock_file)
+        # unlock(lock_file)
 
     def access_data_server(self, sumo_vehid, method_name, args=None):
         """
@@ -171,48 +189,6 @@ class CAM(Message):
 
         self.option["size"] = 190
         self.option["type"] = "CAM"
-
-# class CAMGenerateHandler:
-#     def __init__(self, init_time, init_location, init_speed, init_yaw):
-#         self.init_time = init_time
-#         self.init_location = init_location
-#         self.init_speed = init_speed
-#         self.init_yaw = init_yaw
-#
-#
-#     def generate(self, timestamp, current_location, current_speed, current_yaw):
-#         self.init_time = timestamp
-#         self.init_location = current_location
-#         self.init_speed = current_speed
-#         self.init_yaw = current_yaw
-#
-#         return CAM(timestamp, self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data(), self.__tmp_data())
-#
-#
-#     def is_ready(self, current_time, current_location, current_speed, current_yaw):
-#         return True
-#
-#
-#     def __get_delta(self, current_time, current_location, current_speed, current_yaw):
-#         delta_t = current_time - self.init_time
-#
-#         delta_y = current_yaw - self.init_yaw
-#
-#         delta_s_x = current_speed.x - self.init_speed.x
-#         delta_s_y = current_speed.y - self.init_speed.y
-#         delta_s = math.sqrt(delta_s_x * delta_s_x + delta_s_y * delta_s_y)
-#
-#         delta_p_x = current_location.x - self.init_location.x
-#         delta_p_y = current_location.y - self.init_location.y
-#         delta_p = math.sqrt(delta_p_x * delta_p_x + delta_p_y * delta_p_y)
-#
-#         # print(f"{current_time}, {self.init_time}, {vars(current_location)}, {vars(self.init_location)}, {vars(current_speed)}, {vars(self.init_speed)}, {current_yaw}, {self.init_yaw}")
-#         # print(f"delta_t: {delta_t}, delta_s: {delta_s}, delta_p: {delta_p}")
-#         return delta_t, delta_s, delta_p, delta_y
-#
-#
-#     def __tmp_data(self):
-#         return {"tmp": "tmp"}
 
 
 class CAMsHandler(MessagesHandler):
@@ -353,14 +329,34 @@ class CPMsHandler(MessagesHandler):
     def receive(self, sumo_id):
         # ----- file base -----
         data = super().receive(self.packet_data_file_path(sumo_id), self.packet_lock_file_path(sumo_id))
-        dict_data = [json.loads(d) for d in data]
+        try:
+            dict_data = [json.loads(d) for d in data]
+        except Exception:
+            dict_data = []
+            print(data)
+
         self.received_messages = self.received_messages + [CPM(**d) for d in dict_data if d["option"]["type"] == "CPM"]
+
+    def send_with_info(self, sumo_id, timestamp, ITS_PDU_Header, Management_Container, Station_Data_Container, Sensor_Information_Container, Perceived_Object_Container):
+        self.send(
+            sumo_id=sumo_id,
+            cpm=CPM(
+                timestamp=timestamp,
+                ITS_PDU_Header=ITS_PDU_Header,
+                Management_Container=Management_Container,
+                Station_Data_Container=Station_Data_Container,
+                Sensor_Information_Container=Sensor_Information_Container,
+                Perceived_Object_Container=Perceived_Object_Container
+            ))
 
 
     def send(self, sumo_id, cpm):
         # ----- file base -----
-        self.reserved_messages = self.reserved_messages + [cpm]
-        super().send(self.sensor_data_file_path(sumo_id), self.sensor_lock_file_path(sumo_id), json.dumps(cpm.dict_format()))
+        if len(cpm.Perceived_Object_Container) <= 0:
+            pass
+        else:
+            self.reserved_messages = self.reserved_messages + [cpm]
+            super().send(self.sensor_data_file_path(sumo_id), self.sensor_lock_file_path(sumo_id), json.dumps(cpm.dict_format()))
 
 
     def similar_reserved_perceived_object(self, new_time, new_pseudonym):

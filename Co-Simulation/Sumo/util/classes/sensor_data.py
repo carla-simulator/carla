@@ -12,94 +12,11 @@ from util.classes.perceived_objects import PerceivedObject
 from util.classes.utils import Location
 from util.classes.constants import Constants
 
-from numba import jit, njit
-
-
-os.environ['NUMBA_OPT'] = str(3)
-
-
-@njit
-def perceived_objects_by_jit(data, current_time, duration, distance_threshold):
-    """
-    sensor_data = [
-        [x_pos, y_pos, x_speed, y_speed, time] of point 1,
-        [x_pos, y_pos, x_speed, y_speed, time] of point 2,
-        ...,
-        [x_pos, y_pos, x_speed, y_speed, time] of point N,
-    ]
-
-    new_perceived_objects = [
-        [x_pos, y_pos, x_speed, y_speed, time] of object 1,
-        [x_pos, y_pos, x_speed, y_speed, time] of object 2,
-        ...,
-        [x_pos, y_pos, x_speed, y_speed, time] of object N,
-    ]
-
-    return perceived_objects
-    """
-
-    new_perceived_objects = [[0, 0, 0, 0]]
-    new_perceived_objects.pop()
-    tmp_groups = [[0, 0, 0, 0]]
-    tmp_groups.pop()
-
-    while data:
-        osd = data.pop()  # obstacle_sensor_data (osd)
-
-        # validation
-        if data[4] + duration < current_time:
-            continue
-
-        is_in_group = False
-        for tmp_group in tmp_groups:
-            for nop in tmp_group:
-                dT = nop[4] - osd[4]
-                osd_x = osd[0] + osd[2] * dt
-                osd_y = osd[1] + osd[3] * dt
-                dx = osd_x - nop[0]
-                dy = osd_y - nop[1]
-
-                if math.sqrt(dx * dx + dy * dy) <= distance_threshold:
-                    is_grouped = True
-                    break
-                else:
-                    continue
-
-            if is_grouped:
-                tmp_group.append(osd)
-                break
-            else:
-                continue
-
-        if is_in_group:
-            continue
-        else:
-            tmp_groups.append([osd])
-
-    for tmp_group in tmp_groups:
-        latest_data = [0, 0, 0, 0]
-        total_x_pos = 0
-        total_y_pos = 0
-        group_length = 0
-
-        for d in tmp_group:
-            if latest_time < d[4]:
-                latest_data = d
-
-            group_length = group_length + 1
-            total_x_pos = total_x_pos + d[0]
-            total_y_pos = total_y_pos + d[1]
-
-        new_perceived_objects.append([total_x_pos/group_length, total_y_pos/group_length, latest_data[2], latest_data[3], latest_data[4]])
-
-
-    return new_perceived_objects
-
 
 class SensorDataHandler:
     def __init__(self):
         self.data = deque()
-        self.data_for_jit = []
+        # self.data_for_jit = []
 
 
     def data_num(self):
@@ -117,8 +34,8 @@ class SensorDataHandler:
     def save(self, data):
         self.data.append(data)
 
-    def save_for_jit(self, data):
-        self.data.append(data)
+    # def save_for_jit(self, data):
+    #     self.data_for_jit.append(data)
 
 
 class ObstacleSensorData:
@@ -162,22 +79,22 @@ class ObstacleSensorData:
 
 class ObstacleSensorDataHandler(SensorDataHandler):
 
-    def perceived_objects_by_jit(self, current_time, duration):
-        new_perceived_objects = []
-
-        if len(self.data_for_jit) <= 0:
-            pass
-        else:
-            for p in perceived_objects_by_jit(self.data_for_jit, current_time, duration, Constants.LOCATION_THRESHOLD):
-                new_perceived_objects.append(
-                    PerceivedObject(
-                        time=p[4],
-                        location=Location(p[0], p[1]),
-                        speed=Speed(p[2], p[3])
-                    )
-                )
-
-        return new_perceived_objects
+    # def perceived_objects_by_jit(self, current_time, duration):
+    #     new_perceived_objects = []
+    #
+    #     if len(self.data_for_jit) <= 0:
+    #         pass
+    #     else:
+    #         for p in perceived_objects_by_jit(self.data_for_jit, current_time, duration, Constants.LOCATION_THRESHOLD):
+    #             new_perceived_objects.append(
+    #                 PerceivedObject(
+    #                     time=p[4],
+    #                     location=Location(p[0], p[1]),
+    #                     speed=Speed(p[2], p[3])
+    #                 )
+    #             )
+    #
+    #     return new_perceived_objects
 
 
     def perceived_objects(self, current_time, duration):
@@ -240,9 +157,13 @@ class ObstacleSensorDataHandler(SensorDataHandler):
             )
         t3 = time.time()
 
-        print(f"new_perceived_objects, t1: {t1 - start}, t2: {t2 - t1}, t3: {t3 - t2}")
+        # print(f"new_perceived_objects, t1: {t1 - start}, t2: {t2 - t1}, t3: {t3 - t2}")
 
         return new_perceived_objects
+
+
+    def new_perceived_objects_stdout(self, current_time, duration):
+        return print(self.new_perceived_objects(current_time, duration))
 
     def clear_data(self):
         self.data.clear()
@@ -294,9 +215,9 @@ class ObstacleSensorDataHandler(SensorDataHandler):
 
     def save(self, data):
         super().save(data)
-        l = data.location()
-        s = data.speed()
-        super().save_for_jit([l.x, l.y, s.x, s.y, data.time])
+        # l = data.location()
+        # s = data.speed()
+        # super().save_for_jit([l.x, l.y, s.x, s.y, data.time])
 
 
     def __is_predictable_location(self, osd, nop):
@@ -319,132 +240,6 @@ class ObstacleSensorDataHandler(SensorDataHandler):
 class RadarSensorData(ObstacleSensorData):
     pass
 
-    # ----- deplicated codes -----
-    # def detected_depth(self):
-    #     return self.raw_data.depth
-    #
-    # def detected_velocity(self):
-    #     return self.raw_data.velocity
-    #
-    #
-    # def dx_from_sensor(self):
-    #     location = self.location()
-    #     sensor_location = self.sensor_location()
-    #
-    #     return location.x - sensor_location.x
-    #
-    #
-    # def dy_from_sensor(self):
-    #     location = self.location()
-    #     sensor_location = self.sensor_location()
-    #
-    #     return location.y - sensor_location.y
-    #
-    #
-    # def norm_vector_from_sensor(self):
-    #     dx = self.dx_from_sensor()
-    #     dy = self.dy_from_sensor()
-    #     dist = math.sqrt(dx * dx + dy * dy)
-    #
-    #     return [dx / dist, dy / dist]
-    #
-    #
-    # def sensor_location(self):
-    #     return self.sensor_transform.location
-    #
-    # ----- deplicated codes, end. -----
-
-
-
-
 
 class RadarSensorDataHandler(ObstacleSensorDataHandler):
     pass
-
-    # ----- deplicated nodes -----
-    # def perceived_objects(self, current_time, duration):
-    #     """
-    #     Since Radar data does not return object speed vector, we have to estimate the vector from raw_data.
-    #     """
-    #     print("data size, before")
-    #     print(len(self.data))
-    #
-    #     # ----- validation -----
-    #     ISOs = self.indexes_of_same_objectes()
-    #
-    #     # Estimate Speed Vector
-    #     for indexes_of_the_object in ISOs:
-    #         print("data size, after")
-    #         print(len(self.data))
-    #         cos_sin_alfa_list = np.array([self.data[index].norm_vector_from_sensor() for index in indexes_of_the_object])
-    #         detected_velocities = np.array([[self.data[index].detected_velocity()] for index in indexes_of_the_object])
-    #
-    #         # if len(cos_sin_alfa_list) <= 1:
-    #         #     pass
-    #         # else:
-    #
-    #         # estimated_velocity = vx * cos_alfa + vy * sim_alfa.
-    #         # A = [[ca1, sa1], [ca2, si2], ...], V = [ev1, ev2, ...].
-    #         # In general, [vx, vy] * A = V.
-    #         # Therefore, we estimate [vx, vy] as:
-    #         # [vx, vy] = V * A^T * (A * A^T)^(-1)
-    #
-    #         for index in indexes_of_the_object:
-    #             d = self.data[index]
-    #             location = self.data[index].location()
-    #             s_l = self.data[index].sensor_location()
-    #             print(f"(x, y), v, d, (s_x, s_y) = ({location.x}, {location.y}), {d.detected_velocity()}, {d.detected_depth()}, ({s_l.x}, {s_l.y})")
-    #
-    #         print(cos_sin_alfa_list)
-    #
-    #         estimated_velocity = np.dot(
-    #             np.linalg.pinv(np.dot(cos_sin_alfa_list.T, cos_sin_alfa_list)),
-    #             np.dot(cos_sin_alfa_list.T, detected_velocities)
-    #         )
-    #         # This exception causes when we cannot create inverse metrixex of cos_sin_alfa_list.
-    #         # Especially, thie error is causes when cos_sin_alfa_list includes only one kind of data.
-    #         # In this case, we templora
-    #
-    #         print("estimated_velocity")
-    #         print(estimated_velocity)
-    #         print("")
-    #
-    #
-    #     self.data.clear()
-    #
-    #     return []
-    #
-    #     # super().perceived_objects(current_time, duration)
-    #
-    #
-    # def indexes_of_same_objectes(self):
-    #     ISOs = [] # Indexes of Same Objectes
-    #
-    #     for compared_index in range(0, len(self.data)):
-    #         is_grouped = False
-    #
-    #         for indexes_of_the_object in ISOs:
-    #             for index_of_the_object in indexes_of_the_object:
-    #                 if self.data[index_of_the_object].distance_from_other_location(self.data[compared_index].location()) <= Constants.LOCATION_THRESHOLD:
-    #                     indexes_of_the_object.append(compared_index)
-    #                     is_grouped = True
-    #                     break
-    #
-    #                 else:
-    #                     continue
-    #
-    #             if is_grouped:
-    #                 break
-    #
-    #             else:
-    #                 continue
-    #
-    #         if is_grouped:
-    #             continue
-    #
-    #         else:
-    #             ISOs.append([compared_index])
-    #
-    #     return ISOs
-    #
-    # ----- deplicated codes, end. -----
