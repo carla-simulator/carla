@@ -21,11 +21,6 @@ else:
 CTRL_C_PRESSED_MESSAGE = "ctrl-c is pressed."
 
 # ----- Class -----
-class TraciHandler:
-    def __init__(self, traci, env):
-        self.traci = traci
-
-
 class TracisSyncronizer:
     def __init__(self, main_sumo_host_port, other_sumo_host_ports, order, carla_veins_data_dir):
         self.carla_veins_data_dir = carla_veins_data_dir
@@ -38,7 +33,7 @@ class TracisSyncronizer:
         for tmp_traci in self.tracis:
             tmp_traci.setOrder(order)
 
-    def start(self, time_to_start):
+    def start(self, time_to_start, time_to_finish):
         for tmp_traci in self.tracis:
             if tmp_traci.simulation.getTime() < time_to_start:
                 tmp_traci.simulationStep(time_to_start)
@@ -50,9 +45,14 @@ class TracisSyncronizer:
 
             self.check_lock(self.carla_veins_data_dir)
 
+            next_time = self.main_traci.simulation.getTime()
+            
             for o_traci in self.other_tracis:
                 self.sync_tracis(self.main_traci, o_traci)
-                o_traci.simulationStep()
+                o_traci.simulationStep(next_time)
+
+            if time_to_finish <= next_time:
+                self.close_tracis()
 
 
     def check_lock(self, carla_veins_data_dir):
@@ -164,11 +164,11 @@ class TracisSyncronizer:
 
 
 # ----- function -----
-def start_tracis_syncronizer(main_sumo_host_port, other_sumo_host_ports, order, time_to_start, carla_veins_data_dir):
+def start_tracis_syncronizer(main_sumo_host_port, other_sumo_host_ports, order, time_to_start, time_to_finish, carla_veins_data_dir):
     tracis_syncronizer = TracisSyncronizer(main_sumo_host_port, other_sumo_host_ports, order, carla_veins_data_dir)
 
     try:
-        tracis_syncronizer.start(time_to_start)
+        tracis_syncronizer.start(time_to_start, time_to_finish)
     except KeyboardInterrupt:
         logging.info(CTRL_C_PRESSED_MESSAGE)
     except Exception as e:
@@ -188,6 +188,7 @@ if __name__ == "__main__":
     parser.add_argument('--other_sumo_host_ports', nargs='*', default=f"{env['vagrant_ip']}:{env['veins_sumo_port']}")
     parser.add_argument('--sumo_order', type=int, default=1)
     parser.add_argument('--time_to_start', type=float, default=0)
+    parser.add_argument('--time_to_finish', type=float, default=24*60*60)
     parser.add_argument('--log_file_path', default="./log/tracis_logger.log")
 
     args = parser.parse_args()
@@ -204,5 +205,6 @@ if __name__ == "__main__":
         other_sumo_host_ports=args.other_sumo_host_ports,
         order=args.sumo_order,
         time_to_start=args.time_to_start,
+        time_to_finish=args.time_to_finish,
         carla_veins_data_dir=args.data_dir
     )

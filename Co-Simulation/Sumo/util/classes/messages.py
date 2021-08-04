@@ -43,6 +43,7 @@ def overwrite_by_os(data, path):
 
 
 class MessagesHandler:
+
     def __init__(self, data_server_host, data_server_port, data_sync_dir):
         self.data_server_host = data_server_host
         self.data_server_port = data_server_port
@@ -84,6 +85,37 @@ class MessagesHandler:
             f.write("")
 
         return data
+
+
+    def remove_old_messages(self):
+        # ----- Memo -----
+        # In static simulation, we have to obtain all the reserved_messages.
+        # Therefore, we commented out the part of the reserved_messages removal.
+
+        # ----- reserved_message -----
+        # messages_num = len(self.reserved_messages)
+        # half_index = int(messages_num / 2)
+        #
+        # if messages_num <= 0:
+        #     pass
+        # else:
+        #     if Constants.OLD_TIMESTAMP_THRESIOLD <= self.reserved_messages[-1].timestamp - self.reserved_messages[half_index].timestamp:
+        #         self.reserved_messages = self.reserved_messages[(half_index + 1): (messages_num + 1)]
+        #     else:
+        #         pass
+
+        # ----- received_messages -----
+        messages_num = len(self.received_messages)
+        half_index = int(messages_num / 2)
+
+        if messages_num <= 0:
+            pass
+        else:
+            if Constants.OLD_TIMESTAMP_THRESIOLD <= self.received_messages[-1].timestamp - self.received_messages[half_index].timestamp:
+                self.received_messages = self.received_messages[(half_index + 1): (messages_num + 1)]
+            else:
+                pass
+
 
     def send(self, data_file, lock_file, data):
         # lock(data_file, lock_file)
@@ -215,6 +247,8 @@ class CAMsHandler(MessagesHandler):
         self.received_messages = self.received_messages + [CAM(**d) for d in dict_data if d["option"]["type"] == "CAM"]
 
 
+
+
     def send(self, sumo_id, cam):
         # ----- file base -----
         self.reserved_messages = self.reserved_messages + [cam]
@@ -335,6 +369,7 @@ class CPMsHandler(MessagesHandler):
         dict_data = [json.loads(d) for d in data]
 
         self.received_messages = self.received_messages + [CPM(**d) for d in dict_data if d["option"]["type"] == "CPM"]
+
 
     def send_with_info(self, sumo_id, timestamp, ITS_PDU_Header, Management_Container, Station_Data_Container, Sensor_Information_Container, Perceived_Object_Container):
         self.send(

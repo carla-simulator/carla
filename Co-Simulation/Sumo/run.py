@@ -49,9 +49,14 @@ def is_processes_alive(procs):
 def kill_processes(procs):
     try:
         if 0 < len(procs):
-            os.killpg(os.getpgid(procs[0].pid), signal.SIGTERM)
+            if procs[0].poll() is None:
+                os.killpg(os.getpgid(procs[0].pid), signal.SIGTERM)
+            else:
+                pass
+
             procs.pop(0)
             return kill_processes(procs)
+
         else:
             return procs
 
@@ -98,11 +103,11 @@ def start_carla_veins_data_server(args, env, sumo_files):
 
 
 def start_sumo_for_carla(args, env, sumo_files, client_num):
-    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --seed {args.sumo_seed} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1", shell=True)
+    return Popen(f"{args.sumocmd} -c {sumo_files['sumocfg']} --seed {args.sumo_seed} --step-length {args.time_step} --remote-port {args.carla_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1", shell=True)
 
 
 def start_sumo_for_veins(args, env, sumo_files, client_num):
-    return Popen(f"vagrant ssh -c \"sumo -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --seed {args.sumo_seed} --begin {args.sumo_begin_time} --end {args.sumo_end_time} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
+    return Popen(f"vagrant ssh -c \"sumo -c {env['in_vagrant']['veins_ini_dir_in_vagrant']}/{env['in_vagrant']['sumo_files_name_in_veins']}.sumocfg --seed {args.sumo_seed} --step-length {args.time_step} --remote-port {args.veins_sumo_port} --num-clients {client_num} --log logfile.txt > /dev/null 2>&1\"", cwd=args.veins_vagrant_path, shell=True)
 
 
 def start_tracis_synchronization(args, env, sumo_files):
@@ -110,7 +115,7 @@ def start_tracis_synchronization(args, env, sumo_files):
     # dev_null = ""
 
     if args.main_mobility_handler == "carla":
-        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start} {dev_null}", shell=True)
+        return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port 127.0.0.1:{args.carla_sumo_port} --other_sumo_host_ports {env['vagrant_ip']}:{args.veins_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start} --time_to_finish {args.time_to_finish} {dev_null}", shell=True)
     else:
         return Popen(f"python ./synch/run_tracis_synchronization.py --main_sumo_host_port {env['vagrant_ip']}:{args.veins_sumo_port} --other_sumo_host_ports 127.0.0.1:{args.carla_sumo_port} --sumo_order {2} --time_to_start {args.time_to_start} {dev_null}", shell=True)
 
@@ -265,9 +270,10 @@ class MainWithVeins(Main):
 
             switch_carla_rendering(args, env, args.is_carla_rendering)
 
+            print(f"Processes {[p.pid for p in procs]} are standed.")
             print("Please run Veins manually.")
-            print([p.pid for p in procs])
-            while is_processes_alive(procs) == True and self.veins_state_handler.run_time() <= 0:
+            # while is_processes_alive(procs) == True and self.veins_state_handler.run_time() <= 0:
+            while is_processes_alive(procs) == True:
                 pass
 
         except KeyboardInterrupt:
@@ -280,9 +286,12 @@ class MainWithVeins(Main):
             self.finally_proccess(args, env, procs)
 
     def finally_proccess(self, args, env, procs):
-        # save veins result
+        print("----- saving veins results ... -----")
+
         Popen(f"vagrant ssh -c \"mkdir {args.veins_result_aggrigation_dir}/{self.save_dir_name} \"", cwd=args.veins_vagrant_path, shell=True).wait()
         Popen(f"vagrant ssh -c \"cp -f {args.result_file_path_in_veins}/* {args.veins_result_aggrigation_dir}/{self.save_dir_name}/ \"", cwd=args.veins_vagrant_path, shell=True).wait()
+
+        print("----- saving veins results ... Done! -----")
 
         super().finally_proccess(args, env, procs)
 
@@ -300,12 +309,10 @@ if __name__ == '__main__':
     parser.add_argument('--carla_map_name', default=maps[0], choices=maps)
     parser.add_argument('--time_step', default=float(env["time_step"]))
     parser.add_argument('--time_to_start', type=float, default=float(env["time_to_start"]))
+    parser.add_argument('--time_to_finish', type=float, default=24*60*60)
 
     parser.add_argument('--sumocmd', default=env["sumocmd"], choices=env["sumocmd_choices"])
     parser.add_argument('--sumo_host', default="127.0.0.1")
-    parser.add_argument('--sumo_begin_time', default=0)
-    # parser.add_argument('--sumo_end_time', default=(24 * 60 * 60))
-    parser.add_argument('--sumo_end_time', default=env["time_to_finish"])
     parser.add_argument('--sumo_seed', type=int, default=env["sumo_seed"])
 
 

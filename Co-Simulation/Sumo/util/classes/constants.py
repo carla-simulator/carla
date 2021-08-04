@@ -50,3 +50,5 @@ class Constants:
 
     SENSOR_RANGE_BACK = TARGET_ROAD_LENGTH
     SENSOR_DEGREE_BACK = 2 * math.degrees(math.atan(float(TARGET_ROAD_WIDTH) / float(TARGET_ROAD_LENGTH)))
+
+    OLD_TIMESTAMP_THRESIOLD = 3

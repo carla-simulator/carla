@@ -235,6 +235,7 @@ class CAV:
                 Special_Vehicle_Container=self.__tmp_data()
             ))
 
+        self.CAMs_handler.remove_old_messages()
 
         t2 = time.time()
         # ----- to remove redandant procedures, we check sensor data numbers -----
@@ -259,6 +260,8 @@ class CAV:
                     Sensor_Information_Container=self.__Sensor_Information_Container(),
                     Perceived_Object_Container=perceived_object_container
                 ))
+
+        self.CPMs_handler.remove_old_messages()
 
         t5 = time.time()
 
@@ -733,7 +736,7 @@ class SimulationSynchronization(object):
 
         # print("---- unlock_for_veins")
         self.unlock_for_veins(DATA_DIR)
-        print(f"\nsim_time: {self.sumo_elapsed_seconds()}, carla_tick: {cav_tick - start}, cav_tick: {time.time() - cav_tick}\n")
+        # print(f"\nsim_time: {self.sumo_elapsed_seconds()}, carla_tick: {cav_tick - start}, cav_tick: {time.time() - cav_tick}\n")
 
         ##### End: My code. #####
 
