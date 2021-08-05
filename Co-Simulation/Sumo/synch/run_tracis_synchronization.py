@@ -46,7 +46,8 @@ class TracisSyncronizer:
             self.check_lock(self.carla_veins_data_dir)
 
             next_time = self.main_traci.simulation.getTime()
-            
+            print(f"time: {next_time}")
+
             for o_traci in self.other_tracis:
                 self.sync_tracis(self.main_traci, o_traci)
                 o_traci.simulationStep(next_time)
@@ -111,24 +112,43 @@ class TracisSyncronizer:
             tmp_traci.simulationStep()
 
     def sync_tracis(self, m_traci, o_traci):
+        # ----- The below codes are needed if you will use different rou files for carla and veins. -----
+        # 
         # ----- add departed vehicle -----
         # diff_add_vehicle_ids = set(m_traci.vehicle.getIDList()) - set(o_traci.vehicle.getIDList())
         # for dav_id in diff_add_vehicle_ids:
-        #     new_route_id = str(m_traci.vehicle.getIDCount() + 1)
+        #     new_route_id = "route_" + str(m_traci.vehicle.getIDCount() + 1)
         #
         #     try:
         #         o_traci.route.add(
         #             routeID=new_route_id,
         #             edges=m_traci.vehicle.getRoute(dav_id)
         #         )
-        #         o_traci.vehicle.add(
-        #             vehID=dav_id,
-        #             routeID=new_route_id
-        #         )
         #
         #     except Exception as e:
         #         logging.error(e)
-        #         continue
+        #
+        #         routes_list = o_traci.route.getIDList()
+        #
+        #         if len(routes_list) <= 0:
+        #             new_route_id = None
+        #         else:
+        #             new_route_id = routes_list[0]
+        #
+        #
+        #     try:
+        #         if new_route_id is None:
+        #             pass
+        #
+        #         else:
+        #             o_traci.vehicle.add(
+        #                 vehID=dav_id,
+        #                 routeID=new_route_id
+        #             )
+        #
+        #     except Exception as e:
+        #         logging.error(e)
+
 
         # ----- remove vehicles -----
         diff_remove_vehicle_ids = set(o_traci.vehicle.getIDList()) - set(m_traci.vehicle.getIDList())
@@ -139,15 +159,19 @@ class TracisSyncronizer:
                 logging.error(e)
                 continue
 
+
         # ----- sync vehicle positions -----
         for m_veh_id in list( set(m_traci.vehicle.getIDList()) & set(o_traci.vehicle.getIDList()) ):
             try:
+                lane_id = m_traci.vehicle.getLaneID(m_veh_id)
+                position = m_traci.vehicle.getPosition(m_veh_id)
+
                 o_traci.vehicle.moveToXY(
                     vehID=m_veh_id,
-                    edgeID=m_traci.lane.getEdgeID(m_traci.vehicle.getLaneID(m_veh_id)),
-                    lane=int(str(m_traci.vehicle.getLaneID(m_veh_id)).split('_')[1]),
-                    x=m_traci.vehicle.getPosition(m_veh_id)[0],
-                    y=m_traci.vehicle.getPosition(m_veh_id)[1],
+                    edgeID=m_traci.lane.getEdgeID(lane_id),
+                    lane=int(str(lane_id).split('_')[1]),
+                    x=position[0],
+                    y=position[1],
                     angle=m_traci.vehicle.getAngle(m_veh_id)
                 )
             except Exception as e:
@@ -178,10 +202,12 @@ def start_tracis_syncronizer(main_sumo_host_port, other_sumo_host_ports, order, 
 
 # ----- main -----
 if __name__ == "__main__":
-    env = data_from_json("./env_for_veins.json")
+    env = data_from_json(sys.argv[1])
 
     # ----- get args -----
     parser = argparse.ArgumentParser(description='This script is a middleware for tracis synchronization.')
+
+    parser.add_argument('env_file_path', default=sys.argv[1])
 
     parser.add_argument('--data_dir', default=(env['carla_veins_dynamic_data_dir'] if bool(env['is_dynamic_simulation']) else env['carla_veins_static_data_dir']))
     parser.add_argument('--main_sumo_host_port', default=f"127.0.0.1:{env['carla_sumo_port']}")

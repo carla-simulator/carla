@@ -75,6 +75,7 @@ if __name__ == "__main__":
     parser.add_argument('--poly_file_path', default=env["info"][0]["poly_file_path"])
     parser.add_argument('--net_file_path', default=env["info"][0]["net_file_path"])
     parser.add_argument('--trip_file_path', default=env["info"][0]["trip_file_path"])
+    parser.add_argument('--rou_file_path', default=env["info"][0]["rou_file_path"])
     parser.add_argument('--seed', type=int, default=env["info"][0]["seed"])
     parser.add_argument('--sumo_home_dir', default=env["sumo_home_dir"])
 
@@ -83,6 +84,7 @@ if __name__ == "__main__":
 
     # vehicles departure every 1/p seconds.
     trip_path, trip_name = path_and_name(args.trip_file_path)
+    rou_path, rou_name = path_and_name(args.rou_file_path)
     poly_path, poly_name = path_and_name(args.poly_file_path)
     net_path, net_name = path_and_name(args.net_file_path)
     cfg_path, cfg_name = path_and_name(args.sumocfg_file_path)
@@ -90,7 +92,8 @@ if __name__ == "__main__":
         # cite from: https://sumo.dlr.de/docs/FAQ.html#How_do_I_get_high_flows.2Fvehicle_densities.3F
         # cite from: https://sumo.dlr.de/docs/Definition_of_Vehicles%2C_Vehicle_Types%2C_and_Routes.html#arrivallane
         new_trip_name = f"{trip_name.split('.')[0]}_p_{p}.trip.xml"
-        run(f"python {args.sumo_home_dir}/tools/randomTrips.py --allow-fringe --seed {args.seed} -n {args.net_file_path} -o {trip_path}/{new_trip_name} -p {1.0/p} --trip-attributes=\" departLane=\\\"best\\\" departSpeed=\\\"{0}\\\" departPos=\\\"random_free\\\" \" ", shell=True)
+        new_rou_name = f"{trip_name.split('.')[0]}_p_{p}.rou.xml"
+        run(f"python {args.sumo_home_dir}/tools/randomTrips.py --validate --allow-fringe --seed {args.seed} -n {args.net_file_path} -o {trip_path}/{new_trip_name} -r {rou_path}/{new_rou_name} -p {1.0/p} --trip-attributes=\" departLane=\\\"best\\\" departSpeed=\\\"{0}\\\" departPos=\\\"free\\\" \" ", shell=True)
 
         with open(f"{cfg_path}/{cfg_name.split('.')[0]}_p_{p}.sumocfg", mode='w') as f:
             if os.path.exists(args.poly_file_path):

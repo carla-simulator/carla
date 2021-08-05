@@ -1,0 +1,37 @@
+{
+  "carla_sumo_port": 10001,
+  "veins_sumo_port": 10002,
+  "is_carla_change_map": 1,
+  "is_carla_rendering": 1,
+  "is_carla_standalone_mode": 0,
+  "is_dynamic_simulation": 1,
+  "carla_veins_dynamic_data_dir": "./../OpenCV2X/carla-veins-data/dynamic/",
+  "carla_veins_static_data_dir": "./../OpenCV2X/carla-veins-data/static/",
+  "mobility_handler_choices": ["carla", "veins"],
+  "veins_vagrant_path": "./../OpenCV2X",
+  "veins_result_aggrigation_dir": "/home/yoshida/carla/Co-Simulation/OpenCV2X/veins_results/",
+  "sumocmd": "sumo-gui",
+  "sumocmd_choices": ["sumo, sumo-gui"],
+  "sumo_seed": 0,
+  "time_step": 0.1,
+  "time_to_start": 150,
+  "vagrant_ip": "192.168.33.10",
+  "in_vagrant": {
+    "ini_file_in_veins": "vfc.ini",
+    "result_file_path_in_veins": "/home/vagrant/Downloads/veins/examples/veins/results/",
+    "sumo_files_name_in_veins": "sumo_for_vfc",
+    "veins_ini_dir_in_vagrant": "/home/vagrant/Downloads/veins/examples/veins/",
+    "veins_result_aggrigation_dir": "/vagrant/veins_results/"
+  },
+  "map_2_sumo_files": {
+    "3lane": {
+      "xodr":              "./examples/3lane/map.xodr",
+      "rou":               "./examples/3lane/map_p_4.trip.xml",
+      "rou_empty":         "./examples/rou/empty.rou.xml",
+      "net":               "./examples/3lane/map.net.xml",
+      "poly":              "./examples/poly/empty.poly.xml",
+      "sumocfg":           "./examples/3lane/map_p_4.sumocfg",
+      "sumocfg_for_veins": "./examples/for_veins.sumocfg"
+    }
+  }
+}
