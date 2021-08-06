@@ -75,7 +75,8 @@ def tutorial(args):
     lidar = None
 
     try:
-        os.system('mkdir -p _out' if os.name != 'nt' else 'if not exist _out mkdir _out')
+        if not os.path.isdir('_out'):
+            os.mkdir('_out')
         # Search the desired blueprints
         vehicle_bp = bp_lib.filter("vehicle.lincoln.mkz_2017")[0]
         camera_bp = bp_lib.filter("sensor.camera.rgb")[0]
