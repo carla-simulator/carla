@@ -1,11 +1,8 @@
-# CarSim Integration (Beta)
+# CarSim Integration
 
 CARLA's integration with CarSim allows vehicle controls in CARLA to be forwarded to CarSim. CarSim will do all required physics calculations of the vehicle and return the new state to CARLA. 
 
 This page shows you how to generate a `.sim` file, explains how vehicle dimensions relate between CARLA and CarSim and how to run a simulation on CARLA using the CarSim integration.
-
-!!! Warning
-        This feature is in beta release. This means that development of the feature is ongoing and some aspects of the feature may not work as expected. If you come across any problems feel free to open an issue on [GitHub](https://github.com/carla-simulator/carla).
 
 *   [__Before you begin__](#before-you-begin)  
 *   [__Set up CarSim__](#set-up-carsim)  
