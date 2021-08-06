@@ -49,8 +49,8 @@ def is_processes_alive(procs):
 def kill_related_procs(args):
     dev_null = "> /dev/null 2>&1"
 
-    Popen("sh kill_all_procs.sh" + dev_null, shell=True)
-    Popen("vagrant ssh -c \"ps awx | grep sumo | awk '{print $1}' | xargs kill -9\"" + dev_null, cwd=args.veins_vagrant_path, shell=True)
+    Popen("sh kill_all_procs.sh" + dev_null, shell=True).wait()
+    Popen("vagrant ssh -c \"ps awx | grep sumo | awk '{print \$1}' | xargs kill -9\"" + dev_null, cwd=args.veins_vagrant_path, shell=True).wait()
 
 
 def kill_processes(procs):

@@ -8,12 +8,6 @@ from util.func import (
 )
 
 
-# def scenario2envfile_path(scenario):
-#     scenario2envfile_path = data_from_json("./envs/scenario2envfile.json")
-#
-#     return scenario2envfile_path[scenario]
-
-
 # ----- main -----
 if __name__ == "__main__":
     scenario2envfile_path = data_from_json("./envs/scenario2envfile.json")

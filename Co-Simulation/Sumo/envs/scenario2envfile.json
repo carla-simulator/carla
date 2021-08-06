@@ -3,7 +3,6 @@
   "11p012": "./envs/11p_0.12.json",
   "11p020": "./envs/11p_0.20.json",
   "11p030": "./envs/11p_0.30.json",
-  "veins": "./envs/env_for_veins.json",
-  "opencv2x": "./envs/env_for_opencv2x.json",
+  "mode4": "./envs/env_for_mode4.json",
   "default": "./envs/env_default.json"
 }
