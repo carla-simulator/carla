@@ -2390,6 +2390,15 @@ Y-axis value.
     - **Parameters:**
         - `x` (_float_)  
         - `y` (_float_)  
+- <a name="carla.Vector2D.squared_length"></a>**<font color="#7fb800">squared_length</font>**(<font color="#00a6ed">**self**</font>)
+Computes the squared length of the vector.
+    - **Return:** _float_
+- <a name="carla.Vector2D.length"></a>**<font color="#7fb800">length</font>**(<font color="#00a6ed">**self**</font>)
+Computes the length of the vector.
+    - **Return:** _float_
+- <a name="carla.Vector2D.make_unit_vector"></a>**<font color="#7fb800">make_unit_vector</font>**(<font color="#00a6ed">**self**</font>)
+Returns a vector with the same direction and unitary length.
+    - **Return:** _[carla.Vector2D](#carla.Vector2D)_
 
 ##### Dunder methods
 - <a name="carla.Vector2D.__add__"></a>**<font color="#7fb800">\__add__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Vector2D](#carla.Vector2D)</font>)  
@@ -2425,6 +2434,50 @@ Z-axis value.
         - `x` (_float_)  
         - `y` (_float_)  
         - `z` (_float_)  
+- <a name="carla.Vector3D.length"></a>**<font color="#7fb800">length</font>**(<font color="#00a6ed">**self**</font>)
+Computes the length of the vector.
+    - **Return:** _float_
+- <a name="carla.Vector3D.squared_length"></a>**<font color="#7fb800">squared_length</font>**(<font color="#00a6ed">**self**</font>)
+Computes the squared length of the vector.
+    - **Return:** _float_
+- <a name="carla.Vector3D.make_unit_vector"></a>**<font color="#7fb800">make_unit_vector</font>**(<font color="#00a6ed">**self**</font>)
+Returns a vector with the same direction and unitary length.
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_
+- <a name="carla.Vector3D.dot"></a>**<font color="#7fb800">dot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vector**</font>)
+Computes the dot product between two vectors.
+    - **Parameters:**
+        - `vector` (_[carla.Vector3D](#carla.Vector3D)_)
+    - **Return:** _float_
+- <a name="carla.Vector3D.distance"></a>**<font color="#7fb800">distance</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vector**</font>)
+Computes the distance between two vectors.
+    - **Parameters:**
+        - `vector` (_[carla.Vector3D](#carla.Vector3D)_)
+    - **Return:** _float_
+- <a name="carla.Vector3D.distance_squared"></a>**<font color="#7fb800">distance_squared</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vector**</font>)
+Computes the squared distance between two vectors.
+    - **Parameters:**
+        - `vector` (_[carla.Vector3D](#carla.Vector3D)_)
+    - **Return:** _float_
+- <a name="carla.Vector3D.dot_2d"></a>**<font color="#7fb800">dot_2d</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vector**</font>)
+Computes the 2-dimensional dot product between two vectors.
+    - **Parameters:**
+        - `vector` (_[carla.Vector3D](#carla.Vector3D)_)
+    - **Return:** _float_
+- <a name="carla.Vector3D.distance_2d"></a>**<font color="#7fb800">distance_2d</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vector**</font>)
+Computes the 2-dimensional distance between two vectors.
+    - **Parameters:**
+        - `vector` (_[carla.Vector3D](#carla.Vector3D)_)
+    - **Return:** _float_
+- <a name="carla.Vector3D.distance_squared_2d"></a>**<font color="#7fb800">distance_squared_2d</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vector**</font>)
+Computes the 2-dimensional squared distance between two vectors.
+    - **Parameters:**
+        - `vector` (_[carla.Vector3D](#carla.Vector3D)_)
+    - **Return:** _float_
+- <a name="carla.Vector3D.get_vector_angle"></a>**<font color="#7fb800">get_vector_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vector**</font>)
+Computes the angle between two vectors.
+    - **Parameters:**
+        - `vector` (_[carla.Vector3D](#carla.Vector3D)_)
+    - **Return:** _float_
 
 ##### Dunder methods
 - <a name="carla.Vector3D.__abs__"></a>**<font color="#7fb800">\__abs__</font>**(<font color="#00a6ed">**self**</font>)  
