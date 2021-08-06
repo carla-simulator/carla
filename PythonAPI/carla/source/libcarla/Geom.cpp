@@ -103,6 +103,10 @@ static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
   return BuildMatrix(self.GetInverseMatrix());
 }
 
+static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::Cross(self, other);
+}
+
 static auto Dot(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
   return carla::geom::Math::Dot(self, other);
 }
@@ -173,6 +177,7 @@ void export_geom() {
     .def("length", &cg::Vector3D::Length)
     .def("squared_length", &cg::Vector3D::SquaredLength)
     .def("make_unit_vector", &cg::Vector3D::MakeUnitVector)
+    .def("cross", &Cross, (arg("vector")))
     .def("dot", &Dot, (arg("vector")))
     .def("dot_2d", &Dot2D, (arg("vector")))
     .def("distance", &Distance, (arg("vector")))
