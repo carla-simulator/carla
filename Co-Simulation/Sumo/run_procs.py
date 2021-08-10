@@ -231,6 +231,8 @@ class Main:
             pass
         else:
             static_save_dir = f"{args.data_dir}/../static_past/{self.save_dir_name}"
+            print(f"- static_save_path\n  {static_save_dir}")
+            
             Popen(f"mkdir {static_save_dir}", shell=True).wait()
             Popen(f"cp -rf {args.data_dir}/* {static_save_dir}", shell=True).wait()
 
@@ -294,9 +296,11 @@ class MainWithVeins(Main):
 
     def finally_proccess(self, args, env, procs):
         print("----- saving veins results ... -----")
+        saving_path = f"{args.veins_result_aggrigation_dir}/{self.save_dir_name}"
+        print(f"- saving_path\n  {saving_path}")
 
-        Popen(f"vagrant ssh -c \"mkdir {args.veins_result_aggrigation_dir}/{self.save_dir_name} \"", cwd=args.veins_vagrant_path, shell=True).wait()
-        Popen(f"vagrant ssh -c \"cp -f {args.result_file_path_in_veins}/* {args.veins_result_aggrigation_dir}/{self.save_dir_name}/ \"", cwd=args.veins_vagrant_path, shell=True).wait()
+        Popen(f"vagrant ssh -c \"mkdir {saving_path} \"", cwd=args.veins_vagrant_path, shell=True).wait()
+        Popen(f"vagrant ssh -c \"cp -f {args.result_file_path_in_veins}/* {saving_path}/ \"", cwd=args.veins_vagrant_path, shell=True).wait()
 
         print("----- saving veins results ... Done! -----")
 
