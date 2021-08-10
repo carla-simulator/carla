@@ -330,7 +330,7 @@ def highspeed_turn_scenario(world, bp_veh, steer):
 def main(arg):
     """Main function of the script"""
     client = carla.Client(arg.host, arg.port)
-    client.set_timeout(10.0)
+    client.set_timeout(30.0)
     world = client.get_world()
 
     try:

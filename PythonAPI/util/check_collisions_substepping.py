@@ -428,7 +428,7 @@ class CollisionScenarioTester():
 def main(arg):
     """Main function of the script"""
     client = carla.Client(arg.host, arg.port)
-    client.set_timeout(4.0)
+    client.set_timeout(30.0)
     world = client.get_world()
     pre_settings = world.get_settings()
     world = client.load_world("Town03")
