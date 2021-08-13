@@ -11,6 +11,7 @@ This section deals with two fundamental concepts in CARLA. Their configuration d
 	*   [Setting synchronous mode](#setting-synchronous-mode)
 	*   [Using synchronous mode](#using-synchronous-mode)
 *   [__Possible configurations__](#possible-configurations)
+* [__Physics determinism__](#physics-determinism)
 
 ---
 ## Simulation time-step
@@ -98,15 +99,15 @@ be below `0.01666` and ideally below `0.01`.
 
 To demonstrate the effect of optimal physical sub-stepping, consider the following graphs. The first graph shown below illustrates velocity over time in simulations with different fixed simulation time steps. The physical delta time is constant in all simulations at the default value of `0.01`. We can see that velocity is not affected by the difference in simulation time steps only.
 
->>>>>![velocity with fixed physical delta time](/img/physics_convergence_fixed_pdt.png)
+>>>>>![velocity with fixed physical delta time](../img/physics_convergence_fixed_pdt.png)
 
 The second graph shows velocity over time in simulations with a fixed simulation time step of `0.04`. We can see that once the physical delta time surpasses `0.01`, deviations start to occur in the constancy of velocity, increasing in severity as physical delta time increases.
 
->>>>>![velocity with varied physical delta time](/img/physics_convergence_fixed_dt.png)
+>>>>>![velocity with varied physical delta time](../img/physics_convergence_fixed_dt.png)
 
 We can demonstrate this deviation again by showing the effect of the same difference in physical delta time with a fixed simulation time step in the measurement of z-acceleration, with convergence occurring only when the physical delta time is `0.01` or less.
 
->>>>>![physics convergence z acceleration](/img/physics_convergence_z_acceleration.png)
+>>>>>![physics convergence z acceleration](../img/physics_convergence_z_acceleration.png)
 
 ---
 ## Client-server synchrony 
@@ -194,6 +195,17 @@ The configuration of time-step and synchrony, leads for different settings. Here
 
 !!! Warning 
     __In synchronous mode, always use a fixed time-step__. If the server has to wait for the user, and it is using a variable time-step, time-steps will be too big. Physics will not be reliable. This issue is better explained in the __time-step limitations__ section. 
+
+---
+
+## Physics determinism
+
+CARLA supports physics and collision determinism under specific circumstances:
+
+- __Synchronous mode and fixed delta seconds must be enabled:__ Determinism requires the client to be in perfect sync with the server to ensure that commands are applied correctly and to produce accurate and reproducible results. A constant time step must be enforced by setting `fixed_delta_seconds`. If this is not set, the time step will be automatically computed at each step depending on the simulation performance.
+- __Synchronous mode must be enabled before loading or reloading the world:__ Differing timestamps can arise if the world is not in synchronous mode from the very beginning. This can generate small differences in physics simulation and in the life cycle of objects such as traffics lights.
+- __The world must be reloaded for each new repetition:__ Reload the world each time you want to reproduce a simulation.
+- __Commands should be batched instead of issued one at a time:__ Although rare, in a busy simulation or overloaded server, single issued commands can become lost. If commands are batched in a [`apply_batch_sync`](python_api.md/#carla.Client.apply_batch_sync) command, the command is guaranteed to be executed or return a failure response.
 
 
 ---

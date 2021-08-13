@@ -199,7 +199,7 @@ python3 spawn_npc.py -n 50 -w 50 --safe
   --filterv PATTERN     vehicles filter (default: "vehicle.*")
   --filterw PATTERN     pedestrians filter (default: "walker.pedestrian.*")
   -tm_p P, --tm-port P  port to communicate with TM (default: 8000)
-  --sync                Synchronous mode execution
+  --async               Asynchronous mode execution
 ```
 </details>
 <br>
@@ -840,7 +840,6 @@ Hereunder are the two scripts gathering the fragments of code for this tutorial.
 <summary><b>tutorial_ego.py</b> </summary>
 
 ```py
-
 import glob
 import os
 import sys
@@ -1076,7 +1075,6 @@ if __name__ == '__main__':
 <summary><b>tutorial_replay.py</b></summary>
 
 ```py
-
 import glob
 import os
 import sys

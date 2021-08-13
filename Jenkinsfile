@@ -44,7 +44,7 @@ pipeline
                             steps
                             {
                                 sh 'git update-index --skip-worktree Unreal/CarlaUE4/CarlaUE4.uproject'
-                                sh 'make setup ARGS="--python-version=3.7,2 --chrono"'
+                                sh 'make setup ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
                             }
                         }
                         stage('ubuntu build')
@@ -52,7 +52,7 @@ pipeline
                             steps
                             {
                                 sh 'make LibCarla'
-                                sh 'make PythonAPI ARGS="--python-version=3.7,2"'
+                                sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make CarlaUE4Editor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
@@ -62,7 +62,9 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.whl'
                                     stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
+                                    stash includes: 'PythonAPI/carla/dist/*.whl', name: 'ubuntu_wheels'
                                 }
                             }
                         }
@@ -70,7 +72,7 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make check ARGS="--all --xml --python-version=3.7,2"'
+                                sh 'make check ARGS="--all --xml --python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                             }
                             post
                             {
@@ -92,8 +94,8 @@ pipeline
                         {
                             steps
                             {
-                                sh 'make package ARGS="--python-version=3.7,2 --chrono"'
-                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2"'
+                                sh 'make package ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64 --chrono"'
+                                sh 'make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make examples ARGS="localhost 3654"'
                             }
                             post
@@ -102,7 +104,7 @@ pipeline
                                 {
                                     archiveArtifacts 'Dist/*.tar.gz'
                                     stash includes: 'Dist/CARLA*.tar.gz', name: 'ubuntu_package'
-                                    stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
+                                    // stash includes: 'Dist/AdditionalMaps*.tar.gz', name: 'ubuntu_package2'
                                     stash includes: 'Examples/', name: 'ubuntu_examples'
                                 }
                                 success
@@ -126,13 +128,14 @@ pipeline
                             steps
                             {
                                 unstash name: 'ubuntu_eggs'
+                                unstash name: 'ubuntu_wheels'
                                 unstash name: 'ubuntu_package'
-                                unstash name: 'ubuntu_package2'
+                                // unstash name: 'ubuntu_package2'
                                 unstash name: 'ubuntu_examples'
                                 sh 'tar -xvzf Dist/CARLA*.tar.gz -C Dist/'
-                                sh 'tar -xvzf Dist/AdditionalMaps*.tar.gz -C Dist/'
+                                // sh 'tar -xvzf Dist/AdditionalMaps*.tar.gz -C Dist/'
                                 sh 'DISPLAY= ./Dist/CarlaUE4.sh -nullrhi -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &'
-                                sh 'make smoke_tests ARGS="--xml --python-version=3.7,2"'
+                                sh 'make smoke_tests ARGS="--xml --python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
                                 sh 'make run-examples ARGS="localhost 3654"'
                             }
                             post
@@ -271,7 +274,7 @@ pipeline
                                 always
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
-                                    stash includes: 'PythonAPI/carla/dist/*.egg', name: 'windows_eggs'
+                                    archiveArtifacts 'PythonAPI/carla/dist/*.whl'
                                 }
                             }
                         }
@@ -295,7 +298,7 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
-                                    make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town10HD_Opt --target-archive=AdditionalMaps --clean-intermediate"
+                                    make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11 --target-archive=AdditionalMaps --clean-intermediate"
                                 """
                             }
                             post {

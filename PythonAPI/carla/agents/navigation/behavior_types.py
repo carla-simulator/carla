@@ -12,7 +12,6 @@ class Cautious(object):
     safety_time = 3
     min_proximity_threshold = 12
     braking_distance = 6
-    overtake_counter = -1
     tailgate_counter = 0
 
 
@@ -24,7 +23,6 @@ class Normal(object):
     safety_time = 3
     min_proximity_threshold = 10
     braking_distance = 5
-    overtake_counter = 0
     tailgate_counter = 0
 
 
@@ -36,5 +34,4 @@ class Aggressive(object):
     safety_time = 3
     min_proximity_threshold = 8
     braking_distance = 4
-    overtake_counter = 0
     tailgate_counter = -1

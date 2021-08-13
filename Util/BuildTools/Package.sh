@@ -148,6 +148,7 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./Util/DockerUtils/dist/RecastBuilder" "${DESTINATION}/Tools/"
 
   copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
+  copy_if_changed "./PythonAPI/carla/dist/*.whl" "${DESTINATION}/PythonAPI/carla/dist/"
   copy_if_changed "./PythonAPI/carla/agents/" "${DESTINATION}/PythonAPI/carla/agents"
   copy_if_changed "./PythonAPI/carla/scene_layout.py" "${DESTINATION}/PythonAPI/carla/"
   copy_if_changed "./PythonAPI/carla/requirements.txt" "${DESTINATION}/PythonAPI/carla/"
@@ -214,7 +215,7 @@ fi
 # ==============================================================================
 
 PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
-MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths.txt
+MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPathsLinux.txt
 
 for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
 
@@ -285,20 +286,19 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
       fi
 
-      # binary files for navigation
+      # binary files for navigation and traffic manager
       BIN_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
       MAP_NAME=${BIN_FILE_PATH##*/}
-      BIN_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.bin" -print -quit)
+      find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.bin" -print0 | while read -d $'\0' BIN_FILE
+      do
+        if [ -f "${BIN_FILE}" ] ; then
 
-      if [ -f "${BIN_FILE}" ] ; then
+          SUBST_FILE="${BIN_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
-        SUBST_FILE="${BIN_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
-
-        # Copy the package config file to package
-        mkdir -p "$(dirname ${SUBST_FILE})" && cp "${BIN_FILE}" "$_"
-
+          # Copy the package config file to package
+          mkdir -p "$(dirname ${SUBST_FILE})" && cp "${BIN_FILE}" "$_"
       fi
-
+      done
     done
 
     rm -Rf "./CarlaUE4/Metadata"

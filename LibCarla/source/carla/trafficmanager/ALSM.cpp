@@ -67,10 +67,13 @@ void ALSM::Update() {
   }
 
   // Invalidate hero actor if it is not alive anymore.
-  if (hybrid_physics_mode && hero_actors.size() != 0u) {
+  if (hero_actors.size() != 0u) {
     ActorIdSet hero_actors_to_delete;
     for (auto &hero_actor_info: hero_actors) {
-      if(destroyed_unregistered.find(hero_actor_info.first) != destroyed_unregistered.end()) {
+      if (destroyed_unregistered.find(hero_actor_info.first) != destroyed_unregistered.end()) {
+        hero_actors_to_delete.insert(hero_actor_info.first);
+      }
+      if (destroyed_registered.find(hero_actor_info.first) != destroyed_registered.end()) {
         hero_actors_to_delete.insert(hero_actor_info.first);
       }
     }
@@ -81,22 +84,7 @@ void ALSM::Update() {
   }
 
   // Scan for new unregistered actors.
-  ALSM::ActorVector new_actors = IdentifyNewActors(world_actors);
-  for (const ActorPtr &actor: new_actors) {
-    unregistered_actors.insert({actor->GetId(), actor});
-
-    // Identify any new hero vehicle if the system is in hybrid physics mode.
-    if (hybrid_physics_mode) {
-      if (actor->GetTypeId().front() == 'v') {
-        ActorId hero_actor_id = actor->GetId();
-        for (auto&& attribute: actor->GetAttributes()) {
-          if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
-            hero_actors.insert({hero_actor_id, actor});
-          }
-        }
-      }
-    }
-  }
+  IdentifyNewActors(world_actors);
 
   // Update dynamic state and static attributes for all registered vehicles.
   ALSM::IdleInfo max_idle_time = std::make_pair(0u, current_timestamp.elapsed_seconds);
@@ -104,7 +92,8 @@ void ALSM::Update() {
 
   // Destroy registered vehicle if stuck at a location for too long.
   if (IsVehicleStuck(max_idle_time.first)
-      && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS) {
+      && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS
+      && hero_actors.find(max_idle_time.first) == hero_actors.end()) {
     registered_vehicles.Destroy(max_idle_time.first);
     RemoveActor(max_idle_time.first, true);
     elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
@@ -123,17 +112,26 @@ void ALSM::Update() {
   UpdateUnregisteredActorsData();
 }
 
-std::vector<ActorPtr> ALSM::IdentifyNewActors(const ActorList &actor_list) {
-  std::vector<ActorPtr> new_actors;
-  for  (auto iter = actor_list->begin(); iter != actor_list->end(); ++iter) {
+void ALSM::IdentifyNewActors(const ActorList &actor_list) {
+  for (auto iter = actor_list->begin(); iter != actor_list->end(); ++iter) {
     ActorPtr actor = *iter;
     ActorId actor_id = actor->GetId();
-    if (!registered_vehicles.Contains(actor_id)
-        && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
-      new_actors.push_back(actor);
+    // Identify any new hero vehicle
+    if (actor->GetTypeId().front() == 'v') {
+     if (hero_actors.size() == 0u || hero_actors.find(actor_id) == hero_actors.end()) {
+      for (auto&& attribute: actor->GetAttributes()) {
+        if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
+          hero_actors.insert({actor_id, actor});
+        }
+      }
     }
   }
-  return new_actors;
+    if (!registered_vehicles.Contains(actor_id)
+        && unregistered_actors.find(actor_id) == unregistered_actors.end()) {
+
+      unregistered_actors.insert({actor_id, actor});
+    }
+  }
 }
 
 ALSM::DestroyeddActors ALSM::IdentifyDestroyedActors(const ActorList &actor_list) {
@@ -171,79 +169,108 @@ ALSM::DestroyeddActors ALSM::IdentifyDestroyedActors(const ActorList &actor_list
 void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::IdleInfo &max_idle_time) {
 
   std::vector<ActorPtr> vehicle_list = registered_vehicles.GetList();
-  bool hero_actor_present = hybrid_physics_mode && hero_actors.size() != 0u;
+  bool hero_actor_present = hero_actors.size() != 0u;
   float physics_radius = parameters.GetHybridPhysicsRadius();
   float physics_radius_square = SQUARE(physics_radius);
+  bool is_respawn_vehicles = parameters.GetRespawnDormantVehicles();
+  if (is_respawn_vehicles && !hero_actor_present) {
+    track_traffic.SetHeroLocation(cg::Location(0,0,0));
+  }
+  // Update first the information regarding any hero vehicle.
+  for (auto &hero_actor_info: hero_actors){
+    if (is_respawn_vehicles) {
+      track_traffic.SetHeroLocation(hero_actor_info.second->GetTransform().location);
+    }
+    UpdateData(hybrid_physics_mode, max_idle_time, hero_actor_info.second, hero_actor_present, physics_radius_square);
+  }
+  // Update information for all other registered vehicles.
   for (const Actor &vehicle : vehicle_list) {
     ActorId actor_id = vehicle->GetId();
-    cg::Transform vehicle_transform = vehicle->GetTransform();
-    cg::Location vehicle_location = vehicle_transform.location;
-    cg::Rotation vehicle_rotation = vehicle_transform.rotation;
-    cg::Vector3D vehicle_velocity = vehicle->GetVelocity();
-
-    // Initializing idle times.
-    if (idle_time.find(actor_id) == idle_time.end() && current_timestamp.elapsed_seconds != 0.0) {
-      idle_time.insert({actor_id, current_timestamp.elapsed_seconds});
+    if (hero_actors.find(actor_id) == hero_actors.end()) {
+      UpdateData(hybrid_physics_mode, max_idle_time, vehicle, hero_actor_present, physics_radius_square);
     }
+  }
+}
 
-    // Check if current actor is in range of hero actor and enable physics in hybrid mode.
-    bool in_range_of_hero_actor = false;
-    if (hero_actor_present) {
-      for (auto &hero_actor_info: hero_actors) {
-        const ActorId &hero_actor_id =  hero_actor_info.first;
-        if (simulation_state.ContainsActor(hero_actor_id)) {
-          const cg::Location &hero_location = simulation_state.GetLocation(hero_actor_id);
-          if (cg::Math::DistanceSquared(vehicle_location, hero_location) < physics_radius_square) {
-            in_range_of_hero_actor = true;
-            break;
-          }
+void ALSM::UpdateData(const bool hybrid_physics_mode,
+                      ALSM::IdleInfo &max_idle_time, const Actor &vehicle,
+                      const bool hero_actor_present, const float physics_radius_square) {
+
+  ActorId actor_id = vehicle->GetId();
+  cg::Transform vehicle_transform = vehicle->GetTransform();
+  cg::Location vehicle_location = vehicle_transform.location;
+  cg::Rotation vehicle_rotation = vehicle_transform.rotation;
+  cg::Vector3D vehicle_velocity = vehicle->GetVelocity();
+
+  // Initializing idle times.
+  if (idle_time.find(actor_id) == idle_time.end() && current_timestamp.elapsed_seconds != 0.0) {
+    idle_time.insert({actor_id, current_timestamp.elapsed_seconds});
+  }
+
+  // Check if current actor is in range of hero actor and enable physics in hybrid mode.
+  bool in_range_of_hero_actor = false;
+  if (hero_actor_present && hybrid_physics_mode) {
+    for (auto &hero_actor_info: hero_actors) {
+      const ActorId &hero_actor_id =  hero_actor_info.first;
+      if (simulation_state.ContainsActor(hero_actor_id)) {
+        const cg::Location &hero_location = simulation_state.GetLocation(hero_actor_id);
+        if (cg::Math::DistanceSquared(vehicle_location, hero_location) < physics_radius_square) {
+          in_range_of_hero_actor = true;
+          break;
         }
       }
     }
+  }
 
-    bool enable_physics = hybrid_physics_mode ? in_range_of_hero_actor : true;
-    if (!has_physics_enabled.count(actor_id) || has_physics_enabled[actor_id] != enable_physics) {
+  bool enable_physics = hybrid_physics_mode ? in_range_of_hero_actor : true;
+  if (!has_physics_enabled.count(actor_id) || has_physics_enabled[actor_id] != enable_physics) {
+    if (hero_actors.find(actor_id) == hero_actors.end()) {
       vehicle->SetSimulatePhysics(enable_physics);
       has_physics_enabled[actor_id] = enable_physics;
-    }
-
-    bool state_entry_present = simulation_state.ContainsActor(actor_id);
-    // If physics is disabled, calculate velocity based on change in position.
-    if (!enable_physics) {
-      cg::Location previous_location;
-      if (state_entry_present) {
-        previous_location = simulation_state.GetLocation(actor_id);
-      } else {
-        previous_location = vehicle_location;
+      if (enable_physics == true && simulation_state.ContainsActor(actor_id)) {
+        vehicle->SetTargetVelocity(simulation_state.GetVelocity(actor_id));
       }
-      cg::Vector3D displacement = (vehicle_location - previous_location);
-      vehicle_velocity = displacement * INV_HYBRID_DT;
     }
-
-    // Updated kinematic state object.
-    auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
-    KinematicState kinematic_state{vehicle_location, vehicle_rotation,
-                                   vehicle_velocity, vehicle_ptr->GetSpeedLimit(), enable_physics};
-
-    // Updated traffic light state object.
-    TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
-
-    // Update simulation state.
-    if (state_entry_present) {
-      simulation_state.UpdateKinematicState(actor_id, kinematic_state);
-      simulation_state.UpdateTrafficLightState(actor_id, tl_state);
-    }
-    else {
-      cg::Vector3D dimensions = vehicle_ptr->GetBoundingBox().extent;
-      StaticAttributes attributes{ActorType::Vehicle, dimensions.x, dimensions.y, dimensions.z};
-
-      simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
-    }
-
-    // Updating idle time when necessary.
-    UpdateIdleTime(max_idle_time, actor_id);
   }
+
+  bool state_entry_present = simulation_state.ContainsActor(actor_id);
+  // If physics is disabled, calculate velocity based on change in position.
+  if (!enable_physics) {
+    cg::Location previous_location;
+    if (state_entry_present) {
+      previous_location = simulation_state.GetLocation(actor_id);
+    } else {
+      previous_location = vehicle_location;
+    }
+    cg::Vector3D displacement = (vehicle_location - previous_location);
+    vehicle_velocity = displacement * INV_HYBRID_DT;
+  }
+
+  // Updated kinematic state object.
+  auto vehicle_ptr = boost::static_pointer_cast<cc::Vehicle>(vehicle);
+  KinematicState kinematic_state{vehicle_location, vehicle_rotation,
+                                  vehicle_velocity, vehicle_ptr->GetSpeedLimit(),
+                                  enable_physics, vehicle->IsDormant()};
+
+  // Updated traffic light state object.
+  TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
+
+  // Update simulation state.
+  if (state_entry_present) {
+    simulation_state.UpdateKinematicState(actor_id, kinematic_state);
+    simulation_state.UpdateTrafficLightState(actor_id, tl_state);
+  }
+  else {
+    cg::Vector3D dimensions = vehicle_ptr->GetBoundingBox().extent;
+    StaticAttributes attributes{ActorType::Vehicle, dimensions.x, dimensions.y, dimensions.z};
+
+    simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
+  }
+
+  // Updating idle time when necessary.
+  UpdateIdleTime(max_idle_time, actor_id);
 }
+
 
 void ALSM::UpdateUnregisteredActorsData() {
   for (auto &actor_info: unregistered_actors) {
@@ -256,7 +283,8 @@ void ALSM::UpdateUnregisteredActorsData() {
     const cg::Location actor_location = actor_transform.location;
     const cg::Rotation actor_rotation = actor_transform.rotation;
     const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
-    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true};
+    const bool actor_is_dormant = actor_ptr->IsDormant();
+    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, actor_is_dormant};
 
     TrafficLightState tl_state;
     ActorType actor_type = ActorType::Any;

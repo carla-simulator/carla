@@ -349,9 +349,6 @@
       - param_name: forward_gears
         default: list()
         type: list(carla.GearPhysicsControl)
-      - param_name: mass
-        default: 1000.0
-        param_units: kilograms
       - param_name: drag_coefficient
         default: 0.3
         type: float
@@ -364,6 +361,13 @@
       - param_name: wheels
         default: list()
         type: list(carla.WheelPhysicsControl)
+      - param_name: use_sweep_wheel_collision
+        default: False
+        type: bool
+      - param_name: mass
+        default: 1000.0
+        type: float
+        param_units: kilograms
       doc: >
         VehiclePhysicsControl constructor
     # --------------------------------------
@@ -428,17 +432,17 @@
       type: float
       var_units: kg per radian
       doc: >
-        Tire longitudinal stiffness per unit gravitational acceleration. __Default__ is `1000.0`.
+        Tire longitudinal stiffness per unit gravitational acceleration. Each vehicle has a custom value.
     # --------------------------------------
     - var_name: lat_stiff_max_load
       type: float
       doc: >
-        Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. __Default__ is `2.0`.
+        Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. Each vehicle has a custom value.
     # --------------------------------------
     - var_name: lat_stiff_value
       type: float
       doc: >
-        Maximum stiffness per unit of lateral slip. __Default__ is `17.0`.
+        Maximum stiffness per unit of lateral slip. Each vehicle has a custom value.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__

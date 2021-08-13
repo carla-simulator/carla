@@ -41,12 +41,17 @@ void CollisionStage::Update(const unsigned long index) {
     const cg::Location ego_location = simulation_state.GetLocation(ego_actor_id);
     const Buffer &ego_buffer = buffer_map.at(ego_actor_id);
     const unsigned long look_ahead_index = GetTargetWaypoint(ego_buffer, JUNCTION_LOOK_AHEAD).second;
+    const float velocity = simulation_state.GetVelocity(ego_actor_id).Length();
 
     ActorIdSet overlapping_actors = track_traffic.GetOverlappingVehicles(ego_actor_id);
     std::vector<ActorId> collision_candidate_ids;
 
     // Run through vehicles with overlapping paths and filter them;
-    float collision_radius_square = SQUARE(MAX_COLLISION_RADIUS);
+    float value = SQUARE(COLLISION_RADIUS_RATE * velocity + COLLISION_RADIUS_MIN) + parameters.GetDistanceToLeadingVehicle(ego_actor_id);
+    float collision_radius_square = value;
+    if (velocity < 1.0f) {
+      collision_radius_square = SQUARE(COLLISION_RADIUS_STOP) + parameters.GetDistanceToLeadingVehicle(ego_actor_id);
+    }
     for (ActorId overlapping_actor_id : overlapping_actors) {
       // If actor is within maximum collision avoidance and vertical overlap range.
       const cg::Location &overlapping_actor_location = simulation_state.GetLocation(overlapping_actor_id);

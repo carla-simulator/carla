@@ -43,7 +43,7 @@
           A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
       doc: >
         Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.  
-        [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L126) is an example on how to delete the actors that appear in carla.ActorList all at once.
+        [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in carla.ActorList all at once.
     # --------------------------------------
     - def_name: apply_batch_sync
       params:
@@ -58,7 +58,7 @@
           A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default.
       return: list(command.Response)
       doc: >
-        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/10c5f6a482a21abfd00220c68c7f12b4110b7f63/PythonAPI/examples/spawn_npc.py#L112-L116) is an example of it being used to spawn actors.
+        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.
     # --------------------------------------
     - def_name: generate_opendrive_world
       params:
@@ -299,6 +299,42 @@
       doc: >
         Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
      # --------------------------------------
+    - def_name: set_replayer_ignore_hero
+      params:
+      - param_name: ignore_hero
+        type: bool
+        doc: >
+          Enables or disables playback of the hero vehicle during a playback of a recorded simulation.
+     # --------------------------------------
+    - def_name: set_files_base_folder
+      params:
+      - param_name: path
+        type: str
+        doc: >
+           Specifies the base folder where the local cache for required files will be placed.
+     # --------------------------------------
+    - def_name: get_required_files
+      params:
+      - param_name: folder
+        type: str
+        doc: >
+          Folder where files required by the client will be downloaded to.
+      - param_name: download
+        type: bool
+        default: True
+        doc: >
+          If True, downloads files that are not already in cache.
+      doc: >
+         Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.
+     # --------------------------------------
+    - def_name: request_file
+      params:
+      - param_name: name
+        type: str
+        doc: >
+          Name of the file you are requesting.
+      doc: >
+        Requests one of the required files returned by carla.Client.get_required_files.
 
   - class_name: TrafficManager
     # - DESCRIPTION ------------------------
@@ -525,6 +561,31 @@
         Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.  
       warning: >
         If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick. 
+    # --------------------------------------
+    - def_name: set_respawn_dormant_vehicles
+      params:
+      - param_name: mode_switch
+        type: bool
+        default: false
+      doc: >
+        If __True__, vehicles in large maps will respawn near the hero vehicle when they become dormant. Otherwise, they will stay dormant until they are within `actor_active_distance` of the hero vehicle again.
+    # --------------------------------------
+    - def_name: set_boundaries_respawn_dormant_vehicles
+      params:
+      - param_name: lower_bound
+        type: float
+        default: 25.0
+        doc: >
+          The minimum distance in meters from the hero vehicle that a dormant actor will be respawned.
+      - param_name: upper_bound
+        type: float
+        default: actor_active_distance
+        doc: >
+          The maximum distance in meters from the hero vehicle that a dormant actor will be respawned.
+      doc: >
+        Sets the upper and lower boundaries for dormant actors to be respawned near the hero vehicle.
+      warning: >
+        The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than 25.
     # --------------------------------------
 
   - class_name: OpendriveGenerationParameters

@@ -30,7 +30,8 @@ float DeviationDotProduct(const cg::Location &reference_location,
   next_vector = next_vector.MakeSafeUnitVector(EPSILON);
   cg::Vector3D heading_vector_flat(heading_vector.x, heading_vector.y, 0);
   heading_vector_flat = heading_vector_flat.MakeSafeUnitVector(EPSILON);
-  const float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+  float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+  dot_product = std::max(0.0f, std::min(dot_product, 1.0f));
   return dot_product;
 }
 

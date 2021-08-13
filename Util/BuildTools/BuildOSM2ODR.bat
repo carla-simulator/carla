@@ -95,7 +95,7 @@ if %BUILD_OSM2ODR% == true (
     if not exist "%OSM2ODR_VSPROJECT_PATH%" mkdir "%OSM2ODR_VSPROJECT_PATH%"
     cd "%OSM2ODR_VSPROJECT_PATH%"
 
-    cmake -G "Visual Studio 15 2017 Win64"^
+    cmake -G "Visual Studio 16 2019" -A x64^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%OSM2ODR_INSTALL_PATH:\=/%"^
         -DPROJ_INCLUDE_DIR=%INSTALLATION_DIR:/=\%\proj-install\include^
@@ -130,7 +130,7 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
+    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
     echo           [ERROR] Possible causes:
     echo           [ERROR]  - Make sure you have Visual Studio installed.
     echo           [ERROR]  - Make sure you have the "x64 Visual C++ Toolset" in your path.

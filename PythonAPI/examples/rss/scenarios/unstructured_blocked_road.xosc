@@ -12,7 +12,7 @@
   </RoadNetwork>
   <Entities>
     <ScenarioObject name="hero">
-      <Vehicle name="vehicle.lincoln.mkz2017" vehicleCategory="car">
+      <Vehicle name="vehicle.lincoln.mkz_2017" vehicleCategory="car">
         <ParameterDeclarations/>
         <Performance maxSpeed="69.444" maxAcceleration="10.0" maxDeceleration="10.0"/>
         <BoundingBox>
@@ -30,7 +30,7 @@
       </Vehicle>
     </ScenarioObject>
     <ScenarioObject name="blockingVehicle">
-      <Vehicle name="vehicle.lincoln.mkz2017" vehicleCategory="car">
+      <Vehicle name="vehicle.lincoln.mkz_2017" vehicleCategory="car">
         <ParameterDeclarations/>
         <Performance maxSpeed="69.444" maxAcceleration="10.0" maxDeceleration="10.0"/>
         <BoundingBox>

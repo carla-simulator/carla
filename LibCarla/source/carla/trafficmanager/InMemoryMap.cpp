@@ -4,12 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include "carla/Logging.h"
+
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/InMemoryMap.h"
+#include <boost/geometry/geometries/box.hpp>
 
 namespace carla {
 namespace traffic_manager {
-
 
   namespace cg = carla::geom;
   using namespace constants::Map;
@@ -28,9 +30,10 @@ namespace traffic_manager {
     return GetSegmentId(swp->GetWaypoint());
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetSuccessors(const SegmentId segment_id,
-  const SegmentTopology &segment_topology, const SegmentMap &segment_map) {
-    std::vector<SimpleWaypointPtr> result;
+  NodeList InMemoryMap::GetSuccessors(const SegmentId segment_id,
+                                      const SegmentTopology &segment_topology,
+                                      const SegmentMap &segment_map) {
+    NodeList result;
     if (segment_topology.find(segment_id) == segment_topology.end()) {
       return result;
     }
@@ -46,9 +49,10 @@ namespace traffic_manager {
     return result;
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetPredecessors(const SegmentId segment_id,
-  const SegmentTopology &segment_topology, const SegmentMap &segment_map) {
-    std::vector<SimpleWaypointPtr> result;
+  NodeList InMemoryMap::GetPredecessors(const SegmentId segment_id,
+                                        const SegmentTopology &segment_topology,
+                                        const SegmentMap &segment_map) {
+    NodeList result;
     if (segment_topology.find(segment_id) == segment_topology.end()) {
       return result;
     }
@@ -62,6 +66,98 @@ namespace traffic_manager {
       }
     }
     return result;
+  }
+
+  void InMemoryMap::Cook(WorldMap world_map, const std::string& path) {
+    InMemoryMap local_map(world_map);
+    local_map.SetUp();
+    local_map.Save(path);
+  }
+
+  void InMemoryMap::Save(const std::string& path) {
+    std::string filename;
+    if (path.empty()) {
+      filename = this->GetMapName() + ".bin";
+    } else {
+      filename = path;
+    }
+
+    std::ofstream out_file;
+    out_file.open(filename, std::ios::binary);
+    if (!out_file.is_open()) {
+      log_error("Could not open binary file");
+      return;
+    }
+
+    // write total records
+    uint32_t total = static_cast<uint32_t>(dense_topology.size());
+    out_file.write(reinterpret_cast<const char *>(&total), sizeof(uint32_t));
+
+    // write simple waypoints
+    std::unordered_set<uint64_t> used_ids;
+    for (auto& wp: dense_topology) {
+      if (used_ids.find(wp->GetId()) != used_ids.end()) {
+        log_error("Could not generate the binary file. There are repeated waypoints");
+      }
+      CachedSimpleWaypoint cached_wp(wp);
+      cached_wp.Write(out_file);
+
+      used_ids.insert(wp->GetId());
+    }
+
+    out_file.close();
+    return;
+  }
+
+  bool InMemoryMap::Load(const std::vector<uint8_t>& content) {
+    unsigned long pos = 0;
+    std::vector<CachedSimpleWaypoint> cached_waypoints;
+    std::unordered_map<uint64_t, uint32_t> id2index;
+
+    // read total records
+    uint32_t total;
+    memcpy(&total, &content[pos], sizeof(total));
+    pos += sizeof(total);
+
+    // read simple waypoints
+    for (uint32_t i=0; i < total; i++) {
+      CachedSimpleWaypoint cached_wp;
+      cached_wp.Read(content, pos);
+      cached_waypoints.push_back(cached_wp);
+      id2index.insert({cached_wp.waypoint_id, i});
+
+      WaypointPtr waypoint_ptr = _world_map->GetWaypointXODR(cached_wp.road_id, cached_wp.lane_id, cached_wp.s);
+      SimpleWaypointPtr wp = std::make_shared<SimpleWaypoint>(waypoint_ptr);
+      dense_topology.push_back(wp);
+    }
+
+    // connect waypoints
+    for (uint32_t i=0; i < dense_topology.size(); i++) {
+      auto wp = dense_topology.at(i);
+      auto cached_wp = cached_waypoints.at(i);
+
+      std::vector<SimpleWaypointPtr> next_waypoints;
+      for (auto id : cached_wp.next_waypoints) {
+        next_waypoints.push_back(dense_topology.at(id2index.at(id)));
+      }
+      std::vector<SimpleWaypointPtr> previous_waypoints;
+      for (auto id : cached_wp.previous_waypoints) {
+        previous_waypoints.push_back(dense_topology.at(id2index.at(id)));
+      }
+      wp->SetNextWaypoint(next_waypoints);
+      wp->SetPreviousWaypoint(previous_waypoints);
+      if (cached_wp.next_left_waypoint > 0) {
+        wp->SetLeftWaypoint(dense_topology.at(id2index.at(cached_wp.next_left_waypoint)));
+      }
+      if (cached_wp.next_right_waypoint > 0) {
+        wp->SetRightWaypoint(dense_topology.at(id2index.at(cached_wp.next_right_waypoint)));
+      }
+    }
+
+    // create spatial tree
+    SetUpSpatialTree();
+
+    return true;
   }
 
   void InMemoryMap::SetUp() {
@@ -139,7 +235,7 @@ namespace traffic_manager {
     auto compare_s = [](const SimpleWaypointPtr &swp1, const SimpleWaypointPtr &swp2) {
       return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
     };
-    auto wpt_angle = [](cg::Location l1, cg::Location l2) {
+    auto wpt_angle = [](cg::Vector3D l1, cg::Vector3D l2) {
       return cg::Math::GetVectorAngle(l1, l2);
     };
     auto max = [](int16_t x, int16_t y) {
@@ -162,15 +258,15 @@ namespace traffic_manager {
 
       // Adding more waypoints if the angle is too tight or if they are too distant.
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
-          float distance = distance_squared(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
-          double angle = wpt_angle(segment_waypoints.at(i)->GetLocation(), segment_waypoints.at(i+1)->GetLocation());
-          int16_t angle_splits = static_cast<int16_t>(angle/SEVEN_DEG_TO_RAD);
-          int16_t distance_splits = static_cast<int16_t>(distance/MAX_WPT_DISTANCE);
+          double distance = std::abs(segment_waypoints.at(i)->GetWaypoint()->GetDistance() - segment_waypoints.at(i+1)->GetWaypoint()->GetDistance());
+          double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().rotation.GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().rotation.GetForwardVector());
+          int16_t angle_splits = static_cast<int16_t>(angle/MAX_WPT_RADIANS);
+          int16_t distance_splits = static_cast<int16_t>((distance*distance)/MAX_WPT_DISTANCE);
           auto max_splits = max(angle_splits, distance_splits);
           if (max_splits >= 1) {
             // Compute how many waypoints do we need to generate.
-            for (auto j = 0; j < max_splits; ++j) {
-              auto next_waypoints = segment_waypoints.at(i)->GetWaypoint()->GetNext(std::sqrt(distance)/(max_splits+1));
+            for (uint16_t j = 0; j < max_splits; ++j) {
+              auto next_waypoints = segment_waypoints.at(i)->GetWaypoint()->GetNext(distance/(max_splits+1));
               if (next_waypoints.size() != 0) {
                 auto new_waypoint = next_waypoints.front();
                 i++;
@@ -202,9 +298,10 @@ namespace traffic_manager {
 
       // Adding simple waypoints to processed dense topology.
       for (auto swp: segment_waypoints) {
-        // Checking whether the waypoint is a real junction.
-        auto road_id = swp->GetWaypoint()->GetRoadId();
-        if (swp->GetWaypoint()->IsJunction() && !is_real_junction.count(road_id)) {
+        // Checking whether the waypoint is in a real junction.
+        auto wpt = swp->GetWaypoint();
+        auto road_id = wpt->GetRoadId();
+        if (wpt->IsJunction() && !is_real_junction.count(road_id)) {
           swp->SetIsJunction(false);
         } else {
           swp->SetIsJunction(swp->GetWaypoint()->IsJunction());
@@ -214,14 +311,7 @@ namespace traffic_manager {
       }
     }
 
-    // Localizing waypoints into grids.
-    for (auto &simple_waypoint: dense_topology) {
-      if (simple_waypoint != nullptr) {
-        const cg::Location loc = simple_waypoint->GetLocation();
-        Point3D point(loc.x, loc.y, loc.z);
-        rtree.insert(std::make_pair(point, simple_waypoint));
-      }
-    }
+    SetUpSpatialTree();
 
     // Placing inter-segment connections.
     for (auto &segment : segment_map) {
@@ -260,19 +350,58 @@ namespace traffic_manager {
     }
   }
 
+  void InMemoryMap::SetUpSpatialTree() {
+    for (auto &simple_waypoint: dense_topology) {
+      if (simple_waypoint != nullptr) {
+        const cg::Location loc = simple_waypoint->GetLocation();
+        Point3D point(loc.x, loc.y, loc.z);
+        rtree.insert(std::make_pair(point, simple_waypoint));
+      }
+    }
+  }
+
   SimpleWaypointPtr InMemoryMap::GetWaypoint(const cg::Location loc) const {
 
     Point3D query_point(loc.x, loc.y, loc.z);
     std::vector<SpatialTreeEntry> result_1;
 
     rtree.query(bgi::nearest(query_point, 1), std::back_inserter(result_1));
+
     SpatialTreeEntry &closest_entry = result_1.front();
     SimpleWaypointPtr &closest_point = closest_entry.second;
 
     return closest_point;
   }
 
-  std::vector<SimpleWaypointPtr> InMemoryMap::GetDenseTopology() const {
+  NodeList InMemoryMap::GetWaypointsInDelta(const cg::Location loc, const uint16_t n_points, const float random_sample) const {
+    Point3D query_point(loc.x, loc.y, loc.z);
+
+    Point3D lower_p1(loc.x + random_sample, loc.y + random_sample, loc.z + Z_DELTA);
+    Point3D lower_p2(loc.x - random_sample, loc.y - random_sample, loc.z - Z_DELTA);
+    Point3D upper_p1(loc.x + random_sample + DELTA, loc.y + random_sample + DELTA, loc.z + Z_DELTA);
+    Point3D upper_p2(loc.x - random_sample - DELTA, loc.y - random_sample - DELTA, loc.z - Z_DELTA);
+
+    Box lower_query_box(lower_p2, lower_p1);
+    Box upper_query_box(upper_p2, upper_p1);
+
+    NodeList result;
+    uint8_t x = 0;
+    for (Rtree::const_query_iterator
+        it = rtree.qbegin(bgi::within(upper_query_box)
+        && !bgi::within(lower_query_box)
+        && bgi::satisfies([&](SpatialTreeEntry const& v) { return !v.second->CheckJunction();}));
+        it != rtree.qend();
+        ++it) {
+    x++;
+    result.push_back(it->second);
+    if (x >= n_points)
+        break;
+    }
+
+    return result;
+  }
+
+  NodeList InMemoryMap::GetDenseTopology() const {
     return dense_topology;
   }
 
@@ -346,6 +475,11 @@ namespace traffic_manager {
     assert(_world_map != nullptr && "No map reference found.");
     return _world_map->GetName();
   }
+
+  const cc::Map& InMemoryMap::GetMap() const {
+    return *_world_map;
+  }
+
 
 } // namespace traffic_manager
 } // namespace carla

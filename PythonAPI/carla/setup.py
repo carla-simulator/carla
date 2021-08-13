@@ -52,9 +52,7 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libDetour.a'),
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
                 os.path.join(pwd, 'dependencies/lib/libosm2odr.a'),
-                os.path.join(pwd, 'dependencies/lib/libxerces-c.a'),
-                os.path.join(pwd, 'dependencies/lib/libproj.a'),
-                os.path.join(pwd, 'dependencies/lib/libsqlite3.a')]
+                os.path.join(pwd, 'dependencies/lib/libxerces-c.a')]
             extra_link_args += ['-lz']
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
@@ -79,11 +77,14 @@ def get_libcarla_extensions():
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_opendrive_reader.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_program_options.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libspdlog.a')]
-                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libproj.a')]
                 extra_link_args += ['-lrt']
                 extra_link_args += ['-ltbb']
 
-            extra_link_args += [os.path.join(pwd, 'dependencies/lib', pylib)]
+            # libproj, libsqlite and python libs are also required for rss_variant, therefore
+            # place them after the rss_variant linked libraries
+            extra_link_args += [os.path.join(pwd, 'dependencies/lib/libproj.a'),
+                                os.path.join(pwd, 'dependencies/lib/libsqlite3.a'),
+                                os.path.join(pwd, 'dependencies/lib', pylib)]
 
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
@@ -124,7 +125,7 @@ def get_libcarla_extensions():
 
         # https://docs.microsoft.com/es-es/cpp/porting/modifying-winver-and-win32-winnt
         extra_compile_args = [
-            '/experimental:external', '/external:I', 'dependencies/include/system',
+            '/experimental:external', '/external:W0', '/external:I', 'dependencies/include/system',
             '/DBOOST_ALL_NO_LIB', '/DBOOST_PYTHON_STATIC_LIB',
             '/DBOOST_ERROR_CODE_HEADER_ONLY', '/D_WIN32_WINNT=0x0600', '/DHAVE_SNPRINTF',
             '/DLIBCARLA_WITH_PYTHON_SUPPORT', '-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true', '/MD']
@@ -156,14 +157,19 @@ def get_license():
         return 'LGPL-v2.1-only License'
     return 'MIT License'
 
+with open("README.md") as f:
+    long_description = f.read()
+
 setup(
     name='carla',
-    version='0.9.11',
+    version='0.9.12',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),
     license=get_license(),
     description='Python API for communicating with the CARLA server.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/carla-simulator/carla',
     author='The CARLA team',
     author_email='carla.simulator@gmail.com',

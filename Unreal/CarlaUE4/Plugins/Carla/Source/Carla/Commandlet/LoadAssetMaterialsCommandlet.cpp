@@ -127,10 +127,18 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 
     if (FilledData == false) {
 
-      TileData.XODRName = LoadedMapName.LeftChop((LoadedMapName.GetCharArray().Num() - 1) - LoadedMapName.Find("_", ESearchCase::IgnoreCase, ESearchDir::Type::FromStart));
       // As the OpenDrive file has the same name as level, build the path to the
       // xodr file using the label name and the game content directory.
-      const FString XodrContent = UOpenDrive::LoadXODR(TileData.XODRName);
+      FString MapName = LoadedMapName;
+      if (IsInTiles)
+      {
+        int32 idx = MapName.Find("_Tile_");
+        if(idx > -1)
+        {
+          MapName = MapName.Mid(0, idx);
+        }
+      }
+      const FString XodrContent = UOpenDrive::LoadXODR(MapName);
       XODRMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromLongFString(XodrContent));
 
       // Acquire the TilesInfo.txt file for storing the tile data (offset and size)
@@ -257,25 +265,6 @@ void ULoadAssetMaterialsCommandlet::ApplyRoadPainterMaterials(const FString &Loa
 #if WITH_EDITOR
   UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 #endif
-  }
-  else {
-
-    AActor* ExistingRoadPainter = UGameplayStatics::GetActorOfClass(World, ARoadPainterWrapper::StaticClass());
-    if (Cast<ARoadPainterWrapper>(ExistingRoadPainter) == nullptr) {
-
-      ARoadPainterWrapper *RoadPainterBp = World->SpawnActor<ARoadPainterWrapper>(RoadPainterSubclass);
-      if (RoadPainterBp)
-      {
-        // Needed to call events in editor-mode
-        FEditorScriptExecutionGuard ScriptGuard;
-        // Prepare roadpainter for spawning decals
-        RoadPainterBp->ReadConfigFile(LoadedMapName, DecalNamesMap);
-        RoadPainterBp->SetBlueprintVariables();
-
-        // Spawn the decals loaded in via the JSON file
-        RoadPainterBp->SpawnDecalsEvent();
-      }
-    }
   }
 }
 

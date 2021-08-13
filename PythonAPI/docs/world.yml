@@ -144,6 +144,14 @@
         Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation. 
         When enabled, pedestrians have less realistic death animation but ensures determinism. 
         When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured.
+    - var_name: tile_stream_distance
+      type: float
+      doc: >
+        Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps. Regions of the map within this range will be visible (and capable of simulating physics). Regions outside this region will not be loaded.
+    - var_name: actor_active_distance
+      type: float
+      doc: >
+        Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -497,6 +505,40 @@
       doc: >
         Provided a landmark, returns the traffic light object it describes. 
     # --------------------------------------
+    - def_name: get_traffic_light_from_opendrive_id
+      return: carla.TrafficLight
+      params:
+      - param_name: traffic_light_id
+        type: str
+        doc: >
+          The OpenDRIVE id.
+      doc: >
+        Returns the traffic light actor corresponding to the indicated OpenDRIVE id.
+    # --------------------------------------
+    - def_name: get_traffic_lights_from_waypoint
+      return: list(carla.TrafficLight)
+      params:
+      - param_name: waypoint
+        type: carla.Waypoint
+        doc: >
+          The input waypoint.
+      - param_name: distance
+        type: float
+        doc: >
+          Search distance.
+      doc: >
+        This function performs a search along the road in front of the specified waypoint and returns a list of traffic light actors found in the specified search distance.
+    # --------------------------------------
+    - def_name: get_traffic_lights_in_junction
+      return: list(carla.TrafficLight)
+      params:
+      - param_name: junction_id
+        type: int
+        doc: >
+          The id of the junction.
+      doc: >
+        Returns the list of traffic light actors affecting the junction indicated in `junction_id`.
+    # --------------------------------------
     - def_name: get_traffic_sign
       return: carla.TrafficSign
       params:
@@ -510,7 +552,7 @@
     - def_name: get_random_location_from_navigation
       return: carla.Location
       doc: >
-        This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`spawn_npc.py`](https://github.com/carla-simulator/carla/blob/e73ad54d182e743b50690ca00f1709b08b16528c/PythonAPI/examples/spawn_npc.py#L179) for an example.
+        This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`generate_traffic.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) for an example.
     # --------------------------------------
     - def_name: get_settings
       return: carla.WorldSettings
@@ -608,6 +650,15 @@
         Unloads the selected layers to the level.
         If the layer is already unloaded the call has no effect.
       warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
+    # --------------------------------------
+    - def_name: set_pedestrians_cross_factor
+      params:
+      - param_name: percentage
+        type: float
+        doc: >
+          Sets the percentage of pedestrians that can walk on the road or cross at any point on the road. Value should be between `0.0` and `1.0`. For example, a value of `0.1` would allow 10% of pedestrians to walk on the road. __Default is `0.0`__.
+      note: >
+        Should be set before pedestrians are spawned.
     # --------------------------------------
     - def_name: __str__
       return:

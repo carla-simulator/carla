@@ -12,7 +12,7 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
         - [Minor installations](#minor-installations)
         - [Python dependencies](#python-dependencies)
         - [Major installations](#major-installations)
-            - [Visual Studio 2017](#visual-studio-2017)
+            - [Visual Studio 2019](#visual-studio-2019)
             - [Unreal Engine](#unreal-engine)
 - [__Part Two: Build CARLA__](#part-two-build-carla)
     - [Clone the CARLA repository](#clone-the-carla-repository)
@@ -20,7 +20,6 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
     - [Set Unreal Engine environment variable](#set-unreal-engine-environment-variable)
     - [Build CARLA](#build-carla)
     - [Other make commands](#other-make-commands)
-- [__Summary__](#summary)
 
 
 ---
@@ -48,14 +47,29 @@ In this section you will find details of system requirements, minor and major so
     Be sure that the above programs are added to the [environment path](https://www.java.com/en/download/help/path.xml). Remember that the path added should correspond to the progam's `bin` directory.  
 #### Python dependencies
 
-Run the following command to install the dependencies for the Python API client:
+Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip3`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
 
-    pip3 install --user setuptools
+```sh
+pip3 -V
+```
+
+If you need to upgrade:
+
+```sh
+pip3 install --upgrade pip
+```
+
+You must install the following Python dependencies:
+
+```sh
+pip3 install --user setuptools
+pip3 install --user wheel
+```
 
 #### Major installations
-##### Visual Studio 2017
+##### Visual Studio 2019
 
-Get the 2017 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2017-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
+Get the 2019 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2019-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
 
 * __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.
 * __x64 Visual C++ Toolset.__ In the _Workloads_ section, choose __Desktop development with C++__. This will enable a x64 command prompt that will be used for the build. Check that it has been installed correctly by pressing the `Windows` button and searching for `x64`. Be careful __not to open a `x86_x64` prompt__.  
@@ -90,7 +104,7 @@ __2.__ Run the configuration scripts:
 
 __3.__ Compile the modified engine:
 
->1. Open the `UE4.sln` file inside the source folder with Visual Studio 2017.
+>1. Open the `UE4.sln` file inside the source folder with Visual Studio 2019.
 
 >2. In the build bar ensure that you have selected 'Development Editor', 'Win64' and 'UnrealBuildTool' options. Check [this guide](https://docs.unrealengine.com/en-US/ProductionPipelines/DevelopmentSetup/BuildingUnrealEngine/index.html) if you need any help. 
         
@@ -162,7 +176,7 @@ To set the environment variable:
 This section outlines the commands to build CARLA. 
 
 - All commands should be run in the root CARLA folder. 
-- Commands should be executed via the __x64 Native Tools Command Prompt for VS 2017__. Open this by clicking the `Windows` key and searching for `x64`.
+- Commands should be executed via the __x64 Native Tools Command Prompt for VS 2019__. Open this by clicking the `Windows` key and searching for `x64`.
 
 There are two parts to the build process for CARLA, compiling the client and compiling the server.
 
@@ -176,15 +190,26 @@ The following command compiles the Python API client:
     make PythonAPI
 ```
 
-Optionally, to compile the PythonAPI for Python2, run the following command in the root CARLA directory.
+The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
+
+__A. `.egg` file__
+
+>The `.egg` file does not need to be installed. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
+
+>If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
+
+__B. `.whl` file__
+
+>The `.whl` file should be installed using `pip3`:
 
 ```sh
-    make PythonAPI ARGS="--python-version=2"
+pip3 install <path/to/wheel>.whl
 ```
 
-!!! Note
-    __Note that when the compilation is done, you may see a successful output in the terminal even if the compilation of the Python API client was unsuccessful.__ Check for any errors in the terminal output and check that a `.egg` file exists in `PythonAPI\carla\dist`. If you come across any errors, check the [F.A.Q.](build_faq.md) or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions).
+>This `.whl` file cannot be distributed as it is built specifically for your OS.
 
+!!! Warning
+    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
 
 __2.__ __Compile the server__:
 
@@ -205,17 +230,13 @@ Test the simulator using the example scripts inside `PythonAPI\examples`.  With 
 ```sh
         # Terminal A 
         cd PythonAPI\examples
-        pip install -r requirements.txt
-        python3 spawn_npc.py  
+        pip3 install -r requirements.txt
+        python3 generate_traffic.py  
 
         # Terminal B
         cd PythonAPI\examples
         python3 dynamic_weather.py 
 ```
-
-!!! Note
-    If you encounter the error `ModuleNotFoundError: No module named 'carla'` while running a script, you may be running a different version of Python than the one used to install the client. Go to `PythonAPI\carla\dist` and check the version of Python used in the `.egg` file.
-    
 
 !!! Important
     If the simulation is running at a very low FPS rate, go to `Edit -> Editor preferences -> Performance` in the Unreal Engine editor and disable `Use less CPU when in background`.
@@ -234,51 +255,6 @@ There are more `make` commands that you may find useful. Find them in the table 
 | `make clean`                                                          | Deletes all the binaries and temporals generated by the build system. |
 | `make rebuild`                                                        | `make clean` and `make launch` both in one command.                   |
 
----
-
-## Summary
-
-Below is a summary of the requirements and commands needed to build CARLA on Windows:
-
-```sh
-# Make sure to meet the minimum requirements:
-#
-# x64 system
-# 165 GB disk space
-# 6 - 8 GB GPU
-# Two TCP ports and good internet connection
-
-# Necessary software: 
-#   CMake
-#   Git
-#   Make
-#   Python3 x64
-#   Modified Unreal Engine 4.24
-#   Visual Studio 2017 with Windows 8.1 SDK, x64 Visual C++ Toolset and .NET framework 4.6.2
-
-# Set environment variables for the software
-
-# Clone the CARLA repository
-git clone https://github.com/carla-simulator/carla
-
-# Get assets
-# Set UE4_ROOT environment variable 
-
-# make the CARLA client and the CARLA server
-# open the x64 Native Tools Command Prompt for VS 2017 to execute the following commands
-make PythonAPI
-make launch
-
-# Press play in the Editor to initialize the server
-# Run example scripts to test CARLA
-# Terminal A 
-cd PythonAPI\examples
-pip install -r requirements.txt
-python3 spawn_npc.py 
-# Terminal B
-cd PythonAPI\examples
-python3 dynamic_weather.py 
-```
 
 ---
 
@@ -299,6 +275,3 @@ First steps</a>
 </p>
 
 </div>
-
-
-

@@ -20,14 +20,14 @@ except IndexError:
 import carla
 
 SUN_PRESETS = {
-    'day': (60.0, 0.0),
+    'day': (45.0, 0.0),
     'night': (-90.0, 0.0),
-    'sunset': (0.5, 180.0)}
+    'sunset': (0.5, 0.0)}
 
 WEATHER_PRESETS = {
     'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0331],
-    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.0, 0.9, 10.0, 0.0, 0.0, 0.0331],
-    'rain': [100.0, 80.0, 90.0, 100.0, 20.0, 0.0, 0.9, 100.0, 0.0, 0.0, 0.0331]}
+    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.75, 0.1, 10.0, 0.0, 0.03, 0.0331],
+    'rain': [100.0, 80.0, 90.0, 100.0, 7.0, 0.75, 0.1, 100.0, 0.0, 0.03, 0.0331]}
 
 CAR_LIGHTS = {
     'None' : [carla.VehicleLightState.NONE],
@@ -109,7 +109,6 @@ def apply_weather_values(args, weather):
     if args.miescatteringscale is not None:
         weather.mie_scattering_scale = args.miescatteringscale
     if args.rayleighscatteringscale is not None:
-        print(weather.rayleigh_scattering_scale)
         weather.rayleigh_scattering_scale = args.rayleighscatteringscale
 
 
@@ -245,19 +244,19 @@ def main():
         type=float,
         help='Wetness intensity [0.0, 100.0]')
     argparser.add_argument(
-        '--scatteringintensity',
-        metavar='Si',
+        '--scatteringintensity', '-si',
+        metavar='si',
         default=None,
         type=float,
         help='Scattering intensity [0.0, inf]')
     argparser.add_argument(
-        '--rayleighscatteringscale',
+        '--rayleighscatteringscale', '-rss',
         metavar='rss',
         default=None,
         type=float,
         help='Rayleigh scattering scale [0.0, 2.0]')
     argparser.add_argument(
-        '--miescatteringscale',
+        '--miescatteringscale', '-mss',
         metavar='mss',
         default=None,
         type=float,

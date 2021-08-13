@@ -6,6 +6,7 @@
 
 from numpy import random
 from . import SmokeTest
+import time
 
 TM_PORT = 7056
 NUM_TICKS = 1000
@@ -68,6 +69,8 @@ class TestDeterminism(SmokeTest):
         tm_seed = 1
 
         self.client.load_world("Town03")
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         # set setting for round 1
         world = self.client.get_world()
@@ -110,6 +113,8 @@ class TestDeterminism(SmokeTest):
 
         # reset for simulation 1
         self.client.reload_world(False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
         world = self.client.get_world()
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
@@ -122,6 +127,8 @@ class TestDeterminism(SmokeTest):
 
         # reset for simulation 2
         self.client.reload_world(False)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
         world = self.client.get_world()
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
@@ -134,6 +141,7 @@ class TestDeterminism(SmokeTest):
 
         self.client.reload_world()
         world.apply_settings(old_settings)
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         self.compare_records(record_run1, record_run2)
-

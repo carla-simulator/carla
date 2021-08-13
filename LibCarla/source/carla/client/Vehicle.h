@@ -41,6 +41,9 @@ namespace client {
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true, uint16_t tm_port = TM_DEFAULT_PORT);
 
+    /// Switch on/off this vehicle's autopilot.
+    void ShowDebugTelemetry(bool enabled = true);
+
     /// Apply @a control to this vehicle.
     void ApplyControl(const Control &control);
 

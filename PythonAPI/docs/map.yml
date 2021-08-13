@@ -270,6 +270,11 @@
           Specify the length from the road start.
       return: carla.Waypoint
     # --------------------------------------
+    - def_name: get_crosswalks
+      doc: >
+        Returns a list of locations with all crosswalk zones in the form of closed polygons. The first point is repeated, symbolizing where the polygon begins and ends.
+      return: list(carla.Location)
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 
@@ -611,6 +616,9 @@
     - var_name: Highway
       doc: >
         Type 330.
+    - var_name: DeadEnd
+      doc: >
+        Type 357.
     - var_name: RecomendedSpeed
       doc: >
         Type 380.
