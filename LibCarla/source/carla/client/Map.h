@@ -65,7 +65,7 @@ namespace client {
 
     TopologyList GetTopology() const;
 
-    std::vector<SharedPtr<Waypoint>> GenerateWaypoints(double distance) const;
+    std::vector<SharedPtr<Waypoint>> GenerateWaypoints(double distance, road::Lane::LaneType lane_type = road::Lane::LaneType::Driving) const;
 
     std::vector<road::element::LaneMarking> CalculateCrossedLanes(
         const geom::Location &origin,

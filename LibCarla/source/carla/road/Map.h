@@ -127,8 +127,8 @@ namespace road {
     /// Return a waypoint at the lane of @a waypoint's left lane.
     boost::optional<Waypoint> GetLeft(Waypoint waypoint) const;
 
-    /// Generate all the waypoints in @a map separated by @a approx_distance.
-    std::vector<Waypoint> GenerateWaypoints(double approx_distance) const;
+    /// Generate all the waypoints in @a map separated by @a approx_distance of the specified type.
+    std::vector<Waypoint> GenerateWaypoints(double approx_distance, Lane::LaneType lane_type = Lane::LaneType::Driving) const;
 
     /// Generate waypoints on each @a lane at the start of each @a road
     std::vector<Waypoint> GenerateWaypointsOnRoadEntries(Lane::LaneType lane_type = Lane::LaneType::Driving) const;

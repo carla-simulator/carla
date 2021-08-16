@@ -143,6 +143,19 @@ namespace road {
     }
   }
 
+  /// Return a waypoint for each lane of the specified type at @a distance on @a road.
+  template <typename FuncT>
+  static void ForEachLaneAt(const Road &road, double distance, Lane::LaneType lane_type, FuncT &&func) {
+    for (const auto &lane_section : road.GetLaneSectionsAt(distance)) {
+      ForEachLaneImpl(
+          road.GetId(),
+          lane_section,
+          distance,
+          lane_type,
+          std::forward<FuncT>(func));
+    }
+  }
+
   /// Assumes road_id and section_id are valid.
   static bool IsLanePresent(const MapData &data, Waypoint waypoint) {
     const auto &section = data.GetRoad(waypoint.road_id).GetLaneSectionById(waypoint.section_id);
@@ -630,13 +643,13 @@ namespace road {
     return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
   }
 
-  std::vector<Waypoint> Map::GenerateWaypoints(const double distance) const {
+  std::vector<Waypoint> Map::GenerateWaypoints(const double distance, Lane::LaneType lane_type) const {
     RELEASE_ASSERT(distance > 0.0);
     std::vector<Waypoint> result;
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
       for (double s = EPSILON; s < (road.GetLength() - EPSILON); s += distance) {
-        ForEachDrivableLaneAt(road, s, [&](auto &&waypoint) {
+        ForEachLaneAt(road, s, lane_type, [&](auto &&waypoint) {
           result.emplace_back(waypoint);
         });
       }

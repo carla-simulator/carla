@@ -92,9 +92,9 @@ namespace client {
     return result;
   }
 
-  std::vector<SharedPtr<Waypoint>> Map::GenerateWaypoints(double distance) const {
+  std::vector<SharedPtr<Waypoint>> Map::GenerateWaypoints(double distance, road::Lane::LaneType lane_type) const {
     std::vector<SharedPtr<Waypoint>> result;
-    const auto waypoints = _map.GenerateWaypoints(distance);
+    const auto waypoints = _map.GenerateWaypoints(distance, lane_type);
     result.reserve(waypoints.size());
     for (const auto &waypoint : waypoints) {
       result.emplace_back(SharedPtr<Waypoint>(new Waypoint{shared_from_this(), waypoint}));

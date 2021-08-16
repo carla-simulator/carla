@@ -161,7 +161,7 @@ void export_map() {
     .def("get_waypoint", &cc::Map::GetWaypoint, (arg("location"), arg("project_to_road")=true, arg("lane_type")=cr::Lane::LaneType::Driving))
     .def("get_waypoint_xodr", &cc::Map::GetWaypointXODR, (arg("road_id"), arg("lane_id"), arg("s")))
     .def("get_topology", &GetTopology)
-    .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
+    .def("generate_waypoints", CALL_RETURNING_LIST_2(cc::Map, GenerateWaypoints, double, cr::Lane::LaneType), (args("distance"), arg("lane_type")=cr::Lane::LaneType::Driving))
     .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))

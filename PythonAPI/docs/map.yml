@@ -159,6 +159,11 @@
         param_units: meters
         doc: >
           Approximate distance between waypoints.
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: >
+          Limits the waypoint generation to the specified type of lanes.
       return: list(carla.Waypoint)
       doc: >
         Returns a list of waypoints with a certain distance between them for every lane and centered inside of it. Waypoints are not listed in any particular order. Remember that waypoints closer than 2cm within the same road, section and lane will have the same identificator.
