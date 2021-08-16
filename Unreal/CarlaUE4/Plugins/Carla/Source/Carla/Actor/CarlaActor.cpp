@@ -745,6 +745,78 @@ ECarlaServerResponse FVehicleActor::GetWheelSteerAngle(
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::SetWheelPitchAngle(
+    const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->SetWheelPitchAngle(WheelLocation, AngleInDeg);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle)
+{
+  if (IsDormant())
+  {
+    Angle = 0;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Angle = Vehicle->GetWheelPitchAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelHeight(
+    const EVehicleWheelLocation& WheelLocation, float height)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->SetWheelHeight(WheelLocation, height);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float& Height)
+{
+  if (IsDormant())
+  {
+    Height = 0;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Height = Vehicle->GetWheelHeight(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::SetActorSimulatePhysics(bool bEnabled)
 {
   if (IsDormant())
@@ -1241,3 +1313,36 @@ ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
   }
   return ECarlaServerResponse::Success;
 }
+
+
+ECarlaServerResponse FWalkerActor::GetWalkerBoneControl(
+    FWalkerBoneControl& Control)
+{
+  if (IsDormant())
+  {
+    Control = FWalkerBoneControl{};
+  }
+  else
+  {
+    auto * Walker = Cast<AWalkerBase>(GetActor());
+    if (Walker && !Walker->bAlive)
+    {
+      return ECarlaServerResponse::WalkerDead;
+    }
+
+    // apply walker speed
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::ActorTypeMismatch;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Control = Controller->GetWalkerBoneState();
+  }
+  return ECarlaServerResponse::Success;
+}
+

@@ -63,6 +63,9 @@ namespace detail {
     rpc::TrafficLightState traffic_light_state;
     bool has_traffic_light;
     rpc::ActorId traffic_light_id;
+    float wheel_rotation[4];
+    float wheel_pitch[4];
+    float wheel_height[4];
   };
 #pragma pack(pop)
 
@@ -143,8 +146,9 @@ namespace detail {
 
 #pragma pack(pop)
 
+ // Largest element detail::VehicleData
  static_assert(
-    sizeof(ActorDynamicState) == 119u,
+    sizeof(ActorDynamicState) == 142u,
     "Invalid ActorDynamicState size! "
     "If you modified this class please update the size here, else you may "
     "comment this assert, but your platform may have compatibility issues "

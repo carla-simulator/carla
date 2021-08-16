@@ -32,6 +32,9 @@ namespace client {
     /// received in the last tick.
     Control GetWalkerControl() const;
 
+    /// Return the bone positions applied to this Walker by calling the simulator.
+    BoneControl GetWalkerBoneState();
+
   private:
 
     Control _control;

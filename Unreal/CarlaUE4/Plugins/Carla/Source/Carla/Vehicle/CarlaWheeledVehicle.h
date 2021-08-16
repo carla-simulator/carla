@@ -284,6 +284,21 @@ public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
+  void GetAllWheelSteerAngle(float*) const;
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelPitchAngle(EVehicleWheelLocation WheelLocation);
+  void GetAllWheelPitchAngle(float*) const;
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelHeight(EVehicleWheelLocation WheelLocation, float AngleInDeg);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelHeight(EVehicleWheelLocation WheelLocation);
+  void GetAllWheelHeight(float*) const;
 
   virtual FVector GetVelocity() const override;
 

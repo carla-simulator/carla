@@ -24,6 +24,12 @@
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <compiler/enable-ue4-macros.h>
 
+static void FWorldObserver_FillWheelState(carla::sensor::data::ActorDynamicState::TypeDependentState& state, const ACarlaWheeledVehicle* Vehicle) {
+  Vehicle->GetAllWheelSteerAngle(state.vehicle_data.wheel_rotation);
+  Vehicle->GetAllWheelPitchAngle(state.vehicle_data.wheel_pitch);
+  Vehicle->GetAllWheelHeight(state.vehicle_data.wheel_height);
+}
+
 static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRegistry &Registry)
 {
   using AType = FCarlaActor::ActorType;
@@ -35,6 +41,7 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
     auto Vehicle = Cast<ACarlaWheeledVehicle>(View.GetActor());
     if (Vehicle != nullptr)
     {
+      FWorldObserver_FillWheelState(state, Vehicle);
       state.vehicle_data.control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
       auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
       if (Controller != nullptr)

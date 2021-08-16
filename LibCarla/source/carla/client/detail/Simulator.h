@@ -461,6 +461,10 @@ namespace detail {
       _client.ApplyBoneControlToWalker(walker.GetId(), control);
     }
 
+    rpc::WalkerBoneControl GetWalkerBoneControl(Walker& walker) {
+      return _client.GetWalkerBoneControl(walker.GetId());
+    }
+
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }
@@ -474,7 +478,23 @@ namespace detail {
     }
 
     float GetWheelSteerAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
-      return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
+      return GetActorSnapshot(vehicle).state.vehicle_data.wheel_rotation[static_cast<uint8_t>(wheel_location)];
+    }
+
+    void SetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelPitchAngle(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return GetActorSnapshot(vehicle).state.vehicle_data.wheel_pitch[static_cast<uint8_t>(wheel_location)];
+    }
+
+    void SetWheelHeight(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float height) {
+      _client.SetWheelHeight(vehicle.GetId(), wheel_location, height);
+    }
+
+    float GetWheelHeight(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return GetActorSnapshot(vehicle).state.vehicle_data.wheel_height[static_cast<int>(wheel_location)];
     }
 
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {

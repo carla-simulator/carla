@@ -68,10 +68,12 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
-  const FWalkerBoneControl GetBoneWalkerControl() const
+  const FWalkerBoneControl GetWalkerBoneControl() const
   {
     return Control.which() == 1u ? boost::get<FWalkerBoneControl>(Control) : FWalkerBoneControl{};
   }
+
+  const FWalkerBoneControl GetWalkerBoneState();
 
   UFUNCTION(BlueprintCallable)
   void SetManualBones(const bool bIsEnabled);

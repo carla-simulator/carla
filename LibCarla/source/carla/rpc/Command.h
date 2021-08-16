@@ -14,6 +14,8 @@
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
+#include "carla/rpc/VehicleWheels.h"
+#include "carla/rpc/WalkerBoneControl.h"
 #include "carla/rpc/WalkerControl.h"
 
 #include <boost/variant.hpp>
@@ -82,6 +84,16 @@ namespace rpc {
       ActorId actor;
       WalkerControl control;
       MSGPACK_DEFINE_ARRAY(actor, control);
+    };
+
+    struct ApplyWalkerBoneControl : CommandBase<ApplyWalkerBoneControl> {
+      ApplyWalkerBoneControl() = default;
+      ApplyWalkerBoneControl(ActorId id, const WalkerBoneControl &value)
+        : actor(id),
+          bone_control(value) {}
+      ActorId actor;
+      WalkerBoneControl bone_control;
+      MSGPACK_DEFINE_ARRAY(actor, bone_control);
     };
 
     struct ApplyVehiclePhysicsControl : CommandBase<ApplyVehiclePhysicsControl> {
@@ -183,6 +195,20 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 
+    struct SetWheelPosition : CommandBase<SetWheelPosition> {
+      SetWheelPosition() = default;
+      SetWheelPosition(ActorId id, VehicleWheelLocation loc, float yaw, float pitch, float height)
+        : actor(id),
+          location(loc),
+          yaw(yaw), pitch(pitch), height(height) {}
+      ActorId actor;
+      VehicleWheelLocation location;
+      float yaw;
+      float pitch;
+      float height;
+      MSGPACK_DEFINE_ARRAY(actor, location, yaw, pitch, height);
+    };
+
     struct SetEnableGravity : CommandBase<SetEnableGravity> {
       SetEnableGravity() = default;
       SetEnableGravity(ActorId id, bool value)
@@ -237,6 +263,7 @@ namespace rpc {
         DestroyActor,
         ApplyVehicleControl,
         ApplyWalkerControl,
+        ApplyWalkerBoneControl,
         ApplyVehiclePhysicsControl,
         ApplyTransform,
         ApplyWalkerState,
@@ -247,6 +274,7 @@ namespace rpc {
         ApplyAngularImpulse,
         ApplyTorque,
         SetSimulatePhysics,
+        SetWheelPosition,
         SetEnableGravity,
         SetAutopilot,
         ShowDebugTelemetry,

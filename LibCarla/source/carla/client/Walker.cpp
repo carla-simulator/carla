@@ -25,5 +25,10 @@ namespace client {
   Walker::Control Walker::GetWalkerControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.walker_control;
   }
+
+  Walker::BoneControl Walker::GetWalkerBoneState() {
+    return GetEpisode().Lock()->GetWalkerBoneControl(*this);
+  }
+
 } // namespace client
 } // namespace carla

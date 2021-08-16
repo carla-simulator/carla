@@ -268,6 +268,26 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetWheelPitchAngle(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelHeight(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelHeight(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&)
   {
@@ -362,6 +382,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetWalkerBoneControl(FWalkerBoneControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse FreezeTrafficLight(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -439,6 +464,18 @@ public:
 
   virtual ECarlaServerResponse GetWheelSteerAngle(
       const EVehicleWheelLocation& WheelLocation, float& Angle);
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle);
+
+  virtual ECarlaServerResponse SetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float Height) final;
+
+  virtual ECarlaServerResponse GetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float& Height);
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 
@@ -535,6 +572,8 @@ public:
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
   virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControl&) final;
+
+  virtual ECarlaServerResponse GetWalkerBoneControl(FWalkerBoneControl&) final;
 };
 
 class FOtherActor : public FCarlaActor

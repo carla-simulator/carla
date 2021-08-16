@@ -142,6 +142,47 @@ void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControl &Walke
   }
 }
 
+const FWalkerBoneControl AWalkerController::GetWalkerBoneState()
+{
+  FWalkerBoneControl ret;
+  auto *Character = GetCharacter();
+  if (Character == nullptr)
+  {
+    return ret;
+  }
+  TArray<UPoseableMeshComponent *> PoseableMeshes;
+  TArray<USkeletalMeshComponent *> SkeletalMeshes;
+  Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
+  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  if (bManualBones)
+  {
+    UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
+    if (PoseableMesh)
+    {
+      TArray<FName> BoneNames;
+      PoseableMesh->GetBoneNames(BoneNames);
+      for (const auto &name : BoneNames) {
+        ret.BoneTransforms.Emplace(name.ToString(), PoseableMesh->GetBoneTransformByName(name, EBoneSpaces::Type::ComponentSpace));
+      }
+    }
+  }
+  else
+  {
+    USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
+    if (SkeletalMesh)
+    {
+      TArray<FName> BoneNames;
+      SkeletalMesh->GetBoneNames(BoneNames);
+      for (int i = 0; i < BoneNames.Num(); i++) {
+        ret.BoneTransforms.Emplace(BoneNames[i].ToString(), FTransform{
+          SkeletalMesh->GetBoneQuaternion(BoneNames[i], EBoneSpaces::Type::ComponentSpace),
+          SkeletalMesh->GetBoneLocation(BoneNames[i], EBoneSpaces::Type::ComponentSpace)});
+      }
+    }
+  }
+  return ret;
+}
+
 void AWalkerController::Tick(float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AWalkerController::Tick);

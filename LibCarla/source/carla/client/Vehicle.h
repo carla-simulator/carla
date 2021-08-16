@@ -61,6 +61,23 @@ namespace client {
     /// @note The function returns the rotation of the vehicle based on the it's physics
     float GetWheelSteerAngle(WheelLocation wheel_location);
 
+    /// Sets a @a Rotation to a wheel of the vehicle (affects the bone of the car skeleton, not the physics)
+    void SetWheelPitchAngle(WheelLocation wheel_location, float angle_in_deg);
+
+    /// Return a @a Rotation from a wheel of the vehicle
+    ///
+    /// @note The function returns the rotation of the vehicle based on the it's physics
+    float GetWheelPitchAngle(WheelLocation wheel_location);
+
+    /// Sets a @a Height to a wheel of the vehicle (affects the bone of the car skeleton, not the physics)
+    void SetWheelHeight(WheelLocation wheel_location, float height);
+
+    /// Return a @a Height from a wheel of the vehicle
+    ///
+    /// @note The function returns the rotation of the vehicle based on the it's physics
+    float GetWheelHeight(WheelLocation wheel_location);
+
+
     /// Return the control last applied to this vehicle.
     ///
     /// @note This function does not call the simulator, it returns the data

@@ -31,6 +31,13 @@ namespace rpc {
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
+    explicit WalkerBoneControl(const FWalkerBoneControl& Control) {
+      bone_transforms.reserve(Control.BoneTransforms.Num());
+      for (const TPair<FString, FTransform> &bone_transform : Control.BoneTransforms) {
+        bone_transforms.push_back(rpc::BoneTransformData{TCHAR_TO_UTF8(*bone_transform.Key), bone_transform.Value});
+      }
+    }
+
     operator FWalkerBoneControl() const {
       FWalkerBoneControl Control;
       for (auto &bone_transform : bone_transforms) {

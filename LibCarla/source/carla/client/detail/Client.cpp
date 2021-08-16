@@ -287,6 +287,32 @@ namespace detail {
     return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
   }
 
+  void Client::SetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg) {
+    return _pimpl->AsyncCall("set_wheel_pitch_angle", vehicle, vehicle_wheel, angle_in_deg);
+  }
+
+  float Client::GetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location){
+    return _pimpl->CallAndWait<float>("get_wheel_pitch_angle", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelHeight(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float height) {
+    return _pimpl->AsyncCall("set_wheel_height", vehicle, vehicle_wheel, height);
+  }
+
+  float Client::GetWheelHeight(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location){
+    return _pimpl->CallAndWait<float>("get_wheel_height", vehicle, wheel_location);
+  }
+
   rpc::Actor Client::SpawnActor(
       const rpc::ActorDescription &description,
       const geom::Transform &transform) {
@@ -421,6 +447,10 @@ namespace detail {
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
+  }
+
+  rpc::WalkerBoneControl Client::GetWalkerBoneControl(rpc::ActorId walker) {
+    return _pimpl->CallAndWait<rpc::WalkerBoneControl>("get_bone_control_from_walker", walker);
   }
 
   void Client::ApplyBoneControlToWalker(rpc::ActorId walker, const rpc::WalkerBoneControl &control) {
