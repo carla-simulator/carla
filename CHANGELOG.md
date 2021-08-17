@@ -5,6 +5,7 @@
   * Added API functions to 2D vectors: `squared_length`, `length`, `make_unit_vector`
   * Added missing dependency `libomp5` to Release.Dockerfile
   * Fixed global route planner crash when being used at maps without lane markings
+  * Fixed bug causing the server to sigsegv when a vehicle collides an environment object in recording mode.
 
 ## CARLA 0.9.12
 
