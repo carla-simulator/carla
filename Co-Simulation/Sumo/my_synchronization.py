@@ -44,8 +44,8 @@ except IndexError:
 DATA_SERVER_HOST = "localhost"
 DATA_SERVER_PORT = 9998
 DATA_DIR = "./../Veins/carla-veins-data/"
-CAM_MESSAGE_STANDARD = "etsi"
-CPM_MESSAGE_STANDARD = "etsi"
+CAM_MESSAGE_STANDARD = "periodic"
+CPM_MESSAGE_STANDARD = "no"
 SENSOR_TYPE = "ra_360"
 TIME_TO_START = 0
 TIME_STEP = 0.05
@@ -244,7 +244,7 @@ class CAV:
         #     return
 
         # ----- update perceived_objects -----
-        self.CPMs_handler.receive(self.sumo_actor_id)
+        # self.CPMs_handler.receive(self.sumo_actor_id)
 
         t3 = time.time()
         # ----- send CPM -----
@@ -257,7 +257,7 @@ class CAV:
                     ITS_PDU_Header=self.__tmp_data(),
                     Management_Container=self.__tmp_data(),
                     Station_Data_Container=self.__Station_Data_Container(),
-                    Sensor_Information_Container=self.__Sensor_Information_Container(),
+                    Sensor_Information_Container=self.Sensor_Information_Container(),
                     Perceived_Object_Container=perceived_object_container
                 ))
 
@@ -297,7 +297,7 @@ class CAV:
 
         return data
 
-    def __Sensor_Information_Container(self):
+    def Sensor_Information_Container(self):
         """
         Now, the container is only used to calculate CPM size.
         Since we only use the number of sensors, we simply return list with the number of the sensors.
@@ -427,6 +427,13 @@ class CAVWith360RaderSensors(CAVWithRaderSensors):
             self.sensor_num_in_range(150, 90) / Constants.SENSOR_TICK,
             self.sensor_num_in_range(150, 90) / Constants.SENSOR_TICK
         ]
+
+    def Sensor_Information_Container(self):
+        """
+        We regard the sensors as one 360 degree sensor.
+        """
+
+        return list(range(0, 1))
 
 
 class CAVWithForwardRaderSensors(CAVWithRaderSensors):

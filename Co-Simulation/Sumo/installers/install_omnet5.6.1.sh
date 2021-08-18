@@ -10,9 +10,13 @@ cd ~/Downloads/
 wget https://github.com/omnetpp/omnetpp/releases/download/omnetpp-5.6.1/omnetpp-5.6.1-src-linux.tgz
 tar -xzvf omnetpp-5.6.1-src-linux.tgz 
 cd omnetpp-5.6.1/
+source setenv
+./configure
+make -j $(nproc)
 # ----- set env to .bashrc -----
+echo "CURRENT_PWD=\$(pwd)" >> ~/.bashrc
 echo "cd ~/Downloads/omnetpp-5.6.1/" >> ~/.bashrc
 echo "source setenv" >> ~/.bashrc
-echo "cd ~/" >> ~/.bashrc
+echo "cd CURRENT_PWD" >> ~/.bashrc
 
 

@@ -219,10 +219,11 @@ class CAM(Message):
 
     def update_option(self):
         """
-        We fix the CAM size to 196 Byte.
+        We fix the CAM size to 190 Byte.
         """
 
         self.option["size"] = 190
+        self.option["size"] = 300 
         self.option["type"] = "CAM"
 
 
