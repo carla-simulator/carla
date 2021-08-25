@@ -3,11 +3,14 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include "Carla.h"
 #include "Carla/Util/RayTracer.h"
 
 #include "Carla/Game/CarlaStatics.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 
 namespace crp = carla::rpc;
@@ -71,4 +74,47 @@ std::pair<bool, crp::LabelledPoint> URayTracer::ProjectPoint(
     return std::make_pair(bDidHit, crp::LabelledPoint(UELocation, ComponentTag));
   }
   return std::make_pair(bDidHit, crp::LabelledPoint(FVector(0.0f,0.0f,0.0f), crp::CityObjectLabel::None));
+}
+
+std::vector<std::pair<bool, crp::ContactPoint>> URayTracer::ProjectPoints(
+    const std::vector<FVector>& StartLocations,
+    FVector Direction,
+    float MaxDistance,
+    UWorld * World,
+    const std::vector<const AActor *>& IgnoredActors)
+{
+    std::vector<std::pair<bool, crp::ContactPoint>> Result;
+    Result.reserve(StartLocations.size());
+
+    // prepare for the ray tracing
+    FHitResult Hit;
+
+    FCollisionQueryParams QueryParams;
+    QueryParams.bReturnPhysicalMaterial = true;
+    for (const AActor * IgnoredActor : IgnoredActors) {
+        QueryParams.AddIgnoredActor(IgnoredActor);
+    }
+
+    for (const auto & StartLocation : StartLocations) {
+        bool bDidHit = World->LineTraceSingleByChannel(
+            Hit,
+            StartLocation,
+            StartLocation + Direction.GetSafeNormal() * MaxDistance,
+            ECC_Visibility,
+            QueryParams
+        );
+
+        if (!bDidHit)
+        {
+            Result.emplace_back(false, crp::ContactPoint());
+            continue;
+        }
+
+        UPhysicalMaterial * Material = Hit.PhysMaterial.Get();
+        float Friction = Material ? Material->Friction : -1.0f;
+
+        Result.emplace_back(true, crp::ContactPoint(Hit.Location, crp::Vector3D(Hit.Normal.X, Hit.Normal.Y, Hit.Normal.Z), Friction));
+    }
+
+    return Result;
 }

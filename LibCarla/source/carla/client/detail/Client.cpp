@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include "carla/client/detail/Client.h"
 
@@ -821,6 +823,15 @@ namespace detail {
       geom::Location location, geom::Vector3D direction, float search_distance) const {
     using return_t = std::pair<bool,rpc::LabelledPoint>;
     return _pimpl->CallAndWait<return_t>("project_point", location, direction, search_distance);
+  }
+
+  std::vector<std::pair<bool, rpc::ContactPoint>> Client::GetContactPoints(
+      const std::vector<geom::Location>& locations,
+      geom::Vector3D direction,
+      float search_distance,
+      const std::vector<ActorId>& ignored_actor_ids) const {
+    using return_t = std::vector<std::pair<bool, rpc::ContactPoint>>;
+    return _pimpl->CallAndWait<return_t>("contact_points", locations, direction, search_distance, ignored_actor_ids);
   }
 
   std::vector<rpc::LabelledPoint> Client::CastRay(

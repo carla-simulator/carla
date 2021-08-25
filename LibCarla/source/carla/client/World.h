@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #pragma once
 
@@ -22,6 +24,7 @@
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/ContactPoint.h"
 #include "carla/rpc/MapLayer.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
@@ -195,6 +198,11 @@ namespace client {
 
     boost::optional<rpc::LabelledPoint> GroundProjection(
         geom::Location location, float search_distance = 10000.0) const;
+
+    std::vector<boost::optional<rpc::ContactPoint>> GetContactPoints(
+        const std::vector<geom::Location>& locations,
+        const std::vector<ActorId>& ignored_actor_ids,
+        float search_distance = 10000.0f) const;
 
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;

@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #pragma once
 
@@ -26,6 +28,7 @@
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/ContactPoint.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/Texture.h"
 #include "carla/rpc/MaterialParameter.h"
@@ -298,6 +301,14 @@ namespace detail {
     std::pair<bool,rpc::LabelledPoint> ProjectPoint(
         geom::Location location, geom::Vector3D direction, float search_distance) const {
       return _client.ProjectPoint(location, direction, search_distance);
+    }
+
+    std::vector<std::pair<bool, rpc::ContactPoint>> GetContactPoints(
+        const std::vector<geom::Location>& locations,
+        geom::Vector3D direction,
+        float search_distance,
+        const std::vector<ActorId>& ignored_actor_ids) const {
+      return _client.GetContactPoints(locations, direction, search_distance, ignored_actor_ids);
     }
 
     std::vector<rpc::LabelledPoint> CastRay(

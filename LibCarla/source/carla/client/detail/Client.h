@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #pragma once
 
@@ -21,6 +23,7 @@
 #include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/ContactPoint.h"
 #include "carla/rpc/LightState.h"
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/MapLayer.h"
@@ -507,6 +510,12 @@ namespace detail {
 
     std::pair<bool,rpc::LabelledPoint> ProjectPoint(
         geom::Location location, geom::Vector3D direction, float search_distance) const;
+
+    std::vector<std::pair<bool, rpc::ContactPoint>> GetContactPoints(
+        const std::vector<geom::Location>& locations,
+        geom::Vector3D direction,
+        float search_distance,
+        const std::vector<ActorId>& ignored_actor_ids) const;
 
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
