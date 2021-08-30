@@ -1,3 +1,7 @@
+## Recent changes
+
+  * Fixed RSSSensor: made client side calculations threaded
+
 ## CARLA 0.9.12
 
   * Changed the resolution of the cached map in Traffic Manager from 0.1 to 5 meters

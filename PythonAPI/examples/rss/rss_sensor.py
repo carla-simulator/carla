@@ -49,6 +49,18 @@ class RssStateInfo(object):
             self.distance = math.sqrt((float(ego_dynamics_on_route.ego_center.x) - float(object_state.centerPoint.x))**2 +
                                       (float(ego_dynamics_on_route.ego_center.y) - float(object_state.centerPoint.y))**2)
 
+        self.longitudinal_margin = float(rss_state.longitudinalState.rssStateInformation.currentDistance - rss_state.longitudinalState.rssStateInformation.safeDistance)
+        self.margin = max(0, self.longitudinal_margin)
+        self.lateral_margin = None
+        if rss_state.lateralStateLeft.rssStateInformation.evaluator != "None":
+            self.lateral_margin = rss_state.lateralStateLeft.rssStateInformation.currentDistance - rss_state.lateralStateLeft.rssStateInformation.safeDistance
+        if rss_state.lateralStateRight.rssStateInformation.evaluator != "None":
+            lateral_margin_right = rss_state.lateralStateRight.rssStateInformation.currentDistance - rss_state.lateralStateRight.rssStateInformation.safeDistance
+            if self.lateral_margin==None or self.lateral_margin > lateral_margin_right:
+                self.lateral_margin=lateral_margin_right
+        if self.lateral_margin!=None and self.lateral_margin>0:
+            self.margin += self.lateral_margin
+
     def get_actor(self, world):
         if self.rss_state.objectId == 18446744073709551614:
             return None # "Border Left"
@@ -103,18 +115,21 @@ class RssSensor(object):
         if not inspect.getmembers(carla, check_rss_class):
             raise RuntimeError('CARLA PythonAPI not compiled in RSS variant, please "make PythonAPI.rss"')
 
+        self.log_level = carla.RssLogLevel.warn
+        self.map_log_level = carla.RssLogLevel.warn
+
         self.set_default_parameters()
 
         self.sensor.register_actor_constellation_callback(self._on_actor_constellation_request)
 
         self.sensor.listen(self._on_rss_response)
+        self.sensor.set_log_level(self.log_level)
+        self.sensor.set_map_log_level(self.map_log_level)
 
         # only relevant if actor constellation callback is not registered
         # self.sensor.ego_vehicle_dynamics = self.current_vehicle_parameters
 
         self.sensor.road_boundaries_mode = carla.RssRoadBoundariesMode.Off
-
-        # self.sensor.set_log_level(carla.RssLogLevel.trace)
 
         self.sensor.reset_routing_targets()
         if routing_targets:
@@ -263,6 +278,7 @@ class RssSensor(object):
                         # print("_on_actor_constellation_result({}) setting accelMax to
                         # zero".format(actor_constellation_data.other_actor.id))
                         actor_constellation_result.actor_dynamics.alphaLon.accelMax = 0.
+                        actor_constellation_result.actor_dynamics.alphaLat.accelMax = 0.
         else:
             # store route for debug drawings
             self.route = actor_constellation_data.ego_route
@@ -295,6 +311,28 @@ class RssSensor(object):
 
     def toggle_debug_visualization_mode(self):
         self.debug_visualizer.toggleMode()
+
+    def increase_log_level(self):
+        print("inccrease {}".format(self.log_level))
+        if self.log_level < carla.RssLogLevel.off:
+            self.log_level = self.log_level+1
+        self.sensor.set_log_level(self.log_level)
+
+    def decrease_log_level(self):
+        print("decrease {}".format(self.log_level))
+        if self.log_level > carla.RssLogLevel.trace:
+            self.log_level = self.log_level-1
+        self.sensor.set_log_level(self.log_level)
+
+    def increase_map_log_level(self):
+        if self.map_log_level < carla.RssLogLevel.off:
+            self.map_log_level = self.map_log_level+1
+        self.sensor.set_map_log_level(self.map_log_level)
+
+    def decrease_map_log_level(self):
+        if self.map_log_level > carla.RssLogLevel.trace:
+            self.map_log_level = self.map_log_level-1
+        self.sensor.set_map_log_level(self.map_log_level)
 
     @staticmethod
     def get_default_parameters():
