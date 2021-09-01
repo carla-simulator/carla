@@ -58,9 +58,10 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->CompressionSettings = TextureCompressionSettings::TC_Default;
   CaptureRenderTarget->SRGB = false;
   CaptureRenderTarget->bAutoGenerateMips = false;
-  CaptureRenderTarget->bGPUSharedFlag = true;
+  // CaptureRenderTarget->bGPUSharedFlag = true;
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
+  CaptureRenderTarget->bCPUReadbackFlag = false;
 
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
       FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
@@ -86,6 +87,7 @@ void ASceneCaptureSensor::SetImageSize(uint32 InWidth, uint32 InHeight)
 {
   ImageWidth = InWidth;
   ImageHeight = InHeight;
+  Pixels.SetNum(ImageWidth * ImageHeight);
 }
 
 void ASceneCaptureSensor::SetFOVAngle(const float FOVAngle)
@@ -460,15 +462,121 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   CaptureComponent2D->CaptureScene();
 }
 
+void ASceneCaptureSensor::CopyTexturetoAtlas(FRHICommandListImmediate& RHICmdList, FTexture2DRHIRef Atlas)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("ASceneCaptureSensor::CopyTexturetoAtlas");
+
+  if (Atlas.IsValid() && HasActorBegunPlay() && !IsPendingKill())
+  {
+    const FTextureRenderTarget2DResource* RenderResource =
+      static_cast<const FTextureRenderTarget2DResource *>(CaptureRenderTarget->Resource);
+    FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+    if (!Texture)
+    {
+      UE_LOG(LogCarla, Error, TEXT("ASceneCaptureSensor::Capture: UTextureRenderTarget2D missing render target texture"));
+      return;
+    }
+
+    // Prepare copy information
+    FRHICopyTextureInfo CopyInfo;
+    CopyInfo.Size = FIntVector(ImageWidth, ImageHeight, 0); // Size of the camera
+    CopyInfo.DestPosition = PositionInAtlas; // Where to copy the texture
+
+    RHICmdList.CopyTexture(Texture, Atlas, CopyInfo);
+  }
+}
+
+/*
+void ASceneCaptureSensor::DownloadGPUTextureToCPU()
+{
+  ENQUEUE_RENDER_COMMAND(ACarlaGameModeBaseOnEndFrameRenderThread)
+  ([&](FRHICommandListImmediate& RHICmdList){
+
+    TRACE_CPUPROFILER_EVENT_SCOPE("ASceneCaptureSensor::DownloadGPUTextureToCPU");
+
+    auto RenderResource =
+      static_cast<const FTextureRenderTarget2DResource *>(CaptureRenderTarget->Resource);
+
+    FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+    if (!Texture)
+    {
+      return;
+    }
+
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE("ReadSurfaceData");
+      ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
+      RHICmdList.ReadSurfaceData(
+        Texture,
+        FIntRect(0, 0, ImageWidth, ImageHeight),
+        Pixels,
+        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX),
+        GM->IsReadSurfaceWaitUntilIdleEnabled());
+    }
+    if(IsValid(this))
+    {
+      SendPixelsInRenderThread();
+    }
+  });
+}
+*/
+
+void ASceneCaptureSensor::CopyTextureFromAtlas(
+    carla::Buffer &Buffer,
+    const TArray<FColor>& AtlasPixels,
+    uint32 AtlasTextureWidth)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("CopyTextureFromAtlas");
+
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer.reset");
+    Buffer.reset(BufferHeaderOffset + ImageWidth * ImageHeight * sizeof(FColor));
+  }
+
+  // Check that the atlas alreay contains our texture
+  // and our image has been initialized
+  uint32 ExpectedSize = (uint32)(PositionInAtlas.Y * AtlasTextureWidth + ImageWidth * ImageHeight);
+  uint32 TotalSize = (uint32)AtlasPixels.Num();
+  if(AtlasPixels.GetData() && TotalSize < ExpectedSize)
+  {
+    return;
+  }
+
+  const FColor* SourceFColor = AtlasPixels.GetData() + PositionInAtlas.Y * AtlasTextureWidth;
+  const uint8* Source = (uint8*)SourceFColor;
+  uint32 Dest = BufferHeaderOffset;
+
+  if(ImageWidth == AtlasTextureWidth)
+  {
+    Buffer.copy_from(Dest, Source, ImageWidth * ImageHeight * sizeof(FColor));
+  }
+  else
+  {
+    const uint32 DstStride = ImageWidth * sizeof(FColor);
+    const uint32 SrcStride = AtlasTextureWidth * sizeof(FColor);
+    for(uint32 i = 0; i < ImageHeight; i++)
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("  for_loop");
+      Buffer.copy_from(Dest, Source, DstStride);
+      Source += SrcStride;
+      Dest += DstStride;
+    }
+  }
+}
+
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
+
+  ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
+  GM->RegisterSceneCaptureSensor(this);
 
   // Determine the gamma of the player.
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
 
   CaptureRenderTarget->InitCustomFormat(ImageWidth, ImageHeight, bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
                                         bInForceLinearGamma);
+  Pixels.SetNum(ImageWidth * ImageHeight);
 
   if (bEnablePostProcessingEffects)
   {
@@ -507,6 +615,10 @@ void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
 {
   Super::PrePhysTick(DeltaSeconds);
 
+  // TODO: remove but bCaptureEveryFrame by default
+//  ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
+//  CaptureComponent2D->bCaptureEveryFrame = false; //GM->IsCaptureEveryFrameEnabled();
+
   // Add the view information every tick. It's only used for one tick and then
   // removed by the streamer.
   IStreamingManager::Get().AddViewInformation(
@@ -522,8 +634,10 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+  ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
+  GM->UnregisterSceneCaptureSensor(this);
+  // SCENE_CAPTURE_COUNTER = 0u;
   Super::EndPlay(EndPlayReason);
-  SCENE_CAPTURE_COUNTER = 0u;
 }
 
 // =============================================================================

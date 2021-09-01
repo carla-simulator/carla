@@ -28,4 +28,17 @@ protected:
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
+  void SendPixelsInRenderThread(const TArray<FColor>& AtlasPixels, uint32 AtlasTextureWidth) override;
+  /*
+
+    void WritePixelsToBuffer(
+      UTextureRenderTarget2D &RenderTarget,
+      carla::Buffer &Buffer,
+      uint32 Offset,
+      FRHICommandListImmediate &InRHICmdList,
+      bool DownloadTexture,
+      bool RHIGPUReadBack
+      );
+      */
+
 };

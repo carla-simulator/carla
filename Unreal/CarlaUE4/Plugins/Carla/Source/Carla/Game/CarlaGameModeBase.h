@@ -8,6 +8,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
+#include "Components/SceneCaptureComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
@@ -27,6 +28,8 @@
 #include "MapGen/LargeMapManager.h"
 
 #include "CarlaGameModeBase.generated.h"
+
+class ASceneCaptureSensor;
 
 /// Base class for the CARLA Game Mode.
 UCLASS(HideCategories=(ActorTick))
@@ -98,7 +101,75 @@ public:
     return LMManager;
   }
 
+
+  /* Camera methods */
+  UFUNCTION(Category = "Carla Game Mode", Exec)
+  void ToggleCaptureEveryFrame()
+  {
+    CaptureEveryFrame = !CaptureEveryFrame;
+  }
+
+  UFUNCTION(Category = "Carla Game Mode", Exec)
+  void ToggleDownloadTexture()
+  {
+    DownloadTexture = !DownloadTexture;
+  }
+
+  UFUNCTION(Category = "Carla Game Mode", Exec)
+  void ToggleRHIGPUReadBack()
+  {
+    RHIGPUReadBack = !RHIGPUReadBack;
+  }
+
+  UFUNCTION(Category = "Carla Game Mode", Exec)
+  void ToggleReadSurfaceWaitUntilIdle()
+  {
+    ReadSurfaceWaitUntilIdle = !ReadSurfaceWaitUntilIdle;
+  }
+
+  bool IsCaptureEveryFrameEnabled() const
+  {
+    return CaptureEveryFrame;
+  }
+
+  bool IsDownloadTextureEnabled() const
+  {
+    return DownloadTexture;
+  }
+
+  bool IsRHIGPUReadBackEnabled() const
+  {
+    return RHIGPUReadBack;
+  }
+
+  bool IsReadSurfaceWaitUntilIdleEnabled() const
+  {
+    return ReadSurfaceWaitUntilIdle;
+  }
+
+  void RegisterSceneCaptureSensor(ASceneCaptureSensor* InSensor);
+
+  void UnregisterSceneCaptureSensor(ASceneCaptureSensor* InSensor);
+
+
+  // TODO: move to a SensorManager
+  void OnEndFrameRenderThread(FViewport* Viewport);
+  // TODO: this should be private
+  TArray<class ASceneCaptureSensor*> CaptureSensors;
+
+  FTexture2DRHIRef SceneCaptureAtlasTexture;
+  TArray<FColor> AtlasPixels;
+  uint32 AtlasTextureWidth = 0u;
+  uint32 AtlasTextureHeight = 0u;
+  bool IsAtlasTextureValid = true;
+
+
 protected:
+
+  bool CaptureEveryFrame = true;
+  bool DownloadTexture = true;
+  bool RHIGPUReadBack = false;
+  bool ReadSurfaceWaitUntilIdle = false;
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
 

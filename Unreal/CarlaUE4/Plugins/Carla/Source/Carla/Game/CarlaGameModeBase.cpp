@@ -11,6 +11,7 @@
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
+#include "Sensor/SceneCaptureSensor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -50,6 +51,48 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
 
+void ACarlaGameModeBase::RegisterSceneCaptureSensor(ASceneCaptureSensor* InSensor)
+{
+  CaptureSensors.Add(InSensor);
+
+  uint32 ImageWidth = InSensor->ImageWidth;
+  uint32 ImageHeight = InSensor->ImageHeight;
+
+  if(AtlasTextureWidth < ImageWidth)
+  {
+    AtlasTextureWidth = ImageWidth;
+  }
+
+  InSensor->PositionInAtlas = FIntVector(0, AtlasTextureHeight, 0);
+  AtlasTextureHeight += ImageHeight;
+  IsAtlasTextureValid = false;
+
+  UE_LOG(LogCarla, Warning, TEXT("GM::RegisterSceneCaptureSensor %d %dx%d"), CaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
+}
+
+void ACarlaGameModeBase::UnregisterSceneCaptureSensor(ASceneCaptureSensor* InSensor)
+{
+  CaptureSensors.Remove(InSensor);
+  IsAtlasTextureValid = false;
+
+  AtlasTextureWidth = 0u;
+  AtlasTextureHeight = 0u;
+  for(ASceneCaptureSensor* Sensor : CaptureSensors)
+  {
+    uint32 ImageWidth = Sensor->ImageWidth;
+    uint32 ImageHeight = Sensor->ImageHeight;
+
+    Sensor->PositionInAtlas = FIntVector(0, AtlasTextureHeight, 0);
+
+    AtlasTextureHeight += ImageHeight;
+    if(AtlasTextureWidth < ImageWidth)
+    {
+      AtlasTextureWidth = ImageWidth;
+    }
+  }
+  UE_LOG(LogCarla, Warning, TEXT("GM::UnregisterSceneCaptureSensor %d %dx%d"), CaptureSensors.Num(), AtlasTextureWidth, AtlasTextureHeight);
+}
+
 const FString ACarlaGameModeBase::GetRelativeMapPath() const
 {
   UWorld* World = GetWorld();
@@ -72,6 +115,8 @@ void ACarlaGameModeBase::InitGame(
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaGameModeBase::InitGame);
   Super::InitGame(MapName, Options, ErrorMessage);
+
+  UGameViewportClient::OnViewportRendered().AddUObject(this, &ACarlaGameModeBase::OnEndFrameRenderThread);
 
   UWorld* World = GetWorld();
   check(World != nullptr);
@@ -641,4 +686,123 @@ void ACarlaGameModeBase::OnUnloadStreamLevel()
 void ACarlaGameModeBase::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 {
   CarlaSettingsDelegate->SetAllActorsDrawDistance(GetWorld(), Settings.MaxCullingDistance);
+}
+
+void ACarlaGameModeBase::OnEndFrameRenderThread(FViewport* /* Viewport */)
+{
+  if(CaptureSensors.Num() == 0) return;
+
+  bool WasAtlasTextureValid = IsAtlasTextureValid;
+  bool RTFinished = false;
+
+  //UE_LOG(LogCarla, Warning, TEXT("  IsAtlasTextureValid %d  WasAtlasTextureValid %d  ReadSurfaceWaitUntilIdle %d"),
+  //            IsAtlasTextureValid, WasAtlasTextureValid, ReadSurfaceWaitUntilIdle);
+
+  // UE_LOG(LogCarla, Warning, TEXT("OnEndFrameRenderThread %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
+
+  // Check if atlas is valid or need to be (re)created
+  if(!IsAtlasTextureValid)
+  {
+    FlushRenderingCommands(true);
+    UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+    if(AtlasTextureWidth > 0 && AtlasTextureHeight > 0)
+    {
+      UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT generating atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+      FRHIResourceCreateInfo CreateInfo;
+      SceneCaptureAtlasTexture =
+        RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_FastVRAM, CreateInfo);
+      AtlasPixels.SetNum(AtlasTextureWidth * AtlasTextureHeight);
+      IsAtlasTextureValid = true;
+    }
+    else
+    {
+      UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas size WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+      SceneCaptureAtlasTexture = nullptr;
+    }
+    FlushRenderingCommands();
+  }
+
+  if(DownloadTexture)
+  {
+    ENQUEUE_RENDER_COMMAND(ACarlaGameModeBaseOnEndFrameRenderThread)
+    (
+      [&, WasAtlasTextureValid](FRHICommandListImmediate& RHICmdList)
+      {
+        check(IsInRenderingThread());
+
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("ACarlaGameModeBaseOnEndFrameRenderThread");
+        // UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBaseOnEndFrameRenderThread %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
+        ////////////////////////////////////////////////////////////////////////
+        {
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("GM_CopyTexturetoAtlas");
+          for(ASceneCaptureSensor* Sensor : CaptureSensors)
+          {
+            if(IsValid(Sensor))
+            {
+              Sensor->CopyTexturetoAtlas(RHICmdList, SceneCaptureAtlasTexture);
+            }
+          }
+        }
+        ////////////////////////////////////////////////////////////////////////
+        {
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("GM_DownloadAtlasTexture");
+
+          if (!SceneCaptureAtlasTexture)
+          {
+            UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBase::DownloadAtlasTexture: Missing atlas texture"));
+            return;
+          }
+
+          if(SceneCaptureAtlasTexture)
+          {
+            //UE_LOG(LogCarla, Error, TEXT("  IsAtlasTextureValid %d  WasAtlasTextureValid %d  ReadSurfaceWaitUntilIdle %d"),
+            //  IsAtlasTextureValid, WasAtlasTextureValid, ReadSurfaceWaitUntilIdle);
+            RHICmdList.ReadSurfaceData(
+              SceneCaptureAtlasTexture,
+              FIntRect(0, 0, AtlasTextureWidth, AtlasTextureHeight),
+              AtlasPixels,
+              FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX),
+              !WasAtlasTextureValid || ReadSurfaceWaitUntilIdle);
+          }
+        }
+        ////////////////////////////////////////////////////////////////////////
+        {
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("GM_SendPixels");
+          // TODO: parallelize
+          for(ASceneCaptureSensor* Sensor : CaptureSensors)
+          {
+            if(IsValid(Sensor))
+            {
+              Sensor->SendPixelsInRenderThread(AtlasPixels, AtlasTextureWidth);
+            }
+          }
+        }
+        ////////////////////////////////////////////////////////////////////////
+        RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
+        // RTFinished = true;
+        ////////////////////////////////////////////////////////////////////////
+        // UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBaseOnEndFrameRenderThread end %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
+      }
+    );
+
+    /*
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("OnEndFrameRenderThread::FlushRenderingCommands");
+      UE_LOG(LogCarla, Error, TEXT("OnEndFrameRenderThread::FlushRenderingCommands %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
+      FlushRenderingCommands();
+      UE_LOG(LogCarla, Error, TEXT("OnEndFrameRenderThread::FlushRenderingCommands end %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
+    }
+    ////////////////////////////////////////////////////////////////////////
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("OnEndFrameRenderThread::GM_UpdateCameraStreams");
+      UE_LOG(LogCarla, Error, TEXT("OnEndFrameRenderThread::GM_UpdateCameraStreams %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
+      UCarlaGameInstance *CarlaGI = UCarlaStatics::GetGameInstance(GetWorld());
+      //while(!RTFinished)
+      //{
+      //}
+      CarlaGI->RunStreamServer();
+      UE_LOG(LogCarla, Error, TEXT("OnEndFrameRenderThread::GM_UpdateCameraStreams end %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
+    }
+    */
+  }
 }

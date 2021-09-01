@@ -126,5 +126,5 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   );
 
   // Blocks until the render thread has finished all it's tasks
-  Sensor.WaitForRenderThreadToFinsih();
+  // Sensor.WaitForRenderThreadToFinsih();
 }

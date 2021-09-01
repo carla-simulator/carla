@@ -298,6 +298,20 @@ public:
     // FlushRenderingCommands();
   }
 
+  void CopyTexturetoAtlas(FRHICommandListImmediate& RHICmdList, FTexture2DRHIRef Atlas);
+  // TODO: this should be pure virtual
+  // void DownloadGPUTextureToCPU();
+  virtual void SendPixelsInRenderThread(const TArray<FColor>& /* AtlasPixels */, uint32 /* AtlasTextureWidth */) {}
+
+  void CopyTextureFromAtlas(carla::Buffer &Buffer, const TArray<FColor>& AtlasPixels, uint32 AtlasTextureWidth);
+
+
+  // TODO: add to all the camera types
+  uint32 BufferHeaderOffset = 0;
+
+  FIntVector PositionInAtlas{0};
+
+
 protected:
 
   virtual void BeginPlay() override;
@@ -308,6 +322,8 @@ protected:
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
+
+  TArray<FColor> Pixels;
 
   /// Render target necessary for scene capture.
   UPROPERTY(EditAnywhere)
@@ -336,6 +352,7 @@ protected:
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
 
+  // TODO: remove
   FRenderCommandFence RenderFence;
 
 };
