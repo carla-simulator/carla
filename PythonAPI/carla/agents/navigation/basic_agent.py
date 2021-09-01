@@ -306,23 +306,28 @@ class BasicAgent(object):
 
             # Waypoints aren't reliable, check the proximity of the vehicle to the route
             else:
-                ego_location = ego_transform.location
-                lateral_extent = self._vehicle.bounding_box.extent.y
-
-                # Get geodesic boudnary box
                 route_bb = []
+                ego_location = ego_transform.location
+                extent_y = self._vehicle.bounding_box.extent.y
+                r_vec = ego_transform.get_right_vector()
+                p1 = ego_location + carla.Location(extent_y * r_vec.x, extent_y * r_vec.y)
+                p2 = ego_location + carla.Location(-extent_y * r_vec.x, -extent_y * r_vec.y)
+                route_bb.append([p1.x, p1.y, p1.z])
+                route_bb.append([p2.x, p2.y, p2.z])
+
                 for wp, _ in self._local_planner.get_plan():
                     if ego_location.distance(wp.transform.location) > max_distance:
                         break
 
-                    right_vector = wp.transform.get_right_vector()
-                    right_point = wp.transform.location + carla.Location(
-                        lateral_extent * right_vector.x, lateral_extent * right_vector.y)
-                    route_bb.append([right_point.x, right_point.y, right_point.z])
-                    left_point = wp.transform.location + carla.Location(
-                        - lateral_extent * right_vector.x, - lateral_extent * right_vector.y)
-                    route_bb.append([left_point.x, left_point.y, left_point.z])
+                    r_vec = wp.transform.get_right_vector()
+                    p1 = wp.transform.location + carla.Location(extent_y * r_vec.x, extent_y * r_vec.y)
+                    p2 = wp.transform.location + carla.Location(-extent_y * r_vec.x, -extent_y * r_vec.y)
+                    route_bb.append([p1.x, p1.y, p1.z])
+                    route_bb.append([p2.x, p2.y, p2.z])
 
+                if len(route_bb) < 3:
+                    # 2 points don't create a polygon, nothing to check
+                    return (False, None)
                 ego_polygon = Polygon(route_bb)
 
                 # Compare the two polygons
