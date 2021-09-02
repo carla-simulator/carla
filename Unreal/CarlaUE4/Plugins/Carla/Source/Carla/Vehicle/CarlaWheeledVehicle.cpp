@@ -477,8 +477,10 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
         hud->AddDebugVehicleForTelemetry(GetVehicleMovementComponent());
       }
       else{
-        if (hud->DebugVehicle == GetVehicleMovementComponent())
+        if (hud->DebugVehicle == GetVehicleMovementComponent()) {
           hud->AddDebugVehicleForTelemetry(nullptr);
+          GetVehicleMovementComponent()->StopTelemetry();
+        }
       }
 
     }
