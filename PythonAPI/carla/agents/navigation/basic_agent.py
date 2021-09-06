@@ -281,7 +281,7 @@ class BasicAgent(object):
 
         for target_vehicle in vehicle_list:
             target_transform = target_vehicle.get_transform()
-            target_wpt = self._map.get_waypoint(target_transform.location)
+            target_wpt = self._map.get_waypoint(target_transform.location, lane_type=carla.LaneType.Any)
 
             # Simplified version for outside junctions
             if not ego_wpt.is_junction or not target_wpt.is_junction:
