@@ -111,6 +111,7 @@ Take a shot of the world from their point of view. For cameras that return [carl
 | ----------------- | ---------- | ------------------ |
 | Depth | [carla.Image](<../python_api#carlaimage>)  |Renders the depth of the elements in the field of view in a gray-scale map.          |
 | RGB      | [carla.Image](<../python_api#carlaimage>)   | Provides clear vision of the surroundings. Looks like a normal photo of the scene.   |
+| Optical Flow    | [carla.Image](<../python_api#carlaimage>)  | Renders the motion of every pixel from the camera.  |
 | Semantic segmentation    | [carla.Image](<../python_api#carlaimage>)  | Renders elements in the field of view with a specific color according to their tags. |
 | DVS    | [carla.DVSEventArray](<../python_api#carladvseventarray>)  | Measures changes of brightness intensity asynchronously as an event stream.  |
 
@@ -185,7 +186,7 @@ Python API reference</a>
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

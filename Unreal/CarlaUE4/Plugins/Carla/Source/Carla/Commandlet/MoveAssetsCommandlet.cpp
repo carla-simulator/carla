@@ -22,7 +22,7 @@ UMoveAssetsCommandlet::UMoveAssetsCommandlet()
 namespace SSTags {
   // Carla Semantic Segmentation Folder Tags
   static const FString ROAD       = TEXT("Road");
-  static const FString ROADLINES  = TEXT("RoadLines");
+  static const FString ROADLINE   = TEXT("RoadLine");
   static const FString TERRAIN    = TEXT("Terrain");
   static const FString GRASS      = TEXT("Terrain");
   static const FString SIDEWALK   = TEXT("SideWalk");
@@ -48,7 +48,6 @@ namespace SSTags {
   static const FString R_CURB2     = TEXT("Roads_Curb");
   static const FString R_GUTTER1   = TEXT("Road_Gutter");
   static const FString R_GUTTER2   = TEXT("Roads_Gutter");
-
   static const FString R_TERRAIN   = TEXT("Terrain");
 }
 
@@ -126,7 +125,7 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   AssetsObjectLibrary->GetAssetDataList(MapContents);
   AssetsObjectLibrary->ClearLoaded();
 
-  TArray<FString> DestinationPaths = {SSTags::ROAD, SSTags::ROADLINES, SSTags::TERRAIN, SSTags::GRASS, SSTags::SIDEWALK, SSTags::CURB, SSTags::GUTTER};
+  TArray<FString> DestinationPaths = {SSTags::ROAD, SSTags::ROADLINE, SSTags::TERRAIN, SSTags::GRASS, SSTags::SIDEWALK, SSTags::CURB, SSTags::GUTTER};
 
   // Init Map with keys
   TMap<FString, TArray<UObject *>> AssetDataMap;
@@ -138,10 +137,8 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   for (const auto &MapAsset : MapContents)
   {
     // Get AssetName
-    UStaticMesh *MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
-    FString ObjectName = MeshAsset->GetName();
-
     FString AssetName;
+    UStaticMesh *MeshAsset = CastChecked<UStaticMesh>(MapAsset.GetAsset());
     MapAsset.AssetName.ToString(AssetName);
 
     if (SrcPath.Len())
@@ -162,7 +159,7 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
       }
       else if (AssetName.Contains(SSTags::R_MARKING1) || AssetName.Contains(SSTags::R_MARKING2))
       {
-        AssetDataMap[SSTags::ROADLINES].Add(MeshAsset);
+        AssetDataMap[SSTags::ROADLINE].Add(MeshAsset);
       }
       else if (AssetName.Contains(SSTags::R_TERRAIN))
       {
@@ -179,6 +176,10 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
       else if (AssetName.Contains(SSTags::R_GUTTER1) || AssetName.Contains(SSTags::R_GUTTER2))
       {
         AssetDataMap[SSTags::GUTTER].Add(MeshAsset);
+      }
+      else
+      {
+        AssetDataMap[SSTags::TERRAIN].Add(MeshAsset);
       }
     }
   }

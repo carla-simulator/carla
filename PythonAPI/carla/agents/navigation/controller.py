@@ -92,13 +92,21 @@ class VehiclePIDController():
         return control
 
 
+    def change_longitudinal_PID(self, args_longitudinal):
+        """Changes the parameters of the PIDLongitudinalController"""
+        self._lon_controller.change_parameters(**args_longitudinal)
+
+    def change_lateral_PID(self, args_lateral):
+        """Changes the parameters of the PIDLongitudinalController"""
+        self._lon_controller.change_parameters(**args_lateral)
+
+
 class PIDLongitudinalController():
     """
     PIDLongitudinalController implements longitudinal control using a PID.
     """
 
-
-    def __init__(self, vehicle, K_P=1.0, K_D=0.0, K_I=0.0, dt=0.03):
+    def __init__(self, vehicle, K_P=1.0, K_I=0.0, K_D=0.0, dt=0.03):
         """
         Constructor method.
 
@@ -110,8 +118,8 @@ class PIDLongitudinalController():
         """
         self._vehicle = vehicle
         self._k_p = K_P
-        self._k_d = K_D
         self._k_i = K_I
+        self._k_d = K_D
         self._dt = dt
         self._error_buffer = deque(maxlen=10)
 
@@ -151,12 +159,20 @@ class PIDLongitudinalController():
 
         return np.clip((self._k_p * error) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
 
+    def change_parameters(self, K_P, K_I, K_D, dt):
+        """Changes the PID parameters"""
+        self._k_p = K_P
+        self._k_i = K_I
+        self._k_d = K_D
+        self._dt = dt
+
+
 class PIDLateralController():
     """
     PIDLateralController implements lateral control using a PID.
     """
 
-    def __init__(self, vehicle, offset=0, K_P=1.0, K_D=0.0, K_I=0.0, dt=0.03):
+    def __init__(self, vehicle, offset=0, K_P=1.0, K_I=0.0, K_D=0.0, dt=0.03):
         """
         Constructor method.
 
@@ -170,8 +186,8 @@ class PIDLateralController():
         """
         self._vehicle = vehicle
         self._k_p = K_P
-        self._k_d = K_D
         self._k_i = K_I
+        self._k_d = K_D
         self._dt = dt
         self._offset = offset
         self._e_buffer = deque(maxlen=10)
@@ -215,8 +231,11 @@ class PIDLateralController():
                           w_loc.y - ego_loc.y,
                           0.0])
 
-        _dot = math.acos(np.clip(np.dot(w_vec, v_vec) /
-                                 (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
+        wv_linalg = np.linalg.norm(w_vec) * np.linalg.norm(v_vec)
+        if wv_linalg == 0:
+            _dot = 1
+        else:
+            _dot = math.acos(np.clip(np.dot(w_vec, v_vec) / (wv_linalg), -1.0, 1.0))
         _cross = np.cross(v_vec, w_vec)
         if _cross[2] < 0:
             _dot *= -1.0
@@ -230,3 +249,10 @@ class PIDLateralController():
             _ie = 0.0
 
         return np.clip((self._k_p * _dot) + (self._k_d * _de) + (self._k_i * _ie), -1.0, 1.0)
+
+    def change_parameters(self, K_P, K_I, K_D, dt):
+        """Changes the PID parameters"""
+        self._k_p = K_P
+        self._k_i = K_I
+        self._k_d = K_D
+        self._dt = dt

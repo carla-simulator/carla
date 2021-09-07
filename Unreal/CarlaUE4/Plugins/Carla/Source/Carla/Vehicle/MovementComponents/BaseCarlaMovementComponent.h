@@ -20,6 +20,7 @@ class CARLA_API UBaseCarlaMovementComponent : public UMovementComponent
 
 protected:
 
+  UPROPERTY()
   ACarlaWheeledVehicle* CarlaVehicle;
 
 public:
@@ -34,5 +35,9 @@ public:
 
   virtual float GetVehicleForwardSpeed() const;
 
+protected:
+
   void DisableUE4VehiclePhysics();
+
+  void EnableUE4VehiclePhysics(bool bResetVelocity = true);
 };

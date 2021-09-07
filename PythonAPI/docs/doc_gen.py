@@ -91,7 +91,7 @@ class MarkdownFile:
 
     def inherit_join(self, inh):
         self._data = join([
-            self._data,'<div class="Inherited"><small><b>Inherited from ',inh,'</b></small></div>'])
+            self._data, '<small style="display:block;margin-top:-20px;">Inherited from ', inh, '</small></br>\n'])
 
     def note(self, buf):
         self._data = join([self._data, buf])
@@ -654,7 +654,7 @@ class Documentation:
         md.first_title()
         md.textn(
         "This reference contains all the details the Python API. To consult a previous reference for a specific CARLA release, change the documentation version using the panel in the bottom right corner.<br>"
-        +"This will change the whole documentation to a previous state. Remember to go back to <i>latest</i> to get the details of the current state of CARLA.<hr>")
+        +"This will change the whole documentation to a previous state. Remember that the <i>latest</i> version is the `dev` branch and may show features not available in any packaged versions of CARLA.<hr>")
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name

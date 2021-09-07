@@ -8,6 +8,7 @@
 #include "Game/CarlaStatics.h"
 #include "StopSignComponent.h"
 #include "YieldSignComponent.h"
+#include "SpeedLimitComponent.h"
 #include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
@@ -47,6 +48,55 @@ ATrafficLightManager::ATrafficLightManager()
     TSubclassOf<AActor> YieldSignModel = YieldFinder.Class;
     TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldSignModel);
     SignComponentModels.Add(carla::road::SignalType::YieldSign().c_str(), UYieldSignComponent::StaticClass());
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit30Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit30" ) );
+  if (SpeedLimit30Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit30Finder.Class;
+    SpeedLimitModels.Add("30", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit40Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit40" ) );
+  if (SpeedLimit40Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit40Finder.Class;
+    SpeedLimitModels.Add("40", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit50Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit50" ) );
+  if (SpeedLimit50Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit50Finder.Class;
+    SpeedLimitModels.Add("50", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit60Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit60" ) );
+  if (SpeedLimit60Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit60Finder.Class;
+    SpeedLimitModels.Add("60", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit70Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit70" ) );
+  if (SpeedLimit70Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit70Finder.Class;
+    SpeedLimitModels.Add("70", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit80Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit80" ) );
+  if (SpeedLimit80Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit80Finder.Class;
+    SpeedLimitModels.Add("80", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit90Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit90" ) );
+  if (SpeedLimit90Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit90Finder.Class;
+    SpeedLimitModels.Add("90", SpeedLimitModel);
   }
   TrafficLightGroupMissingId = -2;
 }
@@ -221,8 +271,7 @@ void ATrafficLightManager::MatchTrafficLightActorsWithOpenDriveSignals()
   TArray<AActor*> Actors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficLightBase::StaticClass(), Actors);
 
-  FString MapName = GetWorld()->GetName();
-  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::GetXODR(GetWorld()));
   auto Map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
 
   if (!Map)
@@ -342,6 +391,16 @@ bool MatchSignalAndActor(const carla::road::Signal &Signal, ATrafficSignBase* Cl
       }
       else if (Signal.GetSubtype() == "60" &&
         ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60)
+      {
+        return true;
+      }
+      else if (Signal.GetSubtype() == "70" &&
+        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60)
+      {
+        return true;
+      }
+      else if (Signal.GetSubtype() == "80" &&
+        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90)
       {
         return true;
       }
@@ -588,6 +647,64 @@ void ATrafficLightManager::SpawnSignals()
           TrafficSign->GetRootComponent(),
           FAttachmentTransformRules::KeepRelativeTransform);
       SignComponent->InitializeSign(GetMap().get());
+
+      auto ClosestWaypointToSignal =
+          GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+      if (ClosestWaypointToSignal)
+      {
+        auto SignalDistanceToRoad =
+            (GetMap()->ComputeTransform(ClosestWaypointToSignal.get()).location - CarlaTransform.location).Length();
+        double LaneWidth = GetMap()->GetLaneWidth(ClosestWaypointToSignal.get());
+
+        if(SignalDistanceToRoad < LaneWidth * 0.5)
+        {
+          carla::log_warning("Traffic sign",
+              TCHAR_TO_UTF8(*SignComponent->GetSignId()),
+              "overlaps a driving lane. Disabling collision...");
+
+          TArray<UPrimitiveComponent*> Primitives;
+          TrafficSign->GetComponents(Primitives);
+          for (auto* Primitive : Primitives)
+          {
+            Primitive->SetCollisionProfileName(TEXT("NoCollision"));
+          }
+        }
+      }
+      TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
+      TrafficSigns.Add(TrafficSign);
+    }
+    else if (Signal->GetType() == carla::road::SignalType::MaximumSpeed() &&
+            SpeedLimitModels.Contains(Signal->GetSubtype().c_str()))
+    {
+      auto CarlaTransform = Signal->GetTransform();
+      FTransform SpawnTransform(CarlaTransform);
+      FVector SpawnLocation = SpawnTransform.GetLocation();
+      FRotator SpawnRotation(SpawnTransform.GetRotation());
+      SpawnRotation.Yaw += 90;
+      // Remove road inclination
+      SpawnRotation.Roll = 0;
+      SpawnRotation.Pitch = 0;
+
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.Owner = this;
+      SpawnParams.SpawnCollisionHandlingOverride =
+          ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+      SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficSigns");
+      ATrafficSignBase * TrafficSign = GetWorld()->SpawnActor<ATrafficSignBase>(
+          SpeedLimitModels[Signal->GetSubtype().c_str()],
+          SpawnLocation,
+          SpawnRotation,
+          SpawnParams);
+
+      USpeedLimitComponent *SignComponent =
+          NewObject<USpeedLimitComponent>(TrafficSign);
+      SignComponent->SetSignId(Signal->GetSignalId().c_str());
+      SignComponent->RegisterComponent();
+      SignComponent->AttachToComponent(
+          TrafficSign->GetRootComponent(),
+          FAttachmentTransformRules::KeepRelativeTransform);
+      SignComponent->InitializeSign(GetMap().get());
+      SignComponent->SetSpeedLimit(Signal->GetValue());
 
       auto ClosestWaypointToSignal =
           GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);

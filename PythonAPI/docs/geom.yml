@@ -26,6 +26,24 @@
         type: float
         default: 0.0
     # --------------------------------------
+    - def_name: length
+      return: float
+      params:
+      doc: >
+        Computes the length of the vector.
+    # --------------------------------------
+    - def_name: squared_length
+      return: float
+      params:
+      doc: >
+        Computes the squared length of the vector.
+    # --------------------------------------
+    - def_name: make_unit_vector
+      return: carla.Vector3D
+      params:
+      doc: >
+        Returns a vector with the same direction and unitary length.
+    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
@@ -100,6 +118,80 @@
         type: float
         default: 0.0
     # --------------------------------------
+    - def_name: length
+      return: float
+      params:
+      doc: >
+        Computes the length of the vector.
+    # --------------------------------------
+    - def_name: squared_length
+      return: float
+      params:
+      doc: >
+        Computes the squared length of the vector.
+    # --------------------------------------
+    - def_name: make_unit_vector
+      return: carla.Vector3D
+      params:
+      doc: >
+        Returns a vector with the same direction and unitary length.
+    # --------------------------------------
+    - def_name: cross
+      return: carla.Vector3D
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the cross product between two vectors.
+    # --------------------------------------
+    - def_name: dot
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the dot product between two vectors.
+    # --------------------------------------
+    - def_name: distance
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the distance between two vectors.
+    # --------------------------------------
+    - def_name: distance_squared
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the squared distance between two vectors.
+    # --------------------------------------
+    - def_name: dot_2d
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the 2-dimensional dot product between two vectors.
+    # --------------------------------------
+    - def_name: distance_2d
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the 2-dimensional distance between two vectors.
+    # --------------------------------------
+    - def_name: distance_squared_2d
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the 2-dimensional squared distance between two vectors.
+    # --------------------------------------
     - def_name: __add__
       params:
       - param_name: other
@@ -140,6 +232,11 @@
       return: str
       doc: >
         Returns the axis values for the vector parsed as string.
+    # --------------------------------------
+    - def_name: __abs__
+      return: carla.Vector3D
+      doc: >
+        Returns a Vector3D with the absolute value of the components x, y and z.
     # --------------------------------------
 
   - class_name: Location
@@ -210,12 +307,18 @@
       doc: >
         Parses the axis' values to string.
     # --------------------------------------
+    - def_name: __abs__
+      return: carla.Location
+      doc: >
+        Returns a Location with the absolute value of the components x, y and z.
+    # --------------------------------------
+
 
   - class_name: Rotation
     # - DESCRIPTION ------------------------
     doc: >
       Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
-      
+
       <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br>
       <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
       *Unreal Engine's coordinates system*
@@ -258,7 +361,7 @@
         param_units: degrees
         doc: >
           X-axis rotation angle.
-      warning: The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations.  
+      warning: The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations.
     # --------------------------------------
     - def_name: get_forward_vector
       params:
@@ -410,7 +513,7 @@
         type: carla.Location
         var_units: meters
         doc: >
-          Center of the box, relative to its parent. 
+          Center of the box, relative to its parent.
       - param_name: extent
         type: carla.Vector3D
         param_units: meters

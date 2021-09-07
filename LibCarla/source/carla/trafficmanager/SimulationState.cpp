@@ -66,6 +66,10 @@ bool SimulationState::IsPhysicsEnabled(ActorId actor_id) const {
   return kinematic_state_map.at(actor_id).physics_enabled;
 }
 
+bool SimulationState::IsDormant(ActorId actor_id) const {
+  return kinematic_state_map.at(actor_id).is_dormant;
+}
+
 TrafficLightState SimulationState::GetTLS(ActorId actor_id) const {
   return tl_state_map.at(actor_id);
 }

@@ -130,7 +130,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
     log "Retrieving boost."
-    wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     # try to use the backup boost we have in Jenkins
     if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
       log "Using boost backup"
@@ -195,7 +195,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c3
+RPCLIB_PATCH=v2.2.1_c5
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
@@ -327,8 +327,8 @@ unset GTEST_BASENAME
 # -- Get Recast&Detour and compile it with libc++ ------------------------------
 # ==============================================================================
 
-RECAST_HASH=cdce4e
-RECAST_COMMIT=cdce4e1a270fdf1f3942d4485954cc5e136df1df
+RECAST_HASH=0b13b0
+RECAST_COMMIT=0b13b0d288ac96fdc5347ee38299511c6e9400db
 RECAST_BASENAME=recast-${RECAST_HASH}-${CXX_TAG}
 
 RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
@@ -433,6 +433,7 @@ XERCESC_REPO=https://ftp.cixug.es/apache//xerces/c/3/sources/xerces-c-${XERCESC_
 
 XERCESC_SRC_DIR=${XERCESC_BASENAME}-source
 XERCESC_INSTALL_DIR=${XERCESC_BASENAME}-install
+XERCESC_LIB=${XERCESC_INSTALL_DIR}/lib/libxerces-c.a
 
 if [[ -d ${XERCESC_INSTALL_DIR} ]] ; then
   log "Xerces-c already installed."
@@ -464,6 +465,9 @@ else
   rm -Rf ${XERCESC_BASENAME}.tar.gz
   rm -Rf ${XERCESC_SRC_DIR}
 fi
+
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
 if ${USE_CHRONO} ; then
 
@@ -542,6 +546,140 @@ if ${USE_CHRONO} ; then
   cp -p -r ${CHRONO_INSTALL_DIR}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
 
 fi
+
+# ==============================================================================
+# -- Get and compile Sqlite3 ---------------------------------------------------
+# ==============================================================================
+
+SQLITE_VERSION=sqlite-autoconf-3340100
+SQLITE_REPO=https://www.sqlite.org/2021/${SQLITE_VERSION}.tar.gz
+
+SQLITE_TAR=${SQLITE_VERSION}.tar.gz
+SQLITE_SOURCE_DIR=sqlite-src
+SQLITE_INSTALL_DIR=sqlite-install
+
+SQLITE_INCLUDE_DIR=${PWD}/${SQLITE_INSTALL_DIR}/include
+SQLITE_LIB=${PWD}/${SQLITE_INSTALL_DIR}/lib/libsqlite3.a
+SQLITE_EXE=${PWD}/${SQLITE_INSTALL_DIR}/bin/sqlite3
+
+if [[ -d ${SQLITE_INSTALL_DIR} ]] ; then
+  log "Sqlite already installed."
+else
+  log "Retrieving Sqlite3"
+  wget ${SQLITE_REPO}
+
+  log "Extracting Sqlite3"
+  tar -xzf ${SQLITE_TAR}
+  mv ${SQLITE_VERSION} ${SQLITE_SOURCE_DIR}
+
+  mkdir ${SQLITE_INSTALL_DIR}
+
+  pushd ${SQLITE_SOURCE_DIR} >/dev/null
+
+  export CFLAGS="-fPIC"
+  ./configure --prefix=${PWD}/../sqlite-install/
+  make
+  make install
+
+  popd >/dev/null
+
+  rm -Rf ${SQLITE_TAR}
+  rm -Rf ${SQLITE_SOURCE_DIR}
+fi
+
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+cp ${SQLITE_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+# ==============================================================================
+# -- Get and compile PROJ ------------------------------------------------------
+# ==============================================================================
+
+PROJ_VERSION=proj-7.2.1
+PROJ_REPO=https://download.osgeo.org/proj/${PROJ_VERSION}.tar.gz
+
+PROJ_TAR=${PROJ_VERSION}.tar.gz
+PROJ_SRC_DIR=proj-src
+PROJ_INSTALL_DIR=proj-install
+PROJ_INSTALL_DIR_FULL=${PWD}/${PROJ_INSTALL_DIR}
+PROJ_LIB=${PROJ_INSTALL_DIR_FULL}/lib/libproj.a
+
+if [[ -d ${PROJ_INSTALL_DIR} ]] ; then
+  log "PROJ already installed."
+else
+  log "Retrieving PROJ"
+  wget ${PROJ_REPO}
+
+  log "Extracting PROJ"
+  tar -xzf ${PROJ_TAR}
+  mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
+
+  mkdir ${PROJ_SRC_DIR}/build
+  mkdir ${PROJ_INSTALL_DIR}
+
+  pushd ${PROJ_SRC_DIR}/build >/dev/null
+
+  cmake -G "Ninja" .. \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
+      -DEXE_SQLITE3=${SQLITE_EXE} \
+      -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
+      -DCMAKE_BUILD_TYPE=Release -DBUILD_PROJINFO=OFF \
+      -DBUILD_CCT=OFF -DBUILD_CS2CS=OFF -DBUILD_GEOD=OFF -DBUILD_GIE=OFF \
+      -DBUILD_PROJ=OFF -DBUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX=${PROJ_INSTALL_DIR_FULL}
+  ninja
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${PROJ_TAR}
+  rm -Rf ${PROJ_SRC_DIR}
+
+fi
+
+cp ${PROJ_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+# ==============================================================================
+# -- Get and compile patchelf --------------------------------------------------
+# ==============================================================================
+
+PATCHELF_VERSION=0.12
+PATCHELF_REPO=https://github.com/NixOS/patchelf/archive/${PATCHELF_VERSION}.tar.gz
+
+PATCHELF_TAR=${PATCHELF_VERSION}.tar.gz
+PATCHELF_SOURCE_DIR=patchelf-src
+PATCHELF_INSTALL_DIR=patchelf-install
+
+PATCHELF_INCLUDE_DIR=${PWD}/${PATCHELF_INSTALL_DIR}/include
+PATCHELF_EXE=${PWD}/${PATCHELF_INSTALL_DIR}/bin/patchelf
+
+if [[ -d ${PATCHELF_INSTALL_DIR} ]] ; then
+  log "Patchelf already installed."
+else
+  log "Retrieving patchelf"
+  wget ${PATCHELF_REPO}
+
+  log "Extracting patchelf"
+  tar -xzf ${PATCHELF_TAR}
+  mv patchelf-${PATCHELF_VERSION} ${PATCHELF_SOURCE_DIR}
+
+  mkdir ${PATCHELF_INSTALL_DIR}
+
+  pushd ${PATCHELF_SOURCE_DIR} >/dev/null
+
+  ./bootstrap.sh
+  ./configure --prefix=${PWD}/../${PATCHELF_INSTALL_DIR}
+  make
+  make install
+
+  popd >/dev/null
+
+  rm -Rf ${PATCHELF_TAR}
+  rm -Rf ${PATCHELF_SOURCE_DIR}
+fi
+
+mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
+cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 
 # ==============================================================================
 # -- Generate Version.h --------------------------------------------------------

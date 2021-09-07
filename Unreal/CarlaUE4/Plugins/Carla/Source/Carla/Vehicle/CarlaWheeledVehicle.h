@@ -15,6 +15,7 @@
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
+#include "VehicleAnimInstance.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 
 #include "CoreMinimal.h"
@@ -28,6 +29,18 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
+
+UENUM()
+enum class EVehicleWheelLocation : uint8 {
+
+  FL_Wheel = 0,
+  FR_Wheel = 1,
+  BL_Wheel = 2,
+  BR_Wheel = 3,
+  //Use for bikes and bicycles
+  Front_Wheel = 0,
+  Back_Wheel = 1,
+};
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
@@ -163,6 +176,9 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void DeactivateVelocityControl();
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ShowDebugTelemetry(bool Enabled);
+
   /// @todo This function should be private to AWheeledVehicleAIController.
   void FlushVehicleControl();
 
@@ -227,6 +243,7 @@ public:
 protected:
 
   virtual void BeginPlay() override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
 
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshLightState(const FVehicleLightState &VehicleLightState);
@@ -259,12 +276,22 @@ private:
 
 public:
 
+  /// Set the rotation of the car wheels indicated by the user
+  /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
+  /// NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
+
   virtual FVector GetVelocity() const override;
 
 //-----CARSIM--------------------------------
   UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
   float CarSimOriginOffset = 150.f;
 //-------------------------------------------
+
 private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)

@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+#include "carla/Logging.h"
+
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
@@ -31,7 +33,6 @@ TrafficManagerLocal::TrafficManagerLocal(
 
     episode_proxy(episode_proxy),
     world(cc::World(episode_proxy)),
-    debug_helper(world.MakeDebugHelper()),
 
     localization_stage(LocalizationStage(vehicle_id_list,
                                          buffer_map,
@@ -42,7 +43,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          marked_for_removal,
                                          marked_for_rerouting,
                                          localization_frame,
-                                         debug_helper,
                                          random_devices)),
 
     collision_stage(CollisionStage(vehicle_id_list,
@@ -51,7 +51,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   debug_helper,
                                    random_devices)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
@@ -75,7 +74,9 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       collision_frame,
                                       tl_frame,
                                       world,
-                                      control_frame)),
+                                      control_frame,
+                                      random_devices,
+                                      local_map)),
 
     alsm(ALSM(registered_vehicles,
               buffer_map,
@@ -109,9 +110,22 @@ TrafficManagerLocal::~TrafficManagerLocal() {
 }
 
 void TrafficManagerLocal::SetupLocalMap() {
-  const carla::SharedPtr<cc::Map> world_map = world.GetMap();
+  const carla::SharedPtr<const cc::Map> world_map = world.GetMap();
   local_map = std::make_shared<InMemoryMap>(world_map);
-  local_map->SetUp();
+
+  auto files = episode_proxy.Lock()->GetRequiredFiles("TM");
+  if (!files.empty()) {
+    auto content = episode_proxy.Lock()->GetCacheFile(files[0], true);
+    if (content.size() != 0) {
+      local_map->Load(content);
+    } else {
+      log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
+      local_map->SetUp();
+    }
+  } else {
+    log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
+    local_map->SetUp();
+  }
 }
 
 void TrafficManagerLocal::Start() {
@@ -127,10 +141,12 @@ void TrafficManagerLocal::Run() {
   control_frame.reserve(INITIAL_SIZE);
   current_reserved_capacity = INITIAL_SIZE;
 
+  size_t last_frame = 0;
   while (run_traffic_manger.load()) {
 
     bool synchronous_mode = parameters.GetSynchronousMode();
     bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+    parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
@@ -150,9 +166,19 @@ void TrafficManagerLocal::Run() {
       previous_update_instance = current_instance;
     }
 
+    // Stop TM from processing the same frame more than once
+    if (!synchronous_mode) {
+      carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
+      if (timestamp.frame == last_frame) {
+        continue;
+      }
+      last_frame = timestamp.frame;
+    }
+
     std::unique_lock<std::mutex> registration_lock(registration_mutex);
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
+
 
     // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
     int current_registered_vehicles_state = registered_vehicles.GetState();
@@ -189,6 +215,7 @@ void TrafficManagerLocal::Run() {
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
+
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
@@ -196,7 +223,6 @@ void TrafficManagerLocal::Run() {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
-
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
@@ -210,7 +236,9 @@ void TrafficManagerLocal::Run() {
       step_end.store(true);
       step_end_trigger.notify_one();
     } else {
-      episode_proxy.Lock()->ApplyBatch(control_frame, false);
+      if (control_frame.size() > 0){
+        episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+      }
     }
   }
 }
@@ -286,6 +314,11 @@ void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_
   std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
   for (const ActorPtr &vehicle: vehicle_list) {
+    if (!is_custom_seed) {
+      seed = vehicle->GetId() + seed;
+    } else {
+      seed = 1 + seed;
+    }
     random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
   }
 }
@@ -358,6 +391,18 @@ void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
   parameters.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
+  parameters.SetRespawnDormantVehicles(mode_switch);
+}
+
+void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+  parameters.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
+}
+
+void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
+  parameters.SetMaxBoundaries(lower, upper);
+}
+
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   for (auto &elem : tl_to_freeze) {
     if (!elem->IsFrozen() || elem->GetState() != TLS::Red) {
@@ -390,6 +435,7 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
+  is_custom_seed = true;
   world.ResetAllTrafficLights();
 }
 

@@ -96,18 +96,28 @@ def define_sensors():
 
   else:
     sensors00 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': '0. cam-300x200'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '0. cam-1920x1080'}]
 
     sensors01 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 800, 'height': 600, 'fov': 100, 'label': '1. cam-800x600'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '1. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors02 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 1900, 'height': 1080, 'fov': 100, 'label': '2. cam-1900x1080'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '2. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 90.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors03 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': '3. cam-300x200'},
-                 {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.4, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': 'cam-300x200'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '3. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 90.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 270.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors04 = [{'type': 'sensor.lidar.ray_cast', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0,
                   'pts_per_sec': '100000', 'label': '4. LIDAR: 100k'}]
@@ -183,7 +193,7 @@ class CallBack(object):
             return self._current_fps
 
 
-def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, client):
+def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, client, tick):
   global sensors_callback
   sensors_ret = []
   blueprint_library = world.get_blueprint_library()
@@ -270,57 +280,59 @@ def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, clie
   # some settings
   percentagePedestriansRunning = 0.0      # how many pedestrians will run
   percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
-  # 1. take all the random locations to spawn
-  spawn_points = []
-  for i in range(n_walkers):
-    spawn_point = carla.Transform()
-    loc = world.get_random_location_from_navigation()
-    if (loc != None):
-      spawn_point.location = loc
-      spawn_points.append(spawn_point)
-  # 2. we spawn the walker object
-  batch = []
-  walker_speed = []
-  for spawn_point in spawn_points:
-    # set as not invincible
-    if walker_bp.has_attribute('is_invincible'):
-      walker_bp.set_attribute('is_invincible', 'false')
-    # set the max speed
-    if walker_bp.has_attribute('speed'):
-      # walking
-      walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
-    else:
-      print("Walker has no speed")
-      walker_speed.append(0.0)
-    batch.append(SpawnActor(walker_bp, spawn_point))
-  results = client.apply_batch_sync(batch, True)
-  walker_speed2 = []
-  for i in range(len(results)):
-    if results[i].error:
-      logging.error(results[i].error)
-    else:
-      walkers_list.append({"id": results[i].actor_id})
-      walker_speed2.append(walker_speed[i])
-  walker_speed = walker_speed2
-  # 3. we spawn the walker controller
-  batch = []
-  walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
-  for i in range(len(walkers_list)):
-    batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
-  results = client.apply_batch_sync(batch, True)
-  for i in range(len(results)):
-    if results[i].error:
-      logging.error(results[i].error)
-    else:
-      walkers_list[i]["con"] = results[i].actor_id
-    # 4. we put altogether the walkers and controllers id to get the objects from their id
-  for i in range(len(walkers_list)):
-    all_id.append(walkers_list[i]["con"])
-    all_id.append(walkers_list[i]["id"])
+  if n_walkers > 0:
+    # 1. take all the random locations to spawn
+    spawn_points = []
+    for i in range(n_walkers):
+      spawn_point = carla.Transform()
+      loc = world.get_random_location_from_navigation()
+      if (loc != None):
+        spawn_point.location = loc
+        spawn_points.append(spawn_point)
+    # 2. we spawn the walker object
+    batch = []
+    walker_speed = []
+    for spawn_point in spawn_points:
+      # set as not invincible
+      if walker_bp.has_attribute('is_invincible'):
+        walker_bp.set_attribute('is_invincible', 'false')
+      # set the max speed
+      if walker_bp.has_attribute('speed'):
+        # walking
+        walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
+      else:
+        print("Walker has no speed")
+        walker_speed.append(0.0)
+      batch.append(SpawnActor(walker_bp, spawn_point))
+    results = client.apply_batch_sync(batch, True)
+    walker_speed2 = []
+    for i in range(len(results)):
+      if results[i].error:
+        logging.error(results[i].error)
+      else:
+        walkers_list.append({"id": results[i].actor_id})
+        walker_speed2.append(walker_speed[i])
+    walker_speed = walker_speed2
+    # 3. we spawn the walker controller
+    batch = []
+    walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+    for i in range(len(walkers_list)):
+      batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+    results = client.apply_batch_sync(batch, True)
+    for i in range(len(results)):
+      if results[i].error:
+        logging.error(results[i].error)
+      else:
+        walkers_list[i]["con"] = results[i].actor_id
+      # 4. we put altogether the walkers and controllers id to get the objects from their id
+    for i in range(len(walkers_list)):
+      all_id.append(walkers_list[i]["con"])
+      all_id.append(walkers_list[i]["id"])
+
   all_actors = world.get_actors(all_id)
 
-  # wait for a tick to ensure client receives the last transform of the walkers we have just created
-  world.wait_for_tick()
+  # ensures client has received the last transform of the walkers we have just created
+  tick()
 
   # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
   # set how many pedestrians can cross the road
@@ -369,7 +381,7 @@ def run_benchmark(world, sensors, n_vehicles, n_walkers, client, debug=False):
   tick = world.tick if args.sync else world.wait_for_tick
   set_world_settings(world, args)
 
-  vehicles_list, walkers_list, all_id, all_actors, sensors_ret = create_environment(world, sensors, n, n_walkers, spawn_points, client)
+  vehicles_list, walkers_list, all_id, all_actors, sensors_ret = create_environment(world, sensors, n, n_walkers, spawn_points, client, tick)
 
   if sensors_ret:
     sensor_list = sensors_ret
@@ -461,7 +473,7 @@ def get_total(records):
 def get_system_specs():
   str_system = ""
   cpu_info = cpuinfo.get_cpu_info()
-  str_system += "CPU {} {}. ".format(cpu_info['brand'], cpu_info['family'])
+  str_system += "CPU {} {}. ".format(cpu_info.get('brand', 'Unknown'), cpu_info.get('family', 'Unknown'))
 
   memory_info = psutil.virtual_memory()
   str_system += "{:03.2f} GB RAM memory. ".format(memory_info.total / (1024 * 1024 * 1024))
@@ -497,7 +509,7 @@ def main(args):
 
   try:
     client = carla.Client(args.host, int(args.port))
-    client.set_timeout(60.0)
+    client.set_timeout(150.0)
     pygame.init()
 
     records = {}
@@ -511,6 +523,7 @@ def main(args):
 
     for town in maps:
       world = client.load_world(town)
+      time.sleep(5)
 
       # set to async mode
       set_world_settings(world)

@@ -112,6 +112,18 @@ namespace parser {
             log_debug("Added dependency to signal ", signal_id, ":", dependency_id, dependency_type);
             map_builder.AddDependencyToSignal(signal_id, dependency_id, dependency_type);
           }
+          for (pugi::xml_node position_node : signal_node.children("positionInertial")) {
+            const double x = position_node.attribute("x").as_double();
+            const double y = position_node.attribute("y").as_double();
+            const double z = position_node.attribute("z").as_double();
+            const double hdg = position_node.attribute("hdg").as_double();
+            const double inertial_pitch = position_node.attribute("pitch").as_double();
+            const double inertial_roll = position_node.attribute("roll").as_double();
+            map_builder.AddSignalPositionInertial(
+                signal_id,
+                x, y, z,
+                hdg, inertial_pitch, inertial_roll);
+          }
         }
         for (pugi::xml_node signal_reference_node : signals_node.children("signalReference")) {
           const double s_position = signal_reference_node.attribute("s").as_double();

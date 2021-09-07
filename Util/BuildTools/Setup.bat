@@ -30,6 +30,7 @@ set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
 set CARLA_DEPENDENCIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\CarlaDependencies\
 set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Binaries\Win64
+set CARLA_PYTHON_DEPENDENCIES=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set USE_CHRONO=false
 
 :arg-parse
@@ -53,8 +54,8 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-rem If not defined, use Visual Studio 2017 as tool set
-if "%TOOLSET%" == "" set TOOLSET=msvc-14.1
+rem If not defined, use Visual Studio 2019 as tool set
+if "%TOOLSET%" == "" set TOOLSET=msvc-14.2
 
 rem If is not set, set the number of parallel jobs to the number of CPU threads
 if "%NUMBER_OF_ASYNC_JOBS%" == "" set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
@@ -185,12 +186,31 @@ copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\rational.hpp" "%INSTALLATION_DIR%b
 copy /Y "%INSTALLATION_DIR%..\Util\BoostFiles\read.hpp" "%INSTALLATION_DIR%boost-%BOOST_VERSION%-install\include\boost\geometry\io\wkt\read.hpp"
 
 rem ============================================================================
-rem -- Download and install Xercesc ----------------------------------------------
+rem -- Download and install Xercesc --------------------------------------------
 rem ============================================================================
 
 echo %FILE_N% Installing Xercesc...
 call "%INSTALLERS_DIR%install_xercesc.bat"^
  --build-dir "%INSTALLATION_DIR%"
+copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+
+rem ============================================================================
+rem -- Download and install Sqlite3 --------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing Sqlite3
+call "%INSTALLERS_DIR%install_sqlite3.bat"^
+ --build-dir "%INSTALLATION_DIR%"
+copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
+
+rem ============================================================================
+rem -- Download and install PROJ --------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing PROJ
+call "%INSTALLERS_DIR%install_proj.bat"^
+ --build-dir "%INSTALLATION_DIR%"
+copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib
 
 rem ============================================================================
 rem -- Download and install Chrono ----------------------------------------------
@@ -213,17 +233,11 @@ if %USE_CHRONO% == true (
     if not exist "%CARLA_DEPENDENCIES_FOLDER%dll" (
         mkdir "%CARLA_DEPENDENCIES_FOLDER%dll"
     )
-    if not exist "%CARLA_BINARIES_FOLDER%" (
-        mkdir %CARLA_BINARIES_FOLDER%
-    )
     echo "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%chrono-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
     copy "%INSTALLATION_DIR%chrono-install\lib\*.lib" "%CARLA_DEPENDENCIES_FOLDER%lib\*.lib" > NUL
     copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_DEPENDENCIES_FOLDER%dll\*.dll" > NUL
     xcopy /Y /S /I "%INSTALLATION_DIR%eigen-install\include\*" "%CARLA_DEPENDENCIES_FOLDER%include\*" > NUL
-    rem Workaround for unreal not finding the .dll files
-    copy "%INSTALLATION_DIR%chrono-install\bin\*.dll" "%CARLA_BINARIES_FOLDER%\*.dll" > NUL
-    
 )
 
 rem ============================================================================
@@ -268,7 +282,7 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")
 >>"%CMAKE_CONFIG_FILE%" echo   # Prevent exceptions
->>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DBOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY) 
+>>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DBOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
 >>"%CMAKE_CONFIG_FILE%" echo   add_compile_options(/EHsc)
 >>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DASIO_NO_EXCEPTIONS)
 >>"%CMAKE_CONFIG_FILE%" echo   add_definitions(-DBOOST_NO_EXCEPTIONS)
@@ -325,7 +339,8 @@ rem ============================================================================
     echo     --boost-toolset [T] -^> Toolset corresponding to your compiler ^(default=^*^):
     echo                               Visual Studio 2013 -^> msvc-12.0
     echo                               Visual Studio 2015 -^> msvc-14.0
-    echo                               Visual Studio 2017 -^> msvc-14.1 *
+    echo                               Visual Studio 2017 -^> msvc-14.1
+    echo                               Visual Studio 2019 -^> msvc-14.2 *
     goto good_exit
 
 :error_cl

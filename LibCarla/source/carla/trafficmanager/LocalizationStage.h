@@ -3,8 +3,6 @@
 
 #include <memory>
 
-#include "carla/client/DebugHelper.h"
-
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
@@ -38,7 +36,6 @@ private:
   std::vector<ActorId>& marked_for_removal;
   std::unordered_set<ActorId>& marked_for_rerouting;
   LocalizationFrame &output_array;
-  cc::DebugHelper &debug_helper;
   LaneChangeLocationMap last_lane_change_location;
   ActorIdSet vehicles_at_junction;
   using SimpleWaypointPair = std::pair<SimpleWaypointPtr, SimpleWaypointPtr>;
@@ -71,7 +68,6 @@ public:
                     std::vector<ActorId>& marked_for_removal,
                     std::unordered_set<ActorId>& marked_for_rerouting,
                     LocalizationFrame &output_array,
-                    cc::DebugHelper &debug_helper,
                     RandomGeneratorMap &random_devices);
 
   void Update(const unsigned long index) override;

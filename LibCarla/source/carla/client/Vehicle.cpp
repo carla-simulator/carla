@@ -44,6 +44,10 @@ namespace client {
     }
   }
 
+  void Vehicle::ShowDebugTelemetry(bool enabled) {
+    GetEpisode().Lock()->ShowVehicleDebugTelemetry(*this, enabled);
+  }
+
   void Vehicle::ApplyControl(const Control &control) {
     if (!_is_control_sticky || (control != _control)) {
       GetEpisode().Lock()->ApplyControlToVehicle(*this, control);
@@ -57,6 +61,14 @@ namespace client {
 
   void Vehicle::SetLightState(const LightState &light_state) {
     GetEpisode().Lock()->SetLightStateToVehicle(*this, rpc::VehicleLightState(light_state));
+  }
+
+  void Vehicle::SetWheelSteerDirection(WheelLocation wheel_location, float angle_in_deg) {
+    GetEpisode().Lock()->SetWheelSteerDirection(*this, wheel_location, angle_in_deg);
+  }
+
+  float Vehicle::GetWheelSteerAngle(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelSteerAngle(*this, wheel_location);
   }
 
   Vehicle::Control Vehicle::GetControl() const {
@@ -96,8 +108,20 @@ namespace client {
     GetEpisode().Lock()->UseCarSimRoad(*this, enabled);
   }
 
-  void Vehicle::EnableChronoPhysics(uint64_t MaxSubsteps, float MaxSubstepDeltaTime) {
-    GetEpisode().Lock()->EnableChronoPhysics(*this, MaxSubsteps, MaxSubstepDeltaTime);
+  void Vehicle::EnableChronoPhysics(
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) {
+    GetEpisode().Lock()->EnableChronoPhysics(*this,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        VehicleJSON,
+        PowertrainJSON,
+        TireJSON,
+        BaseJSONPath);
   }
 
 } // namespace client

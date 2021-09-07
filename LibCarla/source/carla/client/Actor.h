@@ -24,9 +24,7 @@ namespace client {
 
     explicit Actor(ActorInitializer init)
       : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(init.GetDisplayId()),
-        Super(std::move(init)) {
-          _is_alive = IsAliveInEpisode();
-        }
+        Super(std::move(init)) {}
 
     using ActorState::GetBoundingBox;
 
@@ -104,12 +102,18 @@ namespace client {
     /// Enable or disable gravity on this actor.
     void SetEnableGravity(bool enabled = true);
 
-    /// @warning This method only checks whether this instance of Actor has
-    /// called the Destroy() method, it does not check whether the actor is
-    /// actually alive in the simulator.
-    bool IsAlive() {
-      _is_alive = _is_alive && GetEpisode().IsValid() && IsAliveInEpisode();
-      return _is_alive;
+    rpc::ActorState GetActorState() const;
+
+    bool IsAlive() const {
+      return GetEpisode().IsValid() && (GetActorState() != rpc::ActorState::PendingKill && GetActorState() != rpc::ActorState::Invalid) ;
+    }
+
+    bool IsDormant() const {
+      return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Dormant;
+    }
+
+    bool IsActive() const {
+      return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Active;
     }
 
     /// Tell the simulator to destroy this Actor, and return whether the actor
@@ -125,11 +129,6 @@ namespace client {
       return Super::GetActorDescription();
     }
 
-  private:
-
-    bool IsAliveInEpisode() const;
-
-    bool _is_alive = true;
   };
 
 } // namespace client

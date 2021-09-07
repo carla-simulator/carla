@@ -30,7 +30,8 @@ float DeviationDotProduct(const cg::Location &reference_location,
   next_vector = next_vector.MakeSafeUnitVector(EPSILON);
   cg::Vector3D heading_vector_flat(heading_vector.x, heading_vector.y, 0);
   heading_vector_flat = heading_vector_flat.MakeSafeUnitVector(EPSILON);
-  const float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+  float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+  dot_product = std::max(0.0f, std::min(dot_product, 1.0f));
   return dot_product;
 }
 
@@ -61,7 +62,7 @@ TargetWPInfo GetTargetWaypoint(const Buffer &waypoint_buffer, const float &targe
   const SimpleWaypointPtr &buffer_front = waypoint_buffer.front();
   uint64_t startPosn = static_cast<uint64_t>(std::fabs(target_point_distance * INV_MAP_RESOLUTION));
   uint64_t index = 0;
-  /// Condition to determine forward or backward scanning of  WayPoint Buffer.
+  /// Condition to determine forward or backward scanning of waypoint buffer.
 
   if (startPosn < waypoint_buffer.size()) {
     bool mScanForward = false;

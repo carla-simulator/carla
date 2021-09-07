@@ -9,7 +9,6 @@
 #include "Carla/OpenDrive/OpenDriveActor.h"
 #include "Commandlets/Commandlet.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-
 #include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
@@ -75,6 +74,12 @@ public:
   /// structure.
   void LoadWorld(FAssetData &AssetData);
 
+  /// Loads a UWorld object contained in Carla BaseTile into @a AssetData data
+  /// structure.
+  void LoadWorldTile(FAssetData &AssetData);
+
+  void LoadLargeMapWorld(FAssetData &AssetData);
+
   /// Spawns all the static meshes located in @a AssetsPaths inside the World.
   /// There is an option to use Carla materials by setting @a bUseCarlaMaterials
   /// to true, otherwise it will use RoadRunner materials.
@@ -83,7 +88,9 @@ public:
   /// @pre World is expected to be previously loaded
   TArray<AStaticMeshActor *> SpawnMeshesToWorld(
       const TArray<FString> &AssetsPaths,
-      bool bUseCarlaMaterials);
+      bool bUseCarlaMaterials,
+      int i = -1,
+      int j = -1);
 
   /// Saves the current World, contained in @a AssetData, into @a DestPath
   /// composed of @a PackageName and with @a WorldName.
@@ -91,7 +98,8 @@ public:
       FAssetData &AssetData,
       const FString &PackageName,
       const FString &DestPath,
-      const FString &WorldName);
+      const FString &WorldName,
+      bool bGenerateSpawnPoints = true);
 
   /// Destroys all the previously spawned actors stored in @a SpawnedActors
   void DestroySpawnedActorsInWorld(TArray<AStaticMeshActor *> &SpawnedActors);
@@ -116,6 +124,9 @@ public:
   /// all the props inside the world and saves it in .umap format
   /// in a destination path built from @a PackageName and @a MapDestPath.
   void PreparePropsForCooking(FString &PackageName, const TArray<FString> &PropsPaths, FString &MapDestPath);
+
+  /// Return if there is any tile between the assets to cook
+  bool IsMapInTiles(const TArray<FString> &AssetsPaths);
 
 public:
 
@@ -149,25 +160,33 @@ private:
   UPROPERTY()
   UWorld *World;
 
-  /// Workaround material for MarkingNodes mesh
-  UPROPERTY()
-  UMaterial *MarkingNodeMaterial;
-
   /// Workaround material for the RoadNode mesh
   UPROPERTY()
-  UMaterial *RoadNodeMaterial;
+  UMaterialInstance *RoadNodeMaterial;
 
-  /// Workaround material for the second material for the MarkingNodes
+  /// Material to apply to curbs on the road
   UPROPERTY()
-  UMaterial *MarkingNodeMaterialAux;
+  UMaterialInstance *CurbNodeMaterialInstance;
+
+  /// Material to apply to gutters on the road
+  UPROPERTY()
+  UMaterialInstance *GutterNodeMaterialInstance;
+
+  /// Workaround material for the center lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeYellow;
+
+  /// Workaround material for exterior lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeWhite;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()
-  UMaterial *TerrainNodeMaterial;
+  UMaterialInstance *TerrainNodeMaterialInstance;
 
   /// Workaround material for the SidewalkNodes
   UPROPERTY()
-  UMaterial *SidewalkNodeMaterial;
+  UMaterialInstance *SidewalkNodeMaterialInstance;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder
