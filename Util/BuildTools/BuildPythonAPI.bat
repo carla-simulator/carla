@@ -109,7 +109,7 @@ rem Build for Python 3
 rem
 if %BUILD_FOR_PYTHON3%==true (
     echo Building Python API for Python 3.
-    py -3 setup.py bdist_egg bdist_wheel
+    py -3.7 setup.py bdist_egg bdist_wheel
     if %errorlevel% neq 0 goto error_build_wheel
 )
 
