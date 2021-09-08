@@ -45,6 +45,9 @@ public:
 
   void OnComponentDestroyed(bool bDestroyingHierarchy) override;
 
+  UFUNCTION(BlueprintCallable, Category = "Carla Light")
+  void RegisterLight();
+
   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
   void UpdateLights();
 
