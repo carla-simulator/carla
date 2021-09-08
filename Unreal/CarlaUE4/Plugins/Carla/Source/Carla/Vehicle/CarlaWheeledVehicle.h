@@ -42,6 +42,17 @@ enum class EVehicleWheelLocation : uint8 {
   Back_Wheel = 1,
 };
 
+UENUM(BlueprintType)
+enum class EVehicleDoor : uint8 {
+  Door_FL = 0,
+  Door_FR = 1,
+  Door_RL = 2,
+  Door_RR = 3,
+  Door_Hood = 4,
+  Door_Truck = 5,
+  Door_All = 99
+};
+
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
 class CARLA_API ACarlaWheeledVehicle : public AWheeledVehicle
@@ -251,6 +262,12 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor)
   void AdjustVehicleBounds();
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
+  TArray<float> DoorAnimAlpha;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
+  TArray<float> DoorAnimMaxAngle;
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).
@@ -284,6 +301,22 @@ public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void OpenDoor(EVehicleDoor DoorIdx);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void CloseDoor(EVehicleDoor DoorIdx);
+
+  UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "CARLA Wheeled Vehicle")
+  void OpenDoorAnim(EVehicleDoor DoorIdx);
+
+  virtual void OpenDoorAnim_Implementation(EVehicleDoor DoorIdx);
+
+  UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "CARLA Wheeled Vehicle")
+  void CloseDoorAnim(EVehicleDoor DoorIdx);
+
+  virtual void CloseDoorAnim_Implementation(EVehicleDoor DoorIdx);
 
   virtual FVector GetVelocity() const override;
 

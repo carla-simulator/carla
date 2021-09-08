@@ -583,3 +583,59 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
 }
+
+void ACarlaWheeledVehicle::OpenDoor(EVehicleDoor DoorIdx) {
+  // We check if the car has any door configured
+  if (DoorAnimMaxAngle.Num() == 0) {
+    UE_LOG(LogTemp, Warning, TEXT("The car has no doors configured."));
+    return;
+  }
+
+  // door exist
+  if (int(DoorIdx) > DoorAnimMaxAngle.Num() && DoorIdx != EVehicleDoor::Door_All) {
+    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    return;
+  }
+
+  if (DoorIdx == EVehicleDoor::Door_All) {
+    for (int i = 0; i < DoorAnimMaxAngle.Num(); i++)
+      OpenDoorAnim(EVehicleDoor(i));
+
+    return;
+  }
+
+  OpenDoorAnim(DoorIdx);
+}
+
+void ACarlaWheeledVehicle::CloseDoor(EVehicleDoor DoorIdx) {
+  // We check if the car has any door configured
+  if (DoorAnimMaxAngle.Num() == 0) {
+    UE_LOG(LogTemp, Warning, TEXT("The car has no doors configured."));
+    return;
+  }
+
+  // door exist
+  if (int(DoorIdx) > DoorAnimMaxAngle.Num() && DoorIdx != EVehicleDoor::Door_All) {
+    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    return;
+  }
+
+  if (DoorIdx == EVehicleDoor::Door_All) {
+    for (int i = 0; i < DoorAnimMaxAngle.Num(); i++)
+      CloseDoorAnim(EVehicleDoor(i));
+
+    return;
+  }
+
+  CloseDoorAnim(DoorIdx);
+}
+
+void ACarlaWheeledVehicle::OpenDoorAnim_Implementation(EVehicleDoor DoorIdx)
+{
+  UE_LOG(LogTemp, Warning, TEXT("OpenDoorAnim_Implementation."));
+}
+
+void ACarlaWheeledVehicle::CloseDoorAnim_Implementation(EVehicleDoor DoorIdx)
+{
+  UE_LOG(LogTemp, Warning, TEXT("CloseDoorAnim_Implementation."));
+}
