@@ -17,6 +17,7 @@
 #include "WheeledVehicleMovementComponent4W.h"
 #include "VehicleAnimInstance.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
+#include "Components/TimelineComponent.h"
 
 #include "CoreMinimal.h"
 
@@ -262,11 +263,20 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor)
   void AdjustVehicleBounds();
 
+  UFUNCTION(BlueprintCallable, CallInEditor)
+  void ConfigureAnimationData();
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
+  TArray<float> DoorAnimMaxAngle;
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
   TArray<float> DoorAnimAlpha;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  TArray<float> DoorAnimMaxAngle;
+  UTimelineComponent* DoorTimelineDefault;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
+  TArray<UTimelineComponent*> DoorTimeline;
 
 private:
 
