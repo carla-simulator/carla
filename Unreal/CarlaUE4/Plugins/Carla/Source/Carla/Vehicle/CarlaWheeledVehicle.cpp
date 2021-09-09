@@ -9,6 +9,7 @@
 #include "Engine/CollisionProfile.h"
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
+#include "UObject/UObjectGlobals.h"
 
 #include "PhysXPublic.h"
 #include "PhysXVehicleManager.h"
@@ -42,6 +43,8 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
+
+  DoorTimelineDefault = CreateDefaultSubobject<UTimelineComponent>(TEXT("Timeline"));
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -582,6 +585,29 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
+}
+
+void ACarlaWheeledVehicle::ConfigureAnimationData()
+{
+  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: NumDoors: %d"), DoorAnimMaxAngle.Num());
+
+  DoorAnimAlpha.Init(1.0, DoorAnimMaxAngle.Num());
+  DoorTimeline.Reset();
+
+  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: DoorAnimAlpha: %d"), DoorAnimAlpha.Num());
+
+  for (int i = 0; i < DoorAnimMaxAngle.Num(); i++) {
+    //DoorAnimAlpha.Emplace(DoorAnimMaxAngle[i] * 2.0f);
+
+    //UE_LOG(LogTemp, Warning, TEXT("   DoorAnimAlpha: %d %d"), DoorAnimAlpha[i], DoorAnimAlpha.Num());
+    //UTimelineComponent* Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Timeline_%d"), i);
+    FName NameTimeline = FName(TEXT("Timeline_%d"), i);
+    UTimelineComponent* Timeline = DuplicateObject<UTimelineComponent>(DoorTimelineDefault, nullptr);
+    DoorTimeline.Add(Timeline);
+  }
+
+  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: DoorTimeline: %d"), DoorTimeline.Num());
+
 }
 
 void ACarlaWheeledVehicle::OpenDoor(EVehicleDoor DoorIdx) {
