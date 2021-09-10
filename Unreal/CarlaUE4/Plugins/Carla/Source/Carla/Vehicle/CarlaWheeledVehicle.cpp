@@ -664,12 +664,14 @@ void ACarlaWheeledVehicle::CloseDoor(EVehicleDoor DoorIdx) {
   CloseDoorAnim(DoorIdx);
 }
 
-void ACarlaWheeledVehicle::OpenDoorAnim_Implementation(EVehicleDoor DoorIdx)
+void ACarlaWheeledVehicle::OpenDoorAnim(EVehicleDoor DoorIdx)
 {
   UE_LOG(LogTemp, Warning, TEXT("OpenDoorAnim_Implementation."));
+  DoorTimelineDefault->Play();
 }
 
-void ACarlaWheeledVehicle::CloseDoorAnim_Implementation(EVehicleDoor DoorIdx)
+void ACarlaWheeledVehicle::CloseDoorAnim(EVehicleDoor DoorIdx)
 {
   UE_LOG(LogTemp, Warning, TEXT("CloseDoorAnim_Implementation."));
+    DoorTimelineDefault->Reverse();
 }
