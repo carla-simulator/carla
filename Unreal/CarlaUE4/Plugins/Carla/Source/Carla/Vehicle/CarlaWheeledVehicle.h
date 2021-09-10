@@ -341,15 +341,11 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoor(EVehicleDoor DoorIdx);
 
-  UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "CARLA Wheeled Vehicle")
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoorAnim(EVehicleDoor DoorIdx);
 
-  virtual void OpenDoorAnim_Implementation(EVehicleDoor DoorIdx);
-
-  UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "CARLA Wheeled Vehicle")
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoorAnim(EVehicleDoor DoorIdx);
-
-  virtual void CloseDoorAnim_Implementation(EVehicleDoor DoorIdx);
 
   virtual FVector GetVelocity() const override;
 
