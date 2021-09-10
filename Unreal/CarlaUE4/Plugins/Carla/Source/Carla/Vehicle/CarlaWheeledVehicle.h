@@ -265,7 +265,7 @@ protected:
   void AdjustVehicleBounds();
 
   UFUNCTION(BlueprintCallable, CallInEditor)
-  void ConfigureAnimationData();
+  void ConfigureDoorAnimationData();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
   TArray<float> DoorAnimMaxAngle;
