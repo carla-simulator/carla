@@ -600,7 +600,7 @@ void ACarlaWheeledVehicle::ConfigureDoorAnimationData()
 {
   UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureDoorAnimationData: NumDoors: %d"), DoorAnimMaxAngle.Num());
 
-  DoorAnimAlpha.Init(1.0, DoorAnimMaxAngle.Num());
+  DoorAnimAlpha.Init(0.0, DoorAnimMaxAngle.Num());
   DoorTimeline.Reset();
 
   UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureDoorAnimationData: DoorAnimAlpha: %d"), DoorAnimAlpha.Num());
