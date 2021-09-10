@@ -18,6 +18,7 @@
 #include "VehicleAnimInstance.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Runtime/Engine/Classes/Curves/CurveFloat.h"
 
 #include "CoreMinimal.h"
 
@@ -277,6 +278,28 @@ protected:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
   TArray<UTimelineComponent*> DoorTimeline;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
+  class UCurveFloat* CurveDoor;
+
+  FOnTimelineFloat InterpFunction{};
+  FOnTimelineEvent TimelineFinished{};
+  FOnTimelineEvent TimelineUpdate{};
+
+  UFUNCTION()
+  void DoorTimelineUpdate(float value)
+  {
+    UE_LOG(LogTemp, Warning, TEXT("DoorTimelineUpdate: %f"), value);
+
+    for(int i = 0; i < DoorAnimAlpha.Num(); i++)
+      DoorAnimAlpha[i] = value;
+  }
+
+  UFUNCTION()
+  void DoorTimelineFinished()
+  {
+    UE_LOG(LogTemp, Warning, TEXT("DoorTimelineFinished"));
+  }
 
 private:
 
