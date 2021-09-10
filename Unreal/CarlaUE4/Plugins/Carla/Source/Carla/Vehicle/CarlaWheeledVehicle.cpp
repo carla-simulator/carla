@@ -45,6 +45,13 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 
   DoorTimelineDefault = CreateDefaultSubobject<UTimelineComponent>(TEXT("Timeline"));
+
+  InterpFunction.BindUFunction(this, FName("DoorTimelineUpdate"));
+  TimelineFinished.BindUFunction(this, FName("DoorTimelineFinished"));
+//  TimelineUpdate.BindUFunction(this, FName("DoorTimelineUpdate"));
+
+  //DoorTimelineDefault->SetTimelineLength(5.0f);
+  //DoorTimelineDefault->SetFloatCurve(CurveDoor, TEXT("DoorTimelineCurve"));
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -597,16 +604,14 @@ void ACarlaWheeledVehicle::ConfigureAnimationData()
   UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: DoorAnimAlpha: %d"), DoorAnimAlpha.Num());
 
   for (int i = 0; i < DoorAnimMaxAngle.Num(); i++) {
-    //DoorAnimAlpha.Emplace(DoorAnimMaxAngle[i] * 2.0f);
-
-    //UE_LOG(LogTemp, Warning, TEXT("   DoorAnimAlpha: %d %d"), DoorAnimAlpha[i], DoorAnimAlpha.Num());
-    //UTimelineComponent* Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Timeline_%d"), i);
     FName NameTimeline = FName(TEXT("Timeline_%d"), i);
     UTimelineComponent* Timeline = DuplicateObject<UTimelineComponent>(DoorTimelineDefault, nullptr);
     DoorTimeline.Add(Timeline);
   }
 
-  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: DoorTimeline: %d"), DoorTimeline.Num());
+  DoorTimelineDefault->AddInterpFloat(CurveDoor, InterpFunction);
+  DoorTimelineDefault->SetTimelinePostUpdateFunc(TimelineUpdate);
+  DoorTimelineDefault->SetTimelineFinishedFunc(TimelineFinished);
 
 }
 
