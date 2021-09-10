@@ -126,6 +126,8 @@ void ACarlaWheeledVehicle::BeginPlay()
   Vehicle4W->WheelSetups = NewWheelSetups;
 
   LastPhysicsControl = GetVehiclePhysicsControl();
+
+  ConfigureDoorAnimationData();
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -594,14 +596,14 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
   ShowDebugTelemetry(false);
 }
 
-void ACarlaWheeledVehicle::ConfigureAnimationData()
+void ACarlaWheeledVehicle::ConfigureDoorAnimationData()
 {
-  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: NumDoors: %d"), DoorAnimMaxAngle.Num());
+  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureDoorAnimationData: NumDoors: %d"), DoorAnimMaxAngle.Num());
 
   DoorAnimAlpha.Init(1.0, DoorAnimMaxAngle.Num());
   DoorTimeline.Reset();
 
-  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: DoorAnimAlpha: %d"), DoorAnimAlpha.Num());
+  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureDoorAnimationData: DoorAnimAlpha: %d"), DoorAnimAlpha.Num());
 
   for (int i = 0; i < DoorAnimMaxAngle.Num(); i++) {
     FName NameTimeline = FName(TEXT("Timeline_%d"), i);
@@ -613,6 +615,7 @@ void ACarlaWheeledVehicle::ConfigureAnimationData()
   DoorTimelineDefault->SetTimelinePostUpdateFunc(TimelineUpdate);
   DoorTimelineDefault->SetTimelineFinishedFunc(TimelineFinished);
 
+  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: DoorTimeline: %d"), DoorTimeline.Num());
 }
 
 void ACarlaWheeledVehicle::OpenDoor(EVehicleDoor DoorIdx) {
