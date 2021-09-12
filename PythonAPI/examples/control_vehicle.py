@@ -1,4 +1,4 @@
-"""Example of automatic vehicle control from client side."""
+"""Testing vehicle self control by specific map, weather condition and speed then getting feedback."""
 
 from __future__ import print_function
 
@@ -8,6 +8,7 @@ import datetime
 import logging
 import math
 import os
+import textwrap
 import numpy.random as random
 import re
 import sys
@@ -462,6 +463,9 @@ class CollisionSensor(object):
             return
         actor_type = get_actor_display_name(event.other_actor)
         self.hud.notification('Collision with %r' % actor_type)
+        f = open("collisions.csv", "a")
+        f.write('%r,%r\n' % (actor_type, self.hud.simulation_time))
+        f.close()
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
         self.history.append((event.frame, intensity))
@@ -498,6 +502,9 @@ class LaneInvasionSensor(object):
         lane_types = set(x.type for x in event.crossed_lane_markings)
         text = ['%r' % str(x).split()[-1] for x in lane_types]
         self.hud.notification('Crossed line %s' % ' and '.join(text))
+        f = open("invasions.csv", "a")
+        f.write('%s,%r\n' % (' and '.join(text), self.hud.simulation_time))
+        f.close()
 
 # ==============================================================================
 # -- GnssSensor --------------------------------------------------------
@@ -651,6 +658,16 @@ class CameraManager(object):
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
 
+def list_options(client):
+    maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
+    indent = 4 * ' '
+    def wrap(text):
+        return '\n'.join(textwrap.wrap(text, initial_indent=indent, subsequent_indent=indent))
+    print('weather presets:\n')
+    print(wrap(', '.join(x for _, x in find_weather_presets())) + '.\n')
+    print('available maps:\n')
+    print(wrap(', '.join(sorted(maps))) + '.\n')
+
 # ==============================================================================
 # -- Game Loop ---------------------------------------------------------
 # ==============================================================================
@@ -781,8 +798,8 @@ def main():
     argparser.add_argument(
         '--filter',
         metavar='PATTERN',
-        default='vehicle.lincoln.mkz2017',
-        help='Actor filter (default: "vehicle.lincoln.mkz2017")')
+        default='vehicle.lincoln.*',
+        help='Actor filter (default: "vehicle.lincoln.*")')
     argparser.add_argument(
         '-l', '--loop',
         action='store_true',
@@ -795,16 +812,38 @@ def main():
         default="Behavior")
     argparser.add_argument(
         '-b', '--behavior', type=str,
-        choices=["cautious", "normal", "aggressive"],
-        help='Choose one of the possible agent behaviors (default: normal) ',
-        default='normal')
+        choices=["cautious", "normal", "aggressive", "custom"],
+        help='Choose one of the possible agent behaviors (default: custom) ',
+        default='custom')
     argparser.add_argument(
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',
         default=None,
         type=int)
+    argparser.add_argument(
+        '-m', '--map',
+        help='load a new map, use --list to see available maps')
+    argparser.add_argument(
+        '-r', '--reload-map',
+        action='store_true',
+        help='reload current map')
+    argparser.add_argument(
+        '-x', '--xodr-path',
+        metavar='XODR_FILE_PATH',
+        help='load a new map with a minimum physical road representation of the provided OpenDRIVE')
+    argparser.add_argument(
+        '--osm-path',
+        metavar='OSM_FILE_PATH',
+        help='load a new map with a minimum physical road representation of the provided OpenStreetMaps')
+    argparser.add_argument(
+        '--list',
+        action='store_true',
+        help='list available options')
 
     args = argparser.parse_args()
+
+    client = carla.Client(args.host, args.port, worker_threads=1)
+    client.set_timeout(10.0)
 
     args.width, args.height = [int(x) for x in args.res.split('x')]
 
@@ -813,7 +852,63 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    print(__doc__)
+    if args.map is not None:
+        print('load map %r.' % args.map)
+        client.load_world(args.map)
+    elif args.reload_map:
+        print('reload map.')
+        client.reload_world()
+    elif args.xodr_path is not None:
+        if os.path.exists(args.xodr_path):
+            with open(args.xodr_path, encoding='utf-8') as od_file:
+                try:
+                    data = od_file.read()
+                except OSError:
+                    print('file could not be readed.')
+                    sys.exit()
+            print('load opendrive map %r.' % os.path.basename(args.xodr_path))
+            vertex_distance = 2.0  # in meters
+            max_road_length = 500.0 # in meters
+            wall_height = 1.0      # in meters
+            extra_width = 0.6      # in meters
+            client.generate_opendrive_world(
+                data, carla.OpendriveGenerationParameters(
+                    vertex_distance=vertex_distance,
+                    max_road_length=max_road_length,
+                    wall_height=wall_height,
+                    additional_width=extra_width,
+                    smooth_junctions=True,
+                    enable_mesh_visibility=True))
+        else:
+            print('file not found.')
+    elif args.osm_path is not None:
+        if os.path.exists(args.osm_path):
+            with open(args.osm_path, encoding='utf-8') as od_file:
+                try:
+                    data = od_file.read()
+                except OSError:
+                    print('file could not be readed.')
+                    sys.exit()
+            print('Converting OSM data to opendrive')
+            xodr_data = carla.Osm2Odr.convert(data)
+            print('load opendrive map.')
+            vertex_distance = 2.0  # in meters
+            max_road_length = 500.0 # in meters
+            wall_height = 0.0      # in meters
+            extra_width = 0.6      # in meters
+            client.generate_opendrive_world(
+                xodr_data, carla.OpendriveGenerationParameters(
+                    vertex_distance=vertex_distance,
+                    max_road_length=max_road_length,
+                    wall_height=wall_height,
+                    additional_width=extra_width,
+                    smooth_junctions=True,
+                    enable_mesh_visibility=True))
+        else:
+            print('file not found.')
+        
+    if args.list:
+        list_options(client)
 
     try:
         game_loop(args)

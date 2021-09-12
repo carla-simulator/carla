@@ -13,7 +13,7 @@ import numpy as np
 import carla
 from agents.navigation.basic_agent import BasicAgent
 from agents.navigation.local_planner import RoadOption
-from agents.navigation.behavior_types import Cautious, Aggressive, Normal
+from agents.navigation.behavior_types import Cautious, Aggressive, Normal, Custom
 
 from agents.tools.misc import get_speed, positive, is_within_distance, compute_distance
 
@@ -62,13 +62,17 @@ class BehaviorAgent(BasicAgent):
         elif behavior == 'aggressive':
             self._behavior = Aggressive()
 
+        elif behavior == 'custom':
+            self._behavior = Custom()
+
     def _update_information(self):
         """
         This method updates the information regarding the ego
         vehicle based on the surrounding world.
         """
         self._speed = get_speed(self._vehicle)
-        self._speed_limit = self._vehicle.get_speed_limit()
+        # self._speed_limit = self._vehicle.get_speed_limit()
+        self._speed_limit = self._behavior.max_speed
         self._local_planner.set_speed(self._speed_limit)
         self._direction = self._local_planner.target_road_option
         if self._direction is None:
