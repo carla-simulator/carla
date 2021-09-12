@@ -38,6 +38,7 @@ except IndexError:
 
 import carla
 from carla import ColorConverter as cc
+from carla import VehicleLightState as vls
 
 from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
@@ -150,7 +151,7 @@ class World(object):
         self.player.get_world().set_weather(preset[0])
 
     def modify_vehicle_physics(self, actor):
-        #If actor is not a vehicle, we cannot use the physics control
+        # If actor is not a vehicle, we cannot use the physics control
         try:
             physics_control = actor.get_physics_control()
             physics_control.use_sweep_wheel_collision = True
@@ -658,15 +659,46 @@ class CameraManager(object):
         if self.recording:
             image.save_to_disk('_out/%08d' % image.frame)
 
+# ==============================================================================
+# -- Other Functions ---------------------------------------------------------
+# ==============================================================================
+
+
 def list_options(client):
     maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
     indent = 4 * ' '
+
     def wrap(text):
         return '\n'.join(textwrap.wrap(text, initial_indent=indent, subsequent_indent=indent))
     print('weather presets:\n')
     print(wrap(', '.join(x for _, x in find_weather_presets())) + '.\n')
     print('available maps:\n')
     print(wrap(', '.join(sorted(maps))) + '.\n')
+
+
+def get_actor_blueprints(world, filter, generation):
+    bps = world.get_blueprint_library().filter(filter)
+
+    if generation.lower() == "all":
+        return bps
+
+    # If the filter returns only one bp, we assume that this one needed
+    # and therefore, we ignore the generation
+    if len(bps) == 1:
+        return bps
+
+    try:
+        int_generation = int(generation)
+        # Check if generation is in available generations
+        if int_generation in [1, 2]:
+            bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
+            return bps
+        else:
+            print("   Warning! Actor Generation is not valid. No actor will be spawned.")
+            return []
+    except:
+        print("   Warning! Actor Generation is not valid. No actor will be spawned.")
+        return []
 
 # ==============================================================================
 # -- Game Loop ---------------------------------------------------------
@@ -715,7 +747,7 @@ def game_loop(args):
 
         # Set the agent destination
         spawn_points = world.map.get_spawn_points()
-        destination = random.choice(spawn_points).location
+        destination = spawn_points[3].location
         agent.set_destination(destination)
 
         clock = pygame.time.Clock()
@@ -842,6 +874,38 @@ def main():
     argparser.add_argument(
         '--weather',
         help='set weather preset, use --list to see available presets')
+    argparser.add_argument(
+        '-n', '--number-of-vehicles',
+        metavar='N',
+        default=30,
+        type=int,
+        help='Number of vehicles (default: 30)')
+    argparser.add_argument(
+        '--tm-port',
+        metavar='P',
+        default=8000,
+        type=int,
+        help='Port to communicate with TM (default: 8000)')
+    argparser.add_argument(
+        '--filterv',
+        metavar='PATTERN',
+        default='vehicle.*',
+        help='Filter vehicle model (default: "vehicle.*")')
+    argparser.add_argument(
+        '--generationv',
+        metavar='G',
+        default='All',
+        help='restrict to certain vehicle generation (values: "1","2","All" - default: "All")')
+    argparser.add_argument(
+        '--hero',
+        action='store_true',
+        default=False,
+        help='Set one of the vehicles as hero')
+    argparser.add_argument(
+        '--car-lights-on',
+        action='store_true',
+        default=False,
+        help='Enable car lights')
 
     args = argparser.parse_args()
 
@@ -871,7 +935,7 @@ def main():
                     sys.exit()
             print('load opendrive map %r.' % os.path.basename(args.xodr_path))
             vertex_distance = 2.0  # in meters
-            max_road_length = 500.0 # in meters
+            max_road_length = 500.0  # in meters
             wall_height = 1.0      # in meters
             extra_width = 0.6      # in meters
             world = client.generate_opendrive_world(
@@ -896,7 +960,7 @@ def main():
             xodr_data = carla.Osm2Odr.convert(data)
             print('load opendrive map.')
             vertex_distance = 2.0  # in meters
-            max_road_length = 500.0 # in meters
+            max_road_length = 500.0  # in meters
             wall_height = 0.0      # in meters
             extra_width = 0.6      # in meters
             world = client.generate_opendrive_world(
@@ -912,7 +976,7 @@ def main():
 
     else:
         world = client.get_world()
-        
+
     if args.list:
         list_options(client)
         sys.exit()
@@ -922,6 +986,68 @@ def main():
         else:
             print('set weather preset %r.' % args.weather)
             world.set_weather(getattr(carla.WeatherParameters, args.weather))
+
+    traffic_manager = client.get_trafficmanager(args.tm_port)
+    traffic_manager.set_global_distance_to_leading_vehicle(2.5)
+
+    blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
+    blueprints = sorted(blueprints, key=lambda bp: bp.id)
+
+    spawn_points = world.get_map().get_spawn_points()
+    spawn_points = spawn_points[:1] # temp!
+    number_of_spawn_points = len(spawn_points)
+
+    if args.number_of_vehicles < number_of_spawn_points:
+        random.shuffle(spawn_points)
+    elif args.number_of_vehicles > number_of_spawn_points:
+        msg = 'requested %d vehicles, but could only find %d spawn points'
+        logging.warning(msg, args.number_of_vehicles, number_of_spawn_points)
+        args.number_of_vehicles = number_of_spawn_points
+
+    # cannot import these directly.
+    SpawnActor = carla.command.SpawnActor
+    SetAutopilot = carla.command.SetAutopilot
+    SetVehicleLightState = carla.command.SetVehicleLightState
+    FutureActor = carla.command.FutureActor
+
+    # --------------
+    # Spawn vehicles
+    # --------------
+    vehicles_list = []
+    synchronous_master = False
+    batch = []
+    hero = args.hero
+    for n, transform in enumerate(spawn_points):
+        if n >= args.number_of_vehicles:
+            break
+        blueprint = random.choice(blueprints)
+        if blueprint.has_attribute('color'):
+            color = random.choice(blueprint.get_attribute('color').recommended_values)
+            blueprint.set_attribute('color', color)
+        if blueprint.has_attribute('driver_id'):
+            driver_id = random.choice(blueprint.get_attribute('driver_id').recommended_values)
+            blueprint.set_attribute('driver_id', driver_id)
+        if hero:
+            blueprint.set_attribute('role_name', 'hero')
+            hero = False
+        else:
+            blueprint.set_attribute('role_name', 'autopilot')
+
+        # prepare the light state of the cars to spawn
+        light_state = vls.NONE
+        if args.car_lights_on:
+            light_state = vls.Position | vls.LowBeam | vls.LowBeam
+
+        # spawn the cars and set their autopilot and light state all together
+        batch.append(SpawnActor(blueprint, transform)
+                     .then(SetAutopilot(FutureActor, True, traffic_manager.get_port()))
+                     .then(SetVehicleLightState(FutureActor, light_state)))
+
+    for response in client.apply_batch_sync(batch, synchronous_master):
+        if response.error:
+            logging.error(response.error)
+        else:
+            vehicles_list.append(response.actor_id)
 
     try:
         game_loop(args)
