@@ -798,8 +798,8 @@ def main():
     argparser.add_argument(
         '--filter',
         metavar='PATTERN',
-        default='vehicle.lincoln.*',
-        help='Actor filter (default: "vehicle.lincoln.*")')
+        default='vehicle.*',
+        help='Actor filter (default: "vehicle.*")')
     argparser.add_argument(
         '-l', '--loop',
         action='store_true',
@@ -813,8 +813,8 @@ def main():
     argparser.add_argument(
         '-b', '--behavior', type=str,
         choices=["cautious", "normal", "aggressive", "custom"],
-        help='Choose one of the possible agent behaviors (default: custom) ',
-        default='custom')
+        help='Choose one of the possible agent behaviors (default: normal) ',
+        default='normal')
     argparser.add_argument(
         '-s', '--seed',
         help='Set seed for repeating executions (default: None)',
@@ -839,6 +839,9 @@ def main():
         '--list',
         action='store_true',
         help='list available options')
+    argparser.add_argument(
+        '--weather',
+        help='set weather preset, use --list to see available presets')
 
     args = argparser.parse_args()
 
@@ -854,10 +857,10 @@ def main():
 
     if args.map is not None:
         print('load map %r.' % args.map)
-        client.load_world(args.map)
+        world = client.load_world(args.map)
     elif args.reload_map:
         print('reload map.')
-        client.reload_world()
+        world = client.reload_world()
     elif args.xodr_path is not None:
         if os.path.exists(args.xodr_path):
             with open(args.xodr_path, encoding='utf-8') as od_file:
@@ -871,7 +874,7 @@ def main():
             max_road_length = 500.0 # in meters
             wall_height = 1.0      # in meters
             extra_width = 0.6      # in meters
-            client.generate_opendrive_world(
+            world = client.generate_opendrive_world(
                 data, carla.OpendriveGenerationParameters(
                     vertex_distance=vertex_distance,
                     max_road_length=max_road_length,
@@ -896,7 +899,7 @@ def main():
             max_road_length = 500.0 # in meters
             wall_height = 0.0      # in meters
             extra_width = 0.6      # in meters
-            client.generate_opendrive_world(
+            world = client.generate_opendrive_world(
                 xodr_data, carla.OpendriveGenerationParameters(
                     vertex_distance=vertex_distance,
                     max_road_length=max_road_length,
@@ -906,9 +909,19 @@ def main():
                     enable_mesh_visibility=True))
         else:
             print('file not found.')
+
+    else:
+        world = client.get_world()
         
     if args.list:
         list_options(client)
+        sys.exit()
+    if args.weather is not None:
+        if not hasattr(carla.WeatherParameters, args.weather):
+            print('ERROR: weather preset %r not found.' % args.weather)
+        else:
+            print('set weather preset %r.' % args.weather)
+            world.set_weather(getattr(carla.WeatherParameters, args.weather))
 
     try:
         game_loop(args)
