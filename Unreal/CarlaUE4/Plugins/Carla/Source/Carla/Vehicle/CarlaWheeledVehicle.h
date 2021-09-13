@@ -42,6 +42,8 @@ enum class EVehicleWheelLocation : uint8 {
   Back_Wheel = 1,
 };
 
+/// Type of door to open/close
+// When adding new door types, make sure that All is the last one.
 UENUM(BlueprintType)
 enum class EVehicleDoor : uint8 {
   FL = 0,
