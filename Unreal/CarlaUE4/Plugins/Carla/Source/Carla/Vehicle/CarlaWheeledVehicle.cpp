@@ -43,6 +43,10 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
+
+  // We create a vector to store the update values for the animation
+  static uint8 MaxDoorNumber = (uint8) EVehicleDoor::All;
+  DoorAnimAlpha.Init(0.0, MaxDoorNumber);
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -117,9 +121,6 @@ void ACarlaWheeledVehicle::BeginPlay()
   Vehicle4W->WheelSetups = NewWheelSetups;
 
   LastPhysicsControl = GetVehiclePhysicsControl();
-
-  // We create a vector to store the update values for the animation
-  DoorAnimAlpha.Init(0.0, DoorAnimMaxAngle.Num());
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
