@@ -50,7 +50,7 @@ enum class EVehicleDoor : uint8 {
   Door_RR = 3,
   Door_Hood = 4,
   Door_Truck = 5,
-  Door_All = 99
+  Door_All = 6
 };
 
 /// Base class for CARLA wheeled vehicles.
@@ -303,16 +303,16 @@ public:
   float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void OpenDoor(EVehicleDoor DoorIdx);
+  void OpenDoor(const EVehicleDoor DoorIdx);
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void CloseDoor(EVehicleDoor DoorIdx);
+  void CloseDoor(const EVehicleDoor DoorIdx);
 
   UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
-  void OpenDoorAnim(EVehicleDoor DoorIdx);
+  void OpenDoorAnim(const EVehicleDoor DoorIdx);
 
   UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
-  void CloseDoorAnim(EVehicleDoor DoorIdx);
+  void CloseDoorAnim(const EVehicleDoor DoorIdx);
 
   virtual FVector GetVelocity() const override;
 
