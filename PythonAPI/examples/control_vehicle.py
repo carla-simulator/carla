@@ -16,9 +16,6 @@ import weakref
 
 try:
     import pygame
-    from pygame.locals import KMOD_CTRL
-    from pygame.locals import K_ESCAPE
-    from pygame.locals import K_q
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -186,28 +183,6 @@ class World(object):
             if actor is not None:
                 actor.destroy()
 
-
-# ==============================================================================
-# -- KeyboardControl -----------------------------------------------------------
-# ==============================================================================
-
-
-class KeyboardControl(object):
-    def __init__(self, world):
-        world.hud.notification("Press 'H' or '?' for help.", seconds=4.0)
-
-    def parse_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return True
-            if event.type == pygame.KEYUP:
-                if self._is_quit_shortcut(event.key):
-                    return True
-
-    @staticmethod
-    def _is_quit_shortcut(key):
-        """Shortcut for quitting"""
-        return (key == K_ESCAPE) or (key == K_q and pygame.key.get_mods() & KMOD_CTRL)
 
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
@@ -739,15 +714,14 @@ def game_loop(args):
 
         hud = HUD(args.width, args.height)
         world = World(client.get_world(), hud, args)
-        controller = KeyboardControl(world)
         if args.agent == "Basic":
             agent = BasicAgent(world.player)
         else:
-            agent = BehaviorAgent(world.player, behavior=args.behavior)
+            agent = BehaviorAgent(world.player, behavior=args.behavior, speed=args.speed)
 
         # Set the agent destination
         spawn_points = world.map.get_spawn_points()
-        destination = spawn_points[3].location
+        destination = spawn_points[2].location
         agent.set_destination(destination)
 
         clock = pygame.time.Clock()
@@ -758,8 +732,6 @@ def game_loop(args):
                 world.world.tick()
             else:
                 world.world.wait_for_tick()
-            if controller.parse_events():
-                return
 
             world.tick(clock)
             world.render(display)
@@ -906,6 +878,12 @@ def main():
         action='store_true',
         default=False,
         help='Enable car lights')
+    argparser.add_argument(
+        '--speed',
+        metavar='S',
+        default=30,
+        type=int,
+        help='Speed of vehicle in custom mode (default: 30)')
 
     args = argparser.parse_args()
 
@@ -994,7 +972,7 @@ def main():
     blueprints = sorted(blueprints, key=lambda bp: bp.id)
 
     spawn_points = world.get_map().get_spawn_points()
-    spawn_points = spawn_points[:1] # temp!
+    spawn_points = spawn_points[:1]  # temp!
     number_of_spawn_points = len(spawn_points)
 
     if args.number_of_vehicles < number_of_spawn_points:

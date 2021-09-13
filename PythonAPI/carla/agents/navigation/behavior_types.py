@@ -39,10 +39,11 @@ class Aggressive(object):
 
 class Custom(object):
     """Class for Custom agent."""
-    max_speed = 60
-    speed_lim_dist = 1
-    speed_decrease = 10
-    safety_time = 3
-    min_proximity_threshold = 10
-    braking_distance = 7
-    tailgate_counter = 0
+    def __init__(self, speed):
+        self.max_speed = speed
+        self.speed_lim_dist = 1
+        self.speed_decrease = 10
+        self.safety_time = 3
+        self.min_proximity_threshold = 10
+        self.braking_distance = 7
+        self.tailgate_counter = 0
