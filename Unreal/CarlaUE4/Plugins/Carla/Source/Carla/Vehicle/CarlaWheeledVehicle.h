@@ -17,8 +17,6 @@
 #include "WheeledVehicleMovementComponent4W.h"
 #include "VehicleAnimInstance.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
-#include "Components/TimelineComponent.h"
-#include "Runtime/Engine/Classes/Curves/CurveFloat.h"
 
 #include "CoreMinimal.h"
 
@@ -264,42 +262,11 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor)
   void AdjustVehicleBounds();
 
-  UFUNCTION(BlueprintCallable, CallInEditor)
-  void ConfigureDoorAnimationData();
-
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
   TArray<float> DoorAnimMaxAngle;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
   TArray<float> DoorAnimAlpha;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  UTimelineComponent* DoorTimelineDefault;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  TArray<UTimelineComponent*> DoorTimeline;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  class UCurveFloat* CurveDoor;
-
-  FOnTimelineFloat InterpFunction{};
-  FOnTimelineEvent TimelineFinished{};
-  FOnTimelineEvent TimelineUpdate{};
-
-  UFUNCTION()
-  void DoorTimelineUpdate(float value)
-  {
-    UE_LOG(LogTemp, Warning, TEXT("DoorTimelineUpdate: %f"), value);
-
-    for(int i = 0; i < DoorAnimAlpha.Num(); i++)
-      DoorAnimAlpha[i] = value;
-  }
-
-  UFUNCTION()
-  void DoorTimelineFinished()
-  {
-    UE_LOG(LogTemp, Warning, TEXT("DoorTimelineFinished"));
-  }
 
 private:
 
@@ -341,10 +308,10 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoor(EVehicleDoor DoorIdx);
 
-  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
   void OpenDoorAnim(EVehicleDoor DoorIdx);
 
-  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
   void CloseDoorAnim(EVehicleDoor DoorIdx);
 
   virtual FVector GetVelocity() const override;
