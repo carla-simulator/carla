@@ -43,15 +43,6 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
-
-  DoorTimelineDefault = CreateDefaultSubobject<UTimelineComponent>(TEXT("Timeline"));
-
-  InterpFunction.BindUFunction(this, FName("DoorTimelineUpdate"));
-  TimelineFinished.BindUFunction(this, FName("DoorTimelineFinished"));
-//  TimelineUpdate.BindUFunction(this, FName("DoorTimelineUpdate"));
-
-  //DoorTimelineDefault->SetTimelineLength(5.0f);
-  //DoorTimelineDefault->SetFloatCurve(CurveDoor, TEXT("DoorTimelineCurve"));
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -127,7 +118,8 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   LastPhysicsControl = GetVehiclePhysicsControl();
 
-  ConfigureDoorAnimationData();
+  // We create a vector to store the update values for the animation
+  DoorAnimAlpha.Init(0.0, DoorAnimMaxAngle.Num());
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -596,28 +588,6 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
   ShowDebugTelemetry(false);
 }
 
-void ACarlaWheeledVehicle::ConfigureDoorAnimationData()
-{
-  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureDoorAnimationData: NumDoors: %d"), DoorAnimMaxAngle.Num());
-
-  DoorAnimAlpha.Init(0.0, DoorAnimMaxAngle.Num());
-  DoorTimeline.Reset();
-
-  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureDoorAnimationData: DoorAnimAlpha: %d"), DoorAnimAlpha.Num());
-
-  for (int i = 0; i < DoorAnimMaxAngle.Num(); i++) {
-    FName NameTimeline = FName(TEXT("Timeline_%d"), i);
-    UTimelineComponent* Timeline = DuplicateObject<UTimelineComponent>(DoorTimelineDefault, nullptr);
-    DoorTimeline.Add(Timeline);
-  }
-
-  DoorTimelineDefault->AddInterpFloat(CurveDoor, InterpFunction);
-  DoorTimelineDefault->SetTimelinePostUpdateFunc(TimelineUpdate);
-  DoorTimelineDefault->SetTimelineFinishedFunc(TimelineFinished);
-
-  UE_LOG(LogTemp, Warning, TEXT("ACarlaWheeledVehicle::ConfigureAnimationData: DoorTimeline: %d"), DoorTimeline.Num());
-}
-
 void ACarlaWheeledVehicle::OpenDoor(EVehicleDoor DoorIdx) {
   // We check if the car has any door configured
   if (DoorAnimMaxAngle.Num() == 0) {
@@ -664,14 +634,12 @@ void ACarlaWheeledVehicle::CloseDoor(EVehicleDoor DoorIdx) {
   CloseDoorAnim(DoorIdx);
 }
 
-void ACarlaWheeledVehicle::OpenDoorAnim(EVehicleDoor DoorIdx)
+void ACarlaWheeledVehicle::OpenDoorAnim_Implementation(EVehicleDoor DoorIdx)
 {
   UE_LOG(LogTemp, Warning, TEXT("OpenDoorAnim_Implementation."));
-  DoorTimelineDefault->Play();
 }
 
-void ACarlaWheeledVehicle::CloseDoorAnim(EVehicleDoor DoorIdx)
+void ACarlaWheeledVehicle::CloseDoorAnim_Implementation(EVehicleDoor DoorIdx)
 {
   UE_LOG(LogTemp, Warning, TEXT("CloseDoorAnim_Implementation."));
-    DoorTimelineDefault->Reverse();
 }
