@@ -49,7 +49,7 @@ enum class EVehicleDoor : uint8 {
   RL = 2,
   RR = 3,
   Hood = 4,
-  Truck = 5,
+  Trunk = 5,
   All = 6
 };
 
