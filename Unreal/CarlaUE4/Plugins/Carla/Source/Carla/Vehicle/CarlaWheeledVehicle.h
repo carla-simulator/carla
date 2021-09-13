@@ -44,13 +44,13 @@ enum class EVehicleWheelLocation : uint8 {
 
 UENUM(BlueprintType)
 enum class EVehicleDoor : uint8 {
-  Door_FL = 0,
-  Door_FR = 1,
-  Door_RL = 2,
-  Door_RR = 3,
-  Door_Hood = 4,
-  Door_Truck = 5,
-  Door_All = 6
+  FL = 0,
+  FR = 1,
+  RL = 2,
+  RR = 3,
+  Hood = 4,
+  Truck = 5,
+  All = 6
 };
 
 /// Base class for CARLA wheeled vehicles.
