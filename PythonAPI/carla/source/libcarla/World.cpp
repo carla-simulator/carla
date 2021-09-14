@@ -285,6 +285,7 @@ void export_world() {
     .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
     .def("tick", &Tick, (arg("seconds")=0.0))
     .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")))
+    .def("set_pedestrians_seed", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansSeed, int), (arg("seed")))
     .def("get_traffic_sign", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficSign, cc::Landmark), arg("landmark"))
     .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
     .def("get_traffic_light_from_opendrive_id", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLightFromOpenDRIVE, const carla::road::SignId&), arg("traffic_light_id"))

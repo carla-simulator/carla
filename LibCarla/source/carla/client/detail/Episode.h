@@ -101,6 +101,12 @@ namespace detail {
       nav->SetPedestriansCrossFactor(percentage);
     }
 
+    void SetPedestriansSeed(int seed) {
+      auto nav = _navigation.load();
+      DEBUG_ASSERT(nav != nullptr);
+      nav->SetPedestriansSeed(seed);
+    }
+
     void AddPendingException(std::string e) {
       _pending_exceptions = true;
       _pending_exceptions_msg = e;
