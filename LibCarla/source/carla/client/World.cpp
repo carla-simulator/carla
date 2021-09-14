@@ -160,6 +160,10 @@ namespace client {
     _episode.Lock()->SetPedestriansCrossFactor(percentage);
   }
 
+  void World::SetPedestriansSeed(int seed) {
+    _episode.Lock()->SetPedestriansSeed(seed);
+  }
+
   SharedPtr<Actor> World::GetTrafficSign(const Landmark& landmark) const {
     SharedPtr<ActorList> actors = GetActors();
     SharedPtr<TrafficSign> result;

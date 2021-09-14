@@ -8,6 +8,9 @@
   * Improved handling of collisions in Traffic Manager when driving at very high speeds.
   * Added open/close doors feature for vehicles.
   * Added API functions to 3D vectors: `squared_length`, `length`, `make_unit_vector`, `dot`, `dot_2d`, `distance`, `distance_2d`, `distance_squared`, `distance_squared_2d`, `get_vector_angle`
+  * Added a seed for better reproducibility of pedestrians
+    - New API function `set_pedestrians_seed`
+    - New parameter **--seedw** in generate_traffic.py script
   * Added API functions to 2D vectors: `squared_length`, `length`, `make_unit_vector`
   * Added missing dependency `libomp5` to Release.Dockerfile
   * Added API functions to interact with pedestrian bones:

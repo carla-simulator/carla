@@ -145,6 +145,9 @@ namespace client {
     /// percentage of 1.0f means all pedestrians can cross roads if needed
     void SetPedestriansCrossFactor(float percentage);
 
+    /// set the seed to use with random numbers in the pedestrians module
+    void SetPedestriansSeed(int seed);
+
     SharedPtr<Actor> GetTrafficSign(const Landmark& landmark) const;
 
     SharedPtr<Actor> GetTrafficLight(const Landmark& landmark) const;
