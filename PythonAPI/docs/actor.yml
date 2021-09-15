@@ -141,6 +141,28 @@
       doc: >
         Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so if you enable a second one, the previous will be automatically disabled.
     # --------------------------------------
+    - def_name: open_door
+      params:
+      - param_name: door_idx
+        type: carla.VehicleDoor
+        doc: >
+          door index
+      doc: >
+        Open the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to open all available doors.
+      note: >
+        Only carla.Vehicle actors can use this method.
+    # --------------------------------------
+    - def_name: close_door
+      params:
+      - param_name: door_idx
+        type: carla.VehicleDoor
+        doc: >
+          door index
+      doc: >
+        Close the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to close all available doors.
+      note: >
+        Only carla.Vehicle actors can use this method.
+    # --------------------------------------
     - def_name: get_acceleration
       return: carla.Vector3D
       return_units: m/s<sup>2</sup>
@@ -630,5 +652,27 @@
     - var_name: Back_Wheel
       doc: >
         Back wheel of a 2 wheeled vehicle.
+    # --------------------------------------
+  - class_name: VehicleDoor
+    doc: >
+      Possible index representing the possible doors that can be open.
+      Notice that not all possible doors are able to open in some vehicles.
+  # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: FL
+      doc: >
+        Front left door.
+    - var_name: FR
+      doc: >
+        Front right door.
+    - var_name: RL
+      doc: >
+        Back left door.
+    - var_name: RR
+      doc: >
+        Back right door.
+    - var_name: All
+      doc: >
+        Represents all doors.
     # --------------------------------------
 ...
