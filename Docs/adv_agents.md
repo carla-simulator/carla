@@ -14,7 +14,7 @@ CARLA Agent scripts allow a vehicle to either follow a random, endless route or 
 
 ## Overview of agent scripts
 
-The main scripts involved in the CARLA Agents are found in `PythonAPI/carla/agents/navigation`. They fall into two categories; __planning and control__ and __agent behaviors__.
+The main scripts involved in the CARLA Agents are found in `PythonAPI/agents/source/agents/navigation`. They fall into two categories; __planning and control__ and __agent behaviors__.
 
 ### Planning and control
 

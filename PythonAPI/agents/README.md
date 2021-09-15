@@ -1,0 +1,1 @@
+Leveraging the [CARLA simulator](http://carla.org/), this package provides a baseline for the development of autonomous agents. For more information, refer to the [CARLA Agents documentation](https://carla.readthedocs.io/en/latest/adv_agents/).

@@ -12,35 +12,42 @@ launch-only:
 import: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Import.sh $(ARGS)
 
-package: CarlaUE4Editor PythonAPI
+package: CarlaUE4Editor agents PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
-package.rss: CarlaUE4Editor PythonAPI.rss.rebuild
+package.rss: CarlaUE4Editor agents PythonAPI.rss.rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 docs:
 	@doxygen
 	@echo "Documentation index at ./Doxygen/html/index.html"
 
+agents:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildAgents.sh $(ARGS)
+
 clean.LibCarla:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
+clean.agents:
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildAgents.sh --clean
 clean.PythonAPI:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 clean.CarlaUE4Editor:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --clean
 clean.osm2odr:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
-clean: clean.CarlaUE4Editor clean.PythonAPI clean.LibCarla clean.osm2odr
+clean: clean.CarlaUE4Editor clean.agents clean.PythonAPI clean.LibCarla clean.osm2odr
 
 rebuild: setup
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --rebuild
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --rebuild
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildAgents.sh --rebuild $(ARGS)
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --rebuild $(ARGS)
 
 hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --hard-clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildOSM2ODR.sh --clean
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildAgents.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"

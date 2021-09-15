@@ -149,9 +149,18 @@ if ${DO_CARLA_RELEASE} ; then
 
   copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
   copy_if_changed "./PythonAPI/carla/dist/*.whl" "${DESTINATION}/PythonAPI/carla/dist/"
-  copy_if_changed "./PythonAPI/carla/agents/" "${DESTINATION}/PythonAPI/carla/agents"
   copy_if_changed "./PythonAPI/carla/scene_layout.py" "${DESTINATION}/PythonAPI/carla/"
+  copy_if_changed "./PythonAPI/carla/README.md" "${DESTINATION}/PythonAPI/carla/"
   copy_if_changed "./PythonAPI/carla/requirements.txt" "${DESTINATION}/PythonAPI/carla/"
+
+  copy_if_changed "./PythonAPI/agents/README.md" "${DESTINATION}/PythonAPI/agents/"
+  copy_if_changed "./PythonAPI/agents/requirements.txt" "${DESTINATION}/PythonAPI/agents/"
+  copy_if_changed "./PythonAPI/agents/setup.py" "${DESTINATION}/PythonAPI/agents/"
+  copy_if_changed "./PythonAPI/agents/dist/*.egg" "${DESTINATION}/PythonAPI/agents/dist/"
+  copy_if_changed "./PythonAPI/agents/dist/*.whl" "${DESTINATION}/PythonAPI/agents/dist/"
+  copy_if_changed "./PythonAPI/agents/source/agents/*.py" "${DESTINATION}/PythonAPI/agents/source/agents/"
+  copy_if_changed "./PythonAPI/agents/source/agents/navigation/*.py" "${DESTINATION}/PythonAPI/agents/source/agents/navigation"
+  copy_if_changed "./PythonAPI/agents/source/agents/tools/*.py" "${DESTINATION}/PythonAPI/agents/source/agents/tools"
 
   copy_if_changed "./PythonAPI/examples/*.py" "${DESTINATION}/PythonAPI/examples/"
   copy_if_changed "./PythonAPI/examples/rss/*.py" "${DESTINATION}/PythonAPI/examples/rss/"

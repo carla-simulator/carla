@@ -166,16 +166,16 @@ CARLA forum</a>
 >      cd PythonAPI/examples
 >      python3 dynamic_weather.py
 >
-> If the error persists, the problem is probably related with your PythonPATH. These scripts automatically look for the `.egg` file associated with the build, so maybe there is another `.egg` file in your PythonPATH interfering with the process. Show the content of the PythonPATH with the following command.  
+> If the error persists, the problem is probably related with your PYTHONPATH. These scripts automatically look for the `.egg` file associated with the build, so maybe there is another `.egg` file in your PYTHONPATH interfering with the process. Show the content of the PYTHONPATH with the following command.
 >
 >
 >      echo $PYTHONPATH
 >
-> Look up in the output for other instances of `.egg` files in a route similar to `PythonAPI/carla/dist`, and get rid of these. They probably belong to other instances of CARLA installations. For example, if you also installed CARLA via *apt-get*, you can remove it with the following command, and the PythonPATH will be cleaned too.  
+> Look up in the output for other instances of `.egg` files in a route similar to `PythonAPI/carla/dist`, and get rid of these. They probably belong to other instances of CARLA installations. For example, if you also installed CARLA via *apt-get*, you can remove it with the following command, and the PYTHONPATH will be cleaned too.  
 >
 >      sudo apt-get purge carla-simulator
 >
-> Ultimately there is the option to add the `.egg` file of your build to the PythonPATH using the `~/.bashrc`. This is not the recommended way. It would be better to have a clear PythonPATH and simply add the path to the necessary `.egg` files in the scripts.  
+> Ultimately there is the option to add the `.egg` file of your build to the PYTHONPATH using the `~/.bashrc`. This is not the recommended way. It would be better to have a clear PYTHONPATH and simply add the path to the necessary `.egg` files in the scripts.  
 >
 > First, open `~/.bashrc`.
 >
@@ -186,10 +186,10 @@ CARLA forum</a>
 >
 > ```
 > export PYTHONPATH=$PYTHONPATH:"${CARLA_ROOT}/PythonAPI/carla/dist/$(ls ${CARLA_ROOT}/PythonAPI/carla/dist | grep py3.)"
-> export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/carla
+> export PYTHONPATH=$PYTHONPATH:${CARLA_ROOT}/PythonAPI/agents/source
 > ```
 > 
-> After cleaning the PythonPATH or adding the path to the build `.egg` file, all the example scripts should work properly.  
+> After cleaning the PYTHONPATH or adding the path to the build `.egg` file, all the example scripts should work properly.  
 
 ---
 
