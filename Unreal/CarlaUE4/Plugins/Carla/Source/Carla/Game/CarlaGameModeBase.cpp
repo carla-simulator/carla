@@ -222,7 +222,7 @@ void ACarlaGameModeBase::BeginPlay()
     Actor->GetComponents(Lights, false);
     for(UCarlaLight* Light : Lights)
     {
-      Light->BeginPlay();
+      Light->RegisterLight();
     }
   }
   EnableOverlapEvents();

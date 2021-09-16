@@ -1,7 +1,8 @@
 ## Latest
-
+  * Added open/close doors feature for vehicles.
   * Added API functions to 3D vectors: `squared_length`, `length`, `make_unit_vector`, `dot`, `dot_2d`, `distance`, `distance_2d`, `distance_squared`, `distance_squared_2d`, `get_vector_angle`
   * Added API functions to 2D vectors: `squared_length`, `length`, `make_unit_vector`
+  * Added missing dependency `libomp5` to Release.Dockerfile
 
 ## CARLA 0.9.12
 
