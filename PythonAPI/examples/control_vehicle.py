@@ -773,7 +773,7 @@ def main():
     """Main method"""
 
     argparser = argparse.ArgumentParser(
-        description='CARLA Automatic Control Client')
+        description='CARLA Control Vehicle Client')
     argparser.add_argument(
         '-v', '--verbose',
         action='store_true',
@@ -914,8 +914,8 @@ def main():
             print('load opendrive map %r.' % os.path.basename(args.xodr_path))
             vertex_distance = 2.0  # in meters
             max_road_length = 500.0  # in meters
-            wall_height = 1.0      # in meters
-            extra_width = 0.6      # in meters
+            wall_height = 0.0      # in meters
+            extra_width = 1.5      # in meters
             world = client.generate_opendrive_world(
                 data, carla.OpendriveGenerationParameters(
                     vertex_distance=vertex_distance,
@@ -1030,8 +1030,8 @@ def main():
     try:
         game_loop(args)
 
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
+    except:
+        print('\nAn error has occurred.')
 
 
 if __name__ == '__main__':

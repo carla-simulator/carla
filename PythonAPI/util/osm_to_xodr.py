@@ -10,6 +10,7 @@ f.close()
 settings = carla.Osm2OdrSettings()
 # Set OSM road types to export to OpenDRIVE
 settings.set_osm_way_types(["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link", "unclassified", "residential"])
+settings.default_lane_width = 6.0
 # Convert to .xodr
 xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 
