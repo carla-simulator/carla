@@ -2,7 +2,7 @@ import io
 import carla
 
 # Read the .osm data
-f = io.open("examples/map1.osm", mode="r", encoding="utf-8")
+f = io.open("examples/map.osm", mode="r", encoding="utf-8")
 osm_data = f.read()
 f.close()
 
@@ -15,6 +15,6 @@ settings.default_lane_width = 6.0
 xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 
 # save opendrive file
-f = open("examples/map1.xodr", 'w', encoding="utf-8")
+f = open("examples/map.xodr", 'w', encoding="utf-8")
 f.write(xodr_data)
 f.close()
