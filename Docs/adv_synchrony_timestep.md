@@ -207,6 +207,65 @@ CARLA supports physics and collision determinism under specific circumstances:
 - __The world must be reloaded for each new repetition:__ Reload the world each time you want to reproduce a simulation.
 - __Commands should be batched instead of issued one at a time:__ Although rare, in a busy simulation or overloaded server, single issued commands can become lost. If commands are batched in a [`apply_batch_sync`](python_api.md/#carla.Client.apply_batch_sync) command, the command is guaranteed to be executed or return a failure response.
 
+Here is an example of the steps mentioned above:
+
+```py
+client = carla.Client(HOST, PORT) # connect to the server
+client.set_timeout(10.0)
+world = client.get_world()
+
+# Load the desired map
+client.load_world("Town10HD_Opt")
+
+# Set synchronous mode settings
+new_settings = world.get_settings()
+new_settings.synchronous_mode = True
+new_settings.fixed_delta_seconds = 0.05
+world.apply_settings(new_settings) 
+
+client.reload_world(False) # reload map keeping the world settings
+
+# Set up the traffic manager
+traffic_manager = client.get_trafficmanager(TM_PORT)
+traffic_manager.set_synchronous_mode(True)
+traffic_manager.set_random_device_seed(SEED) # define TM seed for determinism
+
+# Spawn your vehicles, pedestrians, etc.
+
+# Simulation loop
+while True:
+	# Your code
+	world.tick()
+```
+
+And a particular example for the playback feature:
+
+```py
+client = carla.Client(HOST, PORT) # connect to the server
+client.set_timeout(10.0)
+world = client.get_world()
+
+# Load the desired map
+client.load_world("Town10HD_Opt")
+
+# Set synchronous mode settings
+new_settings = world.get_settings()
+new_settings.synchronous_mode = True
+new_settings.fixed_delta_seconds = 0.05
+world.apply_settings(new_settings) 
+
+client.reload_world(False) # reload map keeping the world settings
+
+client.replay_file(FILE_TO_PLAY, 0, 0, 0, False)
+world.tick() # a tick is necessary for the server to process the replay_file command
+
+# Simulation loop
+while True:
+	# Your code
+	world.tick()
+```
+
+Running these steps will ensure the same outcome for every simulation run.
 
 ---
 
