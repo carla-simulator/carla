@@ -203,7 +203,6 @@ class HUD(object):
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
-        self.help = HelpText(pygame.font.Font(mono, 24), width, height)
         self.server_fps = 0
         self.frame = 0
         self.simulation_time = 0
@@ -369,38 +368,6 @@ class FadingText(object):
     def render(self, display):
         """Render fading text method"""
         display.blit(self.surface, self.pos)
-
-# ==============================================================================
-# -- HelpText ------------------------------------------------------------------
-# ==============================================================================
-
-
-class HelpText(object):
-    """ Helper class for text render"""
-
-    def __init__(self, font, width, height):
-        """Constructor method"""
-        lines = __doc__.split('\n')
-        self.font = font
-        self.dim = (680, len(lines) * 22 + 12)
-        self.pos = (0.5 * width - 0.5 * self.dim[0], 0.5 * height - 0.5 * self.dim[1])
-        self.seconds_left = 0
-        self.surface = pygame.Surface(self.dim)
-        self.surface.fill((0, 0, 0, 0))
-        for i, line in enumerate(lines):
-            text_texture = self.font.render(line, True, (255, 255, 255))
-            self.surface.blit(text_texture, (22, i * 22))
-            self._render = False
-        self.surface.set_alpha(220)
-
-    def toggle(self):
-        """Toggle on or off the render help"""
-        self._render = not self._render
-
-    def render(self, display):
-        """Render help text method"""
-        if self._render:
-            display.blit(self.surface, self.pos)
 
 # ==============================================================================
 # -- CollisionSensor -----------------------------------------------------------
