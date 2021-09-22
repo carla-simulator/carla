@@ -5,6 +5,7 @@
   * Added API functions to 2D vectors: `squared_length`, `length`, `make_unit_vector`
   * Added missing dependency `libomp5` to Release.Dockerfile
   * Fixed global route planner crash when being used at maps without lane markings
+  * Added the new VehicleLightStage to the Traffic Manager to dynamically update the vehicle lights.
 
 ## CARLA 0.9.12
 
