@@ -154,11 +154,21 @@ void export_actor() {
     .value("Back_Wheel", cr::VehicleWheelLocation::Back_Wheel)
   ;
 
+  enum_<cr::VehicleDoor>("VehicleDoor")
+    .value("FL", cr::VehicleDoor::FL)
+    .value("FR", cr::VehicleDoor::FR)
+    .value("RL", cr::VehicleDoor::RL)
+    .value("RR", cr::VehicleDoor::RR)
+    .value("All", cr::VehicleDoor::All)
+  ;
+
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
       .def("get_control", &cc::Vehicle::GetControl)
       .def("set_light_state", &cc::Vehicle::SetLightState, (arg("light_state")))
+      .def("open_door", &cc::Vehicle::OpenDoor, (arg("door_idx")))
+      .def("close_door", &cc::Vehicle::CloseDoor, (arg("door_idx")))
       .def("set_wheel_steer_direction", &cc::Vehicle::SetWheelSteerDirection, (arg("wheel_location")), (arg("angle_in_deg")))
       .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
       .def("get_light_state", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetLightState))

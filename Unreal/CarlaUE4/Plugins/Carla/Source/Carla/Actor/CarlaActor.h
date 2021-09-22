@@ -248,6 +248,16 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse CloseVehicleDoor(const EVehicleDoor)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyPhysicsControl(const FVehiclePhysicsControl&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -427,6 +437,10 @@ public:
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
 
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
+
+  virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor DoorIdx) final;
+
+  virtual ECarlaServerResponse CloseVehicleDoor(const EVehicleDoor DoorIdx) final;
 
   virtual ECarlaServerResponse ApplyPhysicsControl(
       const FVehiclePhysicsControl& PhysicsControl) final;

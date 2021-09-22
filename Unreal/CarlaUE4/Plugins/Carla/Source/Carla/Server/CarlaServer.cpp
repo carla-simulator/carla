@@ -48,6 +48,7 @@
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector2D.h>
 #include <carla/rpc/Vector3D.h>
+#include <carla/rpc/VehicleDoor.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
@@ -1082,6 +1083,57 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+
+  BIND_SYNC(open_vehicle_door) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleDoor DoorIdx) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "open_vehicle_door",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->OpenVehicleDoor(static_cast<EVehicleDoor>(DoorIdx));
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "open_vehicle_door",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(close_vehicle_door) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleDoor DoorIdx) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "close_vehicle_door",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->CloseVehicleDoor(static_cast<EVehicleDoor>(DoorIdx));
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "close_vehicle_door",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(set_wheel_steer_direction) << [this](
     cr::ActorId ActorId,
     cr::VehicleWheelLocation WheelLocation,
@@ -1826,6 +1878,8 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },
       [=](auto, const C::ShowDebugTelemetry &c) {   MAKE_RESULT(show_vehicle_debug_telemetry(c.actor, c.enabled)); },
       [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },
+//      [=](auto, const C::OpenVehicleDoor &c) {      MAKE_RESULT(open_vehicle_door(c.actor, c.door_idx)); },
+//      [=](auto, const C::CloseVehicleDoor &c) {     MAKE_RESULT(close_vehicle_door(c.actor, c.door_idx)); },
       [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
 
 #undef MAKE_RESULT

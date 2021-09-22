@@ -181,12 +181,12 @@ class LocalPlanner(object):
     def set_global_plan(self, current_plan, stop_waypoint_creation=True, clean_queue=True):
         """
         Adds a new plan to the local planner. A plan must be a list of [carla.Waypoint, RoadOption] pairs
-        If 'clean_queue`, erases the previous plan, and if not, it is added to the old one
-        The 'stop_waypoint_creation' flag avoids creating more random waypoints
+        The 'clean_queue` parameter erases the previous plan if True, otherwise, it adds it to the old one
+        The 'stop_waypoint_creation' flag stops the automatic creation of random waypoints
 
         :param current_plan: list of (carla.Waypoint, RoadOption)
         :param stop_waypoint_creation: bool
-        :param ceal_queue: bool
+        :param clean_queue: bool
         :return:
         """
         if clean_queue:
@@ -274,6 +274,10 @@ class LocalPlanner(object):
                 return wpt, direction
             except IndexError as i:
                 return None, RoadOption.VOID
+
+    def get_plan(self):
+        """Returns the current plan of the local planner"""
+        return self._waypoints_queue
 
     def done(self):
         """
