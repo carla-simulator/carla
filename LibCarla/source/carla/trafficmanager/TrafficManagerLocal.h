@@ -93,6 +93,7 @@ private:
   CollisionStage collision_stage;
   TrafficLightStage traffic_light_stage;
   MotionPlanStage motion_plan_stage;
+  VehicleLightStage vehicle_light_stage;
   ALSM alsm;
   /// Traffic manager server instance.
   TrafficManagerServer server;
