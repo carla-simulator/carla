@@ -16,14 +16,14 @@ import weakref
 
 try:
     import pygame
-except ImportError:
-    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
+except ImportError as import_error:
+    raise RuntimeError('cannot import pygame, make sure pygame package is installed') from import_error
 
 try:
     import numpy as np
-except ImportError:
+except ImportError as import_error:
     raise RuntimeError(
-        'cannot import numpy, make sure numpy package is installed')
+        'cannot import numpy, make sure numpy package is installed') from import_error
 
 # ==============================================================================
 # -- Add PythonAPI for release mode --------------------------------------------
@@ -87,12 +87,12 @@ class World(object):
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
         self._actor_filter = args.filter
-        self.restart(args)
+        self.restart()
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
         self.recording_start = 0
 
-    def restart(self, args):
+    def restart(self):
         """Restart the world"""
         # Keep same camera config if the camera manager exists.
         cam_index = self.camera_manager.index if self.camera_manager is not None else 0
@@ -333,7 +333,6 @@ class HUD(object):
                     display.blit(surface, (8, v_offset))
                 v_offset += 18
         self._notifications.render(display)
-        self.help.render(display)
 
 # ==============================================================================
 # -- FadingText ----------------------------------------------------------------
@@ -406,9 +405,8 @@ class CollisionSensor(object):
             return
         actor_type = get_actor_display_name(event.other_actor)
         self.hud.notification('Collision with %r' % actor_type)
-        f = open("collisions.csv", "a")
-        f.write('%r,%r\n' % (actor_type, self.hud.simulation_time))
-        f.close()
+        with open("collisions.csv", "a", encoding="utf8") as file:
+            file.write('%r,%r\n' % (actor_type, self.hud.simulation_time))
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
         self.history.append((event.frame, intensity))
@@ -445,9 +443,8 @@ class LaneInvasionSensor(object):
         lane_types = set(x.type for x in event.crossed_lane_markings)
         text = ['%r' % str(x).split()[-1] for x in lane_types]
         self.hud.notification('Crossed line %s' % ' and '.join(text))
-        f = open("invasions.csv", "a")
-        f.write('%s,%r\n' % (' and '.join(text), self.hud.simulation_time))
-        f.close()
+        with open("invasions.csv", "a", encoding="utf8") as file:
+            file.write('%s,%r\n' % (' and '.join(text), self.hud.simulation_time))
 
 # ==============================================================================
 # -- GnssSensor --------------------------------------------------------

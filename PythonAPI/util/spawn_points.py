@@ -2,9 +2,9 @@
 
 from __future__ import print_function
 import sys
-import carla
 import argparse
 import logging
+import carla
 
 
 def extract(args):
@@ -27,8 +27,7 @@ def extract(args):
         with open("spawn_points.csv", "w", encoding='utf8') as file:
             index = 0
             for index, spawn_point in enumerate(spawn_points):
-                file.write('%d,%r,%r\n' %
-                           (index, spawn_point.location.x, spawn_point.location.y))
+                file.write(f'{index},{spawn_point.location.x},{spawn_point.location.y}\n')
 
     finally:
         world = None
