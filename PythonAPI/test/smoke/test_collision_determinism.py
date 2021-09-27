@@ -25,6 +25,10 @@ except ImportError:
 class DeterminismError(Exception):
     pass
 
+SpawnActor = carla.command.SpawnActor
+FutureActor = carla.command.FutureActor
+ApplyTargetVelocity = carla.command.ApplyTargetVelocity
+
 class Scenario(object):
     def __init__(self, client, world, save_snapshots_mode=False):
         self.world = world
@@ -35,16 +39,12 @@ class Scenario(object):
         self.prefix = ""
         self.save_snapshots_mode = save_snapshots_mode
         self.snapshots = []
-        self.sensor_list = []
-        self.sensor_queue = Queue()
 
     def init_scene(self, prefix, settings = None, spectator_tr = None):
         self.prefix = prefix
         self.actor_list = []
         self.active = True
         self.snapshots = []
-        self.sensor_list = []
-        self.sensor_queue = Queue()
 
         self.reload_world(settings, spectator_tr)
 
@@ -65,25 +65,23 @@ class Scenario(object):
     def wait(self, frames=100):
         for _i in range(0, frames):
             self.world.tick()
-            if self.active:
-                for _s in self.sensor_list:
-                    self.sensor_queue.get(True, 15.0)
 
     def clear_scene(self):
-        for sensor in self.sensor_list:
-            sensor[1].destroy()
-
         for actor in self.actor_list:
             actor[1].destroy()
 
         self.active = False
 
     def reload_world(self, settings = None, spectator_tr = None):
-        self.client.reload_world()
         if settings is not None:
             self.world.apply_settings(settings)
+        self.wait(5)
+
+        self.client.reload_world(False)
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
+
+        self.wait(5)
 
     def reset_spectator(self, spectator_tr):
         spectator = self.world.get_spectator()
@@ -129,69 +127,11 @@ class Scenario(object):
 
         for _i in range(0, tics):
             self.world.tick()
-            self.sensor_syncronization()
             self.save_snapshots()
 
         self.world.apply_settings(original_settings)
         self.save_snapshots_to_disk()
         self.clear_scene()
-
-    def add_sensor(self, sensor, sensor_type):
-        sen_idx = len(self.sensor_list)
-        if sensor_type == "LiDAR":
-            name = str(sen_idx) + "_LiDAR"
-            sensor.listen(lambda data : self.add_lidar_snapshot(data, name))
-        elif sensor_type == "SemLiDAR":
-            name = str(sen_idx) + "_SemLiDAR"
-            sensor.listen(lambda data : self.add_semlidar_snapshot(data, name))
-        elif sensor_type == "Radar":
-            name = str(sen_idx) + "_Radar"
-            sensor.listen(lambda data : self.add_radar_snapshot(data, name))
-
-        self.sensor_list.append((name, sensor))
-
-    def add_lidar_snapshot(self, lidar_data, name="LiDAR"):
-        if not self.active:
-            return
-
-        points = np.frombuffer(lidar_data.raw_data, dtype=np.dtype('f4'))
-        points = np.reshape(points, (int(points.shape[0] / 4), 4))
-
-        frame = lidar_data.frame - self.init_timestamp['frame0']
-        np.savetxt(self.get_filename(name, frame), points)
-        self.sensor_queue.put((lidar_data.frame, name))
-
-    def add_semlidar_snapshot(self, lidar_data, name="SemLiDAR"):
-        if not self.active:
-            return
-
-        data = np.frombuffer(lidar_data.raw_data, dtype=np.dtype([
-            ('x', np.float32), ('y', np.float32), ('z', np.float32),
-            ('CosAngle', np.float32), ('ObjIdx', np.uint32), ('ObjTag', np.uint32)]))
-        points = np.array([data['x'], data['y'], data['z'], data['CosAngle'], data['ObjTag']]).T
-
-        frame = lidar_data.frame - self.init_timestamp['frame0']
-        np.savetxt(self.get_filename(name, frame), points)
-        self.sensor_queue.put((lidar_data.frame, name))
-
-    def add_radar_snapshot(self, radar_data, name="Radar"):
-        if not self.active:
-            return
-
-        points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
-        points = np.reshape(points, (int(points.shape[0] / 4), 4))
-
-        frame = radar_data.frame - self.init_timestamp['frame0']
-        np.savetxt(self.get_filename(name, frame), points)
-        self.sensor_queue.put((radar_data.frame, name))
-
-    def sensor_syncronization(self):
-        # Sensor Syncronization
-        w_frame = self.world.get_snapshot().frame
-        for sensor in self.sensor_list:
-            s_frame = self.sensor_queue.get(True, 15.0)[0]
-            if w_frame != s_frame:
-                raise DeterminismError("FrameSyncError: Frames are not equal for sensor %s: %d %d" % (sensor[0], w_frame, s_frame))
 
 
 class TwoCarsHighSpeedCollision(Scenario):
@@ -200,18 +140,29 @@ class TwoCarsHighSpeedCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
+        vehicle00_bp = blueprint_library.filter("tt")[0]
+        vehicle01_bp = blueprint_library.filter("mkz_2017")[0]
+
         vehicle00_tr = carla.Transform(carla.Location(140, -256, 0.015), carla.Rotation(yaw=180))
-        vehicle00 = self.world.spawn_actor(blueprint_library.filter("tt")[0], vehicle00_tr)
-
         vehicle01_tr = carla.Transform(carla.Location(40, -255, 0.04), carla.Rotation(yaw=0))
-        vehicle01 = self.world.spawn_actor(blueprint_library.filter("lincoln")[0], vehicle01_tr)
-        self.wait(1)
 
-        vehicle00.set_target_velocity( carla.Vector3D(-50, 0, 0))
-        vehicle01.set_target_velocity(carla.Vector3D(+50, 0, 0))
+        batch = [
+            SpawnActor(vehicle00_bp, vehicle00_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(-50, 0, 0))),
+            SpawnActor(vehicle01_bp, vehicle01_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(+50, 0, 0)))
+        ]
 
-        self.add_actor(vehicle00, "Car")
-        self.add_actor(vehicle01, "Car")
+        responses = self.client.apply_batch_sync(batch)
+
+        veh_ids = [x.actor_id for x in responses]
+        veh_refs = [self.world.get_actor(x) for x in veh_ids]
+
+        if (0 in veh_ids) or (None in veh_refs):
+            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+
+        self.add_actor(veh_refs[0], "Car")
+        self.add_actor(veh_refs[1], "Car")
 
         self.wait(1)
 
@@ -222,24 +173,31 @@ class ThreeCarsSlowSpeedCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
+        vehicle00_bp = blueprint_library.filter("prius")[0]
+        vehicle01_bp = blueprint_library.filter("a2")[0]
+        vehicle02_bp = blueprint_library.filter("lincoln")[0]
+
         vehicle00_tr = carla.Transform(carla.Location(110, -255, 0.05), carla.Rotation(yaw=180))
-        vehicle00 = self.world.spawn_actor(blueprint_library.filter("prius")[0], vehicle00_tr)
-
         vehicle01_tr = carla.Transform(carla.Location(53, -257, 0.00), carla.Rotation(yaw=0))
-        vehicle01 = self.world.spawn_actor(blueprint_library.filter("a2")[0], vehicle01_tr)
-
         vehicle02_tr = carla.Transform(carla.Location(85, -230, 0.04), carla.Rotation(yaw=-90))
-        vehicle02 = self.world.spawn_actor(blueprint_library.filter("lincoln")[0], vehicle02_tr)
 
-        self.wait(1)
+        batch = [
+            SpawnActor(vehicle00_bp, vehicle00_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(-15, 0, 0))),
+            SpawnActor(vehicle01_bp, vehicle01_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(+15, 0, 0))),
+            SpawnActor(vehicle02_bp, vehicle02_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, -15, 0)))
+        ]
 
-        vehicle00.set_target_velocity(carla.Vector3D(-15, 0, 0))
-        vehicle01.set_target_velocity(carla.Vector3D(+15, 0, 0))
-        vehicle02.set_target_velocity(carla.Vector3D(0, -15, 0))
+        responses = self.client.apply_batch_sync(batch)
 
-        self.add_actor(vehicle00, "Car")
-        self.add_actor(vehicle01, "Car")
-        self.add_actor(vehicle02, "Car")
+        veh_ids = [x.actor_id for x in responses]
+        veh_refs = [self.world.get_actor(x) for x in veh_ids]
+
+        self.add_actor(veh_refs[0], "Car")
+        self.add_actor(veh_refs[1], "Car")
+        self.add_actor(veh_refs[2], "Car")
 
         self.wait(1)
 
@@ -250,18 +208,29 @@ class CarBikeCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
+        car_bp = blueprint_library.filter("mkz_2017")[0]
+        bike_bp = blueprint_library.filter("gazelle")[0]
+
         car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
-        car = self.world.spawn_actor(blueprint_library.filter("*lincoln*")[0], car_tr)
-
         bike_tr = carla.Transform(carla.Location(85, -245, 0.04), carla.Rotation(yaw=-90))
-        bike = self.world.spawn_actor(blueprint_library.filter("*gazelle*")[0], bike_tr)
-        self.wait(1)
 
-        car.set_target_velocity(carla.Vector3D(+30, 0, 0))
-        bike.set_target_velocity(carla.Vector3D(0, -12, 0))
+        batch = [
+            SpawnActor(car_bp, car_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(30, 0, 0))),
+            SpawnActor(bike_bp, bike_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, -12, 0)))
+        ]
 
-        self.add_actor(car, "Car")
-        self.add_actor(bike, "Bike")
+        responses = self.client.apply_batch_sync(batch)
+
+        veh_ids = [x.actor_id for x in responses]
+        veh_refs = [self.world.get_actor(x) for x in veh_ids]
+
+        if (0 in veh_ids) or (None in veh_refs):
+            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+
+        self.add_actor(veh_refs[0], "Car")
+        self.add_actor(veh_refs[1], "Bike")
 
         self.wait(1)
 
@@ -272,21 +241,32 @@ class CarWalkerCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
-        car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
-        car = self.world.spawn_actor(blueprint_library.filter("*lincoln*")[0], car_tr)
-
-        walker_tr = carla.Transform(carla.Location(85, -255, 1.00), carla.Rotation(yaw=-90))
+        car_bp = blueprint_library.filter("mkz_2017")[0]
         walker_bp = blueprint_library.filter("walker.pedestrian.0007")[0]
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')
-        walker = self.world.spawn_actor(walker_bp, walker_tr)
+
+        car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
+        walker_tr = carla.Transform(carla.Location(85, -255, 1.00), carla.Rotation(yaw=-90))
+
+        batch = [
+            SpawnActor(car_bp, car_tr)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(20, 0, 0))),
+            SpawnActor(walker_bp, walker_tr)
+        ]
+
+        responses = self.client.apply_batch_sync(batch)
+
+        veh_ids = [x.actor_id for x in responses]
+        veh_refs = [self.world.get_actor(x) for x in veh_ids]
+
+        if (0 in veh_ids) or (None in veh_refs):
+            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
 
         self.wait(1)
 
-        car.set_target_velocity(carla.Vector3D(+20, 0, 0))
-        walker.set_simulate_physics(True)
-        self.add_actor(car, "Car")
-        self.add_actor(walker, "Walker")
+        self.add_actor(veh_refs[0], "Car")
+        self.add_actor(veh_refs[1], "Walker")
 
         self.wait(1)
 
@@ -433,7 +413,7 @@ class TestCollisionDeterminism(SmokeTest):
         # Remove all the output files
         shutil.rmtree(output_path)
 
-    def _test_three_cars(self):
+    def test_three_cars(self):
         print("TestCollisionDeterminism.test_three_cars")
 
         # Setting output temporal folder

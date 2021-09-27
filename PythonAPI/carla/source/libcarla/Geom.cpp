@@ -103,6 +103,38 @@ static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
   return BuildMatrix(self.GetInverseMatrix());
 }
 
+static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::Cross(self, other);
+}
+
+static auto Dot(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::Dot(self, other);
+}
+
+static auto Distance(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::Distance(self, other);
+}
+
+static auto DistanceSquared(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::DistanceSquared(self, other);
+}
+
+static auto Dot2D(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::Dot2D(self, other);
+}
+
+static auto Distance2D(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::Distance2D(self, other);
+}
+
+static auto DistanceSquared2D(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::DistanceSquared2D(self, other);
+}
+
+static auto GetVectorAngle(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
+  return carla::geom::Math::GetVectorAngle(self, other);
+}
+
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
@@ -115,6 +147,9 @@ void export_geom() {
     .def(init<float, float>((arg("x")=0.0f, arg("y")=0.0f)))
     .def_readwrite("x", &cg::Vector2D::x)
     .def_readwrite("y", &cg::Vector2D::y)
+    .def("squared_length", &cg::Vector2D::SquaredLength)
+    .def("length", &cg::Vector2D::Length)
+    .def("make_unit_vector", &cg::Vector2D::MakeUnitVector)
     .def("__eq__", &cg::Vector2D::operator==)
     .def("__ne__", &cg::Vector2D::operator!=)
     .def(self += self)
@@ -139,6 +174,17 @@ void export_geom() {
     .def_readwrite("x", &cg::Vector3D::x)
     .def_readwrite("y", &cg::Vector3D::y)
     .def_readwrite("z", &cg::Vector3D::z)
+    .def("length", &cg::Vector3D::Length)
+    .def("squared_length", &cg::Vector3D::SquaredLength)
+    .def("make_unit_vector", &cg::Vector3D::MakeUnitVector)
+    .def("cross", &Cross, (arg("vector")))
+    .def("dot", &Dot, (arg("vector")))
+    .def("dot_2d", &Dot2D, (arg("vector")))
+    .def("distance", &Distance, (arg("vector")))
+    .def("distance_2d", &Distance2D, (arg("vector")))
+    .def("distance_squared", &DistanceSquared, (arg("vector")))
+    .def("distance_squared_2d", &DistanceSquared2D, (arg("vector")))
+    .def("get_vector_angle", &GetVectorAngle, (arg("vector")))
     .def("__eq__", &cg::Vector3D::operator==)
     .def("__ne__", &cg::Vector3D::operator!=)
     .def("__abs__", &cg::Vector3D::Abs)

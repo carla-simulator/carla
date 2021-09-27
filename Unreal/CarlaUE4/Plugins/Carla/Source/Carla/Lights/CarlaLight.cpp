@@ -15,12 +15,17 @@ UCarlaLight::UCarlaLight()
 
 void UCarlaLight::BeginPlay()
 {
+  Super::BeginPlay();
+
+  RegisterLight();
+}
+
+void UCarlaLight::RegisterLight()
+{
   if(bRegistered)
   {
     return;
   }
-
-  Super::BeginPlay();
 
   UWorld *World = GetWorld();
   if(World)
@@ -28,6 +33,7 @@ void UCarlaLight::BeginPlay()
     UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
     CarlaLightSubsystem->RegisterLight(this);
   }
+
   bRegistered = true;
 }
 
