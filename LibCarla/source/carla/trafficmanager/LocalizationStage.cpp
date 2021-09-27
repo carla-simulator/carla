@@ -9,6 +9,7 @@ namespace traffic_manager {
 using namespace constants::PathBufferUpdate;
 using namespace constants::LaneChange;
 using namespace constants::WaypointSelection;
+using namespace constants::SpeedThreshold;
 
 LocalizationStage::LocalizationStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -18,7 +19,6 @@ LocalizationStage::LocalizationStage(
   const LocalMapPtr &local_map,
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
-  std::unordered_set<ActorId>& marked_for_rerouting,
   LocalizationFrame &output_array,
   RandomGeneratorMap &random_devices)
     : vehicle_id_list(vehicle_id_list),
@@ -28,7 +28,6 @@ LocalizationStage::LocalizationStage(
     local_map(local_map),
     parameters(parameters),
     marked_for_removal(marked_for_removal),
-    marked_for_rerouting(marked_for_rerouting),
     output_array(output_array),
     random_devices(random_devices) {}
 
@@ -41,7 +40,10 @@ void LocalizationStage::Update(const unsigned long index) {
   const float vehicle_speed = vehicle_velocity_vector.Length();
 
   // Speed dependent waypoint horizon length.
-  float horizon_length = vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH;
+  float horizon_length = std::max(vehicle_speed * HORIZON_RATE, MINIMUM_HORIZON_LENGTH);
+  if (vehicle_speed > HIGHWAY_SPEED) {
+    horizon_length = std::max(vehicle_speed * HIGH_SPEED_HORIZON_RATE, MINIMUM_HORIZON_LENGTH);
+  }
   const float horizon_square = SQUARE(horizon_length);
 
   if (buffer_map.find(actor_id) == buffer_map.end()) {
@@ -151,57 +153,6 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
 
-  // Try changing the vehicle's selected path if stuck at a location for too long.
-  if (marked_for_rerouting.find(actor_id) != marked_for_rerouting.end()) {
-    SimpleWaypointPtr latest_waypoint = waypoint_buffer.front();
-    bool junction_point_found = false;
-    // Try finding the first junction wpt
-    // It starts from 1 because you want to re route
-    for (unsigned long i = 1u; i < waypoint_buffer.size() && !junction_point_found; ++i) {
-      std::vector<SimpleWaypointPtr> next_waypoints = latest_waypoint->GetNextWaypoint();
-      // We found it
-      if (next_waypoints.size() > 1) {
-        std::cout << "We are rerouting actor with ID: " << actor_id << std::endl;
-        marked_for_rerouting.erase(actor_id);
-        junction_point_found = true;
-        uint16_t selection_index = 0u;
-        SimpleWaypointPtr previous_wpt = waypoint_buffer.at(i+1); // the previously chosen waypoint
-        // Remove the previously chosen wpt from the list of possible wpts
-        auto min_distance = cg::Math::DistanceSquared(previous_wpt->GetLocation(), next_waypoints.at(0)->GetLocation());
-        uint16_t removal_index = 0u;
-        for (uint16_t j = 1u; j < next_waypoints.size(); ++j) {
-          auto distance = cg::Math::DistanceSquared(previous_wpt->GetLocation(), next_waypoints.at(j)->GetLocation());
-          if (distance < min_distance) {
-            min_distance = distance;
-            removal_index = j;
-          }
-        }
-        std::cout << "Do we really erase it?" << std::endl;
-        next_waypoints.erase(next_waypoints.begin() + removal_index);
-        selection_index = ChooseWaypoint(next_waypoints, actor_id);
-        SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
-        // Remove all wpts
-        auto number_of_pops = waypoint_buffer.size();
-        for (uint64_t j = 0u; j < number_of_pops; ++j) {
-          PopWaypoint(actor_id, track_traffic, waypoint_buffer);
-        }
-        PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
-        marked_for_rerouting.erase(actor_id);
-        break;
-      }
-      else if (next_waypoints.size() == 0) {
-        if (!parameters.GetOSMMode()) {
-          std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
-        }
-        marked_for_removal.push_back(actor_id);
-        break;
-      }
-      else {
-        latest_waypoint = next_waypoints.front();
-      }
-    }
-  }
-
   // Populating the buffer.
   while (waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
 
@@ -240,23 +191,6 @@ void LocalizationStage::Update(const unsigned long index) {
 
   // Updating geodesic grid position for actor.
   track_traffic.UpdateGridPosition(actor_id, waypoint_buffer);
-}
-
-uint16_t LocalizationStage::ChooseWaypoint(std::vector<SimpleWaypointPtr> next_waypoints,
-                                          const ActorId actor_id) {
-  // std::sort(next_waypoints.begin(), next_waypoints.end(),
-  //           [&furthest_waypoint](const SimpleWaypointPtr &a, const SimpleWaypointPtr &b) {
-  //             float a_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
-  //                                                       furthest_waypoint->GetForwardVector(),
-  //                                                       a->GetLocation());
-  //             float b_x_product = DeviationCrossProduct(furthest_waypoint->GetLocation(),
-  //                                                       furthest_waypoint->GetForwardVector(),
-  //                                                       b->GetLocation());
-  //             return a_x_product < b_x_product;
-  //           });
-  double r_sample = random_devices.at(actor_id).next();
-  double s_bucket = 100.0 / next_waypoints.size();
-  return static_cast<uint64_t>(std::floor(r_sample/s_bucket));
 }
 
 void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,

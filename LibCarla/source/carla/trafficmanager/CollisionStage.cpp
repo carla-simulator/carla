@@ -45,12 +45,15 @@ void CollisionStage::Update(const unsigned long index) {
 
     ActorIdSet overlapping_actors = track_traffic.GetOverlappingVehicles(ego_actor_id);
     std::vector<ActorId> collision_candidate_ids;
-
     // Run through vehicles with overlapping paths and filter them;
-    float value = SQUARE(COLLISION_RADIUS_RATE * velocity + COLLISION_RADIUS_MIN) + parameters.GetDistanceToLeadingVehicle(ego_actor_id);
+    float distance_to_leading = parameters.GetDistanceToLeadingVehicle(ego_actor_id);
+    float value = SQUARE(COLLISION_RADIUS_RATE * velocity + COLLISION_RADIUS_MIN) + distance_to_leading;
     float collision_radius_square = value;
-    if (velocity < 1.0f) {
-      collision_radius_square = SQUARE(COLLISION_RADIUS_STOP) + parameters.GetDistanceToLeadingVehicle(ego_actor_id);
+    if (velocity < 2.0f) {
+      collision_radius_square = SQUARE(COLLISION_RADIUS_STOP);
+      if (distance_to_leading > COLLISION_RADIUS_STOP) {
+        collision_radius_square = SQUARE(COLLISION_RADIUS_STOP) + distance_to_leading;
+      }
     }
     for (ActorId overlapping_actor_id : overlapping_actors) {
       // If actor is within maximum collision avoidance and vertical overlap range.
@@ -116,8 +119,9 @@ float CollisionStage::GetBoundingBoxExtention(const ActorId actor_id) {
 
   const float velocity = cg::Math::Dot(simulation_state.GetVelocity(actor_id), simulation_state.GetHeading(actor_id));
   float bbox_extension;
-  // Using a linear function to calculate boundary length.
-  bbox_extension = BOUNDARY_EXTENSION_RATE * velocity + BOUNDARY_EXTENSION_MINIMUM;
+  // Using a function to calculate boundary length.
+  float velocity_extension = 0.36f*velocity;
+  bbox_extension = BOUNDARY_EXTENSION_MINIMUM + velocity_extension * velocity_extension;
   // If a valid collision lock present, change boundary length to maintain lock.
   if (collision_locks.find(actor_id) != collision_locks.end()) {
     const CollisionLock &lock = collision_locks.at(actor_id);

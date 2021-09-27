@@ -51,7 +51,6 @@ private:
   TrackTraffic &track_traffic;
   // Array of vehicles marked by stages for removal.
   std::vector<ActorId>& marked_for_removal;
-  std::unordered_set<ActorId>& marked_for_rerouting;
   const Parameters &parameters;
   const cc::World &world;
   const LocalMapPtr &local_map;
@@ -95,7 +94,6 @@ public:
        BufferMap &buffer_map,
        TrackTraffic &track_traffic,
        std::vector<ActorId>& marked_for_removal,
-       std::unordered_set<ActorId>& marked_for_rerouting,
        const Parameters &parameters,
        const cc::World &world,
        const LocalMapPtr &local_map,

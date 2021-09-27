@@ -69,8 +69,7 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
   bool traffic_light_hazard = false;
 
   if (vehicle_last_junction.find(ego_actor_id) == vehicle_last_junction.end()) {
-    // Initializing new map entry for the actor with
-    // an arbitrary and different junction id.
+    // Initializing new map entry for the actor with  an arbitrary and different junction id.
     vehicle_last_junction.insert({ego_actor_id, junction_id + 1});
   }
 
@@ -92,8 +91,7 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
     }
 
     // If new ticket is needed for the vehicle, then query the junction
-    // ticket map
-    // and update the map value to the new ticket value.
+    // ticket map and update the map value to the new ticket value.
     if (need_to_issue_new_ticket) {
       if (junction_last_ticket.find(junction_id) != junction_last_ticket.end()) {
 

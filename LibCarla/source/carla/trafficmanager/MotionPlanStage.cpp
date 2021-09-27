@@ -307,6 +307,7 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
                                                           const float max_target_velocity) {
   bool collision_emergency_stop = false;
   float dynamic_target_velocity = max_target_velocity;
+  const float vehicle_speed = vehicle_velocity.Length();
 
   if (collision_hazard.hazard && !tl_hazard) {
     const ActorId other_actor_id = collision_hazard.hazard_actor_id;
@@ -321,15 +322,20 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
     if (vehicle_relative_speed > EPSILON_RELATIVE_SPEED) {
       // If other vehicle is approaching lead vehicle and lead vehicle is further
       // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
-      float follow_lead_distance = std::min(vehicle_relative_speed * FOLLOW_DISTANCE_RATE + MIN_FOLLOW_LEAD_DISTANCE, MAX_FOLLOW_LEAD_DISTANCE);
-      if (available_distance_margin > follow_lead_distance && other_velocity.Length() < 1.0f) {
+      float follow_lead_distance = 2.0f*vehicle_speed + MIN_FOLLOW_LEAD_DISTANCE;
+      // if (vehicle_velocity.Length() > 25.0f) {
+      //   std::cout << "follow_lead_distance: " << follow_lead_distance << " for vehicle_velocity " << vehicle_velocity.Length() << " for vehicle_relative_speed " << vehicle_relative_speed << std::endl;
+      // }
+      if (available_distance_margin > follow_lead_distance) {
         // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
-        // by maintaining a relative speed of RELATIVE_APPROACH_SPEED
-        dynamic_target_velocity = other_speed_along_heading + RELATIVE_APPROACH_SPEED;
+        // by maintaining a relative speed of other_speed_along_heading
+        dynamic_target_velocity = other_speed_along_heading;
+        // float v = std::max(((max_target_velocity - minimum_velocity) / max_distance) * distance + minimum_velocity, minimum_velocity);
+        // dynamic_target_velocity = std::min(dynamic_target_velocity, v);
       }
       // If vehicle is approaching a lead vehicle and the lead vehicle is further
       // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
-      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) {
+      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) { // + parameters.GetDistanceToLeadingVehicle(actor_id)) {
         // Then follow the lead vehicle by acquiring it's speed along current heading.
         dynamic_target_velocity = std::max(other_speed_along_heading, RELATIVE_APPROACH_SPEED);
       } else {
@@ -342,6 +348,11 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
     }
   }
 
+  float max_gradual_velocity = PERC_MAX_SLOWDOWN * vehicle_speed;
+  if (dynamic_target_velocity < vehicle_speed - max_gradual_velocity) {
+    // Don't slow more than PERC_MAX_SLOWDOWN per frame.
+    dynamic_target_velocity = vehicle_speed - max_gradual_velocity;
+  }
   dynamic_target_velocity = std::min(max_target_velocity, dynamic_target_velocity);
 
   return {collision_emergency_stop, dynamic_target_velocity};

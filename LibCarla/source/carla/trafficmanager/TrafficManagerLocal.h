@@ -55,9 +55,9 @@ private:
   std::vector<float> longitudinal_highway_PID_parameters;
   std::vector<float> lateral_PID_parameters;
   std::vector<float> lateral_highway_PID_parameters;
-  /// Carla's client connection object.
+  /// CARLA client connection object.
   carla::client::detail::EpisodeProxy episode_proxy;
-  /// Carla client and object.
+  /// CARLA client and object.
   cc::World world;
   /// Set of all actors registered with traffic manager.
   AtomicActorSet registered_vehicles;
@@ -114,7 +114,6 @@ private:
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   bool is_custom_seed {false};
   std::vector<ActorId> marked_for_removal;
-  std::unordered_set<ActorId> marked_for_rerouting;
   /// Mutex to prevent vehicle registration during frame array re-allocation.
   std::mutex registration_mutex;
 

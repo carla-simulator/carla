@@ -41,7 +41,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          local_map,
                                          parameters,
                                          marked_for_removal,
-                                         marked_for_rerouting,
                                          localization_frame,
                                          random_devices)),
 
@@ -82,7 +81,6 @@ TrafficManagerLocal::TrafficManagerLocal(
               buffer_map,
               track_traffic,
               marked_for_removal,
-              marked_for_rerouting,
               parameters,
               world,
               local_map,
