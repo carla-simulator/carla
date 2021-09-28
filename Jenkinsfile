@@ -53,6 +53,7 @@ pipeline
                             {
                                 sh 'make LibCarla'
                                 sh 'make PythonAPI ARGS="--python-version=3.7,2 --target-wheel-platform=manylinux_2_27_x86_64"'
+                                sh 'make agents ARGS="--python-version=3.7,2"'
                                 sh 'make CarlaUE4Editor ARGS="--chrono"'
                                 sh 'make plugins'
                                 sh 'make examples'
@@ -63,8 +64,12 @@ pipeline
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
                                     archiveArtifacts 'PythonAPI/carla/dist/*.whl'
+                                    archiveArtifacts 'PythonAPI/agents/dist/*.egg'
+                                    archiveArtifacts 'PythonAPI/agents/dist/*.whl'
                                     stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
                                     stash includes: 'PythonAPI/carla/dist/*.whl', name: 'ubuntu_wheels'
+                                    stash includes: 'PythonAPI/agents/dist/*.egg', name: 'agents_eggs'
+                                    stash includes: 'PythonAPI/agents/dist/*.whl', name: 'agents_wheels'
                                 }
                             }
                         }
@@ -262,6 +267,10 @@ pipeline
                                 """
                                 bat """
                                     call ../setEnv64.bat
+                                    make agents
+                                """
+                                bat """
+                                    call ../setEnv64.bat
                                     make CarlaUE4Editor ARGS="--chrono"
                                 """
                                 bat """
@@ -275,6 +284,8 @@ pipeline
                                 {
                                     archiveArtifacts 'PythonAPI/carla/dist/*.egg'
                                     archiveArtifacts 'PythonAPI/carla/dist/*.whl'
+                                    archiveArtifacts 'PythonAPI/agents/dist/*.egg'
+                                    archiveArtifacts 'PythonAPI/agents/dist/*.whl'
                                 }
                             }
                         }
