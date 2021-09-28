@@ -128,6 +128,8 @@ namespace traffic_manager {
 
       WaypointPtr waypoint_ptr = _world_map->GetWaypointXODR(cached_wp.road_id, cached_wp.lane_id, cached_wp.s);
       SimpleWaypointPtr wp = std::make_shared<SimpleWaypoint>(waypoint_ptr);
+      wp->SetGeodesicGridId(cached_wp.geodesic_grid_id);
+      wp->SetIsJunction(cached_wp.is_junction);
       dense_topology.push_back(wp);
     }
 
