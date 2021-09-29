@@ -278,8 +278,7 @@ class TestVehicleFriction(SyncSmokeTest):
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
-        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
-        bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
+        bp_vehicles = self.world.get_blueprint_library().filter("*charger_2020")
 
         value_vol_friction = 5.0
         friction_bp = self.world.get_blueprint_library().find('static.trigger.friction')
@@ -396,18 +395,14 @@ class TestVehicleFriction(SyncSmokeTest):
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
 
         for bp_veh in bp_vehicles:
-            veh_transf = carla.Transform(carla.Location(36, -200, 0.3), carla.Rotation(yaw=90))
 
-            veh_transf_00 = carla.Transform(carla.Location(36, -200, 0.2), carla.Rotation(yaw=90))
-            veh_transf_01 = carla.Transform(carla.Location(32, -200, 0.7), carla.Rotation(yaw=90))
-            veh_transf_02 = carla.Transform(carla.Location(28, -200, 0.7), carla.Rotation(yaw=90))
+            veh_transf_00 = carla.Transform(carla.Location(35, -200, 0.2), carla.Rotation(yaw=90))
+            veh_transf_01 = carla.Transform(carla.Location(29, -200, 0.7), carla.Rotation(yaw=90))
 
             batch = [
                     SpawnActor(bp_veh, veh_transf_00)
                     .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0))),
                     SpawnActor(bp_veh, veh_transf_01)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0))),
-                    SpawnActor(bp_veh, veh_transf_02)
                     .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))
                 ]
 
@@ -423,8 +418,7 @@ class TestVehicleFriction(SyncSmokeTest):
 
             self.client.apply_batch_sync([
                 ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], tire_friction=0.0, drag=0.0)),
-                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], tire_friction=0.5, drag=0.0)),
-                ApplyVehiclePhysicsControl(veh_refs[2], change_physics_control(veh_refs[1], tire_friction=3.0, drag=0.0))])
+                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], tire_friction=3.0, drag=0.0))])
 
             self.wait(1)
 
@@ -433,34 +427,29 @@ class TestVehicleFriction(SyncSmokeTest):
             self.wait(1)
             self.client.apply_batch_sync([
                 ApplyTargetVelocity(veh_refs[0], carla.Vector3D(0, vel_ref, 0)),
-                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(0, vel_ref, 0)),
-                ApplyTargetVelocity(veh_refs[2], carla.Vector3D(0, vel_ref, 0))
+                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(0, vel_ref, 0))
             ])
-            self.wait(50)
+            self.wait(20)
 
             vel_veh_00 = veh_refs[0].get_velocity().y
             loc_veh_00 = veh_refs[0].get_location().y
             loc_veh_01 = veh_refs[1].get_location().y
-            loc_veh_02 = veh_refs[2].get_location().y
 
-            for _i in range(0, 150):
+            for _i in range(0, 50):
                 self.world.tick()
                 self.client.apply_batch_sync([
                     ApplyVehicleControl(veh_refs[0], carla.VehicleControl(brake=1.0)),
-                    ApplyVehicleControl(veh_refs[1], carla.VehicleControl(brake=1.0)),
-                    ApplyVehicleControl(veh_refs[2], carla.VehicleControl(brake=1.0))
+                    ApplyVehicleControl(veh_refs[1], carla.VehicleControl(brake=1.0))
                 ])
 
             dist_veh_00 = veh_refs[0].get_location().y - loc_veh_00
             dist_veh_01 = veh_refs[1].get_location().y - loc_veh_01
-            dist_veh_02 = veh_refs[2].get_location().y - loc_veh_02
 
-            err_veh_01 = dist_veh_01 > 0.75 * dist_veh_00
-            err_veh_02 = dist_veh_02 > 0.75 * dist_veh_01
+            err_veh_01 = dist_veh_01 > dist_veh_00
 
-            if err_veh_01 or err_veh_02:
-                self.fail("%s: Friction test failed: ErrVeh01: %r ErrVeh02: %r."
-                    % (bp_veh.id, err_veh_01, err_veh_02))
+            if err_veh_01:
+                self.fail("%s: Friction test failed: ErrVeh01: %r -> (%f, %f)"
+                    % (bp_veh.id, err_veh_01, dist_veh_00, dist_veh_01))
 
             self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
 
@@ -541,7 +530,6 @@ class TestVehicleTireConfig(SyncSmokeTest):
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
 
         for bp_veh in bp_vehicles:
-
             ref_pos = -200
 
             veh_transf_00 = carla.Transform(carla.Location(36 - 0, ref_pos, 0.2), carla.Rotation(yaw=90))

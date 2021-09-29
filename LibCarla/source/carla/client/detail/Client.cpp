@@ -274,6 +274,18 @@ namespace detail {
     return _pimpl->AsyncCall("set_vehicle_light_state", vehicle, light_state);
   }
 
+  void Client::OpenVehicleDoor(
+      rpc::ActorId vehicle,
+      const rpc::VehicleDoor door_idx) {
+    return _pimpl->AsyncCall("open_vehicle_door", vehicle, door_idx);
+  }
+
+  void Client::CloseVehicleDoor(
+      rpc::ActorId vehicle,
+      const rpc::VehicleDoor door_idx) {
+    return _pimpl->AsyncCall("close_vehicle_door", vehicle, door_idx);
+  }
+
   void Client::SetWheelSteerDirection(
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation vehicle_wheel,

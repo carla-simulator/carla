@@ -8,8 +8,9 @@
 
 #include "carla/client/Actor.h"
 #include "carla/rpc/TrafficLightState.h"
-#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehicleDoor.h"
+#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/trafficmanager/TrafficManager.h"
@@ -33,6 +34,7 @@ namespace client {
     using PhysicsControl = rpc::VehiclePhysicsControl;
     using LightState = rpc::VehicleLightState::LightState;
     using TM = traffic_manager::TrafficManager;
+    using VehicleDoor = rpc::VehicleDoor;
     using WheelLocation = carla::rpc::VehicleWheelLocation;
 
 
@@ -49,6 +51,12 @@ namespace client {
 
     /// Apply physics control to this vehicle.
     void ApplyPhysicsControl(const PhysicsControl &physics_control);
+
+    /// Open a door in this vehicle
+    void OpenDoor(const VehicleDoor door_idx);
+
+    /// Close a door in this vehicle
+    void CloseDoor(const VehicleDoor door_idx);
 
     /// Sets a @a LightState to this vehicle.
     void SetLightState(const LightState &light_state);
