@@ -16,6 +16,7 @@
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
 #include "VehicleAnimInstance.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 
 #include "CoreMinimal.h"
@@ -154,6 +155,7 @@ public:
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSimulatePhysics(bool enabled);
 
   void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
@@ -270,6 +272,15 @@ protected:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
   TArray<float> DoorAnimAlpha;
 
+  UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
+  TArray<UPhysicsConstraintComponent*> ConstraintsComponents;
+
+  UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
+  float DoorOpenStrength = 100.0f;
+
+  UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
+  float DoorCloseStrength = 10000.0f;
+
 private:
 
   /// Current state of the vehicle controller (for debugging purposes).
@@ -310,6 +321,12 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoor(const EVehicleDoor DoorIdx);
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void OpenDoorPhys(const EVehicleDoor DoorIdx);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void CloseDoorPhys(const EVehicleDoor DoorIdx);
+
   UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
   void OpenDoorAnim(const EVehicleDoor DoorIdx);
 
@@ -331,5 +348,8 @@ private:
   // Small workarround to allow optional CarSim plugin usage
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   UBaseCarlaMovementComponent * BaseMovementComponent = nullptr;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TMap<UPrimitiveComponent*, FTransform> DoorComponentsTransform;
 
 };
