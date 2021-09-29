@@ -83,6 +83,25 @@ void ACarlaWheeledVehicle::BeginPlay()
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
+  // Get constraint components and their initial transforms
+  DoorComponentsTransform.Empty();
+  FTransform ActorInverseTransform = GetActorTransform().Inverse();
+  for (UPhysicsConstraintComponent * Constraint: ConstraintsComponents)
+  {
+    UPrimitiveComponent* DoorComponent = Cast<UPrimitiveComponent>(GetDefaultSubobjectByName(Constraint->ComponentName1.ComponentName));
+    if(DoorComponent)
+    {
+      UE_LOG(LogCarla, Warning, TEXT("Door name: %s"), *(DoorComponent->GetName()));
+      FTransform ComponentWorldTransform = DoorComponent->GetComponentTransform();
+      FTransform RelativeTransform = ComponentWorldTransform * ActorInverseTransform;
+      DoorComponentsTransform.Add(DoorComponent, RelativeTransform);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("Missing component for constraint: %s"), *(Constraint->GetName()));
+    }
+  }
+
   float FrictionScale = 3.5f;
 
   UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
@@ -534,11 +553,11 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   check(VehicleAnim != nullptr)
   check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
 
-  if (bPhysicsEnabled == true) 
+  if (bPhysicsEnabled == true)
   {
     return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
   }
-  else 
+  else
   {
     return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
   }
@@ -571,7 +590,7 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
     Vehicle4W->RecreatePhysicsState();
     VehicleAnim->ResetWheelCustomRotations();
   }
-  else 
+  else
   {
     Vehicle4W->DestroyPhysicsState();
   }
@@ -579,6 +598,29 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockWrite();
 
   bPhysicsEnabled = enabled;
+
+  // Set simulate physics for doors
+  for (auto& ComponentTransform : DoorComponentsTransform)
+  {
+    UPrimitiveComponent* Component = ComponentTransform.Key;
+    Component->SetSimulatePhysics(bPhysicsEnabled);
+  }
+
+  if (bPhysicsEnabled)
+  {
+    FTransform ActorTransform = GetActorTransform();
+    // recreate physics constraints
+    for (auto& ComponentTransform : DoorComponentsTransform)
+    {
+      UPrimitiveComponent* Component = ComponentTransform.Key;
+      FTransform ComponentWorldTransform = ComponentTransform.Value * ActorTransform;
+      Component->SetWorldTransform(ComponentWorldTransform);
+    }
+    for (UPhysicsConstraintComponent* Constraint : ConstraintsComponents)
+    {
+      Constraint->InitComponentConstraint();
+    }
+  }
 }
 
 FVector ACarlaWheeledVehicle::GetVelocity() const
@@ -592,49 +634,52 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
-  // We check if the car has any door configured
-  if (DoorAnimMaxAngle.Num() == 0) {
-    UE_LOG(LogTemp, Warning, TEXT("The car has no doors configured."));
-    return;
-  }
-
-  // door exist
-  if (int(DoorIdx) > DoorAnimMaxAngle.Num() && DoorIdx != EVehicleDoor::All) {
+  if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
     UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 
   if (DoorIdx == EVehicleDoor::All) {
-    for (int i = 0; i < DoorAnimMaxAngle.Num(); i++)
-      OpenDoorAnim(EVehicleDoor(i));
-
+    for (int i = 0; i < ConstraintsComponents.Num(); i++)
+    {
+      OpenDoorPhys(EVehicleDoor(i));
+    }
     return;
   }
 
-  OpenDoorAnim(DoorIdx);
+  OpenDoorPhys(DoorIdx);
 }
 
 void ACarlaWheeledVehicle::CloseDoor(const EVehicleDoor DoorIdx) {
-  // We check if the car has any door configured
-  if (DoorAnimMaxAngle.Num() == 0) {
-    UE_LOG(LogTemp, Warning, TEXT("The car has no doors configured."));
-    return;
-  }
-
-  // door exist
-  if (int(DoorIdx) > DoorAnimMaxAngle.Num() && DoorIdx != EVehicleDoor::All) {
+  if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
     UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 
   if (DoorIdx == EVehicleDoor::All) {
-    for (int i = 0; i < DoorAnimMaxAngle.Num(); i++)
-      CloseDoorAnim(EVehicleDoor(i));
-
+    for (int i = 0; i < ConstraintsComponents.Num(); i++)
+    {
+      CloseDoorPhys(EVehicleDoor(i));
+    }
     return;
   }
 
-  CloseDoorAnim(DoorIdx);
+  CloseDoorPhys(DoorIdx);
+}
+
+void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
+{
+  UPhysicsConstraintComponent* Constraint = ConstraintsComponents[static_cast<int>(DoorIdx)];
+  float AngleLimit = Constraint->ConstraintInstance.GetAngularSwing1Limit();
+  Constraint->SetAngularOrientationTarget(FRotator(0, 0, AngleLimit));
+  Constraint->SetAngularDriveParams(DoorOpenStrength, 1.0, 0.0);
+}
+
+void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
+{
+  UPhysicsConstraintComponent* Constraint = ConstraintsComponents[static_cast<int>(DoorIdx)];
+  Constraint->SetAngularOrientationTarget(FRotator(0, 0, 0));
+  Constraint->SetAngularDriveParams(DoorCloseStrength, 1.0, 0.0);
 }
 
 void ACarlaWheeledVehicle::OpenDoorAnim_Implementation(const EVehicleDoor DoorIdx)
