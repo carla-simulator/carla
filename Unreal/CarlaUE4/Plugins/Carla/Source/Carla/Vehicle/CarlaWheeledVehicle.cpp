@@ -84,6 +84,15 @@ void ACarlaWheeledVehicle::BeginPlay()
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
   // Get constraint components and their initial transforms
+  ConstraintsComponents.Empty();
+  for (FName& ComponentName : ConstraintComponentNames)
+  {
+    UPhysicsConstraintComponent* ConstraintComponent = Cast<UPhysicsConstraintComponent>(GetDefaultSubobjectByName(ComponentName));
+    if (ConstraintComponent)
+    {
+      ConstraintsComponents.Add(ConstraintComponent);
+    }
+  }
   DoorComponentsTransform.Empty();
   FTransform ActorInverseTransform = GetActorTransform().Inverse();
   for (UPhysicsConstraintComponent * Constraint: ConstraintsComponents)
@@ -101,6 +110,7 @@ void ACarlaWheeledVehicle::BeginPlay()
       UE_LOG(LogCarla, Error, TEXT("Missing component for constraint: %s"), *(Constraint->GetName()));
     }
   }
+  ResetConstraints();
 
   float FrictionScale = 3.5f;
 
@@ -472,6 +482,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
     Vehicle4W->PVehicle->mWheelsSimData.setTireData(i, PTireData);
   }
 
+  ResetConstraints();
+
   auto * Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
   {
@@ -616,10 +628,15 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
       FTransform ComponentWorldTransform = ComponentTransform.Value * ActorTransform;
       Component->SetWorldTransform(ComponentWorldTransform);
     }
-    for (UPhysicsConstraintComponent* Constraint : ConstraintsComponents)
-    {
-      Constraint->InitComponentConstraint();
-    }
+    ResetConstraints();
+  }
+}
+
+void ACarlaWheeledVehicle::ResetConstraints()
+{
+  for (UPhysicsConstraintComponent* Constraint : ConstraintsComponents)
+  {
+    Constraint->InitComponentConstraint();
   }
 }
 
@@ -671,14 +688,24 @@ void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
 {
   UPhysicsConstraintComponent* Constraint = ConstraintsComponents[static_cast<int>(DoorIdx)];
   float AngleLimit = Constraint->ConstraintInstance.GetAngularSwing1Limit();
-  Constraint->SetAngularOrientationTarget(FRotator(0, 0, AngleLimit));
+  FRotator AngularRotationOffset = Constraint->ConstraintInstance.AngularRotationOffset;
+  if (Constraint->ConstraintInstance.AngularRotationOffset.Yaw < 0.0f)
+  {
+    AngleLimit = -AngleLimit;
+  }
+  Constraint->SetAngularOrientationTarget(FRotator(0, AngleLimit, 0));
   Constraint->SetAngularDriveParams(DoorOpenStrength, 1.0, 0.0);
 }
 
 void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
 {
   UPhysicsConstraintComponent* Constraint = ConstraintsComponents[static_cast<int>(DoorIdx)];
-  Constraint->SetAngularOrientationTarget(FRotator(0, 0, 0));
+  float AngleLimit = Constraint->ConstraintInstance.GetAngularSwing1Limit();
+  if (Constraint->ConstraintInstance.AngularRotationOffset.Yaw < 0.0f)
+  {
+    AngleLimit = -AngleLimit;
+  }
+  Constraint->SetAngularOrientationTarget(FRotator(0, -AngleLimit, 0));
   Constraint->SetAngularDriveParams(DoorCloseStrength, 1.0, 0.0);
 }
 

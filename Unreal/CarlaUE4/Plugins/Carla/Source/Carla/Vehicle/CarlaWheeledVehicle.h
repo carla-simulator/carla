@@ -273,13 +273,16 @@ protected:
   TArray<float> DoorAnimAlpha;
 
   UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
-  TArray<UPhysicsConstraintComponent*> ConstraintsComponents;
+  TArray<FName> ConstraintComponentNames;
 
   UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
   float DoorOpenStrength = 100.0f;
 
   UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
-  float DoorCloseStrength = 10000.0f;
+  float DoorCloseStrength = 1000.0f;
+
+  UFUNCTION(BlueprintCallable, CallInEditor)
+  void ResetConstraints();
 
 private:
 
@@ -348,6 +351,9 @@ private:
   // Small workarround to allow optional CarSim plugin usage
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   UBaseCarlaMovementComponent * BaseMovementComponent = nullptr;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TArray<UPhysicsConstraintComponent*> ConstraintsComponents;
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPrimitiveComponent*, FTransform> DoorComponentsTransform;
