@@ -68,8 +68,6 @@ pipeline
                                     archiveArtifacts 'PythonAPI/agents/dist/*.whl'
                                     stash includes: 'PythonAPI/carla/dist/*.egg', name: 'ubuntu_eggs'
                                     stash includes: 'PythonAPI/carla/dist/*.whl', name: 'ubuntu_wheels'
-                                    stash includes: 'PythonAPI/agents/dist/*.egg', name: 'agents_eggs'
-                                    stash includes: 'PythonAPI/agents/dist/*.whl', name: 'agents_wheels'
                                 }
                             }
                         }
