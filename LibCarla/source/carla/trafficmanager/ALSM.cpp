@@ -14,8 +14,6 @@
 namespace carla {
 namespace traffic_manager {
 
-using namespace constants::VehicleReroute;
-
 ALSM::ALSM(
   AtomicActorSet &registered_vehicles,
   BufferMap &buffer_map,

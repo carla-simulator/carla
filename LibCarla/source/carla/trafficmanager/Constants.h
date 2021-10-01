@@ -30,10 +30,6 @@ static const double RED_TL_BLOCKED_TIME_THRESHOLD = 180.0;
 static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
-namespace VehicleReroute {
-static const double REROUTE_TIME_THRESHOLD = 60.0;
-} // namespace VehicleRemoval
-
 namespace HybridMode {
 static const float HYBRID_MODE_DT_FL = 0.1f;
 static const double HYBRID_MODE_DT = 0.1;
@@ -44,7 +40,7 @@ static const float PHYSICS_RADIUS = 50.0f;
 namespace SpeedThreshold {
 static const float HIGHWAY_SPEED = 60.0f / 3.6f;
 static const float AFTER_JUNCTION_MIN_SPEED = 5.0f / 3.6f;
-static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 30.0f;
+static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 0.0f;
 } // namespace SpeedThreshold
 
 namespace PathBufferUpdate {
@@ -110,9 +106,9 @@ static const double DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL = 5.0;
 } // namespace TrafficLight
 
 namespace MotionPlan {
-static const float RELATIVE_APPROACH_SPEED = 15.0f / 3.6f;
+static const float RELATIVE_APPROACH_SPEED = 12.0f / 3.6f;
 static const float MIN_FOLLOW_LEAD_DISTANCE = 2.0f;
-static const float CRITICAL_BRAKING_MARGIN = 0.25f;
+static const float CRITICAL_BRAKING_MARGIN = 0.2f;
 static const float EPSILON_RELATIVE_SPEED = 0.001f;
 static const float MAX_JUNCTION_BLOCK_DISTANCE = 1.0f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
 static const float TWO_KM = 2000.0f;
@@ -126,12 +122,12 @@ static const float YIELD_TARGET_VELOCITY = 15.0f / 3.6f;
 static const float FRICTION = 0.6f;
 static const float GRAVITY = 9.81f;
 static const float PI = 3.1415927f;
-static const float PERC_MAX_SLOWDOWN = 0.06f;
+static const float PERC_MAX_SLOWDOWN = 0.08f;
 } // namespace MotionPlan
 
 namespace PID {
 static const float MAX_THROTTLE = 0.85f;
-static const float MAX_BRAKE = 0.6f;
+static const float MAX_BRAKE = 1.0f;
 static const float MAX_STEERING = 0.8f;
 static const float MAX_STEERING_DIFF = 0.15f;
 static const float DT = 0.05f;
