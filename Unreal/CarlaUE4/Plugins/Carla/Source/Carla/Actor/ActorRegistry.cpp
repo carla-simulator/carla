@@ -112,7 +112,6 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
 
 void FActorRegistry::Deregister(IdType Id)
 {
-  check(Contains(Id));
   FCarlaActor* CarlaActor = FindCarlaActor(Id);
 
   if(!CarlaActor) return;
