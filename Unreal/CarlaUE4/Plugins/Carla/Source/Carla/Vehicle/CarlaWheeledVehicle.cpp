@@ -9,6 +9,7 @@
 #include "Engine/CollisionProfile.h"
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
+#include "UObject/UObjectGlobals.h"
 
 #include "PhysXPublic.h"
 #include "PhysXVehicleManager.h"
@@ -42,6 +43,10 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
+
+  // We create a vector to store the update values for the animation
+  static uint8 MaxDoorNumber = (uint8) EVehicleDoor::All;
+  DoorAnimAlpha.Init(0.0, MaxDoorNumber);
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -584,4 +589,60 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
+}
+
+void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
+  // We check if the car has any door configured
+  if (DoorAnimMaxAngle.Num() == 0) {
+    UE_LOG(LogTemp, Warning, TEXT("The car has no doors configured."));
+    return;
+  }
+
+  // door exist
+  if (int(DoorIdx) > DoorAnimMaxAngle.Num() && DoorIdx != EVehicleDoor::All) {
+    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    return;
+  }
+
+  if (DoorIdx == EVehicleDoor::All) {
+    for (int i = 0; i < DoorAnimMaxAngle.Num(); i++)
+      OpenDoorAnim(EVehicleDoor(i));
+
+    return;
+  }
+
+  OpenDoorAnim(DoorIdx);
+}
+
+void ACarlaWheeledVehicle::CloseDoor(const EVehicleDoor DoorIdx) {
+  // We check if the car has any door configured
+  if (DoorAnimMaxAngle.Num() == 0) {
+    UE_LOG(LogTemp, Warning, TEXT("The car has no doors configured."));
+    return;
+  }
+
+  // door exist
+  if (int(DoorIdx) > DoorAnimMaxAngle.Num() && DoorIdx != EVehicleDoor::All) {
+    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    return;
+  }
+
+  if (DoorIdx == EVehicleDoor::All) {
+    for (int i = 0; i < DoorAnimMaxAngle.Num(); i++)
+      CloseDoorAnim(EVehicleDoor(i));
+
+    return;
+  }
+
+  CloseDoorAnim(DoorIdx);
+}
+
+void ACarlaWheeledVehicle::OpenDoorAnim_Implementation(const EVehicleDoor DoorIdx)
+{
+  UE_LOG(LogTemp, Warning, TEXT("OpenDoorAnim_Implementation."));
+}
+
+void ACarlaWheeledVehicle::CloseDoorAnim_Implementation(const EVehicleDoor DoorIdx)
+{
+  UE_LOG(LogTemp, Warning, TEXT("CloseDoorAnim_Implementation."));
 }

@@ -469,6 +469,14 @@ namespace detail {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
 
+    void OpenVehicleDoor(Vehicle &vehicle, const rpc::VehicleDoor door_idx) {
+      _client.OpenVehicleDoor(vehicle.GetId(), door_idx);
+    }
+
+    void CloseVehicleDoor(Vehicle &vehicle, const rpc::VehicleDoor door_idx) {
+      _client.CloseVehicleDoor(vehicle.GetId(), door_idx);
+    }
+
     void SetWheelSteerDirection(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
       _client.SetWheelSteerDirection(vehicle.GetId(), wheel_location, angle_in_deg);
     }

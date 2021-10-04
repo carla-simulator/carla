@@ -667,6 +667,34 @@ ECarlaServerResponse FVehicleActor::GetVehicleLightState(FVehicleLightState& Lig
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::OpenVehicleDoor(const EVehicleDoor DoorIdx)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->OpenDoor(DoorIdx);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::CloseVehicleDoor(const EVehicleDoor DoorIdx)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->CloseDoor(DoorIdx);
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::ApplyPhysicsControl(
       const FVehiclePhysicsControl& PhysicsControl)
 {
