@@ -46,8 +46,8 @@ static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 0.0f;
 namespace PathBufferUpdate {
 static const float MAX_START_DISTANCE = 20.0f;
 static const float MINIMUM_HORIZON_LENGTH = 15.0f;
-static const float HORIZON_RATE = 7.0f;
-static const float HIGH_SPEED_HORIZON_RATE = 12.0f;
+static const float HORIZON_RATE = 2.0f;
+static const float HIGH_SPEED_HORIZON_RATE = 4.0f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
