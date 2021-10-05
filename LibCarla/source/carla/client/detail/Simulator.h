@@ -294,7 +294,7 @@ namespace detail {
 
     void SetPedestriansCrossFactor(float percentage);
 
-    void SetPedestriansSeed(int seed);
+    void SetPedestriansSeed(unsigned int seed);
 
     /// @}
     // =========================================================================

@@ -308,7 +308,7 @@ namespace detail {
     navigation->SetPedestriansCrossFactor(percentage);
   }
 
-  void Simulator::SetPedestriansSeed(int seed) {
+  void Simulator::SetPedestriansSeed(unsigned int seed) {
     DEBUG_ASSERT(_episode != nullptr);
     auto navigation = _episode->CreateNavigationIfMissing();
     DEBUG_ASSERT(navigation != nullptr);

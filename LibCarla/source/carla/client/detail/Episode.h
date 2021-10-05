@@ -101,7 +101,7 @@ namespace detail {
       nav->SetPedestriansCrossFactor(percentage);
     }
 
-    void SetPedestriansSeed(int seed) {
+    void SetPedestriansSeed(unsigned int seed) {
       auto nav = _navigation.load();
       DEBUG_ASSERT(nav != nullptr);
       nav->SetPedestriansSeed(seed);

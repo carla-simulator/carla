@@ -85,7 +85,7 @@ namespace detail {
       _nav.SetPedestriansCrossFactor(percentage);
     }
 
-    void SetPedestriansSeed(int seed) {
+    void SetPedestriansSeed(unsigned int seed) {
       _nav.SetSeed(seed);
     }
 
