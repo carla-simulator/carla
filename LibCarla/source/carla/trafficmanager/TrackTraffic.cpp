@@ -56,9 +56,8 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
         // Step through buffer and update grid list for actor and actor list for grids.
         std::unordered_set<GeoGridId> current_grids;
         uint64_t buffer_size = buffer.size();
-        uint64_t step_size = static_cast<uint64_t>(static_cast<float>(buffer_size) * INV_BUFFER_STEP_THROUGH);
-        for (uint64_t i = 0u; i <= BUFFER_STEP_THROUGH; ++i) {
-            auto waypoint = buffer.at(std::min(i * step_size, buffer_size - 1u));
+        for (uint64_t i = 0u; i <= buffer_size - 1u; ++i) {
+            auto waypoint = buffer.at(i);
             GeoGridId ggid = waypoint->GetGeodesicGridId();
             current_grids.insert(ggid);
             // Add grid entry if not present.
