@@ -55,9 +55,9 @@ private:
   std::vector<float> longitudinal_highway_PID_parameters;
   std::vector<float> lateral_PID_parameters;
   std::vector<float> lateral_highway_PID_parameters;
-  /// Carla's client connection object.
+  /// CARLA client connection object.
   carla::client::detail::EpisodeProxy episode_proxy;
-  /// Carla client and object.
+  /// CARLA client and object.
   cc::World world;
   /// Set of all actors registered with traffic manager.
   AtomicActorSet registered_vehicles;
