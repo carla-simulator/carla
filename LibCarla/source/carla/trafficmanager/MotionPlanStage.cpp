@@ -322,16 +322,11 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
     if (vehicle_relative_speed > EPSILON_RELATIVE_SPEED) {
       // If other vehicle is approaching lead vehicle and lead vehicle is further
       // than follow_lead_distance 0 kmph -> 5m, 100 kmph -> 10m.
-      float follow_lead_distance = 2.0f*vehicle_speed + MIN_FOLLOW_LEAD_DISTANCE;
-      // if (vehicle_velocity.Length() > 25.0f) {
-      //   std::cout << "follow_lead_distance: " << follow_lead_distance << " for vehicle_velocity " << vehicle_velocity.Length() << " for vehicle_relative_speed " << vehicle_relative_speed << std::endl;
-      // }
+      float follow_lead_distance = FOLLOW_LEAD_FACTOR * vehicle_speed + MIN_FOLLOW_LEAD_DISTANCE;
       if (available_distance_margin > follow_lead_distance) {
         // Then reduce the gap between the vehicles till FOLLOW_LEAD_DISTANCE
         // by maintaining a relative speed of other_speed_along_heading
         dynamic_target_velocity = other_speed_along_heading;
-        // float v = std::max(((max_target_velocity - minimum_velocity) / max_distance) * distance + minimum_velocity, minimum_velocity);
-        // dynamic_target_velocity = std::min(dynamic_target_velocity, v);
       }
       // If vehicle is approaching a lead vehicle and the lead vehicle is further
       // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.

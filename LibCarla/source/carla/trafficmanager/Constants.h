@@ -46,8 +46,8 @@ static const float INITIAL_PERCENTAGE_SPEED_DIFFERENCE = 0.0f;
 namespace PathBufferUpdate {
 static const float MAX_START_DISTANCE = 20.0f;
 static const float MINIMUM_HORIZON_LENGTH = 15.0f;
-static const float HORIZON_RATE = 7.0f;
-static const float HIGH_SPEED_HORIZON_RATE = 12.0f;
+static const float HORIZON_RATE = 2.0f;
+static const float HIGH_SPEED_HORIZON_RATE = 4.0f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
@@ -81,6 +81,8 @@ static const float SQUARE_ROOT_OF_TWO = 1.414f;
 static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
 static const float EPSILON = 2.0f * std::numeric_limits<float>::epsilon();
 static const float MIN_REFERENCE_DISTANCE = 1.0f;
+static const float MIN_VELOCITY_COLL_RADIUS = 2.0f;
+static const float VEL_EXT_FACTOR = 0.36f;
 } // namespace Collision
 
 namespace FrameMemory {
@@ -123,6 +125,7 @@ static const float FRICTION = 0.6f;
 static const float GRAVITY = 9.81f;
 static const float PI = 3.1415927f;
 static const float PERC_MAX_SLOWDOWN = 0.08f;
+static const float FOLLOW_LEAD_FACTOR = 2.0f;
 } // namespace MotionPlan
 
 namespace PID {
