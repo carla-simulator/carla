@@ -146,7 +146,7 @@ namespace client {
     void SetPedestriansCrossFactor(float percentage);
 
     /// set the seed to use with random numbers in the pedestrians module
-    void SetPedestriansSeed(int seed);
+    void SetPedestriansSeed(unsigned int seed);
 
     SharedPtr<Actor> GetTrafficSign(const Landmark& landmark) const;
 

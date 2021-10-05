@@ -160,7 +160,7 @@ namespace client {
     _episode.Lock()->SetPedestriansCrossFactor(percentage);
   }
 
-  void World::SetPedestriansSeed(int seed) {
+  void World::SetPedestriansSeed(unsigned int seed) {
     _episode.Lock()->SetPedestriansSeed(seed);
   }
 
