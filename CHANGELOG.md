@@ -1,6 +1,11 @@
 ## Latest
+<<<<<<< HEAD
   * Improved handling of collisions in Traffic Manager when driving at very high speeds.
   * Added open/close doors feature for vehicles.
+=======
+
+  * Fixed bug causing the server to sigsegv when a vehicle collides an environment object in recording mode.
+>>>>>>> ff25498ac1d05595220589f61dcfa9bf2c85d444
   * Added API functions to 3D vectors: `squared_length`, `length`, `make_unit_vector`, `dot`, `dot_2d`, `distance`, `distance_2d`, `distance_squared`, `distance_squared_2d`, `get_vector_angle`
   * Added API functions to 2D vectors: `squared_length`, `length`, `make_unit_vector`
   * Added missing dependency `libomp5` to Release.Dockerfile
