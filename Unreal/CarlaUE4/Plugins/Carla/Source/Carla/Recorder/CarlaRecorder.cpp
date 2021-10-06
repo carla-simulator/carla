@@ -469,33 +469,33 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
     Collision.IsActor2Hero = false;
 
     // check actor 1
-    FCarlaActor *foundActor1 = Episode->GetActorRegistry().FindCarlaActor(Actor1);
-    if (foundActor1 != nullptr) { 
-      if (foundActor1->GetActorInfo() != nullptr)
+    FCarlaActor *FoundActor1 = Episode->GetActorRegistry().FindCarlaActor(Actor1);
+    if (FoundActor1 != nullptr) { 
+      if (FoundActor1->GetActorInfo() != nullptr)
       {
-        auto Role = foundActor1->GetActorInfo()->Description.Variations.Find("role_name");
+        auto Role = FoundActor1->GetActorInfo()->Description.Variations.Find("role_name");
         if (Role != nullptr)
           Collision.IsActor1Hero = (Role->Value == "hero");
       }
-      Collision.DatabaseId1 = foundActor1->GetActorId();
+      Collision.DatabaseId1 = FoundActor1->GetActorId();
     }
     else {
-      Collision.DatabaseId1 = -1; // actor1 is not a registered Carla actor
+      Collision.DatabaseId1 = uint32_t(-1); // actor1 is not a registered Carla actor
     }
 
     // check actor 2
-    FCarlaActor *foundActor2 = Episode->GetActorRegistry().FindCarlaActor(Actor2);
-    if (foundActor2 != nullptr) { 
-      if (foundActor2->GetActorInfo() != nullptr)
+    FCarlaActor *FoundActor2 = Episode->GetActorRegistry().FindCarlaActor(Actor2);
+    if (FoundActor2 != nullptr) { 
+      if (FoundActor2->GetActorInfo() != nullptr)
       {
-        auto Role = foundActor2->GetActorInfo()->Description.Variations.Find("role_name");
+        auto Role = FoundActor2->GetActorInfo()->Description.Variations.Find("role_name");
         if (Role != nullptr)
           Collision.IsActor2Hero = (Role->Value == "hero");
       }
-      Collision.DatabaseId2 = foundActor2->GetActorId();
+      Collision.DatabaseId2 = FoundActor2->GetActorId();
     }
     else {
-      Collision.DatabaseId2 = -1; // actor2 is not a registered Carla actor
+      Collision.DatabaseId2 = uint32_t(-1); // actor2 is not a registered Carla actor
     }
 
     Collisions.Add(std::move(Collision));

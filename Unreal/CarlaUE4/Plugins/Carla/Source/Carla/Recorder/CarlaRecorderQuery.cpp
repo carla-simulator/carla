@@ -666,15 +666,13 @@ std::string CarlaRecorderQuery::QueryCollisions(std::string Filename, char Categ
           int Valid = 0;
 
           // get categories for both actors
-          // uint8_t Type1 = Categories[Actors[Collision.DatabaseId1].Type];
-          // uint8_t Type2 = Categories[Actors[Collision.DatabaseId2].Type];
           uint8_t Type1, Type2;
-          if (Collision.DatabaseId1 >= 0)
+          if (Collision.DatabaseId1 != uint32_t(-1))
             Type1 = Categories[Actors[Collision.DatabaseId1].Type];
           else
             Type1 = 'o'; // other non-actor object
           
-          if (Collision.DatabaseId2 >= 0)
+          if (Collision.DatabaseId2 != uint32_t(-1))
             Type2 = Categories[Actors[Collision.DatabaseId2].Type];
           else
             Type2 = 'o'; // other non-actor object
