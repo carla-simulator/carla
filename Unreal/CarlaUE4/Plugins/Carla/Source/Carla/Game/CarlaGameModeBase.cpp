@@ -116,7 +116,7 @@ void ACarlaGameModeBase::InitGame(
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaGameModeBase::InitGame);
   Super::InitGame(MapName, Options, ErrorMessage);
 
-  UGameViewportClient::OnViewportRendered().AddUObject(this, &ACarlaGameModeBase::OnEndFrameRenderThread);
+  // UGameViewportClient::OnViewportRendered().AddUObject(this, &ACarlaGameModeBase::OnEndFrameRenderThread);
 
   UWorld* World = GetWorld();
   check(World != nullptr);
@@ -690,6 +690,7 @@ void ACarlaGameModeBase::OnEpisodeSettingsChanged(const FEpisodeSettings &Settin
 
 void ACarlaGameModeBase::OnEndFrameRenderThread(FViewport* /* Viewport */)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("ACarlaGameModeBaseOnEndFrameGameThread");
   if(CaptureSensors.Num() == 0) return;
 
   bool WasAtlasTextureValid = IsAtlasTextureValid;
@@ -701,36 +702,62 @@ void ACarlaGameModeBase::OnEndFrameRenderThread(FViewport* /* Viewport */)
   // UE_LOG(LogCarla, Warning, TEXT("OnEndFrameRenderThread %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
 
   // Check if atlas is valid or need to be (re)created
-  if(!IsAtlasTextureValid)
-  {
-    FlushRenderingCommands(true);
-    UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
-    if(AtlasTextureWidth > 0 && AtlasTextureHeight > 0)
-    {
-      UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT generating atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
-      FRHIResourceCreateInfo CreateInfo;
-      SceneCaptureAtlasTexture =
-        RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_FastVRAM, CreateInfo);
-      AtlasPixels.SetNum(AtlasTextureWidth * AtlasTextureHeight);
-      IsAtlasTextureValid = true;
-    }
-    else
-    {
-      UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas size WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
-      SceneCaptureAtlasTexture = nullptr;
-    }
-    FlushRenderingCommands();
-  }
+  // if(!IsAtlasTextureValid)
+  // {
+  //   FlushRenderingCommands(true);
+  //   UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+  //   if(AtlasTextureWidth > 0 && AtlasTextureHeight > 0)
+  //   {
+  //     UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT generating atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+  //     FRHIResourceCreateInfo CreateInfo;
+  //     SceneCaptureAtlasTexture =
+  //       RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_FastVRAM, CreateInfo);
+  //     AtlasPixels.SetNum(AtlasTextureWidth * AtlasTextureHeight);
+  //     IsAtlasTextureValid = true;
+  //   }
+  //   else
+  //   {
+  //     UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas size WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+  //     SceneCaptureAtlasTexture = nullptr;
+  //   }
+  //   FlushRenderingCommands();
+  // }
 
+  uint32 AtlasTextureWidth = this->AtlasTextureWidth;
+  uint32 AtlasTextureHeight = this->AtlasTextureHeight;
   if(DownloadTexture)
   {
     ENQUEUE_RENDER_COMMAND(ACarlaGameModeBaseOnEndFrameRenderThread)
     (
-      [&, WasAtlasTextureValid](FRHICommandListImmediate& RHICmdList)
+      [&, WasAtlasTextureValid, AtlasTextureWidth, AtlasTextureHeight](FRHICommandListImmediate& RHICmdList)
       {
-        check(IsInRenderingThread());
-
         TRACE_CPUPROFILER_EVENT_SCOPE_STR("ACarlaGameModeBaseOnEndFrameRenderThread");
+        check(IsInRenderingThread());
+        {
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("GM_ModifyAtlas");
+          if(!WasAtlasTextureValid)
+          {
+            // FlushRenderingCommands(true);
+            UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+            if(AtlasTextureWidth > 0 && AtlasTextureHeight > 0)
+            {
+              UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT generating atlas WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+              FRHIResourceCreateInfo CreateInfo;
+              SceneCaptureAtlasTexture =
+                RHICreateTexture2D(AtlasTextureWidth, AtlasTextureHeight, PF_B8G8R8A8, 1, 1, TexCreate_FastVRAM, CreateInfo);
+              AtlasPixels.SetNum(AtlasTextureWidth * AtlasTextureHeight);
+              IsAtlasTextureValid = true;
+            }
+            else
+            {
+              UE_LOG(LogCarla, Warning, TEXT("GM::OnEndFrameRT invalid atlas size WxH=[%d, %d]"), AtlasTextureWidth, AtlasTextureHeight);
+              SceneCaptureAtlasTexture = nullptr;
+            }
+            // FlushRenderingCommands();
+          }
+        }
+
+
         // UE_LOG(LogCarla, Error, TEXT("ACarlaGameModeBaseOnEndFrameRenderThread %d %s"), FCarlaEngine::GetFrameCounter(), *(FDateTime::Now().ToString(TEXT("%H:%M:%S.%s"))));
         ////////////////////////////////////////////////////////////////////////
         {
@@ -761,8 +788,7 @@ void ACarlaGameModeBase::OnEndFrameRenderThread(FViewport* /* Viewport */)
               SceneCaptureAtlasTexture,
               FIntRect(0, 0, AtlasTextureWidth, AtlasTextureHeight),
               AtlasPixels,
-              FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX),
-              !WasAtlasTextureValid || ReadSurfaceWaitUntilIdle);
+              FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
           }
         }
         ////////////////////////////////////////////////////////////////////////

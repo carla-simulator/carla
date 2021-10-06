@@ -163,6 +163,11 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     // send the worldsnapshot
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
     ResetSimulationState();
+    if (World)
+    {
+      ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
+      GameMode->OnEndFrameRenderThread(nullptr);
+    }
   }
 }
 
