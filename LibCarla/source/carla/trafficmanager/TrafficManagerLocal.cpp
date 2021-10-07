@@ -216,13 +216,14 @@ void TrafficManagerLocal::Run() {
     tl_frame.clear();
     tl_frame.resize(number_of_vehicles);
     control_frame.clear();
-    ///////////////////////////////////////////////
+    // Reserve two frames for each vehicle: one for the ApplyVehicleControl command,
+    // and one for the optional SetVehicleLightState command
     control_frame.reserve(2 * number_of_vehicles);
-    ///////////////////////////////////////////////
+    // Resize to accomodate at least all ApplyVehicleControl commands,
+    // that will be inserted by the motion_plan_stage stage.
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
-
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }

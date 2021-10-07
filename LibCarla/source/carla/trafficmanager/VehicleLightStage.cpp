@@ -85,9 +85,9 @@ void VehicleLightStage::Update(const unsigned long index) {
     }
   }
 
-  // determine position, fog and beams
+  // Determine position, fog and beams
   
-  // turn on beams & positions from sunset to dawn
+  // Turn on beams & positions from sunset to dawn
   if (weather.sun_altitude_angle < 15 || weather.sun_altitude_angle > 165) {
     position = true;
     low_beam = true;
@@ -95,12 +95,12 @@ void VehicleLightStage::Update(const unsigned long index) {
   else if (weather.sun_altitude_angle < 35 || weather.sun_altitude_angle > 145) {
     position = true;
   }
-  // turn on lights under heavy rain
+  // Turn on lights under heavy rain
   if (weather.precipitation > 80) {
     position = true;
     low_beam = true;
   }
-  // turn on fog lights
+  // Turn on fog lights
   if (weather.fog_density > 20) {
     position = true;
     low_beam = true;
