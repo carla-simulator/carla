@@ -76,6 +76,11 @@ The TM generates viable commands for all vehicles in the [vehicle registry](#veh
 
 >Vehicle movement is computed based on the defined path. A [PID controller](#pid-controller) determines how to reach the target waypoints. This is then translated into a CARLA command for application in the next step.
 
+>__2.5 - [Vehicle Lights Stage](#stage-5-vehicle-lights-stage).__
+
+> The vehicle lights switch on/off dynamically based on environmental factors (e.g. sunlight and the presence of fog or rain) and vehicle behavior (e.g. turning on direction indicators if the vehicle will turn left/right at the next junction, or turn on the stop lights if braking).
+
+
 __3. Apply the commands in the simulation.__
 
 Commands generated in the previous step are collected into the [command array](#command-array) and sent to the CARLA server in a batch to be applied in the same frame.
@@ -119,7 +124,7 @@ __Related .cpp files:__ `SimulationState.cpp`, `SimulationState.h`.
 
 ### Control loop
 
-The control loop manages the calculations of the next command for all autopilot vehicles so they are performed synchronously. The control loop consists of four different [stages](#stages-of-the-control-loop); localization, collision, traffic light, and motion planner.
+The control loop manages the calculations of the next command for all autopilot vehicles so they are performed synchronously. The control loop consists of five different [stages](#stages-of-the-control-loop); localization, collision, traffic light, motion planner and vehicle lights.
 
 The control loop:
 
@@ -128,7 +133,7 @@ The control loop:
 - Divides calculations into a series of [stages](#stages-of-the-control-loop).
 - Creates synchronization barriers between stages to guarantee consistency. Calculations for all vehicles are finished before any of them move to the next stage, ensuring all vehicles are updated in the same frame.
 - Coordinates the transition between [stages](#stages-of-the-control-loop) so all calculations are done in sync.
-- Sends the [command array](#command-array) to the server when the last stage ([Motion Planner Stage](#stage-4-motion-planner-stage)) finishes so there are no frame delays between the command calculations and the command application.
+- Sends the [command array](#command-array) to the server when the last stages ([Motion Planner Stage](#stage-4-motion-planner-stage) and [Vehicle Lights Stage](#stage-5-vehicle-lights-stage)) finishes so there are no frame delays between the command calculations and the command application.
 
 __Related .cpp files:__ `TrafficManagerLocal.cpp`.
 
@@ -227,6 +232,25 @@ The Motion Planner Stage:
 - Sends the resulting CARLA commands to the [Command Array](#command-array).
 
 __Related .cpp files:__ `MotionPlannerStage.cpp`.
+
+
+##### Stage 5- Vehicle Lights Stage
+
+The Vehicle Lights Stage activates the lights based on the condition of the vehicle and the surrounding environment.
+	
+The Vehicle Lights Stage:
+
+- Retrieves the planned waypoints for the vehicle, information about vehicle lights (eg. light state and the planned command to be applied) and the weather conditions.
+
+- Determines the new state of the vehicle lights:
+	- Turns on the blinkers if the vehicle is planning to turn left/right at the next junction.
+	- Turns on the stop lights if the applied command is asking the vehicle to brake.
+	- Turns on the low beams and the position lights from sunset to dawn, or under heavy rain.
+	- Turns on the fog lights under heavy fog conditions.
+
+- Update the vehicle lights state if it has changed.
+
+__Related .cpp files:__ `VehicleLightStage.cpp`.
 
 ---
 ## Using the Traffic Manager
