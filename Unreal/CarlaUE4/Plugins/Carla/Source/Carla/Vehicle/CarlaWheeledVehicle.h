@@ -266,20 +266,11 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor)
   void AdjustVehicleBounds();
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  TArray<float> DoorAnimMaxAngle;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  TArray<float> DoorAnimAlpha;
-
   UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
   TArray<FName> ConstraintComponentNames;
 
   UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
   float DoorOpenStrength = 100.0f;
-
-  UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
-  float DoorCloseStrength = 1000.0f;
 
   UFUNCTION(BlueprintCallable, CallInEditor)
   void ResetConstraints();
@@ -330,12 +321,6 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoorPhys(const EVehicleDoor DoorIdx);
 
-  UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
-  void OpenDoorAnim(const EVehicleDoor DoorIdx);
-
-  UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
-  void CloseDoorAnim(const EVehicleDoor DoorIdx);
-
   virtual FVector GetVelocity() const override;
 
 //-----CARSIM--------------------------------
@@ -356,6 +341,13 @@ private:
   TArray<UPhysicsConstraintComponent*> ConstraintsComponents;
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TMap<UPhysicsConstraintComponent*, UPrimitiveComponent*> ConstraintDoor;
+
+  // container of the initial transform of the door, used to reset its position
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPrimitiveComponent*, FTransform> DoorComponentsTransform;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TMap<UPrimitiveComponent*, UPhysicsConstraintComponent*> CollisionDisableConstraints;
 
 };
