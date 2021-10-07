@@ -44,9 +44,6 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
 
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 
-  // We create a vector to store the update values for the animation
-  static uint8 MaxDoorNumber = (uint8) EVehicleDoor::All;
-  DoorAnimAlpha.Init(0.0, MaxDoorNumber);
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -84,33 +81,58 @@ void ACarlaWheeledVehicle::BeginPlay()
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
   // Get constraint components and their initial transforms
+  FTransform ActorInverseTransform = GetActorTransform().Inverse();
   ConstraintsComponents.Empty();
+  DoorComponentsTransform.Empty();
+  ConstraintDoor.Empty();
   for (FName& ComponentName : ConstraintComponentNames)
   {
-    UPhysicsConstraintComponent* ConstraintComponent = Cast<UPhysicsConstraintComponent>(GetDefaultSubobjectByName(ComponentName));
+    UPhysicsConstraintComponent* ConstraintComponent =
+        Cast<UPhysicsConstraintComponent>(GetDefaultSubobjectByName(ComponentName));
     if (ConstraintComponent)
     {
-      ConstraintsComponents.Add(ConstraintComponent);
-    }
-  }
-  DoorComponentsTransform.Empty();
-  FTransform ActorInverseTransform = GetActorTransform().Inverse();
-  for (UPhysicsConstraintComponent * Constraint: ConstraintsComponents)
-  {
-    UPrimitiveComponent* DoorComponent = Cast<UPrimitiveComponent>(GetDefaultSubobjectByName(Constraint->ComponentName1.ComponentName));
-    if(DoorComponent)
-    {
-      UE_LOG(LogCarla, Warning, TEXT("Door name: %s"), *(DoorComponent->GetName()));
-      FTransform ComponentWorldTransform = DoorComponent->GetComponentTransform();
-      FTransform RelativeTransform = ComponentWorldTransform * ActorInverseTransform;
-      DoorComponentsTransform.Add(DoorComponent, RelativeTransform);
-    }
-    else
-    {
-      UE_LOG(LogCarla, Error, TEXT("Missing component for constraint: %s"), *(Constraint->GetName()));
+      UPrimitiveComponent* DoorComponent = Cast<UPrimitiveComponent>(
+          GetDefaultSubobjectByName(ConstraintComponent->ComponentName1.ComponentName));
+      if(DoorComponent)
+      {
+        UE_LOG(LogCarla, Warning, TEXT("Door name: %s"), *(DoorComponent->GetName()));
+        FTransform ComponentWorldTransform = DoorComponent->GetComponentTransform();
+        FTransform RelativeTransform = ComponentWorldTransform * ActorInverseTransform;
+        DoorComponentsTransform.Add(DoorComponent, RelativeTransform);
+        ConstraintDoor.Add(ConstraintComponent, DoorComponent);
+        ConstraintsComponents.Add(ConstraintComponent);
+        ConstraintComponent->TermComponentConstraint();
+      }
+      else
+      {
+        UE_LOG(LogCarla, Error, TEXT("Missing component for constraint: %s"), *(ConstraintComponent->GetName()));
+      }
     }
   }
   ResetConstraints();
+
+  // get collision disable constraints (used to prevent doors from colliding with each other)
+  CollisionDisableConstraints.Empty();
+  TArray<UPhysicsConstraintComponent*> Constraints;
+  GetComponents(Constraints);
+  for (UPhysicsConstraintComponent* Constraint : Constraints)
+  {
+    if (!ConstraintsComponents.Contains(Constraint))
+    {
+      UPrimitiveComponent* CollisionDisabledComponent1 = Cast<UPrimitiveComponent>(
+          GetDefaultSubobjectByName(Constraint->ComponentName1.ComponentName));
+      UPrimitiveComponent* CollisionDisabledComponent2 = Cast<UPrimitiveComponent>(
+          GetDefaultSubobjectByName(Constraint->ComponentName2.ComponentName));
+      if (CollisionDisabledComponent1)
+      {
+        CollisionDisableConstraints.Add(CollisionDisabledComponent1, Constraint);
+      }
+      if (CollisionDisabledComponent2)
+      {
+        CollisionDisableConstraints.Add(CollisionDisabledComponent2, Constraint);
+      }
+    }
+  }
 
   float FrictionScale = 3.5f;
 
@@ -611,32 +633,19 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 
   bPhysicsEnabled = enabled;
 
-  // Set simulate physics for doors
-  for (auto& ComponentTransform : DoorComponentsTransform)
-  {
-    UPrimitiveComponent* Component = ComponentTransform.Key;
-    Component->SetSimulatePhysics(bPhysicsEnabled);
-  }
+  ResetConstraints();
 
-  if (bPhysicsEnabled)
-  {
-    FTransform ActorTransform = GetActorTransform();
-    // recreate physics constraints
-    for (auto& ComponentTransform : DoorComponentsTransform)
-    {
-      UPrimitiveComponent* Component = ComponentTransform.Key;
-      FTransform ComponentWorldTransform = ComponentTransform.Value * ActorTransform;
-      Component->SetWorldTransform(ComponentWorldTransform);
-    }
-    ResetConstraints();
-  }
 }
 
 void ACarlaWheeledVehicle::ResetConstraints()
 {
-  for (UPhysicsConstraintComponent* Constraint : ConstraintsComponents)
+  for (int i = 0; i < ConstraintsComponents.Num(); i++)
   {
-    Constraint->InitComponentConstraint();
+    OpenDoorPhys(EVehicleDoor(i));
+  }
+  for (int i = 0; i < ConstraintsComponents.Num(); i++)
+  {
+    CloseDoorPhys(EVehicleDoor(i));
   }
 }
 
@@ -687,34 +696,43 @@ void ACarlaWheeledVehicle::CloseDoor(const EVehicleDoor DoorIdx) {
 void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
 {
   UPhysicsConstraintComponent* Constraint = ConstraintsComponents[static_cast<int>(DoorIdx)];
+  UPrimitiveComponent* DoorComponent = ConstraintDoor[Constraint];
+  DoorComponent->DetachFromComponent(
+      FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+  FTransform DoorInitialTransform =
+      DoorComponentsTransform[DoorComponent] * GetActorTransform();
+  DoorComponent->SetWorldTransform(DoorInitialTransform);
+  DoorComponent->SetSimulatePhysics(true);
+  DoorComponent->SetCollisionProfileName(TEXT("BlockAll"));
   float AngleLimit = Constraint->ConstraintInstance.GetAngularSwing1Limit();
   FRotator AngularRotationOffset = Constraint->ConstraintInstance.AngularRotationOffset;
+
   if (Constraint->ConstraintInstance.AngularRotationOffset.Yaw < 0.0f)
   {
     AngleLimit = -AngleLimit;
   }
   Constraint->SetAngularOrientationTarget(FRotator(0, AngleLimit, 0));
   Constraint->SetAngularDriveParams(DoorOpenStrength, 1.0, 0.0);
+
+  Constraint->InitComponentConstraint();
+
+  UPhysicsConstraintComponent** CollisionDisable =
+      CollisionDisableConstraints.Find(DoorComponent);
+  if (CollisionDisable)
+  {
+    (*CollisionDisable)->InitComponentConstraint();
+  }
 }
 
 void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
 {
   UPhysicsConstraintComponent* Constraint = ConstraintsComponents[static_cast<int>(DoorIdx)];
-  float AngleLimit = Constraint->ConstraintInstance.GetAngularSwing1Limit();
-  if (Constraint->ConstraintInstance.AngularRotationOffset.Yaw < 0.0f)
-  {
-    AngleLimit = -AngleLimit;
-  }
-  Constraint->SetAngularOrientationTarget(FRotator(0, -AngleLimit, 0));
-  Constraint->SetAngularDriveParams(DoorCloseStrength, 1.0, 0.0);
-}
-
-void ACarlaWheeledVehicle::OpenDoorAnim_Implementation(const EVehicleDoor DoorIdx)
-{
-  UE_LOG(LogTemp, Warning, TEXT("OpenDoorAnim_Implementation."));
-}
-
-void ACarlaWheeledVehicle::CloseDoorAnim_Implementation(const EVehicleDoor DoorIdx)
-{
-  UE_LOG(LogTemp, Warning, TEXT("CloseDoorAnim_Implementation."));
+  UPrimitiveComponent* DoorComponent = ConstraintDoor[Constraint];
+  FTransform DoorInitialTransform =
+      DoorComponentsTransform[DoorComponent] * GetActorTransform();
+  DoorComponent->SetSimulatePhysics(false);
+  DoorComponent->SetCollisionProfileName(TEXT("NoCollision"));
+  DoorComponent->SetWorldTransform(DoorInitialTransform);
+  DoorComponent->AttachToComponent(
+      GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 }
