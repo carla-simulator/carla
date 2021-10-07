@@ -16,6 +16,7 @@
     - `show_pose / hide_pose`:  to show or hide the custom pose
     - `get_pose_from_animation`:  to set the custom pose with the animation current frame
   * Added physical simulation to vehicle doors, capable of opening and closing
+  * Fixed the import of props without any map
   * Fixed global route planner crash when being used at maps without lane markings
   * Improved collision detection of the Python agents
   * Added the new VehicleLightStage to the Traffic Manager to dynamically update the vehicle lights.
