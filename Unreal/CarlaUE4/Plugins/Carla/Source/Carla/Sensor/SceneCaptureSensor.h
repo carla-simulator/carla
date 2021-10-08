@@ -299,11 +299,13 @@ public:
   }
 
   void CopyTexturetoAtlas(FRHICommandListImmediate& RHICmdList, FTexture2DRHIRef Atlas);
-  // TODO: this should be pure virtual
-  // void DownloadGPUTextureToCPU();
+
   virtual void SendPixelsInRenderThread(const TArray<FColor>& /* AtlasPixels */, uint32 /* AtlasTextureWidth */) {}
+  virtual void SendPixelsInRenderThread(const TArray<FFloat16Color>& /* AtlasPixels */,
+      uint32 /* AtlasTextureWidth */) {}
 
   void CopyTextureFromAtlas(carla::Buffer &Buffer, const TArray<FColor>& AtlasPixels, uint32 AtlasTextureWidth);
+  void CopyTextureFromAtlas(carla::Buffer &Buffer, const TArray<FFloat16Color>& AtlasPixels, uint32 AtlasTextureWidth);
 
 
   // TODO: add to all the camera types
@@ -311,13 +313,12 @@ public:
 
   FIntVector PositionInAtlas{0};
 
+  virtual void PrePhysTick(float DeltaSeconds) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
 protected:
 
   virtual void BeginPlay() override;
-
-  virtual void PrePhysTick(float DeltaSeconds) override;
-  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 

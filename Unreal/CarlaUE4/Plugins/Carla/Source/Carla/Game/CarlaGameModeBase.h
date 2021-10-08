@@ -26,6 +26,7 @@
 #include "Carla/Util/ObjectRegister.h"
 #include "Carla/Weather/Weather.h"
 #include "MapGen/LargeMapManager.h"
+#include "Carla/Sensor/SensorManager.h"
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -61,6 +62,9 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "CARLA Game Mode")
   ATrafficLightManager* GetTrafficLightManager();
+
+  UFUNCTION(BlueprintCallable, Category = "CARLA Game Mode")
+  ASensorManager* GetSensorManager();
 
   UFUNCTION(Category = "Carla Game Mode", BlueprintCallable)
   const TArray<FTransform>& GetSpawnPointsTransforms() const{
@@ -101,75 +105,7 @@ public:
     return LMManager;
   }
 
-
-  /* Camera methods */
-  UFUNCTION(Category = "Carla Game Mode", Exec)
-  void ToggleCaptureEveryFrame()
-  {
-    CaptureEveryFrame = !CaptureEveryFrame;
-  }
-
-  UFUNCTION(Category = "Carla Game Mode", Exec)
-  void ToggleDownloadTexture()
-  {
-    DownloadTexture = !DownloadTexture;
-  }
-
-  UFUNCTION(Category = "Carla Game Mode", Exec)
-  void ToggleRHIGPUReadBack()
-  {
-    RHIGPUReadBack = !RHIGPUReadBack;
-  }
-
-  UFUNCTION(Category = "Carla Game Mode", Exec)
-  void ToggleReadSurfaceWaitUntilIdle()
-  {
-    ReadSurfaceWaitUntilIdle = !ReadSurfaceWaitUntilIdle;
-  }
-
-  bool IsCaptureEveryFrameEnabled() const
-  {
-    return CaptureEveryFrame;
-  }
-
-  bool IsDownloadTextureEnabled() const
-  {
-    return DownloadTexture;
-  }
-
-  bool IsRHIGPUReadBackEnabled() const
-  {
-    return RHIGPUReadBack;
-  }
-
-  bool IsReadSurfaceWaitUntilIdleEnabled() const
-  {
-    return ReadSurfaceWaitUntilIdle;
-  }
-
-  void RegisterSceneCaptureSensor(ASceneCaptureSensor* InSensor);
-
-  void UnregisterSceneCaptureSensor(ASceneCaptureSensor* InSensor);
-
-
-  // TODO: move to a SensorManager
-  void OnEndFrameRenderThread(FViewport* Viewport);
-  // TODO: this should be private
-  TArray<class ASceneCaptureSensor*> CaptureSensors;
-
-  FTexture2DRHIRef SceneCaptureAtlasTexture;
-  TArray<FColor> AtlasPixels;
-  uint32 AtlasTextureWidth = 0u;
-  uint32 AtlasTextureHeight = 0u;
-  bool IsAtlasTextureValid = true;
-
-
 protected:
-
-  bool CaptureEveryFrame = true;
-  bool DownloadTexture = true;
-  bool RHIGPUReadBack = false;
-  bool ReadSurfaceWaitUntilIdle = false;
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
 
@@ -233,6 +169,10 @@ private:
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
 
+  UPROPERTY()
+  ASensorManager* SensorManager = nullptr;
+
+  UPROPERTY()
   ALargeMapManager* LMManager = nullptr;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;

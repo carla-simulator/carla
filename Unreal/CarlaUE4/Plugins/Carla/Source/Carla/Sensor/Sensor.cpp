@@ -23,8 +23,12 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
 void ASensor::BeginPlay()
 {
   Super::BeginPlay();
-  OnPostTickDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(
-      this, &ASensor::PostPhysTickInternal);
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+  if(GameMode)
+  {
+    ASensorManager* SensorManager = GameMode->GetSensorManager();
+    SensorManager->RegisterGenericSensor(this);
+  }
 }
 
 void ASensor::Set(const FActorDescription &Description)
@@ -77,7 +81,12 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   Stream = FDataStream();
 
-  FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickDelegate);
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+  if(GameMode)
+  {
+    ASensorManager* SensorManager = GameMode->GetSensorManager();
+    SensorManager->UnregisterGenericSensor(this);
+  }
 }
 
 void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds)

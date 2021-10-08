@@ -18,7 +18,17 @@ public:
 
   AOpticalFlowCamera(const FObjectInitializer &ObjectInitializer);
 
+  void BeginPlay() override;
+
+  void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 protected:
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
+
+  void SendPixelsInRenderThread(const TArray<FFloat16Color>& AtlasPixels, uint32 AtlasTextureWidth) override;
+
+  void CopyOpticalFlowFromAtlas(carla::Buffer &Buffer,
+      const TArray<FFloat16Color>& AtlasPixels,
+      uint32 AtlasTextureWidth);
 };

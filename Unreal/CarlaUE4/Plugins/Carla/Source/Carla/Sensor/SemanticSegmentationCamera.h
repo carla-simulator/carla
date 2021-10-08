@@ -24,7 +24,14 @@ public:
 
   ASemanticSegmentationCamera(const FObjectInitializer &ObjectInitializer);
 
+  void BeginPlay() override;
+
+  void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+
 protected:
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
+
+  void SendPixelsInRenderThread(const TArray<FColor>& AtlasPixels, uint32 AtlasTextureWidth) override;
 };

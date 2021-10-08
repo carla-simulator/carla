@@ -163,10 +163,13 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     // send the worldsnapshot
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
     ResetSimulationState();
+
+    // run the sensor post physics tick
     if (World)
     {
       ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
-      GameMode->OnEndFrameRenderThread(nullptr);
+      ASensorManager* SensorManager = GameMode->GetSensorManager();
+      SensorManager->PostPhysTick(World, TickType, DeltaSeconds);
     }
   }
 }

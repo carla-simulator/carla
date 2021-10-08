@@ -61,7 +61,6 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->bGPUSharedFlag = true;
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
-  // CaptureRenderTarget->bCPUReadbackFlag = false;
 
   CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
       FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
@@ -486,41 +485,6 @@ void ASceneCaptureSensor::CopyTexturetoAtlas(FRHICommandListImmediate& RHICmdLis
   }
 }
 
-/*
-void ASceneCaptureSensor::DownloadGPUTextureToCPU()
-{
-  ENQUEUE_RENDER_COMMAND(ACarlaGameModeBaseOnEndFrameRenderThread)
-  ([&](FRHICommandListImmediate& RHICmdList){
-
-    TRACE_CPUPROFILER_EVENT_SCOPE("ASceneCaptureSensor::DownloadGPUTextureToCPU");
-
-    auto RenderResource =
-      static_cast<const FTextureRenderTarget2DResource *>(CaptureRenderTarget->Resource);
-
-    FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
-    if (!Texture)
-    {
-      return;
-    }
-
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE("ReadSurfaceData");
-      ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
-      RHICmdList.ReadSurfaceData(
-        Texture,
-        FIntRect(0, 0, ImageWidth, ImageHeight),
-        Pixels,
-        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX),
-        GM->IsReadSurfaceWaitUntilIdleEnabled());
-    }
-    if(IsValid(this))
-    {
-      SendPixelsInRenderThread();
-    }
-  });
-}
-*/
-
 void ASceneCaptureSensor::CopyTextureFromAtlas(
     carla::Buffer &Buffer,
     const TArray<FColor>& AtlasPixels,
@@ -556,7 +520,7 @@ void ASceneCaptureSensor::CopyTextureFromAtlas(
     const uint32 SrcStride = AtlasTextureWidth * sizeof(FColor);
     for(uint32 i = 0; i < ImageHeight; i++)
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("  for_loop");
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("CopyTextureFromAtlas for_loop");
       Buffer.copy_from(Dest, Source, DstStride);
       Source += SrcStride;
       Dest += DstStride;
@@ -567,9 +531,6 @@ void ASceneCaptureSensor::CopyTextureFromAtlas(
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;
-
-  ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
-  GM->RegisterSceneCaptureSensor(this);
 
   // Determine the gamma of the player.
   const bool bInForceLinearGamma = !bEnablePostProcessingEffects;
@@ -614,17 +575,6 @@ void ASceneCaptureSensor::BeginPlay()
 void ASceneCaptureSensor::PrePhysTick(float DeltaSeconds)
 {
   Super::PrePhysTick(DeltaSeconds);
-
-  // TODO: remove but bCaptureEveryFrame by default
-//  ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
-//  CaptureComponent2D->bCaptureEveryFrame = false; //GM->IsCaptureEveryFrameEnabled();
-
-  // Add the view information every tick. It's only used for one tick and then
-  // removed by the streamer.
-  IStreamingManager::Get().AddViewInformation(
-      CaptureComponent2D->GetComponentLocation(),
-      ImageWidth,
-      ImageWidth / FMath::Tan(CaptureComponent2D->FOVAngle));
 }
 
 void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
@@ -634,9 +584,6 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  ACarlaGameModeBase* GM = UCarlaStatics::GetGameMode(GetWorld());
-  GM->UnregisterSceneCaptureSensor(this);
-  // SCENE_CAPTURE_COUNTER = 0u;
   Super::EndPlay(EndPlayReason);
 }
 
