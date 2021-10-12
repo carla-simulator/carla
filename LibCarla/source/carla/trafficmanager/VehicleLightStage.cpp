@@ -34,6 +34,10 @@ void VehicleLightStage::Update(const unsigned long index) {
   bool high_beam = false;
   bool fog_lights = false;
 
+  const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(id);
+  if (!vehicle_physics_enabled || simulation_state.IsDormant(id)) 
+    return; // do nothing
+
   cg::Vector3D actor_vec = simulation_state.GetHeading(id);
 
   // Recover the planned waypoints for this vehicle

@@ -27,7 +27,7 @@ ALSM::ALSM(
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
   MotionPlanStage &motion_plan_stage,
-  VehicleLightStage vehicle_light_stage,
+  VehicleLightStage &vehicle_light_stage,
   RandomGeneratorMap &random_devices)
   : registered_vehicles(registered_vehicles),
     buffer_map(buffer_map),
