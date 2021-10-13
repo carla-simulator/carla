@@ -51,6 +51,10 @@ def convert(args):
     with open(args.output_path, "w", encoding="utf-8") as xodrFile:
         xodrFile.write(xodr_data)
 
+# ==============================================================================
+# -- main() --------------------------------------------------------------------
+# ==============================================================================
+
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -91,8 +95,10 @@ def main():
     if args.output_path is None:
         print('output file path not found.')
 
+    print(__doc__)
+
     try:
-        convert()
+        convert(args)
     except:
         print('\nAn error has occurred in conversion.')
 
