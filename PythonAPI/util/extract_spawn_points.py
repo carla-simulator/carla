@@ -1,9 +1,20 @@
 """ CARLA map spawn points extractor """
 
 from __future__ import print_function
-import sys
 import argparse
 import logging
+import glob
+import os
+import sys
+
+try:
+    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
+
 import carla
 
 
@@ -24,7 +35,7 @@ def extract(args):
             logging.info('Please add some Vehicle Spawn Point to your UE4 scene.')
             sys.exit(1)
         spawn_points = _map.get_spawn_points()
-        with open("spawn_points.csv", "w", encoding='utf8') as file:
+        with open(args.output_dir+"/spawn_points.csv", "w", encoding='utf8') as file:
             index = 0
             for index, spawn_point in enumerate(spawn_points):
                 file.write(f'{index},{spawn_point.location.x},{spawn_point.location.y}\n')
@@ -51,7 +62,13 @@ def main():
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-o', '--output-dir',
+        help='Output directory path for extraction result')
     args = argparser.parse_args()
+
+    if args.output_dir is None or not os.path.exists(args.output_dir):
+        print('output directory not found.')
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
 
@@ -61,11 +78,15 @@ def main():
 
     try:
         extract(args)
-
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
+    except:
+        print('\nAn error has occurred in extraction.')
 
 
 if __name__ == '__main__':
 
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('\nCancelled by user. Bye!')
+    except RuntimeError as e:
+        print(e)
