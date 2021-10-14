@@ -64,6 +64,7 @@ def main():
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
         '-o', '--output-dir',
+        required=True,
         help='Output directory path for extraction result')
     args = argparser.parse_args()
 
