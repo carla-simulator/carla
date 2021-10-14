@@ -19,6 +19,10 @@ namespace cc = carla::client;
 
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
 using LaneChangeLocationMap = std::unordered_map<ActorId, cg::Location>;
+using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
+using Action = std::pair<RoadOption, WaypointPtr>;
+using ActionBuffer = std::vector<Action>;
+using Path = std::vector<cg::Location>;
 
 /// This class has functionality to maintain a horizon of waypoints ahead
 /// of the vehicle for it to follow.
@@ -51,6 +55,10 @@ private:
   void ExtendAndFindSafeSpace(const ActorId actor_id,
                               const bool is_at_junction_entrance,
                               Buffer &waypoint_buffer);
+
+  Action ComputeNextAction(Buffer &waypoint_buffer);
+
+  ActionBuffer ComputeActionBuffer(Buffer &waypoint_buffer);
 
 public:
   LocalizationStage(const std::vector<ActorId> &vehicle_id_list,

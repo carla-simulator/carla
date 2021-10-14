@@ -20,6 +20,7 @@ namespace traffic_manager {
 using constants::Networking::TM_DEFAULT_PORT;
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
+using Path = std::vector<carla::geom::Location>;
 
 /// This class integrates all the various stages of
 /// the traffic manager appropriately using messengers.
@@ -62,6 +63,38 @@ public:
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if (tm_ptr != nullptr) {
       tm_ptr->SetOSMMode(mode_switch);
+    }
+  }
+
+  /// Method to set if we are uploading a list of points.
+  void SetUploadPath(const ActorPtr &actor, const bool mode_switch) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetUploadPath(actor, mode_switch);
+    }
+  }
+
+  /// Method to set our path.
+  void SetCustomPath(const ActorPtr &actor, const Path path) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetCustomPath(actor, path);
+    }
+  }
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->RemoveUploadPath(actor_id, remove_path);
+    }
+  }
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->UpdateUploadPath(actor_id, path);
     }
   }
 

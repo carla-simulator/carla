@@ -199,6 +199,30 @@ public:
     _client->call("set_osm_mode", mode_switch);
   }
 
+  /// Method to set if we are uploading a list of points.
+  void SetUploadPath(const carla::rpc::Actor &actor, const bool mode_switch) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_upload_path", actor, mode_switch);
+  }
+
+  /// Method to set our path.
+  void SetCustomPath(const carla::rpc::Actor &actor, const Path path) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_custom_path", actor, path);
+  }
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("remove_custom_path", actor_id, remove_path);
+  }
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("update_custom_path", actor_id, path);
+  }
+
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch) {
     DEBUG_ASSERT(_client != nullptr);

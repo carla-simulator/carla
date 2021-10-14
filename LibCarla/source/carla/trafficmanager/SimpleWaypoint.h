@@ -22,6 +22,16 @@ namespace traffic_manager {
   namespace cg = carla::geom;
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
   using GeoGridId = carla::road::JuncId;
+  enum RoadOption {
+    Void,
+    Left,
+    Right,
+    Straight,
+    LaneFollow,
+    ChangeLaneLeft,
+    ChangeLaneRight,
+    RoadEnd
+  };
 
   /// This is a simple wrapper class on Carla's waypoint object.
   /// The class is used to represent discrete samples of the world map.
@@ -41,6 +51,8 @@ namespace traffic_manager {
     SimpleWaypointPtr next_left_waypoint;
     /// Pointer to right lane change waypoint.
     SimpleWaypointPtr next_right_waypoint;
+    /// RoadOption for the actual waypoint.
+    RoadOption road_option = RoadOption::Void;
     /// Integer placing the waypoint into a geodesic grid.
     GeoGridId geodesic_grid_id = 0;
     // Boolean to hold if the waypoint belongs to a junction
@@ -118,6 +130,10 @@ namespace traffic_manager {
 
     /// Return transform object for the current waypoint.
     cg::Transform GetTransform() const;
+
+    // Accessor methods for road option.
+    void SetRoadOption(RoadOption _road_option);
+    RoadOption GetRoadOption();
   };
 
 } // namespace traffic_manager

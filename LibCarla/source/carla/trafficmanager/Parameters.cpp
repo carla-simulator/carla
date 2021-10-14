@@ -153,6 +153,30 @@ void Parameters::SetOSMMode(const bool mode_switch) {
   osm_mode.store(mode_switch);
 }
 
+void Parameters::SetUploadPath(const ActorPtr &actor, const bool mode_switch) {
+  const auto entry = std::make_pair(actor->GetId(), mode_switch);
+  upload_bool.AddEntry(entry);
+}
+
+void Parameters::SetCustomPath(const ActorPtr &actor, const Path path) {
+  const auto entry = std::make_pair(actor->GetId(), path);
+  custom_path.AddEntry(entry);
+}
+
+void Parameters::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+  if (!remove_path) {
+    upload_bool.RemoveEntry(actor_id);
+  } else {
+    custom_path.RemoveEntry(actor_id);
+  }
+}
+
+void Parameters::UpdateUploadPath(const ActorId &actor_id, const Path path) {
+  custom_path.RemoveEntry(actor_id);
+  const auto entry = std::make_pair(actor_id, path);
+  custom_path.AddEntry(entry);
+}
+
 //////////////////////////////////// GETTERS //////////////////////////////////
 
 float Parameters::GetHybridPhysicsRadius() const {
@@ -308,6 +332,28 @@ float Parameters::GetUpperBoundaryRespawnDormantVehicles() const {
 bool Parameters::GetOSMMode() const {
 
   return osm_mode.load();
+}
+
+bool Parameters::GetUploadPath(const ActorId &actor_id) const {
+
+  bool custom_path_bool = false;
+
+  if (upload_bool.Contains(actor_id)) {
+    custom_path_bool = upload_bool.GetValue(actor_id);
+  }
+
+  return custom_path_bool;
+}
+
+Path Parameters::GetCustomPaths(const ActorId &actor_id) const {
+
+  Path custom_path_import;
+
+  if (custom_path.Contains(actor_id)) {
+    custom_path_import = custom_path.GetValue(actor_id);
+  }
+
+  return custom_path_import;
 }
 
 } // namespace traffic_manager

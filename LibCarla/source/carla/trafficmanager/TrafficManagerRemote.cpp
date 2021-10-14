@@ -187,6 +187,26 @@ void TrafficManagerRemote::SetOSMMode(const bool mode_switch) {
   client.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerRemote::SetUploadPath(const ActorPtr &_actor, const bool mode_switch) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetUploadPath(actor, mode_switch);
+}
+
+void TrafficManagerRemote::SetCustomPath(const ActorPtr &_actor, const Path path) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetCustomPath(actor, path);
+}
+
+void TrafficManagerRemote::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+  client.RemoveUploadPath(actor_id, remove_path);
+}
+
+void TrafficManagerRemote::UpdateUploadPath(const ActorId &actor_id, const Path path) {
+  client.UpdateUploadPath(actor_id, path);
+}
+
 void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
   client.SetRespawnDormantVehicles(mode_switch);
 }

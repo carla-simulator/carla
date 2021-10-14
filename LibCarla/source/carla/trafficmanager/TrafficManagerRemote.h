@@ -19,6 +19,8 @@ namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
+using Path = std::vector<carla::geom::Location>;
+
 
 /// The function of this class is to integrate all the various stages of
 /// the traffic manager appropriately using messengers.
@@ -104,6 +106,18 @@ public:
 
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
+
+  /// Method to set if we are uploading a list of points.
+  void SetUploadPath(const ActorPtr &actor, const bool mode_switch);
+
+  /// Method to set our path.
+  void SetCustomPath(const ActorPtr &actor, const Path path);
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path);
 
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch);

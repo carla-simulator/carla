@@ -9,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <random>
+#include <unordered_map>
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -25,6 +26,8 @@ namespace cc = carla::client;
 namespace cg = carla::geom;
 using ActorPtr = carla::SharedPtr<cc::Actor>;
 using ActorId = carla::ActorId;
+using Path = std::vector<cg::Location>;
+using PathMap = std::unordered_map<ActorId, Path>;
 
 struct ChangeLaneInfo {
   bool change_lane = false;
@@ -76,6 +79,10 @@ private:
   std::atomic<float> hybrid_physics_radius {70.0};
   /// Parameter specifying Open Street Map mode.
   std::atomic<bool> osm_mode {true};
+  /// Parameter specifying if importing a custom path.
+  AtomicMap<ActorId, bool> upload_bool;
+  /// Structure to hold all custom paths.
+  AtomicMap<ActorId, Path> custom_path;
 
 public:
   Parameters();
@@ -150,6 +157,18 @@ public:
   /// Method to set limits for boundaries when respawning vehicles.
   void SetMaxBoundaries(const float lower, const float upper);
 
+  /// Method to set if we are uploading a list of points.
+  void SetUploadPath(const ActorPtr &actor, const bool mode_switch);
+
+  /// Method to set our path.
+  void SetCustomPath(const ActorPtr &actor, const Path path);
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path);
+
   ///////////////////////////////// GETTERS /////////////////////////////////////
 
   /// Method to retrieve hybrid physics radius.
@@ -205,6 +224,12 @@ public:
 
   /// Method to get Open Street Map mode.
   bool GetOSMMode() const;
+
+  /// Method to get if we are uploading a list of waypoints.
+  bool GetUploadPath(const ActorId &actor_id) const;
+
+  /// Method to get limits for boundaries when respawning vehicles.
+  Path GetCustomPaths(const ActorId &actor_id) const;
 
   /// Synchronous mode time out variable.
   std::chrono::duration<double, std::milli> synchronous_time_out;
