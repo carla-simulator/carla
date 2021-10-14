@@ -61,10 +61,12 @@ def main():
         description=__doc__)
     argparser.add_argument(
         '-i', '--input-path',
+        required=True,
         metavar='OSM_FILE_PATH',
         help='set the input OSM file path')
     argparser.add_argument(
         '-o', '--output-path',
+        required=True,
         metavar='XODR_FILE_PATH',
         help='set the output XODR file path')
     argparser.add_argument(
