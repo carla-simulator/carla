@@ -8,11 +8,13 @@ namespace carla {
 namespace traffic_manager {
 
 VehicleLightStage::VehicleLightStage(
+  const std::vector<ActorId> &vehicle_id_list,
   const SimulationState &simulation_state,
   const BufferMap &buffer_map,
   const cc::World &world,
   ControlFrame& control_frame)
-  : simulation_state(simulation_state),
+  : vehicle_id_list(vehicle_id_list),
+    simulation_state(simulation_state),
     buffer_map(buffer_map),
     world(world),
     control_frame(control_frame) {}
@@ -24,8 +26,8 @@ void VehicleLightStage::ClearCycleCache() {
 }
 
 void VehicleLightStage::Update(const unsigned long index) {
-  ActorId id = all_light_states[index].first;
-  rpc::VehicleLightState::flag_type light_states = all_light_states[index].second;
+  ActorId id = vehicle_id_list.at(index);
+  rpc::VehicleLightState::flag_type light_states = uint32_t(-1);
   bool brake_lights = false;
   bool left_turn_indicator = false;
   bool right_turn_indicator = false;
@@ -37,6 +39,14 @@ void VehicleLightStage::Update(const unsigned long index) {
   const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(id);
   if (!vehicle_physics_enabled || simulation_state.IsDormant(id)) 
     return; // do nothing
+
+  // search the current light state of the vehicle
+  for (auto&& vls : all_light_states) {
+    if (vls.first == id) {
+      light_states = vls.second;
+      break;
+    }
+  }
 
   cg::Vector3D actor_vec = simulation_state.GetHeading(id);
 
@@ -83,7 +93,7 @@ void VehicleLightStage::Update(const unsigned long index) {
     if (control_frame[cc].command.type() == typeid(carla::rpc::Command::ApplyVehicleControl)) {
       carla::rpc::Command::ApplyVehicleControl& ctrl = boost::get<carla::rpc::Command::ApplyVehicleControl>(control_frame[cc].command);
       if (ctrl.actor == id) {
-        brake_lights = (ctrl.control.brake > 0);
+        brake_lights = (ctrl.control.brake > 0.5); // hard braking, avoid blinking for throttle control
         break;
       }
     }

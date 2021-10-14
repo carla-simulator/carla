@@ -14,6 +14,7 @@ namespace traffic_manager {
 /// according to the current vehicle state and its surrounding environment.
 class VehicleLightStage: Stage {
 private:
+  const std::vector<ActorId> &vehicle_id_list;
   const SimulationState &simulation_state;
   const BufferMap &buffer_map;
   const cc::World &world;
@@ -24,7 +25,8 @@ private:
   rpc::WeatherParameters weather;
 
 public:
-  VehicleLightStage(const SimulationState &simulation_state,
+  VehicleLightStage(const std::vector<ActorId> &vehicle_id_list,
+                    const SimulationState &simulation_state,
                     const BufferMap &buffer_map,
                     const cc::World &world,
                     ControlFrame& control_frame);
