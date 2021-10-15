@@ -75,15 +75,15 @@ def main():
         help='width of each road lane in meters')
     argparser.add_argument(
         '--traffic-lights',
-        default='store_true',
+        action='store_true',
         help='enable traffic light generation from OSM data')
     argparser.add_argument(
         '--all-junctions-lights',
-        default='store_true',
+        action='store_true',
         help='set traffic lights for all junctions')
     argparser.add_argument(
         '--center-map',
-        default='store_true',
+        action='store_true',
         help='set center of map to the origin coordinates')
 
     if len(sys.argv) < 2:

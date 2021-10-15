@@ -35,10 +35,10 @@ def extract(args):
             logging.info('Please add some Vehicle Spawn Point to your UE4 scene.')
             sys.exit(1)
         spawn_points = _map.get_spawn_points()
-        with open(args.output_dir+"/spawn_points.csv", "w", encoding='utf8') as file:
+        with open(args.output_dir + "/spawn_points.csv", "w", encoding='utf8') as file:
             index = 0
             for index, spawn_point in enumerate(spawn_points):
-                file.write(f'{index},{spawn_point.location.x},{spawn_point.location.y}\n')
+                file.write(f'{index},{spawn_point.location.x},{spawn_point.location.y},{spawn_point.location.z}\n')
 
     finally:
         world = None
