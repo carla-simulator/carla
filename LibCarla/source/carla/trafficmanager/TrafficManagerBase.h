@@ -109,11 +109,8 @@ public:
   /// Method to set Open Street Map mode.
   virtual void SetOSMMode(const bool mode_switch) = 0;
 
-  /// Method to set if we are uploading a list of points.
-  virtual void SetUploadPath(const ActorPtr &actor, const bool mode_switch) = 0;
-
-  /// Method to set our path.
-  virtual void SetCustomPath(const ActorPtr &actor, const Path path) = 0;
+  /// Method to set our own imported path.
+  virtual void SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer) = 0;
 
   /// Method to remove a list of points.
   virtual void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) = 0;

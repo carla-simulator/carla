@@ -169,14 +169,9 @@ public:
         tm->SetOSMMode(mode_switch);
       });
 
-      /// Method to set if we are uploading a list of points.
-      server->bind("set_upload_path", [=](carla::rpc::Actor actor, const bool mode_switch) {
-        tm->SetUploadPath(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), mode_switch);
-      });
-
-      /// Method to set our path.
-      server->bind("set_custom_path", [=](carla::rpc::Actor actor, const Path path) {
-        tm->SetCustomPath(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), path);
+      /// Method to set our own imported path.
+      server->bind("set_custom_path", [=](carla::rpc::Actor actor, const Path path, const bool empty_buffer) {
+        tm->SetCustomPath(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), path, empty_buffer);
       });
 
       /// Method to remove a list of points.

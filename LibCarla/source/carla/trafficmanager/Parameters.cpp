@@ -153,14 +153,11 @@ void Parameters::SetOSMMode(const bool mode_switch) {
   osm_mode.store(mode_switch);
 }
 
-void Parameters::SetUploadPath(const ActorPtr &actor, const bool mode_switch) {
-  const auto entry = std::make_pair(actor->GetId(), mode_switch);
-  upload_bool.AddEntry(entry);
-}
-
-void Parameters::SetCustomPath(const ActorPtr &actor, const Path path) {
+void Parameters::SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer) {
   const auto entry = std::make_pair(actor->GetId(), path);
   custom_path.AddEntry(entry);
+  const auto entry2 = std::make_pair(actor->GetId(), emtpy_buffer);
+  upload_bool.AddEntry(entry2);
 }
 
 void Parameters::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {

@@ -199,16 +199,10 @@ public:
     _client->call("set_osm_mode", mode_switch);
   }
 
-  /// Method to set if we are uploading a list of points.
-  void SetUploadPath(const carla::rpc::Actor &actor, const bool mode_switch) {
+  /// Method to set our own imported path.
+  void SetCustomPath(const carla::rpc::Actor &actor, const Path path, const bool empty_buffer) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_upload_path", actor, mode_switch);
-  }
-
-  /// Method to set our path.
-  void SetCustomPath(const carla::rpc::Actor &actor, const Path path) {
-    DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_custom_path", actor, path);
+    _client->call("set_custom_path", actor, path, empty_buffer);
   }
 
   /// Method to remove a list of points.

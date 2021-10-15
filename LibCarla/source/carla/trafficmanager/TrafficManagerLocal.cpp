@@ -389,12 +389,8 @@ void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
   parameters.SetOSMMode(mode_switch);
 }
 
-void TrafficManagerLocal::SetUploadPath(const ActorPtr &actor, const bool mode_switch) {
-  parameters.SetUploadPath(actor, mode_switch);
-}
-
-void TrafficManagerLocal::SetCustomPath(const ActorPtr &actor, const Path path) {
-  parameters.SetCustomPath(actor, path);
+void TrafficManagerLocal::SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
+  parameters.SetCustomPath(actor, path, empty_buffer);
 }
 
 void TrafficManagerLocal::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {

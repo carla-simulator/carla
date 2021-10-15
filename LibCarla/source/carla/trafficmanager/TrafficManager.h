@@ -66,19 +66,11 @@ public:
     }
   }
 
-  /// Method to set if we are uploading a list of points.
-  void SetUploadPath(const ActorPtr &actor, const bool mode_switch) {
+  /// Method to set our own imported path.
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if (tm_ptr != nullptr) {
-      tm_ptr->SetUploadPath(actor, mode_switch);
-    }
-  }
-
-  /// Method to set our path.
-  void SetCustomPath(const ActorPtr &actor, const Path path) {
-    TrafficManagerBase* tm_ptr = GetTM(_port);
-    if (tm_ptr != nullptr) {
-      tm_ptr->SetCustomPath(actor, path);
+      tm_ptr->SetCustomPath(actor, path, emtpy_buffer);
     }
   }
 

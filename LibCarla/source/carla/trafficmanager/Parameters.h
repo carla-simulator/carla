@@ -157,11 +157,8 @@ public:
   /// Method to set limits for boundaries when respawning vehicles.
   void SetMaxBoundaries(const float lower, const float upper);
 
-  /// Method to set if we are uploading a list of points.
-  void SetUploadPath(const ActorPtr &actor, const bool mode_switch);
-
-  /// Method to set our path.
-  void SetCustomPath(const ActorPtr &actor, const Path path);
+  /// Method to set our own imported path.
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer);
 
   /// Method to remove a list of points.
   void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
