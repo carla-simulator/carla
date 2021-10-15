@@ -130,6 +130,7 @@ namespace traffic_manager {
       SimpleWaypointPtr wp = std::make_shared<SimpleWaypoint>(waypoint_ptr);
       wp->SetGeodesicGridId(cached_wp.geodesic_grid_id);
       wp->SetIsJunction(cached_wp.is_junction);
+      wp->SetRoadOption(static_cast<RoadOption>(cached_wp.road_option));
       dense_topology.push_back(wp);
     }
 

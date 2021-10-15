@@ -22,15 +22,16 @@ namespace traffic_manager {
   namespace cg = carla::geom;
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
   using GeoGridId = carla::road::JuncId;
-  enum RoadOption {
-    Void,
-    Left,
-    Right,
-    Straight,
-    LaneFollow,
-    ChangeLaneLeft,
-    ChangeLaneRight,
-    RoadEnd
+  
+  enum class RoadOption : uint8_t {
+    Void = 0,
+    Left = 1,
+    Right = 2,
+    Straight = 3,
+    LaneFollow = 4,
+    ChangeLaneLeft = 5,
+    ChangeLaneRight = 6,
+    RoadEnd = 7
   };
 
   /// This is a simple wrapper class on Carla's waypoint object.
