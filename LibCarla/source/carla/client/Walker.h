@@ -32,6 +32,9 @@ namespace client {
     /// received in the last tick.
     Control GetWalkerControl() const;
 
+    // Walker::Control GetBonesTransform() const;
+    BoneControl GetBonesTransform();
+
   private:
 
     Control _control;

@@ -13,6 +13,7 @@
 #include "GameFramework/Controller.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/WalkerBoneControl.h>
 #include <boost/variant.hpp>
 #include <compiler/enable-ue4-macros.h>
 
@@ -75,6 +76,9 @@ public:
 
   UFUNCTION(BlueprintCallable)
   void SetManualBones(const bool bIsEnabled);
+
+  UFUNCTION(BlueprintCallable)
+  void GetBonesTransform(FWalkerBoneControl &WalkerBones);
 
 private:
 

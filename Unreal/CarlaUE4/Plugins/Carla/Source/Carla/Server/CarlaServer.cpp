@@ -32,6 +32,7 @@
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/BoneTransformData.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
@@ -1311,6 +1312,40 @@ void FCarlaServer::FPimpl::BindActions()
           " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
+  };
+
+  BIND_SYNC(get_bones_transform) << [this](
+      cr::ActorId ActorId) -> R<cr::WalkerBoneControl>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_bones_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    FWalkerBoneControl Bones;
+    ECarlaServerResponse Response =
+        CarlaActor->GetBonesTransform(Bones);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_bones_transform",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    std::vector<carla::rpc::BoneTransformData> BoneData;
+    for (auto Bone : Bones.BoneTransforms) 
+    {
+      std::pair<std::string, carla::geom::Transform> Data;
+      Data.first = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
+      Data.second = Bone.Get<1>();
+      BoneData.push_back(Data);
+    }
+    return carla::rpc::WalkerBoneControl(BoneData);
   };
 
   BIND_SYNC(set_actor_autopilot) << [this](

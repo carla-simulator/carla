@@ -271,6 +271,9 @@ namespace detail {
         rpc::ActorId walker,
         const rpc::WalkerBoneControl &control);
 
+    rpc::WalkerBoneControl GetBonesTransform(
+        rpc::ActorId walker);
+
     void SetTrafficLightState(
         rpc::ActorId traffic_light,
         const rpc::TrafficLightState trafficLightState);
