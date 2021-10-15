@@ -372,6 +372,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControl&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse FreezeTrafficLight(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -549,6 +554,8 @@ public:
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
   virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControl&) final;
+
+  virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControl&) final;
 };
 
 class FOtherActor : public FCarlaActor

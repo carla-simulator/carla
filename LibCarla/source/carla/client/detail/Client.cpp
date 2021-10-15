@@ -439,6 +439,11 @@ namespace detail {
     _pimpl->AsyncCall("apply_bone_control_to_walker", walker, control);
   }
 
+  rpc::WalkerBoneControl Client::GetBonesTransform(rpc::ActorId walker) {
+    auto res = _pimpl->CallAndWait<rpc::WalkerBoneControl>("get_bones_transform", walker);
+    return res;
+  }
+
   void Client::SetTrafficLightState(
       rpc::ActorId traffic_light,
       const rpc::TrafficLightState traffic_light_state) {

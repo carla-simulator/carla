@@ -1269,3 +1269,25 @@ ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
   }
   return ECarlaServerResponse::Success;
 }
+
+ECarlaServerResponse FWalkerActor::GetBonesTransform(FWalkerBoneControl& Bones)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->GetBonesTransform(Bones);
+  }
+  return ECarlaServerResponse::Success;
+}

@@ -101,9 +101,40 @@ void AWalkerController::SetManualBones(const bool bIsEnabled)
     else
     {
       UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
-      PoseableMesh->SetVisibility(false);
+      if (PoseableMesh)
+        PoseableMesh->SetVisibility(false);
       SkeletalMesh->SetVisibility(true);
     }
+  }
+}
+
+void AWalkerController::GetBonesTransform(FWalkerBoneControl &WalkerBones)
+{
+  auto *Character = GetCharacter();
+  TArray<UPoseableMeshComponent *> PoseableMeshes;
+  TArray<USkeletalMeshComponent *> SkeletalMeshes;
+  Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
+  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
+  if (!SkeletalMesh) return;
+
+  UPoseableMeshComponent *PoseableMesh =
+        PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : AddNewBoneComponent(Character,
+        SkeletalMesh->GetRelativeTransform().GetLocation(),
+        SkeletalMesh->GetRelativeTransform().GetRotation().Rotator());
+  PoseableMesh->SetSkeletalMesh(SkeletalMesh->SkeletalMesh);
+  PoseableMesh->SetVisibility(false);
+  PoseableMesh->CopyPoseFromSkeletalComponent(SkeletalMesh);
+    
+  FPoseSnapshot Snap;
+  SkeletalMesh->SnapshotPose(Snap);
+  for (int i=0; i<Snap.BoneNames.Num(); ++i)
+  {
+    FTransform Trans = PoseableMesh->GetBoneTransformByName(Snap.BoneNames[i], EBoneSpaces::WorldSpace);
+    WalkerBones.BoneTransforms.Add(Snap.BoneNames[i].ToString(), Trans);
+    // FVector Loc = SkeletalMesh->GetBoneLocation(Snap.BoneNames[i], EBoneSpaces::WorldSpace);        
+    // Trans = Snap.LocalTransforms[i];
+    // Trans.SetLocation(Loc);
   }
 }
 

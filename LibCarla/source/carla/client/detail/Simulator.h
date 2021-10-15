@@ -461,6 +461,10 @@ namespace detail {
       _client.ApplyBoneControlToWalker(walker.GetId(), control);
     }
 
+    rpc::WalkerBoneControl GetBonesTransform(Walker &walker) {
+      return _client.GetBonesTransform(walker.GetId());
+    }
+
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }

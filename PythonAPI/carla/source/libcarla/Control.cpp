@@ -304,6 +304,17 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cr::BoneTransformData>("bone_transform")
+    .def(init<>())
+    .def_readwrite("name", &std::pair<std::string, cg::Transform>::first)
+    .def_readwrite("transform", &std::pair<std::string, cg::Transform>::second)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<std::vector<cr::BoneTransformData>>("vector_of_bones")
+      .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformData>>())
+  ;
+
   class_<cr::WalkerBoneControl>("WalkerBoneControl")
     .def("__init__", raw_function(WalkerBoneControl_init))
     .def(init<>())
