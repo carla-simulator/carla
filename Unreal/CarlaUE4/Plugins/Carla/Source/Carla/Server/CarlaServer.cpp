@@ -32,7 +32,7 @@
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
-#include <carla/rpc/BoneTransformData.h>
+#include <carla/rpc/BoneTransformDataIn.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
@@ -54,7 +54,8 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehicleLightStateList.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -1291,7 +1292,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(apply_bone_control_to_walker) << [this](
       cr::ActorId ActorId,
-      cr::WalkerBoneControl Control) -> R<void>
+      cr::WalkerBoneControlIn Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
@@ -1315,7 +1316,7 @@ void FCarlaServer::FPimpl::BindActions()
   };
 
   BIND_SYNC(get_bones_transform) << [this](
-      cr::ActorId ActorId) -> R<cr::WalkerBoneControl>
+      cr::ActorId ActorId) -> R<cr::WalkerBoneControlOut>
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
@@ -1326,7 +1327,7 @@ void FCarlaServer::FPimpl::BindActions()
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    FWalkerBoneControl Bones;
+    FWalkerBoneControlOut Bones;
     ECarlaServerResponse Response =
         CarlaActor->GetBonesTransform(Bones);
     if (Response != ECarlaServerResponse::Success)
@@ -1337,15 +1338,18 @@ void FCarlaServer::FPimpl::BindActions()
           " Actor Id: " + FString::FromInt(ActorId));
     }
     
-    std::vector<carla::rpc::BoneTransformData> BoneData;
+    std::vector<carla::rpc::BoneTransformDataOut> BoneData;
     for (auto Bone : Bones.BoneTransforms) 
     {
-      std::pair<std::string, carla::geom::Transform> Data;
-      Data.first = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
-      Data.second = Bone.Get<1>();
+      carla::rpc::BoneTransformDataOut Data;
+      Data.bone_name = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
+      FWalkerBoneControlOutData Transforms = Bone.Get<1>();
+      Data.world = Transforms.World;
+      Data.component = Transforms.Component;
+      Data.relative = Transforms.Relative;
       BoneData.push_back(Data);
     }
-    return carla::rpc::WalkerBoneControl(BoneData);
+    return carla::rpc::WalkerBoneControlOut(BoneData);
   };
 
   BIND_SYNC(set_actor_autopilot) << [this](

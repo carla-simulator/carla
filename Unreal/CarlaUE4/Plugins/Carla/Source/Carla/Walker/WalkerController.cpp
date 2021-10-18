@@ -67,7 +67,7 @@ void AWalkerController::ApplyWalkerControl(const FWalkerControl &InControl)
   }
 }
 
-void AWalkerController::ApplyWalkerControl(const FWalkerBoneControl &InBoneControl)
+void AWalkerController::ApplyWalkerControl(const FWalkerBoneControlIn &InBoneControl)
 {
   Control = InBoneControl;
   if (!bManualBones)
@@ -108,7 +108,7 @@ void AWalkerController::SetManualBones(const bool bIsEnabled)
   }
 }
 
-void AWalkerController::GetBonesTransform(FWalkerBoneControl &WalkerBones)
+void AWalkerController::GetBonesTransform(FWalkerBoneControlOut &WalkerBones)
 {
   auto *Character = GetCharacter();
   TArray<UPoseableMeshComponent *> PoseableMeshes;
@@ -130,11 +130,20 @@ void AWalkerController::GetBonesTransform(FWalkerBoneControl &WalkerBones)
   SkeletalMesh->SnapshotPose(Snap);
   for (int i=0; i<Snap.BoneNames.Num(); ++i)
   {
-    FTransform Trans = PoseableMesh->GetBoneTransformByName(Snap.BoneNames[i], EBoneSpaces::WorldSpace);
-    WalkerBones.BoneTransforms.Add(Snap.BoneNames[i].ToString(), Trans);
+    FWalkerBoneControlOutData Transforms;
+    Transforms.World = PoseableMesh->GetBoneTransformByName(Snap.BoneNames[i], EBoneSpaces::WorldSpace);
+    Transforms.Component = PoseableMesh->GetBoneTransformByName(Snap.BoneNames[i], EBoneSpaces::ComponentSpace);
+    Transforms.Relative = Snap.LocalTransforms[i];
+    WalkerBones.BoneTransforms.Add(Snap.BoneNames[i].ToString(), Transforms);
     // FVector Loc = SkeletalMesh->GetBoneLocation(Snap.BoneNames[i], EBoneSpaces::WorldSpace);        
     // Trans = Snap.LocalTransforms[i];
     // Trans.SetLocation(Loc);
+    // FTransform TransRel = Snap.LocalTransforms[i];
+    // if (i == 0)
+    // {
+    //   UE_LOG(LogCarla, Log, TEXT("World (%f, %f, %f), Relative (%f, %f, %f), Component (%f, %f, %f)"), Trans.GetLocation().X, Trans.GetLocation().Y, Trans.GetLocation().Z, TransRel.GetLocation().X, TransRel.GetLocation().Y, TransRel.GetLocation().Z, TransComp.GetLocation().X, TransComp.GetLocation().Y, TransComp.GetLocation().Z);
+    //   UE_LOG(LogCarla, Log, TEXT("World (%f, %f, %f), Relative (%f, %f, %f), Component (%f, %f, %f)"), Trans.GetLocation().X, Trans.GetLocation().Y, Trans.GetLocation().Z, TransRel.GetLocation().X, TransRel.GetLocation().Y, TransRel.GetLocation().Z, TransComp.GetLocation().X, TransComp.GetLocation().Y, TransComp.GetLocation().Z);
+    // }
   }
 }
 
@@ -152,7 +161,7 @@ void AWalkerController::ControlTickVisitor::operator()(const FWalkerControl &Wal
   }
 }
 
-void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControl &WalkerBoneControl)
+void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControlIn &WalkerBoneControlIn)
 {
   auto *Character = Controller->GetCharacter();
   if (Character == nullptr)
@@ -164,12 +173,12 @@ void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControl &Walke
   UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
   if (PoseableMesh)
   {
-    for (const TPair<FString, FTransform> &pair : WalkerBoneControl.BoneTransforms)
+    for (const TPair<FString, FTransform> &pair : WalkerBoneControlIn.BoneTransforms)
     {
       FName BoneName = FName(*pair.Key);
       PoseableMesh->SetBoneTransformByName(BoneName, pair.Value, EBoneSpaces::Type::ComponentSpace);
     }
-    WalkerBoneControl.BoneTransforms.Empty();
+    WalkerBoneControlIn.BoneTransforms.Empty();
   }
 }
 

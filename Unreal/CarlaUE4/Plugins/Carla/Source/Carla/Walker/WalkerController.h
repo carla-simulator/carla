@@ -6,14 +6,15 @@
 
 #pragma once
 
-#include "Carla/Walker/WalkerBoneControl.h"
+#include "Carla/Walker/WalkerBoneControlIn.h"
+#include "Carla/Walker/WalkerBoneControlOut.h"
 #include "Carla/Walker/WalkerControl.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Controller.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
 #include <boost/variant.hpp>
 #include <compiler/enable-ue4-macros.h>
 
@@ -35,7 +36,7 @@ private:
 
     void operator()(const FWalkerControl &WalkerControl);
 
-    void operator()(FWalkerBoneControl &WalkerBoneControl);
+    void operator()(FWalkerBoneControlIn &WalkerBoneControlIn);
 
   private:
 
@@ -60,7 +61,7 @@ public:
   UFUNCTION(BlueprintCallable)
   void ApplyWalkerControl(const FWalkerControl &InControl);
 
-  void ApplyWalkerControl(const FWalkerBoneControl &InBoneControl);
+  void ApplyWalkerControl(const FWalkerBoneControlIn &InBoneControl);
 
   UFUNCTION(BlueprintCallable)
   const FWalkerControl GetWalkerControl() const
@@ -69,20 +70,20 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
-  const FWalkerBoneControl GetBoneWalkerControl() const
+  const FWalkerBoneControlIn GetBoneWalkerControl() const
   {
-    return Control.which() == 1u ? boost::get<FWalkerBoneControl>(Control) : FWalkerBoneControl{};
+    return Control.which() == 1u ? boost::get<FWalkerBoneControlIn>(Control) : FWalkerBoneControlIn{};
   }
 
   UFUNCTION(BlueprintCallable)
   void SetManualBones(const bool bIsEnabled);
 
   UFUNCTION(BlueprintCallable)
-  void GetBonesTransform(FWalkerBoneControl &WalkerBones);
+  void GetBonesTransform(FWalkerBoneControlOut &WalkerBones);
 
 private:
 
-  boost::variant<FWalkerControl, FWalkerBoneControl> Control;
+  boost::variant<FWalkerControl, FWalkerBoneControlIn> Control;
 
   bool bManualBones;
 };

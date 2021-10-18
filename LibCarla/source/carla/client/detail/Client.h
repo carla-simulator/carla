@@ -45,7 +45,8 @@ namespace rpc {
   class DebugShape;
   class VehicleControl;
   class WalkerControl;
-  class WalkerBoneControl;
+  class WalkerBoneControlIn;
+  class WalkerBoneControlOut;
 }
 namespace sensor {
   class SensorData;
@@ -269,9 +270,9 @@ namespace detail {
 
     void ApplyBoneControlToWalker(
         rpc::ActorId walker,
-        const rpc::WalkerBoneControl &control);
+        const rpc::WalkerBoneControlIn &control);
 
-    rpc::WalkerBoneControl GetBonesTransform(
+    rpc::WalkerBoneControlOut GetBonesTransform(
         rpc::ActorId walker);
 
     void SetTrafficLightState(

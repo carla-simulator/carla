@@ -27,7 +27,8 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehicleLightStateList.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -1248,7 +1249,7 @@ ECarlaServerResponse FWalkerActor::ApplyControlToWalker(
 }
 
 ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
-    const FWalkerBoneControl& Control)
+    const FWalkerBoneControlIn& Control)
 {
   if (IsDormant())
   {
@@ -1270,7 +1271,7 @@ ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
   return ECarlaServerResponse::Success;
 }
 
-ECarlaServerResponse FWalkerActor::GetBonesTransform(FWalkerBoneControl& Bones)
+ECarlaServerResponse FWalkerActor::GetBonesTransform(FWalkerBoneControlOut& Bones)
 {
   if (IsDormant())
   {

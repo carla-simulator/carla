@@ -457,11 +457,11 @@ namespace detail {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }
 
-    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControl &control) {
+    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControlIn &control) {
       _client.ApplyBoneControlToWalker(walker.GetId(), control);
     }
 
-    rpc::WalkerBoneControl GetBonesTransform(Walker &walker) {
+    rpc::WalkerBoneControlOut GetBonesTransform(Walker &walker) {
       return _client.GetBonesTransform(walker.GetId());
     }
 
