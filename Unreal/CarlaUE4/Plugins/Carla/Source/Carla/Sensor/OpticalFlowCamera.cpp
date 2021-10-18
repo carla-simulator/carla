@@ -73,9 +73,9 @@ void AOpticalFlowCamera::CopyOpticalFlowFromAtlas(carla::Buffer &Buffer,
 
   TArray<float> IntermediateBuffer;
   IntermediateBuffer.Reserve(ImageWidth*ImageHeight*2);
-  for (int j = PositionInAtlas.Y; j < PositionInAtlas.Y + ImageHeight; ++j)
+  for (uint32 j = PositionInAtlas.Y; j < PositionInAtlas.Y + ImageHeight; ++j)
   {
-    for (int i = PositionInAtlas.X; i < PositionInAtlas.X + ImageWidth; ++i)
+    for (uint32 i = PositionInAtlas.X; i < PositionInAtlas.X + ImageWidth; ++i)
     {
       const FFloat16Color& Color = AtlasPixels[i + j*AtlasTextureWidth];
       float x = (Color.R.GetFloat() - 0.5f)*4.f;
