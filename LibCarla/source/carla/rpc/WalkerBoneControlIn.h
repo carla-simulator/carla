@@ -7,12 +7,12 @@
 #pragma once
 
 #include "carla/MsgPack.h"
-#include "carla/rpc/BoneTransformData.h"
+#include "carla/rpc/BoneTransformDataIn.h"
 #include "carla/rpc/String.h"
 #include "carla/rpc/Transform.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "Carla/Walker/WalkerBoneControl.h"
+#  include "Carla/Walker/WalkerBoneControlIn.h"
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 #include <vector>
@@ -20,19 +20,19 @@
 namespace carla {
 namespace rpc {
 
-  class WalkerBoneControl {
+  class WalkerBoneControlIn {
   public:
 
-    WalkerBoneControl() = default;
+    WalkerBoneControlIn() = default;
 
-    explicit WalkerBoneControl(
-        std::vector<rpc::BoneTransformData> bone_transforms)
+    explicit WalkerBoneControlIn(
+        std::vector<rpc::BoneTransformDataIn> bone_transforms)
       : bone_transforms(bone_transforms) {}
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
-    operator FWalkerBoneControl() const {
-      FWalkerBoneControl Control;
+    operator FWalkerBoneControlIn() const {
+      FWalkerBoneControlIn Control;
       for (auto &bone_transform : bone_transforms) {
         Control.BoneTransforms.Add(ToFString(bone_transform.first), bone_transform.second);
       }
@@ -41,7 +41,7 @@ namespace rpc {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    std::vector<rpc::BoneTransformData> bone_transforms;
+    std::vector<rpc::BoneTransformDataIn> bone_transforms;
 
     MSGPACK_DEFINE_ARRAY(bone_transforms);
   };

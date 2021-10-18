@@ -11,13 +11,14 @@
 #include "carla/client/FileTransfer.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/rpc/ActorDescription.h"
-#include "carla/rpc/BoneTransformData.h"
+#include "carla/rpc/BoneTransformDataIn.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/Response.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehicleLightState.h"
-#include "carla/rpc/WalkerBoneControl.h"
+#include "carla/rpc/WalkerBoneControlIn.h"
+#include "carla/rpc/WalkerBoneControlOut.h"
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
@@ -435,12 +436,12 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
-  void Client::ApplyBoneControlToWalker(rpc::ActorId walker, const rpc::WalkerBoneControl &control) {
+  void Client::ApplyBoneControlToWalker(rpc::ActorId walker, const rpc::WalkerBoneControlIn &control) {
     _pimpl->AsyncCall("apply_bone_control_to_walker", walker, control);
   }
 
-  rpc::WalkerBoneControl Client::GetBonesTransform(rpc::ActorId walker) {
-    auto res = _pimpl->CallAndWait<rpc::WalkerBoneControl>("get_bones_transform", walker);
+  rpc::WalkerBoneControlOut Client::GetBonesTransform(rpc::ActorId walker) {
+    auto res = _pimpl->CallAndWait<rpc::WalkerBoneControlOut>("get_bones_transform", walker);
     return res;
   }
 

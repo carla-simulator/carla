@@ -8,7 +8,8 @@
 
 #include "carla/client/Actor.h"
 #include "carla/rpc/WalkerControl.h"
-#include "carla/rpc/WalkerBoneControl.h"
+#include "carla/rpc/WalkerBoneControlIn.h"
+#include "carla/rpc/WalkerBoneControlOut.h"
 
 namespace carla {
 namespace client {
@@ -17,14 +18,15 @@ namespace client {
   public:
 
     using Control = rpc::WalkerControl;
-    using BoneControl = rpc::WalkerBoneControl;
+    using BoneControlIn = rpc::WalkerBoneControlIn;
+    using BoneControlOut = rpc::WalkerBoneControlOut;
 
     explicit Walker(ActorInitializer init) : Actor(std::move(init)) {}
 
     /// Apply @a control to this Walker.
     void ApplyControl(const Control &control);
 
-    void ApplyControl(const BoneControl &bone_control);
+    void ApplyControl(const BoneControlIn &bone_control);
 
     /// Return the control last applied to this Walker.
     ///
@@ -33,7 +35,7 @@ namespace client {
     Control GetWalkerControl() const;
 
     // Walker::Control GetBonesTransform() const;
-    BoneControl GetBonesTransform();
+    BoneControlOut GetBonesTransform();
 
   private:
 

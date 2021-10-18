@@ -9,7 +9,8 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/WheelPhysicsControl.h>
 #include <carla/rpc/WalkerControl.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 
 #include <ostream>
 
@@ -38,11 +39,26 @@ namespace rpc {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const WalkerBoneControl &control) {
-    out << "WalkerBoneControl(bone_transforms(";
+  std::ostream &operator<<(std::ostream &out, const WalkerBoneControlIn &control) {
+    out << "WalkerBoneControlIn(bone_transforms(";
     for (auto bone_transform : control.bone_transforms) {
       out << "(name="  << bone_transform.first
           << ", transform=" << bone_transform.second << ')';
+    }
+    out << "))";
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const BoneTransformDataOut &data) {
+    out << "BoneTransformDataOut(name="  << data.bone_name << ", world=" << data.world << ", component=" << data.component << ", relative=" << data.relative << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const WalkerBoneControlOut &control) {
+    out << "WalkerBoneControlOut(bone_transforms(";
+    for (auto bone_transform : control.bone_transforms) {
+      out << "(name="  << bone_transform.bone_name
+          << ", world=" << bone_transform.world << ", component=" << bone_transform.component << ", relative=" << bone_transform.relative << ')';
     }
     out << "))";
     return out;
@@ -111,18 +127,38 @@ static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
 }
 
 static auto GetVectorOfBoneTransformFromList(const boost::python::list &list) {
-  std::vector<carla::rpc::BoneTransformData> v;
+  std::vector<carla::rpc::BoneTransformDataIn> v;
 
   auto length = boost::python::len(list);
   v.reserve(static_cast<size_t>(length));
   for (auto i = 0u; i < length; ++i) {
-    boost::python::extract<carla::rpc::BoneTransformData> ext(list[i]);
+    boost::python::extract<carla::rpc::BoneTransformDataIn> ext(list[i]);
     if (ext.check()) {
       v.push_back(ext);
     } else {
-      v.push_back(carla::rpc::BoneTransformData{
+      v.push_back(carla::rpc::BoneTransformDataIn{
         boost::python::extract<std::string>(list[i][0u]),
         boost::python::extract<carla::geom::Transform>(list[i][1u])});
+    }
+  }
+  return v;
+}
+
+static auto GetVectorOfBoneTransformOutFromList(const boost::python::list &list) {
+  std::vector<carla::rpc::BoneTransformDataOut> v;
+
+  auto length = boost::python::len(list);
+  v.reserve(static_cast<size_t>(length));
+  for (auto i = 0u; i < length; ++i) {
+    boost::python::extract<carla::rpc::BoneTransformDataOut> ext(list[i]);
+    if (ext.check()) {
+      v.push_back(ext);
+    } else {
+      v.push_back(carla::rpc::BoneTransformDataOut{
+        boost::python::extract<std::string>(list[i][0u]),
+        boost::python::extract<carla::geom::Transform>(list[i][1u]),
+        boost::python::extract<carla::geom::Transform>(list[i][2u]),
+        boost::python::extract<carla::geom::Transform>(list[i][3u])});
     }
   }
   return v;
@@ -227,16 +263,28 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
   return res;
 }
 
-static auto GetBonesTransform(const carla::rpc::WalkerBoneControl &self) {
-  const std::vector<carla::rpc::BoneTransformData> &bone_transform_data = self.bone_transforms;
+static auto GetBonesTransform(const carla::rpc::WalkerBoneControlIn &self) {
+  const std::vector<carla::rpc::BoneTransformDataIn> &bone_transform_data = self.bone_transforms;
   boost::python::object get_iter =
-      boost::python::iterator<const std::vector<carla::rpc::BoneTransformData>>();
+      boost::python::iterator<const std::vector<carla::rpc::BoneTransformDataIn>>();
   boost::python::object iter = get_iter(bone_transform_data);
   return boost::python::list(iter);
 }
 
-static void SetBonesTransform(carla::rpc::WalkerBoneControl &self, const boost::python::list &list) {
+static void SetBonesTransform(carla::rpc::WalkerBoneControlIn &self, const boost::python::list &list) {
   self.bone_transforms = GetVectorOfBoneTransformFromList(list);
+}
+
+static auto GetBonesTransformOut(const carla::rpc::WalkerBoneControlOut &self) {
+  const std::vector<carla::rpc::BoneTransformDataOut> &bone_transform_data = self.bone_transforms;
+  boost::python::object get_iter =
+      boost::python::iterator<const std::vector<carla::rpc::BoneTransformDataOut>>();
+  boost::python::object iter = get_iter(bone_transform_data);
+  return boost::python::list(iter);
+}
+
+static void SetBonesTransformOut(carla::rpc::WalkerBoneControlOut &self, const boost::python::list &list) {
+  self.bone_transforms = GetVectorOfBoneTransformOutFromList(list);
 }
 
 boost::python::object WalkerBoneControl_init(boost::python::tuple args, boost::python::dict kwargs) {
@@ -304,21 +352,48 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::BoneTransformData>("bone_transform")
+  class_<cr::BoneTransformDataIn>("bone_transform")
     .def(init<>())
     .def_readwrite("name", &std::pair<std::string, cg::Transform>::first)
     .def_readwrite("transform", &std::pair<std::string, cg::Transform>::second)
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cr::BoneTransformData>>("vector_of_bones")
-      .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformData>>())
+  class_<std::vector<cr::BoneTransformDataIn>>("vector_of_bones")
+    .def(init<>())
+    .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformDataIn>>())
+    .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::WalkerBoneControl>("WalkerBoneControl")
+  class_<cr::BoneTransformDataOut>("bone_transform_out")
+    .def(init<>())
+    .def_readwrite("name", &cr::BoneTransformDataOut::bone_name)
+    .def_readwrite("world", &cr::BoneTransformDataOut::world)
+    .def_readwrite("component", &cr::BoneTransformDataOut::component)
+    .def_readwrite("relative", &cr::BoneTransformDataOut::relative)
+    .def(self_ns::str(self_ns::self))
+    .def("__eq__", &cr::BoneTransformDataOut::operator==)
+    .def("__ne__", &cr::BoneTransformDataOut::operator!=)
+  ;
+
+  class_<std::vector<cr::BoneTransformDataOut>>("vector_of_bones_out")
+    .def(init<>())
+    .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformDataOut>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::WalkerBoneControlIn>("WalkerBoneControlIn")
     .def("__init__", raw_function(WalkerBoneControl_init))
     .def(init<>())
     .add_property("bone_transforms", &GetBonesTransform, &SetBonesTransform)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::WalkerBoneControlOut>("WalkerBoneControlOut")
+    .def("__init__", raw_function(WalkerBoneControl_init))
+    .def(init<>())
+    // .add_property("bone_transforms", &GetBonesTransformOut, &SetBonesTransformOut)
+    .add_property("bone_transforms", &GetBonesTransformOut)
     .def(self_ns::str(self_ns::self))
   ;
 
