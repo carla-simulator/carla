@@ -2020,7 +2020,7 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
   int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
   int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
 
-  UE_LOG(LogCarla, Error, TEXT("FCommandLine %s"), FCommandLine::Get());
+  UE_LOG(LogCarla, Log, TEXT("FCommandLine %s"), FCommandLine::Get());
 
   if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
   {
@@ -2031,7 +2031,7 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
     StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
   }
 
-  UE_LOG(LogCarla, Error, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
+  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
         NumberOfWorkerThreads, RPCThreads, StreamingThreads);
 
   Pimpl->Server.AsyncRun(RPCThreads);

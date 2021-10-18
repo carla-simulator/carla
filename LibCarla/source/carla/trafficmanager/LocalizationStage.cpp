@@ -9,6 +9,7 @@ namespace traffic_manager {
 using namespace constants::PathBufferUpdate;
 using namespace constants::LaneChange;
 using namespace constants::WaypointSelection;
+using namespace constants::SpeedThreshold;
 
 LocalizationStage::LocalizationStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -39,7 +40,10 @@ void LocalizationStage::Update(const unsigned long index) {
   const float vehicle_speed = vehicle_velocity_vector.Length();
 
   // Speed dependent waypoint horizon length.
-  float horizon_length = vehicle_speed * HORIZON_RATE + MINIMUM_HORIZON_LENGTH;
+  float horizon_length = std::max(vehicle_speed * HORIZON_RATE, MINIMUM_HORIZON_LENGTH);
+  if (vehicle_speed > HIGHWAY_SPEED) {
+    horizon_length = std::max(vehicle_speed * HIGH_SPEED_HORIZON_RATE, MINIMUM_HORIZON_LENGTH);
+  }
   const float horizon_square = SQUARE(horizon_length);
 
   if (buffer_map.find(actor_id) == buffer_map.end()) {
