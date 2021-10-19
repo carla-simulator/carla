@@ -102,24 +102,24 @@ void VehicleLightStage::Update(const unsigned long index) {
   // Determine position, fog and beams
 
   // Turn on beams & positions from sunset to dawn
-  if (weather.sun_altitude_angle < VehicleLight.SUN_ALTITUDE_DEGREES_BEFORE_DAWN ||
-      weather.sun_altitude_angle > VehicleLight.SUN_ALTITUDE_DEGREES_AFTER_SUNSET)
+  if (weather.sun_altitude_angle < constants::VehicleLight::SUN_ALTITUDE_DEGREES_BEFORE_DAWN ||
+      weather.sun_altitude_angle > constants::VehicleLight::SUN_ALTITUDE_DEGREES_AFTER_SUNSET)
   {
     position = true;
     low_beam = true;
   }
-  else if (weather.sun_altitude_angle < VehicleLight.SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN ||
-           weather.sun_altitude_angle > VehicleLight.SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET)
+  else if (weather.sun_altitude_angle < constants::VehicleLight::SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN ||
+           weather.sun_altitude_angle > constants::VehicleLight::SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET)
   {
     position = true;
   }
   // Turn on lights under heavy rain
-  if (weather.precipitation > VehicleLight.HEAVY_PRECIPITATION_THRESHOLD) {
+  if (weather.precipitation > constants::VehicleLight::HEAVY_PRECIPITATION_THRESHOLD) {
     position = true;
     low_beam = true;
   }
   // Turn on fog lights
-  if (weather.fog_density > VehicleLight.FOG_DENSITY_THRESHOLD) {
+  if (weather.fog_density > constants::VehicleLight::FOG_DENSITY_THRESHOLD) {
     position = true;
     low_beam = true;
     fog_lights = true;
