@@ -37,7 +37,7 @@ void VehicleLightStage::Update(const unsigned long index) {
   bool fog_lights = false;
 
   const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(id);
-  if (!vehicle_physics_enabled || simulation_state.IsDormant(id)) 
+  if (!vehicle_physics_enabled || simulation_state.IsDormant(id))
     return; // do nothing
 
   // search the current light state of the vehicle
@@ -66,15 +66,15 @@ void VehicleLightStage::Update(const unsigned long index) {
       wptr = next_wptrs.back();
       cg::Vector3D next_road_vec = wptr->GetTransform().GetForwardVector();
       cg::Vector3D up_vec(0, 0, 1);
-      float dot_prod = actor_vec.x*next_road_vec.x + 
-                        actor_vec.y*next_road_vec.y + 
+      float dot_prod = actor_vec.x*next_road_vec.x +
+                        actor_vec.y*next_road_vec.y +
                         actor_vec.z*next_road_vec.z;
       cg::Vector3D cross_prod(actor_vec.y*up_vec.z - actor_vec.z*up_vec.y,
                               actor_vec.z*up_vec.x - actor_vec.x*up_vec.z,
                               actor_vec.x*up_vec.y - actor_vec.y*up_vec.x);
-      
-      float dot_prod_left = cross_prod.x*next_road_vec.x + 
-                            cross_prod.y*next_road_vec.y + 
+
+      float dot_prod_left = cross_prod.x*next_road_vec.x +
+                            cross_prod.y*next_road_vec.y +
                             cross_prod.z*next_road_vec.z;
 
       // Determine if the vehicle is truning left or right
@@ -84,7 +84,7 @@ void VehicleLightStage::Update(const unsigned long index) {
         if(dot_prod_left < -0.5)
           right_turn_indicator = true;
       }
-      break;  
+      break;
     }
   }
 
@@ -100,22 +100,26 @@ void VehicleLightStage::Update(const unsigned long index) {
   }
 
   // Determine position, fog and beams
-  
+
   // Turn on beams & positions from sunset to dawn
-  if (weather.sun_altitude_angle < 15 || weather.sun_altitude_angle > 165) {
+  if (weather.sun_altitude_angle < VehicleLight.SUN_ALTITUDE_DEGREES_BEFORE_DAWN ||
+      weather.sun_altitude_angle > VehicleLight.SUN_ALTITUDE_DEGREES_AFTER_SUNSET)
+  {
     position = true;
     low_beam = true;
   }
-  else if (weather.sun_altitude_angle < 35 || weather.sun_altitude_angle > 145) {
+  else if (weather.sun_altitude_angle < VehicleLight.SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN ||
+           weather.sun_altitude_angle > VehicleLight.SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET)
+  {
     position = true;
   }
   // Turn on lights under heavy rain
-  if (weather.precipitation > 80) {
+  if (weather.precipitation > VehicleLight.HEAVY_PRECIPITATION_THRESHOLD) {
     position = true;
     low_beam = true;
   }
   // Turn on fog lights
-  if (weather.fog_density > 20) {
+  if (weather.fog_density > VehicleLight.FOG_DENSITY_THRESHOLD) {
     position = true;
     low_beam = true;
     fog_lights = true;
@@ -137,12 +141,12 @@ void VehicleLightStage::Update(const unsigned long index) {
     new_light_states |= rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::RightBlinker);
   else
     new_light_states &= ~rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::RightBlinker);
-  
+
   if (position)
     new_light_states |= rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::Position);
   else
     new_light_states &= ~rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::Position);
-    
+
   if (low_beam)
     new_light_states |= rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::LowBeam);
   else
@@ -152,12 +156,12 @@ void VehicleLightStage::Update(const unsigned long index) {
     new_light_states |= rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::HighBeam);
   else
     new_light_states &= ~rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::HighBeam);
-  
+
   if (fog_lights)
     new_light_states |= rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::Fog);
   else
     new_light_states &= ~rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::Fog);
-  
+
   // Update the vehicle light state if it has changed
   if (new_light_states != light_states)
     control_frame.push_back(carla::rpc::Command::SetVehicleLightState(id, new_light_states));
