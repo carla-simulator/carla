@@ -77,6 +77,12 @@ protected:
   std::vector<uint32_t> PointsPerChannel;
 
 private:
-  FSemanticLidarData SemanticLidarData;
+  /// Gradient scanning of the lidar, the angle between the rays is not constant
+  /// and depends on the configuration of the lidar
+  void GradientScanningPattern();
 
+  /// Uniform lidar scanning, the angle between the rays is constant
+  void UniformScanningPattern();
+
+  FSemanticLidarData SemanticLidarData;
 };

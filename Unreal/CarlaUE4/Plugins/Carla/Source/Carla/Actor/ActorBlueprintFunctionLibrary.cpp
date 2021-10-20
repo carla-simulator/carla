@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
+#include "Internationalization/Regex.h" 
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
@@ -885,6 +886,11 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.Id = TEXT("noise_stddev");
   StdDevLidar.Type = EActorAttributeType::Float;
   StdDevLidar.RecommendedValues = { TEXT("0.0") };
+  // Angles between the rays.
+  FActorVariation CustomRayAngles;
+  CustomRayAngles.Id = TEXT("ray_steps");
+  CustomRayAngles.Type = EActorAttributeType::String;
+  CustomRayAngles.RecommendedValues = { TEXT("{}") };
 
   if (Id == "ray_cast") {
     Definition.Variations.Append({
@@ -900,7 +906,8 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       DropOffIntensityLimit,
       DropOffAtZeroIntensity,
       StdDevLidar,
-      HorizontalFOV});
+      HorizontalFOV,
+      CustomRayAngles});
   }
   else if (Id == "ray_cast_semantic") {
     Definition.Variations.Append({
@@ -910,7 +917,8 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       Frequency,
       UpperFOV,
       LowerFOV,
-      HorizontalFOV});
+      HorizontalFOV,
+      CustomRayAngles});
   }
   else {
     DEBUG_ASSERT(false);
@@ -1285,6 +1293,30 @@ float UActorBlueprintFunctionLibrary::ActorAttributeToFloat(
   return FCString::Atof(*ActorAttribute.Value);
 }
 
+TArray<float> UActorBlueprintFunctionLibrary::ActorAttributeToArrayFloat(
+    const FActorAttribute &ActorAttribute,
+    const TArray<float>& Default)
+{
+  if (ActorAttribute.Type != EActorAttributeType::String)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ActorAttribute '%s' is not a string"), *ActorAttribute.Id);
+    return Default;
+  }
+
+  const FRegexPattern SequenceOfFloatsPattern(TEXT("-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?"));
+  FRegexMatcher Matcher(SequenceOfFloatsPattern, ActorAttribute.Value);
+  TArray<float> Floats;
+  while (Matcher.FindNext())
+  {
+    const int32 Beginning = Matcher.GetMatchBeginning();
+    const int32 Ending = Matcher.GetMatchEnding();
+    const FString Number = ActorAttribute.Value.Mid(Beginning, Ending - Beginning);
+    Floats.Emplace(FCString::Atof(*Number));
+  }
+
+  return Floats;
+}
+
 FString UActorBlueprintFunctionLibrary::ActorAttributeToString(
     const FActorAttribute &ActorAttribute,
     const FString &Default)
@@ -1366,6 +1398,16 @@ float UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
 {
   return Attributes.Contains(Id) ?
          ActorAttributeToFloat(Attributes[Id], Default) :
+         Default;
+}
+
+TArray<float> UActorBlueprintFunctionLibrary::RetrieveActorAttributeToArrayFloat(
+    const FString &Id,
+    const TMap<FString, FActorAttribute> &Attributes,
+    const TArray<float>& Default)
+{
+  return Attributes.Contains(Id) ?
+         ActorAttributeToArrayFloat(Attributes[Id], Default) :
          Default;
 }
 
@@ -1548,6 +1590,8 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("dropoff_zero_intensity", Description.Variations, Lidar.DropOffAtZeroIntensity);
   Lidar.NoiseStdDev =
       RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
+  Lidar.RayAngles =
+      RetrieveActorAttributeToArrayFloat("ray_steps", Description.Variations, Lidar.RayAngles);
 }
 
 void UActorBlueprintFunctionLibrary::SetGnss(

@@ -167,6 +167,9 @@ public:
   static float ActorAttributeToFloat(const FActorAttribute &ActorAttribute, float Default);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static TArray<float> ActorAttributeToArrayFloat(const FActorAttribute &ActorAttribute, const TArray<float>& Default);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FString ActorAttributeToString(const FActorAttribute &ActorAttribute, const FString &Default);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
@@ -189,6 +192,12 @@ public:
       const FString &Id,
       const TMap<FString, FActorAttribute> &Attributes,
       float Default);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static TArray<float> RetrieveActorAttributeToArrayFloat(
+      const FString &Id,
+      const TMap<FString, FActorAttribute> &Attributes,
+      const TArray<float>& Default);
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static FString RetrieveActorAttributeToString(

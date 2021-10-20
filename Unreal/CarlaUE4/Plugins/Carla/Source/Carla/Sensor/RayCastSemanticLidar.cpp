@@ -50,17 +50,10 @@ void ARayCastSemanticLidar::Set(const FLidarDescription &LidarDescription)
 
 void ARayCastSemanticLidar::CreateLasers()
 {
-  const auto NumberOfLasers = Description.Channels;
-  check(NumberOfLasers > 0u);
-  const float DeltaAngle = NumberOfLasers == 1u ? 0.f :
-    (Description.UpperFovLimit - Description.LowerFovLimit) /
-    static_cast<float>(NumberOfLasers - 1);
-  LaserAngles.Empty(NumberOfLasers);
-  for(auto i = 0u; i < NumberOfLasers; ++i)
-  {
-    const float VerticalAngle =
-        Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
-    LaserAngles.Emplace(VerticalAngle);
+  if (Description.RayAngles.Num() > 0) {
+    GradientScanningPattern();
+  } else {
+    UniformScanningPattern();
   }
 }
 
@@ -240,5 +233,43 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
     return true;
   } else {
     return false;
+  }
+}
+
+void ARayCastSemanticLidar::GradientScanningPattern()
+{
+  const uint32 NumberOfLasers = Description.Channels;
+  const bool IsEnoughAngles = NumberOfLasers == (Description.RayAngles.Num() + 1);
+  if (!IsEnoughAngles) {
+    UE_LOG(
+        LogCarla,
+        Error,
+        TEXT("The exact number of angles for the %d-rays Lidar is not specified, please specify the required number of angles"),
+        int(Description.Channels));
+    return;
+  }
+
+  LaserAngles.Empty(NumberOfLasers);
+  float FovLimitAngle = Description.UpperFovLimit;
+  LaserAngles.Emplace(FovLimitAngle);
+  for (const float Angle : Description.RayAngles) {
+    FovLimitAngle -= Angle;
+    LaserAngles.Emplace(FovLimitAngle);
+  }
+}
+
+void ARayCastSemanticLidar::UniformScanningPattern()
+{
+  const auto NumberOfLasers = Description.Channels;
+  check(NumberOfLasers > 0u);
+  const float DeltaAngle = NumberOfLasers == 1u ? 0.f :
+    (Description.UpperFovLimit - Description.LowerFovLimit) /
+    static_cast<float>(NumberOfLasers - 1);
+  LaserAngles.Empty(NumberOfLasers);
+  for(auto i = 0u; i < NumberOfLasers; ++i)
+  {
+    const float VerticalAngle =
+        Description.UpperFovLimit - static_cast<float>(i) * DeltaAngle;
+    LaserAngles.Emplace(VerticalAngle);
   }
 }

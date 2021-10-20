@@ -69,4 +69,7 @@ struct CARLA_API FLidarDescription
 
   UPROPERTY(EditAnywhere)
   float NoiseStdDev = 0.0f;
+
+  UPROPERTY(EditAnywhere)
+  TArray<float> RayAngles;
 };
