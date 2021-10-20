@@ -888,7 +888,7 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.RecommendedValues = { TEXT("0.0") };
   // Angles between the rays.
   FActorVariation CustomRayAngles;
-  CustomRayAngles.Id = TEXT("ray_steps");
+  CustomRayAngles.Id = TEXT("ray_angles");
   CustomRayAngles.Type = EActorAttributeType::String;
   CustomRayAngles.RecommendedValues = { TEXT("{}") };
 
@@ -1591,7 +1591,7 @@ void UActorBlueprintFunctionLibrary::SetLidar(
   Lidar.NoiseStdDev =
       RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
   Lidar.RayAngles =
-      RetrieveActorAttributeToArrayFloat("ray_steps", Description.Variations, Lidar.RayAngles);
+      RetrieveActorAttributeToArrayFloat("ray_angles", Description.Variations, Lidar.RayAngles);
 }
 
 void UActorBlueprintFunctionLibrary::SetGnss(
