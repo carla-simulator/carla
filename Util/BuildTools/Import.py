@@ -453,7 +453,7 @@ def import_assets_from_json_list(json_list, batch_size):
             if "props" in data:
                 props = data["props"]
 
-            if "tile_size" in maps[0]:
+            if len(maps) > 0 and "tile_size" in maps[0]:
                 tile_size = maps[0]["tile_size"]
             else:
                 tile_size = 2000
@@ -464,7 +464,7 @@ def import_assets_from_json_list(json_list, batch_size):
             thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
             thr.start()
 
-            if ("tiles" in maps[0]):
+            if len(maps) > 0 and "tiles" in maps[0]:
                 import_assets(package_name, dirname, props, maps, 1, tile_size, batch_size)
             else:
                 import_assets(package_name, dirname, props, maps, 0, 0, 0)
