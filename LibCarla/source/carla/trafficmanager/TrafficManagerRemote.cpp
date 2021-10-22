@@ -175,6 +175,18 @@ void TrafficManagerRemote::SetKeepRightPercentage(const ActorPtr &_actor, const 
   client.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerRemote::SetRandomLeftLaneChangePercentage(const ActorPtr &_actor, const float percentage) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetRandomLeftLaneChangePercentage(actor, percentage);
+}
+
+void TrafficManagerRemote::SetRandomRightLaneChangePercentage(const ActorPtr &_actor, const float percentage) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetRandomRightLaneChangePercentage(actor, percentage);
+}
+
 void TrafficManagerRemote::SetHybridPhysicsMode(const bool mode_switch) {
   client.SetHybridPhysicsMode(mode_switch);
 }
@@ -223,6 +235,14 @@ void TrafficManagerRemote::SetSynchronousMode(bool mode) {
 
 void TrafficManagerRemote::SetSynchronousModeTimeOutInMiliSecond(double time) {
   client.SetSynchronousModeTimeOutInMiliSecond(time);
+}
+
+Action TrafficManagerRemote::GetNextAction(const ActorId &actor_id) {
+  return client.GetNextAction(actor_id);
+}
+
+ActionBuffer TrafficManagerRemote::GetActionBuffer(const ActorId &actor_id) {
+  return client.GetActionBuffer(actor_id);
 }
 
 bool TrafficManagerRemote::SynchronousTick() {

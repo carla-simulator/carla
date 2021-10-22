@@ -20,7 +20,6 @@ namespace traffic_manager {
 using constants::Networking::TM_DEFAULT_PORT;
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-using Path = std::vector<carla::geom::Location>;
 
 /// This class integrates all the various stages of
 /// the traffic manager appropriately using messengers.
@@ -262,11 +261,27 @@ public:
     }
   }
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
       tm_ptr->SetKeepRightPercentage(actor, percentage);
+    }
+  }
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetRandomLeftLaneChangePercentage(actor, percentage);
+    }
+  }
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetRandomRightLaneChangePercentage(actor, percentage);
     }
   }
 
@@ -279,6 +294,28 @@ public:
   }
 
   void ShutDown();
+
+  /// Method to get the next action.
+  Action GetNextAction(const ActorId &actor_id) {
+    Action next_action;
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      next_action = tm_ptr->GetNextAction(actor_id);
+      return next_action;
+    }
+    return next_action;
+  }
+
+  /// Method to get the action buffer.
+  ActionBuffer GetActionBuffer(const ActorId &actor_id) {
+    ActionBuffer action_buffer;
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      action_buffer = tm_ptr->GetActionBuffer(actor_id);
+      return action_buffer;
+    }
+    return action_buffer;
+  }
 
 private:
 

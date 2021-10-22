@@ -90,6 +90,18 @@ void Parameters::SetKeepRightPercentage(const ActorPtr &actor, const float perce
   perc_keep_right.AddEntry(entry);
 }
 
+void Parameters::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+
+  const auto entry = std::make_pair(actor->GetId(), percentage);
+  perc_random_left.AddEntry(entry);
+}
+
+void Parameters::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+
+  const auto entry = std::make_pair(actor->GetId(), percentage);
+  perc_random_right.AddEntry(entry);
+}
+
 void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 
   const auto entry = std::make_pair(actor->GetId(), enable);
@@ -233,7 +245,27 @@ float Parameters::GetKeepRightPercentage(const ActorId &actor_id) {
     percentage = perc_keep_right.GetValue(actor_id);
   }
 
-  perc_keep_right.RemoveEntry(actor_id);
+  return percentage;
+}
+
+float Parameters::GetRandomLeftLaneChangePercentage(const ActorId &actor_id) {
+
+  float percentage = -1.0f;
+
+  if (perc_random_left.Contains(actor_id)) {
+    percentage = perc_random_left.GetValue(actor_id);
+  }
+
+  return percentage;
+}
+
+float Parameters::GetRandomRightLaneChangePercentage(const ActorId &actor_id) {
+
+  float percentage = -1.0f;
+
+  if (perc_random_right.Contains(actor_id)) {
+    percentage = perc_random_right.GetValue(actor_id);
+  }
 
   return percentage;
 }

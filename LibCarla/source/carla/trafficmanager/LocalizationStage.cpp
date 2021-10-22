@@ -47,7 +47,6 @@ void LocalizationStage::Update(const unsigned long index) {
     horizon_length = std::max(vehicle_speed * HIGH_SPEED_HORIZON_RATE, MINIMUM_HORIZON_LENGTH);
   }
   const float horizon_square = SQUARE(horizon_length);
-  const float horizon_limit = horizon_square + SQUARE(MAP_RESOLUTION);
 
   if (buffer_map.find(actor_id) == buffer_map.end()) {
     buffer_map.insert({actor_id, Buffer()});
@@ -97,12 +96,10 @@ void LocalizationStage::Update(const unsigned long index) {
     }
 
     // Purge waypoints too far from the front of the buffer, but not if it has reached a junction.
-    // I need to check this twice.
     while (!is_at_junction_entrance
            && !waypoint_buffer.empty()
-           && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_limit + 50.0f
-           && !waypoint_buffer.back()->CheckJunction()
-           && !waypoint_buffer.back()->CheckIntersection()) {
+           && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square + 125.0f // I need to make this better.
+           && !waypoint_buffer.back()->CheckJunction()) {
       PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
     }
   }
@@ -118,9 +115,19 @@ void LocalizationStage::Update(const unsigned long index) {
   bool force_lane_change = lane_change_info.change_lane;
   bool lane_change_direction = lane_change_info.direction;
 
+  // Apply parameters for keep right rule and random lane changes.
   if (!force_lane_change) {
     float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
+    float perc_random_leftlanechange = parameters.GetRandomLeftLaneChangePercentage(actor_id);
+    float perc_random_rightlanechange = parameters.GetRandomRightLaneChangePercentage(actor_id);
     if (perc_keep_right >= 0.0f && perc_keep_right >= random_devices.at(actor_id).next()) {
+      force_lane_change = true;
+      lane_change_direction = true;
+    }
+    else if (perc_random_leftlanechange >= 0.0f && perc_random_leftlanechange >= random_devices.at(actor_id).next()) {
+      force_lane_change = true;
+      lane_change_direction = false;
+    } else if (perc_random_rightlanechange >= 0.0f && perc_random_rightlanechange >= random_devices.at(actor_id).next()) {
       force_lane_change = true;
       lane_change_direction = true;
     }
@@ -159,7 +166,7 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
 
-  // I need to check performance. And also if it still works using only locations.
+  // I need to check performance.
   Path imported_waypoints = parameters.GetCustomPaths(actor_id);
 
   // We are effectively importing a path.
@@ -263,9 +270,6 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
-
-  Action next_action = ComputeNextAction(waypoint_buffer);
-  // ActionBuffer next_buff = ComputeActionBuffer(waypoint_buffer);
 
   // Editing output array
   LocalizationData &output = output_array.at(index);
@@ -503,37 +507,21 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   return change_over_point;
 }
 
-Action LocalizationStage::ComputeNextAction(Buffer &waypoint_buffer) {
-
+Action LocalizationStage::ComputeNextAction(const ActorId& actor_id) {
+  auto waypoint_buffer = buffer_map.at(actor_id);
   for (auto &wpt : waypoint_buffer) {
     RoadOption road_opt = wpt->GetRoadOption();
-    if (road_opt != RoadOption::LaneFollow && wpt->CheckJunction()) {
-      if (road_opt == RoadOption::Right) {
-        std::cout << "RIGHT" << std::endl;
-      }
-      else if (road_opt == RoadOption::Left) {
-        std::cout << "LEFT" << std::endl;
-      }
-      else if (road_opt == RoadOption::Straight) {
-        std::cout << "STRAIGHT" << std::endl;
-      }
-      auto check_disc = wpt->GetNextWaypoint().front();
-      auto check_disc_ro = check_disc->GetRoadOption();
-      while (check_disc_ro != road_opt && check_disc_ro != RoadOption::LaneFollow) {
-        check_disc->SetRoadOption(RoadOption::LaneFollow);
-        check_disc = check_disc->GetNextWaypoint().front();
-        check_disc_ro = check_disc->GetRoadOption();
-      }
+    if (road_opt != RoadOption::LaneFollow) {
       return std::make_pair(road_opt, wpt->GetWaypoint());
     }
   }
-  std::cout << "LANE FOLLOW" << std::endl;
   return std::make_pair(RoadOption::LaneFollow, waypoint_buffer.back()->GetWaypoint());
 
 }
 
-ActionBuffer LocalizationStage::ComputeActionBuffer(Buffer &waypoint_buffer) {
+ActionBuffer LocalizationStage::ComputeActionBuffer(const ActorId& actor_id) {
 
+  auto waypoint_buffer = buffer_map.at(actor_id);
   ActionBuffer action_buffer;
   SimpleWaypointPtr buffer_front = waypoint_buffer.front();
   RoadOption last_road_opt = buffer_front->GetRoadOption();
@@ -542,35 +530,11 @@ ActionBuffer LocalizationStage::ComputeActionBuffer(Buffer &waypoint_buffer) {
   for (auto &wpt : waypoint_buffer) {
     RoadOption current_road_opt = wpt->GetRoadOption();
     if (current_road_opt != last_road_opt) {
-      if ((last_road_opt == RoadOption::Straight || last_road_opt == RoadOption::Left || last_road_opt == RoadOption::Right) &&
-            (current_road_opt == RoadOption::Straight || current_road_opt == RoadOption::Left || current_road_opt == RoadOption::Right)) {
-        current_road_opt = RoadOption::LaneFollow;
-      }
       action_buffer.push_back(std::make_pair(current_road_opt, wpt->GetWaypoint()));
       last_road_opt = current_road_opt;
     }
   }
-  // To be removed. This is only for printing.
-  std::string path = "";
 
-  for (auto &a : action_buffer) {
-    RoadOption road_opt = a.first;
-    if (road_opt == RoadOption::Right) {
-      path.append("RIGHT");
-    }
-    else if (road_opt == RoadOption::Left) {
-      path.append("LEFT");
-    }
-    else if (road_opt == RoadOption::Straight) {
-      path.append("STRAIGHT");
-    }
-    else if (road_opt == RoadOption::LaneFollow) {
-      path.append("LANE FOLLOW");
-    }
-    path.append(", ");
-  }
-  std::cout << "PATH: " << path << std::endl;
-  // end of to be removed
   return action_buffer;
 }
 

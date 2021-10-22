@@ -210,8 +210,14 @@ public:
   /// the Global leading vehicle.
   void SetGlobalDistanceToLeadingVehicle(const float distance);
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set hybrid physics mode.
   void SetHybridPhysicsMode(const bool mode_switch);
@@ -237,11 +243,17 @@ public:
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch);
 
-  // Method to set boundaries to respawn of dormant vehicles.
+  /// Method to set boundaries to respawn of dormant vehicles.
   void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
 
-  // Method to set limits for boundaries when respawning dormant vehicles.
+  /// Method to set limits for boundaries when respawning dormant vehicles.
   void SetMaxBoundaries(const float lower, const float upper);
+
+  /// Method to get the vehicle's next action.
+  Action GetNextAction(const ActorId &actor_id);
+
+  /// Method to get the vehicle's action buffer.
+  ActionBuffer GetActionBuffer(const ActorId &actor_id);
 
   void ShutDown() {};
 };

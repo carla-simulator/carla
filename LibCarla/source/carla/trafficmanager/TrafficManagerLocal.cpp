@@ -377,6 +377,14 @@ void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const fl
   parameters.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerLocal::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomLeftLaneChangePercentage(actor, percentage);
+}
+
+void TrafficManagerLocal::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomRightLaneChangePercentage(actor, percentage);
+}
+
 void TrafficManagerLocal::SetHybridPhysicsMode(const bool mode_switch) {
   parameters.SetHybridPhysicsMode(mode_switch);
 }
@@ -411,6 +419,14 @@ void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_
 
 void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
   parameters.SetMaxBoundaries(lower, upper);
+}
+
+Action TrafficManagerLocal::GetNextAction(const ActorId &actor_id) {
+  return localization_stage.ComputeNextAction(actor_id);
+}
+
+ActionBuffer TrafficManagerLocal::GetActionBuffer(const ActorId &actor_id) {
+  return localization_stage.ComputeActionBuffer(actor_id);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {

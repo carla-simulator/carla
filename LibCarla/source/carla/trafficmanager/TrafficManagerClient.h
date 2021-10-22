@@ -169,10 +169,22 @@ public:
     _client->call("set_global_distance_to_leading_vehicle",distance);
   }
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_percentage_keep_right_rule", actor, percentage);
+  }
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const carla::rpc::Actor &actor, const float percentage) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_percentage_random_left_lanechange", actor, percentage);
+  }
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const carla::rpc::Actor &actor, const float percentage) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_percentage_random_right_lanechange", actor, percentage);
   }
 
   /// Method to set hybrid physics mode.
@@ -233,6 +245,20 @@ public:
   void SetMaxBoundaries(const float lower, const float upper) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_max_boundaries", lower, upper);
+  }
+
+  /// Method to get the vehicle's next action.
+  Action GetNextAction(const ActorId &actor_id) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("get_next_action", actor_id);
+    return Action();
+  }
+
+  /// Method to get the vehicle's action buffer.
+  ActionBuffer GetActionBuffer(const ActorId &actor_id) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("get_action_buffer", actor_id);
+    return ActionBuffer();
   }
 
   void ShutDown() {

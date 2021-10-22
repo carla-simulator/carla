@@ -56,10 +56,6 @@ private:
                               const bool is_at_junction_entrance,
                               Buffer &waypoint_buffer);
 
-  Action ComputeNextAction(Buffer &waypoint_buffer);
-
-  ActionBuffer ComputeActionBuffer(Buffer &waypoint_buffer);
-
 public:
   LocalizationStage(const std::vector<ActorId> &vehicle_id_list,
                     BufferMap &buffer_map,
@@ -76,6 +72,11 @@ public:
   void RemoveActor(const ActorId actor_id) override;
 
   void Reset() override;
+
+  Action ComputeNextAction(const ActorId &actor_id);
+
+  ActionBuffer ComputeActionBuffer(const ActorId& actor_id);
+
 };
 
 } // namespace traffic_manager

@@ -22,7 +22,6 @@ namespace traffic_manager {
   namespace cg = carla::geom;
   using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
   using GeoGridId = carla::road::JuncId;
-  
   enum class RoadOption : uint8_t {
     Void = 0,
     Left = 1,

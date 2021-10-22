@@ -353,73 +353,9 @@ namespace traffic_manager {
         }
       }
     }
+
     // Specifying a RoadOption for each SimpleWaypoint
-    for (auto &swp : dense_topology) {
-      //SetupRoadOption(swp);
-      std::vector<SimpleWaypointPtr> next_waypoints = swp->GetNextWaypoint();
-      std::size_t next_swp_size = next_waypoints.size();
-
-      if (next_swp_size > 1 && (swp->GetRoadOption() == RoadOption::Void || swp->GetRoadOption() == RoadOption::LaneFollow)) {
-        swp->SetRoadOption(RoadOption::LaneFollow);
-
-        for (auto &next_swp : next_waypoints) {
-          std::vector<SimpleWaypointPtr> traversed_waypoints;
-          SimpleWaypointPtr junction_end_waypoint = next_swp;
-          traversed_waypoints.push_back(junction_end_waypoint);
-
-          // Get inside the junction
-          while (!junction_end_waypoint->CheckJunction()) {
-            junction_end_waypoint = junction_end_waypoint->GetNextWaypoint().front();
-            traversed_waypoints.push_back(junction_end_waypoint);
-          }
-          // Get outside the junction
-          while (junction_end_waypoint->CheckJunction()) {
-            junction_end_waypoint = junction_end_waypoint->GetNextWaypoint().front();
-            traversed_waypoints.push_back(junction_end_waypoint);
-          }
-
-          int16_t current_angle = static_cast<int16_t>(swp->GetTransform().rotation.yaw);
-          int16_t junction_end_angle = static_cast<int16_t>(junction_end_waypoint->GetTransform().rotation.yaw);
-          int16_t diff_angle = junction_end_angle - current_angle;
-
-          bool straight = (diff_angle < 35 && diff_angle > -35) || (diff_angle > 325 && diff_angle < 360) || (diff_angle < -325 && diff_angle > -360);
-          bool right = (diff_angle >= 35 && diff_angle <= 180) || (diff_angle <= -180 && diff_angle > -325);
-
-          if (straight) {
-
-            for (auto &swpt : traversed_waypoints) {
-              if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
-                swpt->SetRoadOption(RoadOption::Straight);
-              }
-            }
-
-          }
-          else if (right) {
-
-            for (auto &swpt : traversed_waypoints) {
-              if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
-                swpt->SetRoadOption(RoadOption::Right);
-              }
-            }
-
-          }
-          else {
-
-            for (auto &swpt : traversed_waypoints) {
-              if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
-                swpt->SetRoadOption(RoadOption::Left);
-              }
-            }
-          }
-
-        }
-      }
-      else if (next_swp_size == 1 && swp->GetRoadOption() == RoadOption::Void) {
-        swp->SetRoadOption(RoadOption::LaneFollow);
-      } else if (next_swp_size == 0 && swp->GetRoadOption() == RoadOption::Void) {
-        swp->SetRoadOption(RoadOption::RoadEnd);
-      }
-    }
+    SetUpRoadOption();
   }
 
   void InMemoryMap::SetUpSpatialTree() {
@@ -428,6 +364,98 @@ namespace traffic_manager {
         const cg::Location loc = simple_waypoint->GetLocation();
         Point3D point(loc.x, loc.y, loc.z);
         rtree.insert(std::make_pair(point, simple_waypoint));
+      }
+    }
+  }
+
+  void InMemoryMap::SetUpRoadOption() {
+    for (auto &swp : dense_topology) {
+      std::vector<SimpleWaypointPtr> next_waypoints = swp->GetNextWaypoint();
+      std::size_t next_swp_size = next_waypoints.size();
+      if (next_swp_size == 0) {
+        swp->SetRoadOption(RoadOption::RoadEnd);
+      }
+      // I need to change this.
+      else if ( (next_swp_size > 1 || (!swp->CheckJunction() && next_waypoints.front()->CheckJunction())) &&
+                (swp->GetRoadOption() == RoadOption::Void || swp->GetRoadOption() == RoadOption::LaneFollow) ) {
+        bool found = false;
+        if (next_swp_size == 1 && !swp->CheckJunction() && next_waypoints.front()->CheckJunction()) {
+          auto all_landmarks = swp->GetWaypoint()->GetAllLandmarksInDistance(15.0);
+          if (all_landmarks.empty()) {
+            swp->SetRoadOption(RoadOption::LaneFollow);
+          } else {
+            for (auto &landmark : all_landmarks) {
+              auto landmark_type = landmark->GetType();
+              if (landmark_type == "1000001" || landmark_type == "206" || landmark_type == "205") {
+                found = true;
+                break;
+              }
+            }
+            if (!found) {
+              swp->SetRoadOption(RoadOption::LaneFollow);
+            }
+          }
+        } else {
+          found = true;
+        } if (found) {
+          swp->SetRoadOption(RoadOption::LaneFollow);
+          for (auto &next_swp : next_waypoints) {
+            std::vector<SimpleWaypointPtr> traversed_waypoints;
+            SimpleWaypointPtr junction_end_waypoint;
+            if (next_waypoints.size() > 1) {
+              junction_end_waypoint = next_swp;
+            } else {
+              junction_end_waypoint = next_waypoints.front();
+            }
+
+            while (junction_end_waypoint->CheckJunction()){
+              traversed_waypoints.push_back(junction_end_waypoint);
+              std::vector<SimpleWaypointPtr> temp = junction_end_waypoint->GetNextWaypoint();
+              if (temp.empty()) {
+                break;
+              }
+              junction_end_waypoint = temp.front();
+            }
+
+            int16_t current_angle = static_cast<int16_t>(traversed_waypoints.front()->GetTransform().rotation.yaw);
+            int16_t junction_end_angle = static_cast<int16_t>(traversed_waypoints.back()->GetTransform().rotation.yaw);
+            int16_t diff_angle = (junction_end_angle - current_angle) % 360;
+            bool straight = (diff_angle < STRAIGHT_DEG && diff_angle > -STRAIGHT_DEG) ||
+                  (diff_angle > 360-STRAIGHT_DEG && diff_angle <= 360) ||
+                  (diff_angle < -360+STRAIGHT_DEG && diff_angle >= -360);
+            bool right = (diff_angle >= STRAIGHT_DEG && diff_angle <= 180) ||
+                (diff_angle <= -180 && diff_angle >= -360+STRAIGHT_DEG);
+
+            if (straight) {
+
+              for (auto &swpt : traversed_waypoints) {
+                if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
+                  swpt->SetRoadOption(RoadOption::Straight);
+                }
+              }
+            }
+            else if (right) {
+
+              for (auto &swpt : traversed_waypoints) {
+                if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
+                  swpt->SetRoadOption(RoadOption::Right);
+                }
+              }
+
+            }
+            else {
+
+              for (auto &swpt : traversed_waypoints) {
+                if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
+                  swpt->SetRoadOption(RoadOption::Left);
+                }
+              }
+            }
+          }
+        }
+      }
+      else if (next_swp_size == 1 && swp->GetRoadOption() == RoadOption::Void) {
+        swp->SetRoadOption(RoadOption::LaneFollow);
       }
     }
   }

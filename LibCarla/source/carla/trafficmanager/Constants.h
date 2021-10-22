@@ -100,6 +100,7 @@ static const double MAX_WPT_DISTANCE = MAP_RESOLUTION/2.0 + SQUARE(MAP_RESOLUTIO
 static const float MAX_WPT_RADIANS = 0.1745f;  // 10º
 static float const DELTA = 25.0f;
 static float const Z_DELTA = 500.0f;
+static float const STRAIGHT_DEG = 19.0f;
 } // namespace Map
 
 namespace TrafficLight {

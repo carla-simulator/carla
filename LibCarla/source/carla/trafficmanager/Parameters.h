@@ -59,6 +59,10 @@ private:
   AtomicMap<ActorId, float> perc_ignore_vehicles;
   /// Map containing % of keep right rule.
   AtomicMap<ActorId, float> perc_keep_right;
+  /// Map containing % of random left lane change.
+  AtomicMap<ActorId, float> perc_random_left;
+  /// Map containing % of random right lane change.
+  AtomicMap<ActorId, float> perc_random_right;
   /// Synchronous mode switch.
   std::atomic<bool> synchronous_mode{false};
   /// Distance margin
@@ -127,8 +131,14 @@ public:
   /// Method to set % to ignore any vehicle.
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set the distance to leading vehicle for all registered vehicles.
   void SetGlobalDistanceToLeadingVehicle(const float dist);
@@ -182,6 +192,12 @@ public:
 
   /// Method to query percentage probability of keep right rule for a vehicle.
   float GetKeepRightPercentage(const ActorId &actor_id);
+
+  /// Method to query percentage probability of a random right lane change for a vehicle.
+  float GetRandomLeftLaneChangePercentage(const ActorId &actor_id);
+
+  /// Method to query percentage probability of a random left lane change for a vehicle.
+  float GetRandomRightLaneChangePercentage(const ActorId &actor_id);
 
   /// Method to query auto lane change rule for a vehicle.
   bool GetAutoLaneChange(const ActorId &actor_id) const;
