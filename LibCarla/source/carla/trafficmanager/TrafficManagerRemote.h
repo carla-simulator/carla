@@ -19,7 +19,8 @@ namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-using Path = std::vector<carla::geom::Location>;
+using Path = std::vector<cg::Location>;
+using Route = std::vector<uint8_t>;
 
 
 /// The function of this class is to integrate all the various stages of
@@ -116,11 +117,20 @@ public:
   /// Method to set our own imported path.
   void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer);
 
-  /// Method to remove a list of points.
+  /// Method to remove a path.
   void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
 
-  /// Method to update an already set list of points.
+  /// Method to update an already set path.
   void UpdateUploadPath(const ActorId &actor_id, const Path path);
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer);
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set route.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route);
 
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch);

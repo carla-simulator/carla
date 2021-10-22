@@ -409,6 +409,18 @@ void TrafficManagerLocal::UpdateUploadPath(const ActorId &actor_id, const Path p
   parameters.UpdateUploadPath(actor_id, path);
 }
 
+void TrafficManagerLocal::SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+  parameters.SetImportedRoute(actor, route, empty_buffer);
+}
+
+void TrafficManagerLocal::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  parameters.RemoveImportedRoute(actor_id, remove_path);
+}
+
+void TrafficManagerLocal::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  parameters.UpdateImportedRoute(actor_id, route);
+}
+
 void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
   parameters.SetRespawnDormantVehicles(mode_switch);
 }

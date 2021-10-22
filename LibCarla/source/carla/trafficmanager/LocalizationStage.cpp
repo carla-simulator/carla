@@ -166,86 +166,20 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
 
-  // I need to check performance.
-  Path imported_waypoints = parameters.GetCustomPaths(actor_id);
-
+  // I need to check performance!! CHECK HOW MUCH THIS TAKES WITH AND WITHOUT THE PARAM!!!
+  Path imported_points = parameters.GetCustomPath(actor_id);
+  Route imported_route = parameters.GetImportedRoute(actor_id);
   // We are effectively importing a path.
-  if (!imported_waypoints.empty()) {
+  if (!imported_points.empty()) {
 
-    // Remove the waypoints already added to the path, except for the first.
-    if (parameters.GetUploadPath(actor_id)) {
-      auto number_of_pops = waypoint_buffer.size();
-      for (uint64_t j = 0u; j < number_of_pops - 1; ++j) {
-        PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
-      }
-      // We have successfully imported the path. Remove it from the list of paths to be imported.
-      parameters.RemoveUploadPath(actor_id, false);
+    ImportPath(imported_points, waypoint_buffer, actor_id, horizon_square);
+
+  } else if (!imported_route.empty()) {
+    for (uint16_t j = 0u; j < imported_route.size(); ++j) {
     }
 
-    // Get the latest imported waypoint. and find its closest waypoint in TM's InMemoryMap.
-    cg::Location latest_imported = imported_waypoints.front();
-    SimpleWaypointPtr imported = local_map->GetWaypoint(latest_imported);
+    ImportRoute(imported_route, waypoint_buffer, actor_id, horizon_square);
 
-    // We need to generate a path compatible with TM's waypoints.
-    while (!imported_waypoints.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
-      // Get the latest point we added to the list. If starting, this will be the one referred to the vehicle's location.
-      SimpleWaypointPtr latest_waypoint = waypoint_buffer.back();
-
-      // Try to link the latest_waypoint to the imported waypoint.
-      std::vector<SimpleWaypointPtr> next_waypoints = latest_waypoint->GetNextWaypoint();
-      uint64_t selection_index = 0u;
-
-      // Choose correct path.
-      if (next_waypoints.size() > 1) {
-        const float imported_road_id = imported->GetWaypoint()->GetRoadId();
-        float min_distance = std::numeric_limits<float>::infinity();
-        for (uint64_t k = 0u; k < next_waypoints.size(); ++k) {
-          SimpleWaypointPtr junction_end_point = next_waypoints.at(k);
-          while (!junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          float jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
-          if (jep_road_id == imported_road_id) {
-            selection_index = k;
-            break;
-          }
-          float distance = junction_end_point->DistanceSquared(imported);
-          if (distance < min_distance) {
-            min_distance = distance;
-            selection_index = k;
-          }
-        }
-      } else if (next_waypoints.size() == 0) {
-        if (!parameters.GetOSMMode()) {
-          std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
-        }
-        marked_for_removal.push_back(actor_id);
-        break;
-      }
-      SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
-      PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
-
-      // Remove the imported waypoint from the path if it's close to the last one.
-      if (next_wp_selection->DistanceSquared(imported) < 30.0f) {
-        imported_waypoints.erase(imported_waypoints.begin());
-        PushWaypoint(actor_id, track_traffic, waypoint_buffer, imported);
-        latest_imported = imported_waypoints.front();
-        imported = local_map->GetWaypoint(latest_imported);
-      }
-    }
-    if (imported_waypoints.empty()) {
-      // Once we are done, check if we can clear the structure.
-      parameters.RemoveUploadPath(actor_id, true);
-    } else {
-      // Otherwise, update the structure with the waypoints that we still need to import.
-      parameters.UpdateUploadPath(actor_id,imported_waypoints);
-    }
   }
 
   // Populating the buffer through randomly chosen waypoints.
@@ -505,6 +439,135 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   }
 
   return change_over_point;
+}
+
+void LocalizationStage::ImportPath(Path &imported_points, Buffer &waypoint_buffer, const ActorId actor_id, const float horizon_square) {
+    // Remove the waypoints already added to the path, except for the first.
+    if (parameters.GetUploadPath(actor_id)) {
+      auto number_of_pops = waypoint_buffer.size();
+      for (uint64_t j = 0u; j < number_of_pops - 1; ++j) {
+        PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
+      }
+      // We have successfully imported the path. Remove it from the list of paths to be imported.
+      parameters.RemoveUploadPath(actor_id, false);
+    }
+
+    // Get the latest imported waypoint. and find its closest waypoint in TM's InMemoryMap.
+    cg::Location latest_imported = imported_points.front();
+    SimpleWaypointPtr imported = local_map->GetWaypoint(latest_imported);
+
+    // We need to generate a path compatible with TM's waypoints.
+    while (!imported_points.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
+      // Get the latest point we added to the list. If starting, this will be the one referred to the vehicle's location.
+      SimpleWaypointPtr latest_waypoint = waypoint_buffer.back();
+
+      // Try to link the latest_waypoint to the imported waypoint.
+      std::vector<SimpleWaypointPtr> next_waypoints = latest_waypoint->GetNextWaypoint();
+      uint64_t selection_index = 0u;
+
+      // Choose correct path.
+      if (next_waypoints.size() > 1) {
+        const float imported_road_id = imported->GetWaypoint()->GetRoadId();
+        float min_distance = std::numeric_limits<float>::infinity();
+        for (uint64_t k = 0u; k < next_waypoints.size(); ++k) {
+          SimpleWaypointPtr junction_end_point = next_waypoints.at(k);
+          while (!junction_end_point->CheckJunction()) {
+            junction_end_point = junction_end_point->GetNextWaypoint().front();
+          }
+          while (junction_end_point->CheckJunction()) {
+            junction_end_point = junction_end_point->GetNextWaypoint().front();
+          }
+          while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f) {
+            junction_end_point = junction_end_point->GetNextWaypoint().front();
+          }
+          float jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
+          if (jep_road_id == imported_road_id) {
+            selection_index = k;
+            break;
+          }
+          float distance = junction_end_point->DistanceSquared(imported);
+          if (distance < min_distance) {
+            min_distance = distance;
+            selection_index = k;
+          }
+        }
+      } else if (next_waypoints.size() == 0) {
+        if (!parameters.GetOSMMode()) {
+          std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
+        }
+        marked_for_removal.push_back(actor_id);
+        break;
+      }
+      SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
+      PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+
+      // Remove the imported waypoint from the path if it's close to the last one.
+      if (next_wp_selection->DistanceSquared(imported) < 30.0f) {
+        imported_points.erase(imported_points.begin());
+        PushWaypoint(actor_id, track_traffic, waypoint_buffer, imported);
+        latest_imported = imported_points.front();
+        imported = local_map->GetWaypoint(latest_imported);
+      }
+    }
+    if (imported_points.empty()) {
+      // Once we are done, check if we can clear the structure.
+      parameters.RemoveUploadPath(actor_id, true);
+    } else {
+      // Otherwise, update the structure with the waypoints that we still need to import.
+      parameters.UpdateUploadPath(actor_id, imported_points);
+    }
+}
+
+void LocalizationStage::ImportRoute(Route &imported_route, Buffer &waypoint_buffer, const ActorId actor_id, const float horizon_square) {
+
+    if (parameters.GetUploadRoute(actor_id)) {
+      auto number_of_pops = waypoint_buffer.size();
+      for (uint64_t j = 0u; j < number_of_pops - 1; ++j) {
+        PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
+      }
+      // We have successfully imported the route. Remove it from the list of routes to be imported.
+      parameters.RemoveImportedRoute(actor_id, false);
+    }
+
+    RoadOption next_road_option = static_cast<RoadOption>(imported_route.front());
+    while (!imported_route.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
+      // Get the latest point we added to the list. If starting, this will be the one referred to the vehicle's location.
+      SimpleWaypointPtr latest_waypoint = waypoint_buffer.back();
+      RoadOption latest_road_option = latest_waypoint->GetRoadOption();
+      // Try to link the latest_waypoint to the correct next RouteOption.
+      std::vector<SimpleWaypointPtr> next_waypoints = latest_waypoint->GetNextWaypoint();
+      uint16_t selection_index = 0u;
+      if (next_waypoints.size() > 1) {
+        for (uint16_t i=0; i<next_waypoints.size(); ++i) {
+          if (next_waypoints.at(i)->GetRoadOption() == next_road_option) {
+            selection_index = i;
+            break;
+          }
+        }
+      } else if (next_waypoints.size() == 0) {
+        if (!parameters.GetOSMMode()) {
+          std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
+        }
+        marked_for_removal.push_back(actor_id);
+        break;
+      }
+
+      SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
+      PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+
+      // If we are switching to a new RoadOption, it means the current one is already fully imported.
+      if (latest_road_option != next_wp_selection->GetRoadOption() && next_road_option == next_wp_selection->GetRoadOption()) {
+        imported_route.erase(imported_route.begin());
+        next_road_option = static_cast<RoadOption>(imported_route.front());
+      }
+    }
+    if (imported_route.empty()) {
+      // Once we are done, check if we can clear the structure.
+      parameters.RemoveImportedRoute(actor_id, true);
+    } else {
+      // Otherwise, update the structure with the waypoints that we still need to import.
+      parameters.UpdateImportedRoute(actor_id, imported_route);
+    }
 }
 
 Action LocalizationStage::ComputeNextAction(const ActorId& actor_id) {

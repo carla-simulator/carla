@@ -27,7 +27,7 @@ namespace cg = carla::geom;
 using ActorPtr = carla::SharedPtr<cc::Actor>;
 using ActorId = carla::ActorId;
 using Path = std::vector<cg::Location>;
-using PathMap = std::unordered_map<ActorId, Path>;
+using Route = std::vector<uint8_t>;
 
 struct ChangeLaneInfo {
   bool change_lane = false;
@@ -84,9 +84,13 @@ private:
   /// Parameter specifying Open Street Map mode.
   std::atomic<bool> osm_mode {true};
   /// Parameter specifying if importing a custom path.
-  AtomicMap<ActorId, bool> upload_bool;
+  AtomicMap<ActorId, bool> upload_path;
   /// Structure to hold all custom paths.
   AtomicMap<ActorId, Path> custom_path;
+  /// Parameter specifying if importing a custom route.
+  AtomicMap<ActorId, bool> upload_route;
+  /// Structure to hold all custom routes.
+  AtomicMap<ActorId, Route> custom_route;
 
 public:
   Parameters();
@@ -168,13 +172,22 @@ public:
   void SetMaxBoundaries(const float lower, const float upper);
 
   /// Method to set our own imported path.
-  void SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer);
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer);
 
   /// Method to remove a list of points.
   void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
 
   /// Method to update an already set list of points.
   void UpdateUploadPath(const ActorId &actor_id, const Path path);
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer);
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set route.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route);
 
   ///////////////////////////////// GETTERS /////////////////////////////////////
 
@@ -238,11 +251,17 @@ public:
   /// Method to get Open Street Map mode.
   bool GetOSMMode() const;
 
-  /// Method to get if we are uploading a list of waypoints.
+  /// Method to get if we are uploading a path.
   bool GetUploadPath(const ActorId &actor_id) const;
 
-  /// Method to get limits for boundaries when respawning vehicles.
-  Path GetCustomPaths(const ActorId &actor_id) const;
+  /// Method to get a custom path.
+  Path GetCustomPath(const ActorId &actor_id) const;
+
+  /// Method to get if we are uploading a route.
+  bool GetUploadRoute(const ActorId &actor_id) const;
+
+  /// Method to get a custom route.
+  Route GetImportedRoute(const ActorId &actor_id) const;
 
   /// Synchronous mode time out variable.
   std::chrono::duration<double, std::milli> synchronous_time_out;

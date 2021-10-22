@@ -165,16 +165,16 @@ void Parameters::SetOSMMode(const bool mode_switch) {
   osm_mode.store(mode_switch);
 }
 
-void Parameters::SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer) {
+void Parameters::SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
   const auto entry = std::make_pair(actor->GetId(), path);
   custom_path.AddEntry(entry);
-  const auto entry2 = std::make_pair(actor->GetId(), emtpy_buffer);
-  upload_bool.AddEntry(entry2);
+  const auto entry2 = std::make_pair(actor->GetId(), empty_buffer);
+  upload_path.AddEntry(entry2);
 }
 
 void Parameters::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
   if (!remove_path) {
-    upload_bool.RemoveEntry(actor_id);
+    upload_path.RemoveEntry(actor_id);
   } else {
     custom_path.RemoveEntry(actor_id);
   }
@@ -184,6 +184,27 @@ void Parameters::UpdateUploadPath(const ActorId &actor_id, const Path path) {
   custom_path.RemoveEntry(actor_id);
   const auto entry = std::make_pair(actor_id, path);
   custom_path.AddEntry(entry);
+}
+
+void Parameters::SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+  const auto entry = std::make_pair(actor->GetId(), route);
+  custom_route.AddEntry(entry);
+  const auto entry2 = std::make_pair(actor->GetId(), empty_buffer);
+  upload_route.AddEntry(entry2);
+}
+
+void Parameters::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  if (!remove_path) {
+    upload_route.RemoveEntry(actor_id);
+  } else {
+    custom_route.RemoveEntry(actor_id);
+  }
+}
+
+void Parameters::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  custom_route.RemoveEntry(actor_id);
+  const auto entry = std::make_pair(actor_id, route);
+  custom_route.AddEntry(entry);
 }
 
 //////////////////////////////////// GETTERS //////////////////////////////////
@@ -367,14 +388,14 @@ bool Parameters::GetUploadPath(const ActorId &actor_id) const {
 
   bool custom_path_bool = false;
 
-  if (upload_bool.Contains(actor_id)) {
-    custom_path_bool = upload_bool.GetValue(actor_id);
+  if (upload_path.Contains(actor_id)) {
+    custom_path_bool = upload_path.GetValue(actor_id);
   }
 
   return custom_path_bool;
 }
 
-Path Parameters::GetCustomPaths(const ActorId &actor_id) const {
+Path Parameters::GetCustomPath(const ActorId &actor_id) const {
 
   Path custom_path_import;
 
@@ -384,6 +405,30 @@ Path Parameters::GetCustomPaths(const ActorId &actor_id) const {
 
   return custom_path_import;
 }
+
+
+bool Parameters::GetUploadRoute(const ActorId &actor_id) const {
+
+  bool custom_route_bool = false;
+
+  if (upload_route.Contains(actor_id)) {
+    custom_route_bool = upload_route.GetValue(actor_id);
+  }
+
+  return custom_route_bool;
+}
+
+Route Parameters::GetImportedRoute(const ActorId &actor_id) const {
+
+  Route custom_route_import;
+
+  if (custom_route.Contains(actor_id)) {
+    custom_route_import = custom_route.GetValue(actor_id);
+  }
+
+  return custom_route_import;
+}
+
 
 } // namespace traffic_manager
 } // namespace carla

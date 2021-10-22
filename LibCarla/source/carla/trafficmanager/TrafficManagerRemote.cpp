@@ -213,6 +213,20 @@ void TrafficManagerRemote::UpdateUploadPath(const ActorId &actor_id, const Path 
   client.UpdateUploadPath(actor_id, path);
 }
 
+void TrafficManagerRemote::SetImportedRoute(const ActorPtr &_actor, const Route route, const bool empty_buffer) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetImportedRoute(actor, route, empty_buffer);
+}
+
+void TrafficManagerRemote::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  client.RemoveImportedRoute(actor_id, remove_path);
+}
+
+void TrafficManagerRemote::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  client.UpdateImportedRoute(actor_id, route);
+}
+
 void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
   client.SetRespawnDormantVehicles(mode_switch);
 }

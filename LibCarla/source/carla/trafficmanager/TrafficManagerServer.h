@@ -19,7 +19,8 @@ namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-using Path = std::vector<carla::geom::Location>;
+using Path = std::vector<cg::Location>;
+using Route = std::vector<uint8_t>;
 
 using namespace constants::Networking;
 
@@ -192,6 +193,21 @@ public:
        /// Method to update an already set list of points.
       server->bind("update_custom_path", [=](const ActorId actor_id, const Path path) {
         tm->UpdateUploadPath(actor_id, path);
+      });
+
+      /// Method to set our own imported route.
+      server->bind("set_imported_route", [=](carla::rpc::Actor actor, const Route route, const bool empty_buffer) {
+        tm->SetImportedRoute(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), route, empty_buffer);
+      });
+
+      /// Method to remove a route.
+      server->bind("remove_imported_route", [=](const ActorId actor_id, const bool remove_path) {
+        tm->RemoveImportedRoute(actor_id, remove_path);
+      });
+
+      /// Method to update an already set list of points.
+      server->bind("update_imported_route", [=](const ActorId actor_id, const Route route) {
+        tm->UpdateImportedRoute(actor_id, route);
       });
 
       /// Method to set respawn dormant vehicles mode.

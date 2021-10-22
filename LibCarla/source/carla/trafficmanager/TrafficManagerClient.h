@@ -229,6 +229,24 @@ public:
     _client->call("update_custom_path", actor_id, path);
   }
 
+  /// Method to set our own imported route.
+  void SetImportedRoute(const carla::rpc::Actor &actor, const Route route, const bool empty_buffer) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_imported_route", actor, route, empty_buffer);
+  }
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("remove_imported_route", actor_id, remove_path);
+  }
+
+  /// Method to update an already set list of points.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("update_imported_route", actor_id, route);
+  }
+
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch) {
     DEBUG_ASSERT(_client != nullptr);

@@ -23,6 +23,7 @@ using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
 using Action = std::pair<RoadOption, WaypointPtr>;
 using ActionBuffer = std::vector<Action>;
 using Path = std::vector<cg::Location>;
+using Route = std::vector<uint8_t>;
 
 /// This class has functionality to maintain a horizon of waypoints ahead
 /// of the vehicle for it to follow.
@@ -50,11 +51,19 @@ private:
                                      const float vehicle_speed,
                                      bool force, bool direction);
 
-  void DrawBuffer(Buffer &buffer);
-
   void ExtendAndFindSafeSpace(const ActorId actor_id,
                               const bool is_at_junction_entrance,
                               Buffer &waypoint_buffer);
+
+  void ImportPath(Path &imported_waypoints,
+                  Buffer &waypoint_buffer,
+                  const ActorId actor_id,
+                  const float horizon_square);
+
+  void ImportRoute(Route &imported_route,
+                  Buffer &waypoint_buffer,
+                  const ActorId actor_id,
+                  const float horizon_square);
 
 public:
   LocalizationStage(const std::vector<ActorId> &vehicle_id_list,

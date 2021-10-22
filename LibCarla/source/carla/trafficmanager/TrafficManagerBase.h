@@ -14,7 +14,8 @@ namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
-using Path = std::vector<carla::geom::Location>;
+using Path = std::vector<cg::Location>;
+using Route = std::vector<uint8_t>;
 using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
 using Action = std::pair<RoadOption, WaypointPtr>;
 using ActionBuffer = std::vector<Action>;
@@ -120,13 +121,22 @@ public:
   virtual void SetOSMMode(const bool mode_switch) = 0;
 
   /// Method to set our own imported path.
-  virtual void SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer) = 0;
+  virtual void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) = 0;
 
-  /// Method to remove a list of points.
+  /// Method to remove a path.
   virtual void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) = 0;
 
-  /// Method to update an already set list of points.
+  /// Method to update an already set path.
   virtual void UpdateUploadPath(const ActorId &actor_id, const Path path) = 0;
+
+  /// Method to set our own imported route.
+  virtual void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) = 0;
+
+  /// Method to remove a route.
+  virtual void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) = 0;
+
+  /// Method to update an already set route.
+  virtual void UpdateImportedRoute(const ActorId &actor_id, const Route route) = 0;
 
   /// Method to set automatic respawn of dormant vehicles.
   virtual void SetRespawnDormantVehicles(const bool mode_switch) = 0;

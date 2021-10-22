@@ -66,14 +66,14 @@ public:
   }
 
   /// Method to set our own imported path.
-  void SetCustomPath(const ActorPtr &actor, const Path path, const bool emtpy_buffer) {
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if (tm_ptr != nullptr) {
-      tm_ptr->SetCustomPath(actor, path, emtpy_buffer);
+      tm_ptr->SetCustomPath(actor, path, empty_buffer);
     }
   }
 
-  /// Method to remove a list of points.
+  /// Method to remove a path.
   void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if (tm_ptr != nullptr) {
@@ -81,11 +81,35 @@ public:
     }
   }
 
-  /// Method to update an already set list of points.
+  /// Method to update an already set path.
   void UpdateUploadPath(const ActorId &actor_id, const Path path) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if (tm_ptr != nullptr) {
       tm_ptr->UpdateUploadPath(actor_id, path);
+    }
+  }
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetImportedRoute(actor, route, empty_buffer);
+    }
+  }
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->RemoveImportedRoute(actor_id, remove_path);
+    }
+  }
+
+  /// Method to update an already set route.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->UpdateImportedRoute(actor_id, route);
     }
   }
 
