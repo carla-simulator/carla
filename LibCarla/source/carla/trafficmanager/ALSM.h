@@ -106,8 +106,6 @@ public:
 
   void Update();
 
-  bool VehicleRerouting(const ActorId& actor_id);
-
   // Removes an actor from traffic manager and performs clean up of associated data
   // from various stages tracking the said vehicle.
   void RemoveActor(const ActorId actor_id, const bool registered_actor);

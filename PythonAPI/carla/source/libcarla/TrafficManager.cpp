@@ -105,11 +105,11 @@ void export_trafficmanager() {
     .def("set_hybrid_physics_radius", &ctm::TrafficManager::SetHybridPhysicsRadius)
     .def("set_random_device_seed", &ctm::TrafficManager::SetRandomDeviceSeed)
     .def("set_osm_mode", &carla::traffic_manager::TrafficManager::SetOSMMode)
-    .def("set_custom_path", &InterSetCustomPath, (arg("empty_buffer") = true))
-    .def("set_import_route", &InterSetImportedRoute, (arg("empty_buffer") = true))
+    .def("set_path", &InterSetCustomPath, (arg("empty_buffer") = true))
+    .def("set_route", &InterSetImportedRoute, (arg("empty_buffer") = true))
     .def("set_respawn_dormant_vehicles", &carla::traffic_manager::TrafficManager::SetRespawnDormantVehicles)
     .def("set_boundaries_respawn_dormant_vehicles", &carla::traffic_manager::TrafficManager::SetBoundariesRespawnDormantVehicles)
     .def("get_next_action", &InterGetNextAction)
-    .def("get_action_buffer", &InterGetActionBuffer)
+    .def("get_all_actions", &InterGetActionBuffer)
     .def("shut_down", &ctm::TrafficManager::ShutDown);
 }

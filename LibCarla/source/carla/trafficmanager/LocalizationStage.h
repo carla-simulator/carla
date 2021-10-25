@@ -18,7 +18,7 @@ namespace traffic_manager {
 namespace cc = carla::client;
 
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
-using LaneChangeLocationMap = std::unordered_map<ActorId, cg::Location>;
+using LaneChangeWptMap = std::unordered_map<ActorId, SimpleWaypointPtr>;
 using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
 using Action = std::pair<RoadOption, WaypointPtr>;
 using ActionBuffer = std::vector<Action>;
@@ -40,7 +40,7 @@ private:
   // Array of vehicles marked by stages for removal.
   std::vector<ActorId>& marked_for_removal;
   LocalizationFrame &output_array;
-  LaneChangeLocationMap last_lane_change_location;
+  LaneChangeWptMap last_lane_change_wpt;
   ActorIdSet vehicles_at_junction;
   using SimpleWaypointPair = std::pair<SimpleWaypointPtr, SimpleWaypointPtr>;
   std::unordered_map<ActorId, SimpleWaypointPair> vehicles_at_junction_entrance;

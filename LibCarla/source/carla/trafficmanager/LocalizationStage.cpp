@@ -98,7 +98,7 @@ void LocalizationStage::Update(const unsigned long index) {
     // Purge waypoints too far from the front of the buffer, but not if it has reached a junction.
     while (!is_at_junction_entrance
            && !waypoint_buffer.empty()
-           && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square + 125.0f // I need to make this better.
+           && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) > horizon_square + horizon_square
            && !waypoint_buffer.back()->CheckJunction()) {
       PopWaypoint(actor_id, track_traffic, waypoint_buffer, false);
     }
@@ -136,10 +136,10 @@ void LocalizationStage::Update(const unsigned long index) {
   const SimpleWaypointPtr front_waypoint = waypoint_buffer.front();
   const float lane_change_distance = SQUARE(std::max(10.0f * vehicle_speed, INTER_LANE_CHANGE_DISTANCE));
 
-  bool recently_not_executed_lane_change = last_lane_change_location.find(actor_id) == last_lane_change_location.end();
+  bool recently_not_executed_lane_change = last_lane_change_wpt.find(actor_id) == last_lane_change_wpt.end();
   bool done_with_previous_lane_change = true;
   if (!recently_not_executed_lane_change) {
-    float distance_frm_previous = cg::Math::DistanceSquared(last_lane_change_location.at(actor_id), vehicle_location);
+    float distance_frm_previous = cg::Math::DistanceSquared(last_lane_change_wpt.at(actor_id)->GetLocation(), vehicle_location);
     done_with_previous_lane_change = distance_frm_previous > lane_change_distance;
   }
   bool auto_or_force_lane_change = parameters.GetAutoLaneChange(actor_id) || force_lane_change;
@@ -153,10 +153,10 @@ void LocalizationStage::Update(const unsigned long index) {
                                                            force_lane_change, lane_change_direction);
 
     if (change_over_point != nullptr) {
-      if (last_lane_change_location.find(actor_id) != last_lane_change_location.end()) {
-        last_lane_change_location.at(actor_id) = vehicle_location;
+      if (last_lane_change_wpt.find(actor_id) != last_lane_change_wpt.end()) {
+        last_lane_change_wpt.at(actor_id) = change_over_point;
       } else {
-        last_lane_change_location.insert({actor_id, vehicle_location});
+        last_lane_change_wpt.insert({actor_id, change_over_point});
       }
       auto number_of_pops = waypoint_buffer.size();
       for (uint64_t j = 0u; j < number_of_pops; ++j) {
@@ -166,7 +166,6 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
 
-  // I need to check performance!! CHECK HOW MUCH THIS TAKES WITH AND WITHOUT THE PARAM!!!
   Path imported_points = parameters.GetCustomPath(actor_id);
   Route imported_route = parameters.GetImportedRoute(actor_id);
   // We are effectively importing a path.
@@ -311,12 +310,12 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
 }
 
 void LocalizationStage::RemoveActor(ActorId actor_id) {
-    last_lane_change_location.erase(actor_id);
+    last_lane_change_wpt.erase(actor_id);
     vehicles_at_junction.erase(actor_id);
 }
 
 void LocalizationStage::Reset() {
-  last_lane_change_location.clear();
+  last_lane_change_wpt.clear();
   vehicles_at_junction.clear();
 }
 
@@ -542,6 +541,10 @@ void LocalizationStage::ImportRoute(Route &imported_route, Buffer &waypoint_buff
           if (next_waypoints.at(i)->GetRoadOption() == next_road_option) {
             selection_index = i;
             break;
+          } else {
+            if (i == next_waypoints.size() - 1) {
+              std::cout << "We couldn't find the RoadOption you were looking for. This route might diverge from the one expected." << std::endl;
+            }
           }
         }
       } else if (next_waypoints.size() == 0) {
@@ -572,24 +575,49 @@ void LocalizationStage::ImportRoute(Route &imported_route, Buffer &waypoint_buff
 
 Action LocalizationStage::ComputeNextAction(const ActorId& actor_id) {
   auto waypoint_buffer = buffer_map.at(actor_id);
+  Action next_action = std::make_pair(RoadOption::LaneFollow, waypoint_buffer.back()->GetWaypoint());
+  if (last_lane_change_wpt.find(actor_id) != last_lane_change_wpt.end()) {
+    // A lane change is happening.
+    cg::Location lane_change = last_lane_change_wpt.at(actor_id)->GetLocation();
+    double angle = cg::Math::GetVectorAngle(lane_change, simulation_state.GetLocation(actor_id));
+    if (angle < 0) next_action = std::make_pair(RoadOption::ChangeLaneLeft, last_lane_change_wpt.at(actor_id)->GetWaypoint());
+    else next_action = std::make_pair(RoadOption::ChangeLaneRight, last_lane_change_wpt.at(actor_id)->GetWaypoint());
+  }
   for (auto &wpt : waypoint_buffer) {
     RoadOption road_opt = wpt->GetRoadOption();
     if (road_opt != RoadOption::LaneFollow) {
-      return std::make_pair(road_opt, wpt->GetWaypoint());
+      if (next_action.first == RoadOption::LaneFollow) {
+        // No lane change in sight, we can assume this will be the next action.
+        return std::make_pair(road_opt, wpt->GetWaypoint());
+      } else {
+        // A lane change will happen as well as another action, we need to figure out which one will happen first.
+        cg::Location lane_change = last_lane_change_wpt.at(actor_id)->GetLocation();
+        auto distance_lane_change = cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), lane_change);
+        auto distance_other_action = cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), wpt->GetLocation());
+        if (distance_lane_change < distance_other_action) return next_action;
+        else return std::make_pair(road_opt, wpt->GetWaypoint());
+      }
     }
   }
-  return std::make_pair(RoadOption::LaneFollow, waypoint_buffer.back()->GetWaypoint());
-
+  return next_action;
 }
 
 ActionBuffer LocalizationStage::ComputeActionBuffer(const ActorId& actor_id) {
 
   auto waypoint_buffer = buffer_map.at(actor_id);
   ActionBuffer action_buffer;
+  Action lane_change;
+  bool is_lane_change = false;
   SimpleWaypointPtr buffer_front = waypoint_buffer.front();
   RoadOption last_road_opt = buffer_front->GetRoadOption();
   action_buffer.push_back(std::make_pair(last_road_opt, buffer_front->GetWaypoint()));
-
+  if (last_lane_change_wpt.find(actor_id) != last_lane_change_wpt.end()) {
+    // A lane change is happening.
+    is_lane_change = true;
+    double angle = cg::Math::GetVectorAngle(last_lane_change_wpt.at(actor_id)->GetLocation(), simulation_state.GetLocation(actor_id));
+    if (angle < 0) lane_change = std::make_pair(RoadOption::ChangeLaneLeft, last_lane_change_wpt.at(actor_id)->GetWaypoint());
+    else lane_change = std::make_pair(RoadOption::ChangeLaneRight, last_lane_change_wpt.at(actor_id)->GetWaypoint());
+  }
   for (auto &wpt : waypoint_buffer) {
     RoadOption current_road_opt = wpt->GetRoadOption();
     if (current_road_opt != last_road_opt) {
@@ -597,7 +625,20 @@ ActionBuffer LocalizationStage::ComputeActionBuffer(const ActorId& actor_id) {
       last_road_opt = current_road_opt;
     }
   }
-
+  if (is_lane_change) {
+    // Insert the lane change action in the appropriate part of the action buffer.
+    auto distance_lane_change = cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), lane_change.second->GetTransform().location);
+    for (uint16_t i=0; i<waypoint_buffer.size(); i++) {
+      auto distance_action = cg::Math::DistanceSquared(waypoint_buffer.front()->GetLocation(), waypoint_buffer.at(i)->GetLocation());
+      // If the waypoint related to the next action is further away from the one of the lane change, insert lane change action here.
+      if (distance_action > distance_lane_change) {
+        action_buffer.insert(action_buffer.begin()+i, lane_change);
+        break;
+      }
+      // If we reached the end of the buffer, place the action at the end.
+      else if (i == waypoint_buffer.size()-1) action_buffer.push_back(lane_change);
+    }
+  }
   return action_buffer;
 }
 

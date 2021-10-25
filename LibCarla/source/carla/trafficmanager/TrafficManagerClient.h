@@ -214,7 +214,7 @@ public:
   /// Method to set our own imported path.
   void SetCustomPath(const carla::rpc::Actor &actor, const Path path, const bool empty_buffer) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_custom_path", actor, path, empty_buffer);
+    _client->call("set_path", actor, path, empty_buffer);
   }
 
   /// Method to remove a list of points.
@@ -275,7 +275,7 @@ public:
   /// Method to get the vehicle's action buffer.
   ActionBuffer GetActionBuffer(const ActorId &actor_id) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("get_action_buffer", actor_id);
+    _client->call("get_all_actions", actor_id);
     return ActionBuffer();
   }
 

@@ -330,7 +330,7 @@ std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardD
       }
       // If vehicle is approaching a lead vehicle and the lead vehicle is further
       // than CRITICAL_BRAKING_MARGIN but closer than FOLLOW_LEAD_DISTANCE.
-      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) { // + parameters.GetDistanceToLeadingVehicle(actor_id)) {
+      else if (available_distance_margin > CRITICAL_BRAKING_MARGIN) {
         // Then follow the lead vehicle by acquiring it's speed along current heading.
         dynamic_target_velocity = std::max(other_speed_along_heading, RELATIVE_APPROACH_SPEED);
       } else {

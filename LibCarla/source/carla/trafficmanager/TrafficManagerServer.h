@@ -181,7 +181,7 @@ public:
       });
 
       /// Method to set our own imported path.
-      server->bind("set_custom_path", [=](carla::rpc::Actor actor, const Path path, const bool empty_buffer) {
+      server->bind("set_path", [=](carla::rpc::Actor actor, const Path path, const bool empty_buffer) {
         tm->SetCustomPath(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), path, empty_buffer);
       });
 
@@ -226,7 +226,7 @@ public:
       });
 
       /// Method to get the vehicle's action buffer.
-      server->bind("get_action_buffer", [=](const ActorId actor_id) {
+      server->bind("get_all_actions", [=](const ActorId actor_id) {
         tm->GetActionBuffer(actor_id);
       });
 

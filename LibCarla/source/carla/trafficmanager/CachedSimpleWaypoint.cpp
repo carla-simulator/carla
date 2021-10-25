@@ -71,7 +71,7 @@ namespace traffic_manager {
 
     // is_junction
     WriteValue<bool>(out_file, this->is_junction);
-    
+
     // road_option
     WriteValue<uint8_t>(out_file, this->road_option);
   }
@@ -154,7 +154,7 @@ namespace traffic_manager {
 
     // is_junction
     ReadValue<bool>(content, start, this->is_junction);
-    
+
     // road_option
     ReadValue<uint8_t>(content, start, this->road_option);
   }
