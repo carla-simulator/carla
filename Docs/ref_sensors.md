@@ -273,7 +273,7 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 | `dropoff_zero_intensity`        | float  | 0.4   | For the intensity based drop-off, the probability of each point with zero intensity being dropped.    |
 | `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
 | `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
-
+| `ray_angles`     | string  | []   | Number of angles between lasers. |
 
 
 

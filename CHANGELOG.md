@@ -6,6 +6,7 @@
   * Added missing dependency `libomp5` to Release.Dockerfile
   * Fixed global route planner crash when being used at maps without lane markings
   * Added two new examples to PythonAPI/util: Conversion of OpenStreetMaps to OpenDRIVE maps `osm_to_xodr.py` and Extraction of map spawn points `extract_spawn_points.py`
+  * Added a gradient scanning for lidar sensors
 
 ## CARLA 0.9.12
 
