@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "TrafficLightController.h"
+#include "Carla/Actor/CarlaActor.h"
 
 UTrafficLightController::UTrafficLightController()
 {

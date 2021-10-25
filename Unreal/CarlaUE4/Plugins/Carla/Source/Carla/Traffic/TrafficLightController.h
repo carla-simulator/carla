@@ -14,6 +14,7 @@
 #include "TrafficLightController.generated.h"
 
 class ATrafficLightGroup;
+class FCarlaActor;
 
 /// Defines a stage of a semaphor with a State and
 /// the time this state lasts
