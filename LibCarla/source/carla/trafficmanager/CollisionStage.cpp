@@ -47,13 +47,13 @@ void CollisionStage::Update(const unsigned long index) {
     std::vector<ActorId> collision_candidate_ids;
     // Run through vehicles with overlapping paths and filter them;
     const float distance_to_leading = parameters.GetDistanceToLeadingVehicle(ego_actor_id);
-    float collision_radius_square = SQUARE(COLLISION_RADIUS_RATE * velocity + COLLISION_RADIUS_MIN) + distance_to_leading;;
+    float collision_radius_square = SQUARE(COLLISION_RADIUS_RATE * velocity + COLLISION_RADIUS_MIN + distance_to_leading);
     if (velocity < 2.0f) {
       const float length = simulation_state.GetDimensions(ego_actor_id).x;
       const float collision_radius_stop = COLLISION_RADIUS_STOP + length;
       collision_radius_square = SQUARE(collision_radius_stop);
       if (distance_to_leading > collision_radius_stop) {
-        collision_radius_square = SQUARE(collision_radius_stop) + distance_to_leading;
+        collision_radius_square = SQUARE(collision_radius_stop + distance_to_leading);
       }
     }
     for (ActorId overlapping_actor_id : overlapping_actors) {

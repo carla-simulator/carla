@@ -230,8 +230,7 @@ namespace traffic_manager {
     }
 
     // 3. Processing waypoints.
-    auto distance_squared =
-    [](cg::Location l1, cg::Location l2) {
+    auto distance_squared = [](cg::Location l1, cg::Location l2) {
       return cg::Math::DistanceSquared(l1, l2);
     };
     auto square = [](float input) {return std::pow(input, 2);};
@@ -372,37 +371,48 @@ namespace traffic_manager {
     for (auto &swp : dense_topology) {
       std::vector<SimpleWaypointPtr> next_waypoints = swp->GetNextWaypoint();
       std::size_t next_swp_size = next_waypoints.size();
+
       if (next_swp_size == 0) {
+        // No next waypoint means that this is an end of the road.
         swp->SetRoadOption(RoadOption::RoadEnd);
       }
-      // I need to change this.
-      else if ( (next_swp_size > 1 || (!swp->CheckJunction() && next_waypoints.front()->CheckJunction())) &&
-                (swp->GetRoadOption() == RoadOption::Void || swp->GetRoadOption() == RoadOption::LaneFollow) ) {
-        bool found = false;
-        if (next_swp_size == 1 && !swp->CheckJunction() && next_waypoints.front()->CheckJunction()) {
+
+      else if (next_swp_size > 1 || (!swp->CheckJunction() && next_waypoints.front()->CheckJunction())) {
+        // To check if we are in an actual junction, and not on an highway, we try to see
+        // if there's a landmark nearby of type Traffic Light, Stop Sign or Yield Sign.
+
+        bool found_landmark= false;
+        if (next_swp_size <= 1) {
+
           auto all_landmarks = swp->GetWaypoint()->GetAllLandmarksInDistance(15.0);
+
           if (all_landmarks.empty()) {
+            // Landmark hasn't been found, this isn't a junction.
             swp->SetRoadOption(RoadOption::LaneFollow);
           } else {
             for (auto &landmark : all_landmarks) {
               auto landmark_type = landmark->GetType();
               if (landmark_type == "1000001" || landmark_type == "206" || landmark_type == "205") {
-                found = true;
+                // We found a landmark.
+                found_landmark= true;
                 break;
               }
             }
-            if (!found) {
+            if (!found_landmark) {
               swp->SetRoadOption(RoadOption::LaneFollow);
             }
           }
-        } else {
-          found = true;
-        } if (found) {
+        }
+
+        // If we did find a landmark, or we are in the other case, find all waypoints
+        // in the junction and assign the correct RoadOption.
+        if (found_landmark || next_swp_size > 1) {
           swp->SetRoadOption(RoadOption::LaneFollow);
           for (auto &next_swp : next_waypoints) {
             std::vector<SimpleWaypointPtr> traversed_waypoints;
             SimpleWaypointPtr junction_end_waypoint;
-            if (next_waypoints.size() > 1) {
+
+            if (next_swp_size > 1) {
               junction_end_waypoint = next_swp;
             } else {
               junction_end_waypoint = next_waypoints.front();
@@ -417,6 +427,7 @@ namespace traffic_manager {
               junction_end_waypoint = temp.front();
             }
 
+            // Calculate the angle between the first and the last point of the junction.
             int16_t current_angle = static_cast<int16_t>(traversed_waypoints.front()->GetTransform().rotation.yaw);
             int16_t junction_end_angle = static_cast<int16_t>(traversed_waypoints.back()->GetTransform().rotation.yaw);
             int16_t diff_angle = (junction_end_angle - current_angle) % 360;
@@ -426,31 +437,16 @@ namespace traffic_manager {
             bool right = (diff_angle >= STRAIGHT_DEG && diff_angle <= 180) ||
                 (diff_angle <= -180 && diff_angle >= -360+STRAIGHT_DEG);
 
-            if (straight) {
-
-              for (auto &swpt : traversed_waypoints) {
-                if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
-                  swpt->SetRoadOption(RoadOption::Straight);
-                }
+            auto assign_option = [](RoadOption ro, std::vector<SimpleWaypointPtr> traversed_waypoints) {
+              for (auto &twp : traversed_waypoints) {
+                  twp->SetRoadOption(ro);
               }
-            }
-            else if (right) {
+            };
 
-              for (auto &swpt : traversed_waypoints) {
-                if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
-                  swpt->SetRoadOption(RoadOption::Right);
-                }
-              }
-
-            }
-            else {
-
-              for (auto &swpt : traversed_waypoints) {
-                if (swpt->GetRoadOption() == RoadOption::Void || swpt->GetRoadOption() == RoadOption::LaneFollow) {
-                  swpt->SetRoadOption(RoadOption::Left);
-                }
-              }
-            }
+            // Assign RoadOption according to the angle.
+            if (straight) assign_option(RoadOption::Straight, traversed_waypoints);
+            else if (right) assign_option(RoadOption::Right, traversed_waypoints);
+            else assign_option(RoadOption::Left, traversed_waypoints);
           }
         }
       }

@@ -80,7 +80,7 @@ static const float WALKER_TIME_EXTENSION = 1.5f;
 static const float SQUARE_ROOT_OF_TWO = 1.414f;
 static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
 static const float EPSILON = 2.0f * std::numeric_limits<float>::epsilon();
-static const float MIN_REFERENCE_DISTANCE = 1.0f;
+static const float MIN_REFERENCE_DISTANCE = 0.5f;
 static const float MIN_VELOCITY_COLL_RADIUS = 2.0f;
 static const float VEL_EXT_FACTOR = 0.36f;
 } // namespace Collision

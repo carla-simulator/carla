@@ -22,7 +22,8 @@ LocalizationStage::LocalizationStage(
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  RandomGeneratorMap &random_devices)
+  RandomGeneratorMap &random_devices,
+  cc::DebugHelper &debug_helper)
     : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
@@ -31,7 +32,8 @@ LocalizationStage::LocalizationStage(
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
-    random_devices(random_devices) {}
+    random_devices(random_devices),
+    debug_helper(debug_helper) {}
 
 void LocalizationStage::Update(const unsigned long index) {
 
@@ -639,6 +641,7 @@ ActionBuffer LocalizationStage::ComputeActionBuffer(const ActorId& actor_id) {
       else if (i == waypoint_buffer.size()-1) action_buffer.push_back(lane_change);
     }
   }
+  debug_helper.DrawPoint(action_buffer.front().second->GetTransform().location, 0.2f, {255u,0u,0u}, 555.0f);
   return action_buffer;
 }
 
