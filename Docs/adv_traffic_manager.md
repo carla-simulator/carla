@@ -339,6 +339,20 @@ for v in my_vehicles:
   tm.auto_lane_change(v,False)
 ``` 
 
+#### Delegating the Traffic Manager to automatically update vehicle lights
+
+By default, vehicle lights (brake, turn indicators, etc...) of the vehicles managed by the TM are never updated. It is possible to delegate the TM to update the vehicle lights of a given vehicle actor:
+
+```python
+tm = client.get_trafficmanager(port)
+for actor in my_vehicles:
+  tm.auto_update_lights(actor, True)
+```
+
+Vehicle lights management has to be specified on a per-vehicle basis, and there could be at any given time both vehicles with and without the automatic light management.
+
+
+
 ### Stopping a Traffic Manager
 
 The TM is not an actor that needs to be destroyed; it will stop when the client that created it stops. This is automatically managed by the API, the user does not have to do anything. However, when shutting down a TM, the user must destroy the vehicles controlled by it, otherwise they will remain immobile on the map. The script `generate_traffic.py` does this automatically:

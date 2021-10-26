@@ -115,6 +115,12 @@ void TrafficManagerRemote::SetGlobalPercentageSpeedDifference(const float percen
   client.SetGlobalPercentageSpeedDifference(percentage);
 }
 
+void TrafficManagerRemote::SetUpdateVehicleLights(const ActorPtr &_actor, const bool do_update) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetUpdateVehicleLights(actor, do_update);
+}
+
 void TrafficManagerRemote::SetCollisionDetection(const ActorPtr &_reference_actor, const ActorPtr &_other_actor, const bool detect_collision) {
   carla::rpc::Actor reference_actor(_reference_actor->Serialize());
   carla::rpc::Actor other_actor(_other_actor->Serialize());

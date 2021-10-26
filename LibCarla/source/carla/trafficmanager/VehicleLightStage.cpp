@@ -11,11 +11,13 @@ VehicleLightStage::VehicleLightStage(
   const std::vector<ActorId> &vehicle_id_list,
   const SimulationState &simulation_state,
   const BufferMap &buffer_map,
+  const Parameters &parameters,
   const cc::World &world,
   ControlFrame& control_frame)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),
+    parameters(parameters),
     world(world),
     control_frame(control_frame) {}
 
@@ -36,9 +38,8 @@ void VehicleLightStage::Update(const unsigned long index) {
   bool high_beam = false;
   bool fog_lights = false;
 
-  const bool vehicle_physics_enabled = simulation_state.IsPhysicsEnabled(id);
-  if (!vehicle_physics_enabled || simulation_state.IsDormant(id))
-    return; // do nothing
+  if (!parameters.GetUpdateVehicleLightState(id))
+    return; // this vehicle is not set to have automatic lights update
 
   // search the current light state of the vehicle
   for (auto&& vls : all_light_states) {

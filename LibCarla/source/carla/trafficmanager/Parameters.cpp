@@ -90,6 +90,11 @@ void Parameters::SetKeepRightPercentage(const ActorPtr &actor, const float perce
   perc_keep_right.AddEntry(entry);
 }
 
+void Parameters::SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update) {
+  const auto entry = std::make_pair(actor->GetId(), do_update);
+  auto_update_vehicle_lights.AddEntry(entry);
+}
+
 void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 
   const auto entry = std::make_pair(actor->GetId(), enable);
@@ -271,6 +276,16 @@ float Parameters::GetPercentageIgnoreWalkers(const ActorId &actor_id) const {
   }
 
   return percentage;
+}
+
+bool Parameters::GetUpdateVehicleLightState(const ActorId &actor_id) const {
+  bool do_update = false;
+
+  if (auto_update_vehicle_lights.Contains(actor_id)) {
+    do_update = auto_update_vehicle_lights.GetValue(actor_id);
+  }
+
+  return do_update;
 }
 
 float Parameters::GetPercentageIgnoreVehicles(const ActorId &actor_id) const {

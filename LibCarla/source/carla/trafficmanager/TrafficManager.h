@@ -138,6 +138,14 @@ public:
     }
   }
 
+  /// Set the automatical management of the vehicle lights
+  void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetUpdateVehicleLights(actor, do_update);
+    }
+  }
+
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
     TrafficManagerBase* tm_ptr = GetTM(_port);

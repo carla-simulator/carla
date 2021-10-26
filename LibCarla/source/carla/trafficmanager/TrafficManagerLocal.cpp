@@ -80,6 +80,7 @@ TrafficManagerLocal::TrafficManagerLocal(
     vehicle_light_stage(VehicleLightStage(vehicle_id_list,
                                           simulation_state,
                                           buffer_map,
+                                          parameters,
                                           world,
                                           control_frame)),
 
@@ -348,6 +349,11 @@ void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, co
 
 void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percentage) {
   parameters.SetGlobalPercentageSpeedDifference(percentage);
+}
+
+/// Method to set the automatical management of the vehicle lights
+void TrafficManagerLocal::SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) {
+  parameters.SetUpdateVehicleLightState(actor, do_update);
 }
 
 void TrafficManagerLocal::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
