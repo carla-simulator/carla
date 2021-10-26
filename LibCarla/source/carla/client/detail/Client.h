@@ -31,6 +31,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <functional>
 #include <memory>
@@ -102,6 +104,20 @@ namespace detail {
 
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
+
+    void ApplyColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture,
+        int material_index);
+
+    void ApplyColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture,
+        int material_index);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
 
     rpc::EpisodeInfo GetEpisodeInfo();
 

@@ -11,6 +11,8 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <boost/optional.hpp>
+#include <carla/rpc/Texture.h>
+#include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "Carla/Actor/CarlaActorFactory.h"
@@ -97,6 +99,19 @@ public:
   ALargeMapManager* GetLMManager() const {
     return LMManager;
   }
+
+  AActor* FindActorByName(const FString& ActorName);
+
+  UTexture2D* CreateUETexture(const carla::rpc::TextureColor& Texture);
+  UTexture2D* CreateUETexture(const carla::rpc::TextureFloatColor& Texture);
+
+  void ApplyTextureToActor(
+      AActor* Actor,
+      UTexture2D* Texture,
+      const carla::rpc::MaterialParameter& TextureParam,
+      int MaterialIndex);
+
+  TArray<FString> GetNamesOfAllActors();
 
 protected:
 

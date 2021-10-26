@@ -26,6 +26,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <boost/optional.hpp>
 
@@ -186,6 +188,22 @@ namespace client {
 
     std::vector<SharedPtr<Actor>> GetTrafficLightsInJunction(
         const road::JuncId junc_id) const;
+
+    // std::vector<std::string> GetObjectNameList();
+
+    void ApplyColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture,
+        int material_index);
+
+    void ApplyFloatColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture,
+        int material_index);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
 
   private:
 

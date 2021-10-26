@@ -291,5 +291,25 @@ namespace client {
     return Result;
   }
 
+  void World::ApplyColorTextureToObject(
+      const std::string &object_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture,
+      int material_index) {
+    _episode.Lock()->ApplyColorTextureToObject(object_name, parameter, Texture, material_index);
+  }
+
+  void World::ApplyFloatColorTextureToObject(
+      const std::string &object_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture,
+      int material_index) {
+    _episode.Lock()->ApplyColorTextureToObject(object_name, parameter, Texture, material_index);
+  }
+
+  std::vector<std::string> World::GetNamesOfAllObjects() const {
+    return _episode.Lock()->GetNamesOfAllObjects();
+  }
+
 } // namespace client
 } // namespace carla

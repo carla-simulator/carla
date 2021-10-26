@@ -380,6 +380,30 @@ namespace detail {
     _client.FreezeAllTrafficLights(frozen);
   }
 
+  // =========================================================================
+  /// -- Texture updating operations
+  // =========================================================================
+
+  void Simulator::ApplyColorTextureToObject(
+      const std::string &actor_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture,
+      int material_index) {
+    _client.ApplyColorTextureToObject(actor_name, parameter, Texture, material_index);
+  }
+
+  void Simulator::ApplyColorTextureToObject(
+      const std::string &actor_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture,
+      int material_index) {
+    _client.ApplyColorTextureToObject(actor_name, parameter, Texture, material_index);
+  }
+
+  std::vector<std::string> Simulator::GetNamesOfAllObjects() const {
+    return _client.GetNamesOfAllObjects();
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
