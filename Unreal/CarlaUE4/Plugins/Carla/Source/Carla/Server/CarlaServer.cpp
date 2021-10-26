@@ -58,6 +58,8 @@
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
+#include <carla/rpc/Texture.h>
+#include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
@@ -329,6 +331,79 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("opendrive could not be correctly parsed");
     }
     return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_color_texture_to_object) << [this](
+      const std::string &actor_name,
+      const cr::MaterialParameter& parameter,
+      const cr::TextureColor& Texture,
+      int material_index) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+    if(ActorToPaint == nullptr)
+    {
+      RESPOND_ERROR("unable to find Actor to apply the texture");
+    }
+
+    UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
+
+    GameMode->ApplyTextureToActor(
+        ActorToPaint,
+        UETexture,
+        parameter,
+        material_index);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_float_color_texture_to_object) << [this](
+      const std::string &actor_name,
+      const cr::MaterialParameter& parameter,
+      const cr::TextureFloatColor& Texture,
+      int material_index) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+    if(ActorToPaint == nullptr)
+    {
+      RESPOND_ERROR("unable to find Actor to apply the texture");
+    }
+
+    UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
+
+    GameMode->ApplyTextureToActor(
+        ActorToPaint,
+        UETexture,
+        parameter,
+        material_index);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_names_of_all_objects) << [this]() -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<FString> NamesFString = GameMode->GetNamesOfAllActors();
+    std::vector<std::string> NamesStd;
+    for (const FString &Name : NamesFString)
+    {
+      NamesStd.emplace_back(cr::FromFString(Name));
+    }
+    return NamesStd;
   };
 
   // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
