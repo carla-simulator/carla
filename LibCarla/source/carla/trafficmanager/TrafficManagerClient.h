@@ -88,6 +88,12 @@ public:
     _client->call("set_global_percentage_speed_difference", percentage);
   }
 
+  /// Method to set the automatical management of the vehicle lights
+  void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("auto_update_lights", std::move(_actor), do_update);
+  }
+
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {
     DEBUG_ASSERT(_client != nullptr);

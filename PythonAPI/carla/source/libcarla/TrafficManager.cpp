@@ -21,6 +21,7 @@ void export_trafficmanager() {
     .def("get_port", &ctm::TrafficManager::Port)
     .def("vehicle_percentage_speed_difference", &ctm::TrafficManager::SetPercentageSpeedDifference)
     .def("global_percentage_speed_difference", &ctm::TrafficManager::SetGlobalPercentageSpeedDifference)
+    .def("auto_update_lights", &ctm::TrafficManager::SetUpdateVehicleLights)
     .def("collision_detection", &ctm::TrafficManager::SetCollisionDetection)
     .def("force_lane_change", &ctm::TrafficManager::SetForceLaneChange)
     .def("auto_lane_change", &ctm::TrafficManager::SetAutoLaneChange)

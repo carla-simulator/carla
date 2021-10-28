@@ -18,6 +18,7 @@
 #include "carla/trafficmanager/RandomGenerator.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
+#include "carla/trafficmanager/VehicleLightStage.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -59,6 +60,7 @@ private:
   CollisionStage &collision_stage;
   TrafficLightStage &traffic_light_stage;
   MotionPlanStage &motion_plan_stage;
+  VehicleLightStage &vehicle_light_stage;
   // Time elapsed since last vehicle destruction due to being idle for too long.
   double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
@@ -102,6 +104,7 @@ public:
        CollisionStage &collision_stage,
        TrafficLightStage &traffic_light_stage,
        MotionPlanStage &motion_plan_stage,
+       VehicleLightStage &vehicle_light_stage,
        RandomGeneratorMap &random_devices);
 
   void Update();

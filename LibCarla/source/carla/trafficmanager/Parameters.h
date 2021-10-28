@@ -56,6 +56,8 @@ private:
   AtomicMap<ActorId, float> perc_ignore_vehicles;
   /// Map containing % of keep right rule.
   AtomicMap<ActorId, float> perc_keep_right;
+  /// Map containing the automatic vehicle lights update flag
+  AtomicMap<ActorId, bool> auto_update_vehicle_lights;
   /// Synchronous mode switch.
   std::atomic<bool> synchronous_mode{false};
   /// Distance margin
@@ -123,6 +125,9 @@ public:
   /// Method to set probabilistic preference to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
 
+  /// Method to set the automatic vehicle light state update flag.
+  void SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update);
+
   /// Method to set the distance to leading vehicle for all registered vehicles.
   void SetGlobalDistanceToLeadingVehicle(const float dist);
 
@@ -184,6 +189,9 @@ public:
 
   /// Method to get % to ignore any walker.
   float GetPercentageIgnoreWalkers(const ActorId &actor_id) const;
+
+  /// Method to get if the vehicle lights should be updates automatically
+  bool GetUpdateVehicleLightState(const ActorId &actor_id) const;
 
   /// Method to get synchronous mode.
   bool GetSynchronousMode() const;

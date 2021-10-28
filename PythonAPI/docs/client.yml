@@ -481,6 +481,21 @@
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
     # --------------------------------------
+    - def_name: auto_update_lights
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose lights status is being changed.
+      - param_name: do_update
+        type: bool
+        doc: >
+          If __True__ the traffic manager will manage the vehicle lights for the specified vehicle.
+      doc: >
+        Sets if the Traffic Manager is responsible of updating the vehicle lights, or not.
+
+        Default is __False__. The traffic manager will not change the vehicle light status of a vehicle, unless its auto_update_status is st to __True__.
+    # --------------------------------------
     - def_name: get_port
       params:
       return: uint16
