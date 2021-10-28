@@ -93,6 +93,7 @@ private:
   CollisionStage collision_stage;
   TrafficLightStage traffic_light_stage;
   MotionPlanStage motion_plan_stage;
+  VehicleLightStage vehicle_light_stage;
   ALSM alsm;
   /// Traffic manager server instance.
   TrafficManagerServer server;
@@ -164,6 +165,9 @@ public:
   /// Methos to set a global % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage);
+
+  /// Method to set the automatical management of the vehicle lights
+  void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);
 
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision);

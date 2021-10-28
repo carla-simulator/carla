@@ -63,6 +63,8 @@ private:
   AtomicMap<ActorId, float> perc_random_left;
   /// Map containing % of random right lane change.
   AtomicMap<ActorId, float> perc_random_right;
+  /// Map containing the automatic vehicle lights update flag
+  AtomicMap<ActorId, bool> auto_update_vehicle_lights;
   /// Synchronous mode switch.
   std::atomic<bool> synchronous_mode{false};
   /// Distance margin
@@ -140,12 +142,13 @@ public:
 
   /// Method to set % to randomly do a left lane change.
   void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
-
   /// Method to set % to randomly do a right lane change.
   void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
+  /// Method to set the automatic vehicle light state update flag.
+  void SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update);
+
   /// Method to set the distance to leading vehicle for all registered vehicles.
-  void SetGlobalDistanceToLeadingVehicle(const float dist);
 
   /// Set Synchronous mode time out.
   void SetSynchronousModeTimeOutInMiliSecond(const double time);
@@ -229,6 +232,9 @@ public:
 
   /// Method to get % to ignore any walker.
   float GetPercentageIgnoreWalkers(const ActorId &actor_id) const;
+
+  /// Method to get if the vehicle lights should be updates automatically
+  bool GetUpdateVehicleLightState(const ActorId &actor_id) const;
 
   /// Method to get synchronous mode.
   bool GetSynchronousMode() const;

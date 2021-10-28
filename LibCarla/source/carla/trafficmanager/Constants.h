@@ -131,6 +131,15 @@ static const float PERC_MAX_SLOWDOWN = 0.08f;
 static const float FOLLOW_LEAD_FACTOR = 2.0f;
 } // namespace MotionPlan
 
+namespace VehicleLight {
+static const float SUN_ALTITUDE_DEGREES_BEFORE_DAWN = 15.0f;
+static const float SUN_ALTITUDE_DEGREES_AFTER_SUNSET = 165.0f;
+static const float SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN = 35.0f;
+static const float SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET = 145.0f;
+static const float HEAVY_PRECIPITATION_THRESHOLD = 80.0f;
+static const float FOG_DENSITY_THRESHOLD = 20.0f;
+} // namespace VehicleLight
+
 namespace PID {
 static const float MAX_THROTTLE = 0.85f;
 static const float MAX_BRAKE = 0.7f;
