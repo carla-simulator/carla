@@ -131,7 +131,7 @@ static const float FOLLOW_LEAD_FACTOR = 2.0f;
 
 namespace PID {
 static const float MAX_THROTTLE = 0.85f;
-static const float MAX_BRAKE = 1.0f;
+static const float MAX_BRAKE = 0.7f;
 static const float MAX_STEERING = 0.8f;
 static const float MAX_STEERING_DIFF = 0.15f;
 static const float DT = 0.05f;

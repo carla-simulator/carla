@@ -33,7 +33,6 @@ TrafficManagerLocal::TrafficManagerLocal(
 
     episode_proxy(episode_proxy),
     world(cc::World(episode_proxy)),
-    debug_helper(world.MakeDebugHelper()),
 
     localization_stage(LocalizationStage(vehicle_id_list,
                                          buffer_map,
@@ -43,8 +42,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          parameters,
                                          marked_for_removal,
                                          localization_frame,
-                                         random_devices,
-                                         debug_helper)),
+                                         random_devices)),
 
     collision_stage(CollisionStage(vehicle_id_list,
                                    simulation_state,

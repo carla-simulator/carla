@@ -59,8 +59,6 @@ private:
   carla::client::detail::EpisodeProxy episode_proxy;
   /// CARLA client and object.
   cc::World world;
-  /// CARLA debugger object.
-  cc::DebugHelper debug_helper;
   /// Set of all actors registered with traffic manager.
   AtomicActorSet registered_vehicles;
   /// State counter to track changes in registered actors.

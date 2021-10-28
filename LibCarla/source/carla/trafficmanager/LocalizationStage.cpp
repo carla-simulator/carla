@@ -22,8 +22,7 @@ LocalizationStage::LocalizationStage(
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  RandomGeneratorMap &random_devices,
-  cc::DebugHelper &debug_helper)
+  RandomGeneratorMap &random_devices)
     : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
@@ -32,8 +31,7 @@ LocalizationStage::LocalizationStage(
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
-    random_devices(random_devices),
-    debug_helper(debug_helper) {}
+    random_devices(random_devices){}
 
 void LocalizationStage::Update(const unsigned long index) {
 
