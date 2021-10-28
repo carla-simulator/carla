@@ -58,17 +58,17 @@ void InterSetImportedRoute(carla::traffic_manager::TrafficManager& self, const A
   self.SetImportedRoute(actor, RoadOptionToUint(input), empty_buffer);
 }
 
-boost::python::list InterGetNextAction(carla::traffic_manager::TrafficManager& self, const ActorId &actor_id) {
+boost::python::list InterGetNextAction(carla::traffic_manager::TrafficManager& self, const ActorPtr &actor_ptr) {
   boost::python::list l;
-  auto next_action = self.GetNextAction(actor_id);
+  auto next_action = self.GetNextAction(actor_ptr->GetId());
   l.append(RoadOptionToString(next_action.first));
   l.append(next_action.second);
   return l;
 }
 
-boost::python::list InterGetActionBuffer(carla::traffic_manager::TrafficManager& self, const ActorId &actor_id) {
+boost::python::list InterGetActionBuffer(carla::traffic_manager::TrafficManager& self, const ActorPtr &actor_ptr) {
   boost::python::list l;
-  auto action_buffer = self.GetActionBuffer(actor_id);
+  auto action_buffer = self.GetActionBuffer(actor_ptr->GetId());
   for (auto &next_action : action_buffer) {
     boost::python::list temp;
     temp.append(RoadOptionToString(next_action.first));
