@@ -142,6 +142,7 @@ public:
 
   /// Method to set % to randomly do a left lane change.
   void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
+
   /// Method to set % to randomly do a right lane change.
   void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
@@ -149,6 +150,7 @@ public:
   void SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update);
 
   /// Method to set the distance to leading vehicle for all registered vehicles.
+  void SetGlobalDistanceToLeadingVehicle(const float dist);
 
   /// Set Synchronous mode time out.
   void SetSynchronousModeTimeOutInMiliSecond(const double time);

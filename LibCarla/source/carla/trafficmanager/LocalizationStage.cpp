@@ -174,8 +174,6 @@ void LocalizationStage::Update(const unsigned long index) {
     ImportPath(imported_points, waypoint_buffer, actor_id, horizon_square);
 
   } else if (!imported_route.empty()) {
-    for (uint16_t j = 0u; j < imported_route.size(); ++j) {
-    }
 
     ImportRoute(imported_route, waypoint_buffer, actor_id, horizon_square);
 
@@ -429,10 +427,10 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
 
     if (change_over_point != nullptr) {
       const float change_over_distance = cg::Math::Clamp(1.5f * vehicle_speed, MIN_WPT_DISTANCE, MAX_WPT_DISTANCE);
-      const auto starting_point = change_over_point;
+      const SimpleWaypointPtr starting_point = change_over_point;
       while (change_over_point->DistanceSquared(starting_point) < SQUARE(change_over_distance) &&
              !change_over_point->CheckJunction()) {
-        change_over_point = change_over_point->GetNextWaypoint()[0];
+        change_over_point = change_over_point->GetNextWaypoint().front();
       }
     }
   }
