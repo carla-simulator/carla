@@ -26,16 +26,18 @@ namespace client {
     /// Apply @a control to this Walker.
     void ApplyControl(const Control &control);
 
-    void ApplyControl(const BoneControlIn &bone_control);
-
     /// Return the control last applied to this Walker.
     ///
     /// @note This function does not call the simulator, it returns the Control
     /// received in the last tick.
     Control GetWalkerControl() const;
 
-    // Walker::Control GetBonesTransform() const;
     BoneControlOut GetBonesTransform();
+    void SetBonesTransform(const BoneControlIn &bones);
+    void BlendPose(float blend);
+    void ShowPose() { BlendPose(1.0f); };
+    void HidePose() { BlendPose(0.0f); };
+    void GetPoseFromAnimation();
 
   private:
 

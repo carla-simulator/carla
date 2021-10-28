@@ -436,13 +436,21 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
-  void Client::ApplyBoneControlToWalker(rpc::ActorId walker, const rpc::WalkerBoneControlIn &control) {
-    _pimpl->AsyncCall("apply_bone_control_to_walker", walker, control);
-  }
-
   rpc::WalkerBoneControlOut Client::GetBonesTransform(rpc::ActorId walker) {
     auto res = _pimpl->CallAndWait<rpc::WalkerBoneControlOut>("get_bones_transform", walker);
     return res;
+  }
+
+  void Client::SetBonesTransform(rpc::ActorId walker, const rpc::WalkerBoneControlIn &bones) {
+    _pimpl->AsyncCall("set_bones_transform", walker, bones);
+  }
+
+  void Client::BlendPose(rpc::ActorId walker, float blend) {
+    _pimpl->AsyncCall("blend_pose", walker, blend);
+  }
+
+  void Client::GetPoseFromAnimation(rpc::ActorId walker) {
+    _pimpl->AsyncCall("get_pose_from_animation", walker);
   }
 
   void Client::SetTrafficLightState(

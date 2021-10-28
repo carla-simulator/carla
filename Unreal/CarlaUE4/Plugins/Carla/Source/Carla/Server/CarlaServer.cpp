@@ -1290,31 +1290,6 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(apply_bone_control_to_walker) << [this](
-      cr::ActorId ActorId,
-      cr::WalkerBoneControlIn Control) -> R<void>
-  {
-    REQUIRE_CARLA_EPISODE();
-    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
-    if (!CarlaActor)
-    {
-      return RespondError(
-          "apply_bone_control_to_walker",
-          ECarlaServerResponse::ActorNotFound,
-          " Actor Id: " + FString::FromInt(ActorId));
-    }
-    ECarlaServerResponse Response =
-        CarlaActor->ApplyBoneControlToWalker(Control);
-    if (Response != ECarlaServerResponse::Success)
-    {
-      return RespondError(
-          "apply_bone_control_to_walker",
-          Response,
-          " Actor Id: " + FString::FromInt(ActorId));
-    }
-    return R<void>::Success();
-  };
-
   BIND_SYNC(get_bones_transform) << [this](
       cr::ActorId ActorId) -> R<cr::WalkerBoneControlOut>
   {
@@ -1350,6 +1325,84 @@ void FCarlaServer::FPimpl::BindActions()
       BoneData.push_back(Data);
     }
     return carla::rpc::WalkerBoneControlOut(BoneData);
+  };
+
+  BIND_SYNC(set_bones_transform) << [this](
+      cr::ActorId ActorId,
+      carla::rpc::WalkerBoneControlIn Bones) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_bones_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    FWalkerBoneControlIn Bones2 = FWalkerBoneControlIn(Bones);
+    ECarlaServerResponse Response = CarlaActor->SetBonesTransform(Bones2);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_bones_transform",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(blend_pose) << [this](
+      cr::ActorId ActorId,
+      float Blend) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "blend_pose",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response = CarlaActor->BlendPose(Blend);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "blend_pose",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_pose_from_animation) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_pose_from_animation",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response = CarlaActor->GetPoseFromAnimation();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_pose_from_animation",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    return R<void>::Success();
   };
 
   BIND_SYNC(set_actor_autopilot) << [this](

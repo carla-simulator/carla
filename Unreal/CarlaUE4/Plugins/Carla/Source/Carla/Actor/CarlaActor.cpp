@@ -1248,29 +1248,6 @@ ECarlaServerResponse FWalkerActor::ApplyControlToWalker(
   return ECarlaServerResponse::Success;
 }
 
-ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
-    const FWalkerBoneControlIn& Control)
-{
-  if (IsDormant())
-  {
-  }
-  else
-  {
-    auto Pawn = Cast<APawn>(GetActor());
-    if (Pawn == nullptr)
-    {
-      return ECarlaServerResponse::NotAWalker;
-    }
-    auto Controller = Cast<AWalkerController>(Pawn->GetController());
-    if (Controller == nullptr)
-    {
-      return ECarlaServerResponse::WalkerIncompatibleController;
-    }
-    Controller->ApplyWalkerControl(Control);
-  }
-  return ECarlaServerResponse::Success;
-}
-
 ECarlaServerResponse FWalkerActor::GetBonesTransform(FWalkerBoneControlOut& Bones)
 {
   if (IsDormant())
@@ -1289,6 +1266,72 @@ ECarlaServerResponse FWalkerActor::GetBonesTransform(FWalkerBoneControlOut& Bone
       return ECarlaServerResponse::WalkerIncompatibleController;
     }
     Controller->GetBonesTransform(Bones);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::SetBonesTransform(const FWalkerBoneControlIn& Bones)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->SetBonesTransform(Bones);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::BlendPose(float Blend)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->BlendPose(Blend);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::GetPoseFromAnimation()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->GetPoseFromAnimation();
   }
   return ECarlaServerResponse::Success;
 }

@@ -367,12 +367,22 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
-  virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControlIn&)
+  virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
-  virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&)
+  virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse BlendPose(float Blend)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetPoseFromAnimation()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -553,9 +563,13 @@ public:
 
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
-  virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControlIn&) final;
-
   virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) final;
+  
+  virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) final;
+
+  virtual ECarlaServerResponse BlendPose(float Blend);
+
+  virtual ECarlaServerResponse GetPoseFromAnimation();
 };
 
 class FOtherActor : public FCarlaActor

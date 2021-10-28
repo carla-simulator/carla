@@ -268,11 +268,18 @@ namespace detail {
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
 
-    void ApplyBoneControlToWalker(
-        rpc::ActorId walker,
-        const rpc::WalkerBoneControlIn &control);
-
     rpc::WalkerBoneControlOut GetBonesTransform(
+        rpc::ActorId walker);
+
+    void SetBonesTransform(
+        rpc::ActorId walker,
+        const rpc::WalkerBoneControlIn &bones);
+
+    void BlendPose(
+        rpc::ActorId walker, 
+        float blend);
+
+    void GetPoseFromAnimation(
         rpc::ActorId walker);
 
     void SetTrafficLightState(
