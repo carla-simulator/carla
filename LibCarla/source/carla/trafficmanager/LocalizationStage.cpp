@@ -428,7 +428,7 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
     }
 
     if (change_over_point != nullptr) {
-      const float change_over_distance = cg::Math::Clamp(1.5f * vehicle_speed, 3.0f, 20.0f);
+      const float change_over_distance = cg::Math::Clamp(1.5f * vehicle_speed, MIN_WPT_DISTANCE, MAX_WPT_DISTANCE);
       const auto starting_point = change_over_point;
       while (change_over_point->DistanceSquared(starting_point) < SQUARE(change_over_distance) &&
              !change_over_point->CheckJunction()) {

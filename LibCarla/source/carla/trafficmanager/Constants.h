@@ -64,6 +64,8 @@ static const float MINIMUM_LANE_CHANGE_DISTANCE = 20.0f;
 static const float MAXIMUM_LANE_OBSTACLE_DISTANCE = 50.0f;
 static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
 static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
+static const float MIN_WPT_DISTANCE = 5.0f;
+static const float MAX_WPT_DISTANCE = 20.0f;
 } // namespace LaneChange
 
 namespace Collision {
