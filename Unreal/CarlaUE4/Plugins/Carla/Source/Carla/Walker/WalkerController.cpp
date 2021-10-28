@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Carla/Walker/WalkerAnim.h"
 
 #include "Components/PoseableMeshComponent.h"
 #include "Components/PrimitiveComponent.h"
@@ -44,141 +45,137 @@ void AWalkerController::OnPossess(APawn *InPawn)
   Character->JumpMaxCount = 2;
 }
 
-UPoseableMeshComponent *AddNewBoneComponent(AActor *InActor, FVector inLocation, FRotator inRotator)
-{
-  UPoseableMeshComponent *NewComp = NewObject<UPoseableMeshComponent>(InActor,
-      UPoseableMeshComponent::StaticClass());
-  if (NewComp)
-  {
-    NewComp->RegisterComponent();
-    NewComp->SetWorldLocation(inLocation);
-    NewComp->SetWorldRotation(inRotator);
-    NewComp->AttachToComponent(InActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-  }
-  return NewComp;
-}
-
 void AWalkerController::ApplyWalkerControl(const FWalkerControl &InControl)
 {
   Control = InControl;
-  if (bManualBones)
-  {
-    SetManualBones(false);
-  }
-}
-
-void AWalkerController::ApplyWalkerControl(const FWalkerBoneControlIn &InBoneControl)
-{
-  Control = InBoneControl;
-  if (!bManualBones)
-  {
-    SetManualBones(true);
-  }
-}
-
-void AWalkerController::SetManualBones(const bool bIsEnabled)
-{
-  bManualBones = bIsEnabled;
-
-  auto *Character = GetCharacter();
-  TArray<UPoseableMeshComponent *> PoseableMeshes;
-  TArray<USkeletalMeshComponent *> SkeletalMeshes;
-  Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
-  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
-  USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
-  if (SkeletalMesh)
-  {
-    if (bManualBones)
-    {
-      UPoseableMeshComponent *PoseableMesh =
-          PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : AddNewBoneComponent(Character,
-          SkeletalMesh->GetRelativeTransform().GetLocation(),
-          SkeletalMesh->GetRelativeTransform().GetRotation().Rotator());
-      PoseableMesh->SetSkeletalMesh(SkeletalMesh->SkeletalMesh);
-      PoseableMesh->SetVisibility(true);
-      SkeletalMesh->SetVisibility(false);
-    }
-    else
-    {
-      UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
-      if (PoseableMesh)
-        PoseableMesh->SetVisibility(false);
-      SkeletalMesh->SetVisibility(true);
-    }
-  }
 }
 
 void AWalkerController::GetBonesTransform(FWalkerBoneControlOut &WalkerBones)
 {
   auto *Character = GetCharacter();
-  TArray<UPoseableMeshComponent *> PoseableMeshes;
+  if (!Character) return;
+
   TArray<USkeletalMeshComponent *> SkeletalMeshes;
-  Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
   Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
   USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
   if (!SkeletalMesh) return;
 
-  UPoseableMeshComponent *PoseableMesh =
-        PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : AddNewBoneComponent(Character,
-        SkeletalMesh->GetRelativeTransform().GetLocation(),
-        SkeletalMesh->GetRelativeTransform().GetRotation().Rotator());
-  PoseableMesh->SetSkeletalMesh(SkeletalMesh->SkeletalMesh);
-  PoseableMesh->SetVisibility(false);
-  PoseableMesh->CopyPoseFromSkeletalComponent(SkeletalMesh);
-    
-  FPoseSnapshot Snap;
-  SkeletalMesh->SnapshotPose(Snap);
-  for (int i=0; i<Snap.BoneNames.Num(); ++i)
+  // get the walker animation class
+  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  if (!AnimInst) return;
+  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  if (!WalkerAnim) return;
+  
+  // get current pose
+  FPoseSnapshot TempSnapshot;
+  SkeletalMesh->SnapshotPose(TempSnapshot);
+  
+  // copy pose
+  // WalkerAnim->Snap = TempSnapshot;
+
+  for (int i=0; i<TempSnapshot.BoneNames.Num(); ++i)
   {
     FWalkerBoneControlOutData Transforms;
-    Transforms.World = PoseableMesh->GetBoneTransformByName(Snap.BoneNames[i], EBoneSpaces::WorldSpace);
-    Transforms.Component = PoseableMesh->GetBoneTransformByName(Snap.BoneNames[i], EBoneSpaces::ComponentSpace);
-    Transforms.Relative = Snap.LocalTransforms[i];
-    WalkerBones.BoneTransforms.Add(Snap.BoneNames[i].ToString(), Transforms);
-    // FVector Loc = SkeletalMesh->GetBoneLocation(Snap.BoneNames[i], EBoneSpaces::WorldSpace);        
-    // Trans = Snap.LocalTransforms[i];
-    // Trans.SetLocation(Loc);
-    // FTransform TransRel = Snap.LocalTransforms[i];
-    // if (i == 0)
-    // {
-    //   UE_LOG(LogCarla, Log, TEXT("World (%f, %f, %f), Relative (%f, %f, %f), Component (%f, %f, %f)"), Trans.GetLocation().X, Trans.GetLocation().Y, Trans.GetLocation().Z, TransRel.GetLocation().X, TransRel.GetLocation().Y, TransRel.GetLocation().Z, TransComp.GetLocation().X, TransComp.GetLocation().Y, TransComp.GetLocation().Z);
-    //   UE_LOG(LogCarla, Log, TEXT("World (%f, %f, %f), Relative (%f, %f, %f), Component (%f, %f, %f)"), Trans.GetLocation().X, Trans.GetLocation().Y, Trans.GetLocation().Z, TransRel.GetLocation().X, TransRel.GetLocation().Y, TransRel.GetLocation().Z, TransComp.GetLocation().X, TransComp.GetLocation().Y, TransComp.GetLocation().Z);
-    // }
+    Transforms.World = SkeletalMesh->GetSocketTransform(TempSnapshot.BoneNames[i], ERelativeTransformSpace::RTS_World);
+    Transforms.Component = SkeletalMesh->GetSocketTransform(TempSnapshot.BoneNames[i], ERelativeTransformSpace::RTS_Actor);
+    Transforms.Relative = SkeletalMesh->GetSocketTransform(TempSnapshot.BoneNames[i], ERelativeTransformSpace::RTS_ParentBoneSpace);
+    // Transforms.Relative = TempSnapshot.LocalTransforms[i];
+
+    WalkerBones.BoneTransforms.Add(TempSnapshot.BoneNames[i].ToString(), Transforms);
   }
+}
+
+void AWalkerController::SetBonesTransform(const FWalkerBoneControlIn &WalkerBones)
+{
+  auto *Character = GetCharacter();
+  if (!Character) return;
+
+  TArray<USkeletalMeshComponent *> SkeletalMeshes;
+  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
+  if (!SkeletalMesh) return;
+
+  // get the walker animation class
+  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  if (!AnimInst) return;
+  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  if (!WalkerAnim) return;
+  
+  // if pose is empty, then get a first version
+  if (WalkerAnim->Snap.BoneNames.Num() == 0)
+  {
+    // get current pose
+    SkeletalMesh->SnapshotPose(WalkerAnim->Snap);
+  }
+
+  TMap<FName, FTransform> BonesMap;
+  for (const TPair<FString, FTransform> &pair : WalkerBones.BoneTransforms)
+  {
+    FName BoneName = FName(*pair.Key);
+    BonesMap.Add(BoneName, pair.Value);
+  }
+
+  // assign common bones
+  for (int i=0; i<WalkerAnim->Snap.BoneNames.Num(); ++i)
+  {
+    FTransform *Trans = BonesMap.Find(WalkerAnim->Snap.BoneNames[i]);
+    if (Trans)
+    {
+      WalkerAnim->Snap.LocalTransforms[i] = *Trans;
+    }
+  }
+}
+
+void AWalkerController::BlendPose(float Blend)
+{
+  auto *Character = GetCharacter();
+  if (!Character) return;
+
+  TArray<USkeletalMeshComponent *> SkeletalMeshes;
+  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
+  if (!SkeletalMesh) return;
+
+  // get the walker animation class
+  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  if (!AnimInst) return;
+  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  if (!WalkerAnim) return;
+  
+  // set current pose
+  WalkerAnim->Blend = Blend;
+}
+
+void AWalkerController::GetPoseFromAnimation()
+{
+  auto *Character = GetCharacter();
+  if (!Character) return;
+
+  TArray<USkeletalMeshComponent *> SkeletalMeshes;
+  Character->GetComponents<USkeletalMeshComponent>(SkeletalMeshes, false);
+  USkeletalMeshComponent *SkeletalMesh = SkeletalMeshes.IsValidIndex(0) ? SkeletalMeshes[0] : nullptr;
+  if (!SkeletalMesh) return;
+
+  // get the walker animation class
+  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  if (!AnimInst) return;
+  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  if (!WalkerAnim) return;
+  
+  // get current pose
+  SkeletalMesh->SnapshotPose(WalkerAnim->Snap);
 }
 
 void AWalkerController::ControlTickVisitor::operator()(const FWalkerControl &WalkerControl)
 {
   auto *Character = Controller->GetCharacter();
-  if (Character != nullptr)
-  {
-    Character->AddMovementInput(WalkerControl.Direction,
-        WalkerControl.Speed / Controller->GetMaximumWalkSpeed());
-    if (WalkerControl.Jump)
-    {
-      Character->Jump();
-    }
-  }
-}
+  if (!Character) return;
 
-void AWalkerController::ControlTickVisitor::operator()(FWalkerBoneControlIn &WalkerBoneControlIn)
-{
-  auto *Character = Controller->GetCharacter();
-  if (Character == nullptr)
+  Character->AddMovementInput(WalkerControl.Direction,
+        WalkerControl.Speed / Controller->GetMaximumWalkSpeed());
+  if (WalkerControl.Jump)
   {
-    return;
-  }
-  TArray<UPoseableMeshComponent *> PoseableMeshes;
-  Character->GetComponents<UPoseableMeshComponent>(PoseableMeshes, false);
-  UPoseableMeshComponent *PoseableMesh = PoseableMeshes.IsValidIndex(0) ? PoseableMeshes[0] : nullptr;
-  if (PoseableMesh)
-  {
-    for (const TPair<FString, FTransform> &pair : WalkerBoneControlIn.BoneTransforms)
-    {
-      FName BoneName = FName(*pair.Key);
-      PoseableMesh->SetBoneTransformByName(BoneName, pair.Value, EBoneSpaces::Type::ComponentSpace);
-    }
-    WalkerBoneControlIn.BoneTransforms.Empty();
+    Character->Jump();
   }
 }
 

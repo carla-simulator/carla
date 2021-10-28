@@ -457,12 +457,20 @@ namespace detail {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }
 
-    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControlIn &control) {
-      _client.ApplyBoneControlToWalker(walker.GetId(), control);
-    }
-
     rpc::WalkerBoneControlOut GetBonesTransform(Walker &walker) {
       return _client.GetBonesTransform(walker.GetId());
+    }
+
+    void SetBonesTransform(Walker &walker, const rpc::WalkerBoneControlIn &bones) {
+      return _client.SetBonesTransform(walker.GetId(), bones);
+    }
+
+    void BlendPose(Walker &walker, float blend) {
+      return _client.BlendPose(walker.GetId(), blend);
+    }
+
+    void GetPoseFromAnimation(Walker &walker) {
+      return _client.GetPoseFromAnimation(walker.GetId());
     }
 
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {

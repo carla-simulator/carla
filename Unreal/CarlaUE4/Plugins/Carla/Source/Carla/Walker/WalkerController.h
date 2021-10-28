@@ -36,8 +36,6 @@ private:
 
     void operator()(const FWalkerControl &WalkerControl);
 
-    void operator()(FWalkerBoneControlIn &WalkerBoneControlIn);
-
   private:
 
     AWalkerController *Controller;
@@ -61,8 +59,6 @@ public:
   UFUNCTION(BlueprintCallable)
   void ApplyWalkerControl(const FWalkerControl &InControl);
 
-  void ApplyWalkerControl(const FWalkerBoneControlIn &InBoneControl);
-
   UFUNCTION(BlueprintCallable)
   const FWalkerControl GetWalkerControl() const
   {
@@ -70,20 +66,18 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
-  const FWalkerBoneControlIn GetBoneWalkerControl() const
-  {
-    return Control.which() == 1u ? boost::get<FWalkerBoneControlIn>(Control) : FWalkerBoneControlIn{};
-  }
-
-  UFUNCTION(BlueprintCallable)
-  void SetManualBones(const bool bIsEnabled);
-
-  UFUNCTION(BlueprintCallable)
   void GetBonesTransform(FWalkerBoneControlOut &WalkerBones);
+
+  UFUNCTION(BlueprintCallable)
+  void SetBonesTransform(const FWalkerBoneControlIn &WalkerBones);
+
+  UFUNCTION(BlueprintCallable)
+  void BlendPose(float Blend);
+
+  UFUNCTION(BlueprintCallable)
+  void GetPoseFromAnimation();
 
 private:
 
-  boost::variant<FWalkerControl, FWalkerBoneControlIn> Control;
-
-  bool bManualBones;
+  boost::variant<FWalkerControl> Control;
 };
