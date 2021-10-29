@@ -288,9 +288,9 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureFloatCo
 {
   FlushRenderingCommands();
   TArray<FFloat16Color> Colors;
-  for (int x = 0; x < Texture.GetWidth(); x++)
+  for (int y = 0; y < Texture.GetHeight(); y++)
   {
-    for (int y = 0; y < Texture.GetHeight(); y++)
+    for (int x = 0; x < Texture.GetWidth(); x++)
     {
       auto& Color = Texture.At(x,y);
       Colors.Add(FLinearColor(Color.r, Color.g, Color.b, Color.a));
@@ -310,8 +310,7 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureFloatCo
 void ACarlaGameModeBase::ApplyTextureToActor(
     AActor* Actor,
     UTexture2D* Texture,
-    const carla::rpc::MaterialParameter& TextureParam,
-    int MaterialIndex)
+    const carla::rpc::MaterialParameter& TextureParam)
 {
   namespace cr = carla::rpc;
   TArray<UStaticMeshComponent*> StaticMeshes;
@@ -330,7 +329,7 @@ void ACarlaGameModeBase::ApplyTextureToActor(
 
       switch(TextureParam)
       {
-        case cr::MaterialParameter::Tex_BaseColor:
+        case cr::MaterialParameter::Tex_Diffuse:
           DynamicMaterial->SetTextureParameterValue("BaseColor", Texture);
           DynamicMaterial->SetTextureParameterValue("Difuse", Texture);
           DynamicMaterial->SetTextureParameterValue("Difuse 2", Texture);

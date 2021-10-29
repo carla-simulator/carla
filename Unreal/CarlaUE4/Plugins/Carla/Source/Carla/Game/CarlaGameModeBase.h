@@ -108,8 +108,7 @@ public:
   void ApplyTextureToActor(
       AActor* Actor,
       UTexture2D* Texture,
-      const carla::rpc::MaterialParameter& TextureParam,
-      int MaterialIndex);
+      const carla::rpc::MaterialParameter& TextureParam);
 
   TArray<FString> GetNamesOfAllActors();
 

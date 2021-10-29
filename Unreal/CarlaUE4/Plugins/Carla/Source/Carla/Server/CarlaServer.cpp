@@ -335,11 +335,10 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(apply_color_texture_to_object) << [this](
-      const std::string &actor_name,
+  BIND_SYNC(apply_color_texture_to_objects) << [this](
+      const std::vector<std::string> &actors_name,
       const cr::MaterialParameter& parameter,
-      const cr::TextureColor& Texture,
-      int material_index) -> R<void>
+      const cr::TextureColor& Texture) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
@@ -347,27 +346,37 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to find CARLA game mode");
     }
-    AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
-    if(ActorToPaint == nullptr)
+    TArray<AActor*> ActorsToPaint;
+    for(const std::string& actor_name : actors_name)
+    {
+      AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+      if (ActorToPaint)
+      {
+        ActorsToPaint.Add(ActorToPaint);
+      }
+    }
+
+    if(!ActorsToPaint.Num())
     {
       RESPOND_ERROR("unable to find Actor to apply the texture");
     }
 
     UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
 
-    GameMode->ApplyTextureToActor(
-        ActorToPaint,
-        UETexture,
-        parameter,
-        material_index);
+    for(AActor* ActorToPaint : ActorsToPaint)
+    {
+      GameMode->ApplyTextureToActor(
+          ActorToPaint,
+          UETexture,
+          parameter);
+    }
     return R<void>::Success();
   };
 
-  BIND_SYNC(apply_float_color_texture_to_object) << [this](
-      const std::string &actor_name,
+  BIND_SYNC(apply_float_color_texture_to_objects) << [this](
+      const std::vector<std::string> &actors_name,
       const cr::MaterialParameter& parameter,
-      const cr::TextureFloatColor& Texture,
-      int material_index) -> R<void>
+      const cr::TextureFloatColor& Texture) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
@@ -375,19 +384,30 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to find CARLA game mode");
     }
-    AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
-    if(ActorToPaint == nullptr)
+    TArray<AActor*> ActorsToPaint;
+    for(const std::string& actor_name : actors_name)
+    {
+      AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+      if (ActorToPaint)
+      {
+        ActorsToPaint.Add(ActorToPaint);
+      }
+    }
+
+    if(!ActorsToPaint.Num())
     {
       RESPOND_ERROR("unable to find Actor to apply the texture");
     }
 
     UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
 
-    GameMode->ApplyTextureToActor(
-        ActorToPaint,
-        UETexture,
-        parameter,
-        material_index);
+    for(AActor* ActorToPaint : ActorsToPaint)
+    {
+      GameMode->ApplyTextureToActor(
+          ActorToPaint,
+          UETexture,
+          parameter);
+    }
     return R<void>::Success();
   };
 

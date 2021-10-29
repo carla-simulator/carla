@@ -682,17 +682,15 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    void ApplyColorTextureToObject(
-        const std::string &actor_name,
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
         const rpc::MaterialParameter& parameter,
-        const rpc::TextureColor& Texture,
-        int material_index);
+        const rpc::TextureColor& Texture);
 
-    void ApplyColorTextureToObject(
-        const std::string &actor_name,
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
         const rpc::MaterialParameter& parameter,
-        const rpc::TextureFloatColor& Texture,
-        int material_index);
+        const rpc::TextureFloatColor& Texture);
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 
