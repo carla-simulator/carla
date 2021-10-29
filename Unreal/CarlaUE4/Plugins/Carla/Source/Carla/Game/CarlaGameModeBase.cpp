@@ -265,9 +265,9 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureColor& 
 {
   FlushRenderingCommands();
   TArray<FColor> Colors;
-  for (int y = 0; y < Texture.GetHeight(); y++)
+  for (uint32_t y = 0; y < Texture.GetHeight(); y++)
   {
-    for (int x = 0; x < Texture.GetWidth(); x++)
+    for (uint32_t x = 0; x < Texture.GetWidth(); x++)
     {
       auto& Color = Texture.At(x,y);
       Colors.Add(FColor(Color.r, Color.g, Color.b, Color.a));
@@ -288,9 +288,9 @@ UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureFloatCo
 {
   FlushRenderingCommands();
   TArray<FFloat16Color> Colors;
-  for (int y = 0; y < Texture.GetHeight(); y++)
+  for (uint32_t y = 0; y < Texture.GetHeight(); y++)
   {
-    for (int x = 0; x < Texture.GetWidth(); x++)
+    for (uint32_t x = 0; x < Texture.GetWidth(); x++)
     {
       auto& Color = Texture.At(x,y);
       Colors.Add(FLinearColor(Color.r, Color.g, Color.b, Color.a));
