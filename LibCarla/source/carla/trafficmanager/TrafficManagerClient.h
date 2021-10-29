@@ -91,7 +91,7 @@ public:
   /// Method to set the automatical management of the vehicle lights
   void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("auto_update_lights", std::move(_actor), do_update);
+    _client->call("update_vehicle_lights", std::move(_actor), do_update);
   }
 
   /// Method to set collision detection rules between vehicles.
@@ -178,19 +178,19 @@ public:
   /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_percentage_keep_right_rule", actor, percentage);
+    _client->call("keep_right_rule_percentage", actor, percentage);
   }
 
   /// Method to set % to randomly do a left lane change.
   void SetRandomLeftLaneChangePercentage(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_percentage_random_left_lanechange", actor, percentage);
+    _client->call("random_left_lanechange_percentage", actor, percentage);
   }
 
   /// Method to set % to randomly do a right lane change.
   void SetRandomRightLaneChangePercentage(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_percentage_random_right_lanechange", actor, percentage);
+    _client->call("random_right_lanechange_percentage", actor, percentage);
   }
 
   /// Method to set hybrid physics mode.

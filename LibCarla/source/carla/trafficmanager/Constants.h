@@ -52,7 +52,7 @@ static const float HIGH_SPEED_HORIZON_RATE = 4.0f;
 
 namespace WaypointSelection {
 static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
-static const float TARGET_WAYPOINT_HORIZON_LENGTH = 1.0f;
+static const float MIN_TARGET_WAYPOINT_DISTANCE = 1.0f;
 static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;

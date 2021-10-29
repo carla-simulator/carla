@@ -30,9 +30,9 @@ void VehicleLightStage::ClearCycleCache() {
 }
 
 void VehicleLightStage::Update(const unsigned long index) {
-  ActorId id = vehicle_id_list.at(index);
+  ActorId actor_id = vehicle_id_list.at(index);
 
-  if (!parameters.GetUpdateVehicleLightState(id))
+  if (!parameters.GetUpdateVehicleLightState(actor_id))
     return; // this vehicle is not set to have automatic lights update
 
   rpc::VehicleLightState::flag_type light_states = uint32_t(-1);
@@ -46,23 +46,23 @@ void VehicleLightStage::Update(const unsigned long index) {
 
   // search the current light state of the vehicle
   for (auto&& vls : all_light_states) {
-    if (vls.first == id) {
+    if (vls.first == actor_id) {
       light_states = vls.second;
       break;
     }
   }
 
-  cg::Vector3D actor_vec = simulation_state.GetHeading(id);
-
   // Determine if the vehicle is truning left or right by checking the close waypoints
 
-  const Buffer& waypoint_buffer = buffer_map.at(id);
+  const Buffer& waypoint_buffer = buffer_map.at(actor_id);
   cg::Location front_location = waypoint_buffer.front()->GetLocation();
+
   for (const SimpleWaypointPtr& waypoint : waypoint_buffer) {
     if (waypoint->CheckJunction()) {
       RoadOption target_ro = waypoint->GetRoadOption();
       if (target_ro == RoadOption::Left) left_turn_indicator = true;
       else if (target_ro == RoadOption::Right) right_turn_indicator = true;
+      break;
     }
     if (cg::Math::DistanceSquared(front_location, waypoint->GetLocation()) > MAX_DISTANCE_LIGHT_CHECK) {
       break;
@@ -73,7 +73,7 @@ void VehicleLightStage::Update(const unsigned long index) {
   for (size_t cc = 0; cc < control_frame.size(); cc++) {
     if (control_frame[cc].command.type() == typeid(carla::rpc::Command::ApplyVehicleControl)) {
       carla::rpc::Command::ApplyVehicleControl& ctrl = boost::get<carla::rpc::Command::ApplyVehicleControl>(control_frame[cc].command);
-      if (ctrl.actor == id) {
+      if (ctrl.actor == actor_id) {
         brake_lights = (ctrl.control.brake > 0.5); // hard braking, avoid blinking for throttle control
         break;
       }
@@ -145,7 +145,7 @@ void VehicleLightStage::Update(const unsigned long index) {
 
   // Update the vehicle light state if it has changed
   if (new_light_states != light_states)
-    control_frame.push_back(carla::rpc::Command::SetVehicleLightState(id, new_light_states));
+    control_frame.push_back(carla::rpc::Command::SetVehicleLightState(actor_id, new_light_states));
 }
 
 void VehicleLightStage::RemoveActor(const ActorId) {
