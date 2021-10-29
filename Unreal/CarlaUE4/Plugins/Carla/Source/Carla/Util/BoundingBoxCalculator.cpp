@@ -10,6 +10,10 @@
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/ObjectLabel.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 
