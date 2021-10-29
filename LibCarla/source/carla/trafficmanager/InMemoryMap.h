@@ -17,7 +17,6 @@
 
 #include "carla/client/Map.h"
 #include "carla/client/Waypoint.h"
-#include "carla/client/DebugHelper.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/Memory.h"

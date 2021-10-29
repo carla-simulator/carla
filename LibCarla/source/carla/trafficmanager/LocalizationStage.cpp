@@ -173,16 +173,16 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
 
-  Path imported_points = parameters.GetCustomPath(actor_id);
-  Route imported_route = parameters.GetImportedRoute(actor_id);
+  Path imported_path = parameters.GetCustomPath(actor_id);
+  Route imported_actions = parameters.GetImportedRoute(actor_id);
   // We are effectively importing a path.
-  if (!imported_points.empty()) {
+  if (!imported_path.empty()) {
 
-    ImportPath(imported_points, waypoint_buffer, actor_id, horizon_square);
+    ImportPath(imported_path, waypoint_buffer, actor_id, horizon_square);
 
-  } else if (!imported_route.empty()) {
+  } else if (!imported_actions.empty()) {
 
-    ImportRoute(imported_route, waypoint_buffer, actor_id, horizon_square);
+    ImportRoute(imported_actions, waypoint_buffer, actor_id, horizon_square);
 
   }
 
@@ -445,7 +445,7 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   return change_over_point;
 }
 
-void LocalizationStage::ImportPath(Path &imported_points, Buffer &waypoint_buffer, const ActorId actor_id, const float horizon_square) {
+void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer, const ActorId actor_id, const float horizon_square) {
     // Remove the waypoints already added to the path, except for the first.
     if (parameters.GetUploadPath(actor_id)) {
       auto number_of_pops = waypoint_buffer.size();
@@ -457,11 +457,11 @@ void LocalizationStage::ImportPath(Path &imported_points, Buffer &waypoint_buffe
     }
 
     // Get the latest imported waypoint. and find its closest waypoint in TM's InMemoryMap.
-    cg::Location latest_imported = imported_points.front();
+    cg::Location latest_imported = imported_path.front();
     SimpleWaypointPtr imported = local_map->GetWaypoint(latest_imported);
 
     // We need to generate a path compatible with TM's waypoints.
-    while (!imported_points.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
+    while (!imported_path.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
       // Get the latest point we added to the list. If starting, this will be the one referred to the vehicle's location.
       SimpleWaypointPtr latest_waypoint = waypoint_buffer.back();
 
@@ -507,22 +507,22 @@ void LocalizationStage::ImportPath(Path &imported_points, Buffer &waypoint_buffe
 
       // Remove the imported waypoint from the path if it's close to the last one.
       if (next_wp_selection->DistanceSquared(imported) < 30.0f) {
-        imported_points.erase(imported_points.begin());
+        imported_path.erase(imported_path.begin());
         PushWaypoint(actor_id, track_traffic, waypoint_buffer, imported);
-        latest_imported = imported_points.front();
+        latest_imported = imported_path.front();
         imported = local_map->GetWaypoint(latest_imported);
       }
     }
-    if (imported_points.empty()) {
+    if (imported_path.empty()) {
       // Once we are done, check if we can clear the structure.
       parameters.RemoveUploadPath(actor_id, true);
     } else {
       // Otherwise, update the structure with the waypoints that we still need to import.
-      parameters.UpdateUploadPath(actor_id, imported_points);
+      parameters.UpdateUploadPath(actor_id, imported_path);
     }
 }
 
-void LocalizationStage::ImportRoute(Route &imported_route, Buffer &waypoint_buffer, const ActorId actor_id, const float horizon_square) {
+void LocalizationStage::ImportRoute(Route &imported_actions, Buffer &waypoint_buffer, const ActorId actor_id, const float horizon_square) {
 
     if (parameters.GetUploadRoute(actor_id)) {
       auto number_of_pops = waypoint_buffer.size();
@@ -533,8 +533,8 @@ void LocalizationStage::ImportRoute(Route &imported_route, Buffer &waypoint_buff
       parameters.RemoveImportedRoute(actor_id, false);
     }
 
-    RoadOption next_road_option = static_cast<RoadOption>(imported_route.front());
-    while (!imported_route.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
+    RoadOption next_road_option = static_cast<RoadOption>(imported_actions.front());
+    while (!imported_actions.empty() && waypoint_buffer.back()->DistanceSquared(waypoint_buffer.front()) <= horizon_square) {
       // Get the latest point we added to the list. If starting, this will be the one referred to the vehicle's location.
       SimpleWaypointPtr latest_waypoint = waypoint_buffer.back();
       RoadOption latest_road_option = latest_waypoint->GetRoadOption();
@@ -565,16 +565,16 @@ void LocalizationStage::ImportRoute(Route &imported_route, Buffer &waypoint_buff
 
       // If we are switching to a new RoadOption, it means the current one is already fully imported.
       if (latest_road_option != next_wp_selection->GetRoadOption() && next_road_option == next_wp_selection->GetRoadOption()) {
-        imported_route.erase(imported_route.begin());
-        next_road_option = static_cast<RoadOption>(imported_route.front());
+        imported_actions.erase(imported_actions.begin());
+        next_road_option = static_cast<RoadOption>(imported_actions.front());
       }
     }
-    if (imported_route.empty()) {
+    if (imported_actions.empty()) {
       // Once we are done, check if we can clear the structure.
       parameters.RemoveImportedRoute(actor_id, true);
     } else {
       // Otherwise, update the structure with the waypoints that we still need to import.
-      parameters.UpdateImportedRoute(actor_id, imported_route);
+      parameters.UpdateImportedRoute(actor_id, imported_actions);
     }
 }
 

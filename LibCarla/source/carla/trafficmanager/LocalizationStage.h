@@ -55,12 +55,12 @@ private:
                               const bool is_at_junction_entrance,
                               Buffer &waypoint_buffer);
 
-  void ImportPath(Path &imported_waypoints,
+  void ImportPath(Path &imported_path,
                   Buffer &waypoint_buffer,
                   const ActorId actor_id,
                   const float horizon_square);
 
-  void ImportRoute(Route &imported_route,
+  void ImportRoute(Route &imported_actions,
                   Buffer &waypoint_buffer,
                   const ActorId actor_id,
                   const float horizon_square);
