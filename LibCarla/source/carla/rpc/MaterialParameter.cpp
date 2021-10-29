@@ -15,7 +15,7 @@ std::string MaterialParameterToString(MaterialParameter material_parameter)
   {
     case MaterialParameter::Tex_Normal:                         return "Normal";
     case MaterialParameter::Tex_Ao_Roughness_Metallic_Emissive: return "AO / Roughness / Metallic / Emissive";
-    case MaterialParameter::Tex_BaseColor:                      return "BaseColor";
+    case MaterialParameter::Tex_Diffuse:                      return "Diffuse";
     case MaterialParameter::Tex_Emissive:                       return "Emissive";
     default:                                                    return "Invalid";
   }

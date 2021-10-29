@@ -249,7 +249,7 @@ void export_world() {
   enum_<cr::MaterialParameter>("MaterialParameter")
     .value("Normal", cr::MaterialParameter::Tex_Normal)
     .value("AO_Roughness_Metallic_Emissive", cr::MaterialParameter::Tex_Ao_Roughness_Metallic_Emissive)
-    .value("BaseColor", cr::MaterialParameter::Tex_BaseColor)
+    .value("Diffuse", cr::MaterialParameter::Tex_Diffuse)
     .value("Emissive", cr::MaterialParameter::Tex_Emissive)
   ;
 
@@ -334,8 +334,18 @@ void export_world() {
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
     .def("get_names_of_all_objects", CALL_RETURNING_LIST(cc::World, GetNamesOfAllObjects))
-    .def("apply_color_texture_to_object", &cc::World::ApplyColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture"), arg("material_index") = 0))
-    .def("apply_float_color_texture_to_object", &cc::World::ApplyFloatColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture"), arg("material_index") = 0))
+    .def("apply_color_texture_to_object", &cc::World::ApplyColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
+    .def("apply_float_color_texture_to_object", &cc::World::ApplyFloatColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
+    .def("apply_textures_to_object", &cc::World::ApplyTexturesToObject, (arg("object_name"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
+    .def("apply_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureColor& Texture) {
+        self.ApplyColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+      }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
+    .def("apply_float_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureFloatColor& Texture) {
+        self.ApplyFloatColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+      }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
+    .def("apply_textures_to_objects", +[](cc::World &self, boost::python::list &list, const cr::TextureColor& diffuse_texture, const cr::TextureFloatColor& emissive_texture, const cr::TextureFloatColor& normal_texture, const cr::TextureFloatColor& ao_roughness_metallic_emissive_texture) {
+        self.ApplyTexturesToObjects(PythonLitstToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
+      }, (arg("objects_name_list"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def(self_ns::str(self_ns::self))
   ;
 

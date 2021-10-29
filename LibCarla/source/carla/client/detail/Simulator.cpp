@@ -384,20 +384,18 @@ namespace detail {
   /// -- Texture updating operations
   // =========================================================================
 
-  void Simulator::ApplyColorTextureToObject(
-      const std::string &actor_name,
+  void Simulator::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
       const rpc::MaterialParameter& parameter,
-      const rpc::TextureColor& Texture,
-      int material_index) {
-    _client.ApplyColorTextureToObject(actor_name, parameter, Texture, material_index);
+      const rpc::TextureColor& Texture) {
+    _client.ApplyColorTextureToObjects(objects_name, parameter, Texture);
   }
 
-  void Simulator::ApplyColorTextureToObject(
-      const std::string &actor_name,
+  void Simulator::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
       const rpc::MaterialParameter& parameter,
-      const rpc::TextureFloatColor& Texture,
-      int material_index) {
-    _client.ApplyColorTextureToObject(actor_name, parameter, Texture, material_index);
+      const rpc::TextureFloatColor& Texture) {
+    _client.ApplyColorTextureToObjects(objects_name, parameter, Texture);
   }
 
   std::vector<std::string> Simulator::GetNamesOfAllObjects() const {

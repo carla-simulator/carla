@@ -194,14 +194,36 @@ namespace client {
     void ApplyColorTextureToObject(
         const std::string &actor_name,
         const rpc::MaterialParameter& parameter,
-        const rpc::TextureColor& Texture,
-        int material_index);
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
 
     void ApplyFloatColorTextureToObject(
         const std::string &actor_name,
         const rpc::MaterialParameter& parameter,
-        const rpc::TextureFloatColor& Texture,
-        int material_index);
+        const rpc::TextureFloatColor& Texture);
+
+    void ApplyFloatColorTextureToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    void ApplyTexturesToObject(
+        const std::string &actor_name,
+        const rpc::TextureColor& diffuse_texture,
+        const rpc::TextureFloatColor& emissive_texture,
+        const rpc::TextureFloatColor& normal_texture,
+        const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
+
+    void ApplyTexturesToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::TextureColor& diffuse_texture,
+        const rpc::TextureFloatColor& emissive_texture,
+        const rpc::TextureFloatColor& normal_texture,
+        const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 

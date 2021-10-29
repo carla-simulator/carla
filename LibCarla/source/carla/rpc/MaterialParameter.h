@@ -17,7 +17,7 @@ enum class MaterialParameter
 {
   Tex_Normal,
   Tex_Ao_Roughness_Metallic_Emissive,
-  Tex_BaseColor,
+  Tex_Diffuse,
   Tex_Emissive
 };
 
