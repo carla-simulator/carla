@@ -116,20 +116,27 @@ void LocalizationStage::Update(const unsigned long index) {
   bool lane_change_direction = lane_change_info.direction;
 
   // Apply parameters for keep right rule and random lane changes.
-  if (!force_lane_change) {
-    float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
-    float perc_random_leftlanechange = parameters.GetRandomLeftLaneChangePercentage(actor_id);
-    float perc_random_rightlanechange = parameters.GetRandomRightLaneChangePercentage(actor_id);
-    if (perc_keep_right >= 0.0f && perc_keep_right >= random_devices.at(actor_id).next()) {
+  if (!force_lane_change && vehicle_speed > MIN_LANE_CHANGE_SPEED){
+    const float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
+    const float perc_random_leftlanechange = parameters.GetRandomLeftLaneChangePercentage(actor_id);
+    const float perc_random_rightlanechange = parameters.GetRandomRightLaneChangePercentage(actor_id);
+    const bool is_keep_right = perc_keep_right > random_devices.at(actor_id).next();
+    const bool is_random_left_change = perc_random_leftlanechange >= random_devices.at(actor_id).next();
+    const bool is_random_right_change = perc_random_rightlanechange >= random_devices.at(actor_id).next();
+
+    // Determine which of the parameters we should apply.
+    if (is_keep_right || is_random_right_change) {
       force_lane_change = true;
       lane_change_direction = true;
     }
-    else if (perc_random_leftlanechange >= 0.0f && perc_random_leftlanechange >= random_devices.at(actor_id).next()) {
-      force_lane_change = true;
-      lane_change_direction = false;
-    } else if (perc_random_rightlanechange >= 0.0f && perc_random_rightlanechange >= random_devices.at(actor_id).next()) {
-      force_lane_change = true;
-      lane_change_direction = true;
+    if (is_random_left_change) {
+      if (!force_lane_change) {
+        force_lane_change = true;
+        lane_change_direction = false;
+      } else {
+        // Both a left and right lane changes are forced. Choose between one of them.
+        lane_change_direction = FIFTYPERC > random_devices.at(actor_id).next();
+      }
     }
   }
 
