@@ -57,7 +57,7 @@ FString QualityLevelToString(EQualityLevel QualitySettingsLevel)
   {
     return FString("Invalid");
   }
-  return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
+  return ptr->GetNameStringByValue(static_cast<int32>(QualitySettingsLevel));
 }
 
 static void LoadSettingsFromConfig(
