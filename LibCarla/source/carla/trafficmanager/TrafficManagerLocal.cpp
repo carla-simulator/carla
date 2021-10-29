@@ -233,7 +233,6 @@ void TrafficManagerLocal::Run() {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
-    vehicle_light_stage.ClearCycleCache();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);

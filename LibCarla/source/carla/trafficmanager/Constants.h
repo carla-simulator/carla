@@ -138,6 +138,7 @@ static const float SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN = 35.0f;
 static const float SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET = 145.0f;
 static const float HEAVY_PRECIPITATION_THRESHOLD = 80.0f;
 static const float FOG_DENSITY_THRESHOLD = 20.0f;
+static const float MAX_DISTANCE_LIGHT_CHECK = SQUARE(15.0f);
 } // namespace VehicleLight
 
 namespace PID {
