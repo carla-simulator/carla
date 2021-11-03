@@ -8,11 +8,18 @@
 
 #include <memory>
 #include "carla/client/Actor.h"
+#include "carla/trafficmanager/SimpleWaypoint.h"
 
 namespace carla {
 namespace traffic_manager {
 
 using ActorPtr = carla::SharedPtr<carla::client::Actor>;
+using Path = std::vector<cg::Location>;
+using Route = std::vector<uint8_t>;
+using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
+using Action = std::pair<RoadOption, WaypointPtr>;
+using ActionBuffer = std::vector<Action>;
+
 
 /// The function of this class is to integrate all the various stages of
 /// the traffic manager appropriately using messengers.
@@ -95,8 +102,14 @@ public:
   /// Method to set Global Distance to Leading Vehicle.
   virtual void SetGlobalDistanceToLeadingVehicle(const float dist) = 0;
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   virtual void SetKeepRightPercentage(const ActorPtr &actor,const float percentage) = 0;
+
+  /// Method to set % to randomly do a left lane change.
+  virtual void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) = 0;
+
+  /// Method to set % to randomly do a right lane change.
+  virtual void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) = 0;
 
   /// Method to set hybrid physics mode.
   virtual void SetHybridPhysicsMode(const bool mode_switch) = 0;
@@ -110,6 +123,24 @@ public:
   /// Method to set Open Street Map mode.
   virtual void SetOSMMode(const bool mode_switch) = 0;
 
+  /// Method to set our own imported path.
+  virtual void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) = 0;
+
+  /// Method to remove a path.
+  virtual void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) = 0;
+
+  /// Method to update an already set path.
+  virtual void UpdateUploadPath(const ActorId &actor_id, const Path path) = 0;
+
+  /// Method to set our own imported route.
+  virtual void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) = 0;
+
+  /// Method to remove a route.
+  virtual void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) = 0;
+
+  /// Method to update an already set route.
+  virtual void UpdateImportedRoute(const ActorId &actor_id, const Route route) = 0;
+
   /// Method to set automatic respawn of dormant vehicles.
   virtual void SetRespawnDormantVehicles(const bool mode_switch) = 0;
 
@@ -118,6 +149,12 @@ public:
 
   /// Method to set limits for boundaries when respawning vehicles.
   virtual void SetMaxBoundaries(const float lower, const float upper) = 0;
+
+  /// Method to get the vehicle's next action.
+  virtual Action GetNextAction(const ActorId &actor_id) = 0;
+
+  /// Method to get the vehicle's action buffer.
+  virtual ActionBuffer GetActionBuffer(const ActorId &actor_id) = 0;
 
   virtual void ShutDown() = 0;
 

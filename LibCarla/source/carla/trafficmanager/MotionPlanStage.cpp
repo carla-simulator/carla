@@ -157,7 +157,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
-                                                  TARGET_WAYPOINT_HORIZON_LENGTH);
+                                                  MIN_TARGET_WAYPOINT_DISTANCE);
       const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
       const cg::Location target_location = target_waypoint->GetLocation();
       float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);

@@ -214,8 +214,14 @@ public:
   /// the Global leading vehicle.
   void SetGlobalDistanceToLeadingVehicle(const float distance);
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set hybrid physics mode.
   void SetHybridPhysicsMode(const bool mode_switch);
@@ -229,14 +235,38 @@ public:
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
 
+  /// Method to set our own imported path.
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer);
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path);
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer);
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set route.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route);
+
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch);
 
-  // Method to set boundaries to respawn of dormant vehicles.
+  /// Method to set boundaries to respawn of dormant vehicles.
   void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
 
-  // Method to set limits for boundaries when respawning dormant vehicles.
+  /// Method to set limits for boundaries when respawning dormant vehicles.
   void SetMaxBoundaries(const float lower, const float upper);
+
+  /// Method to get the vehicle's next action.
+  Action GetNextAction(const ActorId &actor_id);
+
+  /// Method to get the vehicle's action buffer.
+  ActionBuffer GetActionBuffer(const ActorId &actor_id);
 
   void ShutDown() {};
 };

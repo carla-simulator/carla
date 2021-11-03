@@ -251,7 +251,7 @@ def main():
         if args.car_lights_on:
             all_vehicle_actors = world.get_actors(vehicles_list)
             for actor in all_vehicle_actors:
-                traffic_manager.auto_update_lights(actor, True)
+                traffic_manager.update_vehicle_lights(actor, True)
 
         # -------------
         # Spawn Walkers

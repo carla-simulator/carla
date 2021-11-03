@@ -9,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <random>
+#include <unordered_map>
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -25,6 +26,8 @@ namespace cc = carla::client;
 namespace cg = carla::geom;
 using ActorPtr = carla::SharedPtr<cc::Actor>;
 using ActorId = carla::ActorId;
+using Path = std::vector<cg::Location>;
+using Route = std::vector<uint8_t>;
 
 struct ChangeLaneInfo {
   bool change_lane = false;
@@ -56,6 +59,10 @@ private:
   AtomicMap<ActorId, float> perc_ignore_vehicles;
   /// Map containing % of keep right rule.
   AtomicMap<ActorId, float> perc_keep_right;
+  /// Map containing % of random left lane change.
+  AtomicMap<ActorId, float> perc_random_left;
+  /// Map containing % of random right lane change.
+  AtomicMap<ActorId, float> perc_random_right;
   /// Map containing the automatic vehicle lights update flag
   AtomicMap<ActorId, bool> auto_update_vehicle_lights;
   /// Synchronous mode switch.
@@ -78,6 +85,14 @@ private:
   std::atomic<float> hybrid_physics_radius {70.0};
   /// Parameter specifying Open Street Map mode.
   std::atomic<bool> osm_mode {true};
+  /// Parameter specifying if importing a custom path.
+  AtomicMap<ActorId, bool> upload_path;
+  /// Structure to hold all custom paths.
+  AtomicMap<ActorId, Path> custom_path;
+  /// Parameter specifying if importing a custom route.
+  AtomicMap<ActorId, bool> upload_route;
+  /// Structure to hold all custom routes.
+  AtomicMap<ActorId, Route> custom_route;
 
 public:
   Parameters();
@@ -122,8 +137,14 @@ public:
   /// Method to set % to ignore any vehicle.
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set the automatic vehicle light state update flag.
   void SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update);
@@ -155,6 +176,24 @@ public:
   /// Method to set limits for boundaries when respawning vehicles.
   void SetMaxBoundaries(const float lower, const float upper);
 
+  /// Method to set our own imported path.
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer);
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path);
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer);
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set route.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route);
+
   ///////////////////////////////// GETTERS /////////////////////////////////////
 
   /// Method to retrieve hybrid physics radius.
@@ -171,6 +210,12 @@ public:
 
   /// Method to query percentage probability of keep right rule for a vehicle.
   float GetKeepRightPercentage(const ActorId &actor_id);
+
+  /// Method to query percentage probability of a random right lane change for a vehicle.
+  float GetRandomLeftLaneChangePercentage(const ActorId &actor_id);
+
+  /// Method to query percentage probability of a random left lane change for a vehicle.
+  float GetRandomRightLaneChangePercentage(const ActorId &actor_id);
 
   /// Method to query auto lane change rule for a vehicle.
   bool GetAutoLaneChange(const ActorId &actor_id) const;
@@ -213,6 +258,18 @@ public:
 
   /// Method to get Open Street Map mode.
   bool GetOSMMode() const;
+
+  /// Method to get if we are uploading a path.
+  bool GetUploadPath(const ActorId &actor_id) const;
+
+  /// Method to get a custom path.
+  Path GetCustomPath(const ActorId &actor_id) const;
+
+  /// Method to get if we are uploading a route.
+  bool GetUploadRoute(const ActorId &actor_id) const;
+
+  /// Method to get a custom route.
+  Route GetImportedRoute(const ActorId &actor_id) const;
 
   /// Synchronous mode time out variable.
   std::chrono::duration<double, std::milli> synchronous_time_out;

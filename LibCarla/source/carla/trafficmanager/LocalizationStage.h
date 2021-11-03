@@ -18,7 +18,12 @@ namespace traffic_manager {
 namespace cc = carla::client;
 
 using LocalMapPtr = std::shared_ptr<InMemoryMap>;
-using LaneChangeLocationMap = std::unordered_map<ActorId, cg::Location>;
+using LaneChangeSWptMap = std::unordered_map<ActorId, SimpleWaypointPtr>;
+using WaypointPtr = carla::SharedPtr<cc::Waypoint>;
+using Action = std::pair<RoadOption, WaypointPtr>;
+using ActionBuffer = std::vector<Action>;
+using Path = std::vector<cg::Location>;
+using Route = std::vector<uint8_t>;
 
 /// This class has functionality to maintain a horizon of waypoints ahead
 /// of the vehicle for it to follow.
@@ -35,7 +40,7 @@ private:
   // Array of vehicles marked by stages for removal.
   std::vector<ActorId>& marked_for_removal;
   LocalizationFrame &output_array;
-  LaneChangeLocationMap last_lane_change_location;
+  LaneChangeSWptMap last_lane_change_swpt;
   ActorIdSet vehicles_at_junction;
   using SimpleWaypointPair = std::pair<SimpleWaypointPtr, SimpleWaypointPtr>;
   std::unordered_map<ActorId, SimpleWaypointPair> vehicles_at_junction_entrance;
@@ -46,11 +51,19 @@ private:
                                      const float vehicle_speed,
                                      bool force, bool direction);
 
-  void DrawBuffer(Buffer &buffer);
-
   void ExtendAndFindSafeSpace(const ActorId actor_id,
                               const bool is_at_junction_entrance,
                               Buffer &waypoint_buffer);
+
+  void ImportPath(Path &imported_path,
+                  Buffer &waypoint_buffer,
+                  const ActorId actor_id,
+                  const float horizon_square);
+
+  void ImportRoute(Route &imported_actions,
+                  Buffer &waypoint_buffer,
+                  const ActorId actor_id,
+                  const float horizon_square);
 
 public:
   LocalizationStage(const std::vector<ActorId> &vehicle_id_list,
@@ -68,6 +81,11 @@ public:
   void RemoveActor(const ActorId actor_id) override;
 
   void Reset() override;
+
+  Action ComputeNextAction(const ActorId &actor_id);
+
+  ActionBuffer ComputeActionBuffer(const ActorId& actor_id);
+
 };
 
 } // namespace traffic_manager

@@ -75,8 +75,7 @@ namespace bgi = boost::geometry::index;
     //bool Load(const std::string& filename);
     bool Load(const std::vector<uint8_t>& content);
 
-    /// This method constructs the local map with a resolution of
-    /// sampling_resolution.
+    /// This method constructs the local map with a resolution of sampling_resolution.
     void SetUp();
 
     /// This method returns the closest waypoint to a given location on the map.
@@ -85,8 +84,7 @@ namespace bgi = boost::geometry::index;
     /// This method returns n waypoints in an delta area with a certain distance from the ego vehicle.
     NodeList GetWaypointsInDelta(const cg::Location loc, const uint16_t n_points, const float random_sample) const;
 
-    /// This method returns the full list of discrete samples of the map in the
-    /// local cache.
+    /// This method returns the full list of discrete samples of the map in the local cache.
     NodeList GetDenseTopology() const;
 
     std::string GetMapName();
@@ -98,6 +96,7 @@ namespace bgi = boost::geometry::index;
 
     void SetUpDenseTopology();
     void SetUpSpatialTree();
+    void SetUpRoadOption();
 
     /// This method is used to find and place lane change links.
     void FindAndLinkLaneChange(SimpleWaypointPtr reference_waypoint);
