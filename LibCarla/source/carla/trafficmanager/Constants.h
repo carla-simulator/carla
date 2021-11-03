@@ -52,7 +52,7 @@ static const float HIGH_SPEED_HORIZON_RATE = 4.0f;
 
 namespace WaypointSelection {
 static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
-static const float TARGET_WAYPOINT_HORIZON_LENGTH = 1.0f;
+static const float MIN_TARGET_WAYPOINT_DISTANCE = 1.0f;
 static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
@@ -64,6 +64,10 @@ static const float MINIMUM_LANE_CHANGE_DISTANCE = 20.0f;
 static const float MAXIMUM_LANE_OBSTACLE_DISTANCE = 50.0f;
 static const float MAXIMUM_LANE_OBSTACLE_CURVATURE = 0.6f;
 static const float INTER_LANE_CHANGE_DISTANCE = 10.0f;
+static const float MIN_WPT_DISTANCE = 5.0f;
+static const float MAX_WPT_DISTANCE = 20.0f;
+static const float MIN_LANE_CHANGE_SPEED = 5.0f;
+static const float FIFTYPERC = 50.0f;
 } // namespace LaneChange
 
 namespace Collision {
@@ -80,7 +84,7 @@ static const float WALKER_TIME_EXTENSION = 1.5f;
 static const float SQUARE_ROOT_OF_TWO = 1.414f;
 static const float VERTICAL_OVERLAP_THRESHOLD = 4.0f;
 static const float EPSILON = 2.0f * std::numeric_limits<float>::epsilon();
-static const float MIN_REFERENCE_DISTANCE = 1.0f;
+static const float MIN_REFERENCE_DISTANCE = 0.5f;
 static const float MIN_VELOCITY_COLL_RADIUS = 2.0f;
 static const float VEL_EXT_FACTOR = 0.36f;
 } // namespace Collision
@@ -100,6 +104,7 @@ static const double MAX_WPT_DISTANCE = MAP_RESOLUTION/2.0 + SQUARE(MAP_RESOLUTIO
 static const float MAX_WPT_RADIANS = 0.1745f;  // 10º
 static float const DELTA = 25.0f;
 static float const Z_DELTA = 500.0f;
+static float const STRAIGHT_DEG = 19.0f;
 } // namespace Map
 
 namespace TrafficLight {
@@ -128,9 +133,19 @@ static const float PERC_MAX_SLOWDOWN = 0.08f;
 static const float FOLLOW_LEAD_FACTOR = 2.0f;
 } // namespace MotionPlan
 
+namespace VehicleLight {
+static const float SUN_ALTITUDE_DEGREES_BEFORE_DAWN = 15.0f;
+static const float SUN_ALTITUDE_DEGREES_AFTER_SUNSET = 165.0f;
+static const float SUN_ALTITUDE_DEGREES_JUST_AFTER_DAWN = 35.0f;
+static const float SUN_ALTITUDE_DEGREES_JUST_BEFORE_SUNSET = 145.0f;
+static const float HEAVY_PRECIPITATION_THRESHOLD = 80.0f;
+static const float FOG_DENSITY_THRESHOLD = 20.0f;
+static const float MAX_DISTANCE_LIGHT_CHECK = 225.0f;
+} // namespace VehicleLight
+
 namespace PID {
 static const float MAX_THROTTLE = 0.85f;
-static const float MAX_BRAKE = 1.0f;
+static const float MAX_BRAKE = 0.7f;
 static const float MAX_STEERING = 0.8f;
 static const float MAX_STEERING_DIFF = 0.15f;
 static const float DT = 0.05f;

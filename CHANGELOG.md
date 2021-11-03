@@ -1,11 +1,18 @@
 ## Latest
   * Fixed RSSSensor: made client side calculations threaded
+  * Added the option for users to set a path using locations to a vehicle controlled by the Traffic Manager.
+  * Added a RoadOption element in each SimpleWaypoint to specify which action will the vehicle perform if it follows that route.
+  * Added the option for users to set a route using RoadOption elements to a vehicle controlled by the Traffic Manager.
+  * Fixed keep_right_rule parameter.
+  * Added set_percentage_random_left_lanechange and set_percentage_random_right_lanechange.
   * Improved handling of collisions in Traffic Manager when driving at very high speeds.
   * Added open/close doors feature for vehicles.
   * Added API functions to 3D vectors: `squared_length`, `length`, `make_unit_vector`, `dot`, `dot_2d`, `distance`, `distance_2d`, `distance_squared`, `distance_squared_2d`, `get_vector_angle`
   * Added API functions to 2D vectors: `squared_length`, `length`, `make_unit_vector`
   * Added missing dependency `libomp5` to Release.Dockerfile
+  * Added physical simulation to vehicle doors, capable of opening and closing
   * Fixed global route planner crash when being used at maps without lane markings
+  * Added the new VehicleLightStage to the Traffic Manager to dynamically update the vehicle lights.
   * Added two new examples to PythonAPI/util: Conversion of OpenStreetMaps to OpenDRIVE maps `osm_to_xodr.py` and Extraction of map spawn points `extract_spawn_points.py`
 
 ## CARLA 0.9.12

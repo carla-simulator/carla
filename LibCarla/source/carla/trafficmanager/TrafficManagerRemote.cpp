@@ -115,6 +115,12 @@ void TrafficManagerRemote::SetGlobalPercentageSpeedDifference(const float percen
   client.SetGlobalPercentageSpeedDifference(percentage);
 }
 
+void TrafficManagerRemote::SetUpdateVehicleLights(const ActorPtr &_actor, const bool do_update) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetUpdateVehicleLights(actor, do_update);
+}
+
 void TrafficManagerRemote::SetCollisionDetection(const ActorPtr &_reference_actor, const ActorPtr &_other_actor, const bool detect_collision) {
   carla::rpc::Actor reference_actor(_reference_actor->Serialize());
   carla::rpc::Actor other_actor(_other_actor->Serialize());
@@ -175,6 +181,18 @@ void TrafficManagerRemote::SetKeepRightPercentage(const ActorPtr &_actor, const 
   client.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerRemote::SetRandomLeftLaneChangePercentage(const ActorPtr &_actor, const float percentage) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetRandomLeftLaneChangePercentage(actor, percentage);
+}
+
+void TrafficManagerRemote::SetRandomRightLaneChangePercentage(const ActorPtr &_actor, const float percentage) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetRandomRightLaneChangePercentage(actor, percentage);
+}
+
 void TrafficManagerRemote::SetHybridPhysicsMode(const bool mode_switch) {
   client.SetHybridPhysicsMode(mode_switch);
 }
@@ -185,6 +203,34 @@ void TrafficManagerRemote::SetHybridPhysicsRadius(const float radius) {
 
 void TrafficManagerRemote::SetOSMMode(const bool mode_switch) {
   client.SetOSMMode(mode_switch);
+}
+
+void TrafficManagerRemote::SetCustomPath(const ActorPtr &_actor, const Path path, const bool empty_buffer) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetCustomPath(actor, path, empty_buffer);
+}
+
+void TrafficManagerRemote::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+  client.RemoveUploadPath(actor_id, remove_path);
+}
+
+void TrafficManagerRemote::UpdateUploadPath(const ActorId &actor_id, const Path path) {
+  client.UpdateUploadPath(actor_id, path);
+}
+
+void TrafficManagerRemote::SetImportedRoute(const ActorPtr &_actor, const Route route, const bool empty_buffer) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetImportedRoute(actor, route, empty_buffer);
+}
+
+void TrafficManagerRemote::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  client.RemoveImportedRoute(actor_id, remove_path);
+}
+
+void TrafficManagerRemote::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  client.UpdateImportedRoute(actor_id, route);
 }
 
 void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
@@ -209,6 +255,14 @@ void TrafficManagerRemote::SetSynchronousMode(bool mode) {
 
 void TrafficManagerRemote::SetSynchronousModeTimeOutInMiliSecond(double time) {
   client.SetSynchronousModeTimeOutInMiliSecond(time);
+}
+
+Action TrafficManagerRemote::GetNextAction(const ActorId &actor_id) {
+  return client.GetNextAction(actor_id);
+}
+
+ActionBuffer TrafficManagerRemote::GetActionBuffer(const ActorId &actor_id) {
+  return client.GetActionBuffer(actor_id);
 }
 
 bool TrafficManagerRemote::SynchronousTick() {
