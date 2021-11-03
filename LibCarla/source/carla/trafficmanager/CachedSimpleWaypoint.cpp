@@ -35,6 +35,7 @@ namespace traffic_manager {
 
     this->geodesic_grid_id = simple_waypoint->GetGeodesicGridId();
     this->is_junction = simple_waypoint->CheckJunction();
+    this->road_option = static_cast<uint8_t>(simple_waypoint->GetRoadOption());
   }
 
   void CachedSimpleWaypoint::Write(std::ofstream &out_file) {
@@ -70,6 +71,9 @@ namespace traffic_manager {
 
     // is_junction
     WriteValue<bool>(out_file, this->is_junction);
+
+    // road_option
+    WriteValue<uint8_t>(out_file, this->road_option);
   }
 
   void CachedSimpleWaypoint::Read(std::ifstream &in_file) {
@@ -109,6 +113,9 @@ namespace traffic_manager {
 
     // is_junction
     ReadValue<bool>(in_file, this->is_junction);
+
+    // road_option
+    ReadValue<uint8_t>(in_file, this->road_option);
   }
 
   void CachedSimpleWaypoint::Read(const std::vector<uint8_t>& content, unsigned long& start) {
@@ -147,6 +154,9 @@ namespace traffic_manager {
 
     // is_junction
     ReadValue<bool>(content, start, this->is_junction);
+
+    // road_option
+    ReadValue<uint8_t>(content, start, this->road_option);
   }
 
 } // namespace traffic_manager
