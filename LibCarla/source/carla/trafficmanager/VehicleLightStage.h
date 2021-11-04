@@ -31,7 +31,7 @@ public:
                     const cc::World &world,
                     ControlFrame& control_frame);
 
-  void ClearCycleCache();
+  void UpdateWorldInfo();
 
   void Update(const unsigned long index) override;
 

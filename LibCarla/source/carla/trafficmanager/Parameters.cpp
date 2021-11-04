@@ -354,7 +354,7 @@ float Parameters::GetPercentageIgnoreWalkers(const ActorId &actor_id) const {
   return percentage;
 }
 
-bool Parameters::GetUpdateVehicleLightState(const ActorId &actor_id) const {
+bool Parameters::GetUpdateVehicleLights(const ActorId &actor_id) const {
   bool do_update = false;
 
   if (auto_update_vehicle_lights.Contains(actor_id)) {
