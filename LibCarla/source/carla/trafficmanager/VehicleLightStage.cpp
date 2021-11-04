@@ -21,7 +21,7 @@ VehicleLightStage::VehicleLightStage(
     world(world),
     control_frame(control_frame) {}
 
-void VehicleLightStage::ClearCycleCache() {
+void VehicleLightStage::UpdateWorldInfo() {
   // Get the global weather and all the vehicle light states at once
   all_light_states = world.GetVehiclesLightStates();
   weather = world.GetWeather();
@@ -30,7 +30,7 @@ void VehicleLightStage::ClearCycleCache() {
 void VehicleLightStage::Update(const unsigned long index) {
   ActorId actor_id = vehicle_id_list.at(index);
 
-  if (!parameters.GetUpdateVehicleLightState(actor_id))
+  if (!parameters.GetUpdateVehicleLights(actor_id))
     return; // this vehicle is not set to have automatic lights update
 
   rpc::VehicleLightState::flag_type light_states = uint32_t(-1);

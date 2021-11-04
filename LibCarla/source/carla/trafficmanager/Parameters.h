@@ -236,7 +236,7 @@ public:
   float GetPercentageIgnoreWalkers(const ActorId &actor_id) const;
 
   /// Method to get if the vehicle lights should be updates automatically
-  bool GetUpdateVehicleLightState(const ActorId &actor_id) const;
+  bool GetUpdateVehicleLights(const ActorId &actor_id) const;
 
   /// Method to get synchronous mode.
   bool GetSynchronousMode() const;
