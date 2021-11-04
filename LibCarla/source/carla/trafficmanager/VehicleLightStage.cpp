@@ -11,13 +11,11 @@ using namespace constants::VehicleLight;
 
 VehicleLightStage::VehicleLightStage(
   const std::vector<ActorId> &vehicle_id_list,
-  const SimulationState &simulation_state,
   const BufferMap &buffer_map,
   const Parameters &parameters,
   const cc::World &world,
   ControlFrame& control_frame)
   : vehicle_id_list(vehicle_id_list),
-    simulation_state(simulation_state),
     buffer_map(buffer_map),
     parameters(parameters),
     world(world),
