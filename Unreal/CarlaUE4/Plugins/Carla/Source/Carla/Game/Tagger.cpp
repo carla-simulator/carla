@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Tagger.h"
+#include "TaggedComponent.h"
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -58,6 +59,30 @@ void ATagger::SetStencilValue(
       (Label != crp::CityObjectLabel::None));
 }
 
+bool ATagger::IsThing(const crp::CityObjectLabel &Label)
+{
+  return (Label == crp::CityObjectLabel::Pedestrians ||
+          Label == crp::CityObjectLabel::TrafficSigns ||
+          Label == crp::CityObjectLabel::Vehicles ||
+          Label == crp::CityObjectLabel::TrafficLight);
+}
+
+FLinearColor ATagger::GetActorLabelColor(const AActor &Actor, const crp::CityObjectLabel &Label)
+{
+  uint32 id = Actor.GetUniqueID();
+  // TODO: Warn if id > 0xffff.
+
+  // Encode label and id like semantic segmentation does
+  // TODO: Steal bits from R channel and maybe A channel?
+  FLinearColor Color(0.0f, 0.0f, 0.0f, 1.0f);
+  Color.R = CastEnum(Label) / 255.0f;
+  Color.G = ((id & 0x00ff) >> 0) / 255.0f;
+  Color.B = ((id & 0xff00) >> 8) / 255.0f;
+
+  return Color;
+}
+
+
 // =============================================================================
 // -- static ATagger functions -------------------------------------------------
 // =============================================================================
@@ -78,6 +103,44 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
     UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
+
+    // Don't instance segment non-things (i.e., stuff)
+    // if (!IsThing(Label)) {
+    //   continue;
+    // }
+
+    // Find a tagged component that is attached to this component
+    UTaggedComponent *TaggedComponent = NULL;
+    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
+    for (USceneComponent *SceneComponent : AttachedComponents) {
+      UTaggedComponent *TaggedSceneComponent = Cast<UTaggedComponent>(SceneComponent);
+      if (IsValid(TaggedSceneComponent)) {
+          TaggedComponent = TaggedSceneComponent;
+#ifdef CARLA_TAGGER_EXTRA_LOG
+          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
+#endif // CARLA_TAGGER_EXTRA_LOG
+          break;
+      }
+    }
+
+    // If not found, then create new tagged component and attach it to this component
+    if (!TaggedComponent) {
+      TaggedComponent = NewObject<UTaggedComponent>(Component);
+      TaggedComponent->SetupAttachment(Component);
+      TaggedComponent->RegisterComponent();
+#ifdef CARLA_TAGGER_EXTRA_LOG
+      UE_LOG(LogCarla, Log, TEXT("    - Added Tag"));
+#endif // CARLA_TAGGER_EXTRA_LOG
+    }
+
+    // Set tagged component color
+    FLinearColor Color = GetActorLabelColor(Actor, Label);
+#ifdef CARLA_TAGGER_EXTRA_LOG
+    UE_LOG(LogCarla, Log, TEXT("    - Color: %s"), *Color.ToString());
+#endif // CARLA_TAGGER_EXTRA_LOG
+
+    TaggedComponent->SetColor(Color);
+    TaggedComponent->MarkRenderStateDirty();
   }
 
   // Iterate skeletal meshes.
@@ -90,6 +153,45 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
     UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
+
+    // Don't instance segment non-things (i.e., stuff)
+    // if (!IsThing(Label)) {
+    //   continue;
+    // }
+
+    // Find a tagged component that is attached to this component
+    UTaggedComponent *TaggedComponent = NULL;
+    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
+    for (USceneComponent *SceneComponent : AttachedComponents) {
+      UTaggedComponent *TaggedSceneComponent = Cast<UTaggedComponent>(SceneComponent);
+      if (IsValid(TaggedSceneComponent)) {
+          TaggedComponent = TaggedSceneComponent;
+#ifdef CARLA_TAGGER_EXTRA_LOG
+          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
+#endif // CARLA_TAGGER_EXTRA_LOG
+          break;
+      }
+    }
+
+    // If not found, then create new tagged component and attach it to this component
+    if (!TaggedComponent) {
+      TaggedComponent = NewObject<UTaggedComponent>(Component);
+      TaggedComponent->SetupAttachment(Component);
+      TaggedComponent->RegisterComponent();
+#ifdef CARLA_TAGGER_EXTRA_LOG
+      UE_LOG(LogCarla, Log, TEXT("    - Added Tag"));
+#endif // CARLA_TAGGER_EXTRA_LOG
+    }
+
+    // Set tagged component color
+    FLinearColor Color = GetActorLabelColor(Actor, Label);
+#ifdef CARLA_TAGGER_EXTRA_LOG
+    UE_LOG(LogCarla, Log, TEXT("    - Color: %s"), *Color.ToString());
+#endif // CARLA_TAGGER_EXTRA_LOG
+
+    TaggedComponent->SetColor(Color);
+    TaggedComponent->MarkRenderStateDirty();
+
   }
 }
 

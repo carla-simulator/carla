@@ -84,6 +84,10 @@ public:
   static void SetStencilValue(UPrimitiveComponent &Component,
     const crp::CityObjectLabel &Label, const bool bSetRenderCustomDepth);
 
+  static FLinearColor GetActorLabelColor(const AActor &Actor, const crp::CityObjectLabel &Label);
+
+  static bool IsThing(const crp::CityObjectLabel &Label);
+
   ATagger();
 
 protected:
