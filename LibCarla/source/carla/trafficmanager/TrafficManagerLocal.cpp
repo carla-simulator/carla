@@ -78,7 +78,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       local_map)),
 
     vehicle_light_stage(VehicleLightStage(vehicle_id_list,
-                                          simulation_state,
                                           buffer_map,
                                           parameters,
                                           world,

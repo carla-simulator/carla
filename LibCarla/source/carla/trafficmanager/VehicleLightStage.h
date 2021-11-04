@@ -15,7 +15,6 @@ namespace traffic_manager {
 class VehicleLightStage: Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
-  const SimulationState &simulation_state;
   const BufferMap &buffer_map;
   const Parameters &parameters;
   const cc::World &world;
@@ -27,7 +26,6 @@ private:
 
 public:
   VehicleLightStage(const std::vector<ActorId> &vehicle_id_list,
-                    const SimulationState &simulation_state,
                     const BufferMap &buffer_map,
                     const Parameters &parameters,
                     const cc::World &world,
