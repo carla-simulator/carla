@@ -9,6 +9,11 @@
   * Added API functions to 3D vectors: `squared_length`, `length`, `make_unit_vector`, `dot`, `dot_2d`, `distance`, `distance_2d`, `distance_squared`, `distance_squared_2d`, `get_vector_angle`
   * Added API functions to 2D vectors: `squared_length`, `length`, `make_unit_vector`
   * Added missing dependency `libomp5` to Release.Dockerfile
+  * Added API functions to interact with pedestrian bones:
+    - `get_bones / set_bones`:  to get/set the bones of a pedestrian
+    - `blend_pose`:  to blend a custom pose with current animation
+    - `show_pose / hide_pose`:  to show or hide the custom pose
+    - `get_pose_from_animation`:  to set the custom pose with the animation current frame
   * Added physical simulation to vehicle doors, capable of opening and closing
   * Fixed global route planner crash when being used at maps without lane markings
   * Added the new VehicleLightStage to the Traffic Manager to dynamically update the vehicle lights.
