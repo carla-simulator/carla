@@ -186,7 +186,7 @@ public:
     }
   }
 
-  /// Set the automatical management of the vehicle lights
+  /// Set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update){
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){

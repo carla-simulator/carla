@@ -58,7 +58,7 @@ public:
   /// If less than 0, it's a % increase.
   virtual void SetGlobalPercentageSpeedDifference(float const percentage) = 0;
 
-  /// Method to set the automatical management of the vehicle lights
+  /// Method to set the automatic management of the vehicle lights
   virtual void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) = 0;
 
   /// Method to set collision detection rules between vehicles.

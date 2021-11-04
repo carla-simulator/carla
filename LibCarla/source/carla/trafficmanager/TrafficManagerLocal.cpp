@@ -349,9 +349,9 @@ void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percent
   parameters.SetGlobalPercentageSpeedDifference(percentage);
 }
 
-/// Method to set the automatical management of the vehicle lights
+/// Method to set the automatic management of the vehicle lights
 void TrafficManagerLocal::SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) {
-  parameters.SetUpdateVehicleLightState(actor, do_update);
+  parameters.SetUpdateVehicleLights(actor, do_update);
 }
 
 void TrafficManagerLocal::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
