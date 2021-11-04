@@ -147,7 +147,7 @@ public:
   void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set the automatic vehicle light state update flag.
-  void SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update);
+  void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);
 
   /// Method to set the distance to leading vehicle for all registered vehicles.
   void SetGlobalDistanceToLeadingVehicle(const float dist);

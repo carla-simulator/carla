@@ -103,7 +103,7 @@ void Parameters::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const
 
 }
 
-void Parameters::SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update) {
+void Parameters::SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) {
 
   const auto entry = std::make_pair(actor->GetId(), do_update);
   auto_update_vehicle_lights.AddEntry(entry);
