@@ -265,6 +265,7 @@ def append_code_snipets(md):
     snipets_path = os.path.join(current_folder, '../../Docs/python_api_snipets.md')
     snipets = open(snipets_path, 'r')
     md.text(snipets.read())
+    snipets.close()
     os.remove(snipets_path)
 
 
@@ -393,13 +394,13 @@ def add_doc_method_param(md, param):
     if valid_dic_val(param, 'doc'):
         param_doc = create_hyperlinks(md.prettify_doc(param['doc']))
     if valid_dic_val(param, 'param_units'):
-        param_units = small_html(' – '+param['param_units'])
+        param_units = small_html(' - '+param['param_units'])
     param_type = '' if not param_type else parentheses(italic(param_type+param_units))
     md.list_push(code(param_name))
     if param_type:
         md.text(' ' + param_type)
     if param_doc:
-        md.textn(' – ' + param_doc)
+        md.textn(' - ' + param_doc)
     else:
         md.new_line()
     md.list_pop()
@@ -436,7 +437,7 @@ def add_doc_method(md, method, class_key):
         md.list_push(bold('Return:') + ' ')
         return_units = ''
         if valid_dic_val(method, 'return_units'):
-            return_units = small_html(' – '+method['return_units'])
+            return_units = small_html(' - '+method['return_units'])
         md.textn(italic(create_hyperlinks(method['return'])+return_units))
         md.list_pop()
 
@@ -490,7 +491,7 @@ def add_doc_getter_setter(md, method, class_key, is_getter, other_list):
         md.list_push(bold('Return:') + ' ')
         return_units = ''
         if valid_dic_val(method, 'return_units'):
-            return_units = small_html(' – '+method['return_units'])
+            return_units = small_html(' - '+method['return_units'])
         md.textn(italic(create_hyperlinks(method['return'])+return_units))
         md.list_pop()
 
@@ -566,7 +567,7 @@ def add_doc_inst_var(md, inst_var, class_key):
     # Instance variable type
     if valid_dic_val(inst_var, 'type'):
         if valid_dic_val(inst_var, 'var_units'):
-            var_units = small_html(' – '+inst_var['var_units'])
+            var_units = small_html(' - '+inst_var['var_units'])
         var_type = ' ' + parentheses(italic(create_hyperlinks(inst_var['type']+var_units)))
     md.list_pushn(
         html_key(var_key) +
