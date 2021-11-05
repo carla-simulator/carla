@@ -188,7 +188,6 @@ void export_actor() {
 
   class_<cc::Walker, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Walker>>("Walker", no_init)
       .def("apply_control", &ApplyControl<cr::WalkerControl>, (arg("control")))
-      .def("apply_control", &ApplyControl<cr::WalkerBoneControlIn>, (arg("control")))
       .def("get_control", &cc::Walker::GetWalkerControl)
       .def("get_bones", &cc::Walker::GetBonesTransform)
       .def("set_bones", &cc::Walker::SetBonesTransform, (arg("bones")))
