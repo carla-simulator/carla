@@ -22,12 +22,15 @@
 namespace carla {
 namespace client {
 
+std::atomic_uint RssSensor::_global_map_initialization_counter_{0u};
+
 RssSensor::RssSensor(ActorInitializer init) : Sensor(std::move(init)), _on_tick_register_id(0u), _drop_route(false) {}
 
 RssSensor::~RssSensor() {
-  // ensure there is no processing anymore when deleting rss_check object
-  const std::lock_guard<std::mutex> lock(_processing_lock);
-  _rss_check.reset();
+  // ensure there is no processing anymore
+  if (IsListening()) {
+    Stop();
+  }
 }
 
 void RssSensor::RegisterActorConstellationCallback(ActorConstellationCallbackFunctionType callback) {
@@ -68,12 +71,16 @@ void RssSensor::Listen(CallbackFunctionType callback) {
   DEBUG_ASSERT(map != nullptr);
   std::string const open_drive_content = map->GetOpenDrive();
 
-  _rss_check = nullptr;
-  ::ad::map::access::cleanup();
+  auto mapInitializationResult = ::ad::map::access::initFromOpenDriveContent(
+      open_drive_content, 0.2, ::ad::map::intersection::IntersectionType::TrafficLight,
+      ::ad::map::landmark::TrafficLightType::LEFT_STRAIGHT_RED_YELLOW_GREEN);
 
-  ::ad::map::access::initFromOpenDriveContent(open_drive_content, 0.2,
-                                              ::ad::map::intersection::IntersectionType::TrafficLight,
-                                              ::ad::map::landmark::TrafficLightType::LEFT_STRAIGHT_RED_YELLOW_GREEN);
+  if (!mapInitializationResult) {
+    log_error(GetDisplayId(), ": Initialization of map failed");
+    return;
+  }
+
+  _global_map_initialization_counter_++;
 
   if (_rss_actor_constellation_callback == nullptr) {
     _rss_check = std::make_shared<::carla::rss::RssCheck>(max_steering_angle);
@@ -84,15 +91,13 @@ void RssSensor::Listen(CallbackFunctionType callback) {
 
   auto self = boost::static_pointer_cast<RssSensor>(shared_from_this());
 
+  _last_processed_frame=0u;
   log_debug(GetDisplayId(), ": subscribing to tick event");
   _on_tick_register_id = GetEpisode().Lock()->RegisterOnTickEvent(
       [ cb = std::move(callback), weak_self = WeakPtr<RssSensor>(self) ](const auto &snapshot) {
         auto self = weak_self.lock();
         if (self != nullptr) {
-          auto data = self->TickRssSensor(snapshot.GetTimestamp());
-          if (data != nullptr) {
-            cb(std::move(data));
-          }
+          self->TickRssSensor(snapshot.GetTimestamp(), cb);
         }
       });
 }
@@ -106,6 +111,25 @@ void RssSensor::Stop() {
   log_debug(GetDisplayId(), ": unsubscribing from tick event");
   GetEpisode().Lock()->RemoveOnTickEvent(_on_tick_register_id);
   _on_tick_register_id = 0u;
+
+  if ( bool(_rss_check) ) {
+    _rss_check->GetLogger()->info("RssSensor stopping");
+  }
+  // don't remove the braces since they protect the lock_guard
+  {
+     // ensure there is no processing anymore when deleting rss_check object
+    const std::lock_guard<std::mutex> lock(_processing_lock);
+
+    if ( bool(_rss_check) ) {
+      _rss_check->GetLogger()->info("RssSensor delete checker");
+    }
+    _rss_check.reset();
+    auto const map_initialization_counter_value = _global_map_initialization_counter_--;
+    if (map_initialization_counter_value == 0u) {
+      // last one stop listening is cleaning up the map
+      ::ad::map::access::cleanup();
+    }
+  }
 }
 
 void RssSensor::SetLogLevel(const uint8_t &log_level) {
@@ -269,59 +293,84 @@ void RssSensor::DropRoute() {
   _drop_route = true;
 }
 
-SharedPtr<sensor::SensorData> RssSensor::TickRssSensor(const Timestamp &timestamp) {
+void RssSensor::TickRssSensor(const client::Timestamp &timestamp, CallbackFunctionType callback) {
+  if (_processing_lock.try_lock()) {
+    if (!bool(_rss_check)){
+      _processing_lock.unlock();
+      return;
+    }
+    if ((timestamp.frame < _last_processed_frame) && ((_last_processed_frame - timestamp.frame) < 0xffffffffu)) {
+      _processing_lock.unlock();
+      _rss_check->GetLogger()->warn("RssSensor[{}] outdated tick dropped, LastProcessed={}", timestamp.frame, _last_processed_frame);
+      return;
+    }
+    _last_processed_frame = timestamp.frame;
+    SharedPtr<carla::client::ActorList> actors = GetWorld().GetActors();
+
+    auto const settings = GetWorld().GetSettings();
+    if ( settings.synchronous_mode ) {
+      _rss_check->GetLogger()->trace("RssSensor[{}] sync-tick", timestamp.frame);
+      TickRssSensorThreadLocked(timestamp, actors, callback);
+    }
+    else {
+      // store the future to prevent the destructor of the future from blocked waiting
+      _rss_check->GetLogger()->trace("RssSensor[{}] async-tick", timestamp.frame);
+      _tick_future = std::async(&RssSensor::TickRssSensorThreadLocked, this, timestamp, actors, callback);
+    }
+  } else {
+    if (bool(_rss_check)){
+      _rss_check->GetLogger()->debug("RssSensor[{}] tick dropped", timestamp.frame);
+    }
+  }
+}
+
+void RssSensor::TickRssSensorThreadLocked(const client::Timestamp &timestamp,
+                                          SharedPtr<carla::client::ActorList> actors, CallbackFunctionType callback) {
   try {
-    bool result = false;
+    double const time_since_epoch_check_start_ms =
+        std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    if (_drop_route) {
+      _drop_route = false;
+      _rss_check->DropRoute();
+    }
+
+    // check all object<->ego pairs with RSS and calculate proper response
     ::ad::rss::state::ProperResponse response;
     ::ad::rss::state::RssStateSnapshot rss_state_snapshot;
     ::ad::rss::situation::SituationSnapshot situation_snapshot;
     ::ad::rss::world::WorldModel world_model;
     carla::rss::EgoDynamicsOnRoute ego_dynamics_on_route;
-    if (_processing_lock.try_lock()) {
-      spdlog::debug("RssSensor tick: T={}", timestamp.frame);
+    auto const result = _rss_check->CheckObjects(timestamp, actors, GetParent(), response, rss_state_snapshot,
+                                                             situation_snapshot, world_model, ego_dynamics_on_route);
 
-      if ((timestamp.frame < _last_processed_frame) && ((_last_processed_frame - timestamp.frame) < 0xffffffffu))
-      {
-        _processing_lock.unlock();
-        spdlog::warn("RssSensor tick dropped: T={}", timestamp.frame);
-        return nullptr;
-      }
-      _last_processed_frame = timestamp.frame;
-
-      carla::client::World world = GetWorld();
-      SharedPtr<carla::client::ActorList> actors = world.GetActors();
-
-      if (_drop_route) {
-        _drop_route = false;
-        _rss_check->DropRoute();
-      }
-
-      // check all object<->ego pairs with RSS and calculate proper response
-      result = _rss_check->CheckObjects(timestamp, actors, GetParent(), response, rss_state_snapshot,
-                                        situation_snapshot, world_model, ego_dynamics_on_route);
-      _processing_lock.unlock();
-
-      spdlog::debug(
-          "RssSensor response: T={} S:{}->E:{} DeltaT:{}", timestamp.frame,
-          ego_dynamics_on_route.time_since_epoch_check_start_ms, ego_dynamics_on_route.time_since_epoch_check_end_ms,
-          ego_dynamics_on_route.time_since_epoch_check_end_ms - ego_dynamics_on_route.time_since_epoch_check_start_ms);
-      return MakeShared<sensor::data::RssResponse>(timestamp.frame, timestamp.elapsed_seconds, GetTransform(), result,
-                                                   response, rss_state_snapshot, situation_snapshot, world_model,
-                                                   ego_dynamics_on_route);
-    } else {
-      spdlog::debug("RssSensor tick dropped: T={}", timestamp.frame);
-      return nullptr;
+    double const time_since_epoch_check_end_ms =
+        std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count();
+    auto const delta_time_ms = time_since_epoch_check_end_ms - time_since_epoch_check_start_ms;
+    _rss_check->GetLogger()->debug("RssSensor[{}] response: S:{}->E:{} DeltaT:{}", timestamp.frame,
+                                  time_since_epoch_check_start_ms, time_since_epoch_check_end_ms,
+                                  delta_time_ms);
+    _rss_check_timings.push_back(delta_time_ms);
+    while (_rss_check_timings.size() > 10u) {
+      _rss_check_timings.pop_front();
     }
+    double agv_time=0.;
+    for (auto run_time: _rss_check_timings) {
+      agv_time += run_time;
+    }
+    agv_time /= _rss_check_timings.size();
+    _rss_check->GetLogger()->info("RssSensor[{}] runtime {} avg {}", timestamp.frame, delta_time_ms, agv_time);
+    _processing_lock.unlock();
+
+    callback(MakeShared<sensor::data::RssResponse>(timestamp.frame, timestamp.elapsed_seconds, GetTransform(), result,
+                                                 response, rss_state_snapshot, situation_snapshot, world_model,
+                                                   ego_dynamics_on_route));
   } catch (const std::exception &e) {
-    /// @todo do we need to unsubscribe the sensor here?
-    std::cout << e.what() << std::endl;
+    _rss_check->GetLogger()->error("RssSensor[{}] tick exception", timestamp.frame);
     _processing_lock.unlock();
-    spdlog::error("RssSensor tick exception");
-    return nullptr;
   } catch (...) {
+    _rss_check->GetLogger()->error("RssSensor[{}] tick exception", timestamp.frame);
     _processing_lock.unlock();
-    spdlog::error("RssSensor tick exception");
-    return nullptr;
   }
 }
 

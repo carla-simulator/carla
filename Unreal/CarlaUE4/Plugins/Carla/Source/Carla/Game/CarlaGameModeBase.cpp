@@ -224,6 +224,10 @@ void ACarlaGameModeBase::BeginPlay()
     for(UCarlaLight* Light : Lights)
     {
       Light->RegisterLight();
+      if(!Light->HasBegunPlay())
+      {
+        Light->BeginPlay();
+      }
     }
   }
   EnableOverlapEvents();
