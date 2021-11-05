@@ -223,7 +223,7 @@ class LocalPlanner(object):
         # Purge the queue of obsolete waypoints
         veh_location = self._vehicle.get_location()
         vehicle_speed = get_speed(self._vehicle) / 3.6
-        self._min_distance = self._base_min_distance + 0.5 *vehicle_speed
+        self._min_distance = self._base_min_distance + 0.5 * vehicle_speed
 
         num_waypoint_removed = 0
         for waypoint, _ in self._waypoints_queue:

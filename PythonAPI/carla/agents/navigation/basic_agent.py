@@ -88,6 +88,7 @@ class BasicAgent(object):
         Changes the target speed of the agent
             :param speed (float): target speed in Km/h
         """
+        self._target_speed = speed
         self._local_planner.set_speed(speed)
 
     def follow_speed_limits(self, value=True):

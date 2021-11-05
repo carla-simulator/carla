@@ -30,16 +30,15 @@ class BehaviorAgent(BasicAgent):
     are encoded in the agent, from cautious to a more aggressive ones.
     """
 
-    def __init__(self, vehicle, behavior='normal'):
+    def __init__(self, vehicle, behavior='normal', opt_dict={}):
         """
         Constructor method.
 
             :param vehicle: actor to apply to local planner logic onto
-            :param ignore_traffic_light: boolean to ignore any traffic light
             :param behavior: type of agent to apply
         """
 
-        super(BehaviorAgent, self).__init__(vehicle)
+        super(BehaviorAgent, self).__init__(vehicle, opt_dict=opt_dict)
         self._look_ahead_steps = 0
 
         # Vehicle information
