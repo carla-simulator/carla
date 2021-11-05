@@ -29,7 +29,7 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 # -- Get ad-rss -------------------------------------------
 # ==============================================================================
 
-ADRSS_VERSION=4.4.2
+ADRSS_VERSION=4.4.3
 ADRSS_BASENAME=ad-rss-${ADRSS_VERSION}
 ADRSS_COLCON_WORKSPACE="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}"
 ADRSS_SRC_DIR="${ADRSS_COLCON_WORKSPACE}/src"
