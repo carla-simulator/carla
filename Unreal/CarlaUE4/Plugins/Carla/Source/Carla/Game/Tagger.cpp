@@ -104,10 +104,10 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
 
-    // Don't instance segment non-things (i.e., stuff)
-    // if (!IsThing(Label)) {
-    //   continue;
-    // }
+    if(!Component->IsVisible() || !Component->GetStaticMesh())
+    {
+      continue;
+    }
 
     // Find a tagged component that is attached to this component
     UTaggedComponent *TaggedComponent = NULL;
@@ -154,10 +154,10 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
 
-    // Don't instance segment non-things (i.e., stuff)
-    // if (!IsThing(Label)) {
-    //   continue;
-    // }
+    if(!Component->IsVisible() || !Component->GetSkeletalMeshRenderData())
+    {
+      continue;
+    }
 
     // Find a tagged component that is attached to this component
     UTaggedComponent *TaggedComponent = NULL;

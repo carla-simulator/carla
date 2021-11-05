@@ -39,6 +39,10 @@ private:
   FPrimitiveSceneProxy * CreateSceneProxy(USkeletalMeshComponent * SkeletalMeshComponent);
   FPrimitiveSceneProxy * CreateSceneProxy(UHierarchicalInstancedStaticMeshComponent * MeshComponent);
   FPrimitiveSceneProxy * CreateSceneProxy(UInstancedStaticMeshComponent * MeshComponent);
+
+  // small hack to allow unreal to initialize the base component in skeletal meshes
+  bool bShouldWaitFrame = true;
+  int NumFramesToWait = 2;
 };
 
 class FTaggedStaticMeshSceneProxy : public FStaticMeshSceneProxy

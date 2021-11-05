@@ -2,6 +2,7 @@
 #include "TaggedComponent.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
+#include "SkeletalRenderPublic.h"
 
 //
 // UTaggedComponent
@@ -125,30 +126,29 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UStaticMeshComponent *
 
 FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(USkeletalMeshComponent * SkeletalMeshComponent)
 {
-
-  FSkeletalMeshRenderData * SkeletalMeshRenderData = SkeletalMeshComponent->GetSkeletalMeshRenderData();
-
-  // Only create a scene proxy for rendering if properly initialized
-  if (SkeletalMeshRenderData == NULL)
+  if (bShouldWaitFrame)
   {
-      UE_LOG(LogCarla, Error, TEXT("Failed to create scene proxy for skeletal mesh component: %s"), *SkeletalMeshComponent->GetReadableName());
-      return NULL;
+    return nullptr;
   }
+  ERHIFeatureLevel::Type SceneFeatureLevel = GetWorld()->FeatureLevel;
+	FSkeletalMeshRenderData* SkelMeshRenderData = SkeletalMeshComponent->GetSkeletalMeshRenderData();
 
-  if (SkeletalMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->PredictedLODLevel) == false)
-  {
-      UE_LOG(LogCarla, Error, TEXT("Failed to create scene proxy for skeletal mesh component: %s"), *SkeletalMeshComponent->GetReadableName());
-      return NULL;
-  }
-
-  if (SkeletalMeshComponent->MeshObject == NULL)
-  {
-      UE_LOG(LogCarla, Error, TEXT("Failed to create scene proxy for skeletal mesh component: %s"), *SkeletalMeshComponent->GetReadableName());
-      return NULL;
-  }
-
-  // FIXME: How does this allocation get freed?
-  return new FTaggedSkeletalMeshSceneProxy(SkeletalMeshComponent, SkeletalMeshRenderData, TaggedMID);
+	// Only create a scene proxy for rendering if properly initialized
+	if (SkelMeshRenderData &&
+		SkelMeshRenderData->LODRenderData.IsValidIndex(SkeletalMeshComponent->PredictedLODLevel) &&
+		!SkeletalMeshComponent->bHideSkin &&
+		SkeletalMeshComponent->MeshObject)
+	{
+		// Only create a scene proxy if the bone count being used is supported, or if we don't have a skeleton (this is the case with destructibles)
+		int32 MinLODIndex = SkeletalMeshComponent->ComputeMinLOD();
+		int32 MaxBonesPerChunk = SkelMeshRenderData->GetMaxBonesPerSection(MinLODIndex);
+		int32 MaxSupportedNumBones = SkeletalMeshComponent->MeshObject->IsCPUSkinned() ? MAX_int32 : GetFeatureLevelMaxNumberOfBones(SceneFeatureLevel);
+		if (MaxBonesPerChunk <= MaxSupportedNumBones)
+		{
+			return new FTaggedSkeletalMeshSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, TaggedMID);
+		}
+	}
+  return nullptr;
 }
 
 FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UHierarchicalInstancedStaticMeshComponent * MeshComponent)
@@ -199,7 +199,16 @@ void UTaggedComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
   // // TODO: Try removing this
   if (bSkeletalMesh)
   {
+    // MarkRenderTransformDirty();
     MarkRenderStateDirty();
+    if(bShouldWaitFrame)
+    {
+      if(NumFramesToWait < 0)
+      {
+        bShouldWaitFrame = false;
+      }
+      NumFramesToWait--;
+    }
   }
 }
 
@@ -225,7 +234,7 @@ FPrimitiveViewRelevance FTaggedStaticMeshSceneProxy::GetViewRelevance(const FSce
 {
   FPrimitiveViewRelevance ViewRelevance = FStaticMeshSceneProxy::GetViewRelevance(View);
 
-  ViewRelevance.bDrawRelevance = !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
 
   return ViewRelevance;
 }
@@ -252,7 +261,7 @@ FPrimitiveViewRelevance FTaggedSkeletalMeshSceneProxy::GetViewRelevance(const FS
 {
   FPrimitiveViewRelevance ViewRelevance = FSkeletalMeshSceneProxy::GetViewRelevance(View);
 
-  ViewRelevance.bDrawRelevance = !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
 
   return ViewRelevance;
 }
@@ -277,7 +286,7 @@ FPrimitiveViewRelevance FTaggedInstancedStaticMeshSceneProxy::GetViewRelevance(c
 {
   FPrimitiveViewRelevance ViewRelevance = FInstancedStaticMeshSceneProxy::GetViewRelevance(View);
 
-  ViewRelevance.bDrawRelevance = !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
 
   return ViewRelevance;
 }
@@ -303,7 +312,7 @@ FPrimitiveViewRelevance FTaggedHierarchicalStaticMeshSceneProxy::GetViewRelevanc
 {
   FPrimitiveViewRelevance ViewRelevance = FHierarchicalStaticMeshSceneProxy::GetViewRelevance(View);
 
-  ViewRelevance.bDrawRelevance = !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
 
   return ViewRelevance;
 }
