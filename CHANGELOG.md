@@ -1,4 +1,5 @@
 ## Latest
+  * Fixed RSSSensor: made client side calculations threaded
   * Added the option for users to set a path using locations to a vehicle controlled by the Traffic Manager.
   * Added a RoadOption element in each SimpleWaypoint to specify which action will the vehicle perform if it follows that route.
   * Added the option for users to set a route using RoadOption elements to a vehicle controlled by the Traffic Manager.
