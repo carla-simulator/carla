@@ -660,6 +660,16 @@
       note: >
         Should be set before pedestrians are spawned.
     # --------------------------------------
+    - def_name: set_pedestrians_seed
+      params:
+      - param_name: seed
+        type: int
+        doc: >
+          Sets the seed to use for any random number generated in relation to pedestrians.
+      note: >
+        Should be set before pedestrians are spawned.
+        If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
+    # --------------------------------------
     - def_name: __str__
       return:
         string

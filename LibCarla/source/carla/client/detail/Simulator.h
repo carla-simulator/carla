@@ -296,6 +296,8 @@ namespace detail {
 
     void SetPedestriansCrossFactor(float percentage);
 
+    void SetPedestriansSeed(unsigned int seed);
+
     /// @}
     // =========================================================================
     /// @name General operations with actors
