@@ -16,6 +16,7 @@
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
 #include "VehicleAnimInstance.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
 
 #include "CoreMinimal.h"
@@ -154,6 +155,7 @@ public:
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSimulatePhysics(bool enabled);
 
   void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
@@ -264,11 +266,14 @@ protected:
   UFUNCTION(BlueprintCallable, CallInEditor)
   void AdjustVehicleBounds();
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  TArray<float> DoorAnimMaxAngle;
+  UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
+  TArray<FName> ConstraintComponentNames;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Animation")
-  TArray<float> DoorAnimAlpha;
+  UPROPERTY(Category="Door Animation", EditAnywhere, BlueprintReadWrite)
+  float DoorOpenStrength = 100.0f;
+
+  UFUNCTION(BlueprintCallable, CallInEditor)
+  void ResetConstraints();
 
 private:
 
@@ -310,11 +315,11 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoor(const EVehicleDoor DoorIdx);
 
-  UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
-  void OpenDoorAnim(const EVehicleDoor DoorIdx);
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void OpenDoorPhys(const EVehicleDoor DoorIdx);
 
-  UFUNCTION(BlueprintNativeEvent, Category = "CARLA Wheeled Vehicle")
-  void CloseDoorAnim(const EVehicleDoor DoorIdx);
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void CloseDoorPhys(const EVehicleDoor DoorIdx);
 
   virtual FVector GetVelocity() const override;
 
@@ -331,5 +336,18 @@ private:
   // Small workarround to allow optional CarSim plugin usage
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   UBaseCarlaMovementComponent * BaseMovementComponent = nullptr;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TArray<UPhysicsConstraintComponent*> ConstraintsComponents;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TMap<UPhysicsConstraintComponent*, UPrimitiveComponent*> ConstraintDoor;
+
+  // container of the initial transform of the door, used to reset its position
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TMap<UPrimitiveComponent*, FTransform> DoorComponentsTransform;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TMap<UPrimitiveComponent*, UPhysicsConstraintComponent*> CollisionDisableConstraints;
 
 };

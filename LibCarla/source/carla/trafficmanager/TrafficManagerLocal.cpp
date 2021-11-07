@@ -77,6 +77,13 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       random_devices,
                                       local_map)),
 
+    vehicle_light_stage(VehicleLightStage(vehicle_id_list,
+                                          simulation_state,
+                                          buffer_map,
+                                          parameters,
+                                          world,
+                                          control_frame)),
+
     alsm(ALSM(registered_vehicles,
               buffer_map,
               track_traffic,
@@ -89,6 +96,7 @@ TrafficManagerLocal::TrafficManagerLocal(
               collision_stage,
               traffic_light_stage,
               motion_plan_stage,
+              vehicle_light_stage,
               random_devices)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
@@ -210,10 +218,14 @@ void TrafficManagerLocal::Run() {
     tl_frame.clear();
     tl_frame.resize(number_of_vehicles);
     control_frame.clear();
+    // Reserve two frames for each vehicle: one for the ApplyVehicleControl command,
+    // and one for the optional SetVehicleLightState command
+    control_frame.reserve(2 * number_of_vehicles);
+    // Resize to accomodate at least all ApplyVehicleControl commands,
+    // that will be inserted by the motion_plan_stage stage.
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
-
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
@@ -224,6 +236,7 @@ void TrafficManagerLocal::Run() {
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
+      vehicle_light_stage.Update(index);
     }
 
     registration_lock.unlock();
@@ -337,6 +350,11 @@ void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percent
   parameters.SetGlobalPercentageSpeedDifference(percentage);
 }
 
+/// Method to set the automatical management of the vehicle lights
+void TrafficManagerLocal::SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) {
+  parameters.SetUpdateVehicleLightState(actor, do_update);
+}
+
 void TrafficManagerLocal::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
   parameters.SetCollisionDetection(reference_actor, other_actor, detect_collision);
 }
@@ -377,6 +395,14 @@ void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const fl
   parameters.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerLocal::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomLeftLaneChangePercentage(actor, percentage);
+}
+
+void TrafficManagerLocal::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomRightLaneChangePercentage(actor, percentage);
+}
+
 void TrafficManagerLocal::SetHybridPhysicsMode(const bool mode_switch) {
   parameters.SetHybridPhysicsMode(mode_switch);
 }
@@ -389,6 +415,30 @@ void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
   parameters.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerLocal::SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
+  parameters.SetCustomPath(actor, path, empty_buffer);
+}
+
+void TrafficManagerLocal::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+  parameters.RemoveUploadPath(actor_id, remove_path);
+}
+
+void TrafficManagerLocal::UpdateUploadPath(const ActorId &actor_id, const Path path) {
+  parameters.UpdateUploadPath(actor_id, path);
+}
+
+void TrafficManagerLocal::SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+  parameters.SetImportedRoute(actor, route, empty_buffer);
+}
+
+void TrafficManagerLocal::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  parameters.RemoveImportedRoute(actor_id, remove_path);
+}
+
+void TrafficManagerLocal::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  parameters.UpdateImportedRoute(actor_id, route);
+}
+
 void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
   parameters.SetRespawnDormantVehicles(mode_switch);
 }
@@ -399,6 +449,14 @@ void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_
 
 void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
   parameters.SetMaxBoundaries(lower, upper);
+}
+
+Action TrafficManagerLocal::GetNextAction(const ActorId &actor_id) {
+  return localization_stage.ComputeNextAction(actor_id);
+}
+
+ActionBuffer TrafficManagerLocal::GetActionBuffer(const ActorId &actor_id) {
+  return localization_stage.ComputeActionBuffer(actor_id);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {

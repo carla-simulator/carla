@@ -29,7 +29,7 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 # -- Get ad-rss -------------------------------------------
 # ==============================================================================
 
-ADRSS_VERSION=4.4.0
+ADRSS_VERSION=4.4.3
 ADRSS_BASENAME=ad-rss-${ADRSS_VERSION}
 ADRSS_COLCON_WORKSPACE="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}"
 ADRSS_SRC_DIR="${ADRSS_COLCON_WORKSPACE}/src"
@@ -42,7 +42,7 @@ if [[ ! -d "${ADRSS_SRC_DIR}" ]]; then
 
   pushd "${ADRSS_SRC_DIR}" >/dev/null
   git clone --depth=1 -b v1.7.0 https://github.com/gabime/spdlog.git
-  git clone --depth=1 -b v2.3.0 https://github.com/carla-simulator/map.git
+  git clone --depth=1 -b v2.4.5_hotfix https://github.com/carla-simulator/map.git
   git clone --depth=1 -b v${ADRSS_VERSION} https://github.com/intel/ad-rss-lib.git
   popd
 

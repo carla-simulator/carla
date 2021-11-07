@@ -88,6 +88,12 @@ public:
     _client->call("set_global_percentage_speed_difference", percentage);
   }
 
+  /// Method to set the automatical management of the vehicle lights
+  void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("update_vehicle_lights", std::move(_actor), do_update);
+  }
+
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {
     DEBUG_ASSERT(_client != nullptr);
@@ -169,10 +175,22 @@ public:
     _client->call("set_global_distance_to_leading_vehicle",distance);
   }
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("set_percentage_keep_right_rule", actor, percentage);
+    _client->call("keep_right_rule_percentage", actor, percentage);
+  }
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const carla::rpc::Actor &actor, const float percentage) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("random_left_lanechange_percentage", actor, percentage);
+  }
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const carla::rpc::Actor &actor, const float percentage) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("random_right_lanechange_percentage", actor, percentage);
   }
 
   /// Method to set hybrid physics mode.
@@ -199,6 +217,42 @@ public:
     _client->call("set_osm_mode", mode_switch);
   }
 
+  /// Method to set our own imported path.
+  void SetCustomPath(const carla::rpc::Actor &actor, const Path path, const bool empty_buffer) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_path", actor, path, empty_buffer);
+  }
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("remove_custom_path", actor_id, remove_path);
+  }
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("update_custom_path", actor_id, path);
+  }
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const carla::rpc::Actor &actor, const Route route, const bool empty_buffer) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_imported_route", actor, route, empty_buffer);
+  }
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("remove_imported_route", actor_id, remove_path);
+  }
+
+  /// Method to update an already set list of points.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("update_imported_route", actor_id, route);
+  }
+
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch) {
     DEBUG_ASSERT(_client != nullptr);
@@ -215,6 +269,20 @@ public:
   void SetMaxBoundaries(const float lower, const float upper) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("set_max_boundaries", lower, upper);
+  }
+
+  /// Method to get the vehicle's next action.
+  Action GetNextAction(const ActorId &actor_id) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("get_next_action", actor_id);
+    return Action();
+  }
+
+  /// Method to get the vehicle's action buffer.
+  ActionBuffer GetActionBuffer(const ActorId &actor_id) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("get_all_actions", actor_id);
+    return ActionBuffer();
   }
 
   void ShutDown() {

@@ -65,6 +65,54 @@ public:
     }
   }
 
+  /// Method to set our own imported path.
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetCustomPath(actor, path, empty_buffer);
+    }
+  }
+
+  /// Method to remove a path.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->RemoveUploadPath(actor_id, remove_path);
+    }
+  }
+
+  /// Method to update an already set path.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->UpdateUploadPath(actor_id, path);
+    }
+  }
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->SetImportedRoute(actor, route, empty_buffer);
+    }
+  }
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->RemoveImportedRoute(actor_id, remove_path);
+    }
+  }
+
+  /// Method to update an already set route.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      tm_ptr->UpdateImportedRoute(actor_id, route);
+    }
+  }
+
   /// Method to set if we are automatically respawning vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
@@ -135,6 +183,14 @@ public:
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
       tm_ptr->SetGlobalPercentageSpeedDifference(percentage);
+    }
+  }
+
+  /// Set the automatical management of the vehicle lights
+  void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetUpdateVehicleLights(actor, do_update);
     }
   }
 
@@ -237,11 +293,27 @@ public:
     }
   }
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
       tm_ptr->SetKeepRightPercentage(actor, percentage);
+    }
+  }
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetRandomLeftLaneChangePercentage(actor, percentage);
+    }
+  }
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetRandomRightLaneChangePercentage(actor, percentage);
     }
   }
 
@@ -254,6 +326,28 @@ public:
   }
 
   void ShutDown();
+
+  /// Method to get the next action.
+  Action GetNextAction(const ActorId &actor_id) {
+    Action next_action;
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      next_action = tm_ptr->GetNextAction(actor_id);
+      return next_action;
+    }
+    return next_action;
+  }
+
+  /// Method to get the action buffer.
+  ActionBuffer GetActionBuffer(const ActorId &actor_id) {
+    ActionBuffer action_buffer;
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      action_buffer = tm_ptr->GetActionBuffer(actor_id);
+      return action_buffer;
+    }
+    return action_buffer;
+  }
 
 private:
 

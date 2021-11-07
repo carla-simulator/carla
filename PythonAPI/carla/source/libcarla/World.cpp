@@ -125,6 +125,7 @@ void export_world() {
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
+  namespace csd = carla::sensor::data;
 
   class_<cc::Timestamp>("Timestamp")
     .def(init<size_t, double, double, double>(
@@ -245,6 +246,39 @@ void export_world() {
     .value("All", cr::MapLayer::All)
   ;
 
+  enum_<cr::MaterialParameter>("MaterialParameter")
+    .value("Normal", cr::MaterialParameter::Tex_Normal)
+    .value("AO_Roughness_Metallic_Emissive", cr::MaterialParameter::Tex_Ao_Roughness_Metallic_Emissive)
+    .value("Diffuse", cr::MaterialParameter::Tex_Diffuse)
+    .value("Emissive", cr::MaterialParameter::Tex_Emissive)
+  ;
+
+  class_<cr::TextureColor>("TextureColor")
+    .def(init<uint32_t, uint32_t>())
+    .add_property("width", &cr::TextureColor::GetWidth)
+    .add_property("height", &cr::TextureColor::GetHeight)
+    .def("set_dimensions", &cr::TextureColor::SetDimensions)
+    .def("get", +[](const cr::TextureColor &self, int x, int y) -> csd::Color{
+      return self.At(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
+    })
+    .def("set", +[](cr::TextureColor &self, int x, int y, csd::Color& value) {
+      self.At(static_cast<uint32_t>(x), static_cast<uint32_t>(y)) = value;
+    })
+  ;
+
+  class_<cr::TextureFloatColor>("TextureFloatColor")
+    .def(init<uint32_t, uint32_t>())
+    .add_property("width", &cr::TextureFloatColor::GetWidth)
+    .add_property("height", &cr::TextureFloatColor::GetHeight)
+    .def("set_dimensions", &cr::TextureFloatColor::SetDimensions)
+    .def("get", +[](const cr::TextureFloatColor &self, int x, int y) -> cr::FloatColor{
+      return self.At(static_cast<uint32_t>(x), static_cast<uint32_t>(y));
+    })
+    .def("set", +[](cr::TextureFloatColor &self, int x, int y, cr::FloatColor& value) {
+      self.At(static_cast<uint32_t>(x), static_cast<uint32_t>(y)) = value;
+    })
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -285,6 +319,7 @@ void export_world() {
     .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
     .def("tick", &Tick, (arg("seconds")=0.0))
     .def("set_pedestrians_cross_factor", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansCrossFactor, float), (arg("percentage")))
+    .def("set_pedestrians_seed", CALL_WITHOUT_GIL_1(cc::World, SetPedestriansSeed, unsigned int), (arg("seed")))
     .def("get_traffic_sign", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficSign, cc::Landmark), arg("landmark"))
     .def("get_traffic_light", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLight, cc::Landmark), arg("landmark"))
     .def("get_traffic_light_from_opendrive_id", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLightFromOpenDRIVE, const carla::road::SignId&), arg("traffic_light_id"))
@@ -299,6 +334,19 @@ void export_world() {
     .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
+    .def("get_names_of_all_objects", CALL_RETURNING_LIST(cc::World, GetNamesOfAllObjects))
+    .def("apply_color_texture_to_object", &cc::World::ApplyColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
+    .def("apply_float_color_texture_to_object", &cc::World::ApplyFloatColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
+    .def("apply_textures_to_object", &cc::World::ApplyTexturesToObject, (arg("object_name"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
+    .def("apply_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureColor& Texture) {
+        self.ApplyColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+      }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
+    .def("apply_float_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureFloatColor& Texture) {
+        self.ApplyFloatColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+      }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
+    .def("apply_textures_to_objects", +[](cc::World &self, boost::python::list &list, const cr::TextureColor& diffuse_texture, const cr::TextureFloatColor& emissive_texture, const cr::TextureFloatColor& normal_texture, const cr::TextureFloatColor& ao_roughness_metallic_emissive_texture) {
+        self.ApplyTexturesToObjects(PythonLitstToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
+      }, (arg("objects_name_list"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def(self_ns::str(self_ns::self))
   ;
 

@@ -123,10 +123,16 @@ def main():
         type=int,
         help='Set random device seed and deterministic mode for Traffic Manager')
     argparser.add_argument(
+        '--seedw',
+        metavar='S',
+        default=0,
+        type=int,
+        help='Set the seed for pedestrians module')
+    argparser.add_argument(
         '--car-lights-on',
         action='store_true',
         default=False,
-        help='Enable car lights')
+        help='Enable automatic car light management')
     argparser.add_argument(
         '--hero',
         action='store_true',
@@ -214,7 +220,6 @@ def main():
         # @todo cannot import these directly.
         SpawnActor = carla.command.SpawnActor
         SetAutopilot = carla.command.SetAutopilot
-        SetVehicleLightState = carla.command.SetVehicleLightState
         FutureActor = carla.command.FutureActor
 
         # --------------
@@ -238,15 +243,9 @@ def main():
             else:
                 blueprint.set_attribute('role_name', 'autopilot')
 
-            # prepare the light state of the cars to spawn
-            light_state = vls.NONE
-            if args.car_lights_on:
-                light_state = vls.Position | vls.LowBeam | vls.LowBeam
-
             # spawn the cars and set their autopilot and light state all together
             batch.append(SpawnActor(blueprint, transform)
-                .then(SetAutopilot(FutureActor, True, traffic_manager.get_port()))
-                .then(SetVehicleLightState(FutureActor, light_state)))
+                .then(SetAutopilot(FutureActor, True, traffic_manager.get_port())))
 
         for response in client.apply_batch_sync(batch, synchronous_master):
             if response.error:
@@ -254,12 +253,21 @@ def main():
             else:
                 vehicles_list.append(response.actor_id)
 
+        # Set automatic vehicle lights update if specified
+        if args.car_lights_on:
+            all_vehicle_actors = world.get_actors(vehicles_list)
+            for actor in all_vehicle_actors:
+                traffic_manager.update_vehicle_lights(actor, True)
+
         # -------------
         # Spawn Walkers
         # -------------
         # some settings
         percentagePedestriansRunning = 0.0      # how many pedestrians will run
         percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
+        if args.seedw:
+            world.set_pedestrians_seed(args.seedw)
+            random.seed(args.seedw)
         # 1. take all the random locations to spawn
         spawn_points = []
         for i in range(args.number_of_walkers):

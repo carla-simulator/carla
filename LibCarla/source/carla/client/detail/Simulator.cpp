@@ -308,6 +308,13 @@ namespace detail {
     navigation->SetPedestriansCrossFactor(percentage);
   }
 
+  void Simulator::SetPedestriansSeed(unsigned int seed) {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->SetPedestriansSeed(seed);
+  }
+
   // ===========================================================================
   // -- General operations with actors -----------------------------------------
   // ===========================================================================
@@ -378,6 +385,28 @@ namespace detail {
 
   void Simulator::FreezeAllTrafficLights(bool frozen) {
     _client.FreezeAllTrafficLights(frozen);
+  }
+
+  // =========================================================================
+  /// -- Texture updating operations
+  // =========================================================================
+
+  void Simulator::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture) {
+    _client.ApplyColorTextureToObjects(objects_name, parameter, Texture);
+  }
+
+  void Simulator::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture) {
+    _client.ApplyColorTextureToObjects(objects_name, parameter, Texture);
+  }
+
+  std::vector<std::string> Simulator::GetNamesOfAllObjects() const {
+    return _client.GetNamesOfAllObjects();
   }
 
 } // namespace detail
