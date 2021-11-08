@@ -32,6 +32,7 @@
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/BoneTransformDataIn.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
@@ -53,11 +54,14 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehicleLightStateList.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
+#include <carla/rpc/Texture.h>
+#include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
@@ -329,6 +333,99 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("opendrive could not be correctly parsed");
     }
     return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_color_texture_to_objects) << [this](
+      const std::vector<std::string> &actors_name,
+      const cr::MaterialParameter& parameter,
+      const cr::TextureColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<AActor*> ActorsToPaint;
+    for(const std::string& actor_name : actors_name)
+    {
+      AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+      if (ActorToPaint)
+      {
+        ActorsToPaint.Add(ActorToPaint);
+      }
+    }
+
+    if(!ActorsToPaint.Num())
+    {
+      RESPOND_ERROR("unable to find Actor to apply the texture");
+    }
+
+    UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
+
+    for(AActor* ActorToPaint : ActorsToPaint)
+    {
+      GameMode->ApplyTextureToActor(
+          ActorToPaint,
+          UETexture,
+          parameter);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_float_color_texture_to_objects) << [this](
+      const std::vector<std::string> &actors_name,
+      const cr::MaterialParameter& parameter,
+      const cr::TextureFloatColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<AActor*> ActorsToPaint;
+    for(const std::string& actor_name : actors_name)
+    {
+      AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+      if (ActorToPaint)
+      {
+        ActorsToPaint.Add(ActorToPaint);
+      }
+    }
+
+    if(!ActorsToPaint.Num())
+    {
+      RESPOND_ERROR("unable to find Actor to apply the texture");
+    }
+
+    UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
+
+    for(AActor* ActorToPaint : ActorsToPaint)
+    {
+      GameMode->ApplyTextureToActor(
+          ActorToPaint,
+          UETexture,
+          parameter);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_names_of_all_objects) << [this]() -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<FString> NamesFString = GameMode->GetNamesOfAllActors();
+    std::vector<std::string> NamesStd;
+    for (const FString &Name : NamesFString)
+    {
+      NamesStd.emplace_back(cr::FromFString(Name));
+    }
+    return NamesStd;
   };
 
   // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1288,28 +1385,118 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(apply_bone_control_to_walker) << [this](
-      cr::ActorId ActorId,
-      cr::WalkerBoneControl Control) -> R<void>
+  BIND_SYNC(get_bones_transform) << [this](
+      cr::ActorId ActorId) -> R<cr::WalkerBoneControlOut>
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
       return RespondError(
-          "apply_bone_control_to_walker",
+          "get_bones_transform",
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
+    FWalkerBoneControlOut Bones;
     ECarlaServerResponse Response =
-        CarlaActor->ApplyBoneControlToWalker(Control);
+        CarlaActor->GetBonesTransform(Bones);
     if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
-          "apply_bone_control_to_walker",
+          "get_bones_transform",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
+    
+    std::vector<carla::rpc::BoneTransformDataOut> BoneData;
+    for (auto Bone : Bones.BoneTransforms) 
+    {
+      carla::rpc::BoneTransformDataOut Data;
+      Data.bone_name = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
+      FWalkerBoneControlOutData Transforms = Bone.Get<1>();
+      Data.world = Transforms.World;
+      Data.component = Transforms.Component;
+      Data.relative = Transforms.Relative;
+      BoneData.push_back(Data);
+    }
+    return carla::rpc::WalkerBoneControlOut(BoneData);
+  };
+
+  BIND_SYNC(set_bones_transform) << [this](
+      cr::ActorId ActorId,
+      carla::rpc::WalkerBoneControlIn Bones) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_bones_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    FWalkerBoneControlIn Bones2 = FWalkerBoneControlIn(Bones);
+    ECarlaServerResponse Response = CarlaActor->SetBonesTransform(Bones2);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_bones_transform",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(blend_pose) << [this](
+      cr::ActorId ActorId,
+      float Blend) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "blend_pose",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response = CarlaActor->BlendPose(Blend);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "blend_pose",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_pose_from_animation) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_pose_from_animation",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response = CarlaActor->GetPoseFromAnimation();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_pose_from_animation",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
     return R<void>::Success();
   };
 
@@ -2020,7 +2207,7 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
   int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
   int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
 
-  UE_LOG(LogCarla, Error, TEXT("FCommandLine %s"), FCommandLine::Get());
+  UE_LOG(LogCarla, Log, TEXT("FCommandLine %s"), FCommandLine::Get());
 
   if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
   {
@@ -2031,7 +2218,7 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
     StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
   }
 
-  UE_LOG(LogCarla, Error, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
+  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
         NumberOfWorkerThreads, RPCThreads, StreamingThreads);
 
   Pimpl->Server.AsyncRun(RPCThreads);

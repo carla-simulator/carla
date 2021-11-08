@@ -7,8 +7,10 @@
 #include "Carla.h"
 #include "Carla/Trigger/TriggerFactory.h"
 
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Trigger/FrictionTrigger.h"
 
 // =============================================================================

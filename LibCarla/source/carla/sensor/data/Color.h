@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/rpc/Color.h"
+#include "carla/rpc/FloatColor.h"
 
 #include <cstdint>
 
@@ -36,11 +37,15 @@ namespace data {
     operator rpc::Color() const {
       return {r, g, b};
     }
+    operator rpc::FloatColor() const {
+      return {r/255.f, g/255.f, b/255.f, a/255.f};
+    }
 
     uint8_t b = 0u;
     uint8_t g = 0u;
     uint8_t r = 0u;
     uint8_t a = 0u;
+    MSGPACK_DEFINE_ARRAY(r, g, b, a);
   };
 #pragma pack(pop)
 

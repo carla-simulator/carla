@@ -15,7 +15,7 @@ from shapely.geometry import Polygon
 
 from agents.navigation.local_planner import LocalPlanner
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.tools.misc import get_speed, is_within_distance, get_trafficlight_trigger_location
+from agents.tools.misc import get_speed, is_within_distance, get_trafficlight_trigger_location, compute_distance
 
 
 class BasicAgent(object):
@@ -167,7 +167,7 @@ class BasicAgent(object):
 
         # Check for possible vehicle obstacles
         max_vehicle_distance = self._base_vehicle_threshold + vehicle_speed
-        affected_by_vehicle, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
+        affected_by_vehicle, _, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
         if affected_by_vehicle:
             hazard_detected = True
 
@@ -249,7 +249,7 @@ class BasicAgent(object):
 
         return (False, None)
 
-    def _vehicle_obstacle_detected(self, vehicle_list=None, max_distance=None):
+    def _vehicle_obstacle_detected(self, vehicle_list=None, max_distance=None, up_angle_th=90, low_angle_th=0, lane_offset=0):
         """
         Method to check if there is a vehicle in front of the agent blocking its path.
 
@@ -259,7 +259,7 @@ class BasicAgent(object):
                 If None, the base threshold value is used
         """
         if self._ignore_vehicles:
-            return (False, None)
+            return (False, None, -1)
 
         if not vehicle_list:
             vehicle_list = self._world.get_actors().filter("*vehicle*")
@@ -269,6 +269,10 @@ class BasicAgent(object):
 
         ego_transform = self._vehicle.get_transform()
         ego_wpt = self._map.get_waypoint(self._vehicle.get_location())
+
+        # Get the right offset
+        if ego_wpt.lane_id < 0 and lane_offset != 0:
+            lane_offset *= -1
 
         # Get the transform of the front of the ego
         ego_forward_vector = ego_transform.get_forward_vector()
@@ -286,11 +290,11 @@ class BasicAgent(object):
             # Simplified version for outside junctions
             if not ego_wpt.is_junction or not target_wpt.is_junction:
 
-                if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id:
+                if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id  + lane_offset:
                     next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=3)[0]
                     if not next_wpt:
                         continue
-                    if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id:
+                    if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id  + lane_offset:
                         continue
 
                 target_forward_vector = target_transform.get_forward_vector()
@@ -301,8 +305,8 @@ class BasicAgent(object):
                     y=target_extent * target_forward_vector.y,
                 )
 
-                if is_within_distance(target_rear_transform, ego_front_transform, max_distance, [0, 90]):
-                    return (True, target_vehicle)
+                if is_within_distance(target_rear_transform, ego_front_transform, max_distance, [low_angle_th, up_angle_th]):
+                    return (True, target_vehicle, compute_distance(target_transform.location, ego_transform.location))
 
             # Waypoints aren't reliable, check the proximity of the vehicle to the route
             else:
@@ -327,7 +331,7 @@ class BasicAgent(object):
 
                 if len(route_bb) < 3:
                     # 2 points don't create a polygon, nothing to check
-                    return (False, None)
+                    return (False, None, -1)
                 ego_polygon = Polygon(route_bb)
 
                 # Compare the two polygons
@@ -344,8 +348,8 @@ class BasicAgent(object):
                     target_polygon = Polygon(target_list)
 
                     if ego_polygon.intersects(target_polygon):
-                        return (True, target_vehicle)
+                        return (True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))
 
-                return (False, None)
+                return (False, None, -1)
 
-        return (False, None)
+        return (False, None, -1)

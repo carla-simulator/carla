@@ -90,6 +90,25 @@ void Parameters::SetKeepRightPercentage(const ActorPtr &actor, const float perce
   perc_keep_right.AddEntry(entry);
 }
 
+void Parameters::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+
+  const auto entry = std::make_pair(actor->GetId(), percentage);
+  perc_random_left.AddEntry(entry);
+}
+
+void Parameters::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+
+  const auto entry = std::make_pair(actor->GetId(), percentage);
+  perc_random_right.AddEntry(entry);
+
+}
+
+void Parameters::SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update) {
+
+  const auto entry = std::make_pair(actor->GetId(), do_update);
+  auto_update_vehicle_lights.AddEntry(entry);
+}
+
 void Parameters::SetAutoLaneChange(const ActorPtr &actor, const bool enable) {
 
   const auto entry = std::make_pair(actor->GetId(), enable);
@@ -153,6 +172,48 @@ void Parameters::SetOSMMode(const bool mode_switch) {
   osm_mode.store(mode_switch);
 }
 
+void Parameters::SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
+  const auto entry = std::make_pair(actor->GetId(), path);
+  custom_path.AddEntry(entry);
+  const auto entry2 = std::make_pair(actor->GetId(), empty_buffer);
+  upload_path.AddEntry(entry2);
+}
+
+void Parameters::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+  if (!remove_path) {
+    upload_path.RemoveEntry(actor_id);
+  } else {
+    custom_path.RemoveEntry(actor_id);
+  }
+}
+
+void Parameters::UpdateUploadPath(const ActorId &actor_id, const Path path) {
+  custom_path.RemoveEntry(actor_id);
+  const auto entry = std::make_pair(actor_id, path);
+  custom_path.AddEntry(entry);
+}
+
+void Parameters::SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+  const auto entry = std::make_pair(actor->GetId(), route);
+  custom_route.AddEntry(entry);
+  const auto entry2 = std::make_pair(actor->GetId(), empty_buffer);
+  upload_route.AddEntry(entry2);
+}
+
+void Parameters::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  if (!remove_path) {
+    upload_route.RemoveEntry(actor_id);
+  } else {
+    custom_route.RemoveEntry(actor_id);
+  }
+}
+
+void Parameters::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  custom_route.RemoveEntry(actor_id);
+  const auto entry = std::make_pair(actor_id, route);
+  custom_route.AddEntry(entry);
+}
+
 //////////////////////////////////// GETTERS //////////////////////////////////
 
 float Parameters::GetHybridPhysicsRadius() const {
@@ -212,7 +273,27 @@ float Parameters::GetKeepRightPercentage(const ActorId &actor_id) {
     percentage = perc_keep_right.GetValue(actor_id);
   }
 
-  perc_keep_right.RemoveEntry(actor_id);
+  return percentage;
+}
+
+float Parameters::GetRandomLeftLaneChangePercentage(const ActorId &actor_id) {
+
+  float percentage = -1.0f;
+
+  if (perc_random_left.Contains(actor_id)) {
+    percentage = perc_random_left.GetValue(actor_id);
+  }
+
+  return percentage;
+}
+
+float Parameters::GetRandomRightLaneChangePercentage(const ActorId &actor_id) {
+
+  float percentage = -1.0f;
+
+  if (perc_random_right.Contains(actor_id)) {
+    percentage = perc_random_right.GetValue(actor_id);
+  }
 
   return percentage;
 }
@@ -273,6 +354,16 @@ float Parameters::GetPercentageIgnoreWalkers(const ActorId &actor_id) const {
   return percentage;
 }
 
+bool Parameters::GetUpdateVehicleLightState(const ActorId &actor_id) const {
+  bool do_update = false;
+
+  if (auto_update_vehicle_lights.Contains(actor_id)) {
+    do_update = auto_update_vehicle_lights.GetValue(actor_id);
+  }
+
+  return do_update;
+}
+
 float Parameters::GetPercentageIgnoreVehicles(const ActorId &actor_id) const {
 
   float percentage = 0.0f;
@@ -309,6 +400,52 @@ bool Parameters::GetOSMMode() const {
 
   return osm_mode.load();
 }
+
+bool Parameters::GetUploadPath(const ActorId &actor_id) const {
+
+  bool custom_path_bool = false;
+
+  if (upload_path.Contains(actor_id)) {
+    custom_path_bool = upload_path.GetValue(actor_id);
+  }
+
+  return custom_path_bool;
+}
+
+Path Parameters::GetCustomPath(const ActorId &actor_id) const {
+
+  Path custom_path_import;
+
+  if (custom_path.Contains(actor_id)) {
+    custom_path_import = custom_path.GetValue(actor_id);
+  }
+
+  return custom_path_import;
+}
+
+
+bool Parameters::GetUploadRoute(const ActorId &actor_id) const {
+
+  bool custom_route_bool = false;
+
+  if (upload_route.Contains(actor_id)) {
+    custom_route_bool = upload_route.GetValue(actor_id);
+  }
+
+  return custom_route_bool;
+}
+
+Route Parameters::GetImportedRoute(const ActorId &actor_id) const {
+
+  Route custom_route_import;
+
+  if (custom_route.Contains(actor_id)) {
+    custom_route_import = custom_route.GetValue(actor_id);
+  }
+
+  return custom_route_import;
+}
+
 
 } // namespace traffic_manager
 } // namespace carla
