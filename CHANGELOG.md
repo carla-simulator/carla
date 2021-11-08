@@ -1,7 +1,5 @@
 ## Latest
-<<<<<<< HEAD
   * Added generation of wheels and egg files for the python agents library.
-=======
   * Fixed RSSSensor: made client side calculations threaded
   * Added the option for users to set a path using locations to a vehicle controlled by the Traffic Manager.
   * Added a RoadOption element in each SimpleWaypoint to specify which action will the vehicle perform if it follows that route.
@@ -9,7 +7,6 @@
   * Fixed keep_right_rule parameter.
   * Added set_percentage_random_left_lanechange and set_percentage_random_right_lanechange.
   * Improved handling of collisions in Traffic Manager when driving at very high speeds.
->>>>>>> dev
   * Added open/close doors feature for vehicles.
   * Added API functions to 3D vectors: `squared_length`, `length`, `make_unit_vector`, `dot`, `dot_2d`, `distance`, `distance_2d`, `distance_squared`, `distance_squared_2d`, `get_vector_angle`
   * Added a seed for better reproducibility of pedestrians
