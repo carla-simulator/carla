@@ -50,6 +50,8 @@ public:
                                                     const carla::rss::EgoDynamicsOnRoute &ego_dynamics_on_route,
                                                     const carla::rpc::VehiclePhysicsControl &vehicle_physics);
 
+  void SetLogLevel(const uint8_t log_level);
+
 private:
   /// @brief the logger instance
   std::shared_ptr<spdlog::logger> _logger;
