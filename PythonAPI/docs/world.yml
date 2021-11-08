@@ -288,6 +288,132 @@
         All layers selected
     # --------------------------------------
 
+  - class_name: MaterialParameter
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents material parameters. Not all objects in the scene contain all parameters.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Normal
+      doc: >
+        The Normal map of the object. Present in all objects.
+    - var_name: Diffuse
+      doc: >
+        The Diffuse texture of the object. Present in all objects.
+    - var_name: AO_Roughness_Metallic_Emissive
+      doc: >
+        A texture where each color channel represent a property of the material (R: Ambien oclusion, G: Roughness, B: Metallic, A: Emissive/Height map in some objects)
+    - var_name: Emissive
+      doc: >
+        Emissive texture. Present in a few objects.
+    # --------------------------------------
+
+  - class_name: TextureColor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class representing a texture object to be uploaded to the server. Pixel format is RGBA, uint8 per channel.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: width
+      type: int
+      doc: >
+        X-coordinate size of the texture.
+    - var_name: height
+      type: int
+      doc: >
+        Y-coordinate size of the texture.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Initializes a the texture with a (`width`, `height`) size.
+    - def_name: set_dimensions
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Resizes the texture to te specified dimensions.
+    - def_name: get
+      return: carla.Color
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      doc: >
+        Get the (x,y) pixel data.
+    - def_name: set
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      - param_name: value
+        type: carla.Color
+      doc: >
+        Sets the (x,y) pixel data with `value`.
+    # --------------------------------------
+
+  - class_name: TextureFloatColor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class representing a texture object to be uploaded to the server. Pixel format is RGBA, float per channel.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: width
+      type: int
+      doc: >
+        X-coordinate size of the texture.
+    - var_name: height
+      type: int
+      doc: >
+        Y-coordinate size of the texture.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Initializes a the texture with a (`width`, `height`) size.
+    - def_name: set_dimensions
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Resizes the texture to te specified dimensions.
+    - def_name: get
+      return: carla.FloatColor
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      doc: >
+        Get the (x,y) pixel data.
+    - def_name: set
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      - param_name: value
+        type: carla.FloatColor
+      doc: >
+        Sets the (x,y) pixel data with `value`.
+    # --------------------------------------
+
   - class_name: World
     # - DESCRIPTION ------------------------
     doc: >
@@ -669,6 +795,85 @@
       note: >
         Should be set before pedestrians are spawned.
         If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
+    # --------------------------------------
+    - def_name: apply_color_texture_to_object
+      params:
+      - param_name: object_name
+        type: str
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.
+    # --------------------------------------
+    - def_name: apply_float_color_texture_to_object
+      params:
+      - param_name: object_name
+        type: str
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureFloatColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.
+    # --------------------------------------
+    - def_name: apply_textures_to_object
+      params:
+      - param_name: object_name
+        type: str
+      - param_name: diffuse_texture
+        type: TextureColor
+      - param_name: emissive_texture
+        type: TextureFloatColor
+      - param_name: normal_texture
+        type: TextureFloatColor
+      - param_name: ao_roughness_metallic_emissive_texture
+        type: TextureFloatColor
+      doc: >
+        Applies all texture fields in carla.MaterialParameter to the object `object_name`. Empty textures here will not be applied.
+    # --------------------------------------
+    - def_name: apply_color_texture_to_objects
+      params:
+      - param_name: objects_name_list
+        type: list(str)
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.
+    # --------------------------------------
+    - def_name: apply_float_color_texture_to_objects
+      params:
+      - param_name: objects_name_list
+        type: list(str)
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureFloatColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.
+    # --------------------------------------
+    - def_name: apply_textures_to_objects
+      params:
+      - param_name: objects_name_list
+        type: list(str)
+      - param_name: diffuse_texture
+        type: TextureColor
+      - param_name: emissive_texture
+        type: TextureFloatColor
+      - param_name: normal_texture
+        type: TextureFloatColor
+      - param_name: ao_roughness_metallic_emissive_texture
+        type: TextureFloatColor
+      doc: >
+        Applies all texture fields in carla.MaterialParameter to all objects in `objects_name_list`. Empty textures here will not be applied.
+    # --------------------------------------
+    - def_name: get_names_of_all_objects
+      return: list(str)
+      doc: >
+        Returns a list of the names of all objects in the scene that can be painted with the apply texture functions.
     # --------------------------------------
     - def_name: __str__
       return:
