@@ -11,6 +11,7 @@ It can also make use of the global route planner to follow a specifed route
 
 import carla
 import weakref
+
 from agents.navigation.basic_agent import BasicAgent
 
 class ConstantVelocityAgent(BasicAgent):
@@ -21,24 +22,31 @@ class ConstantVelocityAgent(BasicAgent):
     and normal behavior.
     """
 
-    def __init__(self, vehicle, target_speed=20, restart_time=float('inf'), use_basic_behavior=True, opt_dict={}):
+    def __init__(self, vehicle, target_speed=20, opt_dict={}):
         """
         Initialization the agent parameters, the local and the global planner.
 
             :param vehicle: actor to apply to agent logic onto
             :param target_speed: speed (in Km/h) at which the vehicle will move
-            :param restart_time: time (in s) needed to restart the constant velocity behavior. Deactivated by default
-            :param use_basic_behavior: Whether or not the basicAgent behavior is used when the constant velocity one
-                is inactive. Default is True.
             :param opt_dict: dictionary in case some of its parameters want to be changed.
                 This also applies to parameters related to the LocalPlanner.
         """
         super(ConstantVelocityAgent, self).__init__(vehicle, target_speed, opt_dict=opt_dict)
-        self._restart_time = restart_time
-        self._use_basic_behavior = use_basic_behavior
 
+        self._restart_time = 10  # Time after collision before the constant velocity behavior starts again
+        self._use_basic_behavior = True  # Whether or not to use the BasicAgent behavior when the constant velcoity is down
         self._traffic_light_detection_dist = 1
         self._vehicle_detection_dist = 10
+
+        if 'restart_time' in opt_dict:
+            self._restart_time = opt_dict['restart_time']
+        if 'use_basic_behavior' in opt_dict:
+            self._use_basic_behavior = opt_dict['use_basic_behavior']
+        if 'traffic_light_detection_dist' in opt_dict:
+            self._traffic_light_detection_dist = opt_dict['traffic_light_detection_dist']
+        if 'vehicle_detection_dist' in opt_dict:
+            self._vehicle_detection_dist = opt_dict['vehicle_detection_dist']
+
         self._is_vehicle_stopped = False
         self._constant_velocity_stop_time = None
 
@@ -74,13 +82,13 @@ class ConstantVelocityAgent(BasicAgent):
         if not self.is_constant_velocity_active:
             # Check if it time to restart it again. If not, do something else
             if self._world.get_snapshot().timestamp.elapsed_seconds - self._constant_velocity_stop_time > self._restart_time:
+                self.restart_constant_velocity()
                 self.is_constant_velocity_active = True
             elif self._use_basic_behavior:
                 return super(ConstantVelocityAgent, self).run_step()
             else:
                 return carla.VehicleControl()
 
-        # self._check_for_incorrect_beahviors
         vehicle_location = self._vehicle.get_location()
         vehicle_wp = self._map.get_waypoint(vehicle_location)
         if abs(vehicle_wp.transform.location.z - vehicle_location.z) > 5:
@@ -94,7 +102,7 @@ class ConstantVelocityAgent(BasicAgent):
         lights_list = actor_list.filter("*traffic_light*")
 
         # Check for possible vehicle obstacles
-        affected_by_vehicle, _ = self._vehicle_obstacle_detected(vehicle_list, self._vehicle_detection_dist)
+        affected_by_vehicle, _, _ = self._vehicle_obstacle_detected(vehicle_list)
         if affected_by_vehicle:
             hazard_detected = True
 
