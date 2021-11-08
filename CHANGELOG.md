@@ -21,6 +21,7 @@
   * Added physical simulation to vehicle doors, capable of opening and closing
   * Fixed the import of props without any map
   * Fixed global route planner crash when being used at maps without lane markings
+  * Fixed bug causing the server to sigsegv when a vehicle collides an environment object in recording mode.
   * Improved collision detection of the Python agents
   * Added the new VehicleLightStage to the Traffic Manager to dynamically update the vehicle lights.
   * Added two new examples to PythonAPI/util: Conversion of OpenStreetMaps to OpenDRIVE maps `osm_to_xodr.py` and Extraction of map spawn points `extract_spawn_points.py`
