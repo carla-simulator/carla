@@ -235,6 +235,7 @@ FPrimitiveViewRelevance FTaggedStaticMeshSceneProxy::GetViewRelevance(const FSce
   FPrimitiveViewRelevance ViewRelevance = FStaticMeshSceneProxy::GetViewRelevance(View);
 
   ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bShadowRelevance = false;
 
   return ViewRelevance;
 }
@@ -262,6 +263,7 @@ FPrimitiveViewRelevance FTaggedSkeletalMeshSceneProxy::GetViewRelevance(const FS
   FPrimitiveViewRelevance ViewRelevance = FSkeletalMeshSceneProxy::GetViewRelevance(View);
 
   ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bShadowRelevance = false;
 
   return ViewRelevance;
 }
@@ -287,6 +289,7 @@ FPrimitiveViewRelevance FTaggedInstancedStaticMeshSceneProxy::GetViewRelevance(c
   FPrimitiveViewRelevance ViewRelevance = FInstancedStaticMeshSceneProxy::GetViewRelevance(View);
 
   ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bShadowRelevance = false;
 
   return ViewRelevance;
 }
@@ -313,6 +316,7 @@ FPrimitiveViewRelevance FTaggedHierarchicalStaticMeshSceneProxy::GetViewRelevanc
   FPrimitiveViewRelevance ViewRelevance = FHierarchicalStaticMeshSceneProxy::GetViewRelevance(View);
 
   ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bShadowRelevance = false;
 
   return ViewRelevance;
 }
