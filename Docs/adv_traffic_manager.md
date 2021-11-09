@@ -346,7 +346,7 @@ By default, vehicle lights (brake, turn indicators, etc...) of the vehicles mana
 ```python
 tm = client.get_trafficmanager(port)
 for actor in my_vehicles:
-  tm.auto_update_lights(actor, True)
+  tm.update_vehicle_lights(actor, True)
 ```
 
 Vehicle lights management has to be specified on a per-vehicle basis, and there could be at any given time both vehicles with and without the automatic light management.
