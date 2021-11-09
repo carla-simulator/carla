@@ -4,6 +4,7 @@
   * Added a RoadOption element in each SimpleWaypoint to specify which action will the vehicle perform if it follows that route.
   * Added the option for users to set a route using RoadOption elements to a vehicle controlled by the Traffic Manager.
   * Fixed keep_right_rule parameter.
+  * Cache now has an extra folder with current version of CARLA (so different cache per version)
   * Added new instance aware semantic segmentation sensor `sensor.camera.instance_segmentation`
   * Added new API classes: `MaterialParameter`, `TextureColor` and  `TextureFloatColor` to encode texture data and field (normal map, diffuse, etc)
   * Added new API functions: `apply_color_texture_to_object`, `apply_float_color_texture_to_object` and `apply_textures_to_object` to paint objects in runtime
