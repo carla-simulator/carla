@@ -26,6 +26,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <boost/optional.hpp>
 
@@ -143,6 +145,9 @@ namespace client {
     /// percentage of 1.0f means all pedestrians can cross roads if needed
     void SetPedestriansCrossFactor(float percentage);
 
+    /// set the seed to use with random numbers in the pedestrians module
+    void SetPedestriansSeed(unsigned int seed);
+
     SharedPtr<Actor> GetTrafficSign(const Landmark& landmark) const;
 
     SharedPtr<Actor> GetTrafficLight(const Landmark& landmark) const;
@@ -186,6 +191,44 @@ namespace client {
 
     std::vector<SharedPtr<Actor>> GetTrafficLightsInJunction(
         const road::JuncId junc_id) const;
+
+    // std::vector<std::string> GetObjectNameList();
+
+    void ApplyColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyFloatColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    void ApplyFloatColorTextureToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    void ApplyTexturesToObject(
+        const std::string &actor_name,
+        const rpc::TextureColor& diffuse_texture,
+        const rpc::TextureFloatColor& emissive_texture,
+        const rpc::TextureFloatColor& normal_texture,
+        const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
+
+    void ApplyTexturesToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::TextureColor& diffuse_texture,
+        const rpc::TextureFloatColor& emissive_texture,
+        const rpc::TextureFloatColor& normal_texture,
+        const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
 
   private:
 

@@ -68,6 +68,58 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+
+  - class_name: FloatColor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a float RGBA color.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: r
+      type: float
+      doc: >
+        Red color.
+    - var_name: g
+      type: float
+      doc: >
+        Green color.
+    - var_name: b
+      type: float
+      doc: >
+        Blue color.
+    - var_name: a
+      type: float
+      doc: >
+        Alpha channel.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: r
+        type: float
+        default: 0
+      - param_name: g
+        type: float
+        default: 0
+      - param_name: b
+        type: float
+        default: 0
+      - param_name: a
+        type: float
+        default: 1.0
+      doc: >
+        Initializes a color, black by default. 
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.FloatColor
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.FloatColor
+    # --------------------------------------
   
   - class_name: OpticalFlowPixel
     # - DESCRIPTION ------------------------

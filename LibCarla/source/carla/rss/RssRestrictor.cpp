@@ -22,10 +22,18 @@ RssRestrictor::RssRestrictor() {
   if (!_logger) {
     _logger = spdlog::create<spdlog::sinks::stdout_color_sink_st>(logger_name);
   }
-  //_logger->set_level(spdlog::level::debug);
+
+  SetLogLevel(spdlog::level::warn);
 }
 
 RssRestrictor::~RssRestrictor() = default;
+
+void RssRestrictor::SetLogLevel(const uint8_t log_level) {
+  if (log_level < spdlog::level::n_levels) {
+    const auto log_level_value = static_cast<spdlog::level::level_enum>(log_level);
+    _logger->set_level(log_level_value);
+  }
+}
 
 carla::rpc::VehicleControl RssRestrictor::RestrictVehicleControl(
     const carla::rpc::VehicleControl &vehicle_control, const ::ad::rss::state::ProperResponse &proper_response,

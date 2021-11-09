@@ -424,17 +424,52 @@
       doc: >
         On the next tick, the control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.   
     # --------------------------------------
-    - def_name: apply_control
-      params:
-      - param_name: control
-        type: carla.WalkerBoneControl
-      doc: >
-        On the next tick, the control defines a list of bone transformations that will be applied to the walker's skeleton. 
-    # --------------------------------------
     - def_name: get_control
       return: carla.WalkerControl
       doc: >
         The client returns the control applied to this walker during last tick. The method does not call the simulator.
+    # --------------------------------------
+    - def_name: get_bones
+      return: carla.WalkerBoneControlOut
+      doc: >
+        Return the structure with all the bone transformations from the actor. For each bone, we get the name and its transform in three different spaces:
+          - name: bone name
+          - world: transform in world coordinates
+          - component: transform based on the pivot of the actor
+          - relative: transform based on the bone parent
+    # --------------------------------------
+    - def_name: set_bones
+      params:
+      - param_name: bones
+        type: carla.WalkerBoneControlIn
+        param_units: list of pairs (bone_name, transform) for the bones that we want to set
+      doc: >
+        Set the bones of the actor. For each bone we want to set we use a relative transform. Only the bones in this list will be set. For each bone you need to setup this info:
+          - name: bone name
+          - relative: transform based on the bone parent
+    # --------------------------------------
+    - def_name: blend_pose
+      params:
+      - param_name: blend_value
+        type: float
+        param_units: value from 0 to 1 with the blend percentage
+      doc: >
+        Set the blending value of the custom pose with the animation. The values can be:
+          - 0: will show only the animation
+          - 1: will show only the custom pose (set by the user with set_bones())
+          - any other: will interpolate all the bone positions between animation and the custom pose
+    # --------------------------------------
+    - def_name: show_pose
+      doc: >
+        Show the custom pose and hide the animation (same as calling blend_pose(1))
+    # --------------------------------------
+    - def_name: hide_pose
+      doc: >
+        Hide the custom pose and show the animation (same as calling blend_pose(0))
+    # --------------------------------------
+    - def_name: get_pose_from_animation
+      doc: >
+        Make a copy of the current animation frame as the custom pose. Initially the custom pose is the neutral pedestrian pose.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
