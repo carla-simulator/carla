@@ -2435,8 +2435,8 @@ With hybrid physics on, changes the radius of the area of influence where physic
 - <a name="carla.TrafficManager.set_osm_mode"></a>**<font color="#7fb800">set_osm_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
 Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
     - **Parameters:**
-        - `mode_switch` (_bool_) - If __True__, the OSM mode is enabled.  
-- <a name="carla.TrafficManager.set_percentage_keep_right_rule"></a>**<font color="#7fb800">set_percentage_keep_right_rule</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+        - `mode_switch` (_bool_) – If __True__, the OSM mode is enabled.  
+- <a name="carla.TrafficManager.keep_right_rule_percentage"></a>**<font color="#7fb800">keep_right_rule_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
 During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) - Vehicle whose behaviour is being changed.  
