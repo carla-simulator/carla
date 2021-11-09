@@ -738,6 +738,9 @@ def game_loop(args):
             agent = BasicAgent(world.player, 30)
         elif args.agent == "Constant":
             agent = ConstantVelocityAgent(world.player, 30)
+            ground_loc = world.world.ground_projection(world.player.get_location(), 5)
+            if ground_loc:
+                world.player.set_location(ground_loc.location + carla.Location(z=0.01))
         elif args.agent == "Behavior":
             agent = BehaviorAgent(world.player, behavior=args.behavior)
 

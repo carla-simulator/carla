@@ -13,6 +13,7 @@ import carla
 import weakref
 
 from agents.navigation.basic_agent import BasicAgent
+from agents.tools.misc import get_speed
 
 class ConstantVelocityAgent(BasicAgent):
     """
@@ -34,20 +35,16 @@ class ConstantVelocityAgent(BasicAgent):
         super(ConstantVelocityAgent, self).__init__(vehicle, target_speed, opt_dict=opt_dict)
 
         self._restart_time = 10  # Time after collision before the constant velocity behavior starts again
-        self._use_basic_behavior = True  # Whether or not to use the BasicAgent behavior when the constant velcoity is down
-        self._traffic_light_detection_dist = 1
-        self._vehicle_detection_dist = 10
+        self._use_basic_behavior = True  # Whether or not to use the BasicAgent behavior when the constant velocity is down
+        self._acceleration = 3.5 # [m/s^2]
+        self._max_speed = target_speed / 3.6
 
         if 'restart_time' in opt_dict:
             self._restart_time = opt_dict['restart_time']
         if 'use_basic_behavior' in opt_dict:
             self._use_basic_behavior = opt_dict['use_basic_behavior']
-        if 'traffic_light_detection_dist' in opt_dict:
-            self._traffic_light_detection_dist = opt_dict['traffic_light_detection_dist']
-        if 'vehicle_detection_dist' in opt_dict:
-            self._vehicle_detection_dist = opt_dict['vehicle_detection_dist']
-
-        self._is_vehicle_stopped = False
+        if 'acceleration' in opt_dict:
+            self._acceleration = opt_dict['acceleration']
         self._constant_velocity_stop_time = None
 
         self._set_collision_sensor()
@@ -62,12 +59,11 @@ class ConstantVelocityAgent(BasicAgent):
         """Forces the agent to drive at the specified speed"""
         self._vehicle.enable_constant_velocity(carla.Vector3D(self._target_speed / 3.6, 0, 0))
         self.is_constant_velocity_active = True
-        self._is_vehicle_stopped = False
 
-    def _stop_vehicle(self):
+    def _stop_vehicle(self, speed):
         """Stops the vehicle"""
-        self._vehicle.enable_constant_velocity(carla.Vector3D(0, 0, 0))
-        self._is_vehicle_stopped = True
+        new_speed = max(speed - self._acceleration, 0)
+        self._vehicle.enable_constant_velocity(carla.Vector3D(new_speed, 0, 0))
 
     def _stop_constant_velocity(self):
         """Stops the constant velocity behavior"""
@@ -101,13 +97,16 @@ class ConstantVelocityAgent(BasicAgent):
         vehicle_list = actor_list.filter("*vehicle*")
         lights_list = actor_list.filter("*traffic_light*")
 
-        # Check for possible vehicle obstacles
-        affected_by_vehicle, _, _ = self._vehicle_obstacle_detected(vehicle_list)
+        vehicle_speed = get_speed(self._vehicle) / 3.6
+
+        max_vehicle_distance = self._base_vehicle_threshold + vehicle_speed
+        affected_by_vehicle, _, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
         if affected_by_vehicle:
             hazard_detected = True
 
         # Check if the vehicle is affected by a red traffic light
-        affected_by_tlight, _ = self._affected_by_traffic_light(lights_list, self._traffic_light_detection_dist)
+        max_tlight_distance = self._base_tlight_threshold + 0.3 * vehicle_speed
+        affected_by_tlight, _ = self._affected_by_traffic_light(lights_list, max_tlight_distance)
         if affected_by_tlight:
             hazard_detected = True
 
@@ -117,9 +116,10 @@ class ConstantVelocityAgent(BasicAgent):
         control.brake = 0
 
         if hazard_detected:
-            self._stop_vehicle()
-        elif self._is_vehicle_stopped:  # First frame of not detecting hazards, reactivate the movement
-            self._set_constant_velocity()
+            new_speed = max(vehicle_speed - self._acceleration, 0)
+        else:
+            new_speed = min(vehicle_speed + self._acceleration, self._max_speed)
+        self._vehicle.enable_constant_velocity(carla.Vector3D(new_speed, 0, 0))
 
         return control
 
