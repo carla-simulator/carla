@@ -88,7 +88,7 @@ public:
     _client->call("set_global_percentage_speed_difference", percentage);
   }
 
-  /// Method to set the automatical management of the vehicle lights
+  /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
     DEBUG_ASSERT(_client != nullptr);
     _client->call("update_vehicle_lights", std::move(_actor), do_update);

@@ -147,7 +147,7 @@ public:
   void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set the automatic vehicle light state update flag.
-  void SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update);
+  void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);
 
   /// Method to set the distance to leading vehicle for all registered vehicles.
   void SetGlobalDistanceToLeadingVehicle(const float dist);
@@ -236,7 +236,7 @@ public:
   float GetPercentageIgnoreWalkers(const ActorId &actor_id) const;
 
   /// Method to get if the vehicle lights should be updates automatically
-  bool GetUpdateVehicleLightState(const ActorId &actor_id) const;
+  bool GetUpdateVehicleLights(const ActorId &actor_id) const;
 
   /// Method to get synchronous mode.
   bool GetSynchronousMode() const;

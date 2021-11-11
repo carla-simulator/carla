@@ -103,7 +103,7 @@ void Parameters::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const
 
 }
 
-void Parameters::SetUpdateVehicleLightState(const ActorPtr &actor, const bool do_update) {
+void Parameters::SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) {
 
   const auto entry = std::make_pair(actor->GetId(), do_update);
   auto_update_vehicle_lights.AddEntry(entry);
@@ -354,7 +354,7 @@ float Parameters::GetPercentageIgnoreWalkers(const ActorId &actor_id) const {
   return percentage;
 }
 
-bool Parameters::GetUpdateVehicleLightState(const ActorId &actor_id) const {
+bool Parameters::GetUpdateVehicleLights(const ActorId &actor_id) const {
   bool do_update = false;
 
   if (auto_update_vehicle_lights.Contains(actor_id)) {

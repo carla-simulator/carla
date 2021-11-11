@@ -51,8 +51,8 @@ static const float HIGH_SPEED_HORIZON_RATE = 4.0f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
-static const float MIN_TARGET_WAYPOINT_DISTANCE = 1.0f;
+static const float TARGET_WAYPOINT_TIME_HORIZON = 0.3f;
+static const float MIN_TARGET_WAYPOINT_DISTANCE = 3.0f;
 static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
@@ -101,7 +101,7 @@ static const float MAX_GEODESIC_GRID_LENGTH = 20.0f;
 static const float MAP_RESOLUTION = 5.0f;
 static const float INV_MAP_RESOLUTION = 1.0f / MAP_RESOLUTION;
 static const double MAX_WPT_DISTANCE = MAP_RESOLUTION/2.0 + SQUARE(MAP_RESOLUTION);
-static const float MAX_WPT_RADIANS = 0.1745f;  // 10º
+static const float MAX_WPT_RADIANS = 0.087f;  // 5º
 static float const DELTA = 25.0f;
 static float const Z_DELTA = 500.0f;
 static float const STRAIGHT_DEG = 19.0f;

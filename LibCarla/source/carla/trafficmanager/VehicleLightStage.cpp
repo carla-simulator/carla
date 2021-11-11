@@ -11,19 +11,17 @@ using namespace constants::VehicleLight;
 
 VehicleLightStage::VehicleLightStage(
   const std::vector<ActorId> &vehicle_id_list,
-  const SimulationState &simulation_state,
   const BufferMap &buffer_map,
   const Parameters &parameters,
   const cc::World &world,
   ControlFrame& control_frame)
   : vehicle_id_list(vehicle_id_list),
-    simulation_state(simulation_state),
     buffer_map(buffer_map),
     parameters(parameters),
     world(world),
     control_frame(control_frame) {}
 
-void VehicleLightStage::ClearCycleCache() {
+void VehicleLightStage::UpdateWorldInfo() {
   // Get the global weather and all the vehicle light states at once
   all_light_states = world.GetVehiclesLightStates();
   weather = world.GetWeather();
@@ -32,7 +30,7 @@ void VehicleLightStage::ClearCycleCache() {
 void VehicleLightStage::Update(const unsigned long index) {
   ActorId actor_id = vehicle_id_list.at(index);
 
-  if (!parameters.GetUpdateVehicleLightState(actor_id))
+  if (!parameters.GetUpdateVehicleLights(actor_id))
     return; // this vehicle is not set to have automatic lights update
 
   rpc::VehicleLightState::flag_type light_states = uint32_t(-1);

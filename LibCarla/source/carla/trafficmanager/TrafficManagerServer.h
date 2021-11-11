@@ -94,6 +94,11 @@ public:
         tm->SetPercentageSpeedDifference(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
+      /// Method to set the automatic management of the vehicle lights
+      server->bind("update_vehicle_lights", [=](carla::rpc::Actor actor, const bool do_update) {
+        tm->SetUpdateVehicleLights(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), do_update);
+      });
+
       /// Method to set a global % decrease in velocity with respect to the speed limit.
       /// If less than 0, it's a % increase.
       server->bind("set_global_percentage_speed_difference", [=](const float percentage) {

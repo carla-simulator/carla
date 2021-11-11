@@ -450,7 +450,8 @@ Creates a new world with default settings using `map_name` map. All actors in th
         - `map_name` (_str_) - Name of the map to be used in this world. Accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.  
         - `reset_settings` (_bool_) - Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios.  
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers of the map that will be loaded. By default all layers are loaded. This parameter works like a flag mask.  
-    - **Warning:** <font color="#ED2F2F">_`map_layers` are only available for "Opt" maps_</font>  
+    - **Warning:** <font color="#ED2F2F">_`map_layers` are only available for "Opt" maps
+_</font>  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**reset_settings**=True</font>)  
 Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
@@ -738,6 +739,34 @@ Semantic tag.
 - <a name="carla.EnvironmentObject.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 Parses the EnvironmentObject to a string and shows them in command line.  
     - **Return:** _str_  
+
+---
+
+## carla.FloatColor<a name="carla.FloatColor"></a>
+Class that defines a float RGBA color.  
+
+### Instance Variables
+- <a name="carla.FloatColor.r"></a>**<font color="#f8805a">r</font>** (_float_)  
+Red color.  
+- <a name="carla.FloatColor.g"></a>**<font color="#f8805a">g</font>** (_float_)  
+Green color.  
+- <a name="carla.FloatColor.b"></a>**<font color="#f8805a">b</font>** (_float_)  
+Blue color.  
+- <a name="carla.FloatColor.a"></a>**<font color="#f8805a">a</font>** (_float_)  
+Alpha channel.  
+
+### Methods
+- <a name="carla.FloatColor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**r**=0</font>, <font color="#00a6ed">**g**=0</font>, <font color="#00a6ed">**b**=0</font>, <font color="#00a6ed">**a**=1.0</font>)  
+Initializes a color, black by default.  
+    - **Parameters:**
+        - `r` (_float_)  
+        - `g` (_float_)  
+        - `b` (_float_)  
+        - `a` (_float_)  
+
+##### Dunder methods
+- <a name="carla.FloatColor.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.FloatColor](#carla.FloatColor)</font>)  
+- <a name="carla.FloatColor.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.FloatColor](#carla.FloatColor)</font>)  
 
 ---
 
@@ -1545,6 +1574,21 @@ All layers selected.
 
 ---
 
+## carla.MaterialParameter<a name="carla.MaterialParameter"></a>
+Class that represents material parameters. Not all objects in the scene contain all parameters.  
+
+### Instance Variables
+- <a name="carla.MaterialParameter.Normal"></a>**<font color="#f8805a">Normal</font>**  
+The Normal map of the object. Present in all objects.  
+- <a name="carla.MaterialParameter.Diffuse"></a>**<font color="#f8805a">Diffuse</font>**  
+The Diffuse texture of the object. Present in all objects.  
+- <a name="carla.MaterialParameter.AO_Roughness_Metallic_Emissive"></a>**<font color="#f8805a">AO_Roughness_Metallic_Emissive</font>**  
+A texture where each color channel represent a property of the material (R: Ambien oclusion, G: Roughness, B: Metallic, A: Emissive/Height map in some objects).  
+- <a name="carla.MaterialParameter.Emissive"></a>**<font color="#f8805a">Emissive</font>**  
+Emissive texture. Present in a few objects.  
+
+---
+
 ## carla.ObstacleDetectionEvent<a name="carla.ObstacleDetectionEvent"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
 Class that defines the obstacle data for <b>sensor.other.obstacle</b>. Learn more about this [here](ref_sensors.md#obstacle-detector).  
@@ -1915,6 +1959,12 @@ Applies the safety restrictions given by a [carla.RssSensor](#carla.RssSensor) t
         - `vehicle_physics` (_[carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl)_) - The current physics of the vehicle. Used to apply the restrictions properly.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
 
+##### Setters
+- <a name="carla.RssRestrictor.set_log_level"></a>**<font color="#7fb800">set_log_level</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**log_level**</font>)  
+Sets the log level.  
+    - **Parameters:**
+        - `log_level` (_[carla.RssLogLevel](#carla.RssLogLevel)_) - New log level.  
+
 ---
 
 ## carla.RssRoadBoundariesMode<a name="carla.RssRoadBoundariesMode"></a>
@@ -2086,6 +2136,80 @@ Frame count when the data was generated.
 Simulation-time when the data was generated.  
 - <a name="carla.SensorData.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
 Sensor's transform when the data was generated.  
+
+---
+
+## carla.TextureColor<a name="carla.TextureColor"></a>
+Class representing a texture object to be uploaded to the server. Pixel format is RGBA, uint8 per channel.  
+
+### Instance Variables
+- <a name="carla.TextureColor.width"></a>**<font color="#f8805a">width</font>** (_int_)  
+X-coordinate size of the texture.  
+- <a name="carla.TextureColor.height"></a>**<font color="#f8805a">height</font>** (_int_)  
+Y-coordinate size of the texture.  
+
+### Methods
+- <a name="carla.TextureColor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**width**</font>, <font color="#00a6ed">**height**</font>)  
+Initializes a the texture with a (`width`, `height`) size.  
+    - **Parameters:**
+        - `width` (_int_)  
+        - `height` (_int_)  
+- <a name="carla.TextureColor.get"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**</font>, <font color="#00a6ed">**y**</font>)  
+Get the (x,y) pixel data.  
+    - **Parameters:**
+        - `x` (_int_)  
+        - `y` (_int_)  
+    - **Return:** _[carla.Color](#carla.Color)_  
+- <a name="carla.TextureColor.set"></a>**<font color="#7fb800">set</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**</font>, <font color="#00a6ed">**y**</font>, <font color="#00a6ed">**value**</font>)  
+Sets the (x,y) pixel data with `value`.  
+    - **Parameters:**
+        - `x` (_int_)  
+        - `y` (_int_)  
+        - `value` (_[carla.Color](#carla.Color)_)  
+
+##### Setters
+- <a name="carla.TextureColor.set_dimensions"></a>**<font color="#7fb800">set_dimensions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**width**</font>, <font color="#00a6ed">**height**</font>)  
+Resizes the texture to te specified dimensions.  
+    - **Parameters:**
+        - `width` (_int_)  
+        - `height` (_int_)  
+
+---
+
+## carla.TextureFloatColor<a name="carla.TextureFloatColor"></a>
+Class representing a texture object to be uploaded to the server. Pixel format is RGBA, float per channel.  
+
+### Instance Variables
+- <a name="carla.TextureFloatColor.width"></a>**<font color="#f8805a">width</font>** (_int_)  
+X-coordinate size of the texture.  
+- <a name="carla.TextureFloatColor.height"></a>**<font color="#f8805a">height</font>** (_int_)  
+Y-coordinate size of the texture.  
+
+### Methods
+- <a name="carla.TextureFloatColor.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**width**</font>, <font color="#00a6ed">**height**</font>)  
+Initializes a the texture with a (`width`, `height`) size.  
+    - **Parameters:**
+        - `width` (_int_)  
+        - `height` (_int_)  
+- <a name="carla.TextureFloatColor.get"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**</font>, <font color="#00a6ed">**y**</font>)  
+Get the (x,y) pixel data.  
+    - **Parameters:**
+        - `x` (_int_)  
+        - `y` (_int_)  
+    - **Return:** _[carla.FloatColor](#carla.FloatColor)_  
+- <a name="carla.TextureFloatColor.set"></a>**<font color="#7fb800">set</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**</font>, <font color="#00a6ed">**y**</font>, <font color="#00a6ed">**value**</font>)  
+Sets the (x,y) pixel data with `value`.  
+    - **Parameters:**
+        - `x` (_int_)  
+        - `y` (_int_)  
+        - `value` (_[carla.FloatColor](#carla.FloatColor)_)  
+
+##### Setters
+- <a name="carla.TextureFloatColor.set_dimensions"></a>**<font color="#7fb800">set_dimensions</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**width**</font>, <font color="#00a6ed">**height**</font>)  
+Resizes the texture to te specified dimensions.  
+    - **Parameters:**
+        - `width` (_int_)  
+        - `height` (_int_)  
 
 ---
 
@@ -2311,8 +2435,8 @@ With hybrid physics on, changes the radius of the area of influence where physic
 - <a name="carla.TrafficManager.set_osm_mode"></a>**<font color="#7fb800">set_osm_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
 Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
     - **Parameters:**
-        - `mode_switch` (_bool_) - If __True__, the OSM mode is enabled.  
-- <a name="carla.TrafficManager.set_percentage_keep_right_rule"></a>**<font color="#7fb800">set_percentage_keep_right_rule</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+        - `mode_switch` (_bool_) – If __True__, the OSM mode is enabled.  
+- <a name="carla.TrafficManager.keep_right_rule_percentage"></a>**<font color="#7fb800">keep_right_rule_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
 During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) - Vehicle whose behaviour is being changed.  
@@ -3109,6 +3233,30 @@ The ID of the episode associated with this world. Episodes are different session
 Responsible for creating different shapes for debugging. Take a look at its class to learn more about it.  
 
 ### Methods
+- <a name="carla.World.apply_color_texture_to_object"></a>**<font color="#7fb800">apply_color_texture_to_object</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**object_name**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
+Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.  
+    - **Parameters:**
+        - `object_name` (_str_)  
+        - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
+        - `texture` (_TextureColor_)  
+- <a name="carla.World.apply_color_texture_to_objects"></a>**<font color="#7fb800">apply_color_texture_to_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**objects_name_list**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
+Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.  
+    - **Parameters:**
+        - `objects_name_list` (_list(str)_)  
+        - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
+        - `texture` (_TextureColor_)  
+- <a name="carla.World.apply_float_color_texture_to_object"></a>**<font color="#7fb800">apply_float_color_texture_to_object</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**object_name**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
+Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.  
+    - **Parameters:**
+        - `object_name` (_str_)  
+        - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
+        - `texture` (_TextureFloatColor_)  
+- <a name="carla.World.apply_float_color_texture_to_objects"></a>**<font color="#7fb800">apply_float_color_texture_to_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**objects_name_list**</font>, <font color="#00a6ed">**material_parameter**</font>, <font color="#00a6ed">**texture**</font>)  
+Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.  
+    - **Parameters:**
+        - `objects_name_list` (_list(str)_)  
+        - `material_parameter` (_[carla.MaterialParameter](#carla.MaterialParameter)_)  
+        - `texture` (_TextureFloatColor_)  
 - <a name="carla.World.apply_settings"></a>**<font color="#7fb800">apply_settings</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**world_settings**</font>)  
 This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented.  
     - **Parameters:**
@@ -3116,6 +3264,22 @@ This method applies settings contained in an object to the simulation running an
     - **Return:** _int_  
     - **Warning:** <font color="#ED2F2F">_If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
 _</font>  
+- <a name="carla.World.apply_textures_to_object"></a>**<font color="#7fb800">apply_textures_to_object</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**object_name**</font>, <font color="#00a6ed">**diffuse_texture**</font>, <font color="#00a6ed">**emissive_texture**</font>, <font color="#00a6ed">**normal_texture**</font>, <font color="#00a6ed">**ao_roughness_metallic_emissive_texture**</font>)  
+Applies all texture fields in [carla.MaterialParameter](#carla.MaterialParameter) to the object `object_name`. Empty textures here will not be applied.  
+    - **Parameters:**
+        - `object_name` (_str_)  
+        - `diffuse_texture` (_TextureColor_)  
+        - `emissive_texture` (_TextureFloatColor_)  
+        - `normal_texture` (_TextureFloatColor_)  
+        - `ao_roughness_metallic_emissive_texture` (_TextureFloatColor_)  
+- <a name="carla.World.apply_textures_to_objects"></a>**<font color="#7fb800">apply_textures_to_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**objects_name_list**</font>, <font color="#00a6ed">**diffuse_texture**</font>, <font color="#00a6ed">**emissive_texture**</font>, <font color="#00a6ed">**normal_texture**</font>, <font color="#00a6ed">**ao_roughness_metallic_emissive_texture**</font>)  
+Applies all texture fields in [carla.MaterialParameter](#carla.MaterialParameter) to all objects in `objects_name_list`. Empty textures here will not be applied.  
+    - **Parameters:**
+        - `objects_name_list` (_list(str)_)  
+        - `diffuse_texture` (_TextureColor_)  
+        - `emissive_texture` (_TextureFloatColor_)  
+        - `normal_texture` (_TextureFloatColor_)  
+        - `ao_roughness_metallic_emissive_texture` (_TextureFloatColor_)  
 - <a name="carla.World.cast_ray"></a>**<font color="#7fb800">cast_ray</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**initial_location**</font>, <font color="#00a6ed">**final_location**</font>)  
 Casts a ray from the specified initial_location to final_location. The function then detects all geometries intersecting the ray and returns a list of [carla.LabelledPoint](#carla.LabelledPoint) in order.  
     - **Parameters:**
@@ -3226,6 +3390,9 @@ Asks the server for the XODR containing the map file, and returns this parsed as
     - **Return:** _[carla.Map](#carla.Map)_  
     - **Warning:** <font color="#ED2F2F">_This method does call the simulation. It is expensive, and should only be called once.  
 _</font>  
+- <a name="carla.World.get_names_of_all_objects"></a>**<font color="#7fb800">get_names_of_all_objects</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a list of the names of all objects in the scene that can be painted with the apply texture functions.  
+    - **Return:** _list(str)_  
 - <a name="carla.World.get_random_location_from_navigation"></a>**<font color="#7fb800">get_random_location_from_navigation</font>**(<font color="#00a6ed">**self**</font>)  
 This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in [carla.WalkerAIController](#carla.WalkerAIController). This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`generate_traffic.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) for an example.  
     - **Return:** _[carla.Location](#carla.Location)_  
@@ -3277,6 +3444,11 @@ Retrieves an object containing weather parameters currently active in the simula
     - **Parameters:**
         - `percentage` (_float_) - Sets the percentage of pedestrians that can walk on the road or cross at any point on the road. Value should be between `0.0` and `1.0`. For example, a value of `0.1` would allow 10% of pedestrians to walk on the road. __Default is `0.0`__.  
     - **Note:** <font color="#8E8E8E">_Should be set before pedestrians are spawned.
+_</font>  
+- <a name="carla.World.set_pedestrians_seed"></a>**<font color="#7fb800">set_pedestrians_seed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seed**</font>)  
+    - **Parameters:**
+        - `seed` (_int_) - Sets the seed to use for any random number generated in relation to pedestrians.  
+    - **Note:** <font color="#8E8E8E">_Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
 _</font>  
 - <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
 Changes the weather parameteres ruling the simulation to another ones defined in an object.  
@@ -3733,6 +3905,34 @@ document.getElementById("snipets-container").innerHTML = null;
 }
 </script>
   
+<div id ="carla.World.load_map_layer-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.load_map_layer
+</p>
+<div id="carla.World.load_map_layer-code" class="SnipetContent">
+
+```py
+  
+# This recipe toggles on several layers in our "_Opt" maps
+
+# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
+world = client.load_world('Town01_Opt', carla.MapLayer.None)
+
+# Toggle all buildings on
+world.load_map_layer(carla.MapLayer.Buildings)
+
+# Toggle all foliage on
+world.load_map_layer(carla.MapLayer.Foliage)
+
+# Toggle all parked vehicles on
+world.load_map_layer(carla.MapLayer.ParkedVehicles)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
 <div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.ActorBlueprint.set_attribute
@@ -3840,79 +4040,27 @@ for i in range(0, len(all_actors), 2):
   
 </div>
   
-<div id ="carla.Client.__init__-snipet" style="display: none;">
+<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.Client.__init__
+Snippet for carla.WalkerAIController.stop
 </p>
-<div id="carla.Client.__init__-code" class="SnipetContent">
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe shows in every script provided in PythonAPI/Examples 
-# and it is used to parse the client creation arguments when running the script. 
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
 
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '-s', '--speed',
-        metavar='FACTOR',
-        default=1.0,
-        type=float,
-        help='rate at which the weather changes (default: 1.0)')
-    args = argparser.parse_args()
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
 
-    speed_factor = args.speed
-    update_freq = 0.1 / speed_factor
-
-    client = carla.Client(args.host, args.port)
-
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.DebugHelper.draw_box
-</p>
-<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
-
-# ....
-debug = world.debug
-world_snapshot = world.get_snapshot()
-
-for actor_snapshot in world_snapshot:
-    actual_actor = world.get_actor(actor_snapshot.id)
-    if actual_actor.type_id == 'traffic.traffic_light':
-        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
-# ...
-
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -3988,31 +4136,6 @@ print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
   
 </div>
   
-<div id ="carla.Sensor.listen-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.Sensor.listen
-</p>
-<div id="carla.Sensor.listen-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe applies a color conversion to the image taken by a camera sensor,
-# so it is converted to a semantic segmentation image.
-
-# ...
-camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
-# ...
-cc = carla.ColorConverter.CityScapesPalette
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
 <div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.TrafficLight.set_state
@@ -4059,6 +4182,108 @@ if vehicle_actor.is_at_traffic_light():
   
 </div>
   
+<div id ="carla.World.unload_map_layer-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.unload_map_layer
+</p>
+<div id="carla.World.unload_map_layer-code" class="SnipetContent">
+
+```py
+  
+# This recipe toggles off several layers in our "_Opt" maps
+
+# Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
+# as well as buildings and parked vehicles
+world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
+
+# Toggle all buildings off
+world.unload_map_layer(carla.MapLayer.Buildings)
+
+# Toggle all parked vehicles off
+world.unload_map_layer(carla.MapLayer.ParkedVehicles)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.DebugHelper.draw_box
+</p>
+<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
+
+# ....
+debug = world.debug
+world_snapshot = world.get_snapshot()
+
+for actor_snapshot in world_snapshot:
+    actual_actor = world.get_actor(actor_snapshot.id)
+    if actual_actor.type_id == 'traffic.traffic_light':
+        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+  
+</div>
+  
+<div id ="carla.Client.__init__-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Client.__init__
+</p>
+<div id="carla.Client.__init__-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows in every script provided in PythonAPI/Examples 
+# and it is used to parse the client creation arguments when running the script. 
+
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-s', '--speed',
+        metavar='FACTOR',
+        default=1.0,
+        type=float,
+        help='rate at which the weather changes (default: 1.0)')
+    args = argparser.parse_args()
+
+    speed_factor = args.speed
+    update_freq = 0.1 / speed_factor
+
+    client = carla.Client(args.host, args.port)
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
 <div id ="carla.Vehicle.set_wheel_steer_direction-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.Vehicle.set_wheel_steer_direction
@@ -4078,27 +4303,28 @@ vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
   
 </div>
   
-<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
+<div id ="carla.Sensor.listen-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.WalkerAIController.stop
+Snippet for carla.Sensor.listen
 </p>
-<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
+<div id="carla.Sensor.listen-code" class="SnipetContent">
 
 ```py
   
 
-#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
+# This recipe applies a color conversion to the image taken by a camera sensor,
+# so it is converted to a semantic segmentation image.
 
-# stop pedestrians (list is [controller, actor, controller, actor ...])
-for i in range(0, len(all_id), 2):
-    all_actors[i].stop()
-
-# destroy pedestrian (actor and controller)
-client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+# ...
+camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
+# ...
+cc = carla.ColorConverter.CityScapesPalette
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
+# ...
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -4129,6 +4355,31 @@ world.enable_environment_objects(objects_to_toggle, True)
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.enable_environment_objects-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.spawn_actor-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.spawn_actor
+</p>
+<div id="carla.World.spawn_actor-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe attaches different camera / sensors to a vehicle with different attachments.
+
+# ...
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
+# Default attachment:  Attachment.Rigid
+gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
+collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
+lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -4164,85 +4415,6 @@ spectator.set_transform(actor_snapshot.get_transform())
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.load_map_layer-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.load_map_layer
-</p>
-<div id="carla.World.load_map_layer-code" class="SnipetContent">
-
-```py
-  
-# This recipe toggles on several layers in our "_Opt" maps
-
-# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
-world = client.load_world('Town01_Opt', carla.MapLayer.None)
-
-# Toggle all buildings on
-world.load_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all foliage on
-world.load_map_layer(carla.MapLayer.Foliage)
-
-# Toggle all parked vehicles on
-world.load_map_layer(carla.MapLayer.ParkedVehicles)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.spawn_actor-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.spawn_actor
-</p>
-<div id="carla.World.spawn_actor-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe attaches different camera / sensors to a vehicle with different attachments.
-
-# ...
-camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
-# Default attachment:  Attachment.Rigid
-gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
-collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
-lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.unload_map_layer-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.unload_map_layer
-</p>
-<div id="carla.World.unload_map_layer-code" class="SnipetContent">
-
-```py
-  
-# This recipe toggles off several layers in our "_Opt" maps
-
-# Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
-# as well as buildings and parked vehicles
-world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
-
-# Toggle all buildings off
-world.unload_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all parked vehicles off
-world.unload_map_layer(carla.MapLayer.ParkedVehicles)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
