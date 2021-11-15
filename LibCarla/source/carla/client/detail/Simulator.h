@@ -25,6 +25,8 @@
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/LabelledPoint.h"
 #include "carla/rpc/VehicleWheels.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <boost/optional.hpp>
 
@@ -294,6 +296,8 @@ namespace detail {
 
     void SetPedestriansCrossFactor(float percentage);
 
+    void SetPedestriansSeed(unsigned int seed);
+
     /// @}
     // =========================================================================
     /// @name General operations with actors
@@ -457,8 +461,20 @@ namespace detail {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }
 
-    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControl &control) {
-      _client.ApplyBoneControlToWalker(walker.GetId(), control);
+    rpc::WalkerBoneControlOut GetBonesTransform(Walker &walker) {
+      return _client.GetBonesTransform(walker.GetId());
+    }
+
+    void SetBonesTransform(Walker &walker, const rpc::WalkerBoneControlIn &bones) {
+      return _client.SetBonesTransform(walker.GetId(), bones);
+    }
+
+    void BlendPose(Walker &walker, float blend) {
+      return _client.BlendPose(walker.GetId(), blend);
+    }
+
+    void GetPoseFromAnimation(Walker &walker) {
+      return _client.GetPoseFromAnimation(walker.GetId());
     }
 
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
@@ -467,6 +483,14 @@ namespace detail {
 
     void SetLightStateToVehicle(Vehicle &vehicle, const rpc::VehicleLightState light_state) {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
+    }
+
+    void OpenVehicleDoor(Vehicle &vehicle, const rpc::VehicleDoor door_idx) {
+      _client.OpenVehicleDoor(vehicle.GetId(), door_idx);
+    }
+
+    void CloseVehicleDoor(Vehicle &vehicle, const rpc::VehicleDoor door_idx) {
+      _client.CloseVehicleDoor(vehicle.GetId(), door_idx);
     }
 
     void SetWheelSteerDirection(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
@@ -653,6 +677,24 @@ namespace detail {
     }
 
     void FreezeAllTrafficLights(bool frozen);
+
+    /// @}
+    // =========================================================================
+    /// @name Texture updating operations
+    // =========================================================================
+    /// @{
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
 
     /// @}
 

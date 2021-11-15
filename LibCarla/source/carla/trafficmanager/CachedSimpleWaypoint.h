@@ -28,6 +28,7 @@ namespace traffic_manager {
     uint64_t next_right_waypoint = 0;
     int32_t geodesic_grid_id;
     bool is_junction;
+    uint8_t road_option;
 
     CachedSimpleWaypoint() = default;
     CachedSimpleWaypoint(const SimpleWaypointPtr& simple_waypoint);

@@ -248,6 +248,16 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse CloseVehicleDoor(const EVehicleDoor)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyPhysicsControl(const FVehiclePhysicsControl&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -357,7 +367,22 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
-  virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControl&)
+  virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse BlendPose(float Blend)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetPoseFromAnimation()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -427,6 +452,10 @@ public:
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
 
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
+
+  virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor DoorIdx) final;
+
+  virtual ECarlaServerResponse CloseVehicleDoor(const EVehicleDoor DoorIdx) final;
 
   virtual ECarlaServerResponse ApplyPhysicsControl(
       const FVehiclePhysicsControl& PhysicsControl) final;
@@ -534,7 +563,13 @@ public:
 
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
-  virtual ECarlaServerResponse ApplyBoneControlToWalker(const FWalkerBoneControl&) final;
+  virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) final;
+  
+  virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) final;
+
+  virtual ECarlaServerResponse BlendPose(float Blend);
+
+  virtual ECarlaServerResponse GetPoseFromAnimation();
 };
 
 class FOtherActor : public FCarlaActor

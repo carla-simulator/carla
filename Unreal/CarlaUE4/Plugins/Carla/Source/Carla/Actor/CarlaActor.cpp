@@ -27,7 +27,8 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehicleLightStateList.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -667,6 +668,34 @@ ECarlaServerResponse FVehicleActor::GetVehicleLightState(FVehicleLightState& Lig
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::OpenVehicleDoor(const EVehicleDoor DoorIdx)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->OpenDoor(DoorIdx);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::CloseVehicleDoor(const EVehicleDoor DoorIdx)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->CloseDoor(DoorIdx);
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::ApplyPhysicsControl(
       const FVehiclePhysicsControl& PhysicsControl)
 {
@@ -1219,8 +1248,7 @@ ECarlaServerResponse FWalkerActor::ApplyControlToWalker(
   return ECarlaServerResponse::Success;
 }
 
-ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
-    const FWalkerBoneControl& Control)
+ECarlaServerResponse FWalkerActor::GetBonesTransform(FWalkerBoneControlOut& Bones)
 {
   if (IsDormant())
   {
@@ -1237,7 +1265,73 @@ ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
     {
       return ECarlaServerResponse::WalkerIncompatibleController;
     }
-    Controller->ApplyWalkerControl(Control);
+    Controller->GetBonesTransform(Bones);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::SetBonesTransform(const FWalkerBoneControlIn& Bones)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->SetBonesTransform(Bones);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::BlendPose(float Blend)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->BlendPose(Blend);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::GetPoseFromAnimation()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->GetPoseFromAnimation();
   }
   return ECarlaServerResponse::Success;
 }

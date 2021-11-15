@@ -128,6 +128,9 @@ namespace traffic_manager {
 
       WaypointPtr waypoint_ptr = _world_map->GetWaypointXODR(cached_wp.road_id, cached_wp.lane_id, cached_wp.s);
       SimpleWaypointPtr wp = std::make_shared<SimpleWaypoint>(waypoint_ptr);
+      wp->SetGeodesicGridId(cached_wp.geodesic_grid_id);
+      wp->SetIsJunction(cached_wp.is_junction);
+      wp->SetRoadOption(static_cast<RoadOption>(cached_wp.road_option));
       dense_topology.push_back(wp);
     }
 
@@ -227,8 +230,7 @@ namespace traffic_manager {
     }
 
     // 3. Processing waypoints.
-    auto distance_squared =
-    [](cg::Location l1, cg::Location l2) {
+    auto distance_squared = [](cg::Location l1, cg::Location l2) {
       return cg::Math::DistanceSquared(l1, l2);
     };
     auto square = [](float input) {return std::pow(input, 2);};
@@ -259,7 +261,7 @@ namespace traffic_manager {
       // Adding more waypoints if the angle is too tight or if they are too distant.
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
           double distance = std::abs(segment_waypoints.at(i)->GetWaypoint()->GetDistance() - segment_waypoints.at(i+1)->GetWaypoint()->GetDistance());
-          double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().rotation.GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().rotation.GetForwardVector());
+          double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().GetForwardVector());
           int16_t angle_splits = static_cast<int16_t>(angle/MAX_WPT_RADIANS);
           int16_t distance_splits = static_cast<int16_t>((distance*distance)/MAX_WPT_DISTANCE);
           auto max_splits = max(angle_splits, distance_splits);
@@ -282,17 +284,19 @@ namespace traffic_manager {
       // Placing intra-segment connections.
       cg::Location grid_edge_location = segment_waypoints.front()->GetLocation();
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
-
+        SimpleWaypointPtr current_waypoint = segment_waypoints.at(i);
+        SimpleWaypointPtr next_waypoint = segment_waypoints.at(i+1);
         // Assigning grid id.
-        if (distance_squared(grid_edge_location, segment_waypoints.at(i)->GetLocation()) >
+        if (distance_squared(grid_edge_location, current_waypoint->GetLocation()) >
         square(MAX_GEODESIC_GRID_LENGTH)) {
           ++geodesic_grid_id_counter;
-          grid_edge_location = segment_waypoints.at(i)->GetLocation();
+          grid_edge_location = current_waypoint->GetLocation();
         }
-        segment_waypoints.at(i)->SetGeodesicGridId(geodesic_grid_id_counter);
+        current_waypoint->SetGeodesicGridId(geodesic_grid_id_counter);
 
-        segment_waypoints.at(i)->SetNextWaypoint({segment_waypoints.at(i + 1)});
-        segment_waypoints.at(i + 1)->SetPreviousWaypoint({segment_waypoints.at(i)});
+        current_waypoint->SetNextWaypoint({next_waypoint});
+        next_waypoint->SetPreviousWaypoint({current_waypoint});
+
       }
       segment_waypoints.back()->SetGeodesicGridId(geodesic_grid_id_counter);
 
@@ -326,14 +330,14 @@ namespace traffic_manager {
     }
 
     // Linking lane change connections.
-    for (auto &simple_waypoint:dense_topology) {
-      if (!simple_waypoint->CheckJunction()) {
-        FindAndLinkLaneChange(simple_waypoint);
+    for (auto &swp : dense_topology) {
+      if (!swp->CheckJunction()) {
+        FindAndLinkLaneChange(swp);
       }
     }
 
     // Linking any unconnected segments.
-    for (auto &swp: dense_topology) {
+    for (auto &swp : dense_topology) {
       if (swp->GetNextWaypoint().empty()) {
         auto neighbour = swp->GetRightWaypoint();
         if (!neighbour) {
@@ -348,6 +352,9 @@ namespace traffic_manager {
         }
       }
     }
+
+    // Specifying a RoadOption for each SimpleWaypoint
+    SetUpRoadOption();
   }
 
   void InMemoryMap::SetUpSpatialTree() {
@@ -356,6 +363,95 @@ namespace traffic_manager {
         const cg::Location loc = simple_waypoint->GetLocation();
         Point3D point(loc.x, loc.y, loc.z);
         rtree.insert(std::make_pair(point, simple_waypoint));
+      }
+    }
+  }
+
+  void InMemoryMap::SetUpRoadOption() {
+    for (auto &swp : dense_topology) {
+      std::vector<SimpleWaypointPtr> next_waypoints = swp->GetNextWaypoint();
+      std::size_t next_swp_size = next_waypoints.size();
+
+      if (next_swp_size == 0) {
+        // No next waypoint means that this is an end of the road.
+        swp->SetRoadOption(RoadOption::RoadEnd);
+      }
+
+      else if (next_swp_size > 1 || (!swp->CheckJunction() && next_waypoints.front()->CheckJunction())) {
+        // To check if we are in an actual junction, and not on an highway, we try to see
+        // if there's a landmark nearby of type Traffic Light, Stop Sign or Yield Sign.
+
+        bool found_landmark= false;
+        if (next_swp_size <= 1) {
+
+          auto all_landmarks = swp->GetWaypoint()->GetAllLandmarksInDistance(15.0);
+
+          if (all_landmarks.empty()) {
+            // Landmark hasn't been found, this isn't a junction.
+            swp->SetRoadOption(RoadOption::LaneFollow);
+          } else {
+            for (auto &landmark : all_landmarks) {
+              auto landmark_type = landmark->GetType();
+              if (landmark_type == "1000001" || landmark_type == "206" || landmark_type == "205") {
+                // We found a landmark.
+                found_landmark= true;
+                break;
+              }
+            }
+            if (!found_landmark) {
+              swp->SetRoadOption(RoadOption::LaneFollow);
+            }
+          }
+        }
+
+        // If we did find a landmark, or we are in the other case, find all waypoints
+        // in the junction and assign the correct RoadOption.
+        if (found_landmark || next_swp_size > 1) {
+          swp->SetRoadOption(RoadOption::LaneFollow);
+          for (auto &next_swp : next_waypoints) {
+            std::vector<SimpleWaypointPtr> traversed_waypoints;
+            SimpleWaypointPtr junction_end_waypoint;
+
+            if (next_swp_size > 1) {
+              junction_end_waypoint = next_swp;
+            } else {
+              junction_end_waypoint = next_waypoints.front();
+            }
+
+            while (junction_end_waypoint->CheckJunction()){
+              traversed_waypoints.push_back(junction_end_waypoint);
+              std::vector<SimpleWaypointPtr> temp = junction_end_waypoint->GetNextWaypoint();
+              if (temp.empty()) {
+                break;
+              }
+              junction_end_waypoint = temp.front();
+            }
+
+            // Calculate the angle between the first and the last point of the junction.
+            int16_t current_angle = static_cast<int16_t>(traversed_waypoints.front()->GetTransform().rotation.yaw);
+            int16_t junction_end_angle = static_cast<int16_t>(traversed_waypoints.back()->GetTransform().rotation.yaw);
+            int16_t diff_angle = (junction_end_angle - current_angle) % 360;
+            bool straight = (diff_angle < STRAIGHT_DEG && diff_angle > -STRAIGHT_DEG) ||
+                  (diff_angle > 360-STRAIGHT_DEG && diff_angle <= 360) ||
+                  (diff_angle < -360+STRAIGHT_DEG && diff_angle >= -360);
+            bool right = (diff_angle >= STRAIGHT_DEG && diff_angle <= 180) ||
+                (diff_angle <= -180 && diff_angle >= -360+STRAIGHT_DEG);
+
+            auto assign_option = [](RoadOption ro, std::vector<SimpleWaypointPtr> traversed_waypoints) {
+              for (auto &twp : traversed_waypoints) {
+                  twp->SetRoadOption(ro);
+              }
+            };
+
+            // Assign RoadOption according to the angle.
+            if (straight) assign_option(RoadOption::Straight, traversed_waypoints);
+            else if (right) assign_option(RoadOption::Right, traversed_waypoints);
+            else assign_option(RoadOption::Left, traversed_waypoints);
+          }
+        }
+      }
+      else if (next_swp_size == 1 && swp->GetRoadOption() == RoadOption::Void) {
+        swp->SetRoadOption(RoadOption::LaneFollow);
       }
     }
   }

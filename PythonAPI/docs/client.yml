@@ -42,7 +42,7 @@
         doc: >
           A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
       doc: >
-        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.  
+        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.
         [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in carla.ActorList all at once.
     # --------------------------------------
     - def_name: apply_batch_sync
@@ -438,7 +438,7 @@
         doc: >
           Between 0 and 100. Amount of times stop signs will be ignored.
       doc: >
-        During the traffic light stage, which runs every frame, this method sets the percent chance that stop signs will be ignored for a vehicle.  
+        During the traffic light stage, which runs every frame, this method sets the percent chance that stop signs will be ignored for a vehicle.
     # --------------------------------------
     - def_name: ignore_vehicles_percentage
       params:
@@ -480,6 +480,21 @@
         Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 
         Default is 30. Exceeding a speed limit can be done using negative percentages.
+    # --------------------------------------
+    - def_name: update_vehicle_lights
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose lights status is being changed.
+      - param_name: do_update
+        type: bool
+        doc: >
+          If __True__ the traffic manager will manage the vehicle lights for the specified vehicle.
+      doc: >
+        Sets if the Traffic Manager is responsible of updating the vehicle lights, or not.
+
+        Default is __False__. The traffic manager will not change the vehicle light status of a vehicle, unless its auto_update_status is st to __True__.
     # --------------------------------------
     - def_name: get_port
       params:
@@ -524,11 +539,11 @@
         type: bool
         default: true
         doc: >
-          If __True__, the OSM mode is enabled. 
+          If __True__, the OSM mode is enabled.
       doc: >
-        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
+        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
     # --------------------------------------
-    - def_name: set_percentage_keep_right_rule
+    - def_name: keep_right_rule_percentage
       params:
       - param_name: actor
         type: carla.Actor
@@ -546,7 +561,7 @@
       - param_name: value
         type: int
         doc: >
-          Seed value for the random number generation of the Traffic Manager. 
+          Seed value for the random number generation of the Traffic Manager.
       doc: >
         Sets a specific random seed for the Traffic Manager, thereby setting it to be deterministic.
     # --------------------------------------
@@ -556,11 +571,11 @@
         type: bool
         default: true
         doc: >
-          If __True__, the TM synchronous mode is enabled. 
+          If __True__, the TM synchronous mode is enabled.
       doc: >
-        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.  
+        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
       warning: >
-        If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick. 
+        If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick.
     # --------------------------------------
     - def_name: set_respawn_dormant_vehicles
       params:

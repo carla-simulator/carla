@@ -100,7 +100,7 @@ CARLA forum</a>
 [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons.  
 [__Generate maps with OpenStreetMap__](tuto_G_openstreetmap.md) — Use OpenStreetMap to generate maps for use in simulations.  
 [__Retrieve simulation data__](tuto_G_retrieve_data.md) — A step by step guide to properly gather data using the recorder.  
-[__CarSim Integration (Beta)__](tuto_G_carsim_integration.md) — Tutorial on how to run a simulation using the CarSim vehicle dynamics engine.  
+[__CarSim Integration__](tuto_G_carsim_integration.md) — Tutorial on how to run a simulation using the CarSim vehicle dynamics engine.  
 [__RLlib Integration__](tuto_G_rllib_integration.md) — Find out how to run your own experiment using the RLlib library.  
 [__Chrono Integration__](tuto_G_chrono.md) — Use the Chrono integration to simulation physics  
 [__Build Unreal Engine and CARLA in Docker__](build_docker_unreal.md) — Build Unreal Engine and CARLA in Docker  

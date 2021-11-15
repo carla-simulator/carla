@@ -178,13 +178,13 @@ pipeline
                         }
                         stage('ubuntu Doxygen')
                         {
-                            when { anyOf { branch "master"; buildingTag() } }
+                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
                             steps
                             {
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
                                 sh '''
                                     cd ~/carla-simulator.github.io
-                                    git remote set-url origin git@github.com:carla-simulator/carla-simulator.github.io.git
+                                    git remote set-url origin git@docs:carla-simulator/carla-simulator.github.io.git
                                     git fetch
                                     git checkout -B master origin/master
                                 '''

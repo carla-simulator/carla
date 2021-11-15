@@ -11,6 +11,7 @@
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -222,10 +223,142 @@ void ACarlaGameModeBase::BeginPlay()
     Actor->GetComponents(Lights, false);
     for(UCarlaLight* Light : Lights)
     {
-      Light->BeginPlay();
+      Light->RegisterLight();
+      if(!Light->HasBegunPlay())
+      {
+        Light->BeginPlay();
+      }
     }
   }
   EnableOverlapEvents();
+}
+
+TArray<FString> ACarlaGameModeBase::GetNamesOfAllActors()
+{
+  TArray<FString> Names;
+  TArray<AActor*> Actors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), Actors);
+  for (AActor* Actor : Actors)
+  {
+    TArray<UStaticMeshComponent*> StaticMeshes;
+    Actor->GetComponents(StaticMeshes);
+    if (StaticMeshes.Num())
+    {
+      Names.Add(Actor->GetName());
+    }
+  }
+  return Names;
+}
+
+AActor* ACarlaGameModeBase::FindActorByName(const FString& ActorName)
+{
+  TArray<AActor*> Actors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), Actors);
+  for (AActor* Actor : Actors)
+  {
+    if(Actor->GetName() == ActorName)
+    {
+      return Actor;
+      break;
+    }
+  }
+  return nullptr;
+}
+
+UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureColor& Texture)
+{
+  FlushRenderingCommands();
+  TArray<FColor> Colors;
+  for (uint32_t y = 0; y < Texture.GetHeight(); y++)
+  {
+    for (uint32_t x = 0; x < Texture.GetWidth(); x++)
+    {
+      auto& Color = Texture.At(x,y);
+      Colors.Add(FColor(Color.r, Color.g, Color.b, Color.a));
+    }
+  }
+  UTexture2D* UETexture = UTexture2D::CreateTransient(Texture.GetWidth(), Texture.GetHeight(), EPixelFormat::PF_B8G8R8A8);
+  FTexture2DMipMap& Mip = UETexture->PlatformData->Mips[0];
+  void* Data = Mip.BulkData.Lock( LOCK_READ_WRITE );
+  FMemory::Memcpy( Data,
+      &Colors[0],
+      Texture.GetWidth()*Texture.GetHeight()*sizeof(FColor));
+  Mip.BulkData.Unlock();
+  UETexture->UpdateResource();
+  return UETexture;
+}
+
+UTexture2D* ACarlaGameModeBase::CreateUETexture(const carla::rpc::TextureFloatColor& Texture)
+{
+  FlushRenderingCommands();
+  TArray<FFloat16Color> Colors;
+  for (uint32_t y = 0; y < Texture.GetHeight(); y++)
+  {
+    for (uint32_t x = 0; x < Texture.GetWidth(); x++)
+    {
+      auto& Color = Texture.At(x,y);
+      Colors.Add(FLinearColor(Color.r, Color.g, Color.b, Color.a));
+    }
+  }
+  UTexture2D* UETexture = UTexture2D::CreateTransient(Texture.GetWidth(), Texture.GetHeight(), EPixelFormat::PF_FloatRGBA);
+  FTexture2DMipMap& Mip = UETexture->PlatformData->Mips[0];
+  void* Data = Mip.BulkData.Lock( LOCK_READ_WRITE );
+  FMemory::Memcpy( Data,
+      &Colors[0],
+      Texture.GetWidth()*Texture.GetHeight()*sizeof(FFloat16Color));
+  Mip.BulkData.Unlock();
+  UETexture->UpdateResource();
+  return UETexture;
+}
+
+void ACarlaGameModeBase::ApplyTextureToActor(
+    AActor* Actor,
+    UTexture2D* Texture,
+    const carla::rpc::MaterialParameter& TextureParam)
+{
+  namespace cr = carla::rpc;
+  TArray<UStaticMeshComponent*> StaticMeshes;
+  Actor->GetComponents(StaticMeshes);
+  for (UStaticMeshComponent* Mesh : StaticMeshes)
+  {
+    for (int i = 0; i < Mesh->GetNumMaterials(); ++i)
+    {
+      UMaterialInterface* OriginalMaterial = Mesh->GetMaterial(i);
+      UMaterialInstanceDynamic* DynamicMaterial = Cast<UMaterialInstanceDynamic>(OriginalMaterial);
+      if(!DynamicMaterial)
+      {
+        DynamicMaterial = UMaterialInstanceDynamic::Create(OriginalMaterial, NULL);
+        Mesh->SetMaterial(i, DynamicMaterial);
+      }
+
+      switch(TextureParam)
+      {
+        case cr::MaterialParameter::Tex_Diffuse:
+          DynamicMaterial->SetTextureParameterValue("BaseColor", Texture);
+          DynamicMaterial->SetTextureParameterValue("Difuse", Texture);
+          DynamicMaterial->SetTextureParameterValue("Difuse 2", Texture);
+          DynamicMaterial->SetTextureParameterValue("Difuse 3", Texture);
+          DynamicMaterial->SetTextureParameterValue("Difuse 4", Texture);
+          break;
+        case cr::MaterialParameter::Tex_Normal:
+          DynamicMaterial->SetTextureParameterValue("Normal", Texture);
+          DynamicMaterial->SetTextureParameterValue("Normal 2", Texture);
+          DynamicMaterial->SetTextureParameterValue("Normal 3", Texture);
+          DynamicMaterial->SetTextureParameterValue("Normal 4", Texture);
+          break;
+        case cr::MaterialParameter::Tex_Emissive:
+          DynamicMaterial->SetTextureParameterValue("Emissive", Texture);
+          break;
+        case cr::MaterialParameter::Tex_Ao_Roughness_Metallic_Emissive:
+          DynamicMaterial->SetTextureParameterValue("AO / Roughness / Metallic / Emissive", Texture);
+          DynamicMaterial->SetTextureParameterValue("ORMH", Texture);
+          DynamicMaterial->SetTextureParameterValue("ORMH 2", Texture);
+          DynamicMaterial->SetTextureParameterValue("ORMH 3", Texture);
+          DynamicMaterial->SetTextureParameterValue("ORMH 4", Texture);
+          break;
+      }
+    }
+  }
 }
 
 void ACarlaGameModeBase::Tick(float DeltaSeconds)

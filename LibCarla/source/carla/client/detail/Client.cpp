@@ -11,13 +11,14 @@
 #include "carla/client/FileTransfer.h"
 #include "carla/client/TimeoutException.h"
 #include "carla/rpc/ActorDescription.h"
-#include "carla/rpc/BoneTransformData.h"
+#include "carla/rpc/BoneTransformDataIn.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/Response.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehicleLightState.h"
-#include "carla/rpc/WalkerBoneControl.h"
+#include "carla/rpc/WalkerBoneControlIn.h"
+#include "carla/rpc/WalkerBoneControlOut.h"
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
@@ -161,6 +162,24 @@ namespace detail {
     _pimpl->CallAndWait<void>("copy_opendrive_to_file", std::move(opendrive), params);
   }
 
+  void Client::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture) {
+    _pimpl->CallAndWait<void>("apply_color_texture_to_objects", objects_name, parameter, Texture);
+  }
+
+  void Client::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture) {
+    _pimpl->CallAndWait<void>("apply_float_color_texture_to_objects", objects_name, parameter, Texture);
+  }
+
+  std::vector<std::string> Client::GetNamesOfAllObjects() const {
+    return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
+  }
+
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
     return _pimpl->CallAndWait<rpc::EpisodeInfo>("get_episode_info");
   }
@@ -272,6 +291,18 @@ namespace detail {
       rpc::ActorId vehicle,
       const rpc::VehicleLightState &light_state) {
     return _pimpl->AsyncCall("set_vehicle_light_state", vehicle, light_state);
+  }
+
+  void Client::OpenVehicleDoor(
+      rpc::ActorId vehicle,
+      const rpc::VehicleDoor door_idx) {
+    return _pimpl->AsyncCall("open_vehicle_door", vehicle, door_idx);
+  }
+
+  void Client::CloseVehicleDoor(
+      rpc::ActorId vehicle,
+      const rpc::VehicleDoor door_idx) {
+    return _pimpl->AsyncCall("close_vehicle_door", vehicle, door_idx);
   }
 
   void Client::SetWheelSteerDirection(
@@ -423,8 +454,21 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
-  void Client::ApplyBoneControlToWalker(rpc::ActorId walker, const rpc::WalkerBoneControl &control) {
-    _pimpl->AsyncCall("apply_bone_control_to_walker", walker, control);
+  rpc::WalkerBoneControlOut Client::GetBonesTransform(rpc::ActorId walker) {
+    auto res = _pimpl->CallAndWait<rpc::WalkerBoneControlOut>("get_bones_transform", walker);
+    return res;
+  }
+
+  void Client::SetBonesTransform(rpc::ActorId walker, const rpc::WalkerBoneControlIn &bones) {
+    _pimpl->AsyncCall("set_bones_transform", walker, bones);
+  }
+
+  void Client::BlendPose(rpc::ActorId walker, float blend) {
+    _pimpl->AsyncCall("blend_pose", walker, blend);
+  }
+
+  void Client::GetPoseFromAnimation(rpc::ActorId walker) {
+    _pimpl->AsyncCall("get_pose_from_animation", walker);
   }
 
   void Client::SetTrafficLightState(

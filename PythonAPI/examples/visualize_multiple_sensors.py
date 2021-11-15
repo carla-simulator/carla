@@ -278,7 +278,7 @@ def run_simulation(args, client):
 
 
         # Instanciating the vehicle to which we attached the sensors
-        bp = world.get_blueprint_library().filter('charger2020')[0]
+        bp = world.get_blueprint_library().filter('charger_2020')[0]
         vehicle = world.spawn_actor(bp, random.choice(world.get_map().get_spawn_points()))
         vehicle_list.append(vehicle)
         vehicle.set_autopilot(True)

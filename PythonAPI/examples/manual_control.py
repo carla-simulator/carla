@@ -36,11 +36,13 @@ Use ARROWS or WASD keys for control.
     C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
 
+    O            : open/close all doors of vehicle
+    T            : toggle vehicle's telemetry
+
     V            : Select next map layer (Shift+V reverse)
     B            : Load current selected map layer (Shift+B to unload)
 
     R            : toggle recording images to disk
-    T            : toggle vehicle's telemetry
 
     CTRL + R     : toggle recording of simulation (replacing any previous)
     CTRL + P     : start replaying last recorded simulation
@@ -120,6 +122,7 @@ try:
     from pygame.locals import K_l
     from pygame.locals import K_m
     from pygame.locals import K_n
+    from pygame.locals import K_o
     from pygame.locals import K_p
     from pygame.locals import K_q
     from pygame.locals import K_r
@@ -217,6 +220,7 @@ class World(object):
         self.recording_start = 0
         self.constant_velocity_enabled = False
         self.show_vehicle_telemetry = False
+        self.doors_are_open = False
         self.current_map_layer = 0
         self.map_layer_names = [
             carla.MapLayer.NONE,
@@ -262,6 +266,7 @@ class World(object):
             spawn_point.rotation.pitch = 0.0
             self.destroy()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
         while self.player is None:
             if not self.map.get_spawn_points():
@@ -271,6 +276,7 @@ class World(object):
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
@@ -427,6 +433,18 @@ class KeyboardControl(object):
                         world.player.enable_constant_velocity(carla.Vector3D(17, 0, 0))
                         world.constant_velocity_enabled = True
                         world.hud.notification("Enabled Constant Velocity Mode at 60 km/h")
+                elif event.key == K_o:
+                    try:
+                        if world.doors_are_open:
+                            world.hud.notification("Closing Doors")
+                            world.doors_are_open = False
+                            world.player.close_door(carla.VehicleDoor.All)
+                        else:
+                            world.hud.notification("Opening doors")
+                            world.doors_are_open = True
+                            world.player.open_door(carla.VehicleDoor.All)
+                    except Exception:
+                        pass
                 elif event.key == K_t:
                     if world.show_vehicle_telemetry:
                         world.player.show_debug_telemetry(False)
@@ -1040,8 +1058,9 @@ class CameraManager(object):
             ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)', {}],
             ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)', {}],
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)', {}],
-            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
-                'Camera Semantic Segmentation (CityScapes Palette)', {}],
+            ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)', {}],
+            ['sensor.camera.instance_segmentation', cc.CityScapesPalette, 'Camera Instance Segmentation (CityScapes Palette)', {}],
+            ['sensor.camera.instance_segmentation', cc.Raw, 'Camera Instance Segmentation (Raw)', {}],
             ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',

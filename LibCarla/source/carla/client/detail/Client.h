@@ -16,20 +16,23 @@
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/CommandResponse.h"
+#include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/EpisodeInfo.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/LabelledPoint.h"
 #include "carla/rpc/LightState.h"
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/MapLayer.h"
-#include "carla/rpc/EnvironmentObject.h"
-#include "carla/rpc/TrafficLightState.h"
-#include "carla/rpc/VehiclePhysicsControl.h"
-#include "carla/rpc/VehicleLightState.h"
-#include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
+#include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehicleDoor.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/VehicleLightState.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleWheels.h"
+#include "carla/rpc/WeatherParameters.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <functional>
 #include <memory>
@@ -44,7 +47,8 @@ namespace rpc {
   class DebugShape;
   class VehicleControl;
   class WalkerControl;
-  class WalkerBoneControl;
+  class WalkerBoneControlIn;
+  class WalkerBoneControlOut;
 }
 namespace sensor {
   class SensorData;
@@ -101,6 +105,18 @@ namespace detail {
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
 
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
+
     rpc::EpisodeInfo GetEpisodeInfo();
 
     rpc::MapInfo GetMapInfo();
@@ -144,6 +160,14 @@ namespace detail {
     void SetLightStateToVehicle(
         rpc::ActorId vehicle,
         const rpc::VehicleLightState &light_state);
+
+    void OpenVehicleDoor(
+        rpc::ActorId vehicle,
+        const rpc::VehicleDoor door_idx);
+
+    void CloseVehicleDoor(
+        rpc::ActorId vehicle,
+        const rpc::VehicleDoor door_idx);
 
     rpc::Actor SpawnActor(
         const rpc::ActorDescription &description,
@@ -258,9 +282,19 @@ namespace detail {
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
 
-    void ApplyBoneControlToWalker(
+    rpc::WalkerBoneControlOut GetBonesTransform(
+        rpc::ActorId walker);
+
+    void SetBonesTransform(
         rpc::ActorId walker,
-        const rpc::WalkerBoneControl &control);
+        const rpc::WalkerBoneControlIn &bones);
+
+    void BlendPose(
+        rpc::ActorId walker, 
+        float blend);
+
+    void GetPoseFromAnimation(
+        rpc::ActorId walker);
 
     void SetTrafficLightState(
         rpc::ActorId traffic_light,
