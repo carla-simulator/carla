@@ -96,7 +96,8 @@ CARLA forum</a>
 [__Import/Package a Large Map__](large_map_import.md) — How to import a large map  
 ## Tutorials — General
 [__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define dynamic box triggers for wheels. 
-[__Instance segmentation__](tuto_G_instance_segmentation_sensor.md) — Add instance segmentation camera sensor.  
+[__Instance segmentation sensor__](tuto_G_instance_segmentation_sensor.md) - Use the instance segmentation camera sensor.
+[__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define dynamic box triggers for wheels.  
 [__Control vehicle physics__](tuto_G_control_vehicle_physics.md) — Set runtime changes on a vehicle physics.  
 [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons.  
 [__Generate maps with OpenStreetMap__](tuto_G_openstreetmap.md) — Use OpenStreetMap to generate maps for use in simulations.  
