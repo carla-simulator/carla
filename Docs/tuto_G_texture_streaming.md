@@ -24,7 +24,7 @@ Export your modified texture into an appropriate location and then open up a cod
 
 ## Update the texture through the API
 
-If you havent already, launch the CARLA simulation, either from the command line, or launch the simulation within the Unreal Editor. We will use the Python Imaging Library (PIL) to read the texture from the image file we exported from our image manipulation software.
+If you havent already, launch the CARLA simulation, either from the command line, or launch the simulation within the Unreal Editor. We will use the [__Python Imaging Library (PIL)__](https://pillow.readthedocs.io/en/stable/) to read the texture from the image file we exported from our image manipulation software.
 
 ## Connect to the simulator
 
