@@ -8,15 +8,15 @@ Firstly, we need to load the Unreal Editor and load a CARLA map, follow the inst
 
 ![select_building](../img/tuto_G_texture_streaming/building_selected.png)
 
-We have selected BP_Apartment04_v5_Opt for texture manipulation, the name can be seen in the World Outliner panel. Make sure Hover over the name in the World Outliner as the internal name may differ from the title displayed, in this case, the internal name is actually BP_Apartment04_v5_Opt_2.
+We have selected __BP_Apartment04_v5_Opt for__ texture manipulation, the name can be seen in the World Outliner panel. Make sure Hover over the name in the World Outliner as the internal name may differ from the title displayed, in this case, the internal name is actually __BP_Apartment04_v5_Opt_2Ñ__.
 
 ## Export a texture to work with
 
-Now that we have selected a building, we can modify the texture used to control the building's appearance. With the building selected, in the details panel you will see some of the details of the asset, such as location, rotation and scale. Click on "Static Mesh (inherited)" to open the mesh properties, then in the Static Mesh section of the panel click the magnifying glass icon. This brings up the materials and textures belonging to the asset into focus in the Content Browser. In this case, we want to inspect the T_Apartment04_D_Opt texture. If you double click the texture, you can inspect it in the Unreal Editor, however, we want to export it so we can modify it. Right click and choose Asset Actions > Export. Save the file in an appropriate location with an appropriate format (we choose TGA here).
+Now that we have selected a building, we can modify the texture used to control the building's appearance. With the building selected, in the details panel you will see some of the details of the asset, such as location, rotation and scale. Click on "Static Mesh (inherited)" to open the mesh properties, then in the Static Mesh section of the panel click the magnifying glass icon. This brings up the materials and textures belonging to the asset into focus in the Content Browser. In this case, we want to inspect the T_Apartment04_D_Opt texture. If you double click the texture, you can inspect it in the Unreal Editor, however, we want to export it so we can modify it. Right click and choose *Asset Actions > Export*. Save the file in an appropriate format (we choose the TGA format here).
 
 ![texture_export](../img/tuto_G_texture_streaming/texture_export.png)
 
-Open the exported texture in your preferred image editing software and edit the texture as needed. In the image below, the original texture is visible in the top half, the lower half shows the modified texture.
+Open the exported texture in your preferred image manipulation software and edit the texture as needed. In the image below, the original texture is visible in the top half, the lower half shows the modified texture.
 
 ![textures](../img/tuto_G_texture_streaming/textures.png)
 
@@ -24,7 +24,7 @@ Export your modified texture into an appropriate location and then open up a cod
 
 ## Update the texture through the API
 
-If you havent already, launch the CARLA simulation, either from the command line, or launch the simulation within the Unreal Editor. We will use the Python Imaging Library (PIL) to read the texture from disk.
+If you havent already, launch the CARLA simulation, either from the command line, or launch the simulation within the Unreal Editor. We will use the Python Imaging Library (PIL) to read the texture from the image file we exported from our image manipulation software.
 
 ## Connect to the simulator
 
@@ -40,6 +40,11 @@ client.set_timeout(2.0)
 ```
 
 ## Update the texture
+
+After loading the modified image, instantiate a [carla.TextureColor](python_api.md#carla.TextureColor) object and populate the pixel data from the loaded image.
+
+Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World)) object to update the texture. You should see the texture update in the UE4 spectator view. 
+
 
 ```py
 
@@ -66,3 +71,11 @@ world.apply_color_texture_to_object('BP_Apartment04_v05_Opt_2', carla.MaterialPa
 ```
 
 ![texture_change](../img/tuto_G_texture_streaming/texture_change.gif)
+
+
+To find objects without relying on the Unreal Editor, you can also use `world.get_names_of_all_objects()` to query object names. By using Python's inbuilt `filter(...)` method you can zero in on your target object.
+
+```py
+# Filter world objects for those with 'Apartment' in the name
+list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
+```
