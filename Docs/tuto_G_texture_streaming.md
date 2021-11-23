@@ -43,7 +43,7 @@ client.set_timeout(2.0)
 
 After loading the modified image, instantiate a [carla.TextureColor](python_api.md#carla.TextureColor) object and populate the pixel data from the loaded image.
 
-Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World)) object to update the texture. You should see the texture update in the UE4 spectator view. 
+Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World) object to update the texture. You should see the texture update in the UE4 spectator view. 
 
 
 ```py

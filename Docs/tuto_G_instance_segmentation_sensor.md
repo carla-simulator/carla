@@ -69,12 +69,10 @@ Now generate the image.
 
 # Save the image to disk
 instance_image_queue = queue.Queue()
-instance_camera.listen(instance_image_queicle_telemetryue.put)
+instance_camera.listen(instance_image_queue.put)
 world.tick()
 instance_image=instance_image_queue.get()
-world.tick()
 instance_image.save_to_disk('instance_segmentation.png')
-world.tick()
 
 ```
 
