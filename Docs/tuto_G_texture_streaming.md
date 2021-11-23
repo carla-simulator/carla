@@ -8,11 +8,11 @@ Firstly, we need to load the Unreal Editor and load a CARLA map, follow the inst
 
 ![select_building](../img/tuto_G_texture_streaming/building_selected.png)
 
-We have selected __BP_Apartment04_v5_Opt for__ texture manipulation, the name can be seen in the World Outliner panel. Make sure Hover over the name in the World Outliner as the internal name may differ from the title displayed, in this case, the internal name is actually __BP_Apartment04_v5_Opt_2Ñ__.
+We have selected __BP_Apartment04_v5_Opt__ for texture manipulation, the name can be seen in the World Outliner panel. Make sure Hover over the name in the World Outliner as the internal name may differ from the title displayed, in this case, the internal name is actually __BP_Apartment04_v5_Opt_2__.
 
 ## Export a texture to work with
 
-Now that we have selected a building, we can modify the texture used to control the building's appearance. With the building selected, in the details panel you will see some of the details of the asset, such as location, rotation and scale. Click on "Static Mesh (inherited)" to open the mesh properties, then in the Static Mesh section of the panel click the magnifying glass icon. This brings up the materials and textures belonging to the asset into focus in the Content Browser. In this case, we want to inspect the T_Apartment04_D_Opt texture. If you double click the texture, you can inspect it in the Unreal Editor, however, we want to export it so we can modify it. Right click and choose *Asset Actions > Export*. Save the file in an appropriate format (we choose the TGA format here).
+Now that we have selected a building, we can modify the texture used to control the building's appearance. With the building selected, in the details panel you will see some of the details of the asset, such as location, rotation and scale. Click on __Static Mesh (inherited)__ to open the mesh properties, then in the Static Mesh section of the panel click the magnifying glass icon. This brings up the materials and textures belonging to the asset into focus in the Content Browser. In this case, we want to inspect the __T_Apartment04_D_Opt__ texture. If you double click the texture, you can inspect it in the Unreal Editor, however, in this instance we want to export it so we can modify it. Right click and choose *Asset Actions > Export*. Save the file in an appropriate format (we choose the TGA format here).
 
 ![texture_export](../img/tuto_G_texture_streaming/texture_export.png)
 
