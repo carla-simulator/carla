@@ -97,6 +97,7 @@ CARLA forum</a>
 ## Tutorials — General
 [__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define dynamic box triggers for wheels. 
 [__Instance segmentation sensor__](tuto_G_instance_segmentation_sensor.md) - Use the instance segmentation camera sensor.
+[__Texture streaming__](tuto_G_texture_streaming.md) - Change textures during runtime through the API.
 [__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define dynamic box triggers for wheels.  
 [__Control vehicle physics__](tuto_G_control_vehicle_physics.md) — Set runtime changes on a vehicle physics.  
 [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons.  

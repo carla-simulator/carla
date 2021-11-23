@@ -67,6 +67,7 @@ nav:
   - 'Import/Package a large map': 'large_map_import.md'
 - Tutorials (general):
   - 'Instance segmentation sensor': "tuto_G_instance_segmentation_sensor.md"
+  - 'Texture streaming': "tuto_G_texture_streaming.md"
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
   - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
