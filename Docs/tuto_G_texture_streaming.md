@@ -10,7 +10,7 @@ Firstly, we need to load the Unreal Editor and load a CARLA map, follow the inst
 
 We have selected __BP_Apartment04_v5_Opt__ for texture manipulation, the name can be seen in the World Outliner panel. Make sure to hover over the name in the World Outliner as the internal name may differ from the title displayed, in this case, the internal name is actually __BP_Apartment04_v5_Opt_2__.
 
-![tooltip](../img/tuto_G_texture_streaming/tooltip_name.png)
+![tooltip](../img/tuto_G_texture_streaming/tooltip.png)
 
 ## Export a texture to work with
 
