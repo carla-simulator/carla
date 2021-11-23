@@ -74,6 +74,8 @@ world.apply_color_texture_to_object('BP_Apartment04_v05_Opt_2', carla.MaterialPa
 
 ![texture_change](../img/tuto_G_texture_streaming/texture_change.gif)
 
+## Find object names through the API
+
 
 To find objects without relying on the Unreal Editor, you can also use `world.get_names_of_all_objects()` to query object names. By using Python's inbuilt `filter(...)` method you can zero in on your target object.
 
