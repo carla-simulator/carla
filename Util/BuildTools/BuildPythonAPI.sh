@@ -50,8 +50,8 @@ done
 
 source $(dirname "$0")/Environment.sh
 
-export CC=clang-8
-export CXX=clang++-8
+export CC=clang-10
+export CXX=clang++-10
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_PYTHONAPI} ; }; then
   fatal_error "Nothing selected to be done."
