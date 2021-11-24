@@ -37,14 +37,14 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-8 >/dev/null 2>&1 || {
+command -v /usr/bin/clang++-10 >/dev/null 2>&1 || {
   echo >&2 "clang 8 is required, but it's not installed.";
   exit 1;
 }
 
-CXX_TAG=c8
-export CC=/usr/bin/clang-8
-export CXX=/usr/bin/clang++-8
+CXX_TAG=c10
+export CC=/usr/bin/clang-10
+export CXX=/usr/bin/clang++-10
 
 source $(dirname "$0")/Environment.sh
 
