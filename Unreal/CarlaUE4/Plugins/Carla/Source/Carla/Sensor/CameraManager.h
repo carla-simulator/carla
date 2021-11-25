@@ -37,6 +37,8 @@ private:
   TArray<ASceneCaptureCamera*> Cameras;
 
   UPROPERTY(EditAnywhere)
-  ECameraManagerMode CameraManagerMode = ECameraManagerMode::Normal;
-  ECameraManagerMode CameraManagerMode_old = ECameraManagerMode::Normal;
+  ECameraManagerMode CameraManagerMode = ECameraManagerMode::TimeSharing;
+  ECameraManagerMode CameraManagerMode_old = ECameraManagerMode::TimeSharing;
+  //ECameraManagerMode CameraManagerMode = ECameraManagerMode::Normal;
+  //ECameraManagerMode CameraManagerMode_old = ECameraManagerMode::Normal;
 };

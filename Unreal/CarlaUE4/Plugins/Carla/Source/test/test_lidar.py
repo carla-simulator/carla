@@ -61,7 +61,7 @@ try:
 except IndexError:
     pass
 try:
-    sys.path.append(glob.glob('PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('D:/bxdd/design/newCarla/carla/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -688,9 +688,9 @@ class CameraManager(object):
         bound_y = 0.5 + self._parent.bounding_box.extent.y
         Attachment = carla.AttachmentType
         self._camera_transforms = [
-            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=10.0)), Attachment.SpringArm),
+            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=-15.0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=5.5, y=1.5, z=1.5)), Attachment.Rigid),
+            (carla.Transform(carla.Location(x=0, y=0, z=2.5)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.Rigid),
             (carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)]
         self.transform_index = 1
@@ -702,10 +702,12 @@ class CameraManager(object):
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)'],
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette,
                 'Camera Semantic Segmentation (CityScapes Palette)'],
-            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)']]
+            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)'],
+            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)'],
+            ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)'],]
         world = self._parent.get_world()
         bp_library = world.get_blueprint_library()
-        for item in self.sensors:
+        for item_index, item in enumerate(self.sensors):
             bp = bp_library.find(item[0])
             if item[0].startswith('sensor.camera'):
                 bp.set_attribute('image_size_x', str(hud.dim[0]))
@@ -713,9 +715,32 @@ class CameraManager(object):
                 if bp.has_attribute('gamma'):
                     bp.set_attribute('gamma', str(gamma_correction))
             elif item[0].startswith('sensor.lidar'):
-                bp.set_attribute('range', '4000')
-                bp.set_attribute('camera_quality', '0.5')
-                bp.set_attribute('points_per_second', '300000')
+                bp.set_attribute('range', '5000')
+                bp.set_attribute('points_per_second', '160000')
+                bp.set_attribute('channels', '32')
+                bp.set_attribute('camera_width', '1000')
+                bp.set_attribute('camera_height', '1000')
+                bp.set_attribute('lidar_visible', '1')
+                bp.set_attribute('lidar_shift', '1.0')
+                bp.set_attribute('speed_mode', 'true')
+                bp.set_attribute('old_mode', 'false')
+                #bp.set_attribute('pc_cycle', 'true')
+                if item_index == 6:
+                    bp.set_attribute('cal_ratio', 'false')
+                    bp.set_attribute('gpu_mode', 'true')
+                    bp.set_attribute('cal_error', 'true')
+                    bp.set_attribute('pc_cycle', 'true')
+                    bp.set_attribute('pc_all', 'true')
+                elif item_index == 7:
+                    bp.set_attribute('cal_ratio', 'false')
+                    bp.set_attribute('gpu_mode', 'true')
+                    bp.set_attribute('cal_error', 'true')
+                    bp.set_attribute('pc_cycle', 'true')
+                    #bp.set_attribute('pc_all', 'false')
+                else:
+                    bp.set_attribute('cal_ratio', 'false')
+                    bp.set_attribute('gpu_mode', 'false')
+                    bp.set_attribute('pc_all', 'false')
             item.append(bp)
         self.index = None
 
@@ -740,6 +765,7 @@ class CameraManager(object):
             # circular reference.
             weak_self = weakref.ref(self)
             self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
+            
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -761,6 +787,7 @@ class CameraManager(object):
         if not self:
             return
         if self.sensors[self.index][0].startswith('sensor.lidar'):
+           #print(image.Channel)
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 3), 3))
             lidar_data = np.array(points[:, :2])
@@ -857,8 +884,8 @@ def main():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='1280x720',
-        help='window resolution (default: 1280x720)')
+        default='1440x900',
+        help='window resolution (default: 1440x900)')
     argparser.add_argument(
         '--filter',
         metavar='PATTERN',

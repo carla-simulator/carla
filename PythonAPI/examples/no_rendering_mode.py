@@ -45,6 +45,13 @@ try:
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 except IndexError:
     pass
+try:
+    sys.path.append(glob.glob('PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
 
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
@@ -256,9 +263,11 @@ class HUD (object):
         pass
 
     def _init_hud_params(self):
-        fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
-        default_font = 'ubuntumono'
-        mono = default_font if default_font in fonts else fonts[0]
+        font = pygame.font.Font(pygame.font.get_default_font(), 20)
+        #fonts = [x for x in pygame.font.get_fonts() if 'mono' in x]
+        #default_font = 'ubuntumono'
+        #mono = default_font if default_font in fonts else fonts[0]
+        mono = 'arial'
         mono = pygame.font.match_font(mono)
         self._font_mono = pygame.font.Font(mono, 14)
         self._header_font = pygame.font.SysFont('Arial', 14, True)

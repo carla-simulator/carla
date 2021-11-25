@@ -9,7 +9,7 @@
 #include "CoreGlobals.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
-
+#include "Misc/ScopeLock.h"
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Buffer.h>
 #include <carla/sensor/SensorRegistry.h>
@@ -26,54 +26,57 @@ class FPixelReader
 {
 public:
 
-  /// Copy the pixels in @a RenderTarget into @a BitMap.
-  ///
-  /// @pre To be called from game-thread.
-  static bool WritePixelsToArray(
-      UTextureRenderTarget2D &RenderTarget,
-      TArray<FColor> &BitMap);
+	/// Copy the pixels in @a RenderTarget into @a BitMap.
+	///
+	/// @pre To be called from game-thread.
+	static bool WritePixelsToArray(
+		UTextureRenderTarget2D &RenderTarget,
+		TArray<FColor> &BitMap);
 
-  /// Dump the pixels in @a RenderTarget.
-  ///
-  /// @pre To be called from game-thread.
-  static TUniquePtr<TImagePixelData<FColor>> DumpPixels(
-      UTextureRenderTarget2D &RenderTarget);
+	/// Dump the pixels in @a RenderTarget.
+	///
+	/// @pre To be called from game-thread.
+	static TUniquePtr<TImagePixelData<FColor>> DumpPixels(
+		UTextureRenderTarget2D &RenderTarget);
 
-  /// Asynchronously save the pixels in @a RenderTarget to disk.
-  ///
-  /// @pre To be called from game-thread.
-  static TFuture<bool> SavePixelsToDisk(
-      UTextureRenderTarget2D &RenderTarget,
-      const FString &FilePath);
+	/// Asynchronously save the pixels in @a RenderTarget to disk.
+	///
+	/// @pre To be called from game-thread.
+	static TFuture<bool> SavePixelsToDisk(
+		UTextureRenderTarget2D &RenderTarget,
+		const FString &FilePath);
 
-  /// Asynchronously save the pixels in @a PixelData to disk.
-  ///
-  /// @pre To be called from game-thread.
-  static TFuture<bool> SavePixelsToDisk(
-      TUniquePtr<TImagePixelData<FColor>> PixelData,
-      const FString &FilePath);
+	/// Asynchronously save the pixels in @a PixelData to disk.
+	///
+	/// @pre To be called from game-thread.
+	static TFuture<bool> SavePixelsToDisk(
+		TUniquePtr<TImagePixelData<FColor>> PixelData,
+		const FString &FilePath);
 
-  /// Convenience function to enqueue a render command that sends the pixels
-  /// down the @a Sensor's data stream. It expects a sensor derived from
-  /// ASceneCaptureSensor or compatible.
-  ///
-  /// Note that the serializer needs to define a "header_offset" that it's
-  /// allocated in front of the buffer.
-  ///
-  /// @pre To be called from game-thread.
-  template <typename TSensor>
-  static void SendPixelsInRenderThread(TSensor &Sensor);
+	/// Convenience function to enqueue a render command that sends the pixels
+	/// down the @a Sensor's data stream. It expects a sensor derived from
+	/// ASceneCaptureSensor or compatible.
+	///
+	/// Note that the serializer needs to define a "header_offset" that it's
+	/// allocated in front of the buffer.
+	///
+	/// @pre To be called from game-thread.
+	template <typename TSensor>
+	static void SendPixelsInRenderThread(TSensor &Sensor);
+
+	template <typename TSensor>
+	static void SendPixelsInRenderThreadToBuffer(TSensor &Sensor, carla::Buffer &LidarBuffer, bool &FlagBuffer, FCriticalSection &BufferMutex, int ReadCaptureId);
 
 private:
 
-  /// Copy the pixels in @a RenderTarget into @a Buffer.
-  ///
-  /// @pre To be called from render-thread.
-  static void WritePixelsToBuffer(
-      UTextureRenderTarget2D &RenderTarget,
-      carla::Buffer &Buffer,
-      uint32 Offset,
-      FRHICommandListImmediate &InRHICmdList);
+	/// Copy the pixels in @a RenderTarget into @a Buffer.
+	///
+	/// @pre To be called from render-thread.
+	static void WritePixelsToBuffer(
+		UTextureRenderTarget2D &RenderTarget,
+		carla::Buffer &Buffer,
+		uint32 Offset,
+		FRHICommandListImmediate &InRHICmdList);
 
 };
 
@@ -84,26 +87,59 @@ private:
 template <typename TSensor>
 void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
 {
-  check(Sensor.CaptureRenderTarget != nullptr);
+	check(Sensor.CaptureRenderTarget != nullptr);
 
-  // Enqueue a command in the render-thread that will write the image buffer to
-  // the data stream. The stream is created in the capture thus executed in the
-  // game-thread.
-  ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
-  (
-    [&Sensor, Stream=Sensor.GetDataStream(Sensor)](auto &InRHICmdList) mutable
-    {
-      /// @todo Can we make sure the sensor is not going to be destroyed?
-      if (!Sensor.IsPendingKill())
-      {
-        auto Buffer = Stream.PopBufferFromPool();
-        WritePixelsToBuffer(
-            *Sensor.CaptureRenderTarget,
-            Buffer,
-            carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-            InRHICmdList);
-        Stream.Send(Sensor, std::move(Buffer));
-      }
-    }
-  );
+	// Enqueue a command in the render-thread that will write the image buffer to
+	// the data stream. The stream is created in the capture thus executed in the
+	// game-thread.
+	ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
+		(
+			[&Sensor, Stream = Sensor.GetDataStream(Sensor)](auto &InRHICmdList) mutable
+	{
+		/// @todo Can we make sure the sensor is not going to be destroyed?
+		if (!Sensor.IsPendingKill())
+		{
+			auto Buffer = Stream.PopBufferFromPool();
+			WritePixelsToBuffer(
+				*Sensor.CaptureRenderTarget,
+				Buffer,
+				carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
+				InRHICmdList);
+			Stream.Send(Sensor, std::move(Buffer));
+		}
+	}
+	);
+}
+
+
+template <typename TSensor>
+void FPixelReader::SendPixelsInRenderThreadToBuffer(TSensor &Sensor, carla::Buffer &LidarBuffer, bool &FlagBuffer, FCriticalSection &BufferMutex, int ReadCaptureId)
+{
+	check(Sensor.CaptureRenderTarget[ReadCaptureId] != nullptr);
+
+	// Enqueue a command in the render-thread that will write the image buffer to
+	// the data stream. The stream is created in the capture thus executed in the
+	// game-thread.
+	ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
+		(
+			[&Sensor, Stream = Sensor.GetDataStream(Sensor), &LidarBuffer, &FlagBuffer, &BufferMutex, ReadCaptureId](auto &InRHICmdList) mutable
+	{
+		/// @todo Can we make sure the sensor is not going to be destroyed?
+		if (!Sensor.IsPendingKill())
+		{
+			auto tBuffer = Stream.PopBufferFromPool();
+			WritePixelsToBuffer(
+				*Sensor.CaptureRenderTarget[ReadCaptureId],
+				tBuffer,
+				0,
+				InRHICmdList);
+			//Stream.Send(Sensor, std::move(tBuffer));
+			{
+				FScopeLock ScopeLock(&BufferMutex);
+				LidarBuffer = std::move(tBuffer);
+				FlagBuffer = true;
+			}
+		}
+	}
+	);
 }

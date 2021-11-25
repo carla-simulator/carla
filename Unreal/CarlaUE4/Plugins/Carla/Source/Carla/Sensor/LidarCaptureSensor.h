@@ -1,0 +1,304 @@
+// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#pragma once
+
+#include "Carla/Sensor/PixelReader.h"
+#include "Carla/Sensor/Sensor.h"
+
+#include "LidarCaptureSensor.generated.h"
+
+class UDrawFrustumComponent;
+class USceneCaptureComponent2D;
+class UStaticMeshComponent;
+class UTextureRenderTarget2D;
+
+/// Base class for sensors using a USceneCaptureComponent2D for rendering the
+/// scene. This class does not capture data, use
+/// `FPixelReader::SendPixelsInRenderThread(*this)` in derived classes.
+///
+/// To access the USceneCaptureComponent2D override the
+/// SetUpSceneCaptureComponent function.
+///
+/// @warning All the setters should be called before BeginPlay.
+UCLASS(Abstract)
+class CARLA_API ALidarCaptureSensor : public ASensor
+{
+	GENERATED_BODY()
+
+		friend class FPixelReader;
+
+public:
+
+	ALidarCaptureSensor(const FObjectInitializer &ObjectInitializer);
+
+	void Set(const FActorDescription &ActorDescription);
+
+	void SetImageSize(uint32 Width, uint32 Height);
+
+	uint32 GetImageWidth() const
+	{
+		return ImageWidth;
+	}
+
+	uint32 GetImageHeight() const
+	{
+		return ImageHeight;
+	}
+
+	void SetSpeedMode(bool NewMode)
+	{
+		LidarSpeedMode = NewMode;
+	}
+
+	bool GetSpeedMode()
+	{
+		return LidarSpeedMode;
+	}
+	UFUNCTION(BlueprintCallable)
+		void EnablePostProcessingEffects(bool Enable = true)
+	{
+		bEnablePostProcessingEffects = Enable;
+	}
+
+	UFUNCTION(BlueprintCallable)
+		bool ArePostProcessingEffectsEnabled() const
+	{
+		return bEnablePostProcessingEffects;
+	}
+
+	UFUNCTION(BlueprintCallable)
+		void SetFOVAngle(float FOVAngle);
+
+	UFUNCTION(BlueprintCallable)
+		float GetFOVAngle() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetTargetGamma(float InTargetGamma)
+	{
+		TargetGamma = InTargetGamma;
+	}
+
+	UFUNCTION(BlueprintCallable)
+		float GetTargetGamma() const
+	{
+		return TargetGamma;
+	}
+
+	UFUNCTION(BlueprintCallable)
+		void SetExposureMethod(EAutoExposureMethod Method);
+
+	UFUNCTION(BlueprintCallable)
+		EAutoExposureMethod GetExposureMethod() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetExposureCompensation(float Compensation);
+
+	UFUNCTION(BlueprintCallable)
+		float GetExposureCompensation() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetShutterSpeed(float Speed);
+
+	UFUNCTION(BlueprintCallable)
+		float GetShutterSpeed() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetISO(float ISO);
+
+	UFUNCTION(BlueprintCallable)
+		float GetISO() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetAperture(float Aperture);
+
+	UFUNCTION(BlueprintCallable)
+		float GetAperture() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetFocalDistance(float Distance);
+
+	UFUNCTION(BlueprintCallable)
+		float GetFocalDistance() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetDepthBlurAmount(float Amount);
+
+	UFUNCTION(BlueprintCallable)
+		float GetDepthBlurAmount() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetDepthBlurRadius(float Radius);
+
+	UFUNCTION(BlueprintCallable)
+		float GetDepthBlurRadius() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetBladeCount(int Count);
+
+	UFUNCTION(BlueprintCallable)
+		int GetBladeCount() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetDepthOfFieldMinFstop(float MinFstop);
+
+	UFUNCTION(BlueprintCallable)
+		float GetDepthOfFieldMinFstop() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetFilmSlope(float Slope);
+
+	UFUNCTION(BlueprintCallable)
+		float GetFilmSlope() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetFilmToe(float Toe);
+
+	UFUNCTION(BlueprintCallable)
+		float GetFilmToe() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetFilmShoulder(float Shoulder);
+
+	UFUNCTION(BlueprintCallable)
+		float GetFilmShoulder() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetFilmBlackClip(float BlackClip);
+
+	UFUNCTION(BlueprintCallable)
+		float GetFilmBlackClip() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetFilmWhiteClip(float WhiteClip);
+
+	UFUNCTION(BlueprintCallable)
+		float GetFilmWhiteClip() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetExposureMinBrightness(float Brightness);
+
+	UFUNCTION(BlueprintCallable)
+		float GetExposureMinBrightness() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetExposureMaxBrightness(float Brightness);
+
+	UFUNCTION(BlueprintCallable)
+		float GetExposureMaxBrightness() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetExposureSpeedDown(float Speed);
+
+	UFUNCTION(BlueprintCallable)
+		float GetExposureSpeedDown() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetExposureSpeedUp(float Speed);
+
+	UFUNCTION(BlueprintCallable)
+		float GetExposureSpeedUp() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetExposureCalibrationConstant(float Constant);
+
+	UFUNCTION(BlueprintCallable)
+		float GetExposureCalibrationConstant() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetMotionBlurIntensity(float Intensity);
+
+	UFUNCTION(BlueprintCallable)
+		float GetMotionBlurIntensity() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetMotionBlurMaxDistortion(float MaxDistortion);
+
+	UFUNCTION(BlueprintCallable)
+		float GetMotionBlurMaxDistortion() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetMotionBlurMinObjectScreenSize(float ScreenSize);
+
+	UFUNCTION(BlueprintCallable)
+		float GetMotionBlurMinObjectScreenSize() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetWhiteTemp(float Temp);
+
+	UFUNCTION(BlueprintCallable)
+		float GetWhiteTemp() const;
+
+	UFUNCTION(BlueprintCallable)
+		void SetWhiteTint(float Tint);
+
+	UFUNCTION(BlueprintCallable)
+		float GetWhiteTint() const;
+
+	/// Use for debugging purposes only.
+	UFUNCTION(BlueprintCallable)
+		bool ReadPixels(TArray<FColor> &BitMap) const
+	{
+		check(CaptureRenderTarget[0] != nullptr);
+		return FPixelReader::WritePixelsToArray(*CaptureRenderTarget[0], BitMap);
+	}
+
+	/// Use for debugging purposes only.
+	UFUNCTION(BlueprintCallable)
+		void SaveCaptureToDisk(const FString &FilePath) const
+	{
+		check(CaptureRenderTarget[0] != nullptr);
+		FPixelReader::SavePixelsToDisk(*CaptureRenderTarget[0], FilePath);
+	}
+
+	static const int MaxCaptureCnt = 3;
+
+	static const uint32 MaxLidarImgWidth = 1501;
+
+	static const uint32 MaxLidarImgHeight = 6001;
+
+
+protected:
+	int NowCaptureId;
+
+	bool LidarSpeedMode;
+
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
+
+	// Manually capture scene.
+	//void CaptureScene();
+
+	/// Image width in pixels.
+	UPROPERTY(EditAnywhere)
+		uint32 ImageWidth = 800u;
+
+	/// Image height in pixels.
+	UPROPERTY(EditAnywhere)
+		uint32 ImageHeight = 600u;
+
+private:
+
+	/// Whether to render the post-processing effects present in the scene.
+	UPROPERTY(EditAnywhere)
+		bool bEnablePostProcessingEffects = true;
+
+	UPROPERTY(EditAnywhere)
+		float TargetGamma = 2.2f;
+
+	/// Render target necessary for scene capture.
+	UPROPERTY(EditAnywhere)
+		UTextureRenderTarget2D *CaptureRenderTarget[MaxCaptureCnt];
+
+	/// Scene capture component.
+	UPROPERTY(EditAnywhere)
+		USceneCaptureComponent2D *CaptureComponent2D[MaxCaptureCnt];
+};

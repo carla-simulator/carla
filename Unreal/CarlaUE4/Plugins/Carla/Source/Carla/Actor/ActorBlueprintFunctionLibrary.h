@@ -17,6 +17,7 @@
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
 class ASceneCaptureSensor;
+class ALidarCaptureSensor;
 struct FLidarDescription;
 
 UCLASS()
@@ -184,6 +185,8 @@ public:
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void SetCamera(const FActorDescription &Description, ASceneCaptureSensor *Camera);
+
+  static void SetLidarCamera(const FActorDescription &Description, ALidarCaptureSensor *Camera);
 
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 

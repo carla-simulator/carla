@@ -9,6 +9,7 @@
 
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Sensor/LidarCaptureSensor.h"
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
@@ -1098,22 +1099,43 @@ void UActorBlueprintFunctionLibrary::SetCamera(
   }
 }
 
+void UActorBlueprintFunctionLibrary::SetLidarCamera(
+	const FActorDescription &Description,
+	ALidarCaptureSensor *Camera)
+{
+	CARLA_ABFL_CHECK_ACTOR(Camera);
+	uint32 LidarWidth =
+		RetrieveActorAttributeToInt("camera_width", Description.Variations, 500u);
+	uint32 LidarHeight =
+		RetrieveActorAttributeToInt("camera_height", Description.Variations, 500u);
+	bool LidarMode = 
+		RetrieveActorAttributeToBool("speed_mode", Description.Variations, true);
+
+	uint32 CaptureImageWidth = FMath::Max(FMath::Min(LidarWidth, Camera->MaxLidarImgWidth), 100u);
+
+	uint32 CapturnImageHeight = FMath::Max(FMath::Min(LidarHeight, Camera->MaxLidarImgHeight), 100u);
+
+	Camera->SetImageSize(CaptureImageWidth, CapturnImageHeight);
+	Camera->SetFOVAngle(360.0 / Camera->MaxCaptureCnt);
+	Camera->SetSpeedMode(LidarMode);
+}
+
 void UActorBlueprintFunctionLibrary::SetLidar(
     const FActorDescription &Description,
     FLidarDescription &Lidar)
 {
   Lidar.Channels =
-      RetrieveActorAttributeToInt("channels", Description.Variations, Lidar.Channels);
+      RetrieveActorAttributeToInt("channels", Description.Variations, 32u);
   Lidar.Range =
-      RetrieveActorAttributeToFloat("range", Description.Variations, Lidar.Range);
+      RetrieveActorAttributeToFloat("range", Description.Variations, 5000.0f);
   Lidar.PointsPerSecond =
-      RetrieveActorAttributeToInt("points_per_second", Description.Variations, Lidar.PointsPerSecond);
+      RetrieveActorAttributeToInt("points_per_second", Description.Variations, 56000u);
   Lidar.RotationFrequency =
-      RetrieveActorAttributeToFloat("rotation_frequency", Description.Variations, Lidar.RotationFrequency);
+      RetrieveActorAttributeToFloat("rotation_frequency", Description.Variations, 10.0f);
   Lidar.UpperFovLimit =
-      RetrieveActorAttributeToFloat("upper_fov", Description.Variations, Lidar.UpperFovLimit);
+      RetrieveActorAttributeToFloat("upper_fov", Description.Variations, 10.0f);
   Lidar.LowerFovLimit =
-      RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
+      RetrieveActorAttributeToFloat("lower_fov", Description.Variations, -30.0f);
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR
