@@ -85,5 +85,50 @@ spectator.set_transform(camera.get_transform())
 
 ```
 
+## Initialise an AI controller to guide the pedestrian around the map
+
+Now to move our pedestrian, we want to initialise a controller to help the pedestrian move intelligently around the map. 
+
+```py
+
+# Find the controller blueprint and spawn the controller, attaching it to the pedestrian
+
+controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+controller = world.spawn_actor(controller_bp, pedestrian.get_transform(), pedestrian)
+
+# Start the controller and set it a randomly chosen destination from the map
+controller.start()
+controller.go_to_location(world.get_random_location_from_navigation())
+
+```
+
+Now the pedestrian will move autonomously with each time increment (`world.tick()`) of the simulation.
+
+## Camera geometry
+
+Now we need to perform some geometric calculations. First, we want to transform the world coordinates of the bones into camera coordinates, we do this using the inverse transform of the camera transform. This means that the coordinates are transformed to be relative to a camera located at the origin facing in the positive x-direction.
+
+```py
+# get 4x4 matrix to transform points from world to camera coordinates
+world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+
+```
+
+Then, we need to project the 3D points onto the 2D field of view (FOV) of the camera to overlay them on the output images using the [__camera matrix__](#https://en.wikipedia.org/wiki/Camera_matrix) or projection matrix. The following function produces the camera matrix needed for this 3D -> 2D transformation. 
+
+```py
+
+def build_projection_matrix(w, h, fov):
+    focal = w / (2.0 * np.tan(fov * np.pi / 360.0))
+    K = np.identity(3)
+    K[0, 0] = K[1, 1] = focal
+    K[0, 2] = w / 2.0
+    K[1, 2] = h / 2.0
+    return K
+
+```
+
+
+
 
 
