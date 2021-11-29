@@ -30,6 +30,9 @@ settings.synchronous_mode = True # Enables synchronous mode
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
 
+# We will aslo set up the spectator so we can see what we do
+spectator = world.get_spectator()
+
 ```
 
 ## Spawning a pedestrian in the CARLA simulator
@@ -42,4 +45,45 @@ First, we want to spawn a pedestrian in the simulation. This can be done at a ra
     The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 10 before using in the CARLA simulator.
 
 
-Once you have chosen your coordinates, you can then spawn the pedestrian.
+Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](#https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor output is multithreaded)
+
+
+```py
+
+# Get the pedestrian blueprint and spawn it
+pedestrian_bp = random.choice(world.get_blueprint_library().filter('*walker.pedestrian*'))
+transform = carla.Transform(carla.Location(x=-77,y=120.1,z=1.18))
+pedestrian = world.try_spawn_actor(pedestrian_bp, transform)
+
+# Spawn an RGB camera
+camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+camera = world.spawn_actor(camera_bp, transform)
+
+# Create a queue to store and retrieve the sensor data
+image_queue = queue.Queue()
+camera.listen(image_queue.put)
+
+# Now we will rotate the camera to face the pedestrian
+rot_offset = 2.5 # Rotation offset in radians
+trans = pedestrian.get_transform()
+x = math.cos(rot_offset) * -3
+y = math.sin(rot_offset) * 3
+trans.location.x += x
+trans.location.y += y
+trans.location.z = 2
+trans.rotation.pitch = -16
+trans.rotation.roll = 0
+trans.rotation.yaw = -360 * (rot_offset/(math.pi*2))
+spectator.set_transform(trans)
+camera.set_transform(trans)
+
+# Call tick to add actors to the scene
+world.tick()
+
+# Move the spectator to see the result
+spectator.set_transform(camera.get_transform())
+
+```
+
+
+
