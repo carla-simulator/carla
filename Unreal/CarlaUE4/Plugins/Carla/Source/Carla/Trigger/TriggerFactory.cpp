@@ -11,7 +11,10 @@
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Trigger/BaseTrigger.h"
+#include "Carla/Trigger/DragTrigger.h"
 #include "Carla/Trigger/FrictionTrigger.h"
+
 
 // =============================================================================
 // -- ATriggerFactory -----------------------------------------------------------
@@ -19,15 +22,20 @@
 
 TArray<FActorDefinition> ATriggerFactory::GetDefinitions()
 {
-  FActorDefinition TriggerDefinition = FActorDefinition();
-  TriggerDefinition.Class = AFrictionTrigger::StaticClass();
+  FActorDefinition FrictionTriggerDefinition = FActorDefinition();
+  FActorDefinition DragTriggerDefinition = FActorDefinition();
+  FrictionTriggerDefinition.Class = AFrictionTrigger::StaticClass();
+  DragTriggerDefinition.Class = ADragTrigger::StaticClass();
 
   TArray<FActorDefinition> TriggerDefinitions;
 
   bool Success;
-  UActorBlueprintFunctionLibrary::MakeTriggerDefinition(TEXT("friction"), Success, TriggerDefinition);
+  UActorBlueprintFunctionLibrary::MakeTriggerDefinition(TEXT("friction"), Success, FrictionTriggerDefinition);
   check(Success);
-  TriggerDefinitions.Add(TriggerDefinition);
+  Success = false;
+  UActorBlueprintFunctionLibrary::MakeTriggerDefinition(TEXT("drag"), Success, DragTriggerDefinition);
+  TriggerDefinitions.Add(FrictionTriggerDefinition);
+  TriggerDefinitions.Add(DragTriggerDefinition);
 
   return TriggerDefinitions;
 }
@@ -50,7 +58,7 @@ FActorSpawnResult ATriggerFactory::SpawnActor(
     return {};
   }
 
-  auto *Trigger = World->SpawnActorDeferred<AFrictionTrigger>(
+  auto *Trigger = World->SpawnActorDeferred<ABaseTrigger>(
       Description.Class,
       Transform,
       this,
@@ -68,11 +76,7 @@ FActorSpawnResult ATriggerFactory::SpawnActor(
     check(Episode != nullptr);
     Trigger->SetEpisode(*Episode);
 
-    // Retrieve Friction
-    float Friction = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat("friction",
-        Description.Variations,
-        3.5f);
-    Trigger->SetFriction(Friction);
+    Trigger->SetAttributes(Description);
 
     // Retrieve Extent
     FVector Extent {100.0f, 100.0f, 100.0f};

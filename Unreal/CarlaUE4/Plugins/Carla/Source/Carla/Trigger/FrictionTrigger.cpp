@@ -6,35 +6,6 @@
 #include "FrictionTrigger.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
 
-AFrictionTrigger::AFrictionTrigger(const FObjectInitializer &ObjectInitializer)
-  : Super(ObjectInitializer)
-{
-  RootComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("SceneRootComponent"));
-  RootComponent->SetMobility(EComponentMobility::Static);
-
-  TriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerVolume"));
-  TriggerVolume->SetupAttachment(RootComponent);
-  TriggerVolume->SetHiddenInGame(true);
-  TriggerVolume->SetMobility(EComponentMobility::Static);
-  TriggerVolume->SetCollisionProfileName(FName("OverlapAll"));
-  TriggerVolume->SetGenerateOverlapEvents(true);
-}
-
-void AFrictionTrigger::Init()
-{
-  // Register delegate on begin overlap.
-  if (!TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &AFrictionTrigger::OnTriggerBeginOverlap))
-  {
-    TriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &AFrictionTrigger::OnTriggerBeginOverlap);
-  }
-
-  // Register delegate on end overlap.
-  if (!TriggerVolume->OnComponentEndOverlap.IsAlreadyBound(this, &AFrictionTrigger::OnTriggerEndOverlap))
-  {
-    TriggerVolume->OnComponentEndOverlap.AddDynamic(this, &AFrictionTrigger::OnTriggerEndOverlap);
-  }
-}
-
 void AFrictionTrigger::UpdateWheelsFriction(AActor *OtherActor, TArray<float>& NewFriction)
 {
   ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
@@ -67,38 +38,21 @@ void AFrictionTrigger::OnTriggerEndOverlap(
     UPrimitiveComponent * /*OtherComp*/,
     int32 /*OtherBodyIndex*/)
 {
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if (Vehicle == nullptr)
+    return;
+
   // Set Back Default Friction Value
   UpdateWheelsFriction(OtherActor, OldFrictionValues);
 
-  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
   TArray<float> CurrFriction = Vehicle->GetWheelsFrictionScale();
 }
 
-// Called when the game starts or when spawned
-void AFrictionTrigger::BeginPlay()
+void AFrictionTrigger::SetAttributes(const FActorDescription& Description)
 {
-  Super::BeginPlay();
-  Init();
-}
-
-void AFrictionTrigger::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-  // Deregister delegates
-  if (TriggerVolume->OnComponentBeginOverlap.IsAlreadyBound(this, &AFrictionTrigger::OnTriggerBeginOverlap))
-  {
-    TriggerVolume->OnComponentBeginOverlap.RemoveDynamic(this, &AFrictionTrigger::OnTriggerBeginOverlap);
-  }
-
-  if (TriggerVolume->OnComponentEndOverlap.IsAlreadyBound(this, &AFrictionTrigger::OnTriggerEndOverlap))
-  {
-    TriggerVolume->OnComponentEndOverlap.RemoveDynamic(this, &AFrictionTrigger::OnTriggerEndOverlap);
-  }
-
-  Super::EndPlay(EndPlayReason);
-}
-
-// Called every frame
-void AFrictionTrigger::Tick(float DeltaTime)
-{
-  Super::Tick(DeltaTime);
+  // Retrieve Friction
+  float Friction = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat("friction",
+      Description.Variations,
+      3.5f);
+  SetFriction(Friction);
 }

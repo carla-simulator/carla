@@ -246,6 +246,14 @@ static void AddVariationsForTrigger(FActorDefinition &Def)
   Friction.bRestrictToRecommended = false;
   Def.Variations.Emplace(Friction);
 
+  //Drag
+  FActorVariation Drag;
+  Drag.Id = FString("drag");
+  Drag.Type = EActorAttributeType::Float;
+  Drag.RecommendedValues = { TEXT("0.01f") };
+  Drag.bRestrictToRecommended = false;
+  Def.Variations.Emplace(Drag);
+
   // Extent
   FString Extent("extent");
   FString Coordinates[3] = {FString("x"), FString("y"), FString("z")};
