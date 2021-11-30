@@ -57,10 +57,6 @@ namespace detail {
         break;
       }
     }
-    if(result) {
-      carla::traffic_manager::TrafficManager::Tick();
-    }
-
     return result;
   }
 
@@ -212,7 +208,17 @@ namespace detail {
 
   uint64_t Simulator::Tick(time_duration timeout) {
     DEBUG_ASSERT(_episode != nullptr);
+    
+    // tick pedestrian navigation
+    _episode->NavigationTick();
+    
+    // tick traffic manager
+    carla::traffic_manager::TrafficManager::Tick();
+
+    // send tick command
     const auto frame = _client.SendTickCue();
+
+    // waits until new episode is received
     bool result = SynchronizeFrame(frame, *_episode, timeout);
     if (!result) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
