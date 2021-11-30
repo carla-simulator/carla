@@ -189,11 +189,7 @@ void TrafficManagerLocal::Run() {
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
-
       vehicle_id_list = registered_vehicles.GetIDList();
-
-      std::sort(vehicle_id_list.begin(), vehicle_id_list.end());
-
       number_of_vehicles = vehicle_id_list.size();
 
       // Reserve more space if needed.
@@ -323,8 +319,10 @@ void TrafficManagerLocal::Reset() {
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
   std::lock_guard<std::mutex> registration_lock(registration_mutex);
-  registered_vehicles.Insert(vehicle_list);
-  for (const ActorPtr &vehicle: vehicle_list) {
+  std::vector<ActorPtr> sorted_vehicle_list = vehicle_list;
+  std::sort(sorted_vehicle_list.begin(), sorted_vehicle_list.end(), [](ActorPtr &a, ActorPtr &b) {return a->GetId() > b->GetId(); });
+  registered_vehicles.Insert(sorted_vehicle_list);
+  for (const ActorPtr &vehicle: sorted_vehicle_list) {
     if (!is_custom_seed) {
       seed = vehicle->GetId() + seed;
     } else {
