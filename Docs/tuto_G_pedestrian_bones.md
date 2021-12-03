@@ -1,6 +1,6 @@
 # Retrieve pedestrian ground truth bones through API
 
-To train autonomous vehicles, it is essential to make sure they recognise not only buildings, roads and cars, but also the pedestrians that occupy the sidewalks and cross the roads, to ensure the safety of all road users. The CARLA simulator provides AI controlled pedestrians to populate your simulation and training data with human forms. There are many computer vision applications in which pose estimation is an important factor including autonomous driving, but also in security, crowd control and multiple robotic applications. 
+To train autonomous vehicles, it is essential to make sure they recognise not only buildings, roads and cars, but also the pedestrians that occupy the sidewalks and cross the roads, to ensure the safety of all road users. The CARLA simulator provides AI controlled pedestrians to populate your simulation and training data with human forms. There are many computer vision applications in which human pose estimation is an important factor including autonomous driving, but also in security, crowd control and multiple robotic applications. 
 
 CARLA's API provides functionality to retrieve the ground truth skeleton from the pedestrian's in the simulation. The skeleton is composed as a set of bones, each with a root node or vertex and a vector defining the pose (or orientation) of the bone. These bones control the movement of the limbs of the simulated pedestrian. By collecting together the ensemble of individual bones, a model of the virtual human's pose can be built that can be used to compare against a pose model estimated by a neural network, or even used to train a neural network for pose estimation. 
 
@@ -238,7 +238,8 @@ for frame in range(0,360):
     
     # Advance the frame and retrieve an image
     world.tick()
-    
+    # Retrieve the frame from the queue
+    image = image_queue.get()
     
     # get 4x4 matrix to transform points from world to camera coordinates
     world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
@@ -253,9 +254,6 @@ for frame in range(0,360):
     
     # Build the list of lines that will display the skeleton
     lines = build_skeleton(pedestrian, skeleton_links, K)
-
-    # Retrieve the frame from the queue
-    image = image_queue.get()
 
     # Reshape the data into a 2D RBGA array
     img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4)) 
