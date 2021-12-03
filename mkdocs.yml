@@ -68,6 +68,7 @@ nav:
 - Tutorials (general):
   - 'Instance segmentation sensor': "tuto_G_instance_segmentation_sensor.md"
   - 'Texture streaming': "tuto_G_texture_streaming.md"
+  - '3D ground truth pedestrian skeleton': "tuto_G_pedestrian_bones.md"
   - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
   - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
   - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
