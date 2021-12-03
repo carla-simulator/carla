@@ -66,7 +66,7 @@ def center_camera(ped, rot_offset=0):
 
 ```
 
-
+Now we'll spawn the pedestrian, the camera, a controller and move the so we can see what we've done. 
 
 ```py
 # Get the pedestrian blueprint and spawn it
