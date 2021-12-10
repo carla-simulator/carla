@@ -120,7 +120,9 @@ namespace detail {
 
     template <typename Str, typename ViewT>
     static void write_view(Str &&out_filename, const ViewT &view) {
-      boost::gil::write_view(std::forward<Str>(out_filename), view, boost::gil::png_tag());
+      boost::gil::image_write_info<boost::gil::png_tag> write_info;
+      write_info._compression_level = 0;
+      boost::gil::write_view(std::forward<Str>(out_filename), view, write_info);
     }
 
 #endif // LIBCARLA_IMAGE_WITH_PNG_SUPPORT
