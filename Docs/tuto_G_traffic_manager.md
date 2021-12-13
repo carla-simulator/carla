@@ -131,6 +131,7 @@ spawn_points = world.get_map().get_spawn_points()
 
 # Route 1
 spawn_point_1 =  spawn_points[32]
+# Create route 1 from the chosen spawn points
 route_1_indices = [129, 28, 124, 33, 97, 119, 58, 154, 147]
 route_1 = []
 for ind in route_1_indices:
@@ -138,6 +139,7 @@ for ind in route_1_indices:
 
 # Route 2
 spawn_point_2 =  spawn_points[149]
+# Create route 2 from the chosen spawn points
 route_2_indices = [21, 76, 38, 34, 90, 3]
 route_2 = []
 for ind in route_2_indices:
@@ -160,9 +162,64 @@ while True:
 
 ```
 
-Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
-
 
 ![routes](../img/tuto_G_traffic_manager/set_paths.png)
+
+Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
+
+```py
+
+# Set delay to create gap between spawn times
+spawn_delay = 20
+counter = spawn_delay
+
+# Set max vehicles (set smaller for low hardward spec)
+max_vehicles = 200
+# Alternate between spawn points
+alt = False
+
+spawn_points = world.get_map().get_spawn_points()
+while True:
+    world.tick()
+
+    n_vehicles = len(world.get_actors().filter('*vehicle*'))
+    vehicle_bp = random.choice(blueprints)
+
+    # Spawn vehicle only after delay
+    if counter == spawn_delay and n_vehicles < max_vehicles:
+        # Alternate spawn points
+        if alt:
+            vehicle = world.try_spawn_actor(vehicle_bp, spawn_point_1)
+        else:
+            vehicle = world.try_spawn_actor(vehicle_bp, spawn_point_2)
+
+        if vehicle: # IF vehicle is succesfully spawned
+            vehicle.set_autopilot(True) # Give TM control over vehicle
+
+            # Set parameters of TM vehicle control, we don't want lane changes
+            traffic_manager.update_vehicle_lights(vehicle, True)
+            traffic_manager.random_left_lanechange_percentage(vehicle, 0)
+            traffic_manager.random_right_lanechange_percentage(vehicle, 0)
+            traffic_manager.auto_lane_change(vehicle, False)
+
+            # Alternate between routes
+            if alt:
+                traffic_manager.set_path(vehicle, route_1)
+                alt = False
+            else:
+                traffic_manager.set_path(vehicle, route_2)
+                alt = True
+
+            vehicle = None
+
+        counter -= 1
+    elif counter > 0:
+        counter -= 1
+    elif counter == 0:
+        counter = spawn_delay
+
+```
+
+With the above code, we have created two converging streams of traffic originating from opposite sides of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
 
 ![converging_paths](../img/tuto_G_traffic_manager/converging_paths.gif)
