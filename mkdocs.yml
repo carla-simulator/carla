@@ -66,6 +66,7 @@ nav:
   - 'Create a large map in RoadRunner': 'large_map_roadrunner.md'
   - 'Import/Package a large map': 'large_map_import.md'
 - Tutorials (general):
+  - 'Traffic Manager': "tuto_G_traffic_manager.md"
   - 'Instance segmentation sensor': "tuto_G_instance_segmentation_sensor.md"
   - 'Texture streaming': "tuto_G_texture_streaming.md"
   - '3D ground truth pedestrian skeleton': "tuto_G_pedestrian_bones.md"
