@@ -1,12 +1,12 @@
 # Traffic manager
 
-When we train neural networks to control autonomous vehicles, one of the key challenges the autonomous driving agent has to contend with is other road users. On top of the task of recognising and navigating the topology of the road network and maintaining lane discipline, the autonomous driving agent must also recognise other vehicles and anticipate the impact on its planned course of action. CARLA's Traffic Manager enables the management of an ensemble of vehicles navigating through the simulation and creating obstacles and challenges for the vehicle of interest, i.e. the vehicle we are training or controlling. In the CARLA literature, we refer to this vehicle as the "Ego vehicle" to distinguish it. 
+When we train neural networks to control autonomous vehicles, one of the key challenges the autonomous driving agent has to contend with is other road users. On top of the task of recognising and navigating the topology of the road network and maintaining lane discipline, the autonomous driving agent must also recognise other vehicles and anticipate the impact on its planned course of action. CARLA's Traffic Manager (TM) enables the management of an ensemble of vehicles navigating through the simulation and creating obstacles and challenges for the vehicle of interest, i.e. the vehicle we are training or controlling. In the CARLA literature, we refer to this vehicle as the "Ego vehicle" to distinguish it. 
 
-The Traffic Manager manages the behavior and lifecycles of Non Player Character (NPC) vehicles within the map, populating the simulation with vehicles that act as other road users do on the real road network. In this tutorial, we will cover some of the functionality of the Traffic Manager and how to use it in your simulations to create and control NPCs. We will also cover how to use PyGame to fly behind vehicles within the simulation and even control them using the APIs vehicle control interfaces
+The TM manages the behavior and lifecycles of Non Player Character (NPC) vehicles within the map, populating the simulation with vehicles that act as other road users do on the real road network. In this tutorial, we will cover some of the functionality of the TM and how to use it in your simulations to create and control NPCs. We will also cover how to use PyGame to fly behind vehicles within the simulation and even control them using the APIs vehicle control interfaces
 
 ## Setting up the simulator and initialising traffic manager
 
-First, we will initialise the Traffic Manager and create some traffic randomly distributed around the city.
+First, we will initialise the TM and create some traffic randomly distributed around the city.
 
 ```py
 import carla
@@ -22,7 +22,7 @@ settings.synchronous_mode = True # Enables synchronous mode
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
 
-# Set up the traffic manager in synchronous mode
+# Set up the TM in synchronous mode
 traffic_manager = client.get_trafficmanager()
 traffic_manager.set_synchronous_mode(True)
 
@@ -37,7 +37,7 @@ spectator = world.get_spectator()
 
 ## Spawning vehicles
 
-When we create traffic manager vehicles, they need a map location at which to spawn. We can define these ourselves using our own chosen map coordinates. However, to help with this, each CARLA map has a set of pre-defined spawn points spread evenly throughout the road network. We can use these spawn points to spawn our vehicles. 
+When we create TM vehicles, they need a map location at which to spawn. We can define these ourselves using our own chosen map coordinates. However, to help with this, each CARLA map has a set of pre-defined spawn points spread evenly throughout the road network. We can use these spawn points to spawn our vehicles. 
 
 ```py
 spawn_points = world.get_map().get_spawn_points()
@@ -104,7 +104,6 @@ while True:
 If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map.
 
 ![intersection_traffic](../img/tuto_G_traffic_manager/traffic.gif)
-
 
 ## Specify routes for vehicles
 
