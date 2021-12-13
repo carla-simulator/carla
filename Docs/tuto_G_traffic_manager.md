@@ -85,6 +85,8 @@ while True:
 
 If you fly through the map with the spectator now, you should see stationary vehicles occupying the roads in the map.
 
+## Controlling vehicles with Traffic ÇManager
+
 We can now give the TM control over our vehicles and let the simulation run. Once the TM takes control of the vehicles, they will move around the roads autonomously, following features of the road network like lanes and traffic lights and avoiding collisions with other vehicles.
 
 The TM has a number of functions that allow specific behaviors to be modified for each vehicle. In the following example, we set each vehicle with a random probability of ignoring traffic lights, so some vehicles will tend to ignore traffic lights, while others will obey them. There are a number of different behaviours that can be set, refer to the Python API reference for details.
