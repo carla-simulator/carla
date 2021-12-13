@@ -42,7 +42,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          parameters,
                                          marked_for_removal,
                                          localization_frame,
-                                         random_devices)),
+                                         random_device)),
 
     collision_stage(CollisionStage(vehicle_id_list,
                                    simulation_state,
@@ -50,7 +50,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   random_devices)),
+                                   random_device)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
                                           simulation_state,
@@ -58,7 +58,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                           parameters,
                                           world,
                                           tl_frame,
-                                          random_devices)),
+                                          random_device)),
 
     motion_plan_stage(MotionPlanStage(vehicle_id_list,
                                       simulation_state,
@@ -74,7 +74,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       tl_frame,
                                       world,
                                       control_frame,
-                                      random_devices,
+                                      random_device,
                                       local_map)),
 
     vehicle_light_stage(VehicleLightStage(vehicle_id_list,
@@ -95,8 +95,7 @@ TrafficManagerLocal::TrafficManagerLocal(
               collision_stage,
               traffic_light_stage,
               motion_plan_stage,
-              vehicle_light_stage,
-              random_devices)),
+              vehicle_light_stage)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
@@ -190,6 +189,7 @@ void TrafficManagerLocal::Run() {
     unsigned long number_of_vehicles = vehicle_id_list.size();
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
       vehicle_id_list = registered_vehicles.GetIDList();
+      std::sort(vehicle_id_list.begin(), vehicle_id_list.end());
       number_of_vehicles = vehicle_id_list.size();
 
       // Reserve more space if needed.
@@ -282,7 +282,6 @@ void TrafficManagerLocal::Stop() {
   track_traffic.Clear();
   previous_update_instance = chr::system_clock::now();
   current_reserved_capacity = 0u;
-  random_devices.clear();
 
   simulation_state.Reset();
   localization_stage.Reset();
@@ -322,14 +321,6 @@ void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_
   std::vector<ActorPtr> sorted_vehicle_list = vehicle_list;
   std::sort(sorted_vehicle_list.begin(), sorted_vehicle_list.end(), [](ActorPtr &a, ActorPtr &b) {return a->GetId() > b->GetId(); });
   registered_vehicles.Insert(sorted_vehicle_list);
-  for (const ActorPtr &vehicle: sorted_vehicle_list) {
-    if (!is_custom_seed) {
-      seed = vehicle->GetId() + seed;
-    } else {
-      seed = 1 + seed;
-    }
-    random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
-  }
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
@@ -490,6 +481,8 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
   is_custom_seed = true;
+  random_device = RandomGenerator(seed);
+  std::cout << random_device.next() << std::endl;
   world.ResetAllTrafficLights();
 }
 

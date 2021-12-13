@@ -109,11 +109,11 @@ private:
   std::condition_variable step_end_trigger;
   /// Single worker thread for sequential execution of sub-components.
   std::unique_ptr<std::thread> worker_thread;
-  /// Structure holding random devices per vehicle.
-  RandomGeneratorMap random_devices;
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   bool is_custom_seed {false};
+  /// Structure holding random devices per vehicle.
+  RandomGenerator random_device = RandomGenerator(seed);
   std::vector<ActorId> marked_for_removal;
   /// Mutex to prevent vehicle registration during frame array re-allocation.
   std::mutex registration_mutex;

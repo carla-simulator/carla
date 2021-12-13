@@ -27,8 +27,7 @@ ALSM::ALSM(
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
   MotionPlanStage &motion_plan_stage,
-  VehicleLightStage &vehicle_light_stage,
-  RandomGeneratorMap &random_devices)
+  VehicleLightStage &vehicle_light_stage)
   : registered_vehicles(registered_vehicles),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
@@ -41,8 +40,7 @@ ALSM::ALSM(
     collision_stage(collision_stage),
     traffic_light_stage(traffic_light_stage),
     motion_plan_stage(motion_plan_stage),
-    vehicle_light_stage(vehicle_light_stage),
-    random_devices(random_devices) {}
+    vehicle_light_stage(vehicle_light_stage) {}
 
 void ALSM::Update() {
 
@@ -375,7 +373,6 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
     registered_vehicles.Remove({actor_id});
     buffer_map.erase(actor_id);
     idle_time.erase(actor_id);
-    random_devices.erase(actor_id);
     localization_stage.RemoveActor(actor_id);
     collision_stage.RemoveActor(actor_id);
     traffic_light_stage.RemoveActor(actor_id);

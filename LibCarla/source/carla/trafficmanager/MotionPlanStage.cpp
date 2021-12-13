@@ -41,7 +41,7 @@ MotionPlanStage::MotionPlanStage(
   const TLFrame &tl_frame,
   const cc::World &world,
   ControlFrame &output_array,
-  RandomGeneratorMap &random_devices,
+  RandomGenerator &random_device,
   const LocalMapPtr &local_map)
     : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
@@ -57,7 +57,7 @@ MotionPlanStage::MotionPlanStage(
     tl_frame(tl_frame),
     world(world),
     output_array(output_array),
-    random_devices(random_devices),
+    random_device(random_device),
     local_map(local_map) {
 
       // Adding structure to avoid retrieving traffic lights when checking for landmarks.
@@ -111,7 +111,7 @@ void MotionPlanStage::Update(const unsigned long index) {
     double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
 
     if (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT) {
-      float random_sample = (static_cast<float>(random_devices.at(actor_id).next())*dilate_factor) + lower_bound;
+      float random_sample = (static_cast<float>(random_device.next())*dilate_factor) + lower_bound;
       NodeList teleport_waypoint_list = local_map->GetWaypointsInDelta(hero_location, ATTEMPTS_TO_TELEPORT, random_sample);
       if (!teleport_waypoint_list.empty()) {
         for (auto &teleport_waypoint : teleport_waypoint_list) {
