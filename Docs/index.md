@@ -96,6 +96,7 @@ CARLA forum</a>
 [__Import/Package a Large Map__](large_map_import.md) — How to import a large map  
 ## Tutorials — General
 [__Traffic Manager__](tuto_G_traffic_manager.md) - Use the traffic manager to create and control NPC traffic in your simulation.
+[__PyGame for vehicle control__](tuto_G_pygame.md) - Use PyGame to see visualize camera output and control vehicles.
 [__Instance segmentation sensor__](tuto_G_instance_segmentation_sensor.md) - Use the instance segmentation camera sensor.
 [__Texture streaming__](tuto_G_texture_streaming.md) - Change textures during runtime through the API.
 [__3D ground truth pedestrian skeleton__](tuto_G_pedestrian_bones.md) - Retrieve 3D ground truth pedestrian skeleton through the API
