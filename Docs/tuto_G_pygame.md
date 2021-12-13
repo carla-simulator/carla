@@ -2,7 +2,7 @@
 
 [__PyGame__](https://www.pygame.org/news) is a cross-platform set of Python modules useful for writing video games. It provides a useful way of rendering real-time visual output from CARLA in order to monitor sensor output, such as cameras and control actors such as vehicles.
 
-In this tutorial, we will learn to set up a simple PyGame interface that allows us to monitor autonomous traffic driving around a map controlled by traffic manager and then take manual control over any vehicle using they keyboard.
+In this tutorial, we will learn to set up a simple PyGame interface that allows us to monitor autonomous traffic driving around a map controlled by Traffic Manager and then take manual control over any vehicle using they keyboard.
 
 ## Setting up the simulator and initialising traffic manager
 
@@ -217,7 +217,8 @@ pygame.display.flip()
 
 ```
 
-Now we can start the game loop.
+Now we can start the game loop. The view can cycle randomly through different vehicles in the map and visualize their journey through the traffic while controlled by the TM. Pressing the TAB key switches to a randomly chosen new vehicle and pressing the RETURN key enables manual control of the vehicle through the arrow keys on the keyboard. This kind of setup could be useful for example if needing to challenge an agent with erratic driving behaviour. The selection logic could be tweaked to select a vehicle close to the one driven by the agent. 
+
 
 ```py
 
@@ -250,3 +251,5 @@ camera.stop()
 pygame.quit()
 
 ```
+
+![manual_control](../img/tuto_G_pygame/manual_control.gif)
