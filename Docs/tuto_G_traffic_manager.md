@@ -165,4 +165,4 @@ Now that we have chosen our spawn points and way points, we can now start spawni
 
 ![routes](../img/tuto_G_traffic_manager/set_paths.png)
 
-![converging_paths](../img/tuto_G_traffic_manager/converging_paths.png)
+![converging_paths](../img/tuto_G_traffic_manager/converging_paths.gif)
