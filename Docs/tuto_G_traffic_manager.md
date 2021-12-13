@@ -112,7 +112,7 @@ In the previous steps, we saw how to spawn a collection of vehicles into a map, 
 
 We will now use the `traffic_manager.set_path()` function to TM vehicles along specific paths. In this case, we will create two converging streams of traffic that will converge in the center of town and create congestion. 
 
-Firstly, we'll choose some waypoints to construct our path. Spawn points are convenient waypoints and in the same way as earlier we can use CARLA's debug tools to draw the locations of the spawn points on the map. By flying through the map with the spectator, we can choose the indices of the spawn points we want to use for our path. 
+Firstly, we'll choose some waypoints to construct our path. Spawn points are convenient waypoints and in the same way as earlier we can use CARLA's debug tools to draw the locations of the spawn points on the map. By flying through the map with the spectator, we can choose the indices of the spawn points we want to use for our path. The `set_path()` function uses a list of coordinates specified as [carla.Locations].
 
 ```py
 # Draw the spawn point locations as numbers in the map
@@ -160,4 +160,9 @@ while True:
 
 ```
 
+Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
+
+
 ![routes](../img/tuto_G_traffic_manager/set_paths.png)
+
+![converging_paths](../img/tuto_G_traffic_manager/converging_paths.png)
