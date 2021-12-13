@@ -85,7 +85,7 @@ while True:
 
 If you fly through the map with the spectator now, you should see stationary vehicles occupying the roads in the map.
 
-## Controlling vehicles with Traffic ÇManager
+## Controlling vehicles with Traffic Manager
 
 We can now give the TM control over our vehicles and let the simulation run. Once the TM takes control of the vehicles, they will move around the roads autonomously, following features of the road network like lanes and traffic lights and avoiding collisions with other vehicles.
 
