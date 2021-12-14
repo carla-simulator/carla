@@ -40,7 +40,7 @@ First, we want to spawn a pedestrian in the simulation. This can be done at a ra
 ![actor_location](../img/tuto_G_pedestrian_bones/actor_location.png)
 
 !!! Note
-    The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 10 before using in the CARLA simulator.
+    The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 100 before using in the CARLA simulator.
 
 
 Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](#https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
@@ -114,6 +114,9 @@ In the previous step we also initialized an AI controller to help the pedestrian
 ```py
 controller_bp = world.get_blueprint_library().find('controller.ai.walker')
 controller = world.spawn_actor(controller_bp, pedestrian.get_transform(), pedestrian)
+controller.start()
+controller.go_to_location(world.get_random_location_from_navigation())
+
 ```
 
 Now the pedestrian will move autonomously with each time increment (`world.tick()`) of the simulation.
@@ -150,9 +153,31 @@ We need a function to iterate through the bone pairs defined in __skeleton.txt__
 
 ```py
 
+def get_image_point(bone_trans):
+        # Calculate 2D projection of bone coordinate
+        
+        # get the world location of the bone root
+        loc = bone_trans.world.location
+        bone = np.array([loc.x, loc.y, loc.z, 1])
+        # transform to camera coordinates
+        point_camera = np.dot(world_2_camera, bone)
+
+        # New we must change from UE4's coordinate system to an "standard"
+        # (x, y ,z) -> (y, -z, x)
+        # and we remove the fourth component also
+        point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
+
+        # now project 3D->2D using the camera matrix
+        point_img = np.dot(K, point_camera)
+        # normalize
+        point_img[0] /= point_img[2]
+        point_img[1] /= point_img[2]
+
+        return point_img[0:2]
+    
 def build_skeleton(ped, sk_links, K):
 
-    ######## GET THE PEDESTRIAN SKELETON #########
+    ######## get the pedestrian skeleton #########
     bones = ped.get_bones()
 
     # list where we will store the lines we will project
@@ -163,47 +188,21 @@ def build_skeleton(ped, sk_links, K):
     for link in sk_links[1:]:
 
         # get the roots of the two bones to be joined
-        bone_transform_1 = next(filter(lambda b: b.name == link[0], bones.bone_transforms), N5
+        bone_transform_1 = next(filter(lambda b: b.name == link[0], bones.bone_transforms), None)
+        bone_transform_2 = next(filter(lambda b: b.name == link[1], bones.bone_transforms), None)
+
         # some bone names aren't matched
         if bone_transform_1 is not None and bone_transform_2 is not None:
-
-            # get the world location of the bone root
-            loc = bone_transform_1.world.location
-            bone_root = np.array([loc.x, loc.y, loc.z, 1])
-            # transform to camera coordinates
-            point_camera = np.dot(world_2_camera, bone_root)
-
-            # New we must change from UE4's coordinate system to an "standard"
-            # (x, y ,z) -> (y, -z, x)
-            # and we remove the fourth component also
-            point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
-
-            # now project 3D->2D using the camera matrix
-            point_image = np.dot(K, point_camera)
-            # normalize
-            point_image[0] /= point_image[2]
-            point_image[1] /= point_image[2]
-
+           
+            # Calculate 2D projection of 3D bone coordinates
+            point_image = get_image_point(bone_transform_1)
+    
             # append line start to lines list
             lines.append([point_image[0], point_image[1], 0, 0])
-
-            # get the world location of the bone root
-            loc = bone_transform_2.world.location
-            bone_root = np.array([loc.x, loc.y, loc.z, 1])
-            # transform to camera coordinates
-            point_camera = np.dot(world_2_camera, bone_root)
-
-            # New we must change from UE4's coordinate system to an "standard"
-            # (x, y ,z) -> (y, -z, x)
-            # and we remove the fourth component also
-            point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
-
-            # now project 3D->2D using the camera matrix
-            point_image = np.dot(K, point_camera)
-            # normalize
-            point_image[0] /= point_image[2]
-            point_image[1] /= point_image[2]
-
+            
+            # Calculate 2D projection of 3D bone coordinates
+            point_image = get_image_point(bone_transform_2)
+            
             # append line end to lines list
             lines[-1][2] = point_image[0]
             lines[-1][3] = point_image[1]
