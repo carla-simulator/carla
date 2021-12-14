@@ -1,0 +1,63 @@
+carla:
+  host: '127.0.0.1'
+  port: 2000
+  timeout: 5.0
+  sync:
+    fps: 30
+    timeout: 2.0
+  seed: 23
+
+output_dir: "_out"
+
+weather:
+  cloudiness: 0.0
+  precipitation: 0.0
+  precipitation_deposits: 0.0
+  wind_intensity: 0.0
+  sun_azimuth_angle: 0.0
+  sun_altitude_angle: 10.0
+  fog_density: 0.0
+  fog_distance: 0.0
+  wetness: 0.0
+
+spawn_actors:
+  - blueprint: 
+      name: "vehicle.*"
+      attr: {role_name: "hero"}
+    sensors:
+    - blueprint: 
+        name: "sensor.camera.rgb"
+        attr: {"image_size_x": "800", "image_size_y": "600"}
+      transform: 
+        location: {x: -6.0, z: 1.5} 
+      attachment: "rigid"
+    - blueprint: 
+        name: "sensor.camera.depth"
+        attr: {"image_size_x": "800", "image_size_y": "600"}
+      transform: 
+        location: {x: -6.0, z: 1.5} 
+      attachment: "rigid"
+    - blueprint:
+        name: "sensor.camera.instance_segmentation"
+        attr: {"image_size_x": "800", "image_size_y": "600"}
+      transform: 
+        location: {x: -6.0, z: 1.5}
+    - blueprint: 
+        name: "sensor.lidar.ray_cast_semantic"
+        attr: {'range': '100', 'upper_fov': '35.0', 'lower_fov': '-30.0', 'channels': '64.0', 'points_per_second': '400000'}
+      transform:
+        location: {x: -6.0, z: 1.5}
+  - blueprint:
+      name: "sensor.camera.rgb"
+      attr: {"image_size_x": "800", "image_size_y": "600"}
+    transform:
+        location: {x: -6.0, z: 1.5}
+    attach_to: "hero"
+  - blueprint:
+      name: "sensor.camera.instance_segmentation"
+      attr: {"image_size_x": "800", "image_size_y": "600"}
+    transform:
+        location: {x: -6.0, z: 1.5}
+    attach_to: "hero"
+   
+
