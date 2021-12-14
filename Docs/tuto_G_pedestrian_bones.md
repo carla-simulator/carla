@@ -1,14 +1,14 @@
 # Retrieve pedestrian ground truth bones through API
 
-To train autonomous vehicles, it is essential to make sure they recognise not only buildings, roads and cars, but also the pedestrians that occupy the sidewalks and cross the roads, to ensure the safety of all road users. The CARLA simulator provides AI controlled pedestrians to populate your simulation and training data with human forms. There are many computer vision applications in which human pose estimation is an important factor including autonomous driving, but also in security, crowd control and multiple robotic applications. 
+To train autonomous vehicles, it is essential to make sure they recognize not only buildings, roads and cars, but also the pedestrians that occupy the sidewalks and cross the roads, to ensure the safety of all road users. The CARLA simulator provides AI controlled pedestrians to populate your simulation and training data with human forms. There are many computer vision applications in which human pose estimation is an important factor including autonomous driving, but also in security, crowd control and multiple robotic applications. 
 
-CARLA's API provides functionality to retrieve the ground truth skeleton from the pedestrian's in the simulation. The skeleton is composed as a set of bones, each with a root node or vertex and a vector defining the pose (or orientation) of the bone. These bones control the movement of the limbs of the simulated pedestrian. By collecting together the ensemble of individual bones, a model of the virtual human's pose can be built that can be used to compare against a pose model estimated by a neural network, or even used to train a neural network for pose estimation. 
+CARLA's API provides functionality to retrieve the ground truth skeleton from pedestrians in the simulation. The skeleton is composed of a set of bones, each with a root node or vertex and a vector defining the pose (or orientation) of the bone. These bones control the movement of the limbs and body of the simulated pedestrian. By collecting together the ensemble of individual bones, a model of the virtual human's pose can be built that can be used to compare against a pose model estimated by a neural network, or even used to train a neural network for pose estimation. 
 
 In this tutorial, we will go through the steps of spawning a pedestrian in a map, setting up an AI controller to move the pedestrian and then retrieving the ground truth skeleton and projecting the bones onto a 2D camera capture.
 
 ## Setting up the simulator
 
-First, launch the CARLA simulator as per your standard workflow, either in standalone mode or inside the Unreal Edtior. We will import several utility librarys to use for maths and plotting. To give us more control over the simulation, we will use [__synchronous mode__](adv_synchrony_timestep.md) in this tutorial. This means that our Python client controls the time progression of the simulator.
+First, launch the CARLA simulator as per your standard workflow, either in standalone mode or inside the Unreal Editor. We will import several utility libraries to use for maths and plotting. To give us more control over the simulation, we will use [__synchronous mode__](adv_synchrony_timestep.md) in this tutorial. This means that our Python client controls the time progression of the simulator.
 
 ```py
 import carla
@@ -43,7 +43,7 @@ First, we want to spawn a pedestrian in the simulation. This can be done at a ra
     The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 10 before using in the CARLA simulator.
 
 
-Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](#https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor output is multithreaded).
+Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](#https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
 
 In order to see our pedestrian, we need to transform the camera so it is pointing at the pedestrian we spawn. For this we will use a function that calculates the translation and rotation needed to center the camera:
 
@@ -66,7 +66,7 @@ def center_camera(ped, rot_offset=0):
 
 ```
 
-Now we'll spawn the pedestrian, the camera, a controller and move the so we can see what we've done. 
+Now we'll spawn the pedestrian, the camera, a controller and move the spectator so we can see what we've done:
 
 ```py
 # Get the pedestrian blueprint and spawn it
@@ -109,13 +109,18 @@ for frame in range(0,5):
 
 ## AI controller to guide the pedestrian around the map
 
-In the previous step we also initialised an AI controller to help the pedestrian move intelligently around the map.
+In the previous step we also initialized an AI controller to help the pedestrian move intelligently around the map with the following code (you don't need to repeat it):
+
+```py
+controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+controller = world.spawn_actor(controller_bp, pedestrian.get_transform(), pedestrian)
+```
 
 Now the pedestrian will move autonomously with each time increment (`world.tick()`) of the simulation.
 
 ## Camera geometry
 
-Now we need to perform some geometric calculations. First, we want to transform the world coordinates of the bones into camera coordinates, we do this using the inverse transform of the camera transform. This means that the coordinates are transformed to be relative to a camera located at the origin facing in the positive x-direction.
+Now we need to perform some geometric calculations. First, we want to transform the world coordinates of the bones into camera coordinates, we do this using the inverse of the camera transform. This means that the coordinates are transformed to be relative to a camera located at the origin facing in the positive x-direction.
 
 ```py
 # get 4x4 matrix to transform points from world to camera coordinates
@@ -123,7 +128,7 @@ world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
 
 ```
 
-Then, we need to project the 3D points onto the 2D field of view (FOV) of the camera to overlay them on the output images using the [__camera matrix__](#https://en.wikipedia.org/wiki/Camera_matrix) or projection matrix. The following function produces the camera matrix needed for this 3D -> 2D transformation. 
+Then, we need to project the 3D points onto the 2D field of view (FOV) of the camera to overlay them on the output images using the [__camera matrix__](#https://en.wikipedia.org/wiki/Camera_matrix) or __projection matrix__. The following function produces the camera matrix needed for this 3D -> 2D transformation. 
 
 ```py
 
@@ -139,7 +144,7 @@ def build_projection_matrix(w, h, fov):
 
 ## Build the skeleton 
 
-Now we can put the moving parts together, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D image output by the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that can be downloaded [__here__](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/skeleton.txt).
+Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that can be downloaded [__here__](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/skeleton.txt).
 
 We need a function to iterate through the bone pairs defined in __skeleton.txt__ and join the bone coordinates into lines that can be overlayed onto a camera sensor image. 
 
