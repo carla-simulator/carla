@@ -1,8 +1,8 @@
 # Pygame for vehicle control 
 
-[__PyGame__](https://www.pygame.org/news) is a cross-platform set of Python modules useful for writing video games. It provides a useful way of rendering real-time visual output from CARLA in order to monitor sensor output, such as cameras and control actors such as vehicles.
+[__PyGame__](https://www.pygame.org/news) is a cross-platform set of Python modules useful for writing video games. It provides a useful way of rendering real-time visual output from CARLA in order to monitor sensor output, such as cameras. PyGame can also capture keyboard events, so it is a good way to control actors such as vehicles.
 
-In this tutorial, we will learn to set up a simple PyGame interface that allows us to monitor autonomous traffic driving around a map controlled by Traffic Manager and then take manual control over any vehicle using they keyboard.
+In this tutorial, we will learn to set up a simple PyGame interface that allows us to monitor autonomous traffic driving around a map controlled by the Traffic Manager (TM) and then take manual control over any vehicle using the keyboard.
 
 ## Setting up the simulator and initialising traffic manager
 
@@ -38,7 +38,7 @@ spectator = world.get_spectator()
 
 ## Spawning vehicles
 
-We need to create a collection of vehicles spawned throughout the city and give the TM control over them.
+We want to create a collection of vehicles spawned throughout the city and give the TM control over them.
 
 ```py
 # Retrieve the map's spawn points
@@ -100,16 +100,19 @@ Now we will create an object to handle the control logic. This can often need so
 class ControlObject(object):
     def __init__(self, veh):
         
-        # Conrol parameters
+        # Conrol parameters to store the control state
         self._vehicle = veh
         self._steer = 0
         self._throttle = False
         self._brake = False
         self._steer = None
         self._steer_cache = 0
+        # A carla.VehicleControl object is needed to alter the 
+        # vehicle's control state
         self._control = carla.VehicleControl()
     
     # Check for key press events in the PyGame window
+    # and define the control state
     def parse_control(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
@@ -133,7 +136,7 @@ class ControlObject(object):
             if event.key == pygame.K_LEFT:
                 self._steer = None
     
-    # Process the currently engaged key, change the control parameter
+    # Process the current control state, change the control parameter
     # if the key remains pressed
     def process_control(self):
         
@@ -209,8 +212,10 @@ Initialise the PyGame interface. This will call up a new window for PyGame.
 
 ```py
 
+# Initialise the display
 pygame.init()
 gameDisplay = pygame.display.set_mode((image_w,image_h), pygame.HWSURFACE | pygame.DOUBLEBUF)
+# Draw black to the display
 gameDisplay.fill((0,0,0))
 gameDisplay.blit(renderObject.surface, (0,0))
 pygame.display.flip()
@@ -226,27 +231,43 @@ Now we can start the game loop. The view can cycle randomly through different ve
 crashed = False
 
 while not crashed:
+    # Advance the simulation time
     world.tick()
+    # Update the display
     gameDisplay.blit(renderObject.surface, (0,0))
     pygame.display.flip()
+    # Process the current control state
     controlObject.process_control()
+    # Collect key press events
     for event in pygame.event.get():
+        # If the window is closed, break the while loop
         if event.type == pygame.QUIT:
             crashed = True
+        
+        # Parse effect of key press event on control state
         controlObject.parse_control(event)
         if event.type == pygame.KEYUP:
+            # TAB key switches vehicle
             if event.key == pygame.K_TAB:
                 ego_vehicle.set_autopilot(True)
                 ego_vehicle = random.choice(vehicles)
+                # Ensure vehicle is still alive (might have been destroyed)
                 if ego_vehicle.is_alive:
+                    # Stop and remove the camera
                     camera.stop()
                     camera.destroy()
+
+                    # Spawn new camera and attach to new vehicle
                     controlObject = ControlObject(ego_vehicle)
                     camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=ego_vehicle)
-                    gameDisplay.fill((0,0,0))
                     camera.listen(lambda image: pygame_callback(image, renderObject))
+
+                    # Update PyGame window
+                    gameDisplay.fill((0,0,0))               
                     gameDisplay.blit(renderObject.surface, (0,0))
                     pygame.display.flip()
+
+# Stop camera and quit PyGame after exiting game loop
 camera.stop()
 pygame.quit()
 
