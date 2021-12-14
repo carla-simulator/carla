@@ -2,7 +2,7 @@
 
 When we train neural networks to control autonomous vehicles, one of the key challenges the autonomous driving agent has to contend with is other road users. On top of the task of recognising and navigating the topology of the road network and maintaining lane discipline, the autonomous driving agent must also recognise other vehicles and anticipate the impact on its planned course of action. CARLA's Traffic Manager (TM) enables the management of an ensemble of vehicles navigating through the simulation and creating obstacles and challenges for the vehicle of interest, i.e. the vehicle we are training or controlling. In the CARLA literature, we refer to this vehicle as the "Ego vehicle" to distinguish it. 
 
-The TM manages the behavior and lifecycles of Non Player Character (NPC) vehicles within the map, populating the simulation with vehicles that act as other road users do on the real road network. In this tutorial, we will cover some of the functionality of the TM and how to use it in your simulations to create and control NPCs. We will also cover how to use PyGame to fly behind vehicles within the simulation and even control them using the APIs vehicle control interfaces
+The TM manages the behavior and lifecycles of Non Player Character (NPC) vehicles within the map, populating the simulation with vehicles that act as other road users do on the real road network. In this tutorial, we will cover some of the functionality of the TM and how to use it in your simulations to create and control NPCs.
 
 ## Setting up the simulator and initialising traffic manager
 
@@ -111,9 +111,9 @@ If you now fly through the map with the spectator, you will see vehicles driving
 
 In the previous steps, we saw how to spawn a collection of vehicles into a map, then hand control of them over to the TM to create a busy town full of moving traffic. The TM has deeper functionality to control the behavior of vehicles more closely. 
 
-We will now use the `traffic_manager.set_path()` function to TM vehicles along specific paths. In this case, we will create two converging streams of traffic that will converge in the center of town and create congestion. 
+We will now use the `traffic_manager.set_path()` function to guide TM vehicles along specific paths. In this case, we will create two converging streams of traffic that will converge in the center of town and create congestion. 
 
-Firstly, we'll choose some waypoints to construct our path. Spawn points are convenient waypoints and in the same way as earlier we can use CARLA's debug tools to draw the locations of the spawn points on the map. By flying through the map with the spectator, we can choose the indices of the spawn points we want to use for our path. The `set_path()` function uses a list of coordinates specified as [carla.Locations].
+Firstly, we'll choose some waypoints to construct our path. Spawn points are convenient waypoints and in the same way as earlier we can use CARLA's debug tools to draw the locations of the spawn points on the map. By flying through the map with the spectator, we can choose the indices of the spawn points we want to use for our path. The `set_path()` function uses a list of coordinates specified as [carla.Locations](python_api.md#carla.Location).
 
 ```py
 # Draw the spawn point locations as numbers in the map
