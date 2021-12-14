@@ -12,6 +12,7 @@ First, we will initialise the TM and create some traffic randomly distributed ar
 import carla
 import random
 import pygame
+import numpy as np
 
 # Connect to the client and retrieve the world object
 client = carla.Client('localhost', 2000)
