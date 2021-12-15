@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
+
+# Copyright (c) 2021 Intel Labs.
 #
-# Copyright (C) 2020 Intel Corporation
-#
-# SPDX-License-Identifier: BSD-3-Clause
-#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 
 from PIL import Image
 import json
