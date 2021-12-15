@@ -183,13 +183,11 @@ void TrafficManagerLocal::Run() {
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
 
-
     // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
       vehicle_id_list = registered_vehicles.GetIDList();
-      std::sort(vehicle_id_list.begin(), vehicle_id_list.end());
       number_of_vehicles = vehicle_id_list.size();
 
       // Reserve more space if needed.
@@ -229,6 +227,7 @@ void TrafficManagerLocal::Run() {
     }
     collision_stage.ClearCycleCache();
     vehicle_light_stage.UpdateWorldInfo();
+    // std::cout << "New Frame" << std::endl;
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
@@ -308,7 +307,6 @@ void TrafficManagerLocal::Release() {
 }
 
 void TrafficManagerLocal::Reset() {
-
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
@@ -318,9 +316,7 @@ void TrafficManagerLocal::Reset() {
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
   std::lock_guard<std::mutex> registration_lock(registration_mutex);
-  std::vector<ActorPtr> sorted_vehicle_list = vehicle_list;
-  std::sort(sorted_vehicle_list.begin(), sorted_vehicle_list.end(), [](ActorPtr &a, ActorPtr &b) {return a->GetId() > b->GetId(); });
-  registered_vehicles.Insert(sorted_vehicle_list);
+  registered_vehicles.Insert(vehicle_list);
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
@@ -480,9 +476,7 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
-  is_custom_seed = true;
   random_device = RandomGenerator(seed);
-  std::cout << random_device.next() << std::endl;
   world.ResetAllTrafficLights();
 }
 
