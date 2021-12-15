@@ -50,6 +50,7 @@ class CarlaSyncMode(object):
         self._queues = []
         self._settings = None
         self.traffic_manager = client.get_trafficmanager(tm_port)
+        self.traffic_manager.set_respawn_dormant_vehicles(True)
 
     def __enter__(self):
         self._settings = self.world.get_settings()

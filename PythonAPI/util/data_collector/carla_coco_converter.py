@@ -59,10 +59,11 @@ def extract_masks(im, category_ids, combine_twowheeled=False, twowheeled_as_pede
 
     Returns
     -------
-    masks: List[(int, np.array)]
-        A list of tuples (category_id, binary_mask)
+    masks: List[(int, np.array, int)]
+        A list of tuples (category_id, binary_mask, is_crowd)
             category_id: Category ID as in CARLA dataset.
             binary_mask: The binary mask extracted for the respective object ID
+            is_crowd: The value for is_crowd (TODO: Support partial occlusion)
     """
     masks = []
     img_label = im[:, :, 0]
@@ -101,15 +102,21 @@ def extract_masks(im, category_ids, combine_twowheeled=False, twowheeled_as_pede
             extract_obj_binary[np.where((img_label == label) & (obj_ids == obj_id))] = 1
 
             if np.sum(extract_obj_binary) > 0:
+                contours, _ = cv2.findContours(extract_obj_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+                # TODO: Support partial occlusion using IoU of segmentation mask area and 3d bounding boxes from carla projected into 2d space
+                is_crowd = 0
+                if len(contours) > 1:
+                    is_crowd = 1
+
                 if label == carla_labels.index("TrafficLight"):
                     # Treat TrafficLight differently as we want to only extract lights (do not include poles)
                     contours, _ = cv2.findContours(extract_obj_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
                     for contour in contours:
                         binary_mask = np.zeros_like(img_label)
                         binary_mask = cv2.fillPoly(binary_mask, pts = [contour], color = (1, 1, 1))
-                        masks.append((label, binary_mask))
+                        masks.append((label, binary_mask, is_crowd))
                 else:
-                    masks.append((label, extract_obj_binary))
+                    masks.append((label, extract_obj_binary, is_crowd))
 
     return masks
 
@@ -184,9 +191,9 @@ def convert_instancemaps_to_coco_format(dataset_dir_name, dir_pairs, labels, int
                 for mask in masks:
                     class_id = mask[0]
                     binary_mask = mask[1]
+                    is_crowd = mask[2]
                     category_id = [category['id'] for category in categories if category['name'] == carla_labels[class_id]]
-                    # We have not implemented a way to find whether there's occlusion, setting default is_crowd to 0.
-                    category_info = {'id': category_id[0], 'is_crowd': 0}
+                    category_info = {'id': category_id[0], 'is_crowd': is_crowd}
 
                     annotation_info = pycococreatortools.create_annotation_info(
                         annot_id, image_id, category_info, binary_mask, (width, height), tolerance=2)
