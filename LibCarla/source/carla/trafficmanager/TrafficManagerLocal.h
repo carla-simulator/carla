@@ -111,7 +111,6 @@ private:
   std::unique_ptr<std::thread> worker_thread;
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
-  bool is_custom_seed {false};
   /// Structure holding random devices per vehicle.
   RandomGenerator random_device = RandomGenerator(seed);
   std::vector<ActorId> marked_for_removal;

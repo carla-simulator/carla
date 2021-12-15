@@ -156,10 +156,17 @@ static auto ApplyBatchCommandsSync(
   vehicles_to_enable.shrink_to_fit();
   vehicles_to_disable.shrink_to_fit();
 
+  // Ensure the TM always receives the same vector by sorting the elements
+  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_enable = vehicles_to_enable;
+  std::sort(sorted_vehicle_to_enable.begin(), sorted_vehicle_to_enable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
+
+  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_disable = vehicles_to_disable;
+  std::sort(sorted_vehicle_to_disable.begin(), sorted_vehicle_to_disable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
+
   // check if any autopilot command was sent
-  if (vehicles_to_enable.size() || vehicles_to_disable.size()) {
-    self.GetInstanceTM(tm_port).RegisterVehicles(vehicles_to_enable);
-    self.GetInstanceTM(tm_port).UnregisterVehicles(vehicles_to_disable);
+  if (sorted_vehicle_to_enable.size() || sorted_vehicle_to_disable.size()) {
+    self.GetInstanceTM(tm_port).RegisterVehicles(sorted_vehicle_to_enable);
+    self.GetInstanceTM(tm_port).UnregisterVehicles(sorted_vehicle_to_disable);
   }
 
   return result;
