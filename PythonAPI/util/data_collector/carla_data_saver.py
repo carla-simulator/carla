@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-
-# Copyright (c) 2021 Intel Labs.
 #
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
+# Copyright (C) 2020 Intel Corporation
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
 
 from __future__ import print_function
 from config_schema import ConfigSchema
@@ -41,7 +41,7 @@ class CarlaSyncMode(object):
                 data = sync_mode.tick(timeout=1.0)
     """
 
-    def __init__(self, client, *sensors, tm_port=8000, fps=30):
+    def __init__(self, client, *sensors, tm_port=8000, fps=30, respawn=True):
         self.world = client.get_world()
         self.sensors = sensors
         logger.info(f"Init sensors: {self.sensors}, kwargs: {fps}")
@@ -50,7 +50,7 @@ class CarlaSyncMode(object):
         self._queues = []
         self._settings = None
         self.traffic_manager = client.get_trafficmanager(tm_port)
-        self.traffic_manager.set_respawn_dormant_vehicles(True)
+        self.traffic_manager.set_respawn_dormant_vehicles(respawn)
 
     def __enter__(self):
         self._settings = self.world.get_settings()
@@ -352,6 +352,7 @@ def data_saver_loop(conf):
         max_frames = conf.get("max_frames", sys.maxsize)
         tm_port = conf.carla.get("traffic_manager_port", 8000)
         fps = conf.carla.get("fps", 30)
+        respawn = conf.carla.get("respawn", True)
 
         metadata_path = os.path.join(conf.output_dir, 'metadata')
         if not os.path.exists(metadata_path):
@@ -369,7 +370,7 @@ def data_saver_loop(conf):
 
 
         # Create a synchronous mode context.
-        with CarlaSyncMode(client, *sensor_list, tm_port=tm_port, fps=fps) as sync_mode:
+        with CarlaSyncMode(client, *sensor_list, tm_port=tm_port, fps=fps, respawn=respawn) as sync_mode:
             while True:
                 local_frame_num += 1
                 logging.info("Begin sync_mode.tick")

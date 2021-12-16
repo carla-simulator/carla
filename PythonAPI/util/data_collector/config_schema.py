@@ -1,7 +1,8 @@
-# Copyright (c) 2021 Intel Labs.
 #
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
+# Copyright (C) 2020 Intel Corporation
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
 
 from dataclasses import dataclass, field
 from typing import Optional
@@ -22,6 +23,7 @@ class Carla:
     sync: Sync = Sync()
     seed: int = 42
     traffic_manager_port: int = 8000
+    respawn: bool = True
     townmap: Optional[str] = MISSING
 
 @dataclass
