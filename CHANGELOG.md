@@ -1,3 +1,7 @@
+## Latest
+
+  * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
+
 ## CARLA 0.9.13
 
   * Added new **instance aware semantic segmentation** sensor `sensor.camera.instance_segmentation`
