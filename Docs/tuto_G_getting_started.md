@@ -22,7 +22,7 @@ world = client.get_world()
 
 ```
 
-The [__client__](python_api#carla.Client) object serves to maintain the client's connection to the server and has a number of functions for applying commands and loading or exporting data. We can load an alternative map or reload the current one (resetting to initial state) using the client object:
+The [__client__](python_api#carlaclient) object serves to maintain the client's connection to the server and has a number of functions for applying commands and loading or exporting data. We can load an alternative map or reload the current one (resetting to initial state) using the client object:
 
 
 ```py
@@ -44,7 +44,7 @@ The port can be chosen as any available port and is 2000 by default, you can als
 
 ## The world object
 
-In the CARLA API, the [__world__](python_api#carla.World) object provides access to all elements of the simulation, including the map, objects within the map, such as buildings, traffic lights, vehicles and pedestrians.
+In the CARLA API, the [__world__](python_api#carlaworld) object provides access to all elements of the simulation, including the map, objects within the map, such as buildings, traffic lights, vehicles and pedestrians.
 
 We can use the world object to query and access objects within the simulation:
 
@@ -66,7 +66,7 @@ world.get_actors().filter('*vehicle*')
 
 The world object is used to add things to the simulation, such as vehicles and pedestrians through the spawn methods. Vehicles and pedestrians have a special place within the CARLA simulation since they exhibit behaviors, i.e. they can move around and affect other objects, so we call them actors. This differentiates them from static, inanimate objects like buildings that are just features in the map. Other objects such as traffic lights are also actors since they exhibit behaviors that affect other objects. 
 
-To spawn objects, we need a [__blueprint__](python_api#carla.ActorBlueprint) for the object. Blueprints are recipes containing all the parts necessary for an actor such as the mesh, textures and materials that govern it's appearance within the simulation and all the logic that governs its behavior and physics - how it interacts with other objects in the simulation. Let's find a blueprint for a vehicle and spawn it.
+To spawn objects, we need a [__blueprint__](python_api#carlaactorblueprint) for the object. Blueprints are recipes containing all the parts necessary for an actor such as the mesh, textures and materials that govern it's appearance within the simulation and all the logic that governs its behavior and physics - how it interacts with other objects in the simulation. Let's find a blueprint for a vehicle and spawn it.
 
 ```py
 
@@ -132,7 +132,7 @@ spectator.set_transform(carla.Transform())
 
 ```
 
-### Finding a custom spawn point using the spectator
+## Finding a custom spawn point using the spectator
 
 The spectator is particularly useful to verify your actors are spawning correctly and also to determine locations for spawning. 
 
@@ -161,7 +161,7 @@ print(spectator.get_transform())
 
 ```
 
-### Using and visualizing map spawn points
+## Using and visualizing map spawn points
 
 Manually defining spawn points is useful for custom scenarios, however, if we need to create a whole city full of traffic, it could be very time consuming. For this reason, each map provides a set of predefined spawn points distributed evenly throughout the map to make creating large volumes of NPC traffic efficient.
 
@@ -213,13 +213,13 @@ for ind in range(0, 100):
 
 ![vehicle_street](../img/tuto_G_getting_started/vehicle_street.png)
 
-### Actors and blueprints
+## Actors and blueprints
 
-[__Actors__](python_api#carla.Actor) are the objects within the CARLA simulation that have an affect or *act* upon other objects in the simulation. CARLA actors include vehicles, pedestrians, traffic lights, road signs, obstacles, cameras and sensors. Each actor requires a [__blueprint__](python_api#carla.ActorBlueprint). The blueprint defines all the necessary elements needed for an actor, including assets such as meshes, textures and materials and also any logic required to govern the behavior of the actor. To spawn an actor, we need to define it with a blueprint. 
+[__Actors__](python_api#carlaactor) are the objects within the CARLA simulation that have an affect or *act* upon other objects in the simulation. CARLA actors include vehicles, pedestrians, traffic lights, road signs, obstacles, cameras and sensors. Each actor requires a [__blueprint__](python_api#carlaactorblueprint). The blueprint defines all the necessary elements needed for an actor, including assets such as meshes, textures and materials and also any logic required to govern the behavior of the actor. To spawn an actor, we need to define it with a blueprint. 
 
 CARLA provides a comprehensive library of blueprints including numerous types and models of vehicles, numerous pedestrian models and traffic lights, boxes, trash cans, shopping carts and traffic signals.
 
-We can use CARLA's [__blueprint library__](python_api#carla.BlueprintLibrary) to find and choose an appropriate blueprint for our needs:
+We can use CARLA's [__blueprint library__](python_api#carlablueprintlibrary) to find and choose an appropriate blueprint for our needs:
 
 ```py
 # Print all available blueprints
