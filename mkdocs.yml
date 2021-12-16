@@ -66,6 +66,7 @@ nav:
   - 'Create a large map in RoadRunner': 'large_map_roadrunner.md'
   - 'Import/Package a large map': 'large_map_import.md'
 - Tutorials (general):
+  - 'Getting started': "tuto_G_getting_started.md"
   - 'Traffic Manager': "tuto_G_traffic_manager.md"
   - 'PyGame for vehicle control': "tuto_G_pygame.md"
   - 'Instance segmentation sensor': "tuto_G_instance_segmentation_sensor.md"
