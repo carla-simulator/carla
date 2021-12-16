@@ -227,7 +227,6 @@ void TrafficManagerLocal::Run() {
     }
     collision_stage.ClearCycleCache();
     vehicle_light_stage.UpdateWorldInfo();
-    // std::cout << "New Frame" << std::endl;
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);

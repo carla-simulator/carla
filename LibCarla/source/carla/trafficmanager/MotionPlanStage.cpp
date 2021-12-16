@@ -84,15 +84,6 @@ void MotionPlanStage::Update(const unsigned long index) {
   current_timestamp = world.GetSnapshot().GetTimestamp();
   StateEntry current_state;
 
-  // std::cout << index << std::endl;
-  // std::cout << " Location: " << vehicle_location.x << " " << vehicle_location.y << " " << vehicle_location.z << std::endl;
-  // std::cout << " Rotation: " << vehicle_rotation.roll << " " << vehicle_rotation.pitch << " " << vehicle_rotation.yaw << std::endl;
-  // std::cout << " Velocity: " << vehicle_velocity.x << " " << vehicle_velocity.y << " " << vehicle_velocity.z << std::endl;
-  // std::cout << " Speed: " << vehicle_speed << std::endl;
-  // std::cout << " Heading: " << vehicle_heading.x << " " << vehicle_heading.y << " " << vehicle_heading.z << std::endl;
-  // std::cout << " Physics: " << vehicle_physics_enabled << std::endl;
-
-
   // Instanciating teleportation transform as current vehicle transform.
   cg::Transform teleportation_transform = cg::Transform(vehicle_location, vehicle_rotation);
 
@@ -224,8 +215,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       current_state.steer = actuation_signal.steer;
       StateEntry &state = pid_state_map.at(actor_id);
       state = current_state;
-
-      // std::cout << " Control: " << vehicle_control.throttle << " " << vehicle_control.brake << " " << vehicle_control.steer << " " << std::endl;
     }
     // For physics-less vehicles, determine position and orientation for teleportation.
     else {
@@ -268,8 +257,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
       // Constructing the actuation signal.
       output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
-
-      // std::cout << " Teleport transform: " << teleportation_transform.location.x << " " << teleportation_transform.location.y << " " << teleportation_transform.location.z << " " << teleportation_transform.rotation.roll << " " << teleportation_transform.rotation.pitch << " " << teleportation_transform.rotation.yaw << std::endl;
     }
   }
 }
