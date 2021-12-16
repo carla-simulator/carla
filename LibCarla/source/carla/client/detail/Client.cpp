@@ -405,7 +405,7 @@ namespace detail {
   }
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
-    _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
+    _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
 
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
