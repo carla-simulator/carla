@@ -60,7 +60,7 @@ filter(lambda x: 'Building' in x, world.get_names_of_all_objects())
 world.get_actors()
 
 # Filter the list to find the vehicles
-world.get_actors().filter('*vehicles*')
+world.get_actors().filter('*vehicle*')
 
 ```
 
@@ -86,8 +86,9 @@ world.spawn_actor(vehicle_bp, spawn_point)
 ```
 For various reasons, this spawn attempt might fail, so to avoid our code crashing, we can use a fault tolerant spawn method. This returns a NoneType object if the spawn fails. If the spawn succeeds, it will return a reference to the vehicle itself, that can be used to control it in various ways, including applying control inputs to move and steer it, handing over control to the Traffic Manager or destroying it.
 
-```py, 
+```py
 vehicle = world.try_spawn_actor(vehicle_bp, spawn_point)
+
 ```
 
 The spawn may fail if there is already a vehicle or other actor at or close to the chosen spawn point, or if the spawn point is in an inappropriate location such as within a building or other static item of the map that's not a road or pavement.
@@ -187,11 +188,51 @@ spawn_points = world.get_map().get_spawn_points()
 for i, spawn_point in enumerate(spawn_points):
     # Draw in the spectator window the spawn point index
     world.debug.draw_string(spawn_point.location, str(i), life_time=100)
-    # We can also draw an arrow to see the o/traffic.rientation of the spawn point
-    # (Which way the vehicle will be facing when spawned)
+    # We can also draw an arrow to see the orientation of the spawn point
+    # (i.e. which way the vehicle will be facing when spawned)
     world.debug.draw_arrow(spawn_point.location, spawn_point.location + spawn_point.get_forward_vector(), life_time=100)
     
 
 ```
 
 ![spawn_points](../img/tuto_G_getting_started/spawn_points.png)
+
+Now we can note down the spawn point indices we are interested in and fill this street with vehicles:
+
+```py
+for ind in [89, 95, 99, 102, 103, 104, 110, 111, 115, 126, 135, 138, 139, 140, 141]:
+    world.try_spawn_actor(random.choice(vehicle_bps), spawn_points[ind])
+```
+
+Or spawn randomly throughout the map:
+
+```py
+for ind in range(0, 100):
+    world.try_spawn_actor(random.choice(vehicle_bps), random.choice(spawn_points))
+```
+
+![vehicle_street](../img/tuto_G_getting_started/vehicle_street.png)
+
+### Actors and blueprints
+
+[__Actors__](python_api#carla.Actor) are the objects within the CARLA simulation that have an affect or *act* upon other objects in the simulation. CARLA actors include vehicles, pedestrians, traffic lights, road signs, obstacles, cameras and sensors. Each actor requires a [__blueprint__](python_api#carla.ActorBlueprint). The blueprint defines all the necessary elements needed for an actor, including assets such as meshes, textures and materials and also any logic required to govern the behavior of the actor. To spawn an actor, we need to define it with a blueprint. 
+
+CARLA provides a comprehensive library of blueprints including numerous types and models of vehicles, numerous pedestrian models and traffic lights, boxes, trash cans, shopping carts and traffic signals.
+
+We can use CARLA's [__blueprint library__](python_api#carla.BlueprintLibrary) to find and choose an appropriate blueprint for our needs:
+
+```py
+# Print all available blueprints
+for actor in world.get_blueprint_library():
+    print(actor)
+```
+
+The blueprint library can be filtered to narrow down our search:
+
+```py
+# Print all available vehicle blueprints
+for actor in world.get_blueprint_library().filter('vehicle'):
+    print(actor)
+
+vehicle_blueprint = world.get_blueprint_library().find('vehicle.audi.tt')
+```
