@@ -1,3 +1,8 @@
+## CARLA sissiok:data_collector
+ * Added a data collection tool
+   - `carla_data_saver.py`: save sensor data and simulation metadata
+   - `carla_coco_converter.py`: generates annotations in COCO format for camera images saved by `carla_data_saver.py`
+
 ## CARLA 0.9.13
 
   * Added new **instance aware semantic segmentation** sensor `sensor.camera.instance_segmentation`
