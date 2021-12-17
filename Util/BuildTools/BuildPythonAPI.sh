@@ -89,7 +89,7 @@ if ${BUILD_PYTHONAPI} ; then
   # Add patchelf to the path. Auditwheel relies on patchelf to repair ELF files.
   export PATH="${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin:${PATH}"
 
-  CODENAME=$(cat /etc/os-release | grep VERSION_CODENAME)
+  CODENAME="osx"
   if [[ ! -z ${TARGET_WHEEL_PLATFORM} ]] && [[ ${CODENAME#*=} != "bionic" ]] ; then
     log "A target platform has been specified but you are not using a compatible linux distribution. The wheel repair step will be skipped"
     TARGET_WHEEL_PLATFORM=

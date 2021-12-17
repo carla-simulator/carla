@@ -63,6 +63,12 @@ LLVM_BASENAME=llvm-8.0
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
 
+# overwrite the LLVM paths to use the MacOSX libraries
+LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/include/c++/v1
+LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/lib
+# LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
+# LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
+
 if [[ -d "${LLVM_BASENAME}-install" ]] ; then
   log "${LLVM_BASENAME} already installed."
 else
@@ -219,14 +225,14 @@ else
 
   # rpclib does not use any cmake 3.9 feature.
   # As cmake 3.9 is not standard in Ubuntu 16.04, change cmake version to 3.5
-  sed -i s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
+  sed s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
 
   mkdir -p ${RPCLIB_BASENAME}-libcxx-build
 
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -nostdinc++ -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS -DMSGPACK_DISABLE_LEGACY_NIL" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -290,7 +296,7 @@ else
   pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -nostdinc++ -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -335,7 +341,7 @@ RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
 
 if [[ -d "${RECAST_BASENAME}-install" &&
-      -f "${RECAST_BASENAME}-install/bin/RecastBuilder" ]] ; then
+      -d "${RECAST_BASENAME}-install/bin/RecastBuilder.app" ]] ; then
   log "${RECAST_BASENAME} already installed."
 else
   rm -Rf \
@@ -383,7 +389,7 @@ fi
 # make sure the RecastBuilder is corrctly copied
 RECAST_INSTALL_DIR="${CARLA_BUILD_FOLDER}/../Util/DockerUtils/dist"
 if [[ ! -f "${RECAST_INSTALL_DIR}/RecastBuilder" ]]; then
-  cp "${RECAST_BASENAME}-install/bin/RecastBuilder" "${RECAST_INSTALL_DIR}/"
+  cp -r "${RECAST_BASENAME}-install/bin/RecastBuilder.app" "${RECAST_INSTALL_DIR}/"
 fi
 
 unset RECAST_BASENAME
@@ -454,7 +460,7 @@ else
       -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_DIR}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
-      -Dtranscoder=gnuiconv \
+      -Dtranscoder=iconv \
       -Dnetwork=OFF \
       ..
   ninja
@@ -711,7 +717,7 @@ set(CMAKE_C_COMPILER ${CC})
 set(CMAKE_CXX_COMPILER ${CXX})
 
 # disable -Werror since the boost 1.72 doesn't compile with ad_rss without warnings (i.e. the geometry headers)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC -nostdinc++" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wdeprecated -Wshadow -Wuninitialized -Wunreachable-code" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wpessimizing-move -Wold-style-cast -Wnull-dereference" CACHE STRING "" FORCE)
@@ -729,7 +735,7 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++ -nostdinc++" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)

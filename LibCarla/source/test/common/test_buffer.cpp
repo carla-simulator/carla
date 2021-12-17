@@ -116,7 +116,7 @@ TEST(buffer, memcpy) {
 TEST(buffer, message_too_big) {
   ASSERT_THROW(Buffer(4294967296ul), std::invalid_argument);
   Buffer buf;
-  ASSERT_THROW(buf.reset(4294967296ul), std::invalid_argument);
+  ASSERT_THROW(buf.reset(static_cast<Buffer::size_type>(4294967296ul)), std::invalid_argument);
 }
 #endif // LIBCARLA_NO_EXCEPTIONS
 

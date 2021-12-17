@@ -16,7 +16,7 @@ USE_CARSIM=false
 USE_CHRONO=false
 
 GDB=
-RHI="-vulkan"
+RHI="-opengl"
 
 OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,chrono -n 'parse-options' -- "$@"`
 
@@ -141,13 +141,16 @@ if ${BUILD_CARLAUE4} ; then
     # This command fails sometimes but normally we can continue anyway.
     set +e
     log "Generate Unreal project files."
-    ${UE4_ROOT}/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
+    ${UE4_ROOT}/Engine/Build/BatchFiles/Mac/GenerateProjectFiles.sh -project="${PWD}/CarlaUE4.uproject" -game -engine -makefiles
     set -e
 
   fi
 
   log "Build CarlaUE4 project."
-  make CarlaUE4Editor
+  # make CarlaUE4Editor
+  pushd "${UE4_ROOT}" >/dev/null
+  ./Engine/Build/BatchFiles/Mac/Build.sh UE4Editor Mac Development -NoUBTMakefiles
+  popd >/dev/null
 
   #Providing the user with the ExportedMaps folder
   EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"
@@ -163,7 +166,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI}
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Mac/UE4Editor.app/Contents/MacOS/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI}
 
 else
 
