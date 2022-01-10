@@ -12,10 +12,10 @@ nav:
   - 'Introduction': 'start_introduction.md'
   - 'Quick start package installation': 'start_quickstart.md'
   - 'First steps' : 'tuto_G_getting_started.md'
-  
+
 - CARLA components:
   - 'Foundations': 'core_concepts.md'
-  - 'Actors': 'core_actors.md') '
+  - 'Actors': 'core_actors.md'
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
