@@ -8,6 +8,12 @@ CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
 source $(dirname "$0")/Vars.mk
 unset CURDIR
 
+if [[ "$(uname)" != "Darwin" ]] ; then
+  ARCH_TARGET="" # use default arch on linux
+  OSX=false
+  TARGET_PLATFORM="Linux"
+fi
+
 if [ -n "${CARLA_BUILD_NO_COLOR}" ]; then
 
   function log {

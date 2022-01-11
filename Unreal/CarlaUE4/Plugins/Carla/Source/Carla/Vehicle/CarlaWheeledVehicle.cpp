@@ -537,7 +537,7 @@ void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
       else{
         if (hud->DebugVehicle == GetVehicleMovementComponent()) {
           hud->AddDebugVehicleForTelemetry(nullptr);
-          GetVehicleMovementComponent()->StopTelemetry();
+//          GetVehicleMovementComponent()->StopTelemetry();
         }
       }
 
@@ -571,7 +571,7 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
     check((uint8)WheelLocation < 4)
     UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
     check(VehicleAnim != nullptr)
-    VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
+//    VehicleAnim->SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
   }
   else
   {
@@ -593,7 +593,7 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   }
   else
   {
-    return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
+      return 0.f;// VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
   }
 }
 
@@ -622,7 +622,7 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   if (enabled)
   {
     Vehicle4W->RecreatePhysicsState();
-    VehicleAnim->ResetWheelCustomRotations();
+//    VehicleAnim->ResetWheelCustomRotations();
   }
   else
   {
