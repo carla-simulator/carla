@@ -8,10 +8,23 @@ CURDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )"
 source $(dirname "$0")/Vars.mk
 unset CURDIR
 
-if [[ "$(uname)" != "Darwin" ]] ; then
-  ARCH_TARGET="" # use default arch on linux
-  OSX=false
-  TARGET_PLATFORM="Linux"
+
+if [[ "$(uname)" == "Darwin" ]] ; then
+  export MAC_OS=true # automatically set to false on non-Mac builds
+else
+  export MAC_OS=false
+fi
+
+if ${MAC_OS}; then
+  # for OSX apple silicon build (building x86 & using rosetta2)
+  # NOTE: UE4 wants use of macos 10.14, but 12.1 works fine
+  export ARCH_TARGET="-target x86_64-apple-macos12.1"
+  # for cmake -arch flag: https://cmake.org/cmake/help/latest/prop_tgt/OSX_ARCHITECTURES.html#prop_tgt:OSX_ARCHITECTURES
+  export CMAKE_OSX_ARCHITECTURES="x86_64"
+  export TARGET_PLATFORM="Mac"
+else
+  export ARCH_TARGET="" # use default arch on linux
+  export TARGET_PLATFORM="Linux"
 fi
 
 if [ -n "${CARLA_BUILD_NO_COLOR}" ]; then

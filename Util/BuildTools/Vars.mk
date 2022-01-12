@@ -30,11 +30,3 @@ CMAKE_CONFIG_FILE=${CARLA_BUILD_FOLDER}/CMakeLists.txt.in
 
 LIBCARLA_TEST_CONTENT_FOLDER=${CARLA_BUILD_FOLDER}/test-content
 CARLA_EXAMPLES_FOLDER=${CURDIR}/Examples
-
-# for OSX apple silicon build
-# NOTE: UE4 wants use of macos 10.14
-ARCH_TARGET="-target x86_64-apple-macos12.1"
-# for cmake -arch flag: https://cmake.org/cmake/help/latest/prop_tgt/OSX_ARCHITECTURES.html#prop_tgt:OSX_ARCHITECTURES
-CMAKE_OSX_ARCHITECTURES="x86_64"
-OSX=true # automatically set to false on non-Mac builds
-TARGET_PLATFORM="Mac" # automatically set to Linux on non-Mac builds

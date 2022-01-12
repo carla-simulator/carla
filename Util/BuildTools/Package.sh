@@ -145,12 +145,12 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./Docs/python_api.md" "${DESTINATION}/PythonAPI/python_api.md"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
   copy_if_changed "./Util/ImportAssets.sh" "${DESTINATION}/ImportAssets.sh"
-  if [ $OSX ]; then 
-    RECAST_EXEC="./Util/DockerUtils/dist/RecastBuilder.app/"
+  if ${MAC_OS}; then 
+    RECAST_BIN="./Util/DockerUtils/dist/RecastBuilder.app/"
   else
-    RECAST_EXEC="./Util/DockerUtils/dist/RecastBuilder"
+    RECAST_BIN="./Util/DockerUtils/dist/RecastBuilder"
   fi
-  copy_if_changed ${RECAST_EXEC} "${DESTINATION}/Tools/"
+  copy_if_changed ${RECAST_BIN} "${DESTINATION}/Tools/"
 
   copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
   copy_if_changed "./PythonAPI/carla/dist/*.whl" "${DESTINATION}/PythonAPI/carla/dist/"

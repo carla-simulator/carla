@@ -63,12 +63,6 @@ LLVM_BASENAME=llvm-8.0
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
 
-# overwrite the LLVM paths to use the MacOSX libraries
-LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/include/c++/v1
-LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/lib
-# LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
-# LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
-
 if [[ -d "${LLVM_BASENAME}-install" ]] ; then
   log "${LLVM_BASENAME} already installed."
 else
@@ -107,6 +101,13 @@ fi
 
 unset LLVM_BASENAME
 
+if ${MAC_OS}; then
+  # overwrite the LLVM paths to use the MacOSX libraries
+  LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/include/c++/v1
+  LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/lib
+  # LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
+  # LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
+fi
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
@@ -197,9 +198,6 @@ done
 
 unset BOOST_BASENAME
 
-# need to explicitly set the OSX architecture
-export CMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-
 # ==============================================================================
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
@@ -226,8 +224,7 @@ else
 
   log "Building rpclib with libc++."
 
-  if [ "$(uname)" != "Darwin" ]
-  then
+  if ! ${MAC_OS}; then
     # rpclib does not use any cmake 3.9 feature.
     # As cmake 3.9 is not standard in Ubuntu 16.04, change cmake version to 3.5
     sed -i s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
@@ -346,7 +343,8 @@ RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
 
 if [[ -d "${RECAST_BASENAME}-install" &&
-      -d "${RECAST_BASENAME}-install/bin/RecastBuilder.app" ]] ; then
+      (-f "${RECAST_BASENAME}-install/bin/RecastBuilder" || 
+      $MAC_OS && -d "${RECAST_BASENAME}-install/bin/RecastBuilder.app") ]] ; then
   log "${RECAST_BASENAME} already installed."
 else
   rm -Rf \
@@ -394,7 +392,11 @@ fi
 # make sure the RecastBuilder is corrctly copied
 RECAST_INSTALL_DIR="${CARLA_BUILD_FOLDER}/../Util/DockerUtils/dist"
 if [[ ! -f "${RECAST_INSTALL_DIR}/RecastBuilder" ]]; then
-  cp -r "${RECAST_BASENAME}-install/bin/RecastBuilder.app" "${RECAST_INSTALL_DIR}/"
+  if ${MAC_OS}; then
+    cp -r "${RECAST_BASENAME}-install/bin/RecastBuilder.app" "${RECAST_INSTALL_DIR}/"
+  else
+    cp "${RECAST_BASENAME}-install/bin/RecastBuilder" "${RECAST_INSTALL_DIR}/"
+  fi
 fi
 
 unset RECAST_BASENAME
@@ -460,12 +462,13 @@ else
 
   pushd ${XERCESC_SRC_DIR}/build >/dev/null
 
+  if ${MAC_OS}; then ICONV=iconv; else ICONV=gnuiconv; fi
   cmake -G "Ninja" \
       -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w ${ARCH_TARGET}" \
       -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_DIR}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
-      -Dtranscoder=iconv \
+      -Dtranscoder=${ICONV} \
       -Dnetwork=OFF \
       ..
   ninja
@@ -741,7 +744,7 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++ ${ARCH_TARGET} -nostdinc++" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} ${STDLIB} ${ARCH_TARGET} -nostdinc++" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
