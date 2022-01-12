@@ -469,22 +469,34 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
     Collision.IsActor2Hero = false;
 
     // check actor 1
-    if (Episode->GetActorRegistry().FindCarlaActor(Actor1)->GetActorInfo() != nullptr)
-    {
-      auto *Role = Episode->GetActorRegistry().FindCarlaActor(Actor1)->GetActorInfo()->Description.Variations.Find("role_name");
-      if (Role != nullptr)
-        Collision.IsActor1Hero = (Role->Value == "hero");
+    FCarlaActor *FoundActor1 = Episode->GetActorRegistry().FindCarlaActor(Actor1);
+    if (FoundActor1 != nullptr) { 
+      if (FoundActor1->GetActorInfo() != nullptr)
+      {
+        auto Role = FoundActor1->GetActorInfo()->Description.Variations.Find("role_name");
+        if (Role != nullptr)
+          Collision.IsActor1Hero = (Role->Value == "hero");
+      }
+      Collision.DatabaseId1 = FoundActor1->GetActorId();
     }
-    Collision.DatabaseId1 = Episode->GetActorRegistry().FindCarlaActor(Actor1)->GetActorId();
+    else {
+      Collision.DatabaseId1 = uint32_t(-1); // actor1 is not a registered Carla actor
+    }
 
     // check actor 2
-    if (Episode->GetActorRegistry().FindCarlaActor(Actor2)->GetActorInfo() != nullptr)
-    {
-      auto Role = Episode->GetActorRegistry().FindCarlaActor(Actor2)->GetActorInfo()->Description.Variations.Find("role_name");
-      if (Role != nullptr)
-        Collision.IsActor2Hero = (Role->Value == "hero");
+    FCarlaActor *FoundActor2 = Episode->GetActorRegistry().FindCarlaActor(Actor2);
+    if (FoundActor2 != nullptr) { 
+      if (FoundActor2->GetActorInfo() != nullptr)
+      {
+        auto Role = FoundActor2->GetActorInfo()->Description.Variations.Find("role_name");
+        if (Role != nullptr)
+          Collision.IsActor2Hero = (Role->Value == "hero");
+      }
+      Collision.DatabaseId2 = FoundActor2->GetActorId();
     }
-    Collision.DatabaseId2 = Episode->GetActorRegistry().FindCarlaActor(Actor2)->GetActorId();
+    else {
+      Collision.DatabaseId2 = uint32_t(-1); // actor2 is not a registered Carla actor
+    }
 
     Collisions.Add(std::move(Collision));
   }

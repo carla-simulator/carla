@@ -197,13 +197,13 @@ class RssUnstructuredSceneVisualizer(object):
         else:
             self._surface = None
 
-        self._calibration = np.identity(3)
-        self._calibration[0, 2] = self._dim[0] / 2.0
-        self._calibration[1, 2] = self._dim[1] / 2.0
-        self._calibration[0, 0] = self._calibration[1, 1] = self._dim[0] / \
+        if spawn_sensor:
+            self._calibration = np.identity(3)
+            self._calibration[0, 2] = self._dim[0] / 2.0
+            self._calibration[1, 2] = self._dim[1] / 2.0
+            self._calibration[0, 0] = self._calibration[1, 1] = self._dim[0] / \
             (2.0 * np.tan(90.0 * np.pi / 360.0))  # fov default: 90.0
 
-        if spawn_sensor:
             bp_library = self._world.get_blueprint_library()
             bp = bp_library.find('sensor.camera.rgb')
             bp.set_attribute('image_size_x', str(self._dim[0]))
@@ -660,14 +660,14 @@ class RssDebugVisualizer(object):
 
     def visualize_enu_edge(self, edge, color, z_offset):
         for point in edge:
-            carla_point = carla.Location(x=float(point.x), y=float(-1 * point.y), z=float(point.z + z_offset))
+            carla_point = carla.Location(x=float(point.x), y=-1. * float(point.y), z=float(point.z) + z_offset)
             self._world.debug.draw_point(carla_point, 0.1, color, 0.1, False)
 
     def visualize_rss_results(self, state_snapshot):
         for state in state_snapshot:
             other_actor = state.get_actor(self._world)
             if not other_actor:
-                print("Actor not found. Skip visualizing state {}".format(state))
+                # print("Actor not found. Skip visualizing state {}".format(state))
                 continue
             ego_point = self._player.get_location()
             ego_point.z += 0.05

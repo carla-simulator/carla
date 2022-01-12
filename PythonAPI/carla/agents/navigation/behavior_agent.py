@@ -81,62 +81,6 @@ class BehaviorAgent(BasicAgent):
         if self._incoming_direction is None:
             self._incoming_direction = RoadOption.LANEFOLLOW
 
-    def _vehicle_obstacle_detected(self, vehicle_list, proximity_th, up_angle_th, low_angle_th=0, lane_offset=0):
-        """
-        Check if a given vehicle is an obstacle in our way. To this end we take
-        into account the road and lane the target vehicle is on and run a
-        geometry test to check if the target vehicle is under a certain distance
-        in front of our ego vehicle. We also check the next waypoint, just to be
-        sure there's not a sudden road id change.
-
-        WARNING: This method is an approximation that could fail for very large
-        vehicles, which center is actually on a different lane but their
-        extension falls within the ego vehicle lane. Also, make sure to remove
-        the ego vehicle from the list. Lane offset is set to +1 for right lanes
-        and -1 for left lanes, but this has to be inverted if lane values are
-        negative.
-
-            :param vehicle_list: list of potential obstacle to check
-            :param proximity_th: threshold for the agent to be alerted of
-            a possible collision
-            :param up_angle_th: upper threshold for angle
-            :param low_angle_th: lower threshold for angle
-            :param lane_offset: for right and left lane changes
-            :return: a tuple given by (bool_flag, vehicle, distance), where:
-            - bool_flag is True if there is a vehicle ahead blocking us
-                   and False otherwise
-            - vehicle is the blocker object itself
-            - distance is the meters separating the two vehicles
-        """
-        ego_transform = self._vehicle.get_transform()
-        ego_location = ego_transform.location
-        ego_wpt = self._map.get_waypoint(ego_location)
-
-        # Get the right offset
-        if ego_wpt.lane_id < 0 and lane_offset != 0:
-            lane_offset *= -1
-
-        for target_vehicle in vehicle_list:
-
-            target_transform = target_vehicle.get_transform()
-            target_location = target_transform.location
-            # If the object is not in our next or current lane it's not an obstacle
-
-            target_wpt = self._map.get_waypoint(target_location)
-            if target_wpt.road_id != ego_wpt.road_id or \
-                    target_wpt.lane_id != ego_wpt.lane_id + lane_offset:
-                next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=5)[0]
-                if target_wpt.road_id != next_wpt.road_id or \
-                        target_wpt.lane_id != next_wpt.lane_id + lane_offset:
-                    continue
-
-            if is_within_distance(target_transform, ego_transform,
-                                  proximity_th, [low_angle_th, up_angle_th]):
-
-                return (True, target_vehicle, compute_distance(target_location, ego_location))
-
-        return (False, None, -1)
-
     def traffic_light_manager(self):
         """
         This method is in charge of behaviors for red lights.

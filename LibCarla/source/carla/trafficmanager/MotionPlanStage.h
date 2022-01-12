@@ -42,7 +42,7 @@ private:
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
-  RandomGeneratorMap &random_devices;
+  RandomGenerator &random_device;
   const LocalMapPtr &local_map;
   TLMap tl_map;
 
@@ -83,7 +83,7 @@ public:
                   const TLFrame &tl_frame,
                   const cc::World &world,
                   ControlFrame &output_array,
-                  RandomGeneratorMap &random_devices,
+                  RandomGenerator &random_device,
                   const LocalMapPtr &local_map);
 
   void Update(const unsigned long index);

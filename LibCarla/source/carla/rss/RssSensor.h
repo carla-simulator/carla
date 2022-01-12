@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <atomic>
+#include <future>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -66,6 +69,7 @@ public:
   void Listen(CallbackFunctionType callback) override;
 
   /// Stop listening for new measurements.
+  /// Be aware:  GIL has to be unlocked to be able to wait for callbacks not active.
   void Stop() override;
 
   /// Return whether this Sensor instance is currently listening to the
@@ -123,7 +127,12 @@ public:
 
 private:
   /// the acutal sensor tick callback function
-  SharedPtr<sensor::SensorData> TickRssSensor(const Timestamp &timestamp);
+  void TickRssSensor(const client::Timestamp &timestamp, CallbackFunctionType callback);
+  void TickRssSensorThreadLocked(const client::Timestamp &timestamp, SharedPtr<carla::client::ActorList> actors,
+                                 CallbackFunctionType callback);
+
+  //// the object actually performing the RSS processing
+  std::shared_ptr<::carla::rss::RssCheck> _rss_check;
 
   /// the id got when registering for the on tick event
   std::size_t _on_tick_register_id;
@@ -131,8 +140,11 @@ private:
   /// the mutex to protect the actual RSS processing and in case it takes too long to process ever frame
   std::mutex _processing_lock;
 
-  //// the object actually performing the RSS processing
-  std::shared_ptr<::carla::rss::RssCheck> _rss_check;
+  /// the future for the async ticking thread
+  std::future<void> _tick_future;
+
+  /// some debug timings
+  std::list<double> _rss_check_timings;
 
   //// the rss actor constellation callback function
   ActorConstellationCallbackFunctionType _rss_actor_constellation_callback;
@@ -142,6 +154,8 @@ private:
 
   /// last processed frame
   std::size_t _last_processed_frame;
+
+  static std::atomic_uint _global_map_initialization_counter_;
 };
 
 }  // namespace client

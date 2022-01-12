@@ -14,7 +14,7 @@
 namespace carla {
 namespace rpc {
 
-  using BoneTransformData = std::pair<std::string, geom::Transform>;
+  using BoneTransformDataIn = std::pair<std::string, geom::Transform>;
 
 } // namespace rpc
 } // namespace carla

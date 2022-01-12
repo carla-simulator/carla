@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "WalkerBoneControl.generated.h"
+#include "WalkerBoneControlIn.generated.h"
 
 USTRUCT(BlueprintType)
-struct CARLA_API FWalkerBoneControl
+struct CARLA_API FWalkerBoneControlIn
 {
   GENERATED_BODY()
 

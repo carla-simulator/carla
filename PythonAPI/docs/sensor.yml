@@ -153,6 +153,14 @@
         carla.VehicleControl
       doc: >
         Applies the safety restrictions given by a carla.RssSensor to a carla.VehicleControl.
+    - def_name: set_log_level
+      params:
+      - param_name: log_level
+        type: carla.RssLogLevel
+        doc: >
+          New log level.
+      doc: >
+        Sets the log level.
     # --------------------------------------
 
   - class_name: RssRoadBoundariesMode

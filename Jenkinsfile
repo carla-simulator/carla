@@ -184,7 +184,7 @@ pipeline
                                 sh 'rm -rf ~/carla-simulator.github.io/Doxygen'
                                 sh '''
                                     cd ~/carla-simulator.github.io
-                                    git remote set-url origin git@github.com:carla-simulator/carla-simulator.github.io.git
+                                    git remote set-url origin git@docs:carla-simulator/carla-simulator.github.io.git
                                     git fetch
                                     git checkout -B master origin/master
                                 '''

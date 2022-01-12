@@ -42,7 +42,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          parameters,
                                          marked_for_removal,
                                          localization_frame,
-                                         random_devices)),
+                                         random_device)),
 
     collision_stage(CollisionStage(vehicle_id_list,
                                    simulation_state,
@@ -50,7 +50,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   random_devices)),
+                                   random_device)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
                                           simulation_state,
@@ -58,7 +58,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                           parameters,
                                           world,
                                           tl_frame,
-                                          random_devices)),
+                                          random_device)),
 
     motion_plan_stage(MotionPlanStage(vehicle_id_list,
                                       simulation_state,
@@ -74,8 +74,14 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       tl_frame,
                                       world,
                                       control_frame,
-                                      random_devices,
+                                      random_device,
                                       local_map)),
+
+    vehicle_light_stage(VehicleLightStage(vehicle_id_list,
+                                          buffer_map,
+                                          parameters,
+                                          world,
+                                          control_frame)),
 
     alsm(ALSM(registered_vehicles,
               buffer_map,
@@ -89,7 +95,7 @@ TrafficManagerLocal::TrafficManagerLocal(
               collision_stage,
               traffic_light_stage,
               motion_plan_stage,
-              random_devices)),
+              vehicle_light_stage)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
@@ -177,16 +183,11 @@ void TrafficManagerLocal::Run() {
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
 
-
     // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
-
       vehicle_id_list = registered_vehicles.GetIDList();
-
-      std::sort(vehicle_id_list.begin(), vehicle_id_list.end());
-
       number_of_vehicles = vehicle_id_list.size();
 
       // Reserve more space if needed.
@@ -210,10 +211,14 @@ void TrafficManagerLocal::Run() {
     tl_frame.clear();
     tl_frame.resize(number_of_vehicles);
     control_frame.clear();
+    // Reserve two frames for each vehicle: one for the ApplyVehicleControl command,
+    // and one for the optional SetVehicleLightState command
+    control_frame.reserve(2 * number_of_vehicles);
+    // Resize to accomodate at least all ApplyVehicleControl commands,
+    // that will be inserted by the motion_plan_stage stage.
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
-
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       localization_stage.Update(index);
     }
@@ -221,9 +226,11 @@ void TrafficManagerLocal::Run() {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
+    vehicle_light_stage.UpdateWorldInfo();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
+      vehicle_light_stage.Update(index);
     }
 
     registration_lock.unlock();
@@ -273,7 +280,6 @@ void TrafficManagerLocal::Stop() {
   track_traffic.Clear();
   previous_update_instance = chr::system_clock::now();
   current_reserved_capacity = 0u;
-  random_devices.clear();
 
   simulation_state.Reset();
   localization_stage.Reset();
@@ -300,7 +306,6 @@ void TrafficManagerLocal::Release() {
 }
 
 void TrafficManagerLocal::Reset() {
-
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
@@ -311,14 +316,6 @@ void TrafficManagerLocal::Reset() {
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
   std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
-  for (const ActorPtr &vehicle: vehicle_list) {
-    if (!is_custom_seed) {
-      seed = vehicle->GetId() + seed;
-    } else {
-      seed = 1 + seed;
-    }
-    random_devices.insert({vehicle->GetId(), RandomGenerator(seed)});
-  }
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
@@ -335,6 +332,11 @@ void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, co
 
 void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percentage) {
   parameters.SetGlobalPercentageSpeedDifference(percentage);
+}
+
+/// Method to set the automatic management of the vehicle lights
+void TrafficManagerLocal::SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) {
+  parameters.SetUpdateVehicleLights(actor, do_update);
 }
 
 void TrafficManagerLocal::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
@@ -377,6 +379,14 @@ void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const fl
   parameters.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerLocal::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomLeftLaneChangePercentage(actor, percentage);
+}
+
+void TrafficManagerLocal::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomRightLaneChangePercentage(actor, percentage);
+}
+
 void TrafficManagerLocal::SetHybridPhysicsMode(const bool mode_switch) {
   parameters.SetHybridPhysicsMode(mode_switch);
 }
@@ -389,6 +399,30 @@ void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
   parameters.SetOSMMode(mode_switch);
 }
 
+void TrafficManagerLocal::SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
+  parameters.SetCustomPath(actor, path, empty_buffer);
+}
+
+void TrafficManagerLocal::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+  parameters.RemoveUploadPath(actor_id, remove_path);
+}
+
+void TrafficManagerLocal::UpdateUploadPath(const ActorId &actor_id, const Path path) {
+  parameters.UpdateUploadPath(actor_id, path);
+}
+
+void TrafficManagerLocal::SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+  parameters.SetImportedRoute(actor, route, empty_buffer);
+}
+
+void TrafficManagerLocal::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  parameters.RemoveImportedRoute(actor_id, remove_path);
+}
+
+void TrafficManagerLocal::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  parameters.UpdateImportedRoute(actor_id, route);
+}
+
 void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
   parameters.SetRespawnDormantVehicles(mode_switch);
 }
@@ -399,6 +433,14 @@ void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_
 
 void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
   parameters.SetMaxBoundaries(lower, upper);
+}
+
+Action TrafficManagerLocal::GetNextAction(const ActorId &actor_id) {
+  return localization_stage.ComputeNextAction(actor_id);
+}
+
+ActionBuffer TrafficManagerLocal::GetActionBuffer(const ActorId &actor_id) {
+  return localization_stage.ComputeActionBuffer(actor_id);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
@@ -433,7 +475,7 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
-  is_custom_seed = true;
+  random_device = RandomGenerator(seed);
   world.ResetAllTrafficLights();
 }
 

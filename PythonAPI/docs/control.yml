@@ -88,7 +88,7 @@
 
   - class_name: WalkerControl
     doc: >
-      This class defines specific directions that can be commanded to a carla.Walker to control it via script. The walker's animations will blend automatically with the parameters defined in this class when applied, though specific skeleton moves can be obtained through class.WalkerBoneControl.
+      This class defines specific directions that can be commanded to a carla.Walker to control it via script.
         
         AI control can be settled for walkers, but the control used to do so is carla.WalkerAIController. 
 
@@ -142,7 +142,26 @@
     - def_name: __str__
     # --------------------------------------
 
-  - class_name: WalkerBoneControl
+  - class_name: WalkerBoneControlOut
+    # - DESCRIPTION ------------------------
+    doc: >
+       This class is used to return all bone positions of a pedestrian. For each bone we get its _name_ and its transform in three different spaces (world, actor and relative).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: bone_transforms
+      type: list([name,world, actor, relative])
+      doc: >
+        List of one entry per bone with this information:
+          - name: bone name
+          - world: transform in world coordinates
+          - component: transform based on the pivot of the actor
+          - relative: transform based on the bone parent
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: WalkerBoneControlIn
     # - DESCRIPTION ------------------------
     doc: >
        This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](tuto_G_control_walker_skeletons.md) to learn more on how to create a walker and define its movement.  
@@ -151,7 +170,9 @@
     - var_name: bone_transforms
       type: list([name,transform])
       doc: >
-        List of tuples where the first value is the bone's name and the second value stores the transformation (changes in location and rotation) that will be applied to it.
+        List with the data for each bone we want to set:
+          - name: bone name
+          - relative: transform based on the bone parent       
     # - METHODS ----------------------------
     methods:
     - def_name: __init__

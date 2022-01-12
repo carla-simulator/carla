@@ -93,6 +93,7 @@ private:
   CollisionStage collision_stage;
   TrafficLightStage traffic_light_stage;
   MotionPlanStage motion_plan_stage;
+  VehicleLightStage vehicle_light_stage;
   ALSM alsm;
   /// Traffic manager server instance.
   TrafficManagerServer server;
@@ -108,11 +109,10 @@ private:
   std::condition_variable step_end_trigger;
   /// Single worker thread for sequential execution of sub-components.
   std::unique_ptr<std::thread> worker_thread;
-  /// Structure holding random devices per vehicle.
-  RandomGeneratorMap random_devices;
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
-  bool is_custom_seed {false};
+  /// Structure holding random devices per vehicle.
+  RandomGenerator random_device = RandomGenerator(seed);
   std::vector<ActorId> marked_for_removal;
   /// Mutex to prevent vehicle registration during frame array re-allocation.
   std::mutex registration_mutex;
@@ -165,6 +165,9 @@ public:
   /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage);
 
+  /// Method to set the automatic management of the vehicle lights
+  void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);
+
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision);
 
@@ -210,8 +213,14 @@ public:
   /// the Global leading vehicle.
   void SetGlobalDistanceToLeadingVehicle(const float distance);
 
-  /// Method to set probabilistic preference to keep on the right lane.
+  /// Method to set % to keep on the right lane.
   void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a left lane change.
+  void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
+
+  /// Method to set % to randomly do a right lane change.
+  void SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set hybrid physics mode.
   void SetHybridPhysicsMode(const bool mode_switch);
@@ -225,14 +234,38 @@ public:
   /// Method to set Open Street Map mode.
   void SetOSMMode(const bool mode_switch);
 
+  /// Method to set our own imported path.
+  void SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer);
+
+  /// Method to remove a list of points.
+  void RemoveUploadPath(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set list of points.
+  void UpdateUploadPath(const ActorId &actor_id, const Path path);
+
+  /// Method to set our own imported route.
+  void SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer);
+
+  /// Method to remove a route.
+  void RemoveImportedRoute(const ActorId &actor_id, const bool remove_path);
+
+  /// Method to update an already set route.
+  void UpdateImportedRoute(const ActorId &actor_id, const Route route);
+
   /// Method to set automatic respawn of dormant vehicles.
   void SetRespawnDormantVehicles(const bool mode_switch);
 
-  // Method to set boundaries to respawn of dormant vehicles.
+  /// Method to set boundaries to respawn of dormant vehicles.
   void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
 
-  // Method to set limits for boundaries when respawning dormant vehicles.
+  /// Method to set limits for boundaries when respawning dormant vehicles.
   void SetMaxBoundaries(const float lower, const float upper);
+
+  /// Method to get the vehicle's next action.
+  Action GetNextAction(const ActorId &actor_id);
+
+  /// Method to get the vehicle's action buffer.
+  ActionBuffer GetActionBuffer(const ActorId &actor_id);
 
   void ShutDown() {};
 };

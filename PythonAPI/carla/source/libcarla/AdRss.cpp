@@ -93,6 +93,12 @@ static void RegisterActorConstellationCallback(carla::client::RssSensor &self, b
   self.RegisterActorConstellationCallback(callback_function);
 }
 
+static void Stop(carla::client::RssSensor &self) {
+  // ensure the RssSensor is stopped with GIL released to sync on processing lock
+  carla::PythonUtil::ReleaseGIL unlock;
+  self.Stop();
+}
+
 void export_ad() {
   using namespace boost::python;
 
@@ -186,6 +192,7 @@ void export_ad_rss() {
       .add_property("pedestrian_dynamics", &GetPedestrianDynamics, &cc::RssSensor::SetPedestrianDynamics)
       .add_property("road_boundaries_mode", &GetRoadBoundariesMode, &cc::RssSensor::SetRoadBoundariesMode)
       .add_property("routing_targets", &GetRoutingTargets)
+      .def("stop", &Stop)
       .def("register_actor_constellation_callback", &RegisterActorConstellationCallback, (arg("callback")))
       .def("append_routing_target", &cc::RssSensor::AppendRoutingTarget, (arg("routing_target")))
       .def("reset_routing_targets", &cc::RssSensor::ResetRoutingTargets)
@@ -199,5 +206,6 @@ void export_ad_rss() {
       .def(init<>())
       .def("restrict_vehicle_control", &carla::rss::RssRestrictor::RestrictVehicleControl,
            (arg("vehicle_control"), arg("proper_response"), arg("ego_dynamics_on_route"), arg("vehicle_physics")))
+      .def("set_log_level", &carla::rss::RssRestrictor::SetLogLevel, (arg("log_level")))
       .def(self_ns::str(self_ns::self));
 }
