@@ -34,8 +34,7 @@ def get_libcarla_extensions():
     if os.name == "posix":
         import distro
 
-        linux_distro = distro.id() # recommended over distro.linux_distribution()[0]
-        if linux_distro.lower() in ["ubuntu", "debian", "deepin", "darwin"]:
+        if distro.id().lower() in ["ubuntu", "debian", "deepin", "darwin"]:
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
