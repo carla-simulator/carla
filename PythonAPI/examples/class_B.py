@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from numba import jit, cuda
 
 from collections import deque
 
@@ -16,8 +17,8 @@ if gpus:
         # Memory growth must be set before GPUs have been initialized
         print(e)
 
-from tensorflow import keras
-from tensorflow.keras.optimizers import Adam
+# from tensorflow import keras
+# from tensorflow.keras.optimizers import Adam
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
@@ -32,6 +33,7 @@ class DQNAgent:
         self.learning_rate = 0.001
         self.model = self._build_model()
 
+    # @jit
     def _build_model(self):
         # OUR MODEL WILL BE RESNET WITH SOME LINEAR LAYERS AT THE END
         # INPUT = (1280, 720, 3) STACK OF 3 UNCERTAINTY MAPS
@@ -40,18 +42,18 @@ class DQNAgent:
         base_model = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=(480, 640, 3))
         base_model.trainable = False
         # Additional Linear Layers
-        inputs = keras.Input(shape=(480, 640, 3))
+        inputs = tf.keras.Input(shape=(480, 640, 3))
         #print(inputs)
         x = base_model(inputs, training=False)
-        x = keras.layers.GlobalAveragePooling2D()(x)
+        x = tf.keras.layers.GlobalAveragePooling2D()(x)
         # x = keras.layers.Dropout(0.2)(x)
-        x = keras.layers.Flatten()(x)
-        x = keras.layers.Dense(units=40, activation='relu')(x)
+        x = tf.keras.layers.Flatten()(x)
+        x = tf.keras.layers.Dense(units=40, activation='relu')(x)
         # x = keras.layers.Dropout(0.2)(x)
-        output = keras.layers.Dense(units=13, activation='linear')(x)
+        output = tf.keras.layers.Dense(units=13, activation='linear')(x)
         # Compile the Model
-        model = keras.Model(inputs, output)
-        model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
+        model = tf.keras.Model(inputs, output)
+        model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
         return model
 
 
@@ -67,15 +69,14 @@ class DQNAgent:
     def act(self, state):
         # randomly select action
         if np.random.rand() <= self.epsilon:
-            print("Angle was random")
             return random.randrange(self.action_size)
             #return random.randint(5,7)
         # use NN to predict action
         state = np.expand_dims(state, axis=0)
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])  
-
-
+    
+    
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
         states, targets_f = [], []

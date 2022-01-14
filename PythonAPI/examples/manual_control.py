@@ -222,7 +222,9 @@ class World(object):
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            #print(self.world.get_blueprint_library())
+            self.player = self.world.try_spawn_actor(blueprint, spawn_points[0])
+            self.world.try_spawn_actor(self.world.get_blueprint_library().filter('deer')[0], spawn_points[1])
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
@@ -1096,7 +1098,7 @@ def main():
     argparser.add_argument(
         '--res',
         metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        default='640x480',
         help='window resolution (default: 1280x720)')
     argparser.add_argument(
         '--filter',

@@ -11,9 +11,7 @@
 
 """
 Welcome to CARLA manual control.
-
 Use ARROWS or WASD keys for control.
-
     W            : throttle
     S            : brake
     A/D          : steer left/right
@@ -23,26 +21,21 @@ Use ARROWS or WASD keys for control.
     M            : toggle manual transmission
     ,/.          : gear up/down
     CTRL + W     : toggle constant velocity mode at 60 km/h
-
     L            : toggle next light type
     SHIFT + L    : toggle high beam
     Z/X          : toggle right/left blinker
     I            : toggle interior light
-
     TAB          : change sensor position
     ` or N       : next sensor
     [1-9]        : change to sensor [1-9]
     G            : toggle radar visualization
     C            : change weather (Shift+C reverse)
     Backspace    : change vehicle
-
     R            : toggle recording images to disk
-
     CTRL + R     : toggle recording of simulation (replacing any previous)
     CTRL + P     : start replaying last recorded simulation
     CTRL + +     : increments the start time of the replay by 1 second (+SHIFT = 10 seconds)
     CTRL + -     : decrements the start time of the replay by 1 second (+SHIFT = 10 seconds)
-
     F1           : toggle HUD
     H/?          : toggle help
     ESC          : quit
@@ -89,6 +82,8 @@ import re
 import weakref
 import time 
 import matplotlib.pyplot as plt
+from numba import jit, cuda
+from collections import deque
 
 try:
     import pygame
@@ -137,7 +132,8 @@ except ImportError:
 
 collision_array = []
 obstacle_distance = []
-image_list = []
+# image_list = []
+image_list=deque(maxlen=1000)
 count = []
 lane_invasion_error = []
 episode_list = []
@@ -191,7 +187,6 @@ class World(object):
         self.collision_sensor = None
         self.lane_invasion_sensor = None
         self.gnss_sensor = None
-        self.obstacle_detector = None
         self.imu_sensor = None
         self.radar_sensor = None
         self.camera_manager = None
@@ -213,7 +208,6 @@ class World(object):
         cam_pos_index = self.camera_manager.transform_index if self.camera_manager is not None else 0
         # Get a random blueprint.
         blueprint = self.world.get_blueprint_library().find("vehicle.tesla.model3")#random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
-        print(self.world.get_blueprint_library())
         blueprint.set_attribute('role_name', self.actor_role_name)
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
@@ -245,12 +239,11 @@ class World(object):
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            self.player = self.world.try_spawn_actor(blueprint, spawn_point)
+            self.player = self.world.try_spawn_actor(blueprint, spawn_points[0])
         # Set up the sensors.
         self.collision_sensor = CollisionSensor(self.player, self.hud)
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
-        #self.obstacle_detector = LineOfSightSensor(self.player, self.hud)
         self.imu_sensor = IMUSensor(self.player)
         self.radar_sensor = RadarSensor(self.player)
         self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
@@ -293,7 +286,6 @@ class World(object):
             self.collision_sensor.sensor,
             self.lane_invasion_sensor.sensor,
             self.gnss_sensor.sensor,
-            self.obstacle_detector.sensor,
             self.imu_sensor.sensor]
         for sensor in sensors:
             if sensor is not None:
@@ -461,7 +453,7 @@ class KeyboardControl(object):
             if isinstance(self._control, carla.VehicleControl):
                 self._steer_cache = angle #random.uniform(-0.7, 0.7) # make sure input between -0.7 and 0.7
                 self._control.steer = round(self._steer_cache, 1)
-                self._control.throttle = 0.25 #min(self._control.throttle + 0.01, 1)
+                self._control.throttle = 0.50 #min(self._control.throttle + 0.01, 1)
                 world.player.apply_control(self._control)
             #     self._parse_vehicle_keys(pygame.key.get_pressed(), clock.get_time())
             #     self._control.reverse = self._control.gear < 0
@@ -987,8 +979,8 @@ class CameraManager(object):
         Attachment = carla.AttachmentType
         self._camera_transforms = [
             (carla.Transform(carla.Location(x=1.6, z=1.7)), Attachment.Rigid),
-            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
             (carla.Transform(carla.Location(x=5.5, y=1.5, z=1.5)), Attachment.SpringArm),
+            (carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), Attachment.SpringArm),
             (carla.Transform(carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), Attachment.SpringArm),
             (carla.Transform(carla.Location(x=-1, y=-bound_y, z=0.5)), Attachment.Rigid)]
         self.transform_index = 1
@@ -1103,7 +1095,7 @@ class CameraManager(object):
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         #if self.recording:
         #image.save_to_disk('_out/%08d' % image.frame)
-        print(array.shape)
+        #print(array.shape)
         image_list.append((array,image.frame))
         count.append(1)
 
@@ -1137,146 +1129,153 @@ def game_loop(args):
         state_size = (480, 640, 3) 
         action_size = 13 # action: various steering angles
         agent = class_B.DQNAgent(state_size, action_size)
-        batch_size = 8
+        batch_size = 16
+        TOTAL_EPISODES = 100_000
+        training_graph_rewards = 0
+        
+        #agent.load("_out/savedModel.h5")
+        for episode_number in range(2):
+            
+            start_time = time.time()
 
-        while True:
-            #agent.load("_out/savedModel.h5")
-            for i in range(30000):
+            #1. respawn car
+            clock.tick_busy_loop(1)
+            collision_array.clear()
+            lane_invasion_error.clear()
+            obstacle_distance.clear()
+            #world.restart()
+            
+            world.player.set_transform(world.map.get_spawn_points()[0])
+
+            clock.tick_busy_loop(1)
+
+            print ("Episode ", episode_number)
+
+            episode_reward = 0
+            
+            #2. get initial image because new episode
+            collision_array.clear()
+            state, frame = image_list.pop()
+                #pygame.sleep(2.0) so dont get empty list
+
+            for j in range(300):
+
+                #Limit fps to 30
+                clock.tick_busy_loop(30)
+
+                #Get the models predicted angle
+                action_index = agent.act(state)
+                angle = predicted_angles[action_index]
+                #print(angle)
+
+                # Apply predicted angle control to car
+                done = controller.parse_events(client, world, angle)
+
+                #Assign collision rewards
+                reward_collison = 0
+                if type(done) == str:
+                    if done == 'Vehicle':
+                        reward_collison = -300
+                    else:
+                        print(done)
+                        reward_collison = -200
+
+                #Assign lane cross rewards
+                reward_lane = 0
+                if len(lane_invasion_error) > 0:
+                    if 'Broken' in lane_invasion_error[0]:
+                        reward_lane = -30
+                    if 'Solid' in lane_invasion_error[0]:
+                        reward_lane = -100
+                    lane_invasion_error.clear()
                 
-                #1. respawn car
-                clock.tick_busy_loop(1)
-                collision_array.clear()
-                lane_invasion_error.clear()
-                obstacle_distance.clear()
-                collision = False
-                #world.restart()
-                
-                #world.player.set_transform(world.map.get_spawn_points()[0])
-                #deer.set_transform(world.map.get_spawn_points()[0])
-                clock.tick_busy_loop(1)
+                #Assign reward for obstacle distance
+                reward_obs = 0
+                distance = 999
+                if len(obstacle_distance) > 0 :
+                    distance = obstacle_distance.pop()
+                    if distance < 10:
+                        reward_obs = -40 + distance
+                    else:
+                        reward_obs = distance # to encourage longer gaps between obstacles
+                    
+                # Assign reward for steering angle
+                reward_steer = 0
+                if abs(angle) > 0.2:
+                    reward_steer = -50
+                    
+                total_reward = reward_obs + reward_steer + reward_collison + reward_lane
+                episode_reward += total_reward
+                print("Angle:",angle, " Steer:", reward_steer, " Col:", reward_collison, " Lane:", reward_lane, 
+                " Distance Obstacle:", int(reward_obs))
 
-                print ("Episode ", i)
+                #Display next frames
+                world.tick(clock)
+                world.render(display)
+                pygame.display.flip()
+                pygame.time.wait(100)
 
-                average_reward = 0
-                
-                #2. get initial image because new episode
-                state, frame = image_list.pop()
-                
-                #Clear list on every even number
-                #if i%2 == 0:
-                    #image_list.clear()
-                    #pygame.sleep(2.0) so dont get empty list
+                #Get the next state
+                next_state, frame = image_list.pop()
+                #image_list.clear()
 
-                for j in range(3000):
+                #Send rewards to model to memorize/ calculate loss
+                memory_done = False
+                if done is True or type(done) == str:
+                    memory_done = True
+                if state.shape == next_state.shape:
+                    agent.memorize(state, action_index, total_reward, next_state, memory_done, frame)
 
-                    #Limit fps to 30
-                    clock.tick_busy_loop(30)
+                #Set next state to st
+                state = next_state
 
-                    #Get the models predicted angle
-                    action_index = agent.act(state)
-                    angle = predicted_angles[action_index]
-                    #print(angle)
+                #Calculate loss
+                if len(agent.memory) > batch_size and j%5 == 0:
+                    loss = agent.replay(batch_size)
+                    
+                # Collision happened
+                if type(done) == str:
+                    print("Collided frame number: ",frame)
+                    print("Lasted for %d steps" % j)
 
-                    # Apply predicted angle control to car
-                    done = controller.parse_events(client, world, angle)
+                    collision_array.clear()
+                    lane_invasion_error.clear()
+                    obstacle_distance.clear()
+                    world.player.set_transform(world.map.get_spawn_points()[0])
+                    collision_array.clear()
+                    #world.restart()
+                    break
 
-                    #Assign collision rewards
-                    reward_collison = 0
-                    if type(done) == str:
-                        if done == 'Vehicle':
-                            reward_collison = -300
-                        else:
-                            reward_collison = -200
+                #Episode is done
+                if done is True:
+                    # if world is not None:
+                    #     world.destroy()
+                    pygame.quit()
 
-                    #Assign lane cross rewards
-                    reward_lane = 0
-                    if len(lane_invasion_error) > 0:
-                        if 'Broken' in lane_invasion_error[0]:
-                            reward_lane = -30
-                        if 'Solid' in lane_invasion_error[0]:
-                            reward_lane = -100
-                        lane_invasion_error.clear()
-                   
-                    #Assign reward for obstacle distance
-                    reward_obs = 0
-                    distance = 999
-                    if len(obstacle_distance) > 0 :
-                        distance = obstacle_distance.pop()
-                        if distance < 10:
-                            reward_obs = -40 + distance
-                        else:
-                            reward_obs = distance # to encourage longer gaps between obstacles
-                        
-                    # Assign reward for steering angle
-                    reward_steer = 0
-                    if abs(angle) > 0.2:
-                        reward_steer = -50
-                        
-                    total_reward = reward_obs + reward_steer + reward_collison + reward_lane
-                    average_reward += total_reward
-                    print("Angle: ",angle, "Steer: ", reward_steer, "Col: ", reward_collison, "Lane: ", reward_lane, 
-                    "obs: ", reward_obs, "distance: ", distance,"\n")
+            counter += 1
+            agent.save("_out/savedModel.h5")
 
-                    #Display next frames
-                    world.tick(clock)
-                    world.render(display)
-                    pygame.display.flip()
-                    pygame.time.wait(100)
+            if episode_number != 0:
+                training_graph_rewards += episode_reward
+            #Generate training plot for every 10 episodes
+            if episode_number % 10 == 0 and episode_number != 0:
+                training_graph_rewards /= 10
+                reward_list.append(training_graph_rewards)
+                episode_list.append(episode_number)
+                angle_list.append(angle)
 
-                    #Get the next state
-                    next_state, frame = image_list.pop()
-                    #image_list.clear()
+                plt.ylabel('Total Rewards')
+                plt.xlabel('Episodes')
+                plt.title('Figure 1: Average Reward over Episodes')
 
-                    #Send rewards to model to memorize/ calculate loss
-                    memory_done = False
-                    if done is True or type(done) == str:
-                        memory_done = True
-                    if state.shape == next_state.shape:
-                        agent.memorize(state, action_index, total_reward, next_state, memory_done, frame)
+                plt.plot(episode_list,reward_list)
+                plt.savefig('_out/training_graph.png')
 
-                    #Set next state to st
-                    state = next_state
-
-                    #Calculate loss
-                    if len(agent.memory) > batch_size:
-                        loss = agent.replay(batch_size)
-                        
-                    # Collision happened
-                    if type(done) == str:
-                        print("Collided frame number: ",frame)
-                        print("Lasted for %d steps" % j)
-
-                        average_reward/= j
-                        reward_list.append(average_reward)
-                        episode_list.append(i)
-                        angle_list.append(angle)
-                        plt.plot(episode_list,reward_list,'o')
-                        plt.plot(episode_list,reward_list)
-                        plt.savefig('_out/training_graph.png')
-
-                        collision = True
-                        collision_array.clear()
-                        lane_invasion_error.clear()
-                        obstacle_distance.clear()
-                        world.player.set_transform(world.map.get_spawn_points()[0])
-                        #world.restart()
-                        break
-                    #Episode is done
-                    elif done is True:
-                        return
-
-                if not collision:
-                    average_reward /= j
-                    reward_list.append(average_reward)
-                    episode_list.append(i)
-                    angle_list.append(angle)
-                    plt.plot(episode_list,reward_list,'o')
-                    plt.plot(episode_list,reward_list)
-                    plt.savefig('_out/training_graph.png')
-
-                counter += 1
-                agent.save("_out/savedModel.h5")
-
+                training_graph_rewards = 0
+            elapsed_time = time.time() - start_time
+            print("Episode Length: ",int(elapsed_time)," seconds")
+            
+        #Exit carla episodes finished    
     finally:
 
         if (world and world.recording_enabled):
@@ -1292,7 +1291,7 @@ def game_loop(args):
 # -- main() --------------------------------------------------------------------
 # ==============================================================================
 
-#@jit(target ="cuda")
+#@jit
 def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Manual Control Client')
@@ -1353,7 +1352,6 @@ def main():
 
     except KeyboardInterrupt:
         print('\nCancelled by user. Bye!')
-
 
 if __name__ == '__main__':
 
