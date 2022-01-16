@@ -35,6 +35,7 @@ def get_libcarla_extensions():
         import distro
 
         if distro.id().lower() in ["ubuntu", "debian", "deepin", "darwin"]:
+            is_mac = bool(distro.id().lower() == "darwin")
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
@@ -90,7 +91,10 @@ def get_libcarla_extensions():
                 extra_link_args += ['-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=false']
             else:
-                extra_link_args += ['-lpng'] # TODO: find a suitable MacOS replacement for libjpeg and libtiff
+                if is_mac:
+                    extra_link_args += ['-lpng'] # TODO: find a suitable MacOS replacement for libjpeg and libtiff
+                else:
+                    extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
             # @todo Why would we need this?
             # include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
