@@ -69,6 +69,10 @@ namespace carla {
       : _size(size),
         _capacity(size),
         _data(std::make_unique<value_type[]>(size)) {}
+    
+    /// explicit constructor for size_t (instead of size_type's)
+    explicit Buffer(size_t size)
+      : Buffer(static_cast<size_type>(size)) {}
 
     /// @copydoc Buffer(size_type)
     explicit Buffer(uint64_t size)
@@ -330,7 +334,7 @@ namespace carla {
     template <typename T>
     typename std::enable_if<!boost::asio::is_const_buffer_sequence<T>::value>::type
     copy_from(size_type offset, const T &source) {
-      copy_from(offset, boost::asio::buffer(&source, sizeof(T)));
+      copy_from(offset, boost::asio::buffer(source));
     }
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
