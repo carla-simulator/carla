@@ -156,7 +156,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     pushd ${BOOST_BASENAME}-source >/dev/null
 
     BOOST_TOOLSET="clang"
-    BOOST_CFLAGS="-fPIC -std=c++14 ${ARCH_TARGET} -DBOOST_ERROR_CODE_HEADER_ONLY"
+    BOOST_CFLAGS="-fPIC -std=c++14 ${ARCH_TARGET} -stdlib=libc++ -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
     py3_root=`${py3} -c "import sys; print(sys.prefix)"`
