@@ -23,7 +23,7 @@ if ${MAC_OS}; then
   export ARCH_TARGET="-target ${ARCH}-apple-macos12.1"
   export OS_FLAGS=" -nostdinc++" # for macos
   # for cmake -arch flag: https://cmake.org/cmake/help/latest/prop_tgt/OSX_ARCHITECTURES.html#prop_tgt:OSX_ARCHITECTURES
-  export CMAKE_OSX_ARCHITECTURES=${ARCH} #"x86_64"
+  export CMAKE_OSX_ARCHITECTURES=${ARCH}
   export TARGET_PLATFORM="Mac"
 else
   export ARCH_TARGET="" # use default arch on linux
