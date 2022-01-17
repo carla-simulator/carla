@@ -103,10 +103,10 @@ unset LLVM_BASENAME
 
 if ${MAC_OS}; then
   # overwrite the LLVM paths to use the MacOSX libraries
-  LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/include/c++/v1
-  LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/lib
-  # LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
-  # LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
+  # LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
+  # LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
+  LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
+  LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
 fi
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
