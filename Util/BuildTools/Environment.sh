@@ -22,12 +22,14 @@ if ${MAC_OS}; then
   # NOTE: UE4 wants use of macos 10.14, but 12.1 works fine
   export ARCH_TARGET="-target ${ARCH}-apple-macos12.1"
   export OS_FLAGS=" -nostdinc++" # for macos
+  export OS_STDLIB="-stdlib=libc++"
   # for cmake -arch flag: https://cmake.org/cmake/help/latest/prop_tgt/OSX_ARCHITECTURES.html#prop_tgt:OSX_ARCHITECTURES
   export CMAKE_OSX_ARCHITECTURES=${ARCH}
   export TARGET_PLATFORM="Mac"
 else
   export ARCH_TARGET="" # use default arch on linux
   export OS_FLAGS="" 
+  export OS_STDLIB=""
   export TARGET_PLATFORM="Linux"
 fi
 
@@ -69,4 +71,5 @@ function move_if_changed {
   rm -f $1
 }
 
-CARLA_BUILD_CONCURRENCY=`nproc --all`
+# CARLA_BUILD_CONCURRENCY=`nproc --all`
+CARLA_BUILD_CONCURRENCY=12
