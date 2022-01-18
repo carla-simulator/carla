@@ -166,13 +166,13 @@ public:
   template<typename T>
   T* GetActorData()
   {
-    return dynamic_cast<T*>(ActorData.Get());
+    return static_cast<T*>(ActorData.Get());
   }
 
   template<typename T>
   const T* GetActorData() const
   {
-    return dynamic_cast<T*>(ActorData.Get());
+    return static_cast<T*>(ActorData.Get());
   }
 
   // Actor function interface ----------------------
