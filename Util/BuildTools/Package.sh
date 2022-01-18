@@ -112,12 +112,12 @@ if ${DO_CARLA_RELEASE} ; then
       -project="${PWD}/CarlaUE4.uproject" \
       -nocompileeditor -nop4 -cook -stage -archive -package -iterate \
       -clientconfig=${PACKAGE_CONFIG} -ue4exe=UE4Editor \
-      -prereqs -targetplatform=Linux -build -utf8output \
+      -prereqs -targetplatform=${TARGET_PLATFORM} -build -utf8output \
       -archivedirectory="${RELEASE_BUILD_FOLDER}"
 
   popd >/dev/null
 
-  if [[ ! -d ${RELEASE_BUILD_FOLDER}/LinuxNoEditor ]] ; then
+  if [[ ! -d ${RELEASE_BUILD_FOLDER}/${TARGET_PLATFORM}NoEditor ]] ; then
     fatal_error "Failed to cook the project!"
   fi
 
@@ -129,7 +129,7 @@ fi
 
 if ${DO_CARLA_RELEASE} ; then
 
-  DESTINATION=${RELEASE_BUILD_FOLDER}/LinuxNoEditor
+  DESTINATION=${RELEASE_BUILD_FOLDER}/${TARGET_PLATFORM}NoEditor
 
   log "Adding extra files to CARLA package."
 
@@ -145,7 +145,12 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./Docs/python_api.md" "${DESTINATION}/PythonAPI/python_api.md"
   copy_if_changed "./Util/Docker/Release.Dockerfile" "${DESTINATION}/Dockerfile"
   copy_if_changed "./Util/ImportAssets.sh" "${DESTINATION}/ImportAssets.sh"
-  copy_if_changed "./Util/DockerUtils/dist/RecastBuilder" "${DESTINATION}/Tools/"
+  if ${MAC_OS}; then 
+    RECAST_BIN="./Util/DockerUtils/dist/RecastBuilder.app/"
+  else
+    RECAST_BIN="./Util/DockerUtils/dist/RecastBuilder"
+  fi
+  copy_if_changed ${RECAST_BIN} "${DESTINATION}/Tools/"
 
   copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
   copy_if_changed "./PythonAPI/carla/dist/*.whl" "${DESTINATION}/PythonAPI/carla/dist/"
@@ -181,14 +186,14 @@ fi
 if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
 
   DESTINATION=${RELEASE_PACKAGE_PATH}
-  SOURCE=${RELEASE_BUILD_FOLDER}/LinuxNoEditor
+  SOURCE=${RELEASE_BUILD_FOLDER}/${TARGET_PLATFORM}NoEditor
 
   pushd "${SOURCE}" >/dev/null
 
   log "Packaging CARLA release."
 
-  rm -f ./Manifest_NonUFSFiles_Linux.txt
-  rm -f ./Manifest_UFSFiles_Linux.txt
+  rm -f ./Manifest_NonUFSFiles_${TARGET_PLATFORM}.txt
+  rm -f ./Manifest_UFSFiles_${TARGET_PLATFORM}.txt
   rm -Rf ./CarlaUE4/Saved
   rm -Rf ./Engine/Saved
 
@@ -215,7 +220,7 @@ fi
 # ==============================================================================
 
 PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
-MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPathsLinux.txt
+MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths${TARGET_PLATFORM}.txt
 
 for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
 
@@ -238,15 +243,15 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   pushd "${CARLAUE4_ROOT_FOLDER}" > /dev/null
 
   # Prepare cooking of package
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+  ${UE4_ROOT}/Engine/Binaries/${TARGET_PLATFORM}/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
       -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME} -OnlyPrepareMaps=false
 
   PACKAGE_FILE=$(<${PACKAGE_PATH_FILE})
   MAPS_TO_COOK=$(<${MAP_LIST_FILE})
 
   # Cook maps
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
-      -run=cook -map="${MAPS_TO_COOK}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
+  ${UE4_ROOT}/Engine/Binaries/${TARGET_PLATFORM}/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+      -run=cook -map="${MAPS_TO_COOK}" -cooksinglepackage -targetplatform="${TARGET_PLATFORM}NoEditor" \
       -OutputDir="${BUILD_FOLDER}"
 
   PROP_MAP_FOLDER="${PACKAGE_PATH}/Maps/${PROPS_MAP_NAME}"
