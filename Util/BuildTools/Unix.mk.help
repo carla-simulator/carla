@@ -1,0 +1,103 @@
+Welcome to CARLA Simulator!
+===========================
+
+This Makefile will help you building the different CARLA utilities.
+
+Use the following commands:
+
+    help:
+
+        Display this help message.
+
+    launch:
+
+        Compile CarlaUE4 project and launch it in Unreal Engine's Editor.
+
+    launch-only:
+
+        Launch CarlaUE4 project in Unreal Engine's Editor, but skip building
+        step (assume the project is already built).
+
+    import:
+
+        Import maps and assets that are located in "carla/Import" directly to Unreal,
+        so they will be ready to export.
+
+    package:
+
+        Makes a packaged version of CARLA ready for distribution. Used with
+        ARGS="--package=PackageNames" will create specific asset packages.
+
+    docs:
+
+        Build CARLA Doxygen documentation.
+
+    clean:
+
+        Remove intermediate build files.
+
+    rebuild:
+
+        Remove intermediate build files and rebuild the whole project.
+
+    hard-clean:
+
+        Remove intermediate build files and force a recompilation of Unreal
+        Engine's pre-compiled headers. Useful for fixing "version.h has been
+        modified since the precompiled header" errors. Beware, recompilation
+        takes a long time!
+
+
+There are also some lower level commands for building individual modules helpful
+for developers:
+
+    check:
+
+        Run unit test suites for LibCarla and PythonAPI.
+
+    check.LibCarla(.debug|.release):
+
+        Run unit test suites for LibCarla only.
+
+    check.PythonAPI(.2|.3):
+
+        Run unit test suites for PythonAPI only.
+
+    benchmark:
+
+        Run the benchmark tests for LibCarla.
+
+    (run-)examples:
+
+        Build (and run) the C++ client examples.
+
+    CarlaUE4Editor:
+
+        Build CarlaUE4 project, but do not launch the editor.
+
+    PythonAPI(.2|.3):
+
+        Build and package the Python API module for Python 2 and/or 3.
+
+    LibCarla(.server|.client)(.debug|.release):
+
+        Build LibCarla, "Server" and/or "Client" configurations.
+
+    clean.(LibCarla|PythonAPI|CarlaUE4Editor)
+
+        Remove intermediate build files for the specific module.
+
+    setup:
+
+        Run the setup step only.
+
+    deploy:
+
+        Upload nightly build.
+
+    pretty:
+
+        Prettify code files. Run uncrustify on C++ files or AutoPEP8 on Python
+        files. To prettify a single file, use: make pretty ARGS=-f/path/to/file.
+
+

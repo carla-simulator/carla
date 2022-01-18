@@ -114,6 +114,12 @@ public class Carla : ModuleRules
     AddCarlaServerDependency(Target);
   }
 
+  private bool IsMac(ReadOnlyTargetRules Target)
+  {
+    return (Target.Platform == UnrealTargetPlatform.Mac);
+  }
+
+
   private bool UseDebugLibs(ReadOnlyTargetRules Target)
   {
     if (IsWindows(Target))
@@ -231,6 +237,7 @@ public class Carla : ModuleRules
     PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
     PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
     PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+    PublicDefinitions.Add("MSGPACK_DISABLE_LEGACY_NIL");
     PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
   }
 }

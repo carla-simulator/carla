@@ -101,6 +101,13 @@ fi
 
 unset LLVM_BASENAME
 
+if ${MAC_OS}; then
+  # overwrite the LLVM paths to use the MacOSX libraries
+  # LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
+  # LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
+  LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
+  LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
+fi
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
@@ -149,7 +156,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     pushd ${BOOST_BASENAME}-source >/dev/null
 
     BOOST_TOOLSET="clang"
-    BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
+    BOOST_CFLAGS="-fPIC -std=c++14 ${ARCH_TARGET} ${OS_LIBCPP} -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
     py3_root=`${py3} -c "import sys; print(sys.prefix)"`
@@ -217,16 +224,17 @@ else
 
   log "Building rpclib with libc++."
 
-  # rpclib does not use any cmake 3.9 feature.
-  # As cmake 3.9 is not standard in Ubuntu 16.04, change cmake version to 3.5
-  sed -i s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
-
+  if ! ${MAC_OS}; then
+    # rpclib does not use any cmake 3.9 feature.
+    # As cmake 3.9 is not standard in Ubuntu 16.04, change cmake version to 3.5
+    sed -i s/"3.9.0"/"3.5.0"/g ${RPCLIB_BASENAME}-source/CMakeLists.txt
+  fi
   mkdir -p ${RPCLIB_BASENAME}-libcxx-build
 
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 ${ARCH_TARGET} ${OS_FLAGS} -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS -DMSGPACK_DISABLE_LEGACY_NIL" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -243,7 +251,7 @@ else
   pushd ${RPCLIB_BASENAME}-libstdcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 ${ARCH_TARGET}" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libstdcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -290,7 +298,7 @@ else
   pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 ${OS_FLAGS} ${ARCH_TARGET} -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -307,7 +315,7 @@ else
   pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 ${ARCH_TARGET}" \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -335,7 +343,8 @@ RECAST_INCLUDE=${PWD}/${RECAST_BASENAME}-install/include
 RECAST_LIBPATH=${PWD}/${RECAST_BASENAME}-install/lib
 
 if [[ -d "${RECAST_BASENAME}-install" &&
-      -f "${RECAST_BASENAME}-install/bin/RecastBuilder" ]] ; then
+      (-f "${RECAST_BASENAME}-install/bin/RecastBuilder" || 
+      $MAC_OS && -d "${RECAST_BASENAME}-install/bin/RecastBuilder.app") ]] ; then
   log "${RECAST_BASENAME} already installed."
 else
   rm -Rf \
@@ -360,7 +369,7 @@ else
   pushd ${RECAST_BASENAME}-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC ${ARCH_TARGET}" \
       -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-install" \
       -DRECASTNAVIGATION_DEMO=False \
       -DRECASTNAVIGATION_TEST=False \
@@ -383,7 +392,11 @@ fi
 # make sure the RecastBuilder is corrctly copied
 RECAST_INSTALL_DIR="${CARLA_BUILD_FOLDER}/../Util/DockerUtils/dist"
 if [[ ! -f "${RECAST_INSTALL_DIR}/RecastBuilder" ]]; then
-  cp "${RECAST_BASENAME}-install/bin/RecastBuilder" "${RECAST_INSTALL_DIR}/"
+  if ${MAC_OS}; then
+    cp -r "${RECAST_BASENAME}-install/bin/RecastBuilder.app" "${RECAST_INSTALL_DIR}/"
+  else
+    cp "${RECAST_BASENAME}-install/bin/RecastBuilder" "${RECAST_INSTALL_DIR}/"
+  fi
 fi
 
 unset RECAST_BASENAME
@@ -449,12 +462,13 @@ else
 
   pushd ${XERCESC_SRC_DIR}/build >/dev/null
 
+  if ${MAC_OS}; then ICONV=iconv; else ICONV=gnuiconv; fi
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w ${ARCH_TARGET}" \
       -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_DIR}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
-      -Dtranscoder=gnuiconv \
+      -Dtranscoder=${ICONV} \
       -Dnetwork=OFF \
       ..
   ninja
@@ -526,7 +540,7 @@ if ${USE_CHRONO} ; then
     pushd ${CHRONO_SRC_DIR}/build >/dev/null
 
     cmake -G "Ninja" \
-        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
+        -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 ${ARCH_TARGET} -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument" \
         -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
         -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
         -DCMAKE_BUILD_TYPE=Release \
@@ -576,7 +590,7 @@ else
 
   pushd ${SQLITE_SOURCE_DIR} >/dev/null
 
-  export CFLAGS="-fPIC"
+  export CFLAGS="-fPIC ${ARCH_TARGET}"
   ./configure --prefix=${PWD}/../sqlite-install/
   make
   make install
@@ -619,7 +633,7 @@ else
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" .. \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC ${ARCH_TARGET}" \
       -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
@@ -709,9 +723,10 @@ cat >${LIBSTDCPP_TOOLCHAIN_FILE}.gen <<EOL
 
 set(CMAKE_C_COMPILER ${CC})
 set(CMAKE_CXX_COMPILER ${CXX})
+set(CMAKE_OSX_ARCHITECTURES ${CMAKE_OSX_ARCHITECTURES})
 
 # disable -Werror since the boost 1.72 doesn't compile with ad_rss without warnings (i.e. the geometry headers)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 ${ARCH_TARGET} -pthread -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wdeprecated -Wshadow -Wuninitialized -Wunreachable-code" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wpessimizing-move -Wold-style-cast -Wnull-dereference" CACHE STRING "" FORCE)
@@ -719,7 +734,7 @@ set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wduplicate-enum -Wnon-virtual-dtor -Wh
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wconversion -Wfloat-overflow-conversion" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
-set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC ${ARCH_TARGET} -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -729,7 +744,7 @@ cp ${LIBSTDCPP_TOOLCHAIN_FILE}.gen ${LIBCPP_TOOLCHAIN_FILE}.gen
 
 cat >>${LIBCPP_TOOLCHAIN_FILE}.gen <<EOL
 
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -stdlib=libc++ ${OS_FLAGS} ${ARCH_TARGET}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -isystem ${LLVM_INCLUDE}" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -fno-exceptions" CACHE STRING "" FORCE)
 set(CMAKE_CXX_LINK_FLAGS "\${CMAKE_CXX_LINK_FLAGS} -L${LLVM_LIBPATH}" CACHE STRING "" FORCE)
@@ -741,6 +756,7 @@ EOL
 cat >${CMAKE_CONFIG_FILE}.gen <<EOL
 # Automatically generated by `basename "$0"`
 
+set(CMAKE_OSX_ARCHITECTURES ${CMAKE_OSX_ARCHITECTURES})
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
