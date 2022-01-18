@@ -593,7 +593,7 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   }
   else
   {
-      return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
+    return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
   }
 }
 

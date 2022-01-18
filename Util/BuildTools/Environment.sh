@@ -71,5 +71,4 @@ function move_if_changed {
   rm -f $1
 }
 
-# CARLA_BUILD_CONCURRENCY=`nproc --all`
-CARLA_BUILD_CONCURRENCY=12
+CARLA_BUILD_CONCURRENCY=`nproc --all`
