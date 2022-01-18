@@ -24,8 +24,8 @@ CARLA forum</a>
 ## Getting started
 
 [__Introduction__](start_introduction.md) — What to expect from CARLA.  
-[__Quick start package installation__](start_quickstart.md) — Get the CARLA releases. 
-[__First steps__](tuto_G_getting_started.md) - Taking the first steps in CARLA.  
+[__Quick start package installation__](start_quickstart.md) — Get the CARLA releases.
+[__First steps__](tuto_G_getting_started.md) — Taking the first steps in CARLA.  
 
 
 ## CARLA components
@@ -36,10 +36,10 @@ CARLA forum</a>
 [__Traffic__](ts_traffic_simulation_overview.md) — An overview of the different options available to populate your scenes with traffic  
  
 ## Tutorials
-[__Traffic__](tuto_G_traffic_manager.md) - Use the traffic manager to create and control NPC traffic in your simulation.
-[__Rendering__](tuto_G_texture_streaming.md) - Change textures during runtime through the API.
-[__Sensors__](tuto_G_instance_segmentation_sensor.md) - Use the instance segmentation camera sensor.
-[__Actors__](tuto_G_pedestrian_bones.md) - Retrieve 3D ground truth pedestrian skeleton through the API
+[__Traffic__](tuto_G_traffic_manager.md) — Use the traffic manager to create and control NPC traffic in your simulation.
+[__Rendering__](tuto_G_texture_streaming.md) — Change textures during runtime through the API.
+[__Sensors__](tuto_G_instance_segmentation_sensor.md) — Use the instance segmentation camera sensor.
+[__Actors__](tuto_G_pedestrian_bones.md) — Retrieve 3D ground truth pedestrian skeleton through the API
 [__Maps__](tuto_M_custom_map_overview.md) — An overview of the process and options involved in adding a custom, standard sized map  
 [__Integrations__](tuto_G_chrono.md) — Use the Chrono integration to simulation physics  
 [__Custom assets__](tuto_A_add_vehicle.md) — Prepare a vehicle to be used in CARLA.  

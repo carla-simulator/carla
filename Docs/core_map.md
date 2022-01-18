@@ -1,4 +1,4 @@
-# 3rd. Maps and navigation
+# Maps and navigation
 
 After discussing about the world and its actors, it is time to put everything into place and understand the map and how do the actors navigate it.  
 
