@@ -69,13 +69,9 @@ namespace carla {
       : _size(size),
         _capacity(size),
         _data(std::make_unique<value_type[]>(size)) {}
-    
-    /// explicit constructor for size_t (instead of size_type's)
-    explicit Buffer(size_t size)
-      : Buffer(static_cast<size_type>(size)) {}
 
     /// @copydoc Buffer(size_type)
-    explicit Buffer(uint64_t size)
+    explicit Buffer(size_t size)
       : Buffer([size]() {
           if (size > max_size()) {
             throw_exception(std::invalid_argument("message size too big"));
