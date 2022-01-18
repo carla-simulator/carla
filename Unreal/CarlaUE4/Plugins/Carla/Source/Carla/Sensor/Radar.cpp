@@ -133,7 +133,7 @@ void ARadar::SendLineTraces(float DeltaTime)
         MaxRy * Radius * Sin
       });
 
-      const bool Hitted = GetWorld()->LineTraceSingleByChannel(
+      const bool Hitted = GetWorld()->ParallelLineTraceSingleByChannel(
         OutHit,
         RadarLocation,
         EndLocation,
