@@ -33,7 +33,7 @@ try:
 except IndexError:
     pass
 import carla
-
+from carla import ColorConverter as cc
 
 SHOW_PREVIEW = True
 IM_WIDTH = 640
@@ -86,6 +86,11 @@ class CarEnv:
         self.rgb_cam.set_attribute("image_size_y", f"{self.im_height}")
         self.rgb_cam.set_attribute("fov", f"110")
 
+        self.ss_cam = self.blueprint_library.find('sensor.camera.semantic_segmentation')
+        self.ss_cam.set_attribute("image_size_x", f"{self.im_width}")
+        self.ss_cam.set_attribute("image_size_y", f"{self.im_height}")
+        self.ss_cam.set_attribute("fov", f"110")
+
         transform = carla.Transform(carla.Location(x=2.5, z=0.7))
         self.sensor = self.world.spawn_actor(self.rgb_cam, transform, attach_to=self.vehicle)
         self.actor_list.append(self.sensor)
@@ -119,6 +124,17 @@ class CarEnv:
             cv2.imshow("test", i3)
             cv2.waitKey(1)
         self.front_camera = i3
+
+        # image.convert(cc.CityScapesPalette)
+        # array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+        # array = np.reshape(array, (image.height, image.width, 4))
+        # array = array[:, :, :3]
+        # array = array[:, :, ::-1]
+        
+        # if self.SHOW_CAM:
+        #     cv2.imshow("test", array)
+        #     cv2.waitKey(1)
+        # self.front_camera = array
 
     def step(self, action):
         if action == 0:
@@ -171,6 +187,7 @@ class DQNAgent:
         self.epsilon_decay = 0.99995 # changed from 0.995, maybe it can be even slower 
         self.learning_rate = 0.001
         self.model = self.create_model()
+        self.target_model = self.create_model()
 
     def create_model(self):
         base_model = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=(480, 640, 3))
@@ -198,7 +215,7 @@ class DQNAgent:
         minibatch = random.sample(self.replay_memory, MINIBATCH_SIZE)
 
         current_states = np.array([transition[0] for transition in minibatch])/255
-        # with self.graph.as_default():
+
         current_qs_list = self.model.predict(current_states, PREDICTION_BATCH_SIZE)
 
         new_current_states = np.array([transition[3] for transition in minibatch])/255
