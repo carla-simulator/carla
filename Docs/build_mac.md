@@ -13,9 +13,7 @@ This guide details how to build CARLA from source on MacOS Monterey (Apple Silic
 * __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
 
 ..warning::
-    __If you are upgrading from CARLA 0.9.12 to 0.9.13__: you must first upgrade the CARLA fork of the UE4 engine to the latest version. See the [__Unreal Engine__](#unreal-engine) section for details on upgrading UE4
-
-**WARNING**: UE4-carla does not build on MacOS 12 by default! See [this discussion](https://github.com/carla-simulator/carla/discussions/4848) for more details.
+    __If you are upgrading from CARLA 0.9.12 to 0.9.13__: you must first upgrade the CARLA fork of the UE4 engine to the latest version. **ALSO** The provided [CARLA fork](https://github.com/CarlaUnreal/UnrealEngine) has a compile/linker bug with Apple Silicon, so you'll need to use [this fork](https://github.com/GustavoSilvera/UnrealEngine) until the work is merged. See [this discussion](https://github.com/carla-simulator/carla/discussions/4848) for more details.
 
 
 ### Software requirements
@@ -49,9 +47,23 @@ Finally, you'll also need [Rosetta 2](https://support.apple.com/en-us/HT211861) 
 
 ---
 
-## Unreal Engine
+## Unreal Engine (Fork)
 
-For now, refer to the Linux guide for how to build the engine, but note the [strange problem](https://github.com/carla-simulator/carla/discussions/4848) with building the Carla fork (not Vanilla 4.26.2) on Apple silicon.
+```bash
+# clone the fork of CarlaUnreal's fork, with the mac patch applied
+git clone https://github.com/GustavoSilvera/UnrealEngine --depth 1 -b mac-dev
+
+cd /PATH/TO/UnrealEngine
+./Setup.sh && ./GenerateProjectFiles.sh
+
+# then finally build UE4
+xcodebuild -scheme UE4 -target UE4 -UseModernBuildSystem=YES # this takes a while to complete
+
+# make sure to add the right UnrealEngine path as UE4_ROOT:
+export UE4_ROOT=/PATH/TO/UnrealEngine # or add it in your .zshrc
+```
+
+NOTE: if you run into any `mono_os_sem_destroy: semaphore_destroy failed with error ...` errors, simply run the `xcodebuild` command above again. Do this until UE4 compiles, there is a race condition somewhere in the Mac build.
 
 ## Build CARLA 
 
@@ -68,11 +80,14 @@ This is because the python scripts work much better in `arm64` but the game itse
 
 The way I recommend you go about this is as follows:
 ```bash
+# Update environment variables to see Carla
+export CARLA_ROOT=/PATH/TO/Carla/ # or add to your .zshrc
+
 # git clone and enter mac branch
 ./Update.sh # wait a while for the asset fetching to complete
 
 # go to Util/Buildtools/Environment.sh
-# make sure the ARCH (for IS_MAC) is set to "x86_64"
+# make sure the ARCH (for MAC_OS) is set to "x86_64"
 
 make LibCarla # in x86
 ...
