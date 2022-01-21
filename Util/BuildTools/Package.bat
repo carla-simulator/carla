@@ -20,13 +20,14 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ==============================================================================
 
 set DOC_STRING="Makes a packaged version of CARLA for distribution."
-set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--no-packaging] [--no-zip] [--clean] [--clean-intermediate] [--target-archive]"
+set USAGE_STRING="Usage: %FILE_N% [-h|--help] [--config={Debug,Development,Shipping}] [--no-packaging] [--no-zip] [--clean] [--clean-intermediate] [--target-archive]"
 
 set DO_PACKAGE=true
 set DO_COPY_FILES=true
 set DO_TARBALL=true
 set DO_CLEAN=false
 set PACKAGES=Carla
+set PACKAGE_CONFIG=Shipping
 set USE_CARSIM=false
 set SINGLE_PACKAGE=false
 
@@ -37,6 +38,11 @@ if not "%1"=="" (
         set DO_TARBALL=false
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
+    )
+
+    if "%1"=="--config" (
+        set PACKAGE_CONFIG=%2
+        shift
     )
 
     if "%1"=="--clean-intermediate" (
@@ -132,15 +138,38 @@ if %DO_PACKAGE%==true (
 
     if errorlevel 1 goto error_build_editor
 
+    echo "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
+        CarlaUE4^
+        Win64^
+        %PACKAGE_CONFIG%^
+        -WaitMutex^
+        -FromMsBuild^
+        "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
     call "%UE4_ROOT%\Engine\Build\BatchFiles\Build.bat"^
         CarlaUE4^
         Win64^
-        Shipping^
+        %PACKAGE_CONFIG%^
         -WaitMutex^
         -FromMsBuild^
         "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"
 
     if errorlevel 1 goto error_build
+
+    echo "%UE4_ROOT%\Engine\Build\BatchFiles\RunUAT.bat"^
+        BuildCookRun^
+        -nocompileeditor^
+        -TargetPlatform=Win64^
+        -Platform=Win64^
+        -installed^
+        -nop4^
+        -project="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+        -cook^
+        -stage^
+        -build^
+        -archive^
+        -archivedirectory="!BUILD_FOLDER!"^
+        -package^
+        -clientconfig=%PACKAGE_CONFIG%
 
     call "%UE4_ROOT%\Engine\Build\BatchFiles\RunUAT.bat"^
         BuildCookRun^
@@ -156,7 +185,7 @@ if %DO_PACKAGE%==true (
         -archive^
         -archivedirectory="!BUILD_FOLDER!"^
         -package^
-        -clientconfig=Shipping
+        -clientconfig=%PACKAGE_CONFIG%
 
     if errorlevel 1 goto error_runUAT
 )
