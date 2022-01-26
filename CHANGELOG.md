@@ -1,6 +1,7 @@
 ## Latest
 
   * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
+  * Added `NormalsSensor`, a new sensor with normals information
 
 ## CARLA 0.9.13
 
