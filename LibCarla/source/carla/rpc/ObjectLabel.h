@@ -45,6 +45,7 @@ namespace rpc {
     Bridge       =   26u,
     RailTrack    =   27u,
     GuardRail    =   28u,
+    PowerLine    =   29u,
 
     Any          =  0xFF
   };
