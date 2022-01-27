@@ -108,6 +108,10 @@
 		{
 			"Name": "EditorScriptingUtilities",
 			"Enabled": true
+		},
+		{
+			"Name": "CarlaTools",
+			"Enabled": true
 		}
 	]
 }
