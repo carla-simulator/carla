@@ -102,6 +102,10 @@ public class Carla : ModuleRules
       PrivateDependencyModuleNames.AddRange(new string[] { "CarSim" });
       PrivateIncludePathModuleNames.AddRange(new string[] { "CarSim" });
     }
+    PublicDependencyModuleNames.AddRange(new string[] { "MediaIOCore" });
+    PublicIncludePathModuleNames.AddRange(new string[] { "MediaIOCore" });
+    PrivateDependencyModuleNames.AddRange(new string[] { "MediaIOCore" });
+    PrivateIncludePathModuleNames.AddRange(new string[] { "MediaIOCore" });
 
 
     DynamicallyLoadedModuleNames.AddRange(

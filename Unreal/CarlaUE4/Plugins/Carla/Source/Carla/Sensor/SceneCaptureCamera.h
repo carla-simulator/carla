@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorDefinition.h"
+#include "Carla/Sensor/NetMediaOutput.h"
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
 
@@ -20,12 +21,16 @@ class CARLA_API ASceneCaptureCamera : public AShaderBasedSensor
 
 public:
 
+
   static FActorDefinition GetSensorDefinition();
 
   ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
 
+  void BeginPlay() override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
+private:
+  UNetMediaOutput* MediaOutput = nullptr;
 };
