@@ -341,7 +341,7 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
 {
   FVehiclePhysicsControl PhysicsControl;
 
-  if (!bIsSixWVehicle) {
+  if (!bIsNWVehicle) {
     UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
           GetVehicleMovement());
     check(Vehicle4W != nullptr);
@@ -513,7 +513,7 @@ void ACarlaWheeledVehicle::RestoreVehiclePhysicsControl()
 void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
   LastPhysicsControl = PhysicsControl;
-  if (!bIsSixWVehicle) {
+  if (!bIsNWVehicle) {
     UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
           GetVehicleMovement());
     check(Vehicle4W != nullptr);

@@ -331,8 +331,8 @@ public:
   float CarSimOriginOffset = 150.f;
 //-------------------------------------------
 
-  UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
-  bool bIsSixWVehicle = false;
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
+  bool bIsNWVehicle = false;
 
 private:
 
