@@ -91,8 +91,21 @@ void ASceneCaptureCamera::BeginPlay()
   }
 }
 
+void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  // stop capturing
+  UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
+  if (MediaCapture)
+  {
+    MediaCapture->StopCapture(true);
+  }
+
+  Super::EndPlay(EndPlayReason);
+}
+
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
   // FPixelReader::SendPixelsInRenderThread(*this);
+  CaptureComponent2D->CaptureScene();
 }
