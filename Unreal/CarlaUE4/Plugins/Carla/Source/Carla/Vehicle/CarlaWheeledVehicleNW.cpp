@@ -10,6 +10,8 @@
 
 ACarlaWheeledVehicleNW::ACarlaWheeledVehicleNW(const FObjectInitializer& ObjectInitializer) :
   Super(ObjectInitializer.SetDefaultSubobjectClass<UWheeledVehicleMovementComponentNW>(AWheeledVehicle::VehicleMovementComponentName))
-{}
+{
+  bIsNWVehicle = true;
+}
 
 ACarlaWheeledVehicleNW::~ACarlaWheeledVehicleNW() {}
