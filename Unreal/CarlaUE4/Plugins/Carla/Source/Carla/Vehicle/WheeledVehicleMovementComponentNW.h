@@ -33,23 +33,23 @@ struct FVehicleNWEngineData
 
 	/** Maximum revolutions per minute of the engine */
 	UPROPERTY(EditAnywhere, Category = Setup, meta = (ClampMin = "0.01", UIMin = "0.01"))
-  float MaxRPM;
+	float MaxRPM;
 
 	/** Moment of inertia of the engine around the axis of rotation (Kgm^2). */
 	UPROPERTY(EditAnywhere, Category = Setup, meta = (ClampMin = "0.01", UIMin = "0.01"))
-  float MOI;
+	float MOI;
 
 	/** Damping rate of engine when full throttle is applied (Kgm^2/s) */
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-  float DampingRateFullThrottle;
+	float DampingRateFullThrottle;
 
 	/** Damping rate of engine in at zero throttle when the clutch is engaged (Kgm^2/s)*/
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-  float DampingRateZeroThrottleClutchEngaged;
+	float DampingRateZeroThrottleClutchEngaged;
 
 	/** Damping rate of engine in at zero throttle when the clutch is disengaged (in neutral gear) (Kgm^2/s)*/
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-  float DampingRateZeroThrottleClutchDisengaged;
+	float DampingRateZeroThrottleClutchDisengaged;
 
 	/** Find the peak torque produced by the TorqueCurve */
 	float FindPeakTorque() const;
@@ -99,15 +99,15 @@ struct FVehicleNWTransmissionData
 
 	/** Reverse gear ratio */
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = Setup)
-  float ReverseGearRatio;
+	float ReverseGearRatio;
 
 	/** Value of engineRevs/maxEngineRevs that is high enough to increment gear*/
 	UPROPERTY(EditAnywhere, AdvancedDisplay, Category = Setup, meta = (ClampMin = "0.0", UIMin = "0.0", ClampMax = "1.0", UIMax = "1.0"))
-  float NeutralGearUpRatio;
+	float NeutralGearUpRatio;
 
 	/** Strength of clutch (Kgm^2/s)*/
 	UPROPERTY(EditAnywhere, Category = Setup, AdvancedDisplay, meta = (ClampMin = "0.0", UIMin = "0.0"))
-  float ClutchStrength;
+	float ClutchStrength;
 };
 
 UCLASS(ClassGroup = (Physics), meta = (BlueprintSpawnableComponent), hidecategories = (PlanarMovement, "Components|Movement|Planar", Activation, "Components|Activation"))
@@ -121,15 +121,15 @@ class PHYSXVEHICLES_API UWheeledVehicleMovementComponentNW : public UWheeledVehi
 
 	/** Differential */
 	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-  TArray<FVehicleNWWheelDifferentialData> DifferentialSetup;
+	TArray<FVehicleNWWheelDifferentialData> DifferentialSetup;
 
 	/** Transmission data */
 	UPROPERTY(EditAnywhere, Category = MechanicalSetup)
-  FVehicleNWTransmissionData TransmissionSetup;
+	FVehicleNWTransmissionData TransmissionSetup;
 
 	/** Maximum steering versus forward speed (km/h) */
 	UPROPERTY(EditAnywhere, Category = SteeringSetup)
-  FRuntimeFloatCurve SteeringCurve;
+	FRuntimeFloatCurve SteeringCurve;
 
 	virtual void Serialize(FArchive& Ar) override;
 	virtual void ComputeConstants() override;
