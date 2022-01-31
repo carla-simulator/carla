@@ -15,7 +15,8 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
-  - 'Content authoring': ''
+  - 'Content authoring':
+    - 'Authoring maps': 'tuto_content_authoring_maps.md'
 
 
 - CARLA topics:
@@ -34,7 +35,11 @@ nav:
   - 'C++ reference': 'ref_cpp.md'  
 
 - Contributing:
-  - 'Contributing': 
+  - 'Contributing':
+    - 'Guidelines': 'cont_contribution_guidelines.md' 
+ 
+markdown_extensions:
+  - admonition 
  
 markdown_extensions:
   - admonition
