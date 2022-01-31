@@ -114,6 +114,7 @@ Take a shot of the world from their point of view. For cameras that return [carl
 | [RGB](ref_sensors.md#rgb-camera)      | [carla.Image](<../python_api#carlaimage>)   | Provides clear vision of the surroundings. Looks like a normal photo of the scene.   |
 | [Optical Flow](ref_sensors.md#optical-flow-camera)    | [carla.Image](<../python_api#carlaimage>)  | Renders the motion of every pixel from the camera.  |
 | [Semantic segmentation](ref_sensors.md#semantic-segmentation-camera)    | [carla.Image](<../python_api#carlaimage>)  | Renders elements in the field of view with a specific color according to their tags. |
+| [Instance segmentation](ref_sensors.md#instance-segmentation-camera)    | [carla.Image](<../python_api#carlaimage>)  | Renders elements in the field of view with a specific color according to their tags and a unique object ID. |
 | [DVS](ref_sensors.md#dvs-camera)    | [carla.DVSEventArray](<../python_api#carladvseventarray>)  | Measures changes of brightness intensity asynchronously as an event stream.  |
 
 <br>

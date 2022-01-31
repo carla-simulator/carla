@@ -14,28 +14,27 @@ nav:
   - 'First steps' : 'tuto_first_steps.md'
   - 'Building CARLA' : 'build_carla.md'
 
-- CARLA components:
+- Next steps:
+  - 'Content authoring': ''
+
+
+- CARLA topics:
   - 'Foundations': 'foundations.md'
   - 'Actors': 'core_actors.md'
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
   - '3rd party integrations': '3rd_party_integrations.md' 
-
-- Tutorials:
-  - 'Traffic': 'tuto_G_traffic_manager.md' 
-  - 'Rendering': 'tuto_G_texture_streaming.md'
-  - 'Sensors': 'tuto_G_instance_segmentation_sensor.md' 
-  - 'Actors': 'tuto_G_pedestrian_bones.md'
-  - 'Maps': 'tuto_M_custom_map_overview.md'  
-  - 'Integrations': 'tuto_G_chrono.md' 
-  - 'Custom assets': 'custom_assets_tutorials.md' 
-  - 'Development': 'tuto_D_contribute_assets.md'
+  - 'Development': 'development_tutorials.md'
+  - 'Custom assets': 'custom_assets_tutorials.md'
 
 - Resources:
   - 'Blueprint library': 'bp_library.md'
   - 'Python API': 'python_api.md'  
-  - 'C++ reference': 'ref_cpp.md'   
+  - 'C++ reference': 'ref_cpp.md'  
 
+- Contributing:
+  - 'Contributing': 
+ 
 markdown_extensions:
   - admonition

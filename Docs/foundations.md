@@ -13,6 +13,18 @@ Also make sure to import the CARLA package in your python scripts:
 import carla
 ```
 
+- [__World and client__](#world-and-client)  
+	- [Client](#client) 
+    - [World](#world)
+- [__Syncrhonous and asyncrhonous mode__](#synchronous-and-asynchronous-mode)  
+	- [Setting synchronous mode](#setting-synchronous-mode) 
+    - [Using synchronous mode](#using-synchronous-mode)
+- [__Recorder__](#recorder)  
+	- [Recording](#recording) 
+    - [Simulation playback](#simulation-playback)
+    - [Recorder file format](#recorder-file-format)
+
+
 ---
 
 ## World and client
@@ -67,6 +79,9 @@ By default, CARLA runs in __asynchronous mode__.
 Essentially, in __asynchronous mode__ the CARLA server runs in it's own time, as fast as it can. Client requests are handled on the fly. In __synchronous mode__ the client, or your Python code, takes the reigns and tells the server when to update.
 
 __Asynchronous mode__ is an appropriate mode to run CARLA in if you are experimenting or setting up a simulation, so you can fly around the map with the spectator as you place your actors. When you want to start producing training data or deploying an agent within the simulation, it is advised that you use the __synchronous mode__ since this will give you more control and predictability.
+
+Read more about [__synchronous and asynchronous modes__](adv_synchrony_timestep.md).
+
 
 !!! Note
     In a multiclient architecture, only one client should tick. The server reacts to every tick received as if it came from the same client. Many client ticks will make the create inconsistencies between server and clients. 
@@ -141,6 +156,8 @@ The recorder file includes information regarding many different elements.
 *   __Pedestrians__ — position and orientation, and linear and angular velocity.  
 *   __Lights__ — Light states from buildings, streets, and vehicles.
 
+### Recording
+
 To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUE4/Saved`.  
 
 ```py
@@ -165,7 +182,6 @@ client.stop_recorder()
 !!! Note
     As an estimate, 1h recording with 50 traffic lights and 100 vehicles takes around 200MB in size.
 
----
 ### Simulation playback
 
 A playback can be started at any point during a simulation. Besides the path to the log file, this method needs some parameters.
@@ -181,3 +197,29 @@ client.replay_file("recording01.log", start, duration, camera)
 | `camera`                                                                                                                         | ID of the actor that the camera will focus on.                                                                                   | Set it to `0` to let the spectator move freely.                                                                                  |
 
 <br>
+
+### Recorder file format
+
+The recorder saves all of the data in a custom binary file format specified in [__this document__]
+
+---
+
+## Rendering
+
+CARLA offers a number of options regarding rendering quality and efficiency. At the most basic level, CARLA offers two quality options to enable operation on both high and low spec hardware with the best results:
+
+### Epic mode
+`./CarlaUE4.sh -quality-level=Epic`
+
+![Epic mode screenshot](img/rendering_quality_epic.jpg)
+*Epic mode screenshot*
+
+### Low mode
+`./CarlaUE4.sh -quality-level=Low`
+
+![Low mode screenshot](img/rendering_quality_low.jpg)
+*Low mode screenshot*
+
+CARLA also offers options to suspend rendering or render offscreen, to enable simulations to be recorded or run more efficiently.
+
+More details on rendering options can be found [__here__](adv_rendering_options.md).

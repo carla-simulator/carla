@@ -2,10 +2,29 @@
 
 Traffic simulation is integral to the accurate and efficient training and testing of autonomous driving stacks. CARLA provides a number of different options to simulate traffic and specific traffic scenarios. This section is an overview of the options available to help decide which is the best fit for your use case.
 
-- [__Scenario Runner and OpenScenario__](#scenario-runner-and-openscenario)
 - [__Traffic Manager__](#traffic-manager)
+- [__Scenario Runner and OpenScenario__](#scenario-runner-and-openscenario)
 - [__Scenic__](#scenic)
 - [__SUMO__](#sumo)
+
+---
+
+## Traffic Manager
+
+[__Traffic Manager__](adv_traffic_manager.md) is a module within CARLA that controls certain vehicles in a simulation from the client side. Vehicles are registered to Traffic Manager via the [`carla.Vehicle.set_autopilot`](https://carla.readthedocs.io/en/latest/python_api/#carla.Vehicle.set_autopilot) method or [`command.SetAutopilot`](https://carla.readthedocs.io/en/latest/python_api/#commandsetautopilot) class. Control of each vehicle is managed through a cycle of [distinct stages](adv_traffic_manager.md#stages) which each run on a different thread.
+
+__Useful for:__
+
+- Populating a simulation with realistic urban traffic conditions. 
+- [Customizing traffic behaviours](tuto_G_traffic_manager.md) to set specific learning circumstances.
+- Developing phase-related functionalities and data structures while improving computational efficiency.
+
+<div class="build-buttons">
+<p>
+<a href="https://carla.readthedocs.io/en/docs-preview/adv_traffic_manager/" target="_blank" class="btn btn-neutral" title="Go to Traffic Manager">
+Go to Traffic Manager</a>
+</p>
+</div>
 
 ---
 
@@ -26,25 +45,6 @@ __Useful for:__
 <p>
 <a href="https://carla-scenariorunner.readthedocs.io" target="_blank" class="btn btn-neutral" title="Go to Scenario Runner">
 Go to Scenario Runner</a>
-</p>
-</div>
-
----
-
-## Traffic Manager
-
-Traffic Manager is a module within CARLA that controls certain vehicles in a simulation from the client side. Vehicles are registered to Traffic Manager via the [`carla.Vehicle.set_autopilot`](https://carla.readthedocs.io/en/latest/python_api/#carla.Vehicle.set_autopilot) method or [`command.SetAutopilot`](https://carla.readthedocs.io/en/latest/python_api/#commandsetautopilot) class. Control of each vehicle is managed through a cycle of [distinct stages](adv_traffic_manager.md#stages) which each run on a different thread.
-
-__Useful for:__
-
-- Populating a simulation with realistic urban traffic conditions. 
-- [Customizing traffic behaviours](adv_traffic_manager.md#general-considerations) to set specific learning circumstances.
-- Developing phase-related functionalities and data structures while improving computational efficiency.
-
-<div class="build-buttons">
-<p>
-<a href="https://carla.readthedocs.io/en/latest/adv_traffic_manager/" target="_blank" class="btn btn-neutral" title="Go to Traffic Manager">
-Go to Traffic Manager</a>
 </p>
 </div>
 

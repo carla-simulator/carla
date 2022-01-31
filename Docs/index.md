@@ -34,16 +34,9 @@ CARLA forum</a>
 [__Maps__](core_map.md) — Discover the different maps and how do vehicles move around.  
 [__Sensors and data__](core_sensors.md) — Retrieve simulation data using sensors.  
 [__Traffic__](ts_traffic_simulation_overview.md) — An overview of the different options available to populate your scenes with traffic  
- 
-## Tutorials
-[__Traffic__](tuto_G_traffic_manager.md) — Use the traffic manager to create and control NPC traffic in your simulation.
-[__Rendering__](tuto_G_texture_streaming.md) — Change textures during runtime through the API.
-[__Sensors__](tuto_G_instance_segmentation_sensor.md) — Use the instance segmentation camera sensor.
-[__Actors__](tuto_G_pedestrian_bones.md) — Retrieve 3D ground truth pedestrian skeleton through the API
-[__Maps__](tuto_M_custom_map_overview.md) — An overview of the process and options involved in adding a custom, standard sized map  
-[__Integrations__](tuto_G_chrono.md) — Use the Chrono integration to simulation physics  
-[__Custom assets__](tuto_A_add_vehicle.md) — Prepare a vehicle to be used in CARLA.  
-[__Development__](tuto_D_contribute_assets.md) — Add new content to CARLA.  
+[__3rd party integrations__](3rd_party_integrations.md) — Integrations with 3rd party applications and libraries
+[__Development__](development_tutorials.md) — Information on how to develop custom features for CARLA
+[__Custom assets__](custom_assets_tutorials.md) — Information on how to develop custom assets 
 
 ## Resources
 [__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.

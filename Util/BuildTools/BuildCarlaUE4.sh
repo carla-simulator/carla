@@ -14,6 +14,7 @@ BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
 USE_CHRONO=false
+UE4_ROOT=~/UnrealEngine_4.26
 
 GDB=
 RHI="-vulkan"

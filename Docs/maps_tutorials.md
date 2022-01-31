@@ -1,4 +1,4 @@
-# Custom maps tutorials
+# Custom maps
 
 In CARLA, a map includes the 3D model of a town and a definition of its road network. The road network is defined through the [__OpenDRIVE__](https://www.asam.net/standards/detail/opendrive/) standard. CARLA provides a diverse array of maps out of the box ready to use for a multitude of applications. User's can also create their own maps and load them into CARLA. The following set of tutorials detail the necessary steps for creating and loading custom maps into CARLA
 

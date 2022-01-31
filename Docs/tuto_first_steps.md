@@ -23,7 +23,7 @@ cd /carla/root
 ./CarlaUE4.sh
 ```
  
-To manipulate CARLA through the Python API, we need to connect the Python client to the server through an open port. Open a Python notebook or create a new script, then add the following code to the start of the script or the main function:
+To manipulate CARLA through the Python API, we need to connect the Python client to the server through an open port. The client controls the simulator through the [__client and world objects__](foundations.md#world-and-client) Open a Python notebook or create a new script, then add the following code to the start of the script or the main function:
 
 ```py
 import carla
@@ -42,9 +42,9 @@ The port can be chosen as any available port and is set to 2000 by default, you 
 !!! Note
     The following presumes that CARLA is running in the default [__asynchronous__](adv_synchrony_timestep.md) mode. If you have engaged synchronous mode, some of the code in the following sections might not work as expected.
 
-## Loading a map
+## Loading a map 
 
-In the CARLA API, the [__world__](python_api#carlaworld) object provides access to all elements of the simulation, including the map, objects within the map, such as buildings, traffic lights, vehicles and pedestrians. The CARLA server normally loads a default map (normally Town10). If you want to launch CARLA with an alternate map, use the `config.py` script:
+In the CARLA API, the [__world__](python_api.md#carla.World) object provides access to all elements of the simulation, including the map, objects within the map, such as buildings, traffic lights, vehicles and pedestrians. The CARLA server normally loads a default map (normally Town10). If you want to launch CARLA with an alternate map, use the `config.py` script:
 
 ```sh
 ./config.py --map Town05 
@@ -56,6 +56,8 @@ We can also use the world object to load a map from the client:
 world.load_world('Town05')
 
 ``` 
+
+Please find more information about CARLA maps [__here__](core_map.md).
 
 ## Spectator navigation
 
@@ -98,7 +100,7 @@ spectator.set_transform(carla.Transform())
 
 ## Adding NPCs
 
-Now we've loaded the map and the server is up and running we now need to populate our simulation with some vehicles to simulate a real environment with traffic and other road users. 
+Now we've loaded the map and the server is up and running we now need to populate our simulation with some vehicles to simulate a real environment with traffic and other road users or non-player characters (NPCs).
 
 To spawn vehicles, first, we need to select the vehicles we want from the blueprint library. 
 
@@ -124,6 +126,8 @@ Now we should also add a vehicle that will be the centerpoint of our simulation.
 ```py
 ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
 ```
+
+In addition to vehicles, CARLA also provides pedestrians to add to simulations to simulate realistic driving scenarios. Vehicles and pedestrians are referred to as __actors__ in the CARLA parlance, learn more about them [__here__](core_actors.md).
 
 ## Add sensors
 
@@ -153,9 +157,11 @@ camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 
 This will save the data to the `out/` folder as a series of PNG image files named according to the simulation frame number.
 
+There are a multitude of different types of sensors to choose from. [__Here__](core_sensors.md) you can delve deeper into the array of sensors available and how to use them.
+
 ## Animate vehicles with traffic manager
 
-Now we've added our traffic and ego vehicle to the simulation and started recording camera data, we now need to set the vehicles in motion using the traffic manager. The traffic manager is a component of CARLA that controls vehicles to autonomously move around the roads of the map within the simulation, following the road conventions and behaving like real road users. 
+Now we've added our traffic and ego vehicle to the simulation and started recording camera data, we now need to set the vehicles in motion using the [__Traffic manager__](adv_traffic_manager.md). The Traffic manager is a component of CARLA that controls vehicles to autonomously move around the roads of the map within the simulation, following the road conventions and behaving like real road users. 
 
 We can find all the vehicles in the simulation using the `world.get_actors()` method, filtering for all the vehicles. We can then use the `set_autopilot()` method to hand over control of the vehicle to the Traffic Manager.
 
@@ -164,6 +170,6 @@ for vehicle in world.get_actors().filter('vehicle'):
     vehicle.set_autopilot(True)
 ```
 
-Now your simulation is running, with numerous vehicles driving around the map and a camera recording data from one of those vehicles. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent.
+Now your simulation is running, with numerous vehicles driving around the map and a camera recording data from one of those vehicles. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customising traffic behaviour, learn more [__here__](tuto_G_traffic_manager.md).
 
-This is obviously the most basic possible set up for a simulation, now you can go into further details deeper into documentation about the many extra sensors you can use to generate data, and the many other features of CARLA that can make your simulations more detailed and more realistic. 
+This is the most basic possible set up for a simulation, now you can go into further details deeper into documentation about the many extra sensors you can use to generate data, and the many other features of CARLA that can make your simulations more detailed and more realistic. 
