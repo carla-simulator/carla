@@ -35,11 +35,10 @@ nav:
   - 'C++ reference': 'ref_cpp.md'  
 
 - Contributing:
-  - 'Contributing':
-    - 'Guidelines': 'cont_contribution_guidelines.md' 
+  - 'Guidelines': 'cont_contribution_guidelines.md' 
+  - 'Coding standards': 'cont_coding_standards.md'
+  - 'Documentation standard': 'cont_doc_standard.md'
  
 markdown_extensions:
   - admonition 
  
-markdown_extensions:
-  - admonition

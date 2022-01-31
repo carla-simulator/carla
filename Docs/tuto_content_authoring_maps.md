@@ -6,7 +6,7 @@ In this tutorial we will cover the process of creating a simple map for use with
 
 ## Prerequisites
 
-To follow this guide, you will need to build CARLA from source, so that you may use the unreal editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoardRunner. You may also need a 3D modelling application such as Maya, 3DsMax or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you need to  
+To follow this guide, you will need to build CARLA from source, so that you may use the unreal editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoardRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you need to  
 
 
 ## Create a road network using RoadRunner
@@ -39,15 +39,17 @@ You have now created the road network, the basis of your map.
 
 ## Importing assets and adding them to the map
 
-Now we have the road network as the basis for our map, we now want to create some content for the map, such as buildings. These assets can be created using a 3D modelling application such as Autodesk Maya, 3DsMax, Blender or any other 3D application with the appropriate export options. It's important that at a minimum, the application is capable of `.fbx` export. 
+Now we have the road network as the basis for our map, we now want to create some content for the map, such as buildings. These assets can be created using a 3D modelling application such as Autodesk Maya, 3DS Max, Blender or any other 3D application with the appropriate export options. It is important that, at a minimum, the application is capable of `.fbx` export. 
 
 There are several elements needed to create an asset in CARLA:
 
-- Mesh - a set of 3D coordinate vertices and the associated joining edges
-- UV map - a mapping of 3D vertices and edges to a 2D texture space to match textures with 3D locations
-- Texture - a 2D image defining the colors and patterns to appear on the surface of the 3D object
-- Normal map - a 2D image defining the directions of the normals on the surface of the object, to add 3D variations to the object's surface
+- [__Mesh__](https://en.wikipedia.org/wiki/Polygon_mesh) - a set of 3D coordinate vertices and the associated joining edges
+- [__UV map__](https://en.wikipedia.org/wiki/UV_mapping) - a mapping of 3D vertices and edges to a 2D texture space to match textures with 3D locations
+- [__Texture__](https://en.wikipedia.org/wiki/Texture_mapping) - a 2D image defining the colors and patterns to appear on the surface of the 3D object
+- [__Normal map__](https://en.wikipedia.org/wiki/Normal_mapping) - a 2D image defining the directions of the normals on the surface of the object, to add 3D variations to the object's surface
 - ORM map - a map defining the regions of metallicity, roughness and ambient oclussion
+
+The ORM map utilises the channels of a standard RGBA encoded image to encode the map of metallic regions, roughness and ambient occlusion. As we define the map here, the red channel defines the metalic map, the green channel the roughness and the blue channels the ambient occlusion. These maps (as well as the diffuse and normal maps) can be created using an application such as [__Adobe Substance 3D painter__](https://www.adobe.com/products/substance3d-painter.html).
 
 Create a new folder in some appropriate location using the Unreal content browser. Within this folder you can either right click and select `Import to folder_location` near the top of the context menu, or drag and drop files directly into the content browser. 
 
@@ -55,7 +57,7 @@ We will import an FBX file containing the base mesh and the UV map, that we have
 
 ![farmhouse_blender](img/tuto_content_authoring_maps/farmhouse_blender.png)
 
-In the context menu, ensure that, in the __Mesh__ section, that *Import Normals* is selected
+In the context menu, ensure that in the __Mesh__ section *Import Normals* is selected
  for *Normal Import Method* and that in the __Material__ section that *Do Not Create Material* is selected. Deselect *Import Textures* in the __Materials__ section since we will import them manually. These choices would differ if you wanted to use some textures already embedded in your FBX file. 
 
  Select *Import All*. Once the import has completed, double click on the imported asset that appears in the content browser to edit it. 
@@ -91,4 +93,6 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 ![asset_in_map](img/tuto_content_authoring_maps/asset_in_map.png)
 
 Now you can save the map, using the "Save Current" option in the top left of the workspace and it is ready to use. Play the simulation.
+
+This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA. You may now read how to [__package a map for use in CARLA standalond version__](tuto_M_manual_map_package.md)
 
