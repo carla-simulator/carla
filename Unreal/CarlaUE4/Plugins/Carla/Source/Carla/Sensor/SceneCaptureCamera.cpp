@@ -46,7 +46,9 @@ void ASceneCaptureCamera::BeginPlay()
   {
     FIntPoint Size1 = MediaOutput->GetRequestedSize();
     UE_LOG(LogCarla, Log, TEXT("NetMediaCapture size %d x %d"), Size1.X, Size1.Y);
-    if (MediaCapture->CaptureTextureRenderTarget2D(GetCaptureRenderTarget(), FMediaCaptureOptions()))
+    FMediaCaptureOptions CaptureOptions;
+    CaptureOptions.bSkipFrameWhenRunningExpensiveTasks = false;
+    if (MediaCapture->CaptureTextureRenderTarget2D(GetCaptureRenderTarget(), CaptureOptions))
     {
       UE_LOG(LogCarla, Log, TEXT("NetMediaCapture created and started"));
     }
@@ -99,8 +101,6 @@ void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
   {
     MediaCapture->StopCapture(true);
   }
-
-  Super::EndPlay(EndPlayReason);
 }
 
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
