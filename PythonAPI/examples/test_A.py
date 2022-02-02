@@ -6,6 +6,7 @@ import time
 import numpy as np
 import cv2
 import math
+import pickle
 from collections import deque
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -56,7 +57,7 @@ EPISODES = 40_000
 
 DISCOUNT = 0.99
 epsilon = 1
-EPSILON_DECAY = 0.95 ## 0.9975 99975
+EPSILON_DECAY = 0.95 #0.99975
 MIN_EPSILON = 0.001
 
 AGGREGATE_STATS_EVERY = 10
@@ -75,8 +76,9 @@ class CarEnv:
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()
         self.model_3 = self.blueprint_library.filter("model3")[0]
-        
-    def reset(self):
+
+
+    def restart(self):
         self.collision_hist = deque(maxlen=2000)
         self.actor_list = deque(maxlen=2000)
         self.lane_invasion = deque(maxlen=2000)
@@ -132,6 +134,29 @@ class CarEnv:
 
         return self.front_camera
 
+    # def start(self):
+    #     self.collision_hist = deque(maxlen=2000)
+    #     self.actor_list = deque(maxlen=2000)
+    #     self.lane_invasion = deque(maxlen=2000)
+    #     self.obstacle_distance = deque(maxlen=2000)
+
+    #     # self.transform = random.choice(self.world.get_map().get_spawn_points())
+    #     # self.vehicle = self.world.spawn_actor(self.model_3, self.transform)
+    #     # self.actor_list.append(self.vehicle)
+
+    #     self.vehicle.set_transform(random.choice(self.world.get_map().get_spawn_points()))
+    #     self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
+    #     time.sleep(4)
+        
+    #     while self.front_camera is None:
+    #         time.sleep(0.01)
+
+    #     self.episode_start = time.time()
+    #     self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
+
+    #     return self.front_camera
+
+
     def collision_data(self, event):
         self.collision_hist.append(event)
 
@@ -147,10 +172,13 @@ class CarEnv:
     
     def process_img(self, image):
         image.convert(cc.CityScapesPalette)
-        i = np.array(image.raw_data)
+        i = np.array(image.raw_data, dtype='uint8')
+        #copy_i = np.array(image.raw_data)##################################################################################################
         #print(i.shape)
         i2 = i.reshape((self.im_height, self.im_width, 4))
+       # copy_i2 = copy_i.reshape((self.im_height, self.im_width, 4))
         i3 = i2[:, :, :3]
+       # copy_i3 = copy_i2[:, :, :3]
         # image.convert(cc.CityScapesPalette)
         # array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
         # array = np.reshape(array, (image.height, image.width, 4))
@@ -220,7 +248,7 @@ class DQNAgent:
         self.memory = deque(maxlen=20000)
         self.training_initialized = False
         self.gamma = 0.9    # discount rate
-        self.loss_list = []
+        self.loss_list = deque(maxlen=20000)
         self.epsilon = 1  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.99995 # changed from 0.995, maybe it can be even slower 
@@ -249,6 +277,9 @@ class DQNAgent:
     def memorize(self, state, action, reward, next_state, done):
         transition = (state, action, reward, next_state, done)
         self.memory.append(transition)
+        # with open('_out/memory_list.txt', "wb") as myfile:
+        #     myfile.write(str(transition).rstrip('\n') +" ")
+
 
     def load(self, name):
         self.model.load_weights(name)
@@ -353,6 +384,15 @@ class DQNAgent:
             self.replay()
             time.sleep(0.01)
 
+    def load_memory(self):
+        try:
+            print("Prev length: ", len(self.memory))
+            with open('memory2.dump', 'rb') as f:
+                agent.memory = pickle.load(f)
+            print("New length: ", len(self.memory))
+        except:
+            print("New length: ", len(self.memory))
+            return
 
 
 if __name__ == '__main__':
@@ -376,15 +416,41 @@ if __name__ == '__main__':
     # Create agent and environment
     
     agent = DQNAgent(state_size=(240,360,3),action_size=13)
+    #agent.model.load_weights('_out/savedWeights.h5')
+    agent.model = tf.keras.models.load_model('_out/savedModel_10750.h5')
+    agent.target_model = tf.keras.models.load_model('_out/savedTargetModel_10750.h5')
+    
+    # load Agent Memory 
+    agent.load_memory()
+    
     env = CarEnv()
+
+    #load these
     episode_loss = []
     episode_number = []
+
+    with open("_out/loss_lists.txt", "r") as text_file:
+        content = text_file.read()
+        file_content = content.splitlines()
+
+        episode_number = [int(i) for i in file_content[0].split()]
+        episode_loss = [float(i) for i in file_content[3].split()]
+
+    #load these
     reward_list = []
-    episode_list = []
     ten_reward_array = []
+    episode_list = []
+
+    with open("_out/reward_lists.txt", "r") as text_file:
+        content = text_file.read()
+        file_content = content.splitlines()
+
+        episode_list = [int(i) for i in file_content[0].split()]
+        ten_reward_array = [float(i) for i in file_content[3].split()]
 
     elapsed_time = []
     total_steps = []
+    save_before = False
 
     # Start training thread and wait for training to be initialized
     trainer_thread = Thread(target=agent.train_in_loop, daemon=True)
@@ -395,28 +461,41 @@ if __name__ == '__main__':
     # Initialize predictions - forst prediction takes longer as of initialization that has to be done
     # It's better to do a first prediction then before we start iterating over episode steps
     #agent.get_qs(np.ones((env.im_height, env.im_width, 3)))
-
+    
     # Iterate over episodes
-    for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit='episodes'):
-        #try:
-            start_time = time.time()
+    #current_state = env.start()
+    for episode in tqdm(range(10751, EPISODES + 1), ascii=True, unit='episodes'):
+        start_time = time.time()
 
-            env.collision_hist = deque(maxlen=1000)
-            env.lane_invasion = deque(maxlen=1000)
-            env.col_sensor = deque(maxlen=1000)
+        env.collision_hist = deque(maxlen=1000)
+        env.lane_invasion = deque(maxlen=1000)
+        env.col_sensor = deque(maxlen=1000)
 
-            # Update tensorboard step every episode
-            # agent.tensorboard.step = episode
+        # Update tensorboard step every episode
+        # agent.tensorboard.step = episode
 
-            # Restarting episode - reset episode reward and step number
-            if episode%50 == 0:
-                agent.model.save_weights("_out/savedModel.h5")
+        # Restarting episode - reset episode reward and step number
+        if episode%50 == 0:
+            agent.model.save_weights("_out/savedWeights.h5")
+        if episode % 250 == 0:
+            agent.model.save(str("_out/savedModel_"+str(episode) + ".h5"))
+            agent.target_model.save(str("_out/savedTargetModel_"+str(episode) + ".h5"))
+            
+            if save_before:
+                num = 2
+                save_before = False
+            else:
+                num = 1
+                save_before = True
+            with open(str('memory'+str(num)+'.dump'), 'wb') as f:
+                pickle.dump(agent.memory, f)
 
-            episode_reward = 0
-            step = 1
+        episode_reward = 0
+        step = 1
 
-            #Store into episode loss graph
-            if episode%10 == 1 and episode > 1 and len(agent.loss_list) > 0:
+        #Store into episode loss graph
+        if episode%10 == 1 and episode > 10751:
+            if len(agent.loss_list) > 0:
                 episode_loss.append(sum(agent.loss_list) / len(agent.loss_list))
                 episode_number.append(episode-1)
                 agent.loss_list.clear()
@@ -440,101 +519,99 @@ if __name__ == '__main__':
 
                     myfile.write("\n\n\n")
 
-            if episode%10 == 1 and episode > 1:
-                ten_reward_average = sum(reward_list)/len(reward_list)
-                ten_reward_array.append(ten_reward_average)
-                reward_list.clear()
+            ten_reward_average = sum(reward_list)/len(reward_list)
+            ten_reward_array.append(ten_reward_average)
+            reward_list.clear()
 
-                plt.figure(2)
-                episode_list.append(episode-1)
-                plt.xlabel('Episodes')
-                plt.ylabel('Rewards')
-                plt.title('Figure 2: Average Rewards over Episodes')  
-                plt.plot(episode_list, ten_reward_array)
-                plt.savefig('_out/reward_graph.png')
+            plt.figure(2)
+            episode_list.append(episode-1)
+            plt.xlabel('Episodes')
+            plt.ylabel('Rewards')
+            plt.title('Figure 2: Average Rewards over Episodes')  
+            plt.plot(episode_list, ten_reward_array)
+            plt.savefig('_out/reward_graph.png')
 
-                with open('_out/reward_lists.txt', "w") as myfile:
-                    for eps in episode_list:
-                        myfile.write(str(eps) +" ")
+            with open('_out/reward_lists.txt', "w") as myfile:
+                for eps in episode_list:
+                    myfile.write(str(eps) +" ")
 
-                    myfile.write("\n\n\n")
+                myfile.write("\n\n\n")
 
-                    for reward in ten_reward_array:
-                        myfile.write(str(reward) +" ")
-                        
-                    myfile.write("\n\n\n")
+                for reward in ten_reward_array:
+                    myfile.write(str(reward) +" ")
+                    
+                myfile.write("\n\n\n")
 
+        
+        # Reset environment and get initial episode state
+        current_state = env.restart() #return front camera without actor destroy
+
+        # Reset flag and start iterating until episode ends
+        done = False
+        episode_start = time.time()
+
+        # Play for given number of seconds only
+        while True:
+
+            # This part stays mostly the same, the change is to query a model for Q values
+            if np.random.random() > epsilon:
+                # Get action from Q table
+                action = np.argmax(agent.get_qs(current_state))
+            else:
+                # Get random action
+                action = random.randrange(13)
+                # This takes no time, so we add a delay matching 60 FPS (prediction above takes longer)
+                time.sleep(1/FPS)
+            # action, busy = agent.act(current_state)
+            # if busy == True:
+            #     time.sleep(1/FPS)
+
+            new_state, reward, done, _ = env.step(action)
+
+            # Transform new continous state to new discrete state and count reward
+            episode_reward += reward
             
-            # Reset environment and get initial state
-            current_state = env.reset()
+            # Every step we update replay memory
+            # print("Current and New State Shapes: ",current_state.shape, new_state.shape)
+            agent.memorize(current_state, action, reward, new_state, done)
 
-            # Reset flag and start iterating until episode ends
-            done = False
-            episode_start = time.time()
+            current_state = new_state
+            step += 1
 
-            # Play for given number of seconds only
-            while True:
+            if done:
+                episode_reward /= (step-1)
+                reward_list.append(episode_reward)
+                end_time = time.time() - start_time
+                print("\nElapsed Time: ", end_time)
+                print("\nNumber of steps: ", step)
+                elapsed_time.append(end_time)
+                total_steps.append(step)
+                break
 
-                # This part stays mostly the same, the change is to query a model for Q values
-                if np.random.random() > epsilon:
-                    # Get action from Q table
-                    action = np.argmax(agent.get_qs(current_state))
-                else:
-                    # Get random action
-                    action = random.randrange(13)
-                    # This takes no time, so we add a delay matching 60 FPS (prediction above takes longer)
-                    time.sleep(1/FPS)
-                # action, busy = agent.act(current_state)
-                # if busy == True:
-                #     time.sleep(1/FPS)
+        # End of episode - destroy agents
+        for actor in env.actor_list:
+            actor.destroy()
 
-                new_state, reward, done, _ = env.step(action)
+        # Append episode reward to a list and log stats (every given number of episodes)
+        ep_rewards.append(episode_reward)
+        if not episode % AGGREGATE_STATS_EVERY or episode == 1:
+            average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
+            min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
+            max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
+            #agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
 
-                # Transform new continous state to new discrete state and count reward
-                episode_reward += reward
-                
-                # Every step we update replay memory
-                # print("Current and New State Shapes: ",current_state.shape, new_state.shape)
-                agent.memorize(current_state, action, reward, new_state, done)
+            # Save model, but only when min reward is greater or equal a set value
+            # if min_reward >= MIN_REWARD:
+            #     agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
-                current_state = new_state
-                step += 1
-
-                if done:
-                    episode_reward /= (step-1)
-                    reward_list.append(episode_reward)
-                    end_time = time.time() - start_time
-                    print("\nElapsed Time: ", end_time)
-                    print("\nNumber of steps: ", step)
-                    elapsed_time.append(end_time)
-                    total_steps.append(step)
-                    break
-
-            # End of episode - destroy agents
-            for actor in env.actor_list:
-                actor.destroy()
-
-            # Append episode reward to a list and log stats (every given number of episodes)
-            ep_rewards.append(episode_reward)
-            if not episode % AGGREGATE_STATS_EVERY or episode == 1:
-                average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-                min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
-                max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-                #agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
-
-                # Save model, but only when min reward is greater or equal a set value
-                # if min_reward >= MIN_REWARD:
-                #     agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
-
-            # Decay epsilon
-            if epsilon > MIN_EPSILON:
-                epsilon *= EPSILON_DECAY
-                epsilon = max(MIN_EPSILON, epsilon)
-
+        # Decay epsilon
+        if epsilon > MIN_EPSILON:
+            epsilon *= EPSILON_DECAY
+            epsilon = max(MIN_EPSILON, epsilon)
 
     print("Average Time for 360 x 240: ", sum(elapsed_time)/len(elapsed_time))
     print("Average steps for 360 x 240 ", sum(total_steps)/len(total_steps))
     # Set termination flag for training thread and wait for it to finish
     agent.terminate = True
     trainer_thread.join()
-    agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+    #agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
