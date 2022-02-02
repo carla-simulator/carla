@@ -14,7 +14,6 @@
 #include <carla/sensor/data/IMUMeasurement.h>
 #include <carla/sensor/data/ObstacleDetectionEvent.h>
 #include <carla/sensor/data/Image.h>
-#include <carla/sensor/data/Normals.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/LidarMeasurement.h>
 #include <carla/sensor/data/SemanticLidarMeasurement.h>
