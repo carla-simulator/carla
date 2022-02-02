@@ -1,3 +1,9 @@
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #pragma once
 #include "WheeledVehicleMovementComponent.h"
 #include "Curves/CurveFloat.h"
@@ -111,7 +117,7 @@ struct FVehicleNWTransmissionData
 };
 
 UCLASS(ClassGroup = (Physics), meta = (BlueprintSpawnableComponent), hidecategories = (PlanarMovement, "Components|Movement|Planar", Activation, "Components|Activation"))
-class PHYSXVEHICLES_API UWheeledVehicleMovementComponentNW : public UWheeledVehicleMovementComponent
+class CARLA_API UWheeledVehicleMovementComponentNW : public UWheeledVehicleMovementComponent
 {
 	GENERATED_UCLASS_BODY()
 
