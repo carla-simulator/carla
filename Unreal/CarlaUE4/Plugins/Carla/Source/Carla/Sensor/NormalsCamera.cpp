@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,7 +11,7 @@
 
 FActorDefinition ANormalsCamera::GetSensorDefinition()
 {
-  return UActorBlueprintFunctionLibrary::MakeCameraDefinition(TEXT("normals"));
+  return UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition();
 }
 
 ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
@@ -20,7 +20,6 @@ ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
   Enable16BitFormat(true);
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
-      
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/NormalsEffectMaterial.NormalsEffectMaterial'"));
 }
