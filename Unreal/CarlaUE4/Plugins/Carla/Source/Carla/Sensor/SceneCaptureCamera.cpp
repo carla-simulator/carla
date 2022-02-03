@@ -74,7 +74,5 @@ void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
-  // FPixelReader::SendPixelsInRenderThread(*this);
-  // CaptureComponent2D->CaptureScene();
-  CaptureComponent2D->CaptureSceneDeferred();
+  CaptureComponent2D->CaptureScene();
 }
