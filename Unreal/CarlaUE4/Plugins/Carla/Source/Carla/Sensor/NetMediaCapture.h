@@ -4,7 +4,6 @@
 
 #include "MediaCapture.h"
 
-#include "ImageWriteTypes.h"
 #include <functional>
 
 #include "NetMediaCapture.generated.h"
@@ -20,7 +19,7 @@ class CARLA_API UNetMediaCapture : public UMediaCapture
 	UNetMediaCapture();
 	
 public:
-	void SetCallback(std::function<void(void*, int32, int32, EPixelFormat)> Func)
+	void SetCallback(std::function<void(std::vector<uint8_t>, int32, int32, EPixelFormat)> Func)
 	{
 		OnCapturedUserCallback = Func;
 	}
@@ -31,14 +30,5 @@ protected:
 	virtual bool CaptureRenderTargetImpl(UTextureRenderTarget2D* InRenderTarget) override;
 
 private:
-	void CacheMediaOutputValues();
-
-private:
-	FString BaseFilePathName;
-	EImageFormat ImageFormat;
-	TFunction<void(bool)> OnCompleteWrapper;
-	bool bOverwriteFile;
-	int32 CompressionQuality;
-	bool bAsync;
-	std::function<void(void*, int32, int32, EPixelFormat)> OnCapturedUserCallback;
+	std::function<void(std::vector<uint8_t>, int32, int32, EPixelFormat)> OnCapturedUserCallback;
 };

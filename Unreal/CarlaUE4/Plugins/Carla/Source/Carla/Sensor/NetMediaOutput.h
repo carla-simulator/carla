@@ -32,29 +32,6 @@ class CARLA_API UNetMediaOutput : public UMediaOutput
 	GENERATED_BODY()
 
 public:
-	UNetMediaOutput();
-
-public:
-	/** Options on how to save the images. */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="File")
-	FImageWriteOptions WriteOptions;
-
-	/** The file path for the images. */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="File", meta=(RelativePath))
-	FDirectoryPath FilePath;
-
-	/** The base file name of the images. The frame number will be append to the base file name. */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="File", meta=(RelativePath))
-	FString BaseFileName;
-
-	/** Use the default back buffer size or specify a specific size to capture. */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Media", meta = (InlineEditConditionToggle))
-	bool bOverrideDesiredSize;
-
-	/** Use the default back buffer size or specify a specific size to capture. */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Media", meta=(EditCondition="bOverrideDesiredSize"))
-	FIntPoint DesiredSize;
-
 	/** Use the default back buffer pixel format or specify a specific the pixel format to capture. */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Media", meta = (InlineEditConditionToggle))
 	bool bOverridePixelFormat;
@@ -79,6 +56,7 @@ protected:
 	virtual UMediaCapture* CreateMediaCaptureImpl() override;
 
 private:
+	UPROPERTY()
 	UNetMediaCapture *MediaCapture = nullptr;
 
 	//~ End UMediaOutput interface

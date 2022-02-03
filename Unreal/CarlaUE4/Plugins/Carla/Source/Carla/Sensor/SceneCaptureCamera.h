@@ -26,12 +26,15 @@ public:
 
   ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
 
+  UPROPERTY()
+  UNetMediaOutput* MediaOutput = nullptr;
+
 protected:
+
 
   void BeginPlay() override;
   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
 private:
-  UNetMediaOutput* MediaOutput = nullptr;
 };

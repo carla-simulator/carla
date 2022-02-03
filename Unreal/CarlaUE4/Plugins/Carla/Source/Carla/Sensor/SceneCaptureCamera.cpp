@@ -31,36 +31,16 @@ void ASceneCaptureCamera::BeginPlay()
 
   MediaOutput = NewObject<UNetMediaOutput>();
   UE_LOG(LogCarla, Log, TEXT("NetMediaOutput created"));
-  MediaOutput->BaseFileName = "Captured";
-  MediaOutput->FilePath.Path = "c:/captured/";
-  MediaOutput->WriteOptions.bAsync = true;
-  MediaOutput->WriteOptions.bOverwriteFile = true;
-  MediaOutput->WriteOptions.CompressionQuality = 0;
-  MediaOutput->WriteOptions.Format = EDesiredImageFormat::JPG;
-  MediaOutput->DesiredPixelFormat = ENetMediaOutputPixelFormat::B8G8R8A8;
-  MediaOutput->DesiredSize = FIntPoint(GetCaptureRenderTarget()->SizeX, GetCaptureRenderTarget()->SizeY);
   MediaOutput->CreateMediaCapture();
   UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
-  UE_LOG(LogCarla, Log, TEXT("NetMediaCapture: RenderTarget size %d x %d"), MediaOutput->DesiredSize.X, MediaOutput->DesiredSize.Y);
   if (MediaCapture)
   {
-    FIntPoint Size1 = MediaOutput->GetRequestedSize();
-    UE_LOG(LogCarla, Log, TEXT("NetMediaCapture size %d x %d"), Size1.X, Size1.Y);
     FMediaCaptureOptions CaptureOptions;
     CaptureOptions.bSkipFrameWhenRunningExpensiveTasks = false;
-    if (MediaCapture->CaptureTextureRenderTarget2D(GetCaptureRenderTarget(), CaptureOptions))
-    {
-      UE_LOG(LogCarla, Log, TEXT("NetMediaCapture created and started"));
-    }
-    else
-    {
-      UE_LOG(LogCarla, Log, TEXT("NetMediaCapture created but failing to start"));
-    }
-    Size1 = MediaOutput->GetRequestedSize();
-    UE_LOG(LogCarla, Log, TEXT("NetMediaCapture size %d x %d"), Size1.X, Size1.Y);
+    MediaCapture->CaptureTextureRenderTarget2D(GetCaptureRenderTarget(), CaptureOptions);
     
     // callback
-    MediaCapture->SetCallback([Sensor=this](void *InBuffer, int32 Width, int32 Height, EPixelFormat PixelFormat)
+    MediaCapture->SetCallback([Sensor=this](std::vector<uint8_t> InBuffer, int32 Width, int32 Height, EPixelFormat PixelFormat)
 	  {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("OnCapturedUserCallback");
 
@@ -69,19 +49,7 @@ void ASceneCaptureCamera::BeginPlay()
       {
         auto Stream = Sensor->GetDataStream(*Sensor);
         auto Buffer = Stream.PopBufferFromPool();
-
-        if (PixelFormat == PF_B8G8R8A8)
-        {
-          TArray<FColor> Pixels = TArray<FColor>(reinterpret_cast<FColor*>(InBuffer), Width * Height);
-          // Buffer.copy_from(carla::sensor::SensorRegistry::get<ASceneCaptureCamera *>.second::type::header_offset, Pixels);
-          Buffer.copy_from(carla::sensor::s11n::ImageSerializer::header_offset, Pixels);
-        }
-        else if (PixelFormat == PF_FloatRGBA)
-        {
-          TArray<FFloat16Color> Pixels = TArray<FFloat16Color>(reinterpret_cast<FFloat16Color*>(InBuffer), Width * Height);
-          Buffer.copy_from(carla::sensor::s11n::ImageSerializer::header_offset, Pixels);
-        }
-
+        Buffer.copy_from(carla::sensor::s11n::ImageSerializer::header_offset, boost::asio::buffer(InBuffer.data(), InBuffer.size()));
         if(Buffer.data())
         {
           SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
@@ -99,7 +67,7 @@ void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
   UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
   if (MediaCapture)
   {
-    MediaCapture->StopCapture(true);
+    MediaCapture->StopCapture(false);
   }
 }
 
@@ -107,5 +75,6 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
   // FPixelReader::SendPixelsInRenderThread(*this);
-  CaptureComponent2D->CaptureScene();
+  // CaptureComponent2D->CaptureScene();
+  CaptureComponent2D->CaptureSceneDeferred();
 }
