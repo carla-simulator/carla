@@ -28,7 +28,8 @@ void UNetMediaCapture::OnFrameCaptured_RenderingThread(const FCaptureBaseData& I
 		}
 		Pixels.resize(Size);
 		memcpy(Pixels.data(), InBuffer, Size);
-		OnCapturedUserCallback(std::move(Pixels), Width, Height, PixelFormat);
+		std::thread th = std::thread(OnCapturedUserCallback, std::move(Pixels), Width, Height, PixelFormat);
+		th.detach();
 	}
 	SetState(EMediaCaptureState::Capturing);
 }
