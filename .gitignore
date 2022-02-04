@@ -7,6 +7,8 @@ Util/Build
 Install
 Plugins
 !Unreal/CarlaUE4/Plugins
+Unreal/CarlaUE4/CarlaUE4.xcworkspace
+Unreal/CarlaUE4/Config/OptionalModules.ini
 
 /ExportedMaps
 /Import/*
