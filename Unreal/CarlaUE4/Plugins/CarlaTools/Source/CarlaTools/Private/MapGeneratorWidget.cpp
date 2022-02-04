@@ -8,20 +8,99 @@
 
 #include "MapGeneratorWidget.h"
 
-#define DEBUG_MSG(x, ...) if(GEngine){GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT(x), __VA_ARGS__));}
+#include "AssetRegistryModule.h"
+#include "EditorLevelLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Landscape.h"
+#include "LandscapeProxy.h"
+#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
+
+#define DEBUG_MSG(x, ...) if(GEngine){GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, FString::Printf(TEXT(x), __VA_ARGS__));}
+#define DEBUG_MSG_RED(x, ...) if(GEngine){GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT(x), __VA_ARGS__));}
 
 
-// UMapGeneratorWidget::UMapGeneratorWidget()
-// {
 
-// }
-
-// UMapGeneratorWidget::~UMapGeneratorWidget()
-// {}
-
-void UMapGeneratorWidget::HelloWorld()
+FString UMapGeneratorWidget::GenerateMapFiles(const FString& destinationPath, const FString& mapName)
 {
-    DEBUG_MSG("RT Changed")
+    DEBUG_MSG("Generating new map...");
+
+    FString errorMsg = "";
+
+    FAssetData worldAssetData;
+
+    // 1. Creating Levels
+    bool bLoaded = LoadWorld(worldAssetData);
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, bLoaded ? "Loaded CORRECT" : "NOT loaded");
+
+    // 2. Applying heightmap
+    UWorld* world = CastChecked<UWorld>(worldAssetData.GetAsset());
+    ALandscape* landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(world, ALandscape::StaticClass());
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, landscape!=nullptr ? "L TRUE" : "L FALSE");
+    AssignLandscapeHeightMap(landscape);
+
+    // 3. Saving world
+    bool bSaved = SaveWorld(worldAssetData, destinationPath, mapName);
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, bSaved ? "Saved CORRECT" : "NOT saved");
+
+    return errorMsg;
+}
+
+bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData)
+{
+    TArray<FAssetData> AssetDatas;
+    UObjectLibrary *MapObjectLibrary;
+    const FString BaseMap = TEXT("/CarlaTools/MapGenerator/BaseMap");
+
+    // Loading Map from folder using object library
+    MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
+    MapObjectLibrary->AddToRoot();
+    MapObjectLibrary->LoadAssetDataFromPath(*BaseMap);
+    MapObjectLibrary->LoadAssetsFromAssetData();
+    MapObjectLibrary->GetAssetDataList(AssetDatas);
+    if (AssetDatas.Num() > 0)
+    {
+        // Extract first asset found in folder path (i.e. the BaseMap)
+        WorldAssetData = AssetDatas.Pop();
+        return true;
+    }
+    else
+        return false;
+}
+
+bool UMapGeneratorWidget::SaveWorld(FAssetData& WorldToBeSaved, const FString& DestinationPath, const FString& WorldName)
+{
+    UWorld* world;
+    UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(WorldToBeSaved.GetAsset());
+    if(BaseMapRedirector != nullptr)
+        world = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+    else
+        world = CastChecked<UWorld>(WorldToBeSaved.GetAsset());
+
+    // Create package
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Preparing package");
+    UPackage *package = WorldToBeSaved.GetPackage();
+    package->SetFolderName("TestFolder001");
+    package->FullyLoad();
+    package->MarkPackageDirty();
+    FAssetRegistryModule::AssetCreated(world);
+    
+    // Rename new World
+    world->Rename(*WorldName, world->GetOuter());
+    const FString PackagePath = DestinationPath + "/" + WorldName;
+    FAssetRegistryModule::AssetRenamed(world, *PackagePath);
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, world->GetMapName());
+    world->MarkPackageDirty();
+    world->GetOuter()->MarkPackageDirty();
+
+    // Saving package
+    const FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath, FPackageName::GetMapPackageExtension());
+    if(FPaths::FileExists(*PackageFileName))
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Package already Exists");
+        return false;
+    }
+    return UPackage::SavePackage(package, world, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+        *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 }
 
 // #endif
