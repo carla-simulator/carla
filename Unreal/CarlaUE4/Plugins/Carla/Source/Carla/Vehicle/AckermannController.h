@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -51,7 +51,7 @@ class PID
     Integral = 0.0f;
     Integral = FMath::Clamp(Integral, MinOutput, MaxOutput);
     Derivative = 0.0f;
-    
+
     LastError = 0.0f;
     LastInput = 0.0f;
   }
@@ -136,7 +136,7 @@ private:
   // Internal control parameters
   float SpeedControlAccelDelta = 0.0f;
   float SpeedControlAccelTarget = 0.0f;
-  
+
   float AccelControlPedalDelta = 0.0f;
   float AccelControlPedalTarget = 0.0f;
 

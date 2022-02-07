@@ -726,7 +726,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   {
     Recorder->AddPhysicsControl(*this);
   }
-  
+
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
 }

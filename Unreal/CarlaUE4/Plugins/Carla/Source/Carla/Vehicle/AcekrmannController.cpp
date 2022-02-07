@@ -35,7 +35,7 @@ void FAckermannController::ApplySettings(const FAckermannControllerSettings& Set
   SpeedController.Kp = Settings.SpeedKp;
   SpeedController.Ki = Settings.SpeedKi;
   SpeedController.Kd = Settings.SpeedKd;
-  
+
   AccelerationController.Kp = Settings.AccelKp;
   AccelerationController.Ki = Settings.AccelKi;
   AccelerationController.Kd = Settings.AccelKd;
@@ -93,35 +93,6 @@ void FAckermannController::RunLoop(FVehicleControl& Control) {
   Control.Throttle = FMath::Clamp(Throttle, 0.0f, 1.0f);
   Control.Brake = FMath::Clamp(Brake, 0.0f, 1.0f);
   Control.bReverse = bReverse;
-
-  // // Debugging
-  // UE_LOG(LogCarla, Log, TEXT("[AckermannLog];%f;%f;%f;%f;%f;%f;%f;%f;%f;%f;%d;%f;%f;%f;%f"),
-  //     DeltaTime,
-  //     UserTargetPoint.Steer,
-  //     UserTargetPoint.Speed,
-  //     UserTargetPoint.Acceleration,
-  //     UserTargetPoint.Jerk,
-  //     VehicleSpeed,
-  //     VehicleAcceleration,
-  //     //VehiclePitch,
-  //     Control.Steer,
-  //     Control.Throttle,
-  //     Control.Brake,
-  //     Control.Gear,
-  //     //SpeedController.Proportional,
-  //     //SpeedController.Integral,
-  //     //SpeedController.Derivative,
-  //     SpeedControlAccelDelta,
-  //     SpeedControlAccelTarget,
-  //     //AccelerationController.Proportional,
-  //     //AccelerationController.Integral,
-  //     //AccelerationController.Derivative,
-  //     AccelControlPedalDelta,
-  //     AccelControlPedalTarget
-  //     //BrakeUpperBorder,
-  //     //ThrottleLowerBorder
-  //   );
-
 }
 
 void FAckermannController::RunControlSteering() {
@@ -137,7 +108,7 @@ bool FAckermannController::RunControlFullStop() {
     Throttle = 0.0;
     return true;
   }
-  return false;  
+  return false;
 }
 
 void FAckermannController::RunControlReverse() {
@@ -162,7 +133,6 @@ void FAckermannController::RunControlReverse() {
     TargetSpeed = 0.0;
   }
 }
-
 
 void FAckermannController::RunControlSpeed() {
   SpeedController.SetTargetPoint(TargetSpeed);
@@ -217,13 +187,14 @@ void FAckermannController::UpdateVehicleState(const ACarlaWheeledVehicle* Vehicl
 
   LastVehicleSpeed = VehicleSpeed;
   LastVehicleAcceleration = VehicleAcceleration;
-  
+
   // Update simulation state
   DeltaTime = Vehicle->GetWorld()->GetDeltaSeconds();
 
   // Update Vehicle state
   VehicleSpeed = Vehicle->GetVehicleForwardSpeed() / 100.0f;  // From cm/s to m/s
   float CurrentAcceleration = (VehicleSpeed - LastVehicleSpeed) / DeltaTime;
+  // Apply an average filter for the acceleration.
   VehicleAcceleration = (4.0f*LastVehicleAcceleration + CurrentAcceleration) / 5.0f;
 }
 
