@@ -110,9 +110,6 @@ private:
   void RunControlAcceleration();
   void UpdateVehicleControlCommand();
 
-  //float GetVehicleDrivingImpedanceAcceleration();
-  //float GetVehicleLayOffEngineAcceleration();
-
 private:
 
   PID SpeedController = PID(0.15f, 0.0f, 0.25f);
@@ -129,8 +126,6 @@ private:
   // Restricitions parameters
   float MaxAccel = 3.0f;  // [m/s2]
   float MaxDecel = 8.0f;  // [m/s2]
-
-  //float MaxPedal = 3.0f;  // min(MaxAccel, MaxDecel)
 
   // Control parameters
   float Steer = 0.0f;
@@ -149,16 +144,11 @@ private:
   float DeltaTime = 0.0f;                // [s]
 
   // Vehicle state
-  //float VehicleMass = 0.0f;              // [Kg]
   float VehicleMaxSteering = 0.0f;       // [rad]
-  //float VehicleDragArea = 0.0f;          // [m2]
-  //float VehicleDragCoefficient = 0.0f;    // [?]
 
   float VehicleSpeed = 0.0f;             // [m/s]
   float VehicleAcceleration = 0.0f;      // [m/s2]
-  //float VehiclePitch = 0.0f;             // [rad]
 
   float LastVehicleSpeed = 0.0f;         // [m/s]
   float LastVehicleAcceleration = 0.0f;  // [m/s2]
-  //float LastVehiclePitch = 0.0f;         // [rad]
 };
