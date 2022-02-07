@@ -102,7 +102,10 @@ void FVehicleData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carla
   {
     PhysicsControl = Vehicle->GetVehiclePhysicsControl();
   }
+  // TODO(joel): Record the state of the ackermann control
   Control = Vehicle->GetVehicleControl();
+  AckermannControl = Vehicle->GetVehicleAckermannControl();
+  bAckermannControlActive = Vehicle->IsAckermannControlActive();
   LightState = Vehicle->GetVehicleLightState();
   auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
   if (Controller)
@@ -121,7 +124,14 @@ void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carl
   {
     Vehicle->ApplyVehiclePhysicsControl(PhysicsControl);
   }
-  Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
+  if (!bAckermannControlActive)
+  {
+    Vehicle->ApplyVehicleControl(Control, EVehicleInputPriority::Client);
+  }
+  else 
+  {
+    Vehicle->ApplyVehicleAckermannControl(AckermannControl, EVehicleInputPriority::Client);
+  }
   Vehicle->SetVehicleLightState(LightState);
   auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
   if (Controller)
