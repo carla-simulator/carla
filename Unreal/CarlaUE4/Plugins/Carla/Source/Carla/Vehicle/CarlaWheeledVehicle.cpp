@@ -98,8 +98,6 @@ void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
 
-  UE_LOG(LogCarla, Log, TEXT("[AckermannLog];Frame;DeltaSeconds;TargetSteer;TargetSpeed;TargetAcceleration;TargetJerk;CurrentSpeed;CurrentAcceleration;CurrentPitch;Steer;Throttle;Brake;Gear;SpeedP;SpeedI;SpeedD;SpeedControlAccelDelta;SpeedControlAccelTarget;AccelP;AccelI;AccelD;AccelControlPedalDelta;AccelControlPedalTarget;BrakeUpperBorder;ThrottleLowerBorder"));
-
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
   // Get constraint components and their initial transforms
