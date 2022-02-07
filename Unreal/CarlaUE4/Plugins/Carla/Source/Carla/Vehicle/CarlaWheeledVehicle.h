@@ -18,6 +18,7 @@
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
+#include "WheeledVehicleMovementComponentNW.h"
 #include "VehicleAnimInstance.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
@@ -178,6 +179,8 @@ public:
   void SetSimulatePhysics(bool enabled);
 
   void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
+
+  void SetWheelCollisionNW(UWheeledVehicleMovementComponentNW *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
 
@@ -368,6 +371,9 @@ public:
   UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
   float CarSimOriginOffset = 150.f;
 //-------------------------------------------
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
+  bool bIsNWVehicle = false;
 
 private:
 

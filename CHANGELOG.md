@@ -1,6 +1,7 @@
 ## Latest
 
   * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
+  * Added support for N wheeled vehicles
 
 ## CARLA 0.9.13
 
