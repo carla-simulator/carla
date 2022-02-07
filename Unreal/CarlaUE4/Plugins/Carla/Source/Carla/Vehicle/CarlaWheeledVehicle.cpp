@@ -78,6 +78,8 @@ void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
 
+  UE_LOG(LogCarla, Log, TEXT("[AckermannLog];Frame;DeltaSeconds;TargetSteer;TargetSpeed;TargetAcceleration;TargetJerk;CurrentSpeed;CurrentAcceleration;CurrentPitch;Steer;Throttle;Brake;Gear;SpeedP;SpeedI;SpeedD;SpeedControlAccelDelta;SpeedControlAccelTarget;AccelP;AccelI;AccelD;AccelControlPedalDelta;AccelControlPedalTarget;BrakeUpperBorder;ThrottleLowerBorder"));
+
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
   // Get constraint components and their initial transforms
@@ -239,6 +241,11 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
+  if (bAckermannControlActive) {
+    AckermannController.UpdateVehicleState(this);
+    AckermannController.RunLoop(InputControl.Control);
+  }
+
   BaseMovementComponent->ProcessControl(InputControl.Control);
   InputControl.Control.bReverse = InputControl.Control.Gear < 0;
   LastAppliedControl = InputControl.Control;
@@ -511,6 +518,9 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
   {
     Recorder->AddPhysicsControl(*this);
   }
+  
+  // Update physics in the Ackermann Controller
+  AckermannController.UpdateVehiclePhysics(this);
 }
 
 void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)

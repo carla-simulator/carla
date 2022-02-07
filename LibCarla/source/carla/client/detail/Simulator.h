@@ -457,6 +457,18 @@ namespace detail {
       _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
 
+    void ApplyAckermannControlToVehicle(Vehicle &vehicle, const rpc::VehicleAckermannControl &control) {
+      _client.ApplyAckermannControlToVehicle(vehicle.GetId(), control);
+    }
+
+    rpc::AckermannControllerSettings GetAckermannControllerSettings(const Vehicle &vehicle) const {
+      return _client.GetAckermannControllerSettings(vehicle.GetId());
+    }
+
+    void ApplyAckermannControllerSettings(Vehicle &vehicle, const rpc::AckermannControllerSettings &settings) {
+      _client.ApplyAckermannControllerSettings(vehicle.GetId(), settings);
+    }
+
     void ApplyControlToWalker(Walker &walker, const rpc::WalkerControl &control) {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }

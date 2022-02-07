@@ -55,6 +55,18 @@ namespace client {
     }
   }
 
+  void Vehicle::ApplyAckermannControl(const AckermannControl &control) {
+    GetEpisode().Lock()->ApplyAckermannControlToVehicle(*this, control);
+  }
+
+  rpc::AckermannControllerSettings Vehicle::GetAckermannControllerSettings() const {
+    return GetEpisode().Lock()->GetAckermannControllerSettings(*this);
+  }
+
+  void Vehicle::ApplyAckermannControllerSettings(const rpc::AckermannControllerSettings &settings) {
+    GetEpisode().Lock()->ApplyAckermannControllerSettings(*this, settings);
+  }
+
   void Vehicle::ApplyPhysicsControl(const PhysicsControl &physics_control) {
     GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
   }
