@@ -17,6 +17,7 @@ nav:
 - Next steps:
   - 'Content authoring':
     - 'Authoring maps': 'tuto_content_authoring_maps.md'
+    - 'Authoring vehicles': 'tuto_content_authoring_vehicles.md'
 
 
 - CARLA topics:
@@ -25,10 +26,19 @@ nav:
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
-  - '3rd party integrations': '3rd_party_integrations.md' 
   - 'Development': 'development_tutorials.md'
   - 'Custom assets': 'custom_assets_tutorials.md'
 
+- CARLA Ecosystem:
+  - 'ROS bridge': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
+  - 'SUMO': 'adv_sumo.md'
+  - 'Scenic': 'tuto_G_scenic.md'
+  - 'Chrono': 'tuto_G_chrono.md'
+  - 'OpenDRIVE': 'adv_opendrive.md'
+  - 'PTV Vissim': 'adv_ptv.md'
+  - 'RSS': 'adv_rss.md'
+  - 'AWS': 'tuto_G_rllib_integration.md'
+  
 - Resources:
   - 'Blueprint library': 'bp_library.md'
   - 'Python API': 'python_api.md'  

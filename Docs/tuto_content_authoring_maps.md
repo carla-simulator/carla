@@ -75,7 +75,7 @@ Right click in the content browser and select *Material* from the menu. A new ma
 Now connect the nodes according to the following rules:
 
 - Diffuse RGB --> Base Color
-- Normal RBG --> Normal
+- Normal RGB --> Normal
 - ORM R --> Ambient occlusion
 - ORM G --> Roughness
 - ORM B --> Metallic
