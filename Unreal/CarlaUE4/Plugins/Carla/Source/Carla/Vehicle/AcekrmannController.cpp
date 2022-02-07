@@ -94,33 +94,33 @@ void FAckermannController::RunLoop(FVehicleControl& Control) {
   Control.Brake = FMath::Clamp(Brake, 0.0f, 1.0f);
   Control.bReverse = bReverse;
 
-  // Debugging
-  UE_LOG(LogCarla, Log, TEXT("[AckermannLog];%f;%f;%f;%f;%f;%f;%f;%f;%f;%f;%d;%f;%f;%f;%f"),
-      DeltaTime,
-      UserTargetPoint.Steer,
-      UserTargetPoint.Speed,
-      UserTargetPoint.Acceleration,
-      UserTargetPoint.Jerk,
-      VehicleSpeed,
-      VehicleAcceleration,
-      //VehiclePitch,
-      Control.Steer,
-      Control.Throttle,
-      Control.Brake,
-      Control.Gear,
-      //SpeedController.Proportional,
-      //SpeedController.Integral,
-      //SpeedController.Derivative,
-      SpeedControlAccelDelta,
-      SpeedControlAccelTarget,
-      //AccelerationController.Proportional,
-      //AccelerationController.Integral,
-      //AccelerationController.Derivative,
-      AccelControlPedalDelta,
-      AccelControlPedalTarget
-      //BrakeUpperBorder,
-      //ThrottleLowerBorder
-    );
+  // // Debugging
+  // UE_LOG(LogCarla, Log, TEXT("[AckermannLog];%f;%f;%f;%f;%f;%f;%f;%f;%f;%f;%d;%f;%f;%f;%f"),
+  //     DeltaTime,
+  //     UserTargetPoint.Steer,
+  //     UserTargetPoint.Speed,
+  //     UserTargetPoint.Acceleration,
+  //     UserTargetPoint.Jerk,
+  //     VehicleSpeed,
+  //     VehicleAcceleration,
+  //     //VehiclePitch,
+  //     Control.Steer,
+  //     Control.Throttle,
+  //     Control.Brake,
+  //     Control.Gear,
+  //     //SpeedController.Proportional,
+  //     //SpeedController.Integral,
+  //     //SpeedController.Derivative,
+  //     SpeedControlAccelDelta,
+  //     SpeedControlAccelTarget,
+  //     //AccelerationController.Proportional,
+  //     //AccelerationController.Integral,
+  //     //AccelerationController.Derivative,
+  //     AccelControlPedalDelta,
+  //     AccelControlPedalTarget
+  //     //BrakeUpperBorder,
+  //     //ThrottleLowerBorder
+  //   );
 
 }
 
