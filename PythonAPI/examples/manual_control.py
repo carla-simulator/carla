@@ -276,10 +276,6 @@ class World(object):
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-            spawn_point = carla.Transform(
-                carla.Location(x=-250.0, y=245.0, z=2.0),
-                carla.Rotation()
-            )
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
@@ -509,12 +505,6 @@ class KeyboardControl(object):
                     world.hud.notification("Recording start time is %d" % (world.recording_start))
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_f:
-                        world.player.apply_ackermann_controller_settings(
-                            carla.AckermannControllerSettings(
-                               speed_kp=0.15, speed_ki=0.0, speed_kd=0.25,
-                               accel_kp=0.01, accel_ki=0.0, accel_kd=0.01
-                            )
-                        )
                         # Toggle ackermann controller
                         self._ackermann_enabled = not self._ackermann_enabled
                         world.hud.show_ackermann_info(self._ackermann_enabled)
