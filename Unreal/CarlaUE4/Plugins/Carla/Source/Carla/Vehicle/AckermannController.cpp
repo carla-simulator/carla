@@ -108,7 +108,6 @@ void FAckermannController::RunControlSteering() {
       Steer = TargetSteer;
     } else {
       float SteerDirection = (TargetSteer > VehicleSteer) ? 1.0f : -1.0f;
-      UE_LOG(LogCarla, Error, TEXT("Direction: %f"), SteerDirection);
       Steer = VehicleSteer + SteerDirection * (TargetSteerSpeed * DeltaTime);
     }
 
