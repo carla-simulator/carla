@@ -124,14 +124,14 @@ void FAckermannController::RunControlReverse() {
       // Change of driving direction to forward.
       bReverse = false;
     }
+  } else {
+    if (FMath::Sign(VehicleSpeed) * FMath::Sign(UserTargetPoint.Speed) == -1) {
+      // Requested for change of driving direction.
+      // First we have to come to full stop before changing driving direction
+      TargetSpeed = 0.0;
+    }
   }
 
-  if (FMath::Sign(VehicleSpeed) * FMath::Sign(UserTargetPoint.Speed) == -1) {
-    // Requested for change of driving direction.
-    // First we have to come to full stop before changing driving direction
-    UE_LOG(LogCarla, Log, TEXT("Requested change of driving direction. First going to full stop"));
-    TargetSpeed = 0.0;
-  }
 }
 
 void FAckermannController::RunControlSpeed() {
