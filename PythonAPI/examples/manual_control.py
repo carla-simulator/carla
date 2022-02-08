@@ -732,10 +732,7 @@ class HUD(object):
                 self._info_text += [
                     '',
                     'Ackermann Controller:',
-                    '  Target steer: % 9.0f rad' % self._ackermann_control.steer,
                     '  Target speed: % 8.0f km/h' % (3.6*self._ackermann_control.speed),
-                    '  Target accel: % 7.0f km/h2' % self._ackermann_control.acceleration,
-                    '  Target jerk:  % 7.0f km/h3' % self._ackermann_control.jerk,
                 ]
         elif isinstance(c, carla.WalkerControl):
             self._info_text += [

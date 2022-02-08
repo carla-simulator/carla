@@ -55,7 +55,12 @@ namespace client {
     /// Apply @a control to this vehicle.
     void ApplyAckermannControl(const AckermannControl &control);
 
+    /// Return the last Ackermann controller settings applied to this vehicle.
+    ///
+    /// @warning This function does call the simulator.
     rpc::AckermannControllerSettings GetAckermannControllerSettings() const;
+
+    /// Apply Ackermann control settings to this vehicle
     void ApplyAckermannControllerSettings(const rpc::AckermannControllerSettings &settings);
 
     /// Apply physics control to this vehicle.

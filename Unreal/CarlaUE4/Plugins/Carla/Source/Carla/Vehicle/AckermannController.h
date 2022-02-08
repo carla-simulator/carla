@@ -119,6 +119,7 @@ private:
 
   // Target point after aplying restrictions
   float TargetSteer = 0.0;
+  float TargetSteerSpeed = 0.0;
   float TargetSpeed = 0.0;
   float TargetAcceleration = 0.0;
   float TargetJerk = 0.0;
@@ -146,6 +147,7 @@ private:
   // Vehicle state
   float VehicleMaxSteering = 0.0f;       // [rad]
 
+  float VehicleSteer = 0.0f;             // [rad]
   float VehicleSpeed = 0.0f;             // [m/s]
   float VehicleAcceleration = 0.0f;      // [m/s2]
 

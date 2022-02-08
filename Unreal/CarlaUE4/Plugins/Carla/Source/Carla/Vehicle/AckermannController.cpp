@@ -44,10 +44,11 @@ void FAckermannController::ApplySettings(const FAckermannControllerSettings& Set
 void FAckermannController::SetTargetPoint(const FVehicleAckermannControl& AckermannControl) {
   UserTargetPoint = AckermannControl;
 
-  TargetSteer = UserTargetPoint.Steer;
+  TargetSteer = FMath::Clamp(UserTargetPoint.Steer, -VehicleMaxSteering, VehicleMaxSteering);
+  TargetSteerSpeed = FMath::Abs(UserTargetPoint.SteerSpeed);
   TargetSpeed = UserTargetPoint.Speed;
-  TargetAcceleration = UserTargetPoint.Acceleration;
-  TargetJerk = UserTargetPoint.Jerk;
+  TargetAcceleration = FMath::Abs(UserTargetPoint.Acceleration);
+  TargetJerk = FMath::Abs(UserTargetPoint.Jerk);
 
 }
 
@@ -58,6 +59,9 @@ void FAckermannController::Reset() {
 
   // Reset control parameters
   Steer = 0.0f;
+  Throttle = 0.0f;
+  Brake = 0.0f;
+  bReverse = false;
 
   SpeedControlAccelDelta = 0.0f;
   SpeedControlAccelTarget = 0.0f;
@@ -89,14 +93,26 @@ void FAckermannController::RunLoop(FVehicleControl& Control) {
   }
 
   // Update control command
-  Control.Steer = Steer;
+  Control.Steer = Steer / VehicleMaxSteering;
   Control.Throttle = FMath::Clamp(Throttle, 0.0f, 1.0f);
   Control.Brake = FMath::Clamp(Brake, 0.0f, 1.0f);
   Control.bReverse = bReverse;
 }
 
 void FAckermannController::RunControlSteering() {
-  Steer = TargetSteer / VehicleMaxSteering;
+  if (FMath::Abs(TargetSteerSpeed) < 0.001) {
+    Steer = TargetSteer;
+  } else {
+    float SteerDelta = TargetSteerSpeed * DeltaTime;
+    if (FMath::Abs(TargetSteer - VehicleSteer) < SteerDelta) {
+      Steer = TargetSteer;
+    } else {
+      float SteerDirection = (TargetSteer > VehicleSteer) ? 1.0f : -1.0f;
+      UE_LOG(LogCarla, Error, TEXT("Direction: %f"), SteerDirection);
+      Steer = VehicleSteer + SteerDirection * (TargetSteerSpeed * DeltaTime);
+    }
+
+  }
 }
 
 bool FAckermannController::RunControlFullStop() {
@@ -192,6 +208,7 @@ void FAckermannController::UpdateVehicleState(const ACarlaWheeledVehicle* Vehicl
   DeltaTime = Vehicle->GetWorld()->GetDeltaSeconds();
 
   // Update Vehicle state
+  VehicleSteer = Vehicle->GetVehicleControl().Steer * VehicleMaxSteering;
   VehicleSpeed = Vehicle->GetVehicleForwardSpeed() / 100.0f;  // From cm/s to m/s
   float CurrentAcceleration = (VehicleSpeed - LastVehicleSpeed) / DeltaTime;
   // Apply an average filter for the acceleration.
