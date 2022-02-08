@@ -193,6 +193,9 @@ void ACarlaWheeledVehicle::BeginPlay()
     MovementComponent->WheelSetups = NewWheelSetups;
 
     LastPhysicsControl = GetVehiclePhysicsControl();
+
+    // Update physics in the Ackermann Controller
+    AckermannController.UpdateVehiclePhysics(this);
   }
 }
 
