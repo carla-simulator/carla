@@ -102,7 +102,6 @@ void FVehicleData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carla
   {
     PhysicsControl = Vehicle->GetVehiclePhysicsControl();
   }
-  // TODO(joel): Record the state of the ackermann control
   Control = Vehicle->GetVehicleControl();
   AckermannControl = Vehicle->GetVehicleAckermannControl();
   bAckermannControlActive = Vehicle->IsAckermannControlActive();
