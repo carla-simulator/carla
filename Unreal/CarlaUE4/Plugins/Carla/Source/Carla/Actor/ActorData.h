@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Math/DVector.h"
+#include "Carla/Vehicle/AckermannControllerSettings.h"
 #include "Carla/Vehicle/VehicleAckermannControl.h"
 #include "Carla/Vehicle/VehicleControl.h"
 #include "Carla/Vehicle/VehicleLightState.h"
@@ -61,6 +62,8 @@ public:
   FVehicleAckermannControl AckermannControl;
 
   bool bAckermannControlActive = false;
+
+  FAckermannControllerSettings AckermannControllerSettings;
 
   FVehicleLightState LightState;
 

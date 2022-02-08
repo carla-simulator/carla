@@ -879,8 +879,8 @@ ECarlaServerResponse FVehicleActor::GetAckermannControllerSettings(
 {
   if (IsDormant())
   {
-    //FVehicleData* ActorData = GetActorData<FVehicleData>();
-    //PhysicsControl = ActorData->PhysicsControl;
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    AckermannSettings = ActorData->AckermannControllerSettings;
   }
   else
   {
@@ -899,8 +899,8 @@ ECarlaServerResponse FVehicleActor::ApplyAckermannControllerSettings(
 {
   if (IsDormant())
   {
-    // FVehicleData* ActorData = GetActorData<FVehicleData>();
-    // ActorData->PhysicsControl = PhysicsControl;
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    ActorData->AckermannControllerSettings = AckermannSettings;
   }
   else
   {
