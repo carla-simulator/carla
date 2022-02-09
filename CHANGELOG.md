@@ -1,5 +1,6 @@
 ## Latest
 
+  * Added API function `get_telemetry_data` to the vehicle actor.
   * Added native ackermann controller:
     - `apply_ackermann_control`:  to apply an ackermann control command to a vehicle
     - `get_ackermann_controller_settings`: to get the last ackermann controller settings applied
