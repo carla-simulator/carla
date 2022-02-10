@@ -35,6 +35,21 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
     int sizeY;
 };
 
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMapGeneratorTileMetaInfo
+{
+    GENERATED_USTRUCT_BODY();
+
+    UPROPERTY(BlueprintReadWrite)   
+    bool bIsTiled = true;
+
+    UPROPERTY(BlueprintReadWrite)   
+    int indexX;
+
+    UPROPERTY(BlueprintReadWrite)
+    int indexY;
+};
+
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
 /// to be able to generate and manage maps and largemaps tiles for procedural
 /// map generation
@@ -53,8 +68,9 @@ public:
     /// event graph, which sets a heightmap to the @a landscape using
     /// ALandscapeProxy::LandscapeImportHeightMapFromRenderTarget(...)
     /// function, which is not exposed to be used in C++ code, only blueprints
+    /// @a metaTileInfo contains some useful info to execute this function
     UFUNCTION(BlueprintImplementableEvent)
-    void AssignLandscapeHeightMap(ALandscape* landscape);
+    void AssignLandscapeHeightMap(ALandscape* landscape, FMapGeneratorTileMetaInfo tileMetaInfo);
 
     /// Function called by Widget Blueprint which generates all tiles of map
     /// @a mapName, and saves them in @a destinationPath
@@ -96,9 +112,10 @@ private:
     bool CreateTilesMaps(const FMapGeneratorMetaInfo& metaInfo);
 
     /// Gets the landscape from the input world @a worldAssetData and
-    /// applies the heightmap to it
+    /// applies the heightmap to it. The tile index is indexX and indexY in
+    /// @a tileMetaInfo argument
     /// The funtions return true is success, otherwise false
     UFUNCTION()
-    bool ApplyHeightMapToLandscape(FAssetData& worldAssetData);
+    bool ApplyHeightMapToLandscape(FAssetData& worldAssetData, FMapGeneratorTileMetaInfo tileMetaInfo);
 };
 // #endif
