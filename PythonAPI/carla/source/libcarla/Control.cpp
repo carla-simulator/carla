@@ -138,7 +138,7 @@ namespace rpc {
     << ", engine_rpm=" << std::to_string(telemetry.engine_rpm)
     << ", gear=" << std::to_string(telemetry.gear)
     << ", drag=" << std::to_string(telemetry.drag)
-    << ", wheels=" << telemetry.wheels;
+    << ", wheels=" << telemetry.wheels << ')';
     return out;
   }
 

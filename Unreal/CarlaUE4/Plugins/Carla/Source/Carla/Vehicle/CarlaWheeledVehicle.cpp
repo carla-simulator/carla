@@ -784,7 +784,7 @@ FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
 
     Wheels.Add(WheelTelemetryData);
   }
-  
+
   TelemetryData.Wheels = Wheels;
 
   return TelemetryData;
