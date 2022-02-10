@@ -11,6 +11,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/ActorId.h"
+#include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
@@ -71,6 +72,16 @@ namespace rpc {
           control(value) {}
       ActorId actor;
       VehicleControl control;
+      MSGPACK_DEFINE_ARRAY(actor, control);
+    };
+
+    struct ApplyVehicleAckermannControl : CommandBase<ApplyVehicleAckermannControl> {
+      ApplyVehicleAckermannControl() = default;
+      ApplyVehicleAckermannControl(ActorId id, const VehicleAckermannControl &value)
+        : actor(id),
+          control(value) {}
+      ActorId actor;
+      VehicleAckermannControl control;
       MSGPACK_DEFINE_ARRAY(actor, control);
     };
 
@@ -236,6 +247,7 @@ namespace rpc {
         SpawnActor,
         DestroyActor,
         ApplyVehicleControl,
+        ApplyVehicleAckermannControl,
         ApplyWalkerControl,
         ApplyVehiclePhysicsControl,
         ApplyTransform,
