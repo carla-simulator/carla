@@ -63,7 +63,15 @@ LLVM_BASENAME=llvm-8.0
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
 
-if [[ -d "${LLVM_BASENAME}-install" ]] ; then
+if ${MAC_OS}; then
+  # overwrite the LLVM paths to use the MacOSX libraries
+  # LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
+  # LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
+  LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
+  LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
+fi
+
+if [[ -d "${LLVM_BASENAME}-install" || ${MAC_OS} ]] ; then
   log "${LLVM_BASENAME} already installed."
 else
   rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
@@ -98,16 +106,8 @@ else
   rm -Rf ${LLVM_BASENAME}-source ${LLVM_BASENAME}-build
 
 fi
-
 unset LLVM_BASENAME
 
-if ${MAC_OS}; then
-  # overwrite the LLVM paths to use the MacOSX libraries
-  # LLVM_INCLUDE=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1
-  # LLVM_LIBPATH=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
-  LLVM_INCLUDE=$(xcrun --show-sdk-path)/usr/include/c++/v1
-  LLVM_LIBPATH=$(xcrun --show-sdk-path)/usr/lib
-fi
 # ==============================================================================
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
