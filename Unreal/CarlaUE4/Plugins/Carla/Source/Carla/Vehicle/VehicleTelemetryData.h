@@ -20,13 +20,16 @@ struct FWheelTelemetryData
   float LatSlip = 0.0f;  // degrees
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float LongSlip = 0.0f;  // degrees
+  float LongSlip = 0.0f;
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float RPM = 0.0f;
+  float Omega = 0.0f;
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float NormalizedLoad = 0.0f;
+  float TireLoad = 0.0f;
+
+  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
+  float NormalizedTireLoad = 0.0f;
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
   float Torque = 0.0f;  // [Nm]
@@ -36,6 +39,12 @@ struct FWheelTelemetryData
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
   float LatForce  = 0.0f;  // [N]
+
+  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
+  float NormalizedLongForce = 0.0f;
+
+  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
+  float NormalizedLatForce  = 0.0f;
 };
 
 USTRUCT(BlueprintType)

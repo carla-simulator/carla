@@ -122,11 +122,14 @@ namespace rpc {
     out << "WheelTelemetryData(tire_friction=" << std::to_string(telemetry.tire_friction)
         << ", lat_slip=" << std::to_string(telemetry.lat_slip)
         << ", long_slip=" << std::to_string(telemetry.long_slip)
-        << ", rpm=" << std::to_string(telemetry.rpm)
-        << ", normalized_load=" << std::to_string(telemetry.normalized_load)
+        << ", omega=" << std::to_string(telemetry.omega)
+        << ", tire_load=" << std::to_string(telemetry.tire_load)
+        << ", normalized_tire_load=" << std::to_string(telemetry.normalized_tire_load)
         << ", torque=" << std::to_string(telemetry.torque)
         << ", long_force=" << std::to_string(telemetry.long_force)
-        << ", lat_force=" << std::to_string(telemetry.lat_force) << ')';
+        << ", lat_force=" << std::to_string(telemetry.lat_force)
+        << ", normalized_long_force=" << std::to_string(telemetry.normalized_long_force)
+        << ", normalized_lat_force=" << std::to_string(telemetry.normalized_lat_force) << ')';
     return out;
   }
 
@@ -583,23 +586,29 @@ void export_control() {
   ;
 
   class_<cr::WheelTelemetryData>("WheelTelemetryData")
-    .def(init<float, float, float, float, float, float, float, float>(
+    .def(init<float, float, float, float, float, float, float, float, float, float, float>(
         (arg("tire_friction")=0.0f,
          arg("lat_slip")=0.0f,
          arg("long_slip")=0.0f,
-         arg("rpm")=0.0f,
-         arg("normalized_load")=0.0f,
+         arg("omega")=0.0f,
+         arg("tire_load")=0.0f,
+         arg("normalized_tire_load")=0.0f,
          arg("torque")=0.0f,
          arg("long_force")=0.0f,
-         arg("lat_force")=0.0f)))
+         arg("lat_force")=0.0f,
+         arg("normalized_long_force")=0.0f,
+         arg("normalized_lat_force")=0.0f)))
     .def_readwrite("tire_friction", &cr::WheelTelemetryData::tire_friction)
     .def_readwrite("lat_slip", &cr::WheelTelemetryData::lat_slip)
     .def_readwrite("long_slip", &cr::WheelTelemetryData::long_slip)
-    .def_readwrite("rpm", &cr::WheelTelemetryData::rpm)
-    .def_readwrite("normalized_load", &cr::WheelTelemetryData::normalized_load)
+    .def_readwrite("omega", &cr::WheelTelemetryData::omega)
+    .def_readwrite("tire_load", &cr::WheelTelemetryData::tire_load)
+    .def_readwrite("normalized_tire_load", &cr::WheelTelemetryData::normalized_tire_load)
     .def_readwrite("torque", &cr::WheelTelemetryData::torque)
     .def_readwrite("long_force", &cr::WheelTelemetryData::long_force)
     .def_readwrite("lat_force", &cr::WheelTelemetryData::lat_force)
+    .def_readwrite("normalized_long_force", &cr::WheelTelemetryData::normalized_long_force)
+    .def_readwrite("normalized_lat_force", &cr::WheelTelemetryData::normalized_lat_force)
     .def("__eq__", &cr::WheelTelemetryData::operator==)
     .def("__ne__", &cr::WheelTelemetryData::operator!=)
     .def(self_ns::str(self_ns::self))

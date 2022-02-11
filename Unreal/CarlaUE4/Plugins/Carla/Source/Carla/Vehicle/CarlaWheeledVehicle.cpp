@@ -773,14 +773,17 @@ FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
 
     WheelTelemetryData.TireFriction = WheelsStates[w].tireFriction;
     WheelTelemetryData.LatSlip = FMath::RadiansToDegrees(WheelsStates[w].lateralSlip);
-    WheelTelemetryData.LongSlip = FMath::RadiansToDegrees(WheelsStates[w].longitudinalSlip);
-    WheelTelemetryData.RPM = OmegaToRPM(MovementComponent->PVehicle->mWheelsDynData.getWheelRotationSpeed(w));
+    WheelTelemetryData.LongSlip = WheelsStates[w].longitudinalSlip;
+    WheelTelemetryData.Omega = MovementComponent->PVehicle->mWheelsDynData.getWheelRotationSpeed(w);
 
     UVehicleWheel* Wheel = MovementComponent->Wheels[w];
-    WheelTelemetryData.NormalizedLoad = Wheel->DebugNormalizedTireLoad;
+    WheelTelemetryData.TireLoad = Wheel->DebugTireLoad / 100.0f;
+    WheelTelemetryData.NormalizedTireLoad = Wheel->DebugNormalizedTireLoad;
     WheelTelemetryData.Torque = Wheel->DebugWheelTorque / (100.0f * 100.0f);  // From cm2 to m2
     WheelTelemetryData.LongForce = Wheel->DebugLongForce / 100.f;
     WheelTelemetryData.LatForce = Wheel->DebugLatForce / 100.f;
+    WheelTelemetryData.NormalizedLongForce = (FMath::Abs(WheelTelemetryData.LongForce)*WheelTelemetryData.NormalizedTireLoad) / (WheelTelemetryData.TireLoad);
+    WheelTelemetryData.NormalizedLatForce = (FMath::Abs(WheelTelemetryData.LatForce)*WheelTelemetryData.NormalizedTireLoad) / (WheelTelemetryData.TireLoad);
 
     Wheels.Add(WheelTelemetryData);
   }
