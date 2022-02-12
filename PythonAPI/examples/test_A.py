@@ -41,8 +41,8 @@ from carla import ColorConverter as cc
 SHOW_PREVIEW = True
 IM_WIDTH = 360
 IM_HEIGHT = 240
-SECONDS_PER_EPISODE = 10
-REPLAY_MEMORY_SIZE = 5_000
+SECONDS_PER_EPISODE = 30
+REPLAY_MEMORY_SIZE = 20_000
 MIN_REPLAY_MEMORY_SIZE = 1_000
 MINIBATCH_SIZE = 16
 PREDICTION_BATCH_SIZE = 1
@@ -57,12 +57,11 @@ EPISODES = 40_000
 
 DISCOUNT = 0.99
 epsilon = 1
-EPSILON_DECAY = 0.95 #0.99975
+EPSILON_DECAY = 0.99995 #0.95 #0.99975
 MIN_EPSILON = 0.001
 
 AGGREGATE_STATS_EVERY = 10
-PREDICTED_ANGLES = [-0.7, -0.60, -0.48, -0.36, -0.24, -0.12, 0,
-                     0.12, 0.24, 0.36, 0.48, 0.60, 0.7]
+PREDICTED_ANGLES = [-1, 0, 1]
 
 class CarEnv:
     SHOW_CAM = SHOW_PREVIEW
@@ -134,29 +133,6 @@ class CarEnv:
 
         return self.front_camera
 
-    # def start(self):
-    #     self.collision_hist = deque(maxlen=2000)
-    #     self.actor_list = deque(maxlen=2000)
-    #     self.lane_invasion = deque(maxlen=2000)
-    #     self.obstacle_distance = deque(maxlen=2000)
-
-    #     # self.transform = random.choice(self.world.get_map().get_spawn_points())
-    #     # self.vehicle = self.world.spawn_actor(self.model_3, self.transform)
-    #     # self.actor_list.append(self.vehicle)
-
-    #     self.vehicle.set_transform(random.choice(self.world.get_map().get_spawn_points()))
-    #     self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
-    #     time.sleep(4)
-        
-    #     while self.front_camera is None:
-    #         time.sleep(0.01)
-
-    #     self.episode_start = time.time()
-    #     self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
-
-    #     return self.front_camera
-
-
     def collision_data(self, event):
         self.collision_hist.append(event)
 
@@ -173,18 +149,8 @@ class CarEnv:
     def process_img(self, image):
         image.convert(cc.CityScapesPalette)
         i = np.array(image.raw_data, dtype='uint8')
-        #copy_i = np.array(image.raw_data)##################################################################################################
-        #print(i.shape)
         i2 = i.reshape((self.im_height, self.im_width, 4))
-       # copy_i2 = copy_i.reshape((self.im_height, self.im_width, 4))
-        i3 = i2[:, :, :3]
-       # copy_i3 = copy_i2[:, :, :3]
-        # image.convert(cc.CityScapesPalette)
-        # array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
-        # array = np.reshape(array, (image.height, image.width, 4))
-        # array = array[:, :, :3]
-        # array = array[:, :, ::-1]
-        # print(i3.shape)        
+        i3 = i2[:, :, :3]       
         if self.SHOW_CAM:
             cv2.imshow("test", i3)
             cv2.waitKey(1)
@@ -196,7 +162,7 @@ class CarEnv:
         # Assign Reward for Collision
         reward_collision = 0
         if len(self.collision_hist) > 0:
-            reward_collision = -300
+            reward_collision = -6
             done = True
 
         #Crossing lanes
@@ -205,24 +171,23 @@ class CarEnv:
             lane_invasion_error = self.lane_invasion.pop()
             #print(lane_invasion_error)
             if 'Broken' in lane_invasion_error:
-                reward_lane += -30
-            if 'Solid' in lane_invasion_error:
-                reward_lane += -100
+                reward_lane += -2
+            elif 'Solid' in lane_invasion_error:
+                reward_lane += -4
         
         #Assign reward for obstacle distance
         reward_obs = 0
-        distance = 40
-        if len(self.obstacle_distance) > 0 :
-            distance = self.obstacle_distance.pop()
-            reward_obs = int(-40 + distance) if (distance < 10) else int(distance)
+        # distance = 40
+        # if len(self.obstacle_distance) > 0 :
+        #     distance = self.obstacle_distance.pop()
+        #     reward_obs = int(-40 + distance) if (distance < 10) else int(distance)
             
         # Assign reward for steering angle
-        reward_steer = 0
-        if abs(angle) > 0.2:
-            reward_steer = -50
+        # reward_steer = 0
+        # if abs(angle) > 0.2:
+        #     reward_steer = -0.6
 
-        # print("obs: ",reward_obs,"steer: ",reward_steer, "col: ", reward_collision, "lane: ", reward_lane)
-        total_reward = reward_obs + reward_steer + reward_collision + reward_lane
+        total_reward = reward_collision + reward_lane
         return total_reward, done
 
 
@@ -232,8 +197,10 @@ class CarEnv:
 
         v = self.vehicle.get_velocity()
         kmh = int(3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2))
-        
+        speed_reward = kmh/5
+
         total_rewards, done = self.get_rewards(angle)
+        total_rewards+=speed_reward
 
         if self.episode_start + SECONDS_PER_EPISODE < time.time():
             done = True
@@ -245,16 +212,17 @@ class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size # ()
         self.action_size = action_size
-        self.memory = deque(maxlen=20000)
+        self.memory = deque(maxlen=REPLAY_MEMORY_SIZE)
         self.training_initialized = False
         self.gamma = 0.9    # discount rate
         self.loss_list = deque(maxlen=20000)
         self.epsilon = 1  # exploration rate
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.99995 # changed from 0.995, maybe it can be even slower 
+        self.epsilon_min = MIN_EPSILON #0.01
+        self.epsilon_decay = EPSILON_DECAY #0.99995 # changed to 0.95
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
+        self.episode_number = 0
         self.terminate = False
 
     # @jit
@@ -267,10 +235,11 @@ class DQNAgent:
         x = tf.keras.layers.GlobalAveragePooling2D()(x)
         x = tf.keras.layers.Flatten()(x)
         x = tf.keras.layers.Dense(units=40, activation='relu')(x)
-        output = tf.keras.layers.Dense(units=13, activation='linear')(x)
+        output = tf.keras.layers.Dense(units=3, activation='linear')(x)
         # Compile the Model
         model = tf.keras.Model(inputs, output)
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate))
+        print(model.summary)
         return model
 
 
@@ -291,7 +260,6 @@ class DQNAgent:
         # randomly select action
         if np.random.rand() <= self.epsilon:
             return (random.randrange(self.action_size),True)
-            #return random.randint(5,7)
         # use NN to predict action
         state = np.expand_dims(state, axis=0)
         act_values = self.model.predict(state)
@@ -303,13 +271,11 @@ class DQNAgent:
             return
 
         minibatch = random.sample(self.memory, MINIBATCH_SIZE)
-
         current_states = np.array([transition[0] for transition in minibatch])/255
-        # with self.graph.as_default():
-        current_qs_list = self.model.predict(current_states, PREDICTION_BATCH_SIZE)
 
+        current_qs_list = self.model.predict(current_states, PREDICTION_BATCH_SIZE)
         new_current_states = np.array([transition[3] for transition in minibatch])/255
-        # with self.graph.as_default():
+
         future_qs_list = self.target_model.predict(new_current_states, PREDICTION_BATCH_SIZE)
 
         X = []
@@ -330,52 +296,16 @@ class DQNAgent:
 
         history = self.model.fit(np.array(X)/255, np.array(y), batch_size=TRAINING_BATCH_SIZE, verbose=0, shuffle=False)  
         loss = history.history['loss'][0]
-        # print("Loss: ",loss)
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
+
         self.loss_list.append(loss)
 
-        # if len(self.memory) < MIN_REPLAY_MEMORY_SIZE:
-        #     return
-        # minibatch = random.sample(self.memory, MINIBATCH_SIZE)
-        # states, targets_f = [], []
-        # for state, action, reward, next_state, done in minibatch:
-        #     # if done, set target = reward
-        #     target = reward
-        #     # if not done, predict future discounted reward with the Bellman equation
-        #     next_state = np.expand_dims(next_state, axis=0)
-        #    # print("Next_State Shape: ",next_state.shape)
-        #     if not done:
-        #         values = self.model.predict(next_state)
-        #         target = (reward + self.gamma * np.argmax(values[0]))
-
-        #     state = np.expand_dims(state, axis=0) 
-        #    # print("State Shape;", state.shape)      
-        #     target_f = self.model.predict(state)
-        #     target_f[0][action] = target 
-
-        #     # filtering out states and targets for training
-        #     states.append(state[0])
-        #     targets_f.append(target_f[0])
-
-        # # RUN ONE ITERATION OF GRADIENT DESCENT
-        # history = self.model.fit(np.array(states), np.array(targets_f), batch_size=TRAINING_BATCH_SIZE, verbose=0, shuffle = False)
-        # # Keeping track of loss
-        # loss = history.history['loss'][0]
-        # # print("Loss: ",loss)
-        # if self.epsilon > self.epsilon_min:
-        #     self.epsilon *= self.epsilon_decay
-        # self.loss_list.append(loss)
+        if self.episode_number%5 == 0 and self.episode_number > 1: 
+             self.target_model.set_weights(self.model.get_weights())
 
     def get_qs(self, state):
         return self.model.predict(np.expand_dims(state, axis=0))[0]
 
     def train_in_loop(self):
-        # X = np.random.uniform(size=(1, IM_HEIGHT, IM_WIDTH, 3)).astype(np.float32)
-        # y = np.random.uniform(size=(1, 3)).astype(np.float32)
-        # # with self.graph.as_default():
-        # self.model.fit(X,y, verbose=False, batch_size=1)
-
         self.training_initialized = True
 
         while True:
@@ -387,7 +317,7 @@ class DQNAgent:
     def load_memory(self):
         try:
             print("Prev length: ", len(self.memory))
-            with open('memory2.dump', 'rb') as f:
+            with open('memory1.dump', 'rb') as f:
                 agent.memory = pickle.load(f)
             print("New length: ", len(self.memory))
         except:
@@ -415,13 +345,13 @@ if __name__ == '__main__':
 
     # Create agent and environment
     
-    agent = DQNAgent(state_size=(240,360,3),action_size=13)
+    agent = DQNAgent(state_size=(240,360,3),action_size=3)
     #agent.model.load_weights('_out/savedWeights.h5')
-    agent.model = tf.keras.models.load_model('_out/savedModel_10750.h5')
-    agent.target_model = tf.keras.models.load_model('_out/savedTargetModel_10750.h5')
+    #agent.model = tf.keras.models.load_model('_out/savedModel_12500.h5')
+    #agent.target_model = tf.keras.models.load_model('_out/savedTargetModel_12500.h5')
     
     # load Agent Memory 
-    agent.load_memory()
+    #agent.load_memory()
     
     env = CarEnv()
 
@@ -429,24 +359,24 @@ if __name__ == '__main__':
     episode_loss = []
     episode_number = []
 
-    with open("_out/loss_lists.txt", "r") as text_file:
-        content = text_file.read()
-        file_content = content.splitlines()
+    # with open("_out/loss_lists.txt", "r") as text_file:
+    #     content = text_file.read()
+    #     file_content = content.splitlines()
 
-        episode_number = [int(i) for i in file_content[0].split()]
-        episode_loss = [float(i) for i in file_content[3].split()]
+    #     episode_number = [int(i) for i in file_content[0].split()]
+    #     episode_loss = [float(i) for i in file_content[3].split()]
 
     #load these
     reward_list = []
     ten_reward_array = []
     episode_list = []
 
-    with open("_out/reward_lists.txt", "r") as text_file:
-        content = text_file.read()
-        file_content = content.splitlines()
+    # with open("_out/reward_lists.txt", "r") as text_file:
+    #     content = text_file.read()
+    #     file_content = content.splitlines()
 
-        episode_list = [int(i) for i in file_content[0].split()]
-        ten_reward_array = [float(i) for i in file_content[3].split()]
+    #     episode_list = [int(i) for i in file_content[0].split()]
+    #     ten_reward_array = [float(i) for i in file_content[3].split()]
 
     elapsed_time = []
     total_steps = []
@@ -464,22 +394,21 @@ if __name__ == '__main__':
     
     # Iterate over episodes
     #current_state = env.start()
-    for episode in tqdm(range(10751, EPISODES + 1), ascii=True, unit='episodes'):
+    for episode in tqdm(range(0, EPISODES + 1), ascii=True, unit='episodes'):
+        agent.episode_number = episode
+        print("eps: ", agent.epsilon)
         start_time = time.time()
 
         env.collision_hist = deque(maxlen=1000)
         env.lane_invasion = deque(maxlen=1000)
         env.col_sensor = deque(maxlen=1000)
 
-        # Update tensorboard step every episode
-        # agent.tensorboard.step = episode
-
         # Restarting episode - reset episode reward and step number
         if episode%50 == 0:
             agent.model.save_weights("_out/savedWeights.h5")
         if episode % 250 == 0:
             agent.model.save(str("_out/savedModel_"+str(episode) + ".h5"))
-            agent.target_model.save(str("_out/savedTargetModel_"+str(episode) + ".h5"))
+            #agent.target_model.save(str("_out/savedTargetModel_"+str(episode) + ".h5"))
             
             if save_before:
                 num = 2
@@ -487,14 +416,14 @@ if __name__ == '__main__':
             else:
                 num = 1
                 save_before = True
-            with open(str('memory'+str(num)+'.dump'), 'wb') as f:
-                pickle.dump(agent.memory, f)
+            # with open(str('memory'+str(num)+'.dump'), 'wb') as f:
+            #     pickle.dump(agent.memory, f)
 
         episode_reward = 0
         step = 1
 
         #Store into episode loss graph
-        if episode%10 == 1 and episode > 10751:
+        if episode%10 == 1 and episode > 1:
             if len(agent.loss_list) > 0:
                 episode_loss.append(sum(agent.loss_list) / len(agent.loss_list))
                 episode_number.append(episode-1)
@@ -554,17 +483,15 @@ if __name__ == '__main__':
         while True:
 
             # This part stays mostly the same, the change is to query a model for Q values
-            if np.random.random() > epsilon:
+            if np.random.random() > agent.epsilon:
                 # Get action from Q table
                 action = np.argmax(agent.get_qs(current_state))
             else:
                 # Get random action
-                action = random.randrange(13)
+                action = random.randrange(3)
                 # This takes no time, so we add a delay matching 60 FPS (prediction above takes longer)
                 time.sleep(1/FPS)
             # action, busy = agent.act(current_state)
-            # if busy == True:
-            #     time.sleep(1/FPS)
 
             new_state, reward, done, _ = env.step(action)
 
@@ -572,7 +499,6 @@ if __name__ == '__main__':
             episode_reward += reward
             
             # Every step we update replay memory
-            # print("Current and New State Shapes: ",current_state.shape, new_state.shape)
             agent.memorize(current_state, action, reward, new_state, done)
 
             current_state = new_state
@@ -598,20 +524,14 @@ if __name__ == '__main__':
             average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
             min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
             max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            #agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
-
-            # Save model, but only when min reward is greater or equal a set value
-            # if min_reward >= MIN_REWARD:
-            #     agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
 
         # Decay epsilon
-        if epsilon > MIN_EPSILON:
-            epsilon *= EPSILON_DECAY
-            epsilon = max(MIN_EPSILON, epsilon)
+        if agent.epsilon > agent.epsilon_min:
+            agent.epsilon *= agent.epsilon_decay
 
     print("Average Time for 360 x 240: ", sum(elapsed_time)/len(elapsed_time))
     print("Average steps for 360 x 240 ", sum(total_steps)/len(total_steps))
     # Set termination flag for training thread and wait for it to finish
     agent.terminate = True
     trainer_thread.join()
-    #agent.model.save(f'models/{MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time.time())}.model')
+    agent.model.save('final_model.h5')
