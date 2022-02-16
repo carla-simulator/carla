@@ -38,6 +38,7 @@ class ConstantVelocityAgent(BasicAgent):
         self._target_speed = target_speed  # [Km/h]
         self._speed = 3.6 * vehicle.get_velocity().length()  # [Km/h]
         self._constant_velocity_stop_time = None
+        self.is_constant_velocity_active = True
 
         # Additional parameters
         self._restart_time = float('inf')  # Time after collision before the constant velocity behavior starts again
@@ -54,7 +55,7 @@ class ConstantVelocityAgent(BasicAgent):
             self._deceleration = opt_dict['acceleration']
 
         self._set_collision_sensor()
-        self._set_constant_velocity()
+        self._set_constant_velocity(target_speed)
 
     def set_target_speed(self, speed):
         """Changes the target speed of the agent"""
@@ -70,7 +71,7 @@ class ConstantVelocityAgent(BasicAgent):
 
     def restart_constant_velocity(self):
         """Public method to restart the constant velocity"""
-        self._set_constant_velocity()
+        self._set_constant_velocity(self._target_speed)
 
     def _set_constant_velocity(self, new_speed):
         """Forces the agent to drive at the specified speed"""
