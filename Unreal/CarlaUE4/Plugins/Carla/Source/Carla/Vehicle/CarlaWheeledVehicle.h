@@ -8,13 +8,17 @@
 
 #include "WheeledVehicle.h"
 
+#include "Vehicle/AckermannController.h"
+#include "Vehicle/AckermannControllerSettings.h"
 #include "Vehicle/CarlaWheeledVehicleState.h"
+#include "Vehicle/VehicleAckermannControl.h"
 #include "Vehicle/VehicleControl.h"
 #include "Vehicle/VehicleLightState.h"
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
+#include "WheeledVehicleMovementComponentNW.h"
 #include "VehicleAnimInstance.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
@@ -86,6 +90,13 @@ public:
     return LastAppliedControl;
   }
 
+  /// Vehicle Ackermann control currently applied to this vehicle.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  const FVehicleAckermannControl &GetVehicleAckermannControl() const
+  {
+    return LastAppliedAckermannControl;
+  }
+
   /// Transform of the vehicle. Location is shifted so it matches center of the
   /// vehicle bounds rather than the actor's location.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -148,6 +159,11 @@ public:
   FVehiclePhysicsControl GetVehiclePhysicsControl() const;
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  FAckermannControllerSettings GetAckermannControllerSettings() const {
+    return AckermannController.GetSettings();
+  }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void RestoreVehiclePhysicsControl();
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -155,10 +171,16 @@ public:
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
 
+  void ApplyAckermannControllerSettings(const FAckermannControllerSettings &AckermannControllerSettings) {
+    return AckermannController.ApplySettings(AckermannControllerSettings);
+  }
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSimulatePhysics(bool enabled);
 
   void SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W, const FVehiclePhysicsControl &PhysicsControl);
+
+  void SetWheelCollisionNW(UWheeledVehicleMovementComponentNW *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
 
@@ -178,11 +200,29 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
   {
+    if (bAckermannControlActive) {
+      AckermannController.Reset();
+    }
+    bAckermannControlActive = false;
+
     if (InputControl.Priority <= Priority)
     {
       InputControl.Control = Control;
       InputControl.Priority = Priority;
     }
+  }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ApplyVehicleAckermannControl(const FVehicleAckermannControl &AckermannControl, EVehicleInputPriority Priority)
+  {
+    bAckermannControlActive = true;
+    LastAppliedAckermannControl = AckermannControl;
+    AckermannController.SetTargetPoint(AckermannControl);
+  }
+
+  bool IsAckermannControlActive() const
+  {
+    return bAckermannControlActive;
   }
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -296,7 +336,11 @@ private:
   InputControl;
 
   FVehicleControl LastAppliedControl;
+  FVehicleAckermannControl LastAppliedAckermannControl;
   FVehiclePhysicsControl LastPhysicsControl;
+
+  bool bAckermannControlActive = false;
+  FAckermannController AckermannController;
 
 public:
 
@@ -327,6 +371,9 @@ public:
   UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
   float CarSimOriginOffset = 150.f;
 //-------------------------------------------
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
+  bool bIsNWVehicle = false;
 
 private:
 

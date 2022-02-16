@@ -29,6 +29,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/Version.h>
+#include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
@@ -50,6 +51,7 @@
 #include <carla/rpc/Vector2D.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleDoor.h>
+#include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
@@ -1360,6 +1362,81 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(apply_ackermann_control_to_vehicle) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleAckermannControl Control) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "apply_ackermann_control_to_vehicle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyAckermannControlToVehicle(Control, EVehicleInputPriority::Client);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "apply_ackermann_control_to_vehicle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_ackermann_controller_settings) << [this](
+      cr::ActorId ActorId) -> R<cr::AckermannControllerSettings>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+        if (!CarlaActor)
+    {
+      return RespondError(
+          "get_ackermann_controller_settings",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    FAckermannControllerSettings Settings;
+    ECarlaServerResponse Response =
+        CarlaActor->GetAckermannControllerSettings(Settings);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_ackermann_controller_settings",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return cr::AckermannControllerSettings(Settings);
+  };
+
+  BIND_SYNC(apply_ackermann_controller_settings) << [this](
+      cr::ActorId ActorId,
+      cr::AckermannControllerSettings AckermannSettings) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "apply_ackermann_controller_settings",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyAckermannControllerSettings(FAckermannControllerSettings(AckermannSettings));
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "apply_ackermann_controller_settings",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(apply_control_to_walker) << [this](
       cr::ActorId ActorId,
       cr::WalkerControl Control) -> R<void>
@@ -2050,6 +2127,7 @@ void FCarlaServer::FPimpl::BindActions()
       },
       [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
+      [=](auto, const C::ApplyVehicleAckermannControl &c) {  MAKE_RESULT(apply_ackermann_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyVehiclePhysicsControl &c) {  MAKE_RESULT(apply_physics_control(c.actor, c.physics_control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },

@@ -6,8 +6,17 @@
 
 #include "Carla.h"
 #include "Carla/Actor/ActorDescription.h"
+#include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Lights/CarlaLight.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
@@ -470,7 +479,7 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
 
     // check actor 1
     FCarlaActor *FoundActor1 = Episode->GetActorRegistry().FindCarlaActor(Actor1);
-    if (FoundActor1 != nullptr) { 
+    if (FoundActor1 != nullptr) {
       if (FoundActor1->GetActorInfo() != nullptr)
       {
         auto Role = FoundActor1->GetActorInfo()->Description.Variations.Find("role_name");
@@ -485,7 +494,7 @@ void ACarlaRecorder::AddCollision(AActor *Actor1, AActor *Actor2)
 
     // check actor 2
     FCarlaActor *FoundActor2 = Episode->GetActorRegistry().FindCarlaActor(Actor2);
-    if (FoundActor2 != nullptr) { 
+    if (FoundActor2 != nullptr) {
       if (FoundActor2->GetActorInfo() != nullptr)
       {
         auto Role = FoundActor2->GetActorInfo()->Description.Variations.Find("role_name");
