@@ -1,0 +1,73 @@
+from dqnAgent import Agent
+from collections import deque
+import matplotlib.pyplot as plt
+import numpy as np
+import torch 
+from carla_agent_pytorch import CarEnv
+import torchvision
+
+agent = Agent(state_size=(3,240,360),action_size=3,seed=0)
+env = CarEnv()
+
+def dqn(n_episodes= 20_000, max_timesteps = 1000, epsilon_start=1.0, epsilon_min = 0.01,
+       epsilon_decay=0.99996):
+    """Deep Q-Learning
+    
+    Params
+    ======
+        n_episodes (int): maximum number of training epsiodes
+        max_timesteps (int): maximum number of timesteps per episode
+        epsilon_start (float): starting value of epsilon, for epsilon-greedy action selection
+        epsilon_min (float): minimum value of epsilon 
+        epsilon_decay (float): mutiplicative factor (per episode) for decreasing epsilon
+        
+    """
+    scores = [] # list containing score from each episode
+    scores_window = deque(maxlen=1000) # last 100 scores
+    epsilon = epsilon_start
+
+    for i_episode in range(1, n_episodes+1):
+        state = env.restart()
+        score = 0
+        done = False
+        print("\n\nEpisode Number: ",i_episode)
+        for t in range(max_timesteps):
+            action = agent.act(state,epsilon)
+            next_state,reward,done,_ = env.step(action, t)
+            agent.step(state,action,reward,next_state,done)
+            ## above step decides whether we will train(learn) the network
+            ## actor (local_qnetwork) or we will fill the replay buffer
+            ## if len replay buffer is equal to the batch size then we will
+            ## train the network or otherwise we will add experience tuple in our
+            ## replay buffer.
+            state = next_state
+            score += reward
+            if done:
+                break
+            scores_window.append(score) ## save the most recent score
+            scores.append(score) ## sae the most recent score
+            epsilon = max(epsilon*epsilon_decay,epsilon_min)## decrease the epsilon
+            print('\rEpisode {}\tAverage Score {:.2f}'.format(i_episode,np.mean(scores_window)), end="")
+            if i_episode %100==0:
+                print('\rEpisode {}\tAverage Score {:.2f}'.format(i_episode,np.mean(scores_window)))
+                
+            if np.mean(scores_window)>=200.0:
+                print('\nEnvironment solve in {:d} epsiodes!\tAverage score: {:.2f}'.format(i_episode-100,
+                                                                                           np.mean(scores_window)))
+                torch.save(agent.qnetwork_local.state_dict(),'checkpoint.pth')
+                break
+
+        # End of episode - destroy agents
+        for actor in env.actor_list:
+            actor.destroy()        
+    return scores
+
+scores= dqn()
+
+#plot the scores
+fig = plt.figure()
+ax = fig.add_subplot(111)
+plt.plot(np.arange(len(scores)),scores)
+plt.ylabel('Score')
+plt.xlabel('Epsiode #')
+plt.show()

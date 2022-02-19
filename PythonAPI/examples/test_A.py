@@ -73,6 +73,7 @@ class CarEnv:
         self.client = carla.Client("127.0.0.1", 2000)
         self.client.set_timeout(10.0)
         self.world = self.client.get_world()
+        self.world.constant_velocity_enabled=True
         self.blueprint_library = self.world.get_blueprint_library()
         self.model_3 = self.blueprint_library.filter("model3")[0]
 
@@ -103,6 +104,7 @@ class CarEnv:
         self.sensor.listen(lambda data: self.process_img(data))
 
         self.vehicle.apply_control(carla.VehicleControl(throttle=0.0, brake=0.0))
+        self.vehicle.enable_constant_velocity(carla.Vector3D(11, 0, 0))
         time.sleep(4)
 
         col_sensor = self.blueprint_library.find("sensor.other.collision")
@@ -193,11 +195,12 @@ class CarEnv:
 
     def step(self, actionIndex):
         angle = PREDICTED_ANGLES[actionIndex]
-        self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=angle))
-
+        self.vehicle.apply_control(carla.VehicleControl(steer=angle))
         v = self.vehicle.get_velocity()
+        #self.vehicle.set_target_velocity(v)
+
         kmh = int(3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2))
-        speed_reward = kmh/5
+        speed_reward = 1
 
         total_rewards, done = self.get_rewards(angle)
         total_rewards+=speed_reward
@@ -267,40 +270,41 @@ class DQNAgent:
     
     
     def replay(self):
-        if len(self.memory) < MIN_REPLAY_MEMORY_SIZE:
-            return
+        with tf.device('/gpu:0'):
+            if len(self.memory) < MIN_REPLAY_MEMORY_SIZE:
+                return
 
-        minibatch = random.sample(self.memory, MINIBATCH_SIZE)
-        current_states = np.array([transition[0] for transition in minibatch])/255
+            minibatch = random.sample(self.memory, MINIBATCH_SIZE)
+            current_states = np.array([transition[0] for transition in minibatch])/255
 
-        current_qs_list = self.model.predict(current_states, PREDICTION_BATCH_SIZE)
-        new_current_states = np.array([transition[3] for transition in minibatch])/255
+            current_qs_list = self.model.predict(current_states, PREDICTION_BATCH_SIZE)
+            new_current_states = np.array([transition[3] for transition in minibatch])/255
 
-        future_qs_list = self.target_model.predict(new_current_states, PREDICTION_BATCH_SIZE)
+            future_qs_list = self.target_model.predict(new_current_states, PREDICTION_BATCH_SIZE)
 
-        X = []
-        y = []
+            X = []
+            y = []
 
-        for index, (current_state, action, reward, new_state, done) in enumerate(minibatch):
-            if not done:
-                max_future_q = np.max(future_qs_list[index])
-                new_q = reward + DISCOUNT * max_future_q
-            else:
-                new_q = reward
+            for index, (current_state, action, reward, new_state, done) in enumerate(minibatch):
+                if not done:
+                    max_future_q = np.max(future_qs_list[index])
+                    new_q = reward + DISCOUNT * max_future_q
+                else:
+                    new_q = reward
 
-            current_qs = current_qs_list[index]
-            current_qs[action] = new_q
+                current_qs = current_qs_list[index]
+                current_qs[action] = new_q
 
-            X.append(current_state)
-            y.append(current_qs)
+                X.append(current_state)
+                y.append(current_qs)
 
-        history = self.model.fit(np.array(X)/255, np.array(y), batch_size=TRAINING_BATCH_SIZE, verbose=0, shuffle=False)  
-        loss = history.history['loss'][0]
+            history = self.model.fit(np.array(X)/255, np.array(y), batch_size=TRAINING_BATCH_SIZE, verbose=0, shuffle=False)  
+            loss = history.history['loss'][0]
 
-        self.loss_list.append(loss)
+            self.loss_list.append(loss)
 
-        if self.episode_number%5 == 0 and self.episode_number > 1: 
-             self.target_model.set_weights(self.model.get_weights())
+            if self.episode_number%5 == 0 and self.episode_number > 1: 
+                self.target_model.set_weights(self.model.get_weights())
 
     def get_qs(self, state):
         return self.model.predict(np.expand_dims(state, axis=0))[0]
@@ -394,140 +398,141 @@ if __name__ == '__main__':
     
     # Iterate over episodes
     #current_state = env.start()
-    for episode in tqdm(range(0, EPISODES + 1), ascii=True, unit='episodes'):
-        agent.episode_number = episode
-        print("eps: ", agent.epsilon)
-        start_time = time.time()
+    with tf.device('/gpu:1'):
+        for episode in tqdm(range(0, EPISODES + 1), ascii=True, unit='episodes'):
+            agent.episode_number = episode
+            print("eps: ", agent.epsilon)
+            start_time = time.time()
 
-        env.collision_hist = deque(maxlen=1000)
-        env.lane_invasion = deque(maxlen=1000)
-        env.col_sensor = deque(maxlen=1000)
+            env.collision_hist = deque(maxlen=1000)
+            env.lane_invasion = deque(maxlen=1000)
+            env.col_sensor = deque(maxlen=1000)
 
-        # Restarting episode - reset episode reward and step number
-        if episode%50 == 0:
-            agent.model.save_weights("_out/savedWeights.h5")
-        if episode % 250 == 0:
-            agent.model.save(str("_out/savedModel_"+str(episode) + ".h5"))
-            #agent.target_model.save(str("_out/savedTargetModel_"+str(episode) + ".h5"))
-            
-            if save_before:
-                num = 2
-                save_before = False
-            else:
-                num = 1
-                save_before = True
-            # with open(str('memory'+str(num)+'.dump'), 'wb') as f:
-            #     pickle.dump(agent.memory, f)
+            # Restarting episode - reset episode reward and step number
+            if episode%50 == 0:
+                agent.model.save_weights("_out/savedWeights.h5")
+            if episode % 250 == 0:
+                agent.model.save(str("_out/savedModel_"+str(episode) + ".h5"))
+                #agent.target_model.save(str("_out/savedTargetModel_"+str(episode) + ".h5"))
+                
+                if save_before:
+                    num = 2
+                    save_before = False
+                else:
+                    num = 1
+                    save_before = True
+                # with open(str('memory'+str(num)+'.dump'), 'wb') as f:
+                #     pickle.dump(agent.memory, f)
 
-        episode_reward = 0
-        step = 1
+            episode_reward = 0
+            step = 1
 
-        #Store into episode loss graph
-        if episode%10 == 1 and episode > 1:
-            if len(agent.loss_list) > 0:
-                episode_loss.append(sum(agent.loss_list) / len(agent.loss_list))
-                episode_number.append(episode-1)
-                agent.loss_list.clear()
+            #Store into episode loss graph
+            if episode%10 == 1 and episode > 1:
+                if len(agent.loss_list) > 0:
+                    episode_loss.append(sum(agent.loss_list) / len(agent.loss_list))
+                    episode_number.append(episode-1)
+                    agent.loss_list.clear()
 
-                plt.figure(1)
-                plt.ylabel('Loss')
+                    plt.figure(1)
+                    plt.ylabel('Loss')
+                    plt.xlabel('Episodes')
+                    plt.title('Figure 1: Average Loss over Episodes')
+
+                    plt.plot(episode_number,episode_loss)
+                    plt.savefig('_out/loss_graph.png')
+
+                    with open('_out/loss_lists.txt', "w") as myfile:
+                        for eps in episode_number:
+                            myfile.write(str(eps) +" ")
+
+                        myfile.write("\n\n\n")
+
+                        for loss in episode_loss:
+                            myfile.write(str(loss) +" ")
+
+                        myfile.write("\n\n\n")
+
+                ten_reward_average = sum(reward_list)/len(reward_list)
+                ten_reward_array.append(ten_reward_average)
+                reward_list.clear()
+
+                plt.figure(2)
+                episode_list.append(episode-1)
                 plt.xlabel('Episodes')
-                plt.title('Figure 1: Average Loss over Episodes')
+                plt.ylabel('Rewards')
+                plt.title('Figure 2: Average Rewards over Episodes')  
+                plt.plot(episode_list, ten_reward_array)
+                plt.savefig('_out/reward_graph.png')
 
-                plt.plot(episode_number,episode_loss)
-                plt.savefig('_out/loss_graph.png')
-
-                with open('_out/loss_lists.txt', "w") as myfile:
-                    for eps in episode_number:
+                with open('_out/reward_lists.txt', "w") as myfile:
+                    for eps in episode_list:
                         myfile.write(str(eps) +" ")
 
                     myfile.write("\n\n\n")
 
-                    for loss in episode_loss:
-                        myfile.write(str(loss) +" ")
-
+                    for reward in ten_reward_array:
+                        myfile.write(str(reward) +" ")
+                        
                     myfile.write("\n\n\n")
 
-            ten_reward_average = sum(reward_list)/len(reward_list)
-            ten_reward_array.append(ten_reward_average)
-            reward_list.clear()
-
-            plt.figure(2)
-            episode_list.append(episode-1)
-            plt.xlabel('Episodes')
-            plt.ylabel('Rewards')
-            plt.title('Figure 2: Average Rewards over Episodes')  
-            plt.plot(episode_list, ten_reward_array)
-            plt.savefig('_out/reward_graph.png')
-
-            with open('_out/reward_lists.txt', "w") as myfile:
-                for eps in episode_list:
-                    myfile.write(str(eps) +" ")
-
-                myfile.write("\n\n\n")
-
-                for reward in ten_reward_array:
-                    myfile.write(str(reward) +" ")
-                    
-                myfile.write("\n\n\n")
-
-        
-        # Reset environment and get initial episode state
-        current_state = env.restart() #return front camera without actor destroy
-
-        # Reset flag and start iterating until episode ends
-        done = False
-        episode_start = time.time()
-
-        # Play for given number of seconds only
-        while True:
-
-            # This part stays mostly the same, the change is to query a model for Q values
-            if np.random.random() > agent.epsilon:
-                # Get action from Q table
-                action = np.argmax(agent.get_qs(current_state))
-            else:
-                # Get random action
-                action = random.randrange(3)
-                # This takes no time, so we add a delay matching 60 FPS (prediction above takes longer)
-                time.sleep(1/FPS)
-            # action, busy = agent.act(current_state)
-
-            new_state, reward, done, _ = env.step(action)
-
-            # Transform new continous state to new discrete state and count reward
-            episode_reward += reward
             
-            # Every step we update replay memory
-            agent.memorize(current_state, action, reward, new_state, done)
+            # Reset environment and get initial episode state
+            current_state = env.restart() #return front camera without actor destroy
 
-            current_state = new_state
-            step += 1
+            # Reset flag and start iterating until episode ends
+            done = False
+            episode_start = time.time()
 
-            if done:
-                episode_reward /= (step-1)
-                reward_list.append(episode_reward)
-                end_time = time.time() - start_time
-                print("\nElapsed Time: ", end_time)
-                print("\nNumber of steps: ", step)
-                elapsed_time.append(end_time)
-                total_steps.append(step)
-                break
+            # Play for given number of seconds only
+            while True:
 
-        # End of episode - destroy agents
-        for actor in env.actor_list:
-            actor.destroy()
+                # This part stays mostly the same, the change is to query a model for Q values
+                if np.random.random() > agent.epsilon:
+                    # Get action from Q table
+                    action = np.argmax(agent.get_qs(current_state))
+                else:
+                    # Get random action
+                    action = random.randrange(3)
+                    # This takes no time, so we add a delay matching 60 FPS (prediction above takes longer)
+                    time.sleep(1/FPS)
+                # action, busy = agent.act(current_state)
 
-        # Append episode reward to a list and log stats (every given number of episodes)
-        ep_rewards.append(episode_reward)
-        if not episode % AGGREGATE_STATS_EVERY or episode == 1:
-            average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
-            max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
+                new_state, reward, done, _ = env.step(action)
 
-        # Decay epsilon
-        if agent.epsilon > agent.epsilon_min:
-            agent.epsilon *= agent.epsilon_decay
+                # Transform new continous state to new discrete state and count reward
+                episode_reward += reward
+                
+                # Every step we update replay memory
+                agent.memorize(current_state, action, reward, new_state, done)
+
+                current_state = new_state
+                step += 1
+
+                if done:
+                    episode_reward /= (step-1)
+                    reward_list.append(episode_reward)
+                    end_time = time.time() - start_time
+                    print("\nElapsed Time: ", end_time)
+                    print("\nNumber of steps: ", step)
+                    elapsed_time.append(end_time)
+                    total_steps.append(step)
+                    break
+
+            # End of episode - destroy agents
+            for actor in env.actor_list:
+                actor.destroy()
+
+            # Append episode reward to a list and log stats (every given number of episodes)
+            ep_rewards.append(episode_reward)
+            if not episode % AGGREGATE_STATS_EVERY or episode == 1:
+                average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
+                min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
+                max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
+
+            # Decay epsilon
+            if agent.epsilon > agent.epsilon_min:
+                agent.epsilon *= agent.epsilon_decay
 
     print("Average Time for 360 x 240: ", sum(elapsed_time)/len(elapsed_time))
     print("Average steps for 360 x 240 ", sum(total_steps)/len(total_steps))
