@@ -5,9 +5,15 @@ import numpy as np
 import torch 
 from carla_agent_pytorch import CarEnv
 import torchvision
+import gym
 
-agent = Agent(state_size=(3,240,360),action_size=3,seed=0)
-env = CarEnv()
+env = gym.make('Breakout-v4', render_mode='human')
+agent = Agent(state_size=(3,210,160),action_size=4,seed=0)
+#env = CarEnv()
+#plot the scores
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
 
 def dqn(n_episodes= 20_000, max_timesteps = 1000, epsilon_start=1.0, epsilon_min = 0.01,
        epsilon_decay=0.99996):
@@ -23,17 +29,18 @@ def dqn(n_episodes= 20_000, max_timesteps = 1000, epsilon_start=1.0, epsilon_min
         
     """
     scores = [] # list containing score from each episode
-    scores_window = deque(maxlen=1000) # last 100 scores
     epsilon = epsilon_start
+    env.render()
 
     for i_episode in range(1, n_episodes+1):
-        state = env.restart()
+        #state = env.restart()
+        state = env.reset()
         score = 0
         done = False
         print("\n\nEpisode Number: ",i_episode)
         for t in range(max_timesteps):
             action = agent.act(state,epsilon)
-            next_state,reward,done,_ = env.step(action, t)
+            next_state,reward,done,_ = env.step(action)
             agent.step(state,action,reward,next_state,done)
             ## above step decides whether we will train(learn) the network
             ## actor (local_qnetwork) or we will fill the replay buffer
@@ -44,30 +51,26 @@ def dqn(n_episodes= 20_000, max_timesteps = 1000, epsilon_start=1.0, epsilon_min
             score += reward
             if done:
                 break
-            scores_window.append(score) ## save the most recent score
-            scores.append(score) ## sae the most recent score
+
             epsilon = max(epsilon*epsilon_decay,epsilon_min)## decrease the epsilon
-            print('\rEpisode {}\tAverage Score {:.2f}'.format(i_episode,np.mean(scores_window)), end="")
-            if i_episode %100==0:
-                print('\rEpisode {}\tAverage Score {:.2f}'.format(i_episode,np.mean(scores_window)))
-                
-            if np.mean(scores_window)>=200.0:
-                print('\nEnvironment solve in {:d} epsiodes!\tAverage score: {:.2f}'.format(i_episode-100,
-                                                                                           np.mean(scores_window)))
-                torch.save(agent.qnetwork_local.state_dict(),'checkpoint.pth')
-                break
+
+        plt.plot(np.arange(len(scores)),scores)
+        plt.ylabel('Score')
+        plt.xlabel('Episode #')
+        plt.savefig('breakout.png')
+
+        #Print reward every episode
+        print("Episode Rewards:  ", score)
+        scores.append(score)
+
+        #Save model every 100 episodes
+        if i_episode %100==0:
+            #print('\rEpisode {}\tAverage Score {:.2f}'.format(i_episode,np.mean(scores_window)))
+            torch.save(agent.qnetwork_local.state_dict(),'checkpoint.pth')
 
         # End of episode - destroy agents
-        for actor in env.actor_list:
-            actor.destroy()        
+        # for actor in env.actor_list:
+        #     actor.destroy()        
     return scores
 
 scores= dqn()
-
-#plot the scores
-fig = plt.figure()
-ax = fig.add_subplot(111)
-plt.plot(np.arange(len(scores)),scores)
-plt.ylabel('Score')
-plt.xlabel('Epsiode #')
-plt.show()
