@@ -469,6 +469,39 @@ fi
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 
+# ==============================================================================
+# -- Get Eigen headers 3.1.0 (CARLA dependency) -------------------------------------
+# ==============================================================================
+
+EIGEN_VERSION=3.1.0
+EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
+EIGEN_BASENAME=eigen-${EIGEN_VERSION}
+
+EIGEN_SRC_DIR=eigen-${EIGEN_VERSION}-src
+EIGEN_INSTALL_DIR=eigen-${EIGEN_VERSION}-install
+EIGEN_INCLUDE=${EIGEN_INSTALL_DIR}/include
+
+
+if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
+  log "Eigen already installed."
+else
+  log "Retrieving Eigen."
+  wget ${EIGEN_REPO}
+
+  log "Extracting Eigen."
+  tar -xzf ${EIGEN_BASENAME}.tar.gz
+  mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
+  mkdir -p ${EIGEN_INCLUDE}/unsupported
+  mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
+  mv ${EIGEN_SRC_DIR}/unsupported/Eigen ${EIGEN_INCLUDE}/unsupported/Eigen
+
+  rm -Rf ${EIGEN_BASENAME}.tar.gz
+  rm -Rf ${EIGEN_SRC_DIR}
+fi
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+
 if ${USE_CHRONO} ; then
 
   # ==============================================================================

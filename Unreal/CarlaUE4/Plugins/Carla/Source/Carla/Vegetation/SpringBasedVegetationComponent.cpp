@@ -11,7 +11,7 @@
 #include "DrawDebugHelpers.h"
 #include <unordered_set>
 #include <vector>
-// disable warnings and errors for eigen 3.1.0
+// disable warnings for eigen 3.1.0
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
@@ -30,7 +30,7 @@
 #include <cmath>
 #include <sstream>
 
-#define SPRINGVEGETATIONLOGS 1
+#define SPRINGVEGETATIONLOGS 0
 
 #if SPRINGVEGETATIONLOGS
 #define SP_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
@@ -47,11 +47,6 @@ static FString EigenToFString(T& t)
 }
 static Eigen::Matrix3d OuterProduct(const Eigen::Vector3d& V1, const Eigen::Vector3d& V2)
 {
-  // Eigen::Matrix3d Result;
-  // Result << V1(0)*V2(0), V1(1)*V2(0), V1(2)*V2(0),
-  //           V1(0)*V2(1), V1(1)*V2(1), V1(2)*V2(1),
-  //           V1(0)*V2(2), V1(1)*V2(2), V1(2)*V2(2);
-  // return Result;
   return V1 * V2.transpose();
 }
 static Eigen::Matrix3d OuterProduct(const Eigen::Vector3d& V1)
@@ -505,6 +500,10 @@ void USpringBasedVegetationComponent::TickComponent(
     // inertia tensor
     for (FSkeletonBone& Bone : Joint.Bones)
     {
+      if (Bone.Length < 1)
+      {
+        continue;
+      }
       float CylinderRadius = 0.1f;
       float CylinderHeight = Bone.Length/100.f;
       Eigen::Matrix3d LocalCylinderInertia;

@@ -2,7 +2,7 @@ REM @echo off
 setlocal
 
 rem BAT script that downloads and installs a ready to use
-rem x64 chrono for CARLA (carla.org).
+rem x64 eigen for CARLA (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
 
 set LOCAL_PATH=%~dp0
@@ -36,11 +36,11 @@ if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
 rem ============================================================================
-rem -- Get Eigen (Chrono dependency) -------------------------------------------
+rem -- Get Eigen (CARLA dependency) -------------------------------------------
 rem ============================================================================
 
-set EIGEN_VERSION=3.3.7
-set EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.zip
+set EIGEN_VERSION=3.1.0
+set EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/%EIGEN_VERSION%/eigen-%EIGEN_VERSION%.zip
 set EIGEN_BASENAME=eigen-%EIGEN_VERSION%
 
 set EIGEN_SRC_DIR=%BUILD_DIR%%EIGEN_BASENAME%
@@ -72,41 +72,6 @@ if not exist "%EIGEN_INSTALL_DIR%" (
     del %EIGEN_TEMP_FILE_DIR%
 )
 
-rem ============================================================================
-rem -- Get Chrono -------------------------------------------
-rem ============================================================================
-
-set CHRONO_VERSION=6.0.0
-@REM set CHRONO_VERSION=develop
-set CHRONO_REPO=https://github.com/projectchrono/chrono.git
-set CHRONO_BASENAME=chrono
-
-set CHRONO_SRC_DIR=%BUILD_DIR%%CHRONO_BASENAME%-src
-set CHRONO_INSTALL_DIR=%BUILD_DIR%chrono-install
-set CHRONO_BUILD_DIR=%CHRONO_SRC_DIR%\build
-
-if not exist %CHRONO_INSTALL_DIR% (
-    echo %FILE_N% Retrieving Chrono.
-    call git clone --depth 1 --branch %CHRONO_VERSION% %CHRONO_REPO% %CHRONO_SRC_DIR%
-
-    mkdir %CHRONO_BUILD_DIR%
-    mkdir %CHRONO_INSTALL_DIR%
-
-    cd "%CHRONO_BUILD_DIR%"
-
-    echo %FILE_N% Compiling Chrono.
-    cmake -G "Visual Studio 16 2019" -A x64^
-        -DCMAKE_BUILD_TYPE=Release^
-        -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-        -DEIGEN3_INCLUDE_DIR="%EIGEN_INCLUDE%"^
-        -DCMAKE_INSTALL_PREFIX="%CHRONO_INSTALL_DIR%"^
-        -DENABLE_MODULE_VEHICLE=ON^
-        %CHRONO_SRC_DIR%
-
-    echo %FILE_N% Building...
-    cmake --build . --config Release --target install
-
-)
 
 goto success
 
