@@ -11,6 +11,7 @@
 #include "DrawDebugHelpers.h"
 #include <unordered_set>
 #include <vector>
+
 // disable warnings for eigen 3.1.0
 #if defined(__clang__)
 #  pragma clang diagnostic push
@@ -26,6 +27,7 @@
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif
+
 #include "carla/rpc/String.h"
 #include <cmath>
 #include <sstream>

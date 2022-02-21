@@ -70,6 +70,9 @@ if not exist "%EIGEN_INSTALL_DIR%" (
     move "%EIGEN_SRC_DIR%\unsupported\Eigen" "%EIGEN_INCLUDE%\unsupported\"
 
     del %EIGEN_TEMP_FILE_DIR%
+    
+    copy /Y "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\Macros.h" "%EIGEN_INCLUDE%\Eigen\src\Core\util\Macros.h"
+    copy /Y "%BUILD_DIR%..\Util\Patches\Eigen3.1.0\VectorBlock.h" "%EIGEN_INCLUDE%\Eigen\src\Core\VectorBlock.h"
 )
 
 
