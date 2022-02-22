@@ -10,37 +10,68 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "SpringBasedVegetationComponent.generated.h"
 
+USTRUCT(BlueprintType)
 struct FSkeletonBone
 {
+  GENERATED_BODY()
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   float Mass = 1.f;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   float Length = 0.5f;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FVector CenterOfMass = FVector(0,0,0);
 };
 
+USTRUCT(BlueprintType)
 struct FSkeletonJoint
 {
+  GENERATED_BODY()
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   int JointId;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   int ParentId;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FString JointName;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   bool bIsStatic = false;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> ChildrenIds;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FTransform Transform; // relative to parent
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FRotator RestingAngles; // resting angle position of springs
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   float Mass = 10.f;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FRotator AngularVelocity = FRotator(0,0,0);
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FRotator AngularAcceleration = FRotator(0,0,0);
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FTransform GlobalTransform;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FTransform GolbalInverseTransform;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<FSkeletonBone> Bones;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FVector ExternalForces = FVector(0,0,0);
 };
 
+USTRUCT(BlueprintType)
 struct FSkeletonHierarchy
 {
+  GENERATED_BODY()
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<FSkeletonJoint> Joints;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> EndJoints;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> EndToRootOrder;
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> RootToEndOrder;
+  
   void ComputeChildrenJointsAndBones();
   void ComputeEndJoints();
   void AddForce(const FString& BoneName, const FVector& Force);
@@ -104,6 +135,8 @@ public:
   {
     Skeleton.AddForce(BoneName, Force);
   }
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  TArray<FString> FixedJointsList = {"joint1"};
 
 private:
 
@@ -131,7 +164,6 @@ private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float CollisionForceParameter = 10.f;
 
+  UPROPERTY(VisibleAnywhere, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
-
-
 };

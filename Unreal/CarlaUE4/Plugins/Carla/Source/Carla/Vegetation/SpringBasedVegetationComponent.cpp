@@ -200,152 +200,19 @@ void USpringBasedVegetationComponent::BeginPlay()
 
   // set callbacks
   SkeletalMesh->OnComponentHit.AddDynamic(this, &USpringBasedVegetationComponent::OnCollisionEvent);
-  // SkeletalMesh->OnComponentBeginOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnBeginOverlapEvent);
-  // SkeletalMesh->OnComponentEndOverlap.AddDynamic(this, &USpringBasedVegetationComponent::OnEndOverlapEvent);
-
-  // Testing 1
-  // Skeleton.Joints.Add(FSkeletonJoint{0, -1, "joint1", true});
-  // Skeleton.Joints.Add(FSkeletonJoint{1, 0, "joint2"});
-  // Skeleton.Joints.Add(FSkeletonJoint{2, 1, "joint3"});
-  // Skeleton.Joints.Add(FSkeletonJoint{3, 2, "joint4"});
-  // Skeleton.Joints.Add(FSkeletonJoint{4, 3, "joint5"});
-  // Skeleton.Joints.Add(FSkeletonJoint{5, 4, "joint6"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{6, 3, "joint23"});
-  // Skeleton.Joints.Add(FSkeletonJoint{7, 6, "joint8"});
-  // Skeleton.Joints.Add(FSkeletonJoint{8, 7, "joint9"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{9, 3, "joint25"});
-  // Skeleton.Joints.Add(FSkeletonJoint{10, 9, "joint61"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{11, 2, "joint24"});
-  // Skeleton.Joints.Add(FSkeletonJoint{12, 11, "joint16"});
-  // Skeleton.Joints.Add(FSkeletonJoint{13, 12, "joint17"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{14, 2, "joint15"});
-  // Skeleton.Joints.Add(FSkeletonJoint{15, 14, "joint162"});
-  // Skeleton.Joints.Add(FSkeletonJoint{16, 15, "joint173"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{17, 1, "joint7"});
-  // Skeleton.Joints.Add(FSkeletonJoint{18, 17, "joint84"});
-  // Skeleton.Joints.Add(FSkeletonJoint{19, 18, "joint95"});
-  // Skeleton.Joints.Add(FSkeletonJoint{20, 19, "joint10"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{21, 1, "joint11"});
-  // Skeleton.Joints.Add(FSkeletonJoint{22, 21, "joint12"});
-  // Skeleton.Joints.Add(FSkeletonJoint{23, 22, "joint13"});
-  // Skeleton.Joints.Add(FSkeletonJoint{24, 23, "joint14"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{25, 1, "joint19"});
-  // Skeleton.Joints.Add(FSkeletonJoint{26, 25, "joint86"});
-  // Skeleton.Joints.Add(FSkeletonJoint{27, 26, "joint97"});
-  // Skeleton.Joints.Add(FSkeletonJoint{28, 27, "joint108"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{29, 1, "joint18"});
-  // Skeleton.Joints.Add(FSkeletonJoint{30, 29, "joint89"});
-  // Skeleton.Joints.Add(FSkeletonJoint{31, 30, "joint910"});
-  // Skeleton.Joints.Add(FSkeletonJoint{32, 31, "joint1011"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{33, 1, "joint22"});
-  // Skeleton.Joints.Add(FSkeletonJoint{34, 33, "joint812"});
-  // Skeleton.Joints.Add(FSkeletonJoint{35, 34, "joint913"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{36, 1, "joint20"});
-  // Skeleton.Joints.Add(FSkeletonJoint{37, 36, "joint814"});
-  // Skeleton.Joints.Add(FSkeletonJoint{38, 37, "joint915"});
-  // Skeleton.Joints.Add(FSkeletonJoint{39, 38, "joint1016"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{40, 0, "joint21"});
-  // Skeleton.Joints.Add(FSkeletonJoint{41, 40, "joint1217"});
-  // Skeleton.Joints.Add(FSkeletonJoint{42, 41, "joint1318"});
-  // Skeleton.Joints.Add(FSkeletonJoint{43, 42, "joint1419"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{0, -1, "joint1", true});
-  // Skeleton.Joints.Add(FSkeletonJoint{1, 0, "joint21"});
-  // Skeleton.Joints.Add(FSkeletonJoint{2, 1, "joint1217"});
-  // Skeleton.Joints.Add(FSkeletonJoint{3, 2, "joint1318"});
-  // Skeleton.Joints.Add(FSkeletonJoint{4, 3, "joint1419"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{0, 0, "joint21"});
-  // Skeleton.Joints.Add(FSkeletonJoint{1, 0, "joint1217"});
-
- 
-  // Testing 2
-  Skeleton.Joints.Add(FSkeletonJoint{0, -1, "joint1", true});
-  Skeleton.Joints.Add(FSkeletonJoint{1, 0, "joint29"});
-  Skeleton.Joints.Add(FSkeletonJoint{2, 1, "joint26"});
-  Skeleton.Joints.Add(FSkeletonJoint{3, 2, "joint2"});
-  Skeleton.Joints.Add(FSkeletonJoint{4, 3, "joint27"});
-  Skeleton.Joints.Add(FSkeletonJoint{5, 4, "joint28"});
-  Skeleton.Joints.Add(FSkeletonJoint{6, 5, "joint3"});
-  Skeleton.Joints.Add(FSkeletonJoint{7, 6, "joint30"});
-  Skeleton.Joints.Add(FSkeletonJoint{8, 7, "joint4"});
-  Skeleton.Joints.Add(FSkeletonJoint{9, 8, "joint5"});
-  Skeleton.Joints.Add(FSkeletonJoint{10, 9, "joint6"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{11, 8, "joint23"});
-  Skeleton.Joints.Add(FSkeletonJoint{12, 11, "joint8"});
-  Skeleton.Joints.Add(FSkeletonJoint{13, 12, "joint9"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{14, 8, "joint34"});
-  Skeleton.Joints.Add(FSkeletonJoint{15, 14, "joint25"});
-  Skeleton.Joints.Add(FSkeletonJoint{16, 15, "joint61"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{17, 7, "joint15"});
-  Skeleton.Joints.Add(FSkeletonJoint{18, 17, "joint16"});
-  Skeleton.Joints.Add(FSkeletonJoint{19, 18, "joint17"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{20, 6, "joint24"});
-  Skeleton.Joints.Add(FSkeletonJoint{21, 20, "joint162"});
-  Skeleton.Joints.Add(FSkeletonJoint{22, 21, "joint173"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{23, 5, "joint22"});
-  Skeleton.Joints.Add(FSkeletonJoint{24, 23, "joint84"});
-  Skeleton.Joints.Add(FSkeletonJoint{25, 24, "joint95"});
   
-  Skeleton.Joints.Add(FSkeletonJoint{26, 5, "joint35"});
-  Skeleton.Joints.Add(FSkeletonJoint{27, 26, "joint86"});
-  Skeleton.Joints.Add(FSkeletonJoint{28, 27, "joint97"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{29, 4, "joint20"});
-  Skeleton.Joints.Add(FSkeletonJoint{30, 29, "joint88"});
-  Skeleton.Joints.Add(FSkeletonJoint{31, 30, "joint99"});
-  Skeleton.Joints.Add(FSkeletonJoint{32, 31, "joint10"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{33, 4, "joint36"});
-  Skeleton.Joints.Add(FSkeletonJoint{34, 33, "joint810"});
-  Skeleton.Joints.Add(FSkeletonJoint{35, 34, "joint911"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{36, 3, "joint11"});
-  Skeleton.Joints.Add(FSkeletonJoint{37, 36, "joint12"});
-  Skeleton.Joints.Add(FSkeletonJoint{38, 37, "joint13"});
-  Skeleton.Joints.Add(FSkeletonJoint{39, 38, "joint14"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{40, 3, "joint18"});
-  Skeleton.Joints.Add(FSkeletonJoint{41, 40, "joint812"});
-  Skeleton.Joints.Add(FSkeletonJoint{42, 41, "joint913"});
-  Skeleton.Joints.Add(FSkeletonJoint{43, 42, "joint1014"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{44, 3, "joint19"});
-  Skeleton.Joints.Add(FSkeletonJoint{45, 44, "joint815"});
-  Skeleton.Joints.Add(FSkeletonJoint{46, 45, "joint916"});
-  Skeleton.Joints.Add(FSkeletonJoint{47, 46, "joint1017"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{48, 2, "joint21"});
-  Skeleton.Joints.Add(FSkeletonJoint{49, 48, "joint1218"});
-  Skeleton.Joints.Add(FSkeletonJoint{50, 49, "joint1319"});
-  Skeleton.Joints.Add(FSkeletonJoint{51, 50, "joint1420"});
-
-  Skeleton.Joints.Add(FSkeletonJoint{52, 1, "joint7"});
-  Skeleton.Joints.Add(FSkeletonJoint{53, 52, "joint821"});
-  Skeleton.Joints.Add(FSkeletonJoint{54, 53, "joint922"});
-  Skeleton.Joints.Add(FSkeletonJoint{55, 54, "joint1023"});
-
-  // Skeleton.Joints.Add(FSkeletonJoint{0, -1, "joint7", true});
-  // Skeleton.Joints.Add(FSkeletonJoint{1, 0, "joint821"});
-  // Skeleton.Joints.Add(FSkeletonJoint{2, 1, "joint922"});
-  // Skeleton.Joints.Add(FSkeletonJoint{3, 2, "joint1023"});
-  // Testing
+  // Get skeleton hierarchy
+  TArray<FName> BoneNames;
+  SkeletalMesh->GetBoneNames(BoneNames);
+  for (int32 i = 0; i < BoneNames.Num(); i++)
+  {
+    FName& BoneName = BoneNames[i];
+    FString BoneNameString = BoneName.ToString();
+    FName ParentBoneName = SkeletalMesh->GetParentBone(BoneName);
+    int32 ParentIndex = SkeletalMesh->GetBoneIndex(ParentBoneName);
+    Skeleton.Joints.Add(FSkeletonJoint{i, ParentIndex, BoneNameString, FixedJointsList.Contains(BoneNameString)});
+    SP_LOG(Log, "Added bone %s with id %d and parent %d", *BoneNameString, i, ParentIndex);
+  }
 
   Skeleton.ComputeChildrenJointsAndBones();
   Skeleton.ComputeEndJoints();
