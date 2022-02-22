@@ -49,7 +49,7 @@ set EIGEN_INCLUDE=%EIGEN_INSTALL_DIR%\include
 set EIGEN_TEMP_FILE=eigen-%EIGEN_VERSION%.zip
 set EIGEN_TEMP_FILE_DIR=%BUILD_DIR%eigen-%EIGEN_VERSION%.zip
 
-if not exist "%EIGEN_INSTALL_DIR%" (
+if not exist "%EIGEN_SRC_DIR%" (
     if not exist "%EIGEN_TEMP_FILE_DIR%" (
         echo %FILE_N% Retrieving %EIGEN_TEMP_FILE_DIR%.
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%EIGEN_REPO%', '%EIGEN_TEMP_FILE_DIR%')"
@@ -61,16 +61,18 @@ if not exist "%EIGEN_INSTALL_DIR%" (
     if %errorlevel% neq 0 goto error_extracting
     echo %EIGEN_SRC_DIR%
 
-    if not exist "%EIGEN_INSTALL_DIR%" (
-        mkdir %EIGEN_INSTALL_DIR%
-        mkdir %EIGEN_INCLUDE%
-        mkdir %EIGEN_INCLUDE%\unsupported
-    )
-    move "%EIGEN_SRC_DIR%\Eigen" "%EIGEN_INCLUDE%\"
-    move "%EIGEN_SRC_DIR%\unsupported\Eigen" "%EIGEN_INCLUDE%\unsupported\"
-
     del %EIGEN_TEMP_FILE_DIR%
 )
+
+if not exist "%EIGEN_INSTALL_DIR%" (
+    mkdir %EIGEN_INSTALL_DIR%
+    mkdir %EIGEN_INCLUDE%
+    mkdir %EIGEN_INCLUDE%\unsupported
+    mkdir %EIGEN_INCLUDE%\Eigen
+)
+
+xcopy /q /Y /S /I "%EIGEN_SRC_DIR%\Eigen" "%EIGEN_INCLUDE%\Eigen"
+xcopy /q /Y /S /I "%EIGEN_SRC_DIR%\unsupported\Eigen" "%EIGEN_INCLUDE%\unsupported\Eigen"
 
 rem ============================================================================
 rem -- Get Chrono -------------------------------------------
