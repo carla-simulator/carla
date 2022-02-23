@@ -646,6 +646,92 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeNormalsCameraDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), TEXT("normals"));
+  AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
+
+  // FOV
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = { TEXT("90.0") };
+  FOV.bRestrictToRecommended = false;
+
+  // Resolution
+  FActorVariation ResX;
+  ResX.Id = TEXT("image_size_x");
+  ResX.Type = EActorAttributeType::Int;
+  ResX.RecommendedValues = { TEXT("800") };
+  ResX.bRestrictToRecommended = false;
+
+  FActorVariation ResY;
+  ResY.Id = TEXT("image_size_y");
+  ResY.Type = EActorAttributeType::Int;
+  ResY.RecommendedValues = { TEXT("600") };
+  ResY.bRestrictToRecommended = false;
+
+  // Lens parameters
+  FActorVariation LensCircleFalloff;
+  LensCircleFalloff.Id = TEXT("lens_circle_falloff");
+  LensCircleFalloff.Type = EActorAttributeType::Float;
+  LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
+  LensCircleFalloff.bRestrictToRecommended = false;
+
+  FActorVariation LensCircleMultiplier;
+  LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
+  LensCircleMultiplier.Type = EActorAttributeType::Float;
+  LensCircleMultiplier.RecommendedValues = { TEXT("0.0") };
+  LensCircleMultiplier.bRestrictToRecommended = false;
+
+  FActorVariation LensK;
+  LensK.Id = TEXT("lens_k");
+  LensK.Type = EActorAttributeType::Float;
+  LensK.RecommendedValues = { TEXT("-1.0") };
+  LensK.bRestrictToRecommended = false;
+
+  FActorVariation LensKcube;
+  LensKcube.Id = TEXT("lens_kcube");
+  LensKcube.Type = EActorAttributeType::Float;
+  LensKcube.RecommendedValues = { TEXT("0.0") };
+  LensKcube.bRestrictToRecommended = false;
+
+  FActorVariation LensXSize;
+  LensXSize.Id = TEXT("lens_x_size");
+  LensXSize.Type = EActorAttributeType::Float;
+  LensXSize.RecommendedValues = { TEXT("0.08") };
+  LensXSize.bRestrictToRecommended = false;
+
+  FActorVariation LensYSize;
+  LensYSize.Id = TEXT("lens_y_size");
+  LensYSize.Type = EActorAttributeType::Float;
+  LensYSize.RecommendedValues = { TEXT("0.08") };
+  LensYSize.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+      ResX,
+      ResY,
+      FOV,
+      LensCircleFalloff,
+      LensCircleMultiplier,
+      LensK,
+      LensKcube,
+      LensXSize,
+      LensYSize});
+
+  Success = CheckActorDefinition(Definition);
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
 {
   FActorDefinition Definition;
