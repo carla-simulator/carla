@@ -35,15 +35,15 @@ class ConstantVelocityAgent(BasicAgent):
         super(ConstantVelocityAgent, self).__init__(vehicle, target_speed, opt_dict=opt_dict)
 
         self._use_basic_behavior = False  # Whether or not to use the BasicAgent behavior when the constant velocity is down
-        self._target_speed = target_speed  # [Km/h]
-        self._speed = 3.6 * vehicle.get_velocity().length()  # [Km/h]
+        self._target_speed = target_speed / 3.6  # [m/s]
+        self._current_speed = vehicle.get_velocity().length()  # [m/s]
         self._constant_velocity_stop_time = None
 
         # Additional parameters
         self._restart_time = float('inf')  # Time after collision before the constant velocity behavior starts again
         self._acceleration = float('inf')  # Acceleration of the agent [m/s^2]
         self._deceleration = float('inf')  # Deceleration of the agent [m/s^2]
-        self._forced_turn_time = 0  # Initial time used in forced lane following mode [m/s^2]
+        self._forced_turn_time = 0  # Initial time used in forced lane following mode [s]
 
         if 'restart_time' in opt_dict:
             self._restart_time = opt_dict['restart_time']
@@ -59,15 +59,13 @@ class ConstantVelocityAgent(BasicAgent):
             self._forced_turn_time = opt_dict['forced_turn_time']
 
         self.is_constant_velocity_active = True
-
         self._set_collision_sensor()
         self._set_constant_velocity(target_speed)
 
     def set_target_speed(self, speed):
         """Changes the target speed of the agent"""
-        self._target_speed = speed
+        self._target_speed = speed / 3.6
         self._local_planner.set_speed(speed)
-        self._set_constant_velocity(speed)
 
     def stop_constant_velocity(self):
         """Stops the constant velocity behavior"""
@@ -77,24 +75,18 @@ class ConstantVelocityAgent(BasicAgent):
 
     def restart_constant_velocity(self):
         """Public method to restart the constant velocity"""
+        self.is_constant_velocity_active = True
         self._set_constant_velocity(self._target_speed)
 
-    def _set_constant_velocity(self, new_speed):
+    def _set_constant_velocity(self, target_speed):
         """Forces the agent to drive at the specified speed"""
-        if new_speed == self._speed:
-            return
-
         delta_t = self._world.get_snapshot().timestamp.delta_seconds
-        if new_speed > self._speed:
-            self._speed = min(new_speed + self._acceleration * delta_t, self._target_speed)
-        elif new_speed < self._speed:
-            self._speed = max(new_speed - self._deceleration * delta_t, 0)
-        else:
-            return
+        if target_speed > self._current_speed:
+            self._current_speed = min(self._current_speed + self._acceleration * delta_t, target_speed)
+        elif target_speed < self._current_speed:
+            self._current_speed = max(self._current_speed - self._deceleration * delta_t, target_speed)
 
-        self._vehicle.enable_constant_velocity(carla.Vector3D(self._speed / 3.6, 0, 0))
-        if not self.is_constant_velocity_active:
-            self.is_constant_velocity_active = True
+        self._vehicle.enable_constant_velocity(carla.Vector3D(self._current_speed, 0, 0))
 
     def run_step(self):
         """Execute one step of navigation."""
@@ -114,17 +106,20 @@ class ConstantVelocityAgent(BasicAgent):
         vehicle_list = actor_list.filter("*vehicle*")
         lights_list = actor_list.filter("*traffic_light*")
 
-        vehicle_speed = get_speed(self._vehicle) / 3.6
+        vehicle_speed = self._vehicle.get_velocity().length()
 
         max_vehicle_distance = self._base_vehicle_threshold + vehicle_speed
-        affected_by_vehicle, _, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
+        affected_by_vehicle, adversary, _ = self._vehicle_obstacle_detected(vehicle_list, max_vehicle_distance)
         if affected_by_vehicle:
+            vehicle_velocity = self._vehicle.get_velocity()
+            hazard_speed = vehicle_velocity.dot(adversary.get_velocity()) / vehicle_velocity.length()
             hazard_detected = True
 
         # Check if the vehicle is affected by a red traffic light
         max_tlight_distance = self._base_tlight_threshold + 0.3 * vehicle_speed
         affected_by_tlight, _ = self._affected_by_traffic_light(lights_list, max_tlight_distance)
         if affected_by_tlight:
+            hazard_speed = 0
             hazard_detected = True
 
         # The longitudinal PID is overwritten by the constant velocity but it is
@@ -148,7 +143,7 @@ class ConstantVelocityAgent(BasicAgent):
             self._forced_turn_time -= self._world.get_snapshot().timestamp.delta_seconds
 
         if hazard_detected:
-            self._set_constant_velocity(0)
+            self._set_constant_velocity(hazard_speed)
         else:
             self._set_constant_velocity(self._target_speed)
 
