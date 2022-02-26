@@ -14,20 +14,23 @@
 #include <carla/road/element/RoadInfoSignal.h>
 #include <compiler/enable-ue4-macros.h>
 
+namespace cr = carla::road;
+namespace cre = carla::road::element;
+
 void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
 {
 
   const double epsilon = 0.00001;
 
-  auto References = GetAllReferencesToThisSignal(Map);
+  TArray<std::pair<cr::RoadId, const cre::RoadInfoSignal*>> References = GetAllReferencesToThisSignal(Map);
 
   for (auto& Reference : References)
   {
-    auto RoadId = Reference.first;
-    const auto* SignalReference = Reference.second;
+    cr::RoadId RoadId = Reference.first;
+    const cre::RoadInfoSignal* SignalReference = Reference.second;
     TSet<carla::road::RoadId> SignalPredecessors;
     // Yield box
-    for(auto &validity : SignalReference->GetValidities())
+    for(const carla::road::LaneValidity &validity : SignalReference->GetValidities())
     {
       for(auto lane : carla::geom::Math::GenerateRange(validity._from_lane, validity._to_lane))
       {
