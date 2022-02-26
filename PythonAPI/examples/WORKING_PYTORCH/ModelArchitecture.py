@@ -11,7 +11,7 @@ class QNetwork(nn.Module):
         self.fc = nn.Sequential(nn.Linear(1000, 512), #changed 2048,512 to 1000,512
                                  nn.ReLU(),
                                  nn.Dropout(0.2),
-                                 nn.Linear(512, 4),
+                                 nn.Linear(512, 3),
                                  nn.LogSoftmax(dim=1))
     def forward(self, x):
         x = self.pretrained(x)

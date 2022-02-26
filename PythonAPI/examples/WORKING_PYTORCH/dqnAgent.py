@@ -6,7 +6,7 @@ import time
 from ModelArchitecture import QNetwork
 import torchvision
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as F 
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e5)  #replay buffer size

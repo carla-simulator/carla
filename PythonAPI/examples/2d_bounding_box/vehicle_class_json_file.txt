@@ -1,0 +1,38 @@
+{
+    "reference": {
+        "passenger_car": 0,
+        "truck": 1,
+        "motorcycle": 2,
+        "bicycle": 3,
+	"others":9
+    },
+    "classification": {
+        "vehicle.citroen.c3": 0,
+        "vehicle.chevrolet.impala": 0,
+        "vehicle.audi.a2": 0,
+        "vehicle.nissan.micra": 0,
+        "vehicle.carlamotors.carlacola": 1,
+        "vehicle.audi.tt": 0,
+        "vehicle.bmw.grandtourer": 0,
+        "vehicle.harley-davidson.low_rider": 2,
+        "vehicle.bmw.isetta": 0,
+        "vehicle.dodge_charger.police": 0,
+        "vehicle.jeep.wrangler_rubicon": 0,
+        "vehicle.mercedes-benz.coupe": 0,
+        "vehicle.mini.cooperst": 0,
+        "vehicle.nissan.patrol": 0,
+        "vehicle.seat.leon": 0,
+        "vehicle.toyota.prius": 0,
+        "vehicle.yamaha.yzf": 2,
+        "vehicle.kawasaki.ninja": 2,
+        "vehicle.bh.crossbike": 3,
+        "vehicle.tesla.model3": 0,
+        "vehicle.gazelle.omafiets": 3,
+        "vehicle.tesla.cybertruck": 1,
+        "vehicle.diamondback.century": 3,
+        "vehicle.audi.etron": 0,
+        "vehicle.volkswagen.t2": 0,
+        "vehicle.lincoln.mkz2017": 0,
+        "vehicle.mustang.mustang": 0
+    }
+}
