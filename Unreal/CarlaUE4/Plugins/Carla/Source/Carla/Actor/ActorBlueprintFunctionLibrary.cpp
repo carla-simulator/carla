@@ -383,7 +383,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Gamma;
     Gamma.Id = TEXT("gamma");
     Gamma.Type = EActorAttributeType::Float;
-    Gamma.RecommendedValues = { TEXT("2.2") };
+    Gamma.RecommendedValues = { TEXT("2.4") };
     Gamma.bRestrictToRecommended = false;
 
     // Motion Blur
