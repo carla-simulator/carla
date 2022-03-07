@@ -24,6 +24,7 @@
 #include "CarlaRecorderInfo.h"
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderWeather.h"
 
 class CarlaRecorderQuery
 {
@@ -66,6 +67,7 @@ private:
   CarlaRecorderPlatformTime PlatformTime;
   CarlaRecorderPhysicsControl PhysicsControl;
   CarlaRecorderTrafficLightTime TrafficLightTime;
+  CarlaRecorderWeather Weather;
 
   // read next header packet
   bool ReadHeader(void);

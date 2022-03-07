@@ -147,6 +147,8 @@ private:
   void ProcessLightVehicle(void);
   void ProcessLightScene(void);
 
+  void ProcessWeather(void);
+
   // positions
   void UpdatePositions(double Per, double DeltaTime);
 

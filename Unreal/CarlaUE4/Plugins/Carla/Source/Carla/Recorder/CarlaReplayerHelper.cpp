@@ -26,6 +26,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Components/BoxComponent.h"
+#include "Carla/Weather/Weather.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/VehicleLightState.h>
@@ -410,6 +411,16 @@ void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene Ligh
       CarlaLight->SetLightOn(LightScene.bOn);
       CarlaLight->SetLightType(static_cast<ELightType>(LightScene.Type));
     }
+  }
+}
+
+void CarlaReplayerHelper::ProcessReplayerWeather(const CarlaRecorderWeather &RecordedWeather)
+{
+  check(Episode != nullptr);
+  AWeather *Weather = AWeather::FindWeatherInstance(Episode->GetWorld());
+  if (Weather)
+  {
+    Weather->ApplyWeather(RecordedWeather.Params);
   }
 }
 

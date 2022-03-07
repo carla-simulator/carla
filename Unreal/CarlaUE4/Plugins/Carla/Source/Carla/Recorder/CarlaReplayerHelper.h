@@ -13,6 +13,7 @@
 #include "CarlaRecorderAnimVehicle.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderLightScene.h"
+#include "CarlaRecorderWeather.h"
 
 #include <unordered_map>
 
@@ -63,6 +64,9 @@ public:
 
   // set scene lights
   void ProcessReplayerLightScene(CarlaRecorderLightScene LightScene);
+
+  // set weather
+  void ProcessReplayerWeather(const CarlaRecorderWeather &RecordedWeather);
 
   // replay finish
   bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero);

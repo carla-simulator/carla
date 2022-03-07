@@ -358,6 +358,11 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
+      // weather state
+      case static_cast<char>(CarlaRecorderPacketId::Weather):
+        ProcessWeather();
+        break;
+
       // frame end
       case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
         if (bFrameFound)
@@ -571,6 +576,20 @@ void CarlaReplayer::ProcessLightScene(void)
   {
     LightScene.Read(File);
     Helper.ProcessReplayerLightScene(LightScene);
+  }
+}
+
+void CarlaReplayer::ProcessWeather(void)
+{
+  uint16_t Total;
+  CarlaRecorderWeather Weather;
+
+  // read Total light events
+  ReadValue<uint16_t>(File, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    Weather.Read(File);
+    Helper.ProcessReplayerWeather(Weather);
   }
 }
 

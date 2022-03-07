@@ -39,12 +39,16 @@ public:
     return Weather;
   }
 
+  static AWeather *FindWeatherInstance(UWorld *World);
+
 protected:
 
   UFUNCTION(BlueprintImplementableEvent)
   void RefreshWeather(const FWeatherParameters &WeatherParameters);
 
 private:
+
+  void AddWeatherToRecorder() const;
 
   UPROPERTY(VisibleAnywhere)
   FWeatherParameters Weather;

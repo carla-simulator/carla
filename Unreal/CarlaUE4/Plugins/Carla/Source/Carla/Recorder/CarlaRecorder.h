@@ -29,6 +29,7 @@
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderQuery.h"
 #include "CarlaRecorderState.h"
+#include "CarlaRecorderWeather.h"
 #include "CarlaReplayer.h"
 
 #include "CarlaRecorder.generated.h"
@@ -59,7 +60,8 @@ enum class CarlaRecorderPacketId : uint8_t
   PlatformTime,
   PhysicsControl,
   TrafficLightTime,
-  TriggerVolume
+  TriggerVolume,
+  Weather
 };
 
 /// Recorder for the simulation
@@ -121,6 +123,8 @@ public:
   void AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle);
 
   void AddTrafficLightTime(const ATrafficLightBase& TrafficLight);
+
+  void AddWeather(const FWeatherParameters& WeatherParams);
 
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
@@ -188,6 +192,7 @@ private:
   CarlaRecorderPlatformTime PlatformTime;
   CarlaRecorderPhysicsControls PhysicsControls;
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
+  CarlaRecorderWeathers Weathers;
 
 
   // replayer
@@ -197,6 +202,7 @@ private:
   CarlaRecorderQuery Query;
 
   void AddExistingActors(void);
+  void AddStartingWeather(void);
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
   void AddVehicleAnimation(FCarlaActor *CarlaActor);
