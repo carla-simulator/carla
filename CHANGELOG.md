@@ -7,6 +7,7 @@
   * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
   * Added `NormalsSensor`, a new sensor with normals information
   * Added support for N wheeled vehicles
+  * Added weather events to recordings for replaying and querying
 
 ## CARLA 0.9.13
 
