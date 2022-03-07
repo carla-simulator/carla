@@ -25,6 +25,9 @@ struct CARLATOOLS_API FProceduralRiversMetaInfo
 	float CustomScaleFactor;
 
 	UPROPERTY(BlueprintReadWrite)
+	float CustomRiverWidth;
+
+	UPROPERTY(BlueprintReadWrite)
 	FVector CustomLocationOffset;
 
 	UPROPERTY(BlueprintReadWrite)
