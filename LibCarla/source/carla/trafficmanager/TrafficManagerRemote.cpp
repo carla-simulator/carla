@@ -111,6 +111,12 @@ void TrafficManagerRemote::SetPercentageSpeedDifference(const ActorPtr &_actor, 
   client.SetPercentageSpeedDifference(actor, percentage);
 }
 
+void TrafficManagerRemote::SetDesiredSpeed(const ActorPtr &_actor, const float value) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetDesiredSpeed(actor, value);
+}
+
 void TrafficManagerRemote::SetGlobalPercentageSpeedDifference(const float percentage) {
   client.SetGlobalPercentageSpeedDifference(percentage);
 }
