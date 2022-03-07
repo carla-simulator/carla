@@ -60,6 +60,9 @@ FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMet
 	float scaleFactor = metaInfo.CustomScaleFactor;
 	FVector locationOffset(0,0,0);
 
+	if(file.Num() == 0)
+		return "Error processing file. Check file path and it content.";
+
 	for(FString line : file)
 	{
 		if(line == "# _")
@@ -82,7 +85,7 @@ FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMet
 		else{
 			if(!line.Split(TEXT(" "), &y_str, &x_str))
 			{
-				return "Erroorrrrr";
+				return "ERROR: Coordinated cannot be proccess... Check file format";
 			}	
 			
 			float positionX = scaleFactor*FCString::Atof(*x_str);
@@ -101,7 +104,8 @@ FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMet
 
 			if((iterationNumber % metaInfo.CustomSampling) == 0){
 				FSplinePoint newPoint(inputKeyCount, position);
-				newPoint.Scale = FVector(1.0f, 2.5f, 1.0f);
+				float width = (metaInfo.CustomRiverWidth > 0.0f) ? metaInfo.CustomRiverWidth : 2.5f;
+				newPoint.Scale = FVector(1.0f, width, 1.0f);
 				if(riverActor != nullptr)
 					AddRiverPointFromCode(riverActor, newPoint);
 				inputKeyCount += 1.0f;	
@@ -110,6 +114,10 @@ FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMet
 		}
 		iterationNumber++;
 	}
+
+	// Last river created must be destroyed as it is a wildcard
+	if(riverActor != nullptr)
+		riverActor->Destroy();
 
 	return "Successfully processed";
 }
