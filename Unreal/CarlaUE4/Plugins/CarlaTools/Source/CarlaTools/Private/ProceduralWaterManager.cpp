@@ -30,9 +30,32 @@ UProceduralWaterManager::UProceduralWaterManager()
         RiverBlueprintClass = (UClass*)RiverBlueprint.Object->GeneratedClass;
     }
 
+	static ConstructorHelpers::FObjectFinder<UBlueprint> LakeBlueprint(TEXT("Blueprint'/CarlaTools/ProceduralWaterManager/DummyActor.DummyActor'"));
+    if (LakeBlueprint.Object){
+        LakeBlueprintClass = (UClass*)LakeBlueprint.Object->GeneratedClass;
+    }
+
 }
 
 FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMetaInfo metaInfo)
+{
+	FString errorMsg="";
+	
+	if(metaInfo.WaterGenerationType == EWaterGenerationType::RIVERS)
+	{
+		errorMsg = RiverGeneration(metaInfo);
+	}
+	else if(metaInfo.WaterGenerationType == EWaterGenerationType::LAKE)
+	{
+		errorMsg = LakeGeneration(metaInfo);
+	}
+	else
+		errorMsg = "Error in Water Generation Type";
+
+	return errorMsg;
+}
+
+FString UProceduralWaterManager::RiverGeneration(const FProceduralRiversMetaInfo metaInfo)
 {
 	FString errorMsg;
 
@@ -82,7 +105,12 @@ FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMet
 			inputKeyCount = 0.0f;
 			iterationNumber = -1;	// Wildcard value used for headers
 		}
-		else{
+		else if (line == "# _L")
+		{
+			return "This is a LAKE file. Check the water type and the file content.";
+		}
+		else
+		{
 			if(!line.Split(TEXT(" "), &y_str, &x_str))
 			{
 				return "ERROR: Coordinated cannot be proccess... Check file format";
@@ -122,6 +150,81 @@ FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMet
 	return "Successfully processed";
 }
 
+FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo metaInfo)
+{
+	const FString WaterInfoPath = metaInfo.WaterInfoPath;
+	if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*WaterInfoPath))
+	{
+		
+		DEBUG_MSG("File Not Found!! :(");
+		return "File Not Found!! :(";
+	}
+
+	TArray<FString> file;
+	FFileHelper::LoadFileToStringArray(file, *WaterInfoPath);
+
+	if(file.Num() == 0)
+		return "Error processing file. Check file path and it content.";
+
+	FString centerX_str, centerY_str, sizeX_str, sizeY_str, angle_str;
+
+	AActor* lakeActor = nullptr;
+
+	for(FString line : file)
+	{
+		if(line == "# _L")
+		{
+			lakeActor = SpawnLakeBlueprintActor();
+		}
+		else if(line == "# _")
+		{
+			return "This is a RIVER file. Check the water type and the file content.";
+		}
+		else
+		{
+			// if(!line.Split(TEXT(" "), &centerX_str, &centerY_str, &sizeX_str, &sizeY_str, &angle_str))
+			// {
+			// 	return "ERROR: Coordinated cannot be proccess... Check file format";
+			// }
+
+			TArray<FString> lineArray;
+
+			line.ParseIntoArray(lineArray, TEXT(" "));
+
+			float centerX = FCString::Atof(*lineArray[0]);
+			float centerY = FCString::Atof(*lineArray[1]);
+			float sizeX = 	FCString::Atof(*lineArray[2]);
+			float sizeY = 	FCString::Atof(*lineArray[3]);
+			float angle = 	FCString::Atof(*lineArray[4]);
+
+			float centerZ;
+
+			if(metaInfo.CustomHeight > -100000000.0f)
+				centerZ = metaInfo.CustomHeight;
+			else
+				centerZ = GetLandscapeSurfaceHeight(centerX, centerY, false);
+
+			FVector location(metaInfo.CustomScaleFactor*centerX, metaInfo.CustomScaleFactor*centerY, centerZ);
+			location += metaInfo.CustomLocationOffset;
+
+			FRotator rotation(0.0f, angle,0.0f);
+
+			FVector scale(metaInfo.CustomRiverWidth*sizeX, metaInfo.CustomRiverWidth*sizeY, 1.0f);
+
+			lakeActor->SetActorScale3D(scale);
+			lakeActor->SetActorLocationAndRotation(location, rotation, false, 0, ETeleportType::None);
+			
+		}
+	
+	}
+
+	// Last river created must be destroyed as it is a wildcard
+	if(lakeActor != nullptr)
+		lakeActor->Destroy();
+
+	return "Successfully processed";
+}
+
 AActor* UProceduralWaterManager::SpawnRiverBlueprintActor()
 {
 	
@@ -131,6 +234,19 @@ AActor* UProceduralWaterManager::SpawnRiverBlueprintActor()
 	
 	UWorld* World = GetWorld();
 	AActor* riverActor =  World->SpawnActor<AActor>(RiverBlueprintClass, location, rotation, spawnInfo);
+
+	return riverActor;
+}
+
+AActor* UProceduralWaterManager::SpawnLakeBlueprintActor()
+{
+	
+	FVector location(0, 0, 0);
+	FRotator rotation(0,0,0);
+	FActorSpawnParameters spawnInfo;
+	
+	UWorld* World = GetWorld();
+	AActor* riverActor =  World->SpawnActor<AActor>(LakeBlueprintClass, location, rotation, spawnInfo);
 
 	return riverActor;
 }

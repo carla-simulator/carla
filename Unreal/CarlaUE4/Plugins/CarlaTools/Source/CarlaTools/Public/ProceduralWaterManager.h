@@ -10,10 +10,20 @@
 
 #include "ProceduralWaterManager.generated.h"
 
+UENUM(BlueprintType)
+enum EWaterGenerationType
+{
+	RIVERS = 0,
+	LAKE = 1
+};
+
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FProceduralRiversMetaInfo
 {
 	GENERATED_USTRUCT_BODY();
+
+	UPROPERTY(BlueprintReadWrite)
+	TEnumAsByte<EWaterGenerationType> WaterGenerationType;
 
 	UPROPERTY(BlueprintReadWrite)
 	FString WaterInfoPath;
@@ -68,11 +78,23 @@ public:
 
 private:
 	TSubclassOf<class AActor> RiverBlueprintClass;
+	TSubclassOf<class AActor> LakeBlueprintClass;
+
+	UFUNCTION()
+	FString RiverGeneration(const FProceduralRiversMetaInfo metaInfo);
+
+	UFUNCTION()
+	FString LakeGeneration(const FProceduralRiversMetaInfo metaInfo);
 
 	/// Instantiate a new actor of type RiverBlueprintClass
 	/// Returns the the actor created
 	UFUNCTION()
 	AActor* SpawnRiverBlueprintActor();
+
+	/// Instantiate a new actor of type LakeBlueprintClass
+	/// Returns the the actor created
+	UFUNCTION()
+	AActor* SpawnLakeBlueprintActor();
 
 	/// Calculates the height of the landscape in an specific 2D coordinate ( @a x, @a y)
 	/// throwing rays and detecting the hit point. @a bDrawDebugLines allows to visualize
