@@ -15,49 +15,46 @@
 #include "LandscapeProxy.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
-#define DEBUG_MSG(x, ...) if(GEngine){GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, FString::Printf(TEXT(x), __VA_ARGS__));}
-#define DEBUG_MSG_RED(x, ...) if(GEngine){GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT(x), __VA_ARGS__));}
 
-
-
-FString UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& metaInfo)
+FString UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo)
 {
-    DEBUG_MSG("Generating new map...");
 
-    FString errorMsg = "";
+    FString ErrorMsg = "";
 
     // 1. Creating Levels
-    CreateMainLargeMap(metaInfo);
-    CreateTilesMaps(metaInfo);
-    // bool bLoaded = LoadWorld(worldAssetData);
-    // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, bLoaded ? "Loaded CORRECT" : "NOT loaded");
+    CreateMainLargeMap(MetaInfo);
+    CreateTilesMaps(MetaInfo);
+    // bool bLoaded = LoadWorld(WorldAssetData);
+    // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, 
+    //      bLoaded ? "Loaded CORRECT" : "NOT loaded");
 
     // 2. Applying heightmap
-    // UWorld* world = CastChecked<UWorld>(worldAssetData.GetAsset());
-    // ALandscape* landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(world, ALandscape::StaticClass());
-    // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, landscape!=nullptr ? "L TRUE" : "L FALSE");
+    // UWorld* World = CastChecked<UWorld>(WorldAssetData.GetAsset());
+    // ALandscape* landscape = 
+    //      (ALandscape*) UGameplayStatics::GetActorOfClass(World, ALandscape::StaticClass());
+    // GEngine->AddOnScreenDebugMessage(
+    //      -1, 15.0f, FColor::Green, landscape!=nullptr ? "L TRUE" : "L FALSE");
     // AssignLandscapeHeightMap(landscape);
 
-    // 3. Saving world
-    // bool bSaved = SaveWorld(worldAssetData, metaInfo.destinationPath, metaInfo.mapName);
-    // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, bSaved ? "Saved CORRECT" : "NOT saved");
+    // 3. Saving World
+    // bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MetaInfo.MapName);
 
-    return errorMsg;
+    return ErrorMsg;
 }
 
 bool UMapGeneratorWidget::LoadBaseTileWorld(FAssetData& WorldAssetData)
 {
-    const FString baseMapPath= TEXT("/CarlaTools/MapGenerator/BaseMap/Tiles");
-    return LoadWorld(WorldAssetData, baseMapPath);
+    const FString BaseMapPath= TEXT("/CarlaTools/MapGenerator/BaseMap/Tiles");
+    return LoadWorld(WorldAssetData, BaseMapPath);
 }
 
 bool UMapGeneratorWidget::LoadBaseLargeMapWorld(FAssetData& WorldAssetData)
 {
-    const FString baseMapPath= TEXT("/CarlaTools/MapGenerator/BaseMap/MainLargeMap");
-    return LoadWorld(WorldAssetData, baseMapPath);
+    const FString BaseMapPath= TEXT("/CarlaTools/MapGenerator/BaseMap/MainLargeMap");
+    return LoadWorld(WorldAssetData, BaseMapPath);
 }
 
-bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& baseMapPath)
+bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath)
 {
     TArray<FAssetData> AssetDatas;
     UObjectLibrary *MapObjectLibrary;
@@ -65,7 +62,7 @@ bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& b
     // Loading Map from folder using object library
     MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
     MapObjectLibrary->AddToRoot();
-    MapObjectLibrary->LoadAssetDataFromPath(*baseMapPath);
+    MapObjectLibrary->LoadAssetDataFromPath(*BaseMapPath);
     MapObjectLibrary->LoadAssetsFromAssetData();
     MapObjectLibrary->GetAssetDataList(AssetDatas);
     if (AssetDatas.Num() > 0)
@@ -78,90 +75,104 @@ bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& b
         return false;
 }
 
-bool UMapGeneratorWidget::SaveWorld(FAssetData& WorldToBeSaved, const FString& DestinationPath, const FString& WorldName)
+bool UMapGeneratorWidget::SaveWorld(
+    FAssetData& WorldToBeSaved, 
+    const FString& DestinationPath, 
+    const FString& WorldName
+    )
 {
-    UWorld* world;
-    UObjectRedirector *BaseMapRedirector = Cast<UObjectRedirector>(WorldToBeSaved.GetAsset());
+    UWorld* World;
+    UObjectRedirector *BaseMapRedirector = 
+        Cast<UObjectRedirector>(WorldToBeSaved.GetAsset());
     if(BaseMapRedirector != nullptr)
-        world = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+        World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
     else
-        world = CastChecked<UWorld>(WorldToBeSaved.GetAsset());
+        World = CastChecked<UWorld>(WorldToBeSaved.GetAsset());
 
-    // Create package
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Preparing package");
-    UPackage *package = WorldToBeSaved.GetPackage();
-    package->SetFolderName("MapGeneratorPackage");
-    package->FullyLoad();
-    package->MarkPackageDirty();
-    FAssetRegistryModule::AssetCreated(world);
+    // Create Package
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Preparing Package");
+    UPackage *Package = WorldToBeSaved.GetPackage();
+    Package->SetFolderName("MapGeneratorPackage");
+    Package->FullyLoad();
+    Package->MarkPackageDirty();
+    FAssetRegistryModule::AssetCreated(World);
     
     // Rename new World
-    world->Rename(*WorldName, world->GetOuter());
+    World->Rename(*WorldName, World->GetOuter());
     const FString PackagePath = DestinationPath + "/" + WorldName;
-    FAssetRegistryModule::AssetRenamed(world, *PackagePath);
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, world->GetMapName());
-    world->MarkPackageDirty();
-    world->GetOuter()->MarkPackageDirty();
+    FAssetRegistryModule::AssetRenamed(World, *PackagePath);
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, World->GetMapName());
+    World->MarkPackageDirty();
+    World->GetOuter()->MarkPackageDirty();
 
-    // Saving package
-    const FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath, FPackageName::GetMapPackageExtension());
+    // Saving Package
+    const FString PackageFileName = FPackageName::LongPackageNameToFilename(
+        PackagePath, 
+        FPackageName::GetMapPackageExtension()
+    );
     if(FPaths::FileExists(*PackageFileName))
     {
         GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Package already Exists");
         return false;
     }
-    return UPackage::SavePackage(package, world, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-        *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+    return UPackage::SavePackage(
+        Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+        *PackageFileName, GError, nullptr, true, true, SAVE_NoError
+    );
 }
 
-bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& metaInfo)
+bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaInfo)
 {
-    FAssetData worldAssetData;
-    bool bLoaded = LoadBaseLargeMapWorld(worldAssetData);
-    bool bSaved = SaveWorld(worldAssetData, metaInfo.destinationPath, metaInfo.mapName);
+    FAssetData WorldAssetData;
+    bool bLoaded = LoadBaseLargeMapWorld(WorldAssetData);
+    bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MetaInfo.MapName);
 
     return true;
 }
 
-bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& metaInfo)
+bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 {
-    FAssetData worldAssetData;
-    
-    int numberOfTiles = metaInfo.sizeX * metaInfo.sizeY;
+    FAssetData WorldAssetData;
 
-    for(int i = 0; i < metaInfo.sizeX; i++)
+    for(int i = 0; i < MetaInfo.SizeX; i++)
     {
-        for(int j = 0; j < metaInfo.sizeY; j++)
+        for(int j = 0; j < MetaInfo.SizeY; j++)
         {
-            bool bLoaded = LoadBaseTileWorld(worldAssetData);
+            bool bLoaded = LoadBaseTileWorld(WorldAssetData);
 
-            FMapGeneratorTileMetaInfo metaTileInfo;
-            metaTileInfo.indexX = i;
-            metaTileInfo.indexY = j;
-            ApplyHeightMapToLandscape(worldAssetData,metaTileInfo);
+            FMapGeneratorTileMetaInfo MetaTileInfo;
+            MetaTileInfo.IndexX = i;
+            MetaTileInfo.IndexY = j;
+            ApplyHeightMapToLandscape(WorldAssetData,MetaTileInfo);
 
-            const FString mapName = metaInfo.mapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
-            bool bSaved = SaveWorld(worldAssetData, metaInfo.destinationPath, mapName);
-            GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, bSaved ? "Saved CORRECT" : "NOT saved");
+            const FString MapName = 
+                MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+            bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MapName);
         }
     }
     return true;
 }
 
-bool UMapGeneratorWidget::ApplyHeightMapToLandscape(FAssetData& worldAssetData, FMapGeneratorTileMetaInfo tileMetaInfo)
+bool UMapGeneratorWidget::ApplyHeightMapToLandscape(
+    FAssetData& WorldAssetData, 
+    FMapGeneratorTileMetaInfo tileMetaInfo
+    )
 {
-    UWorld* world;
-    UObjectRedirector* BaseMapRedirector = Cast<UObjectRedirector>(worldAssetData.GetAsset());
+    UWorld* World;
+    UObjectRedirector* BaseMapRedirector = 
+        Cast<UObjectRedirector>(WorldAssetData.GetAsset());
     if(BaseMapRedirector != nullptr)
     {
-        world = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+        World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
     }
     else
     {
-        world = CastChecked<UWorld>(worldAssetData.GetAsset());
+        World = CastChecked<UWorld>(WorldAssetData.GetAsset());
     }
-    ALandscape* landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(world, ALandscape::StaticClass());
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, landscape!=nullptr ? "L TRUE" : "L FALSE");
+    ALandscape* landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
+        World, 
+        ALandscape::StaticClass()
+    );
     AssignLandscapeHeightMap(landscape, tileMetaInfo);
     return true;
 }

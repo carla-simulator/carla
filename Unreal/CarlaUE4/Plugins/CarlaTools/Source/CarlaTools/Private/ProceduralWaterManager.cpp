@@ -1,5 +1,8 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
-
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "ProceduralWaterManager.h"
 
@@ -10,7 +13,7 @@
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
 #include "UnrealString.h"
 
-#include "Actor.h"
+#include "GameFramework/Actor.h"
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -20,190 +23,196 @@ UProceduralWaterManager::UProceduralWaterManager()
  	// Pass
 }
 
-FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMetaInfo metaInfo)
+FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMetaInfo MetaInfo)
 {
-	FString errorMsg="";
+	FString ErrorMsg="";
 
-	
-	
-	if(metaInfo.WaterGenerationType == EWaterGenerationType::RIVERS)
+	if(MetaInfo.WaterGenerationType == EWaterGenerationType::RIVERS)
 	{
 		if(RiverBlueprintClass)
-			errorMsg = RiverGeneration(metaInfo);
+			ErrorMsg = RiverGeneration(MetaInfo);
 		else
-			errorMsg = "ERROR: River class not assigned";
+			ErrorMsg = "ERROR: River class not assigned";
 	}
-	else if(metaInfo.WaterGenerationType == EWaterGenerationType::LAKE)
+	else if(MetaInfo.WaterGenerationType == EWaterGenerationType::LAKE)
 	{
-		errorMsg = LakeGeneration(metaInfo);
+		ErrorMsg = LakeGeneration(MetaInfo);
 	}
 	else
-		errorMsg = "Error in Water Generation Type";
+		ErrorMsg = "Error in Water Generation Type";
 
-	return errorMsg;
+	return ErrorMsg;
 }
 
-FString UProceduralWaterManager::RiverGeneration(const FProceduralRiversMetaInfo metaInfo)
+FString UProceduralWaterManager::RiverGeneration(const FProceduralRiversMetaInfo MetaInfo)
 {
-	FString errorMsg;
+	FString ErrorMsg;
 
-	const FString WaterInfoPath = metaInfo.WaterInfoPath;
+	const FString WaterInfoPath = MetaInfo.WaterInfoPath;
 	if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*WaterInfoPath))
 	{
-		errorMsg = "File Not Found!! :(";
-		DEBUG_MSG("File Not Found!! :(");
-		return errorMsg;
+		ErrorMsg = "File Not Found!! :(";
+		return ErrorMsg;
 	}
 
-	TArray<FString> file;
-	FFileHelper::LoadFileToStringArray(file, *WaterInfoPath);
+	TArray<FString> File;
+	FFileHelper::LoadFileToStringArray(File, *WaterInfoPath);
 
-	TArray<FSplinePoint> riverPoints;
+	float InputKeyCount = 0.0f;
+	int IterationNumber = 0;
 
-	float inputKeyCount = 0.0f;
-	int iterationNumber = 0;
+	AActor* RiverActor = nullptr;
 
-	AActor* riverActor = nullptr;
+	FString StrX, StrY;
+	FVector PreviusPosition(NAN, NAN, NAN);
 
-	FString x_str, y_str;
-	FVector previusPosition(NAN, NAN, NAN);
+	float ScaleFactor = MetaInfo.CustomScaleFactor;
 
-	float scaleFactor = metaInfo.CustomScaleFactor;
-	FVector locationOffset(0,0,0);
-
-	if(file.Num() == 0)
+	if(File.Num() == 0)
 		return "Error processing file. Check file path and it content.";
 
-	for(FString line : file)
+	for(FString Line : File)
 	{
-		if(line == "# _")
+		if(Line == "# _")
 		{
 			// Important IF to add last point for every spline
 			// Uses data from previus iteration
-			if(iterationNumber != 0 && iterationNumber != -1)
+			if(IterationNumber != 0 && IterationNumber != -1)
 			{
 				// Add Last point to river spline
-				FSplinePoint location(inputKeyCount, previusPosition);
-				if(riverActor != nullptr)
-					AddRiverPointFromCode(riverActor, location); // Last Point
-				CheckAndReverseWaterFlow(riverActor);
+				FSplinePoint Location(InputKeyCount, PreviusPosition);
+				if(RiverActor != nullptr)
+					AddRiverPointFromCode(RiverActor, Location); // Last Point
+				CheckAndReverseWaterFlow(RiverActor);
 			}
 
-			riverActor = SpawnRiverBlueprintActor();
-			inputKeyCount = 0.0f;
-			iterationNumber = -1;	// Wildcard value used for headers
+			RiverActor = SpawnRiverBlueprintActor();
+			InputKeyCount = 0.0f;
+			IterationNumber = -1;	// Wildcard value used for headers
 		}
-		else if (line == "# _L")
+		else if (Line == "# _L")
 		{
 			return "This is a LAKE file. Check the water type and the file content.";
 		}
 		else
 		{
-			if(!line.Split(TEXT(" "), &y_str, &x_str))
+			if(!Line.Split(TEXT(" "), &StrY, &StrX))
 			{
 				return "ERROR: Coordinated cannot be proccess... Check file format";
 			}	
 			
-			float positionX = scaleFactor*FCString::Atof(*x_str);
-			float positionY = scaleFactor*FCString::Atof(*y_str);
-			float positionZ;
+			float PositionX = ScaleFactor*FCString::Atof(*StrX);
+			float PositionY = ScaleFactor*FCString::Atof(*StrY);
+			float PositionZ;
 
-			if(metaInfo.CustomHeight > -100000000.0f)
-				positionZ = metaInfo.CustomHeight;
+			if(MetaInfo.CustomHeight > -100000000.0f)
+				PositionZ = MetaInfo.CustomHeight;
 			else
-				positionZ = GetLandscapeSurfaceHeight(positionX, positionY, false);
+				PositionZ = GetLandscapeSurfaceHeight(PositionX, PositionY, false);
 
-			FVector position(positionX, positionY, positionZ);
+			FVector Position(PositionX, PositionY, PositionZ);
 			
 
-			position += metaInfo.CustomLocationOffset;
+			Position += MetaInfo.CustomLocationOffset;
 
-			if((iterationNumber % metaInfo.CustomSampling) == 0){
-				FSplinePoint newPoint(inputKeyCount, position);
-				float width = (metaInfo.CustomRiverWidth > 0.0f) ? metaInfo.CustomRiverWidth : 2.5f;
-				newPoint.Scale = FVector(1.0f, width, 1.0f);
-				if(riverActor != nullptr)
-					AddRiverPointFromCode(riverActor, newPoint);
-				inputKeyCount += 1.0f;	
+			if((IterationNumber % MetaInfo.CustomSampling) == 0){
+				FSplinePoint NewPoint(InputKeyCount, Position);
+				float Width = (MetaInfo.CustomRiverWidth > 0.0f) ? 
+					MetaInfo.CustomRiverWidth : 2.5f;
+				NewPoint.Scale = FVector(1.0f, Width, 1.0f);
+				if(RiverActor != nullptr)
+					AddRiverPointFromCode(RiverActor, NewPoint);
+				InputKeyCount += 1.0f;	
 			}
-			previusPosition = position;
+			PreviusPosition = Position;
 		}
-		iterationNumber++;
+		IterationNumber++;
 	}
 
 	// Last river created must be destroyed as it is a wildcard
-	if(riverActor != nullptr)
-		riverActor->Destroy();
+	if(RiverActor != nullptr)
+		RiverActor->Destroy();
 
 	return "Successfully processed";
 }
 
-FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo metaInfo)
+FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo MetaInfo)
 {
-	const FString WaterInfoPath = metaInfo.WaterInfoPath;
+	const FString WaterInfoPath = MetaInfo.WaterInfoPath;
 	if(!FPlatformFileManager::Get().GetPlatformFile().FileExists(*WaterInfoPath))
 	{
-		
-		DEBUG_MSG("File Not Found!! :(");
 		return "File Not Found!! :(";
 	}
 
-	TArray<FString> file;
-	FFileHelper::LoadFileToStringArray(file, *WaterInfoPath);
+	TArray<FString> File;
+	FFileHelper::LoadFileToStringArray(File, *WaterInfoPath);
 
-	if(file.Num() == 0)
+	if(File.Num() == 0)
 		return "Error processing file. Check file path and it content.";
 
-	FString centerX_str, centerY_str, sizeX_str, sizeY_str, angle_str;
+	AActor* LakeActor = nullptr;
 
-	AActor* lakeActor = nullptr;
-
-	for(FString line : file)
+	for(FString Line : File)
 	{
-		if(line == "# _L")
+		if(Line == "# _L")
 		{
-			lakeActor = SpawnLakeBlueprintActor();
+			LakeActor = SpawnLakeBlueprintActor();
 		}
-		else if(line == "# _")
+		else if(Line == "# _")
 		{
 			return "This is a RIVER file. Check the water type and the file content.";
 		}
 		else
 		{
-			TArray<FString> lineArray;
+			TArray<FString> LineArray;
 
-			line.ParseIntoArray(lineArray, TEXT(" "));
+			Line.ParseIntoArray(LineArray, TEXT(" "));
 
-			float centerX = FCString::Atof(*lineArray[0]);
-			float centerY = FCString::Atof(*lineArray[1]);
-			float sizeX = 	FCString::Atof(*lineArray[2]);
-			float sizeY = 	FCString::Atof(*lineArray[3]);
-			float angle = 	FCString::Atof(*lineArray[4]);
+			float CenterX = FCString::Atof(*LineArray[0]);
+			float CenterY = FCString::Atof(*LineArray[1]);
+			float SizeX = 	FCString::Atof(*LineArray[2]);
+			float SizeY = 	FCString::Atof(*LineArray[3]);
+			float Angle = 	FCString::Atof(*LineArray[4]);
 
-			float centerZ;
+			float CenterZ;
 
-			if(metaInfo.CustomHeight > -100000000.0f)
-				centerZ = metaInfo.CustomHeight;
+			if(MetaInfo.CustomHeight > -100000000.0f)
+				CenterZ = MetaInfo.CustomHeight;
 			else
-				centerZ = GetLandscapeSurfaceHeight(centerX, centerY, false);
+				CenterZ = GetLandscapeSurfaceHeight(CenterX, CenterY, false);
 
-			FVector location(metaInfo.CustomScaleFactor*centerX, metaInfo.CustomScaleFactor*centerY, centerZ);
-			location += metaInfo.CustomLocationOffset;
+			FVector Location(
+				MetaInfo.CustomScaleFactor*CenterX, 
+				MetaInfo.CustomScaleFactor*CenterY, 
+				CenterZ
+			);
 
-			FRotator rotation(0.0f, angle,0.0f);
+			Location += MetaInfo.CustomLocationOffset;
 
-			FVector scale(metaInfo.CustomRiverWidth*sizeX, metaInfo.CustomRiverWidth*sizeY, 1.0f);
+			FRotator Rotation(0.0f, Angle, 0.0f);
 
-			lakeActor->SetActorScale3D(scale);
-			lakeActor->SetActorLocationAndRotation(location, rotation, false, 0, ETeleportType::None);
+			FVector Scale(
+				MetaInfo.CustomRiverWidth * SizeX, 
+				MetaInfo.CustomRiverWidth * SizeY, 
+				1.0f
+			);
+
+			LakeActor->SetActorScale3D(Scale);
+			LakeActor->SetActorLocationAndRotation(
+				Location, 
+				Rotation, 
+				false, 
+				0, 
+				ETeleportType::None
+			);
 			
 		}
 	
 	}
 
 	// Last river created must be destroyed as it is a wildcard
-	if(lakeActor != nullptr)
-		lakeActor->Destroy();
+	if(LakeActor != nullptr)
+		LakeActor->Destroy();
 
 	return "Successfully processed";
 }
@@ -211,41 +220,51 @@ FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo 
 AActor* UProceduralWaterManager::SpawnRiverBlueprintActor()
 {
 	
-	FVector location(0, 0, 0);
-	FRotator rotation(0,0,0);
-	FActorSpawnParameters spawnInfo;
+	FVector Location(0, 0, 0);
+	FRotator Rotation(0,0,0);
+	FActorSpawnParameters SpawnInfo;
 	
 	UWorld* World = GetWorld();
-	AActor* riverActor =  World->SpawnActor<AActor>(RiverBlueprintClass, location, rotation, spawnInfo);
+	AActor* RiverActor =  World->SpawnActor<AActor>(
+		RiverBlueprintClass, 
+		Location, 
+		Rotation, 
+		SpawnInfo
+	);
 
-	return riverActor;
+	return RiverActor;
 }
 
 AActor* UProceduralWaterManager::SpawnLakeBlueprintActor()
 {
 	
-	FVector location(0, 0, 0);
-	FRotator rotation(0,0,0);
-	FActorSpawnParameters spawnInfo;
+	FVector Location(0, 0, 0);
+	FRotator Rotation(0,0,0);
+	FActorSpawnParameters SpawnInfo;
 	
 	UWorld* World = GetWorld();
-	AActor* riverActor =  World->SpawnActor<AActor>(LakeBlueprintClass, location, rotation, spawnInfo);
+	AActor* LakeActor =  World->SpawnActor<AActor>(
+		LakeBlueprintClass, 
+		Location, 
+		Rotation, 
+		SpawnInfo
+	);
 
-	return riverActor;
+	return LakeActor;
 }
 
 float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool bDrawDebugLines)
 {
-	UWorld* world = GetWorld();
+	UWorld* World = GetWorld();
 
-	if(world)
+	if(World)
 	{
 		FVector RayStartingPoint(x, y, 999999);
 		FVector RayEndPoint(x, y, 0);
 
 		// Raytrace
 		FHitResult HitResult;
-		world->LineTraceSingleByObjectType(
+		World->LineTraceSingleByObjectType(
 			OUT HitResult,
 			RayStartingPoint,
 			RayEndPoint,
@@ -262,7 +281,7 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
 			else LineColor = FColor::Green;
 
 			DrawDebugLine(
-				world,
+				World,
 				RayStartingPoint,
 				RayEndPoint,
 				LineColor,
@@ -273,7 +292,7 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
 			);
 		}
 
-		// Return Z location.
+		// Return Z Location.
 		if (HitResult.GetActor()) return HitResult.ImpactPoint.Z;
 	}
 	return 0.0f;
