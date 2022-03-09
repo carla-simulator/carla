@@ -109,7 +109,7 @@ def spawn_actors(conf, world, parent=None):
         # Pass parent because...
         actor_list = conf_to_actor(actor_conf, world, parent=parent)
         logger.info(f"Spawned actor: {actor_list[0].type_id} with id: {actor_list[0].id}")
-        
+
         for actor in actor_list:
             # Save actor to dictionary
             # For pedestrians, the ai walker controller is returned as a tuple (walker_controller, destination_transform)
@@ -117,11 +117,11 @@ def spawn_actors(conf, world, parent=None):
                 actors[actor[0].id] = (actor[0], True, actor[1])
                 derived_parent = actor[0].parent
             else:
-                actors[actor.id] = (actor, True)
+                actors[actor.id] = (actor, True, None)
                 derived_parent = actor.parent
             if derived_parent is not None and (fnmatch.fnmatch(derived_parent.type_id, "vehicle.*") or fnmatch.fnmatch(derived_parent.type_id, "walker.pedestrian.*")):
                 # If actor has a parent and it's parent is not the default parent, then it was spawned by another script and we should not destroy this actor
-                actors[derived_parent.id] = (derived_parent, derived_parent == parent)
+                actors[derived_parent.id] = (derived_parent, derived_parent == parent, None)
                 logger.info(f"Found actor : {derived_parent.type_id} with id: {derived_parent.id} to enable autopilot")
 
         attached_actors = spawn_actors(actor_conf.get("sensors", []), world, parent=actor)
@@ -161,9 +161,9 @@ def conf_to_actor(conf, world, parent=None):
             walker_controller.set_max_speed(float(blueprint.get_attribute('speed').recommended_values[2]))
         else:
             walker_controller.set_max_speed(float(blueprint.get_attribute('speed').recommended_values[1]))
-        
+
         return [actor, (walker_controller, dest_transform)]
-    
+
     return [actor]
 
 def conf_to_blueprint(conf, library):
@@ -245,7 +245,7 @@ def save_sensor_static_metadata(sensors):
             camera_data['type'] = sensor.type_id
             camera_data['fov'] = sensor.attributes['fov']
             sensors_metadata[sensor.id] = camera_data
-            
+
     return sensors_metadata
 
 
@@ -379,15 +379,10 @@ def data_saver_loop(conf):
     actor_dict = {}
     try:
         actor_dict = spawn_actors(conf.spawn_actors, world)
-        # actor_dict: {actor_id: (actor, should_destroy)}
-        for actor_tuple in actor_dict.values():
-            # Skip non-vehicle actors
-            #if not fnmatch.fnmatch(actor.type_id, "vehicle.*"):
-            #    continue
-            actor = actor_tuple[0]
+        # actor_dict: {actor_id: (actor, should_destroy, destination)}
+        for actor, _, destination in actor_dict.values():
             if fnmatch.fnmatch(actor.type_id, "controller.ai.walker"):
                 actor.start()
-                destination = actor_tuple[2]
                 actor.go_to_location(destination)
             if fnmatch.fnmatch(actor.type_id, "vehicle.*"):
                 actor.set_autopilot(True, tm_port)
@@ -457,11 +452,10 @@ def data_saver_loop(conf):
         logger.exception(error)
     finally:
         logger.info("Destroying actors")
-        for actor in actor_dict.values():
-            should_destroy = actor[1]
+        for actor, should_destroy, _ in actor_dict.values():
             if not should_destroy:
                 continue
-            actor[0].destroy()
+            actor.destroy()
 
         print('done.')
 
