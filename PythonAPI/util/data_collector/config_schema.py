@@ -25,6 +25,7 @@ class Carla:
     traffic_manager_port: int = 8000
     respawn: bool = True
     townmap: Optional[str] = MISSING
+    retry: Optional[int] = MISSING
 
 @dataclass
 class Location:

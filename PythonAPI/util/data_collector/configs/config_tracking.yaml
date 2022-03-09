@@ -7,6 +7,7 @@ carla:
     timeout: 2.0
   seed: 30
   traffic_manager_port: 8000
+  retry: 10
 
 output_dir: "_out"
 max_frames: 300

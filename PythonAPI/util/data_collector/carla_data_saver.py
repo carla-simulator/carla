@@ -339,9 +339,9 @@ def data_saver_loop(conf):
     if conf.carla.get("seed"):
         random.seed(conf.carla.seed)
 
-    # Try connecting 10 times
+    # Try connecting "retry" (default = 10) times
     client = None
-    for i in range(10):
+    for i in range(conf.carla.get("retry", 10)):
         try:
             client = carla.Client(conf.carla.host, conf.carla.port)
             client.set_timeout(conf.carla.timeout)
