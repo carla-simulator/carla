@@ -1,3 +1,18 @@
+## Latest
+  * Added native ackermann controller:
+    - `apply_ackermann_control`:  to apply an ackermann control command to a vehicle
+    - `get_ackermann_controller_settings`: to get the last ackermann controller settings applied
+    - `apply_ackermann_controller_settings`: to apply new ackermann controller settings
+  * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
+  * Added `NormalsSensor`, a new sensor with normals information
+  * Added support for N wheeled vehicles
+
+## CARLA sissiok:data_collector
+ * Added a data collection tool
+   - `carla_data_saver.py`: saves sensor data and simulation metadata. Can be used for generate synthetic object detection and tracking datasets.
+   - `carla_coco_converter.py`: generates annotations in COCO format for camera images saved by `carla_data_saver.py`
+   - `kwcoco_to_mots.py`: converts kwcoco annotation format to MOTS annotation format.
+
 ## CARLA 0.9.13
 
   * Added new **instance aware semantic segmentation** sensor `sensor.camera.instance_segmentation`
