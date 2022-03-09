@@ -46,3 +46,5 @@ _out*
 _site
 core
 profiler.csv
+ ../../ROM/
+../../Unreal/CarlaUE4/Config/DefaultEditorSettings.ini
