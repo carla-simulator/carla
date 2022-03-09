@@ -1,4 +1,8 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
@@ -69,32 +73,32 @@ public:
 	TSubclassOf<class AActor> LakeBlueprintClass;
 
 	/// Main function to be called from the widget to start all the generation process
-	/// @a metaInfo is the input data for this process
+	/// @a MetaInfo is the input data for this process
 	UFUNCTION(BlueprintCallable)
-	FString StartWaterGeneration(const FProceduralRiversMetaInfo metaInfo);
+	FString StartWaterGeneration(const FProceduralRiversMetaInfo MetaInfo);
 
 	/// Add river @a riverActor spline point @a splinePoint to SplinePoint  
 	/// collection to be added in later processes to the spline component.
 	/// This is implemented in blueprint code.
 	UFUNCTION(BlueprintImplementableEvent)
-	void AddRiverPointFromCode(AActor* riverActor, FSplinePoint splinePoint);
+	void AddRiverPointFromCode(AActor* RiverActor, FSplinePoint SplinePoint);
 
 	/// It checks which is the direction the flow of the river depending on the
 	/// altitude of the start and the end of the river @a riverActor
 	UFUNCTION(BlueprintImplementableEvent)
-	void CheckAndReverseWaterFlow(AActor* riverActor);
+	void CheckAndReverseWaterFlow(AActor* RiverActor);
 
 private:
 	
 	/// It is responsible of the rivers generation, parsing the file,
 	/// intantiating the actors and setting its splline points
 	UFUNCTION()
-	FString RiverGeneration(const FProceduralRiversMetaInfo metaInfo);
+	FString RiverGeneration(const FProceduralRiversMetaInfo MetaInfo);
 
 	/// It is responsible of the lakes generation, pasing the file,
 	/// instantiating the actors and setting its properties
 	UFUNCTION()
-	FString LakeGeneration(const FProceduralRiversMetaInfo metaInfo);
+	FString LakeGeneration(const FProceduralRiversMetaInfo MetaInfo);
 
 	/// Instantiate a new actor of type RiverBlueprintClass
 	/// Returns the the actor created

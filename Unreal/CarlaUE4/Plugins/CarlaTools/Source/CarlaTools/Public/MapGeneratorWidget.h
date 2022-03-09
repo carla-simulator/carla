@@ -4,9 +4,6 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-
-// #if WITH_EDITOR
-
 #pragma once 
 
 #include "CoreMinimal.h"
@@ -23,16 +20,16 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
     GENERATED_USTRUCT_BODY();
 
     UPROPERTY(BlueprintReadWrite)
-    FString destinationPath;
+    FString DestinationPath;
 
     UPROPERTY(BlueprintReadWrite)
-    FString mapName;
+    FString MapName;
 
     UPROPERTY(BlueprintReadWrite)   
-    int sizeX;
+    int SizeX;
 
     UPROPERTY(BlueprintReadWrite)
-    int sizeY;
+    int SizeY;
 };
 
 USTRUCT(BlueprintType)
@@ -44,10 +41,10 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
     bool bIsTiled = true;
 
     UPROPERTY(BlueprintReadWrite)   
-    int indexX;
+    int IndexX;
 
     UPROPERTY(BlueprintReadWrite)
-    int indexY;
+    int IndexY;
 };
 
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
@@ -65,18 +62,18 @@ private:
 
 public:
     /// This function invokes a blueprint event defined in widget blueprint 
-    /// event graph, which sets a heightmap to the @a landscape using
+    /// event graph, which sets a heightmap to the @a Landscape using
     /// ALandscapeProxy::LandscapeImportHeightMapFromRenderTarget(...)
     /// function, which is not exposed to be used in C++ code, only blueprints
     /// @a metaTileInfo contains some useful info to execute this function
     UFUNCTION(BlueprintImplementableEvent)
-    void AssignLandscapeHeightMap(ALandscape* landscape, FMapGeneratorTileMetaInfo tileMetaInfo);
+    void AssignLandscapeHeightMap(ALandscape* Landscape, FMapGeneratorTileMetaInfo TileMetaInfo);
 
     /// Function called by Widget Blueprint which generates all tiles of map
     /// @a mapName, and saves them in @a destinationPath
     /// Returns a void string is success and an error message if the process failed
     UFUNCTION(Category="Map Generator",BlueprintCallable)
-    FString GenerateMapFiles(const FMapGeneratorMetaInfo& metaInfo);
+    FString GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo);
 
 private:    
     /// Loads the base tile map and stores it in @a WorldAssetData
@@ -89,33 +86,33 @@ private:
     UFUNCTION()
     bool LoadBaseLargeMapWorld(FAssetData& WorldAssetData);
 
-    /// Loads the base template UWorld object from @a baseMapPath and returns 
+    /// Loads the base template UWorld object from @a BaseMapPath and returns 
     /// it in @a WorldAssetData
     /// The funtions return true is success, otherwise false
     UFUNCTION()
-    bool LoadWorld(FAssetData& WorldAssetData, const FString& baseMapPath);
+    bool LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath);
 
     /// Saves a world contained in @a WorldToBeSaved, in the path defined in @a DestinationPath
     /// named as @a WorldName, as a package .umap
     UFUNCTION()
     bool SaveWorld(FAssetData& WorldToBeSaved, const FString& DestinationPath, const FString& WorldName);
 
-    /// Takes the name of the map from @a metaInfo and created the main map
+    /// Takes the name of the map from @a MetaInfo and created the main map
     /// including all the actors needed by large map system
     UFUNCTION()
-    bool CreateMainLargeMap(const FMapGeneratorMetaInfo& metaInfo);
+    bool CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaInfo);
 
-    /// Takes @a metaInfo as input and generates all tiles based on the
+    /// Takes @a MetaInfo as input and generates all tiles based on the
     /// dimensions specified for the map
     /// The funtions return true is success, otherwise false
     UFUNCTION()
-    bool CreateTilesMaps(const FMapGeneratorMetaInfo& metaInfo);
+    bool CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo);
 
-    /// Gets the landscape from the input world @a worldAssetData and
+    /// Gets the Landscape from the input world @a WorldAssetData and
     /// applies the heightmap to it. The tile index is indexX and indexY in
-    /// @a tileMetaInfo argument
+    /// @a TileMetaInfo argument
     /// The funtions return true is success, otherwise false
     UFUNCTION()
-    bool ApplyHeightMapToLandscape(FAssetData& worldAssetData, FMapGeneratorTileMetaInfo tileMetaInfo);
+    bool ApplyHeightMapToLandscape(FAssetData& WorldAssetData, FMapGeneratorTileMetaInfo TileMetaInfo);
 };
 // #endif
