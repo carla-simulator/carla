@@ -14,27 +14,10 @@
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
 
-// #define DEBUG_MSG(x, ...) if(GEngine){GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::White, FString::Printf(TEXT(x), __VA_ARGS__));}
-
 // Sets default values
 UProceduralWaterManager::UProceduralWaterManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	//PrimaryActorTick.bCanEverTick = true;
-	// static ConstructorHelpers::FObjectFinder<UBlueprint> DummyBlueprint(TEXT("Blueprint'/CarlaTools/ProceduralWaterManager/DummyActor.DummyActor'"));
-    // if (DummyBlueprint.Object){
-    //     MyDummyBlueprint = (UClass*)DummyBlueprint.Object->GeneratedClass;
-    // }
-	static ConstructorHelpers::FObjectFinder<UBlueprint> RiverBlueprint(TEXT("Blueprint'/Game/racer-sim/Blueprints/Water/BP_River.BP_River'"));
-    if (RiverBlueprint.Object){
-        RiverBlueprintClass = (UClass*)RiverBlueprint.Object->GeneratedClass;
-    }
-
-	static ConstructorHelpers::FObjectFinder<UBlueprint> LakeBlueprint(TEXT("Blueprint'/CarlaTools/ProceduralWaterManager/DummyActor.DummyActor'"));
-    if (LakeBlueprint.Object){
-        LakeBlueprintClass = (UClass*)LakeBlueprint.Object->GeneratedClass;
-    }
-
+ 	// Pass
 }
 
 FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMetaInfo metaInfo)
@@ -182,11 +165,6 @@ FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo 
 		}
 		else
 		{
-			// if(!line.Split(TEXT(" "), &centerX_str, &centerY_str, &sizeX_str, &sizeY_str, &angle_str))
-			// {
-			// 	return "ERROR: Coordinated cannot be proccess... Check file format";
-			// }
-
 			TArray<FString> lineArray;
 
 			line.ParseIntoArray(lineArray, TEXT(" "));
