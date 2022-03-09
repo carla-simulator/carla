@@ -48,8 +48,6 @@ MODEL_NAME = "Xception"
 MEMORY_FRACTION = 0.8
 MIN_REWARD = -200
 
-
-
 EPISODES = 1000
 
 DISCOUNT = 0.99
@@ -75,63 +73,18 @@ class CarEnv:
         self.map = self.world.get_map()   ## added for map creating
         self.blueprint_library = self.world.get_blueprint_library()
 
-        # weather = carla.WeatherParameters(
-        #     cloudyness=10.0,
-        #     precipitation=10.0,
-        #     sun_altitude_angle=90.0)
-
-        # self.world.set_weather(weather)
-
         self.model_3 = self.blueprint_library.filter("model3")[0]  ## grab tesla model3 from library
-
-
-            
 
     def reset(self):
         self.collision_hist = []    
         self.actor_list = []
         
-
-
-
         self.waypoints = self.client.get_world().get_map().generate_waypoints(distance=5.0)
-
-        # for self.waypoint in self.waypoints:
-        #     self.world.debug.draw_string(self.waypoint.transform.location, 'O', draw_shadow=False,
-        #                     color=carla.Color(r=0, g=255, b=0), life_time=40,
-        #                     persistent_lines=True)
-
-        #self.transform = self.world.get_map().get_spawn_points()[1]
         self.spawn_point = self.waypoints[0].transform
 
         self.spawn_point.location.z += 2
         self.vehicle = self.world.spawn_actor(self.model_3, self.spawn_point)  ## changed for adding waypoints
 
-
-
-
-        # self.spawn_points = self.map.get_spawn_points()
-
-        # self.vehicle = self.world.spawn_actor(self.model_3, self.spawn_points)  ## changed for adding waypoints
-
-        # self.waypoint = self.map.get_waypoint(self.vehicle.get_location())
-        # self.vehicle.set_simulate_physics(False)
-
-        # self.world.debug.draw_string(self.waypoint.transform.location, 'O', draw_shadow=False,
-        #                            color=carla.Color(r=0, g=255, b=0), life_time=40,
-        #                            persistent_lines=True)
-        # while True:
-        #     # Find next waypoint 2 meters ahead.
-        #     self.waypoint = random.choice(self.waypoint.next(20.0))
-        #     # Teleport the vehicle.
-        #     self.vehicle.set_transform(self.waypoint.transform)
-
-        # self.transform = random.choice(self.world.get_map().get_spawn_points())
-        # self.vehicle = self.world.spawn_actor(self.model_3, self.transform)
-        
-
-
-        
         self.actor_list.append(self.vehicle)
 
         # self.rgb_cam = self.blueprint_library.find('sensor.camera.rgb')
@@ -170,7 +123,6 @@ class CarEnv:
     def process_img(self, image):
         image.convert(cc.CityScapesPalette)
         i = np.array(image.raw_data)
-        #np.save("iout.npy", i)
         i2 = i.reshape((self.im_height, self.im_width, 4))
         i3 = i2[:, :, :3]
         if self.SHOW_CAM:
@@ -186,7 +138,6 @@ class CarEnv:
         '''
         if action == 0:
             self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer= 0.0 ))
-            
         if action == 1:
             self.vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=1.0*self.STEER_AMT))
         if action == 2:
@@ -195,30 +146,6 @@ class CarEnv:
         v = self.vehicle.get_velocity()
         kmh = int(3.6 * math.sqrt(v.x**2 + v.y**2 + v.z**2))
       
-        
-
-
-        # if len(self.collision_hist) != 0:
-        #         done = True
-        #         reward = -200
-        # elif kmh < 50:
-        #         done = False
-        #         reward = -1
-        # elif carla.Location.distance(self, self.waypoint) == 0:
-        #         done = False
-        #         reward = 150
-        # else:
-        #         done = False
-        #         reward = 10
-
-        # if self.episode_start + SECONDS_PER_EPISODE < time.time():  ## when to stop
-        #         done = True
-
-        # return self.front_camera, reward, done, None
-        #i = 2
-        #for i in range(2, len(self.filtered_waypoints)):
-
-        #print("Loop: ", i)
         car_location = carla.Actor.get_location(self.actor_list[0])
         nearest_waypoint = self.client.get_world().get_map().get_waypoint(car_location,project_to_road=False, lane_type=(carla.LaneType.Driving))
 
@@ -231,18 +158,13 @@ class CarEnv:
         elif nearest_waypoint is not None and carla.Location.distance(car_location, nearest_waypoint.transform.location) <= 0.1:
             done = False
             reward = 25
-            #print("waypoint hit")
         else:
             done = False
             reward = 30
-        #i = i + 1
 
         if self.episode_start + SECONDS_PER_EPISODE < time.time():  ## when to stop
             done = True
-        # if nearest_waypoint is not None: 
-        #     print("waypoint hit: ", nearest_waypoint.transform.location)
-        #     print("car location, ", car_location)
-        
+
         return self.front_camera, reward, done, None
 
 
@@ -253,8 +175,6 @@ class DQNAgent:
 
         ## replay_memory is used to remember the sized previous actions, and then fit our model of this amout of memory by doing random sampling
         self.replay_memory = deque(maxlen=REPLAY_MEMORY_SIZE)   ## batch step
-        self.tensorboard = ModifiedTensorBoard(log_dir=f"logs/{MODEL_NAME}-{int(time.time())}")
-
         self.target_update_counter = 0  # will track when it's time to update the target model
        
         self.model = self.create_model()
@@ -263,7 +183,6 @@ class DQNAgent:
         self.target_model.set_weights(self.model.get_weights())
 
         self.terminate = False  # Should we quit?
-        self.last_logged_episode = 0
         self.training_initialized = False  # waiting for TF to get rolling
 
     def create_model(self):
@@ -274,39 +193,11 @@ class DQNAgent:
         x = GlobalAveragePooling2D()(x)
         x = Flatten()(x) 
         #2048 fcn
-
         predictions = Dense(3, activation="linear")(x)  ## output layer include three nuros, representing three actions
         model = Model(inputs=base_model.input, outputs=predictions)
         model.compile(loss="mse", optimizer="Adam", metrics=["accuracy"])                                 ## changed
         return model
 
-        # base_model = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=(480, 640, 3))
-        # base_model.trainable = False
-        # # Additional Linear Layers
-        # inputs = tf.keras.Input(shape=(480, 640, 3))
-        # x = base_model(inputs, training=False)
-        # x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        # x = tf.keras.layers.Flatten()(x)
-
-        # x = tf.keras.layers.Dense(units=40, activation='relu')(x)
-        # output = tf.keras.layers.Dense(units=3, activation='linear')(x)
-        # # Compile the Model
-        # model = tf.keras.Model(inputs, output)
-        # model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
-        # print(model.summary)
-        # return model
-
-        # base_model = tf.keras.applications.ResNet50(weights=None, include_top=False, input_shape=(IM_HEIGHT, IM_WIDTH,3)) 
-        # x = base_model.output
-        # x = GlobalAveragePooling2D()(x)
-        # x = Flatten()(x) 
-        # print(x.shape)
-        # predictions = Dense(3, activation="linear")(x)  ## output layer include three nuros, representing three actions
-        # model = Model(inputs=base_model.input, outputs=predictions)
-        # model.compile(loss="mse", optimizer="Adam", metrics=["accuracy"])                                 ## changed
-        # return model
-
-    ## function handler
     # Adds step's data to a memory replay array
     # (observation space, action, reward, new observation space, done)= (current_state, action, reward, new_state, done)
     def update_replay_memory(self, transition):
@@ -314,7 +205,6 @@ class DQNAgent:
 
 
     def train(self):
-
         ## starting training only if certain number of samples is already saved
         if len(self.replay_memory) < MIN_REPLAY_MEMORY_SIZE:
             return
@@ -326,12 +216,9 @@ class DQNAgent:
         ## transition is being defined by this: transition = (current_state, action, reward, new_state, done)
         current_states = np.array([transition[0] for transition in minibatch])/255
 
-
-        ## This is the crazyly changed model:
-       
+        ## This is the changed model
         current_qs_list = self.model.predict(current_states, PREDICTION_BATCH_SIZE)    ## changed
         
-
         ## This is normal model
         new_current_states = np.array([transition[3] for transition in minibatch])/255
         future_qs_list = self.target_model.predict(new_current_states, PREDICTION_BATCH_SIZE)
@@ -356,20 +243,9 @@ class DQNAgent:
             X.append(current_state)  ## image we have 
             y.append(current_qs)  ## Q value we have
 
-        ## only trying to log per episode, not actual training step, so we're going to use the below to keep track
-        log_this_step = False
-        if self.tensorboard.step > self.last_logged_episode:
-            log_this_step = True
-            self.last_log_episode = self.tensorboard.step
-
         ## fit our model
-        ## setting the tensorboard callback, only if log_this_step is true. If it's false, then we'll still fit, we just wont log to TensorBoard.
-        self.model.fit(np.array(X)/255, np.array(y), batch_size=TRAINING_BATCH_SIZE, verbose=0, shuffle=False, callbacks=[self.tensorboard] if log_this_step else None)
-
-        ## updating to determine if we want to update target_model 
-        if log_this_step:
-            self.target_update_counter += 1
-
+        self.model.fit(np.array(X)/255, np.array(y), batch_size=TRAINING_BATCH_SIZE, verbose=0, shuffle=False)
+        
         # If counter reaches set value, update target network with weights of main network
         if self.target_update_counter > UPDATE_TARGET_EVERY:
             self.target_model.set_weights(self.model.get_weights())
@@ -392,53 +268,6 @@ class DQNAgent:
                 return
             self.train()
             time.sleep(0.01)
-        
-
-
-class ModifiedTensorBoard(TensorBoard):
-
-    # Overriding init to set initial step and writer (we want one log file for all .fit() calls)
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.step = 1
-        # self.writer = tf.summary.FileWriter(self.log_dir)
-        self.writer = tf.summary.create_file_writer('self.log_dir')
-        
-
-    # Overriding this method to stop creating default log writer
-    def set_model(self, model):
-        pass
-
-    # Overrided, saves logs with our step number
-    # (otherwise every .fit() will start writing from 0th step)
-    def on_epoch_end(self, epoch, logs=None):
-        self.update_stats(**logs)
-
-    # Overrided
-    # We train for one batch only, no need to save anything at epoch end
-    def on_batch_end(self, batch, logs=None):
-        pass
-
-    # Overrided, so won't close writer
-    def on_train_end(self, _):
-        pass
-
-    def _write_logs(self, logs, index):
-        with self.writer.as_default():
-            for name, value in logs.items():
-                tf.summary.scalar(name, value, step=index)
-                self.step += 1
-                self.writer.flush()
-
-    # Custom method for saving own metrics
-    # Creates writer, writes custom metrics and closes writer
-    def update_stats(self, **stats):
-        self._write_logs(stats, self.step)
-      
-
-   
-
-
 
 if __name__ == '__main__':
     FPS = 20
@@ -450,10 +279,6 @@ if __name__ == '__main__':
     np.random.seed(1)
     tf.random.set_seed(1)
 
-    # Memory fraction, used mostly when trai8ning multiple agents
-    # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=MEMORY_FRACTION)
-    # backend.set_session(tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)))
-
     # Create models folder, this is where the model will go 
     if not os.path.isdir('models'):
         os.makedirs('models')
@@ -461,7 +286,6 @@ if __name__ == '__main__':
     # Create agent and environment
     agent = DQNAgent()
     env = CarEnv()
-
 
     # Start training thread and wait for training to be initialized
     trainer_thread = Thread(target=agent.train_in_loop, daemon=True)
@@ -479,8 +303,8 @@ if __name__ == '__main__':
 
             env.collision_hist = []
 
-            # Update tensorboard step every episode
-            agent.tensorboard.step = episode
+            # Update the target_update to copy from target model
+            agent.target_update_counter += 1
 
             # Restarting episode - reset episode reward and step number
             episode_reward = 0
@@ -528,15 +352,6 @@ if __name__ == '__main__':
 
             # Append episode reward to a list and log stats (every given number of episodes)
             ep_rewards.append(episode_reward)
-            if not episode % AGGREGATE_STATS_EVERY or episode == 1:        ## every show_stats_every, which is 10 right now, show and save teh following
-                average_reward = sum(ep_rewards[-AGGREGATE_STATS_EVERY:])/len(ep_rewards[-AGGREGATE_STATS_EVERY:])
-                min_reward = min(ep_rewards[-AGGREGATE_STATS_EVERY:])
-                max_reward = max(ep_rewards[-AGGREGATE_STATS_EVERY:])
-                agent.tensorboard.update_stats(reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=epsilon)
-
-                # Save model, but only when min reward is greater or equal a set value
-                if average_reward >= -100:
-                    agent.model.save('models/rlmodel')
 
             # Decay epsilon
             if epsilon > MIN_EPSILON:
