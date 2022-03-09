@@ -82,7 +82,7 @@ def extract_masks(im, category_ids, combine_twowheeled=False, twowheeled_as_pede
 
         if not labels:
             continue
-        
+
         is_crowd = 0
 
         two_wheeled_labels = [carla_labels.index("Vehicle"), carla_labels.index("Pedestrian")]
@@ -103,7 +103,7 @@ def extract_masks(im, category_ids, combine_twowheeled=False, twowheeled_as_pede
         for label in labels:
             extract_obj_binary = np.zeros_like(img_label)  #.shape, dtype=np.uint8, order='F')  # Fortran order required for RLE tools
             extract_obj_binary[np.where((img_label == label) & (obj_ids == obj_id))] = 1
-            
+
             if np.sum(extract_obj_binary) > 0:
                 contours, _ = cv2.findContours(extract_obj_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
                 # TBD: Support partial occlusion using IoU of segmentation mask area and 3d bounding boxes from carla projected into 2d space
@@ -290,7 +290,7 @@ def convert_instancemaps_to_kwcoco_format(dataset_dir_name, dir_pairs, labels, i
                 images.append(image_info)
 
                 masks = extract_masks(labels_mat, category_ids, combine_twowheeled, twowheeled_as_pedestrian)
-                
+
                 for mask in masks:
                     class_id = mask[0]
                     binary_mask = mask[1]
@@ -300,7 +300,7 @@ def convert_instancemaps_to_kwcoco_format(dataset_dir_name, dir_pairs, labels, i
                     category_info = {'id': category_id[0], 'is_crowd': is_crowd}
                     annotation_info = pycococreatortools.create_annotation_info(
                         annot_id, image_id, category_info, binary_mask, (width, height), tolerance=2)
-                    
+
                     if annotation_info is not None:
                         # Map UE object IDs to IDs starting from 1
                         if mask[3] not in dict_annot.keys():
@@ -425,5 +425,4 @@ if __name__ == '__main__':
                     dir_pairs.append((instance_dir, camera_dir))
                     camera_dir = None
 
-    #convert_instancemaps_to_coco_format(args.dataset_parent_dir, dir_pairs, args.labels, args.interval, args.output, args.combine_twowheeled, args.twowheeled_as_pedestrian)
     convert_instancemaps_to_kwcoco_format(args.dataset_parent_dir, dir_pairs, args.labels, interval=1, output=args.output, combine_twowheeled=False, twowheeled_as_pedestrian=False)
