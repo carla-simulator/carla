@@ -60,6 +60,14 @@ public:
 	UProceduralWaterManager();
 
 public:	
+	/// River blueprint class, set by the user using the widget interface
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<class AActor> RiverBlueprintClass;
+
+	/// Lake blueprint class, set by the user using the widget interface
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<class AActor> LakeBlueprintClass;
+
 	/// Main function to be called from the widget to start all the generation process
 	/// @a metaInfo is the input data for this process
 	UFUNCTION(BlueprintCallable)
@@ -77,12 +85,14 @@ public:
 	void CheckAndReverseWaterFlow(AActor* riverActor);
 
 private:
-	TSubclassOf<class AActor> RiverBlueprintClass;
-	TSubclassOf<class AActor> LakeBlueprintClass;
-
+	
+	/// It is responsible of the rivers generation, parsing the file,
+	/// intantiating the actors and setting its splline points
 	UFUNCTION()
 	FString RiverGeneration(const FProceduralRiversMetaInfo metaInfo);
 
+	/// It is responsible of the lakes generation, pasing the file,
+	/// instantiating the actors and setting its properties
 	UFUNCTION()
 	FString LakeGeneration(const FProceduralRiversMetaInfo metaInfo);
 
