@@ -1,0 +1,65 @@
+carla:
+  host: '127.0.0.1'
+  port: 2000
+  timeout: 5.0
+  sync:
+    fps: 30
+    timeout: 2.0
+  seed: 30
+  traffic_manager_port: 8000
+
+output_dir: "_out"
+max_frames: 300
+
+weather:
+  cloudiness: 0.0
+  precipitation: 0.0
+  precipitation_deposits: 0.0
+  wind_intensity: 0.0
+  sun_azimuth_angle: 0.0
+  sun_altitude_angle: 10.0
+  fog_density: 0.0
+  fog_distance: 0.0
+  wetness: 0.0
+
+spawn_actors:
+  - blueprint:
+      name: "walker.pedestrian.*"
+      attr: {role_name: "hero1", is_invincible: "false"}
+      pace: "walk"
+    transform:
+      location: {x: -91, y: 170, z: 0.6}
+      rotation: {yaw: -90.0}
+    destination_transform:
+      location: {x: -91, y: 150, z: 0.6}
+
+  - blueprint:
+      name: "sensor.camera.rgb"
+      attr: {"image_size_x": "800", "image_size_y": "600"}
+    transform:
+      location: {x: -95, y: 160, z: 1.6}
+      rotation: {yaw: 0.0}
+  - blueprint:
+      name: "sensor.camera.depth"
+      attr: {"image_size_x": "800", "image_size_y": "600"}
+    transform:
+      location: {x: -95, y: 160, z: 1.6}
+      rotation: {yaw: 0.0}
+  - blueprint:
+      name: "sensor.camera.instance_segmentation"
+      attr: {"image_size_x": "800", "image_size_y": "600"}
+    transform:
+      location: {x: -95, y: 160, z: 1.6}
+      rotation: {yaw: 0.0}
+
+  - blueprint:
+      name: "walker.pedestrian.*"
+      attr: {role_name: "hero2", is_invincible: "false"}
+      pace: "walk"
+    transform:
+      location: {x: -91, y: 150, z: 0.6}
+      rotation: {yaw: 90.0}
+    destination_transform:
+      location: {x: -91, y: 170, z: 0.6}
+
+

@@ -1,7 +1,8 @@
-# Copyright (c) 2021 Intel Labs.
 #
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
+# Copyright (C) 2020 Intel Corporation
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
 
 from dataclasses import dataclass, field
 from typing import Optional
@@ -58,11 +59,13 @@ class Transform:
 class Blueprint:
     name: str = MISSING
     attr: Optional[Dict[str, str]] = field(default_factory=lambda: {"image_size_x": 800, "image_size_y": 600, "gamma": 2.2})
-
+    pace: Optional[str] = MISSING
+    
 @dataclass
 class Actor:
     blueprint: Blueprint = Blueprint()
     transform: Transform = Transform()
+    destination_transform: Transform = Transform()
     attach_to: Optional[str] = MISSING
     attachment: str = "rigid"
 

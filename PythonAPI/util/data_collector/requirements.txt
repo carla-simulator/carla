@@ -1,4 +1,6 @@
 hydra-core==1.1.1
+coloredlogs
 cython
-git+git://github.com/waspinator/coco.git@2.1.0
-git+git://github.com/waspinator/pycococreator.git@0.2.0
+git+https://github.com/waspinator/coco.git@2.1.0
+git+https://github.com/waspinator/pycococreator.git@0.2.0
+opencv-python
