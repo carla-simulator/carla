@@ -23,10 +23,15 @@ UProceduralWaterManager::UProceduralWaterManager()
 FString UProceduralWaterManager::StartWaterGeneration(const FProceduralRiversMetaInfo metaInfo)
 {
 	FString errorMsg="";
+
+	
 	
 	if(metaInfo.WaterGenerationType == EWaterGenerationType::RIVERS)
 	{
-		errorMsg = RiverGeneration(metaInfo);
+		if(RiverBlueprintClass)
+			errorMsg = RiverGeneration(metaInfo);
+		else
+			errorMsg = "ERROR: River class not assigned";
 	}
 	else if(metaInfo.WaterGenerationType == EWaterGenerationType::LAKE)
 	{
