@@ -51,7 +51,7 @@ struct FSkeletonJoint
   int ParentId;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FString JointName;
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   bool bIsStatic = false;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> ChildrenIds;
@@ -59,8 +59,10 @@ struct FSkeletonJoint
   FTransform Transform; // relative to parent
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FRotator RestingAngles; // resting angle position of springs
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   float Mass = 10.f;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
+  float SpringStrength = 1000.f;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   FRotator AngularVelocity = FRotator(0,0,0);
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
@@ -96,7 +98,7 @@ struct FSkeletonHierarchy
 {
   GENERATED_BODY()
 
-  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<FSkeletonJoint> Joints;
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> EndJoints;
@@ -105,10 +107,12 @@ struct FSkeletonHierarchy
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Skeleton Bone")
   TArray<int> RootToEndOrder;
   
+  void Clear();
   void ComputeChildrenJointsAndBones();
   void ComputeEndJoints();
   void AddForce(const FString& BoneName, const FVector& Force);
   void ClearExternalForces();
+  FSkeletonJoint& GetRootJoint() { return Joints[0]; }
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -134,6 +138,9 @@ public:
 
   void GenerateCollisionCapsules();
 
+  UFUNCTION(CallInEditor, Category = "Spring Based Vegetation Component")
+  void ComputeSpringStrengthForBranches();
+
   UFUNCTION()
   void OnCollisionEvent(
       UPrimitiveComponent* HitComponent,
@@ -158,6 +165,8 @@ public:
       UPrimitiveComponent* OtherComponent,
       int32 OtherBodyIndex);
 
+  UFUNCTION(CallInEditor, Category = "Spring Based Vegetation Component")
+  void GenerateSkeletonHierarchy();
   // UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spring Based Vegetation Component")
   // TArray<AActor*> OverlappingActors;
   // UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
@@ -206,7 +215,16 @@ private:
   FVector Gravity = FVector(0,0,-1);
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float SpringStrength = 2.f;
+  float BaseSpringStrength = 10000.f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float MinSpringStrength = 2000.f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float HorizontalFallof = 0.1f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float VerticalFallof = 0.1f;
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float DeltaTimeOverride = -1.f;
@@ -214,6 +232,14 @@ private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float CollisionForceParameter = 10.f;
 
-  UPROPERTY(VisibleAnywhere, Category = "Spring Based Vegetation Component")
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float CollisionForceMinVel = 1.f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   FSkeletonHierarchy Skeleton;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  bool bAutoComputeStrength = true;
+
 };
+
