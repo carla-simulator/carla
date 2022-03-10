@@ -4,8 +4,9 @@ TM_PORT := $(shell echo "$(PORT) + 2" | bc)
 CONFIG_FILE ?= config_tracking
 NV_GPU ?= "device=0"
 UUID := $(shell uuidgen)
+PYTHON = python3.7
 
-DOCKER_TAG = carla-client:0.9.13
+DOCKER_TAG ?= carla-client:0.9.13
 DOCKER_OPTIONS += --rm
 DOCKER_OPTIONS += --net=host
 DOCKER_OPTIONS += --volume $(shell pwd)\:/home/carla/PythonAPI/util/data_collector\:ro
@@ -51,22 +52,22 @@ clean: ## Clean all directories
 $(DATASETS)/%.yaml: ## Run data collection with specified configuration
 > $(DOCKER_RUND) /bin/bash ./CarlaUE4.sh -RenderOffScreen -carla-port=$(PORT)
 > while ! nc -z localhost $(PORT); do sleep 1; done
-> $(DOCKER_RUN) python3 PythonAPI/util/data_collector/carla_data_saver.py --config-name $(@F) carla.port=$(PORT) carla.traffic_manager_port=$(TM_PORT) hydra.run.dir="$(@D)/$*/$(UUID)"
+> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_data_saver.py --config-name $(@F) carla.port=$(PORT) carla.traffic_manager_port=$(TM_PORT) hydra.run.dir="$(@D)/$*/$(UUID)"
 > docker ps --quiet --filter="name=$(UUID)" -q | xargs docker kill
 
 .PRECIOUS: $(DATASETS)/$(CONFIG_FILE)/%/collection_done
 $(DATASETS)/$(CONFIG_FILE)/%/collection_done: ## Run data collection with config_tracking configuration
 > $(DOCKER_RUND) /bin/bash ./CarlaUE4.sh -RenderOffScreen -carla-port=$(PORT)
 > while ! nc -z localhost $(PORT); do sleep 1; done
-> $(DOCKER_RUN) python3 PythonAPI/util/data_collector/carla_data_saver.py --config-name $(CONFIG_FILE).yaml carla.port=$(PORT) carla.traffic_manager_port=$(TM_PORT) hydra.run.dir="$(@D)"
+> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_data_saver.py --config-name $(CONFIG_FILE).yaml carla.port=$(PORT) carla.traffic_manager_port=$(TM_PORT) hydra.run.dir="$(@D)"
 > docker ps --quiet --filter="name=$(UUID)" -q | xargs docker kill
 > $(DOCKER_RUN) /bin/bash -c "echo $(UUID) > $@"
 
 .PRECIOUS: $(DATASETS)/%/kwcoco_annotations.json
 $(DATASETS)/%/kwcoco_annotations.json: $(DATASETS)/%/collection_done ## Generate kwcoco annotations
-> $(DOCKER_RUN) python3 PythonAPI/util/data_collector/carla_coco_converter.py --output $@ --dataset_parent_dir $(@D) --labels $(LABELS)
+> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_coco_converter.py --output $@ --dataset_parent_dir $(@D) --labels $(LABELS)
 
 .PRECIOUS: $(DATASETS)/%/instances.zip
 $(DATASETS)/%/instances.zip: $(DATASETS)/%/kwcoco_annotations.json ## Convert kwcoco annotation format to MOTS annotation format
-> $(DOCKER_RUN) python3 PythonAPI/util/data_collector/kwcoco_to_mots.py --input_annotation_file $< --output_dir $(@D)/instances
+> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/kwcoco_to_mots.py --input_annotation_file $< --output_dir $(@D)/instances
 > $(DOCKER_RUN) /bin/bash -c "cd $(@D) ; zip -r instances.zip instances"
