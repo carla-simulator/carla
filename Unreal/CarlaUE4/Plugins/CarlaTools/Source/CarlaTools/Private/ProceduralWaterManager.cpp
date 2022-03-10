@@ -184,8 +184,7 @@ FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo 
       FVector Location(
           MetaInfo.CustomScaleFactor*CenterX, 
           MetaInfo.CustomScaleFactor*CenterY, 
-          CenterZ
-      );
+          CenterZ);
 
       Location += MetaInfo.CustomLocationOffset;
 
@@ -194,8 +193,7 @@ FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo 
       FVector Scale(
           MetaInfo.CustomRiverWidth * SizeX, 
           MetaInfo.CustomRiverWidth * SizeY, 
-          1.0f
-      );
+          1.0f);
 
       LakeActor->SetActorScale3D(Scale);
       LakeActor->SetActorLocationAndRotation(
@@ -203,8 +201,7 @@ FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo 
           Rotation, 
           false, 
           0, 
-          ETeleportType::None
-      );
+          ETeleportType::None);
       
     }
   
@@ -229,8 +226,7 @@ AActor* UProceduralWaterManager::SpawnRiverBlueprintActor()
       RiverBlueprintClass, 
       Location, 
       Rotation, 
-      SpawnInfo
-  );
+      SpawnInfo);
 
   return RiverActor;
 }
@@ -247,8 +243,7 @@ AActor* UProceduralWaterManager::SpawnLakeBlueprintActor()
       LakeBlueprintClass, 
       Location, 
       Rotation, 
-      SpawnInfo
-  );
+      SpawnInfo);
 
   return LakeActor;
 }
@@ -269,8 +264,7 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
         RayStartingPoint,
         RayEndPoint,
         FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
-        FCollisionQueryParams()
-    );
+        FCollisionQueryParams());
 
     // Draw debug line.
     if (bDrawDebugLines)
@@ -288,8 +282,7 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
           true,
           5.f,
           0.f,
-          10.f
-      );
+          10.f);
     }
 
     // Return Z Location.
