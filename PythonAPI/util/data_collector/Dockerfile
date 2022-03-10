@@ -3,10 +3,8 @@ USER root
 RUN apt-get update
 RUN apt-get install -y build-essential
 RUN apt-get install -y libjpeg-dev libtiff-dev
-RUN apt-get install -y python3-pip python3.7-dev python3-distutils
-RUN apt-get install -y wget
-RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python3.7 get-pip.py
+RUN apt-get install -y python3.7 python3.7-dev python3-distutils
+RUN apt-get install -y python3-pip
 RUN apt-get install -y git
 RUN apt-get install -y xdg-user-dirs xdg-utils
 RUN apt-get install -y fontconfig
