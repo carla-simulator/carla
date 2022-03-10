@@ -29,8 +29,15 @@ nav:
   - 'Development': 'development_tutorials.md'
   - 'Custom assets': 'custom_assets_tutorials.md'
 
+- Resources:
+  - 'Blueprint library': 'bp_library.md'
+  - 'Python API': 'python_api.md'  
+  - 'C++ reference': 'ref_cpp.md'  
+
 - CARLA Ecosystem:
-  - 'ROS bridge': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
+  - 'ANSYS': 'adv_ansys.md'
+  - 'MathWorks': 'adv_ansys.md'
+  - 'ROS': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
   - 'SUMO': 'adv_sumo.md'
   - 'Scenic': 'tuto_G_scenic.md'
   - 'Chrono': 'tuto_G_chrono.md'
@@ -39,10 +46,6 @@ nav:
   - 'RSS': 'adv_rss.md'
   - 'AWS': 'tuto_G_rllib_integration.md'
   
-- Resources:
-  - 'Blueprint library': 'bp_library.md'
-  - 'Python API': 'python_api.md'  
-  - 'C++ reference': 'ref_cpp.md'  
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 

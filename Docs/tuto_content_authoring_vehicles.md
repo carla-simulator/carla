@@ -4,7 +4,34 @@ CARLA provides a comprehensive set of vehicles out of the box in the blueprint l
 
 3D modelling of detailed vehicles is highly complex and requires a significant degree of skill. We therefore refer the reader to alternative sources of documentation on 3D modelling, since this is beyond the scope of this guide. There are, however, numerous sources of vehicle models in both free and proprietary online repositories. Hence the user has many options to turn to for creating custom vehicles for use in CARLA.
 
-The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. We will cover these steps in the following guide.
+The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. After rigging and importing, blueprints need to be set for the car and the wheels. Then apply matierials and add the glass parts of the vehicle. We will cover these steps in the following guide.
+
+* __[Rigging](#Rigging-the-vehicle-using-an-armature)__   
+	* [Import](#import)  
+	* [Armature](#add-an-armature)
+    * [Parenting](#parenting)
+    * [Assignment](#assigning-car-parts-to-bones)  
+    * [Export](#export)  
+* __[Import into Unreal Engine](#importing-into-unreal-engine)__   
+	* [Physics asset](#setting-the-physics-asset)  
+	* [Animation](#creating-the-animation)
+    * [Blueprint](#creating-the-blueprint)
+* __[Materials](#materials)__   
+	* [Applying materials](#applying-a-material-to-your-vehicle)
+		* [Color](#color)
+		* [Clear coat](#clear-coat)
+		* [Orange peel](#orange-peel)
+		* [Flakes](#flakes)
+		* [Dust](#dust)
+* __[Glass](#glass)__   
+	* [Glass meshes](#glass-meshes)
+	* [Glass material](#glass-material)
+	* [Single layer glass](#single-layer-glass)
+* __[Wheels](#wheels)__   
+	* [Wheel blueprint](#wheel-blueprint)
+	* [Collision mesh](#collision-mesh)
+	* [Tire configuration](#tire-configuration)
+	* [Wheel dimensions](#wheel-dimensions)
 
 ## Rigging the vehicle using an armature
 
@@ -86,7 +113,7 @@ To simplify things, we can copy the animation from another vehicle. In a second 
 
 ### Creating the blueprint
 
-Navigate with your content browser into `Content > Carla > Blueprints > Vehicles > LincolnMKZ2017` or a similar vehicle. In here you will find a set of blueprints set up for the 4 wheels. Copy these into the directory containing your own vehicle and rename them to ensure you can distinguish them later.
+Navigate with your content browser into `Content > Carla > Blueprints > Vehicles > LincolnMKZ2017` or a similar vehicle. In here you will find a set of blueprints set up for the 4 wheels. Copy these into the directory containing your own vehicle and rename them to ensure you can distinguish them later. You can set up your own custom wheels if you prefer, please refer to the later [__wheels section__](#wheels)
 
 ![copy_wheels](img/tuto_content_authoring_vehicles/copy_wheels.png)
 
@@ -115,4 +142,148 @@ python manual_control.py --filter my_vehicle_make
 ```
 ![manual_control](img/tuto_content_authoring_vehicles/manual_control.gif)
 
-As it is, the vehicle currently has no textures or colors applied, however, you can return to the vehicle mesh in the Unreal Editor and add these details at a later stage. 
+As it is, the vehicle currently has no textures or colors applied. The next step is to apply materials to give your vehicle a finish like a real road vehicle.
+
+## Materials
+
+Once you have your vehicle imported as a basic asset with the mesh and blueprints laid out, you now want to add materials to your vehicle to facilitate photorealistic rendering in the Unreal Engine, for maximum fidelity in your machine learning training data.
+
+The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realitic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch. 
+
+### Applying a material to your vehicle
+
+CARLA provides a prototype material for replicating the glossy finish of vehicles that can mimic numerous different types of vehicle paint jobs and features. Open Unreal editor and in the content browser, locate the material in `Content > Carla > Static > GenericMaterials > 00_MastersOpt`. The basic material is called *M_CarPaint_Master*. Right click on this material and choose *Create Material Instance* from the context material. Name it and move it into the folder where your new vehicle content is stored.
+
+In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there. 
+
+![add_model](img/tuto_content_authoring_vehicles/add_model.gif)
+
+Now, in the details panel on the right hand side, drag your new material instance into the *Element 0* position of the *Materials* section. You will see the bodywork take on a new grey, glossy material property.
+
+![apply_material](img/tuto_content_authoring_vehicles/apply_material
+.gif)
+
+Double click on the material in the content browser and we can start editing the parameters. There are a numerous parameters here that alter various properties that are important to mimic real world car paint jobs. The most important parameters are the following:
+
+#### __Color__
+
+The color settings govern the overal color of the car. The base color is simply the primary color of the car this will govern the overall color:
+
+![change_base_color](img/tuto_content_authoring_vehicles/change_base_color
+.gif)
+
+#### __Clear coat__ 
+
+The clear coat settings govern the appearance of the finish and how it reacts to light. The roughness uses a texture to apply imperfections to the vehicle surface, scattering light more with higher values to create a matte look. Subtle adjustments and low values are recommended for a realistic look. Generally, car paint jobs are smooth and reflective, however, this effect might be used more generously to model specialist matte finishes of custom paint jobs.
+
+![change_roughness](img/tuto_content_authoring_vehicles/change_roughness
+.gif)
+
+An important parameter to govern the "shinyness" or "glossyness" of your car is the *Clear Coat Intensity*. High values close to 1 will make the coat shiny and glossy.
+
+#### __Orange peel__ 
+
+Finishes on real cars (particularly on mass produced cars for the general market) tend to have imperfections that appear as slight ripples in the paint. The orange peel effect mimics this and makes cars look more realistic.
+
+![change_orange_peel](img/tuto_content_authoring_vehicles/change_orange_peel
+.gif)
+
+#### __Flakes__
+
+Some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a *metallic* or *pearlescant* appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic metallic finishes, it would be 
+
+![flakes](img/tuto_content_authoring_vehicles/flakes
+.gif)
+
+#### __Dust__
+
+Cars often accumulate grease and dust on the body that adds additiomal texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint. 
+
+![dust](img/tuto_content_authoring_vehicles/dust
+.gif)
+
+## Glass
+
+Creating realistic glass in CARLA requires some tricks to capture the real refractive and reflective behaviour of glass used in motor vehicles. The CARLA garage vehicles have 4 layers of meshes for the glass, with 2 different materials. The layers are separated by a few millimeters and there are separate materials for the interior and exterior facing glass layers to ensure that the glass looks realistic from both inside and outside the vehicle.
+
+There are 2 layers of glass for the appearence of the vehicle from outside and 2 layers for the appearence of glass from the interior of the vehicle. What makes glass look like glass is the reflections coming from both surfaces of the glass that makes a very subtle doubling of the reflection.
+
+### Glass meshes
+
+Here we see the glass parts attached to the main bodywork (not the doors or other moving parts) of the Lincoln.
+
+![main_glass](img/tuto_content_authoring_vehicles/main_glass.png)
+
+If we separate the constituent mesh parts, we can see that the glass profile is separated into 4 different layers. 
+
+![main_glass_expanded](img/tuto_content_authoring_vehicles/main_glass_expanded.png)
+
+The 4 layers are separated into 2 groups, the exterior layers, with normals facing out of the vehicle and the interior layers, with mesh normals facing into the vehicle interior. The following diagram demonstrates 
+
+![glass_layers](img/tuto_content_authoring_vehicles/glass_layers.png)
+
+Once you have created your mesh layers, import them in the content browser into the Unreal Editor in the folder where you have stored your vehicle. 
+
+Shift select the 4 glass layers and drag them into the map so you can see them.
+
+![drag_glass](img/tuto_content_authoring_vehicles/drag_glass.gif)
+
+### Glass material
+Double click the external layer of the glass, then navigate in a second content browser window to `Content > Carla > Static > Vehicles > GeneralMaterials` and find the *Glass* material. Drag the glass material to the material slot of the mesh item. Repeat this process for each layer of the glass.
+
+The glass will now be transparent, but with reflectivity that reflects nearby objects and light sources. You should also check the interior glass, ensure there is a proper glass effect there.
+
+![glass_reflections](img/tuto_content_authoring_vehicles/glass_reflections.gif)
+
+### Single layer glass
+
+For a quicker way to produce the glass parts of vehicles, the only critical part is the outermost glass layer. You can apply the glass material to this in Unreal Editor and get a result that might be suitable to your needs, however, views from inside the vehicle (i.e. if you instantiate a camera on the dashboard or behind the steering wheel) will seem to have no glass (no refraction or reflection). We recommend the above process to produce maximally realistic glass.
+
+## Wheels
+
+For the wheels of CARLA vehicles, we need to set up a blueprint class for each wheel to deal with the mechanics and collision properties. You will set up 4 blueprint classes, we recommend the following prefixes or suffixes to identify the wheels:
+
+- __RRW__ - **R**ear **R**ight **W**heel
+- __RLW__ - **R**ear **L**eft **W**heel
+- __FRW__ - **F**ront **R**ight **W**heel
+- __FLW__ - **F**ront **L**eft **W**heel
+
+### Wheel blueprint
+
+Inside the folder where you have your new vehicle, right click and choose to create a new blueprint class. Search for 
+
+![wheel_blueprint](img/tuto_content_authoring_vehicles/wheel_blueprint.png)
+
+Double click on the blueprint to adjust it:
+
+![wheel_blueprint_open](img/tuto_content_authoring_vehicles/wheel_bp_open.png)
+
+### Collision mesh
+
+Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content broswer locate the *CollisionWheel* mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the 
+*Collision Mesh* slot in the details panel of the blueprint. This will improve performance without any noticable deficit to physics simulation.
+
+### Tire configuration
+
+Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the *CommonTireConfig* configuration and drag it onto the *Tire Config* section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behaviour of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust. 
+
+### Wheel dimensions
+
+Next, in your 3D application, measure the diameter of your wheel. In Blender, the dimensions can be viewed in the properties panel opened by pressing `n` in object mode.
+
+![tire_dimensions](img/tuto_content_authoring_vehicles/tire_dimensions.png)
+
+Now plug these numbers into the *Wheel* section of the blueprint.Take care to remember to half the diameter for the radius and also that Unreal Editor works in units of centimeters. For the wheel mass, we recommend looking for specifications on the internet, find the right tire model or a similar one to estimate the correct mass (in kilograms).
+
+![bp_wheel_dimensions](img/tuto_content_authoring_vehicles/bp_wheel_dimensions.png)
+
+
+*Affected by handbrake* should be checked for both rear wheels. 
+
+*Steer angle* should be set to the maximum intended steer angle for both front wheels and set to zero for both rear wheels.
+
+### __Suspension characteristics__
+
+The default values here provide a resonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type. 
+
+

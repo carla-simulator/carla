@@ -23,6 +23,8 @@ Once you have created your desired road network, in the RoadRunner menu bar choo
 
 ![roadrunner_exports](img/tuto_content_authoring_maps/roadrunner_exports.png)
 
+RoadRunner is the best application for creating custom maps. There are alternatives such as [__OpenStreetMap__](tuto_G_openstreetmap.md) that focus on generating maps from real road maps. 
+
 ## Importing your road network into CARLA
 
 The important export files needed for CARLA are the `.xodr` file and the `.fbx` file. Copy or move these files into the *Import* folder inside the root directory of the CARLA repository where you have built from source. 
@@ -95,4 +97,13 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 Now you can save the map, using the "Save Current" option in the top left of the workspace and it is ready to use. Play the simulation.
 
 This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA. You may now read how to [__package a map for use in CARLA standalond version__](tuto_M_manual_map_package.md)
+
+## Materials
+
+The CARLA content library has a multitude of useful materials ready to use to change the look of your maps. In your content browser, navigate to `Carla > Static > GenericMaterials`. In here you will find numerous materials you can use to alter the appearence of your map. 
+
+You can test the materials rapidly by drag and drop onto map elements:
+
+![map_materials](img/tuto_content_authoring_maps/map_materials.gif)
+
 
