@@ -76,10 +76,10 @@ bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& B
 }
 
 bool UMapGeneratorWidget::SaveWorld(
-  FAssetData& WorldToBeSaved, 
-  const FString& DestinationPath, 
-  const FString& WorldName
-  )
+    FAssetData& WorldToBeSaved, 
+    const FString& DestinationPath, 
+    const FString& WorldName
+    )
 {
   UWorld* World;
   UObjectRedirector *BaseMapRedirector = 
@@ -146,7 +146,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       ApplyHeightMapToLandscape(WorldAssetData,MetaTileInfo);
 
       const FString MapName = 
-        MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+          MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
       bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MapName);
     }
   }
@@ -154,9 +154,9 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 }
 
 bool UMapGeneratorWidget::ApplyHeightMapToLandscape(
-  FAssetData& WorldAssetData, 
-  FMapGeneratorTileMetaInfo TileMetaInfo
-  )
+    FAssetData& WorldAssetData, 
+    FMapGeneratorTileMetaInfo TileMetaInfo
+    )
 {
   UWorld* World;
   UObjectRedirector* BaseMapRedirector = 
@@ -170,8 +170,8 @@ bool UMapGeneratorWidget::ApplyHeightMapToLandscape(
     World = CastChecked<UWorld>(WorldAssetData.GetAsset());
   }
   ALandscape* landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
-    World, 
-    ALandscape::StaticClass()
+      World, 
+      ALandscape::StaticClass()
   );
   AssignLandscapeHeightMap(landscape, TileMetaInfo);
   return true;

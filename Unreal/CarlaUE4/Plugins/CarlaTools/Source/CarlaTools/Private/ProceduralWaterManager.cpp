@@ -118,7 +118,7 @@ FString UProceduralWaterManager::RiverGeneration(const FProceduralRiversMetaInfo
       if((IterationNumber % MetaInfo.CustomSampling) == 0){
         FSplinePoint NewPoint(InputKeyCount, Position);
         float Width = (MetaInfo.CustomRiverWidth > 0.0f) ? 
-          MetaInfo.CustomRiverWidth : 2.5f;
+            MetaInfo.CustomRiverWidth : 2.5f;
         NewPoint.Scale = FVector(1.0f, Width, 1.0f);
         if(RiverActor != nullptr)
           AddRiverPointFromCode(RiverActor, NewPoint);
@@ -182,9 +182,9 @@ FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo 
         CenterZ = GetLandscapeSurfaceHeight(CenterX, CenterY, false);
 
       FVector Location(
-        MetaInfo.CustomScaleFactor*CenterX, 
-        MetaInfo.CustomScaleFactor*CenterY, 
-        CenterZ
+          MetaInfo.CustomScaleFactor*CenterX, 
+          MetaInfo.CustomScaleFactor*CenterY, 
+          CenterZ
       );
 
       Location += MetaInfo.CustomLocationOffset;
@@ -192,18 +192,18 @@ FString UProceduralWaterManager::LakeGeneration(const FProceduralRiversMetaInfo 
       FRotator Rotation(0.0f, Angle, 0.0f);
 
       FVector Scale(
-        MetaInfo.CustomRiverWidth * SizeX, 
-        MetaInfo.CustomRiverWidth * SizeY, 
-        1.0f
+          MetaInfo.CustomRiverWidth * SizeX, 
+          MetaInfo.CustomRiverWidth * SizeY, 
+          1.0f
       );
 
       LakeActor->SetActorScale3D(Scale);
       LakeActor->SetActorLocationAndRotation(
-        Location, 
-        Rotation, 
-        false, 
-        0, 
-        ETeleportType::None
+          Location, 
+          Rotation, 
+          false, 
+          0, 
+          ETeleportType::None
       );
       
     }
@@ -226,10 +226,10 @@ AActor* UProceduralWaterManager::SpawnRiverBlueprintActor()
   
   UWorld* World = GetWorld();
   AActor* RiverActor =  World->SpawnActor<AActor>(
-    RiverBlueprintClass, 
-    Location, 
-    Rotation, 
-    SpawnInfo
+      RiverBlueprintClass, 
+      Location, 
+      Rotation, 
+      SpawnInfo
   );
 
   return RiverActor;
@@ -244,10 +244,10 @@ AActor* UProceduralWaterManager::SpawnLakeBlueprintActor()
   
   UWorld* World = GetWorld();
   AActor* LakeActor =  World->SpawnActor<AActor>(
-    LakeBlueprintClass, 
-    Location, 
-    Rotation, 
-    SpawnInfo
+      LakeBlueprintClass, 
+      Location, 
+      Rotation, 
+      SpawnInfo
   );
 
   return LakeActor;
@@ -265,11 +265,11 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
     // Raytrace
     FHitResult HitResult;
     World->LineTraceSingleByObjectType(
-      OUT HitResult,
-      RayStartingPoint,
-      RayEndPoint,
-      FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
-      FCollisionQueryParams()
+        OUT HitResult,
+        RayStartingPoint,
+        RayEndPoint,
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
+        FCollisionQueryParams()
     );
 
     // Draw debug line.
@@ -281,14 +281,14 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
       else LineColor = FColor::Green;
 
       DrawDebugLine(
-        World,
-        RayStartingPoint,
-        RayEndPoint,
-        LineColor,
-        true,
-        5.f,
-        0.f,
-        10.f
+          World,
+          RayStartingPoint,
+          RayEndPoint,
+          LineColor,
+          true,
+          5.f,
+          0.f,
+          10.f
       );
     }
 
