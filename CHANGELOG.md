@@ -10,8 +10,8 @@
 ## CARLA sissiok:data_collector
  * Added a data collection tool
    - `carla_data_saver.py`: saves sensor data and simulation metadata. Can be used for generate synthetic object detection and tracking datasets.
-   - `carla_coco_converter.py`: generates annotations in COCO format for camera images saved by `carla_data_saver.py`
-   - `kwcoco_to_mots.py`: converts kwcoco annotation format to MOTS annotation format.
+   - `carla_coco_converter.py`: generates annotations in kwcoco format and MOTS format for camera images saved by `carla_data_saver.py`
+   - `Dockerfile`: builds a docker image for CARLA client upon the current CARLA docker image which only supports CARLA server.
 
 ## CARLA 0.9.13
 
