@@ -4,9 +4,18 @@ CARLA comes with a generous compliment of assets for creating driving simulation
 
 In this tutorial we will cover the process of creating a simple map for use with CARLA. We will use two software packages to create parts of the map. We will create the road network using [__RoadRunner__](https://es.mathworks.com/products/roadrunner.html) and then add assets to the map through the [__Unreal Editor__](https://www.unrealengine.com/en-US/features/the-unreal-editor).
 
+* __[Prerequisites](#prerequisites)__   
+* __[RoadRunner](#create-a-road-network-using-roadrunner)__  
+* __[Importing into CARLA](#importing-your-road-network-into-carla)__
+* __[Importing assets](#importing-assets-and-adding-them-to-the-map)__
+* __[Traffic lights](#traffic-lights)__
+* __[Traffic signs](#traffic-signs)__ 
+* __[Materials](#materials)__
+
+
 ## Prerequisites
 
-To follow this guide, you will need to build CARLA from source, so that you may use the unreal editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoardRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you need to  
+To follow this guide, you will need to build CARLA from source, so that you may use the unreal editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoardRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
 
 
 ## Create a road network using RoadRunner
@@ -97,6 +106,40 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 Now you can save the map, using the "Save Current" option in the top left of the workspace and it is ready to use. Play the simulation.
 
 This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA. You may now read how to [__package a map for use in CARLA standalond version__](tuto_M_manual_map_package.md)
+
+## Traffic lights
+
+To add traffic lights to your new map:
+
+__1.__ From the _Content Browser_, navigate to `Content/Carla/Static/TrafficLight/StreetLights_01`. You will find several different traffic light blueprints to choose from.
+
+__2.__ Drag the traffic lights into the scene and position them in the desired location. Press the space bar on your keyboard to toggle between positioning, rotation, and scaling tools.
+
+__3.__ Adjust the [`trigger volume`][triggerlink] for each traffic light by selecting the _BoxTrigger_ component in the _Details_ panel and adjusting the values in the _Transform_ section. This will determine the traffic light's area of influence.
+
+>>![ue_trafficlight](../img/ue_trafficlight.jpg)
+
+__4.__ For junctions, drag the `BP_TrafficLightGroup` actor into the level. Assign all the traffic lights in the junction to the traffic light group by adding them to the _Traffic Lights_ array in the _Details_ panel.
+
+>>![ue_tl_group](../img/ue_tl_group.jpg)
+
+__5.__ Traffic light timing is only configurable through the Python API. See the documentation [here](core_actors.md#traffic-signs-and-traffic-lights) for more information.
+
+>>![ue_tlsigns_example](../img/ue_tlsigns_example.jpg)
+
+> _Example: Traffic Signs, Traffic lights and Turn based stop._
+
+[triggerlink]: python_api.md#carla.TrafficSign.trigger_volume
+
+## Traffic signs
+
+To add traffic lights to your new map:
+
+__1.__ From the _Content Browser_, navigate to `Content/Carla/Static/TrafficSign`. You will find several different traffic light blueprints to choose from.
+
+__2.__ Drag the traffic lights into the scene and position them in the desired location. Press the space bar on your keyboard to toggle between positioning, rotation, and scaling tools.
+
+__3.__ Adjust the [`trigger volume`][triggerlink] for each traffic sign by selecting the _BoxTrigger_ component in the _Details_ panel and adjusting the values in the _Transform_ section. This will determine the traffic light's area of influence. Not all traffic signs have a trigger volume. Those that do, include the yield, stop and speed limit signs.
 
 ## Materials
 

@@ -32,6 +32,9 @@ The key factors in preparing a custom vehicle for CARLA lie in rigging the vehic
 	* [Collision mesh](#collision-mesh)
 	* [Tire configuration](#tire-configuration)
 	* [Wheel dimensions](#wheel-dimensions)
+* __[Lights](#lights)__
+	* [UV map](#uv-map)
+	* [Importing](#importing)
 
 ## Rigging the vehicle using an armature
 
@@ -229,6 +232,7 @@ Shift select the 4 glass layers and drag them into the map so you can see them.
 ![drag_glass](img/tuto_content_authoring_vehicles/drag_glass.gif)
 
 ### Glass material
+
 Double click the external layer of the glass, then navigate in a second content browser window to `Content > Carla > Static > Vehicles > GeneralMaterials` and find the *Glass* material. Drag the glass material to the material slot of the mesh item. Repeat this process for each layer of the glass.
 
 The glass will now be transparent, but with reflectivity that reflects nearby objects and light sources. You should also check the interior glass, ensure there is a proper glass effect there.
@@ -287,3 +291,23 @@ Now plug these numbers into the *Wheel* section of the blueprint.Take care to re
 The default values here provide a resonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type. 
 
 
+## Lights
+
+The last element to complete a realistic vehicle for CARLA is the lights, headlights, brake lights, blinkers etc. In your 3D modelling application, you should model some shapes that resemble the lights of the vehicle you are replicating. This would be flat discs or flat cuboid structures for most headlights. Some vehicles may also have strips of LEDs. 
+
+![lights_blender](img/tuto_content_authoring_vehicles/lights_blender.png)
+
+### UV map
+
+The different types of lights (headlights, blinkers, brake lights, etc.) are distinguished using a texture. You need to create a UV map in your 3D modelling application and position the lights to match up with the relevant region of the texture. 
+
+![lights_uv](img/tuto_content_authoring_vehicles/lights_uv_map.png)
+
+### Importing
+
+Import the light mesh into the Unreal Editor- After importing the light mesh:
+
+- Drag the mesh item(s) into the **_Mesh (VehicleMesh) (Inherited)_** hierarchy in the **_Components_** panel.
+- Select the extra meshes in the hierarchy and search for `Collision` in the **_Details_** panel.
+- Set **_Collision Presets_** to `NoCollision`.
+- Select any lights meshes in the hierarchy. Search for `Tag` in the **_Details_** panel and add the tag `emissive`.
