@@ -383,7 +383,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Gamma;
     Gamma.Id = TEXT("gamma");
     Gamma.Type = EActorAttributeType::Float;
-    Gamma.RecommendedValues = { TEXT("2.2") };
+    Gamma.RecommendedValues = { TEXT("2.4") };
     Gamma.bRestrictToRecommended = false;
 
     // Motion Blur
@@ -642,6 +642,92 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
       ChromaticIntensity,
       ChromaticOffset});
   }
+
+  Success = CheckActorDefinition(Definition);
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeNormalsCameraDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), TEXT("normals"));
+  AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
+
+  // FOV
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = { TEXT("90.0") };
+  FOV.bRestrictToRecommended = false;
+
+  // Resolution
+  FActorVariation ResX;
+  ResX.Id = TEXT("image_size_x");
+  ResX.Type = EActorAttributeType::Int;
+  ResX.RecommendedValues = { TEXT("800") };
+  ResX.bRestrictToRecommended = false;
+
+  FActorVariation ResY;
+  ResY.Id = TEXT("image_size_y");
+  ResY.Type = EActorAttributeType::Int;
+  ResY.RecommendedValues = { TEXT("600") };
+  ResY.bRestrictToRecommended = false;
+
+  // Lens parameters
+  FActorVariation LensCircleFalloff;
+  LensCircleFalloff.Id = TEXT("lens_circle_falloff");
+  LensCircleFalloff.Type = EActorAttributeType::Float;
+  LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
+  LensCircleFalloff.bRestrictToRecommended = false;
+
+  FActorVariation LensCircleMultiplier;
+  LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
+  LensCircleMultiplier.Type = EActorAttributeType::Float;
+  LensCircleMultiplier.RecommendedValues = { TEXT("0.0") };
+  LensCircleMultiplier.bRestrictToRecommended = false;
+
+  FActorVariation LensK;
+  LensK.Id = TEXT("lens_k");
+  LensK.Type = EActorAttributeType::Float;
+  LensK.RecommendedValues = { TEXT("-1.0") };
+  LensK.bRestrictToRecommended = false;
+
+  FActorVariation LensKcube;
+  LensKcube.Id = TEXT("lens_kcube");
+  LensKcube.Type = EActorAttributeType::Float;
+  LensKcube.RecommendedValues = { TEXT("0.0") };
+  LensKcube.bRestrictToRecommended = false;
+
+  FActorVariation LensXSize;
+  LensXSize.Id = TEXT("lens_x_size");
+  LensXSize.Type = EActorAttributeType::Float;
+  LensXSize.RecommendedValues = { TEXT("0.08") };
+  LensXSize.bRestrictToRecommended = false;
+
+  FActorVariation LensYSize;
+  LensYSize.Id = TEXT("lens_y_size");
+  LensYSize.Type = EActorAttributeType::Float;
+  LensYSize.RecommendedValues = { TEXT("0.08") };
+  LensYSize.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+      ResX,
+      ResY,
+      FOV,
+      LensCircleFalloff,
+      LensCircleMultiplier,
+      LensK,
+      LensKcube,
+      LensXSize,
+      LensYSize});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1040,6 +1126,18 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     Parameters.ObjectType});
 
   Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("base_type"),
+    EActorAttributeType::String,
+    Parameters.BaseType});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("special_type"),
+    EActorAttributeType::String,
+    Parameters.SpecialType});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
     TEXT("number_of_wheels"),
     EActorAttributeType::Int,
     FString::FromInt(Parameters.NumberOfWheels)});
@@ -1049,6 +1147,18 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     TEXT("generation"),
     EActorAttributeType::Int,
     FString::FromInt(Parameters.Generation)});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("has_dynamic_doors"),
+    EActorAttributeType::Bool,
+    Parameters.HasDynamicDoors ? TEXT("true") : TEXT("false")});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("has_lights"),
+    EActorAttributeType::Bool,
+    Parameters.HasLights ? TEXT("true") : TEXT("false")});
   Success = CheckActorDefinition(Definition);
 }
 
@@ -1424,7 +1534,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations["enable_postprocess_effects"],
         true));
     Camera->SetTargetGamma(
-        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.2f));
+        RetrieveActorAttributeToFloat("gamma", Description.Variations, 2.4f));
     Camera->SetMotionBlurIntensity(
         RetrieveActorAttributeToFloat("motion_blur_intensity", Description.Variations, 0.5f));
     Camera->SetMotionBlurMaxDistortion(

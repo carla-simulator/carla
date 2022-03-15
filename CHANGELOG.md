@@ -1,10 +1,16 @@
 ## Latest
 
+  * Added 4 new attributes to all vehicles:
+    - `base_type` can be use as a vehicle classification. The possible values are  *car*, *truck*, *van*, *motorcycle* and *bycicle*.
+    - `special_type` provides more information about the vehicle. It is currently restricted to *electric*, *emergency* and *taxi*, and not all vehicles have this attribute filled.
+    - `has_dynamics_doors` can either be *true* or *false* depending on whether or not the vehicle has doors that can be opened using the API.
+    - `has_lights` works in the same way as *has_dynamic_doors*, but differentiates between vehicles with lights, and those that don't.
   * Added native ackermann controller:
     - `apply_ackermann_control`:  to apply an ackermann control command to a vehicle
     - `get_ackermann_controller_settings`: to get the last ackermann controller settings applied
     - `apply_ackermann_controller_settings`: to apply new ackermann controller settings
   * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
+  * Added `NormalsSensor`, a new sensor with normals information
   * Added support for N wheeled vehicles
 
 ## CARLA 0.9.13
