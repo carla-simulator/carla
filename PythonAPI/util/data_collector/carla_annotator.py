@@ -40,6 +40,7 @@ INFO = {
 LICENSES = [{"id": 1, "name": "", "url": ""}]
 
 # Define Carla semantic categories - as per Carla v0.9.13
+# https://carla.readthedocs.io/en/0.9.13/ref_sensors/#semantic-segmentation-camera
 carla_labels = [
     "Unlabeled",
     "Building",
