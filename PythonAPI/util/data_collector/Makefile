@@ -2,11 +2,11 @@ DATASETS ?= /datasets/data_collector
 PORT := $(shell seq 49152 65535 | shuf | head -n1)
 TM_PORT := $(shell echo "$(PORT) + 2" | bc)
 CONFIG_FILE ?= config_tracking
-FORMAT = mots_png
+TRACKING_FORMAT ?= mots_png
+TRACKING_LABELS ?= Pedestrian
 NV_GPU ?= "device=0"
 UUID := $(shell uuidgen)
 PYTHON = python3.7
-LABELS = Pedestrian
 
 DOCKER_TAG ?= carla-client:0.9.13
 DOCKER_OPTIONS += --rm
@@ -67,9 +67,9 @@ $(DATASETS)/$(CONFIG_FILE)/%/collection_done: ## Run data collection with config
 
 .PRECIOUS: $(DATASETS)/%/kwcoco_annotations.json ## Generate kwcoco annotations
 $(DATASETS)/%/kwcoco_annotations.json: $(DATASETS)/%/collection_done
-> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_annotator.py --format $(FORMAT) --output $@ --dataset_parent_dir $(@D) --labels $(LABELS)
+> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_annotator.py --format $(TRACKING_FORMAT) --output $@ --dataset_parent_dir $(@D) --labels $(TRACKING_LABELS)
 
 .PRECIOUS: $(DATASETS)/%/instances.zip ## Generate annotation in MOTS format
-$(DATASETS)/%/instances.zip: $(DATASETS)/%/collection_done 
-> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_annotator.py --format $(FORMAT) --output $(@D)/instances --dataset_parent_dir $(@D) --labels $(LABELS)
+$(DATASETS)/%/instances.zip: $(DATASETS)/%/collection_done
+> $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_annotator.py --format $(TRACKING_FORMAT) --output $(@D)/instances --dataset_parent_dir $(@D) --labels $(TRACKING_LABELS)
 > $(DOCKER_RUN) /bin/bash -c "cd $(@D) ; zip -r instances.zip instances"
