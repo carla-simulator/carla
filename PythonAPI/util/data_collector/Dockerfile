@@ -1,3 +1,7 @@
+# Copyright (c) 2022 Intel Corporation.
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 FROM carlasim/carla:0.9.13
 USER root
 RUN apt-get update
