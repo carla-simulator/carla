@@ -69,7 +69,7 @@ $(DATASETS)/$(CONFIG_FILE)/%/collection_done: ## Run data collection with config
 $(DATASETS)/%/kwcoco_annotations.json: $(DATASETS)/%/collection_done
 > $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_annotator.py --format $(FORMAT) --output $@ --dataset_parent_dir $(@D) --labels $(LABELS)
 
-.PRECIOUS: $(DATASETS)/%/instances.zip ## Convert kwcoco annotation format to MOTS annotation format
+.PRECIOUS: $(DATASETS)/%/instances.zip ## Generate annotation in MOTS format
 $(DATASETS)/%/instances.zip: $(DATASETS)/%/collection_done 
 > $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_annotator.py --format $(FORMAT) --output $(@D)/instances --dataset_parent_dir $(@D) --labels $(LABELS)
 > $(DOCKER_RUN) /bin/bash -c "cd $(@D) ; zip -r instances.zip instances"

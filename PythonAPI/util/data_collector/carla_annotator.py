@@ -154,7 +154,7 @@ def convert_instancemaps_to_mots_format(
     dir_pairs,
     labels,
     interval=5,
-    format="png",
+    format="mots_png",
     out_dir="instances",
     combine_twowheeled=False,
     twowheeled_as_pedestrian=False,
@@ -248,7 +248,6 @@ def convert_instancemaps_to_mots_format(
                             category["id"] for category in categories if category["name"] == carla_labels[class_id]
                         ]
                         category_info = {"id": category_id[0], "is_crowd": is_crowd}
-                        logger.info("Category id: " + str(category_id[0]))
                         # We have not implemented a way to enable is_crowd for cases where there is occlusion and only one part of an object is visible.
                         annotation_info = pycococreatortools.create_annotation_info(
                             annot_id, im_id, category_info, binary_mask, (width, height)
@@ -261,7 +260,6 @@ def convert_instancemaps_to_mots_format(
                                 obj_id_count += 1
 
                             object_id = int(category_id[0]) * 1000 + int(dict_annot[mask[3]])
-                            logger.info("Object ID: " + str(object_id))
                             if format == "mots_png":
                                 idx = np.where(binary_mask == 1)
                                 mots_png_output[idx] = object_id
@@ -292,7 +290,7 @@ def convert_instancemaps_to_mots_format(
                         # Write annotation images to instances/ folder
                         imageio.imwrite(dest_mots_gt, mots_png_output.astype(np.uint16))
 
-        logger.info("All objects: " + str(dict_annot))
+        logger.info("All objects annotated dict mapping (UE_ID: instance_id): " + str(dict_annot))
 
         with open(labels_path, "w+") as labels_file:
             for category in categories:
@@ -543,7 +541,6 @@ if __name__ == "__main__":
 
     if args.format in ["mots_png", "mots_txt"]:
         convert_instancemaps_to_mots_format(
-            args.dataset_parent_dir,
             dir_pairs,
             list(args.labels),
             args.interval,
@@ -551,7 +548,7 @@ if __name__ == "__main__":
             out_dir=args.output,
             combine_twowheeled=False,
             twowheeled_as_pedestrian=False,
-            closing=args.binary_fill_holes,
+            closing=args.binary_fill_holes
         )
     elif args.format == "kwcoco":
         convert_instancemaps_to_kwcoco_format(
