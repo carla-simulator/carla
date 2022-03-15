@@ -34,6 +34,20 @@ struct CARLA_API FVehicleParameters
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString ObjectType;
 
+  /// (OPTIONAL) Use for a base classification of vehicles (car / truck / van / bycicle / motorcycle).
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString BaseType;
+
+  /// (OPTIONAL) Use for a more in-depth classification of vehicles (electric / emergency / taxi ...).
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString SpecialType;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool HasDynamicDoors = false;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool HasLights = false;
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FColor> RecommendedColors;
 
