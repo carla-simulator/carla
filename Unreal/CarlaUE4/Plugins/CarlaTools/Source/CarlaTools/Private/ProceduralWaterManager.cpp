@@ -254,8 +254,8 @@ float UProceduralWaterManager::GetLandscapeSurfaceHeight(float x, float y, bool 
 
   if(World)
   {
-    FVector RayStartingPoint(x, y, 999999);
-    FVector RayEndPoint(x, y, 0);
+    FVector RayStartingPoint(x, y, 9999999);
+    FVector RayEndPoint(x, y, -9999999);
 
     // Raytrace
     FHitResult HitResult;
