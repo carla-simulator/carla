@@ -1,6 +1,7 @@
 DATASETS ?= /datasets/data_collector
 PORT := $(shell seq 49152 65535 | shuf | head -n1)
 TM_PORT := $(shell echo "$(PORT) + 2" | bc)
+CARLA_QUALITY_LEVEL ?= Epic
 CONFIG_FILE ?= config_tracking
 TRACKING_FORMAT ?= mots_png
 TRACKING_LABELS ?= Pedestrian
@@ -52,7 +53,7 @@ clean: ## Clean all directories
 > $(DOCKER_RUN) rm -rf $(DATASETS)/*
 
 $(DATASETS)/%.yaml: ## Run data collection with specified configuration
-> $(DOCKER_RUND) /bin/bash ./CarlaUE4.sh -RenderOffScreen -carla-port=$(PORT)
+> $(DOCKER_RUND) /bin/bash ./CarlaUE4.sh -RenderOffScreen -carla-port=$(PORT) -quality-level=$(CARLA_QUALITY_LEVEL)
 > while ! nc -z localhost $(PORT); do sleep 1; done
 > $(DOCKER_RUN) $(PYTHON) PythonAPI/util/data_collector/carla_data_saver.py --config-name $(@F) carla.port=$(PORT) carla.traffic_manager_port=$(TM_PORT) hydra.run.dir="$(@D)/$*/$(UUID)"
 > docker ps --quiet --filter="name=$(UUID)" -q | xargs docker kill
