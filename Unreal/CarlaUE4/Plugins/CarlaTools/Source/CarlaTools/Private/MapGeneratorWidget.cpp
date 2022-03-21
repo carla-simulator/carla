@@ -8,12 +8,21 @@
 
 #include "MapGeneratorWidget.h"
 
+#include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
+
+#include "Editor/FoliageEdit/Public/FoliageEdMode.h"
+
 #include "EditorLevelLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Landscape.h"
 #include "LandscapeProxy.h"
+#include "ProceduralFoliageComponent.h"
+#include "ProceduralFoliageVolume.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
+
+
+
 
 
 FString UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo)
@@ -24,6 +33,54 @@ FString UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaI
   // 1. Creating Levels
   CreateMainLargeMap(MetaInfo);
   CreateTilesMaps(MetaInfo);
+
+  return ErrorMsg;
+}
+
+FString UMapGeneratorWidget::CookVegetationToTiles(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
+{
+  FString ErrorMsg = "";
+
+  for(auto Spawner : FoliageSpawners)
+  {
+    UWorld* World = GEditor->GetEditorWorldContext().World();
+    ULevel* Level = World->GetCurrentLevel();
+
+    VectorRegister	Rotation{ 0,0,0 };
+    VectorRegister	Translation{ 0.0,0.0,0.0 };
+    VectorRegister Scale3D{ 2500,2500,900 };
+    EObjectFlags InObjectFlags = RF_Transactional;
+    FName InName = NAME_None;
+    
+    FTransform Transform{ Rotation,Translation,Scale3D };
+
+    UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
+    AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
+
+    UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
+    FoliageComponent->FoliageSpawner = Spawner;
+
+    TArray<FDesiredFoliageInstance> FoliageInstances;
+    bool result = FoliageComponent->GenerateProceduralContent(FoliageInstances);
+
+    if(result)
+    {
+      if (FoliageInstances.Num() > 0)
+      {
+        FoliageComponent->RemoveProceduralContent(false);
+
+        FFoliagePaintingGeometryFilter OverrideGeometryFilter;
+        OverrideGeometryFilter.bAllowLandscape = FoliageComponent->bAllowLandscape;
+        OverrideGeometryFilter.bAllowStaticMesh = FoliageComponent->bAllowStaticMesh;
+        OverrideGeometryFilter.bAllowBSP = FoliageComponent->bAllowBSP;
+        OverrideGeometryFilter.bAllowFoliage = FoliageComponent->bAllowFoliage;
+        OverrideGeometryFilter.bAllowTranslucent = FoliageComponent->bAllowTranslucent;
+
+        //FEdModeFoliage::AddInstances(FoliageComponent->GetWorld(), FoliageInstances, OverrideGeometryFilter, true);					
+        FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);					
+      }
+    }
+  }
 
   return ErrorMsg;
 }
