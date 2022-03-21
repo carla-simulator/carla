@@ -42,7 +42,9 @@ public class CarlaTools : ModuleRules
 				"Blutility",
 				"UMG",
 				"EditorScriptingUtilities",
-				"Landscape"
+				"Landscape",
+				"Foliage",
+				"FoliageEdit"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

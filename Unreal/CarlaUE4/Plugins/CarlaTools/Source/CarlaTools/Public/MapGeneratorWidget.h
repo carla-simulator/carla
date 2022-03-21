@@ -10,6 +10,7 @@
 
 #include "EditorUtilityWidget.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "ProceduralFoliageSpawner.h"
 #include "UnrealString.h"
 
 #include "MapGeneratorWidget.generated.h"
@@ -74,6 +75,9 @@ public:
   /// Returns a void string is success and an error message if the process failed
   UFUNCTION(Category="Map Generator",BlueprintCallable)
   FString GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator", BlueprintCallable)
+  FString CookVegetationToTiles(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
 private:  
   /// Loads the base tile map and stores it in @a WorldAssetData
