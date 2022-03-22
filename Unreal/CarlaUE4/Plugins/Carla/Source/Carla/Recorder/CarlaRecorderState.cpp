@@ -54,3 +54,8 @@ void CarlaRecorderStates::Write(std::ofstream &OutFile)
     StatesTrafficLights[i].Write(OutFile);
   }
 }
+
+const std::vector<CarlaRecorderStateTrafficLight>& CarlaRecorderStates::GetStates()
+{
+  return StatesTrafficLights;
+}

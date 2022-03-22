@@ -140,6 +140,20 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
   // tick the recorder/replayer system
   if (GetCurrentEpisode())
   {
+    if (bIsPrimaryServer)
+    {
+      GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode());
+      // send frame data to secondary
+      GetCurrentEpisode()->GetFrameData().Clear();
+    }
+    else
+    {
+      // play frame data
+      // get frame data from primary
+      GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
+      GetCurrentEpisode()->GetFrameData().Clear();
+    }
+    
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
     if (EpisodeRecorder)
     {

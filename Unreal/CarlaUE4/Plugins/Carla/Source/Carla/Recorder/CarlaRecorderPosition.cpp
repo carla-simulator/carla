@@ -57,3 +57,8 @@ void CarlaRecorderPositions::Write(std::ofstream &OutFile)
         Positions.size() * sizeof(CarlaRecorderPosition));
   }
 }
+
+const std::vector<CarlaRecorderPosition>& CarlaRecorderPositions::GetPositions()
+{
+  return Positions;
+}

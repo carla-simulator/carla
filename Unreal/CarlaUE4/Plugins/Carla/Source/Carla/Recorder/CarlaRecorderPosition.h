@@ -33,6 +33,8 @@ public:
 
   void Write(std::ofstream &OutFile);
 
+  const std::vector<CarlaRecorderPosition>& GetPositions();
+
 private:
 
   std::vector<CarlaRecorderPosition> Positions;

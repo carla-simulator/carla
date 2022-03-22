@@ -93,4 +93,8 @@ private:
   FDelegateHandle OnPostTickHandle;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
+
+  bool bIsPrimaryServer = true;
+
+  std::unordered_map<uint32_t, uint32_t> MappedId;
 };

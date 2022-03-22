@@ -32,6 +32,8 @@ public:
 
   void Write(std::ofstream &OutFile);
 
+  const std::vector<CarlaRecorderAnimWalker>& GetWalkers();
+  
 private:
 
   std::vector<CarlaRecorderAnimWalker> Walkers;

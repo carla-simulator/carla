@@ -63,3 +63,8 @@ void CarlaRecorderLightScenes::Write(std::ofstream &OutFile)
   }
 
 }
+
+const std::vector<CarlaRecorderLightScene>& CarlaRecorderLightScenes::GetLights()
+{
+  return Lights;
+}

@@ -36,6 +36,8 @@ public:
 
   void Write(std::ofstream &OutFile);
 
+  const std::vector<CarlaRecorderLightScene>& GetLights();
+
 private:
 
   std::vector<CarlaRecorderLightScene> Lights;

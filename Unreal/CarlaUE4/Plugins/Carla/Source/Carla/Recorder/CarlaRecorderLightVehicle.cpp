@@ -52,3 +52,8 @@ void CarlaRecorderLightVehicles::Write(std::ofstream &OutFile)
     Vehicle.Write(OutFile);
   }
 }
+
+const std::vector<CarlaRecorderLightVehicle>& CarlaRecorderLightVehicles::GetLightVehicles()
+{
+  return Vehicles;
+}

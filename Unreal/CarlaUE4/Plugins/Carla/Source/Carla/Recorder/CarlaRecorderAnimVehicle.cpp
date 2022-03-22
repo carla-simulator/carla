@@ -66,3 +66,8 @@ void CarlaRecorderAnimVehicles::Write(std::ofstream &OutFile)
   WriteValue<uint32_t>(OutFile, Total);
   OutFile.seekp(PosEnd, std::ios::beg);
 }
+
+const std::vector<CarlaRecorderAnimVehicle>& CarlaRecorderAnimVehicles::GetVehicles()
+{
+  return Vehicles;
+}

@@ -53,3 +53,8 @@ void CarlaRecorderAnimWalkers::Write(std::ofstream &OutFile)
         Walkers.size() * sizeof(CarlaRecorderAnimWalker));
   }
 }
+
+const std::vector<CarlaRecorderAnimWalker>& CarlaRecorderAnimWalkers::GetWalkers()
+{
+  return Walkers;
+}
