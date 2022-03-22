@@ -8,25 +8,25 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderBoundingBox::Write(std::ofstream &OutFile)
+void CarlaRecorderBoundingBox::Write(std::ostream &OutFile)
 {
   WriteFVector(OutFile, this->Origin);
   WriteFVector(OutFile, this->Extension);
 }
 
-void CarlaRecorderBoundingBox::Read(std::ifstream &InFile)
+void CarlaRecorderBoundingBox::Read(std::istream &InFile)
 {
   ReadFVector(InFile, this->Origin);
   ReadFVector(InFile, this->Extension);
 }
 
-void CarlaRecorderActorBoundingBox::Write(std::ofstream &OutFile)
+void CarlaRecorderActorBoundingBox::Write(std::ostream &OutFile)
 {
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   BoundingBox.Write(OutFile);
 }
 
-void CarlaRecorderActorBoundingBox::Read(std::ifstream &InFile)
+void CarlaRecorderActorBoundingBox::Read(std::istream &InFile)
 {
   ReadValue<uint32_t>(InFile, this->DatabaseId);
   BoundingBox.Read(InFile);
@@ -45,7 +45,7 @@ void CarlaRecorderActorBoundingBoxes::Add(const CarlaRecorderActorBoundingBox &I
   Boxes.push_back(InObj);
 }
 
-void CarlaRecorderActorBoundingBoxes::Write(std::ofstream &OutFile)
+void CarlaRecorderActorBoundingBoxes::Write(std::ostream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::BoundingBox));
@@ -75,7 +75,7 @@ void CarlaRecorderActorTriggerVolumes::Add(const CarlaRecorderActorBoundingBox &
   Boxes.push_back(InObj);
 }
 
-void CarlaRecorderActorTriggerVolumes::Write(std::ofstream &OutFile)
+void CarlaRecorderActorTriggerVolumes::Write(std::ostream &OutFile)
 {
   if (Boxes.size() == 0)
   {

@@ -9,7 +9,7 @@
 #include "CarlaRecorderHelpers.h"
 
 
-void CarlaRecorderLightScene::Write(std::ofstream &OutFile)
+void CarlaRecorderLightScene::Write(std::ostream &OutFile)
 {
   WriteValue<int>(OutFile, this->LightId);
   WriteValue<float>(OutFile, this->Intensity);
@@ -17,7 +17,7 @@ void CarlaRecorderLightScene::Write(std::ofstream &OutFile)
   WriteValue<bool>(OutFile, this->bOn);
   WriteValue<uint8>(OutFile, this->Type);
 }
-void CarlaRecorderLightScene::Read(std::ifstream &InFile)
+void CarlaRecorderLightScene::Read(std::istream &InFile)
 {
   ReadValue<int>(InFile, this->LightId);
   ReadValue<float>(InFile, this->Intensity);
@@ -38,7 +38,7 @@ void CarlaRecorderLightScenes::Add(const CarlaRecorderLightScene &Vehicle)
   Lights.push_back(Vehicle);
 }
 
-void CarlaRecorderLightScenes::Write(std::ofstream &OutFile)
+void CarlaRecorderLightScenes::Write(std::ostream &OutFile)
 {
   if (Lights.size() == 0)
   {

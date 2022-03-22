@@ -163,6 +163,24 @@ void FFrameData::Clear()
   TrafficLightTimes.Clear();
 }
 
+void FFrameData::Write(std::ostream& OutStream)
+{
+  EventsAdd.Write(OutStream);
+  EventsDel.Write(OutStream);
+  EventsParent.Write(OutStream);
+  Positions.Write(OutStream);
+  States.Write(OutStream);
+  Vehicles.Write(OutStream);
+  Walkers.Write(OutStream);
+  LightVehicles.Write(OutStream);
+  LightScenes.Write(OutStream);
+  TrafficLightTimes.Write(OutStream);
+}
+void FFrameData::Read(std::istream& InStream)
+{
+
+}
+
 void FFrameData::CreateRecorderEventAdd(
     uint32_t DatabaseId,
     uint8_t Type,

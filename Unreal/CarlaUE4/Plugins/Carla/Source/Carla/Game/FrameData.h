@@ -23,6 +23,8 @@
 #include "Carla/Recorder/CarlaRecorderInfo.h"
 #include "Carla/Recorder/CarlaRecorderPosition.h"
 
+#include <sstream>
+
 class UCarlaEpisode;
 class FCarlaActor;
 
@@ -54,6 +56,9 @@ public:
   void PlayFrameData(UCarlaEpisode *ThisEpisode, std::unordered_map<uint32_t, uint32_t>& MappedId);
 
   void Clear();
+
+  void Write(std::ostream& OutStream);
+  void Read(std::istream& InStream);
 
   // record functions
   void CreateRecorderEventAdd(

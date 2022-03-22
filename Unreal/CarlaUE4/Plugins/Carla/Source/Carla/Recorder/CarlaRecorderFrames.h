@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 
 #pragma pack(push, 1)
 struct CarlaRecorderFrame
@@ -15,9 +15,9 @@ struct CarlaRecorderFrame
   double DurationThis;
   double Elapsed;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 };
 #pragma pack(pop)
@@ -32,8 +32,8 @@ public:
 
   void SetFrame(double DeltaSeconds);
 
-  void WriteStart(std::ofstream &OutFile);
-  void WriteEnd(std::ofstream &OutFile);
+  void WriteStart(std::ostream &OutFile);
+  void WriteEnd(std::ostream &OutFile);
 
 private:
 

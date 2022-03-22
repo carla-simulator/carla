@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 #pragma pack(push, 1)
@@ -19,9 +19,9 @@ struct CarlaRecorderAnimVehicle
   bool bHandbrake;
   int32_t Gear;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 };
 #pragma pack(pop)
@@ -34,7 +34,7 @@ public:
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
   const std::vector<CarlaRecorderAnimVehicle>& GetVehicles();
 private:

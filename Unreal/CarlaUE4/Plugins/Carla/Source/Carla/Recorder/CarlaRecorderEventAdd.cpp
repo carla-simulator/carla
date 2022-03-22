@@ -8,7 +8,7 @@
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderEventAdd::Write(std::ofstream &OutFile) const
+void CarlaRecorderEventAdd::Write(std::ostream &OutFile) const
 {
     // database id
     WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -34,7 +34,7 @@ void CarlaRecorderEventAdd::Write(std::ofstream &OutFile) const
     }
 }
 
-void CarlaRecorderEventAdd::Read(std::ifstream &InFile)
+void CarlaRecorderEventAdd::Read(std::istream &InFile)
 {
     // database id
     ReadValue<uint32_t>(InFile, this->DatabaseId);
@@ -77,7 +77,7 @@ void CarlaRecorderEventsAdd::Add(const CarlaRecorderEventAdd &Event)
     Events.push_back(std::move(Event));
 }
 
-void CarlaRecorderEventsAdd::Write(std::ofstream &OutFile)
+void CarlaRecorderEventsAdd::Write(std::ostream &OutFile)
 {
     // write the packet id
     WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::EventAdd));

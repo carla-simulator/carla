@@ -8,7 +8,7 @@
 #include "CarlaRecorderPosition.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderPosition::Write(std::ofstream &OutFile)
+void CarlaRecorderPosition::Write(std::ostream &OutFile)
 {
   // database id
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -16,7 +16,7 @@ void CarlaRecorderPosition::Write(std::ofstream &OutFile)
   WriteFVector(OutFile, this->Location);
   WriteFVector(OutFile, this->Rotation);
 }
-void CarlaRecorderPosition::Read(std::ifstream &InFile)
+void CarlaRecorderPosition::Read(std::istream &InFile)
 {
   // database id
   ReadValue<uint32_t>(InFile, this->DatabaseId);
@@ -37,7 +37,7 @@ void CarlaRecorderPositions::Add(const CarlaRecorderPosition &Position)
   Positions.push_back(Position);
 }
 
-void CarlaRecorderPositions::Write(std::ofstream &OutFile)
+void CarlaRecorderPositions::Write(std::ostream &OutFile)
 {
   // write the packet id
   WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::Position));

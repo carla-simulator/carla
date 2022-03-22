@@ -9,14 +9,14 @@
 #include "CarlaRecorderHelpers.h"
 
 
-void CarlaRecorderEventParent::Read(std::ifstream &InFile)
+void CarlaRecorderEventParent::Read(std::istream &InFile)
 {
     // database id
     ReadValue<uint32_t>(InFile, this->DatabaseId);
     // database id parent
     ReadValue<uint32_t>(InFile, this->DatabaseIdParent);
 }
-void CarlaRecorderEventParent::Write(std::ofstream &OutFile) const
+void CarlaRecorderEventParent::Write(std::ostream &OutFile) const
 {
     // database id
     WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -36,7 +36,7 @@ void CarlaRecorderEventsParent::Add(const CarlaRecorderEventParent &Event)
     Events.push_back(std::move(Event));
 }
 
-void CarlaRecorderEventsParent::Write(std::ofstream &OutFile)
+void CarlaRecorderEventsParent::Write(std::ostream &OutFile)
 {
     // write the packet id
     WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::EventParent));
