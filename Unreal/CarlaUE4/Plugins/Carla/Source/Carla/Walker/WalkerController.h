@@ -15,7 +15,6 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WalkerBoneControlIn.h>
-#include <boost/variant.hpp>
 #include <compiler/enable-ue4-macros.h>
 
 #include "WalkerController.generated.h"
@@ -24,22 +23,6 @@ UCLASS()
 class CARLA_API AWalkerController : public AController
 {
   GENERATED_BODY()
-
-private:
-
-  class ControlTickVisitor : public boost::static_visitor<>
-  {
-  public:
-
-    ControlTickVisitor(AWalkerController *Controller)
-      : Controller(Controller) {}
-
-    void operator()(const FWalkerControl &WalkerControl);
-
-  private:
-
-    AWalkerController *Controller;
-  };
 
 public:
 
@@ -62,7 +45,7 @@ public:
   UFUNCTION(BlueprintCallable)
   const FWalkerControl GetWalkerControl() const
   {
-    return Control.which() == 0u ? boost::get<FWalkerControl>(Control) : FWalkerControl{};
+    return Control;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -79,5 +62,5 @@ public:
 
 private:
 
-  boost::variant<FWalkerControl> Control;
+  FWalkerControl Control;
 };
