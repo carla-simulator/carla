@@ -62,6 +62,7 @@ void FFrameData::PlayFrameData(
     std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
 
+  UE_LOG(LogCarla, Log, TEXT("Spawning %d Actors"), EventsAdd.GetEvents().size());
   for(const CarlaRecorderEventAdd &EventAdd : EventsAdd.GetEvents())
   {
     // auto Result = CallbackEventAdd(
@@ -91,22 +92,33 @@ void FFrameData::PlayFrameData(
         MappedId[EventAdd.DatabaseId] = Result.second;
         break;
     }
+    UE_LOG(LogCarla, Log, TEXT("Spawn Old id %d New id %d"), EventAdd.DatabaseId, MappedId[EventAdd.DatabaseId]);
   }
 
+  UE_LOG(LogCarla, Log, TEXT("Destroying %d Actors"), EventsDel.GetEvents().size());
   for (const CarlaRecorderEventDel &EventDel : EventsDel.GetEvents())
   {
+    UE_LOG(LogCarla, Log, TEXT("Destroy Old id %d New id %d"), EventDel.DatabaseId, MappedId[EventDel.DatabaseId]);
     ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
     MappedId.erase(EventDel.DatabaseId);
   }
 
+  UE_LOG(LogCarla, Log, TEXT("Parenting %d Actors"), EventsParent.GetEvents().size());
   for (const CarlaRecorderEventParent &EventParent : EventsParent.GetEvents())
   {
     ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
   }
 
+  UE_LOG(LogCarla, Log, TEXT("Positioning %d Actors"), Positions.GetPositions().size());
   for (const CarlaRecorderPosition &Position : Positions.GetPositions())
   {
-    ProcessReplayerPosition(Position, Position, 0.0, 0.0);
+    CarlaRecorderPosition Pos = Position;
+    auto NewId = MappedId.find(Pos.DatabaseId);
+    if (NewId != MappedId.end())
+    {
+      Pos.DatabaseId = NewId->second;
+      ProcessReplayerPosition(Pos, Pos, 0.0, 0.0);
+    }
   }
 
   for (const CarlaRecorderStateTrafficLight &State : States.GetStates())
@@ -178,7 +190,67 @@ void FFrameData::Write(std::ostream& OutStream)
 }
 void FFrameData::Read(std::istream& InStream)
 {
+  Clear();
+  while(!InStream.eof())
+  {
+    Header header;
+    ReadValue<char>(InStream, header.Id);
+    ReadValue<uint32_t>(InStream, header.Size);
+    switch (header.Id)
+    {
+      // events add
+      case static_cast<char>(CarlaRecorderPacketId::EventAdd):
+        EventsAdd.Read(InStream);
+        break;
 
+      // events del
+      case static_cast<char>(CarlaRecorderPacketId::EventDel):
+        EventsDel.Read(InStream);
+        break;
+
+      // events parent
+      case static_cast<char>(CarlaRecorderPacketId::EventParent):
+        EventsParent.Read(InStream);
+        break;
+
+      // positions
+      case static_cast<char>(CarlaRecorderPacketId::Position):
+        Positions.Read(InStream);
+        break;
+
+      // states
+      case static_cast<char>(CarlaRecorderPacketId::State):
+        States.Read(InStream);
+        break;
+
+      // vehicle animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimVehicle):
+        Vehicles.Read(InStream);
+        break;
+
+      // walker animation
+      case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
+        Walkers.Read(InStream);
+        break;
+
+      // vehicle light animation
+      case static_cast<char>(CarlaRecorderPacketId::VehicleLight):
+        LightVehicles.Read(InStream);
+        break;
+
+      // scene lights animation
+      case static_cast<char>(CarlaRecorderPacketId::SceneLight):
+        LightScenes.Read(InStream);
+        break;
+
+      // unknown packet, just skip
+      default:
+        // skip packet
+        InStream.seekg(header.Size, std::ios::cur);
+        break;
+
+    }
+  }
 }
 
 void FFrameData::CreateRecorderEventAdd(

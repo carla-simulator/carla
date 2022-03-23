@@ -64,6 +64,21 @@ void CarlaRecorderEventsParent::Write(std::ostream &OutFile)
     OutFile.seekp(PosEnd, std::ios::beg);
 }
 
+void CarlaRecorderEventsParent::Read(std::istream &InFile)
+{
+    uint16_t i, Total;
+    CarlaRecorderEventParent EventParent;
+    std::stringstream Info;
+
+    // process parenting events
+    ReadValue<uint16_t>(InFile, Total);
+    for (i = 0; i < Total; ++i)
+    {
+        EventParent.Read(InFile);
+        Add(EventParent);
+    }
+}
+
 const std::vector<CarlaRecorderEventParent>& CarlaRecorderEventsParent::GetEvents()
 {
     return Events;

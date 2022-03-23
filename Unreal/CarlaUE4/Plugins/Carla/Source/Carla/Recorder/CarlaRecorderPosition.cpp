@@ -58,6 +58,20 @@ void CarlaRecorderPositions::Write(std::ostream &OutFile)
   }
 }
 
+void CarlaRecorderPositions::Read(std::istream &InFile)
+{
+  uint16_t i, Total;
+
+  // read all positions
+  ReadValue<uint16_t>(InFile, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    CarlaRecorderPosition Pos;
+    Pos.Read(InFile);
+    Add(Pos);
+  }
+}
+
 const std::vector<CarlaRecorderPosition>& CarlaRecorderPositions::GetPositions()
 {
   return Positions;

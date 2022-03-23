@@ -64,6 +64,20 @@ void CarlaRecorderLightScenes::Write(std::ostream &OutFile)
 
 }
 
+void CarlaRecorderLightScenes::Read(std::istream &InFile)
+{
+  uint16_t Total;
+  CarlaRecorderLightScene LightScene;
+
+  // read Total light events
+  ReadValue<uint16_t>(InFile, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    LightScene.Read(InFile);
+    Add(LightScene);
+  }
+}
+
 const std::vector<CarlaRecorderLightScene>& CarlaRecorderLightScenes::GetLights()
 {
   return Lights;

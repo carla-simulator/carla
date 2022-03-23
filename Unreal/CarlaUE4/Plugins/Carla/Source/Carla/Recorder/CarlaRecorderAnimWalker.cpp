@@ -54,6 +54,20 @@ void CarlaRecorderAnimWalkers::Write(std::ostream &OutFile)
   }
 }
 
+void CarlaRecorderAnimWalkers::Read(std::istream &InFile)
+{
+  uint16_t i, Total;
+  CarlaRecorderAnimWalker Walker;
+
+  // read Total walkers
+  ReadValue<uint16_t>(InFile, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    Walker.Read(InFile);
+    Add(Walker);
+  }
+}
+
 const std::vector<CarlaRecorderAnimWalker>& CarlaRecorderAnimWalkers::GetWalkers()
 {
   return Walkers;

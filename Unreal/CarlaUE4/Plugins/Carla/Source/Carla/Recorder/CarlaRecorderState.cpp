@@ -55,6 +55,20 @@ void CarlaRecorderStates::Write(std::ostream &OutFile)
   }
 }
 
+void CarlaRecorderStates::Read(std::istream &InFile)
+{
+  uint16_t i, Total;
+  CarlaRecorderStateTrafficLight StateTrafficLight;
+
+  // read Total traffic light states
+  ReadValue<uint16_t>(InFile, Total);
+  for (i = 0; i < Total; ++i)
+  {
+    StateTrafficLight.Read(InFile);
+    Add(StateTrafficLight);
+  }
+}
+
 const std::vector<CarlaRecorderStateTrafficLight>& CarlaRecorderStates::GetStates()
 {
   return StatesTrafficLights;

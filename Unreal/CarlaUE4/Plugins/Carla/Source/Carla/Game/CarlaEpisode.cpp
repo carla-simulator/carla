@@ -54,6 +54,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id(URandomEngine::GenerateRandomId())
 {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+  FrameData.SetEpisode(this);
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)

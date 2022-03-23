@@ -24,6 +24,7 @@ class CarlaRecorderEventsDel
     void Add(const CarlaRecorderEventDel &Event);
     void Clear(void);
     void Write(std::ostream &OutFile);
+    void Read(std::istream &InFile);
     const std::vector<CarlaRecorderEventDel>& GetEvents();
 
     private:

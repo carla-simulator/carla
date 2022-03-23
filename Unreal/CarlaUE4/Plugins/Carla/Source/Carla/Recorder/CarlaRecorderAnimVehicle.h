@@ -36,6 +36,8 @@ public:
 
   void Write(std::ostream &OutFile);
 
+  void Read(std::istream &InFile);
+
   const std::vector<CarlaRecorderAnimVehicle>& GetVehicles();
 private:
 

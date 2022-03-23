@@ -59,6 +59,20 @@ void CarlaRecorderEventsDel::Write(std::ostream &OutFile)
     OutFile.seekp(PosEnd, std::ios::beg);
 }
 
+void CarlaRecorderEventsDel::Read(std::istream &InFile)
+{
+    uint16_t i, Total;
+    CarlaRecorderEventDel EventDel;
+
+    // process destroy events
+    ReadValue<uint16_t>(InFile, Total);
+    for (i = 0; i < Total; ++i)
+    {
+        EventDel.Read(InFile);
+        Add(EventDel);
+    }
+}
+
 const std::vector<CarlaRecorderEventDel>& CarlaRecorderEventsDel::GetEvents()
 {
     return Events;

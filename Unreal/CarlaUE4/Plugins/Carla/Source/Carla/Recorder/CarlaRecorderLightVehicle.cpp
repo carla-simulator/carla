@@ -53,6 +53,20 @@ void CarlaRecorderLightVehicles::Write(std::ostream &OutFile)
   }
 }
 
+void CarlaRecorderLightVehicles::Read(std::istream &InFile)
+{
+  uint16_t Total;
+  CarlaRecorderLightVehicle LightVehicle;
+
+  // read Total walkers
+  ReadValue<uint16_t>(InFile, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    LightVehicle.Read(InFile);
+    Add(LightVehicle);
+  }
+}
+
 const std::vector<CarlaRecorderLightVehicle>& CarlaRecorderLightVehicles::GetLightVehicles()
 {
   return Vehicles;

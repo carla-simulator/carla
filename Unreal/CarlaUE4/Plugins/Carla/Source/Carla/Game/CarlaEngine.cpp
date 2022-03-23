@@ -134,6 +134,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   }
 }
 
+
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
@@ -153,7 +154,36 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
       GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
       GetCurrentEpisode()->GetFrameData().Clear();
     }
-    
+
+    // GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode());
+    // GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
+    // GetCurrentEpisode()->GetFrameData().Clear();
+
+    // static int NumFramesDelay = 300;
+    // static std::vector<std::string> FrameList(NumFramesDelay);
+    // static int i = 0;
+    // GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode());
+    // std::ostringstream OutStream;
+    // GetCurrentEpisode()->GetFrameData().Write(OutStream);
+    // FrameList[i] = OutStream.str();
+    // i = (i + 1)%NumFramesDelay;
+    // static int countdown = NumFramesDelay-2;
+    // if (countdown > 0)
+    // {
+    //   countdown--;
+    // }
+    // else
+    // {
+    //   UE_LOG(LogCarla, Log, TEXT("Play frame data %d"), i);
+    //   // FrameList[(i+1)%NumFramesDelay].PlayFrameData(GetCurrentEpisode(), MappedId);
+    //   std::istringstream InStream;
+    //   InStream.str(FrameList[(i+1)%NumFramesDelay]);
+    //   UE_LOG(LogCarla, Log, TEXT("Reading string of size %d"), FrameList[(i+1)%NumFramesDelay].size());
+    //   GetCurrentEpisode()->GetFrameData().Read(InStream);
+    //   GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
+    // }
+    // GetCurrentEpisode()->GetFrameData().Clear();
+
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
     if (EpisodeRecorder)
     {

@@ -103,6 +103,18 @@ void CarlaRecorderEventsAdd::Write(std::ostream &OutFile)
     OutFile.seekp(PosEnd, std::ios::beg);
 }
 
+void CarlaRecorderEventsAdd::Read(std::istream &InFile)
+{
+    CarlaRecorderEventAdd EventAdd;
+    uint16_t i, Total;
+    ReadValue<uint16_t>(InFile, Total);
+    for (i = 0; i < Total; ++i)
+    {
+        EventAdd.Read(InFile);
+        Add(EventAdd);
+    }
+}
+
 const std::vector<CarlaRecorderEventAdd>& CarlaRecorderEventsAdd::GetEvents()
 {
     return Events;

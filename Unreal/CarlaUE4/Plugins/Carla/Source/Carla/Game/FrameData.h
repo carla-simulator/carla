@@ -50,7 +50,18 @@ class FFrameData
   CarlaRecorderPhysicsControls PhysicsControls;
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
 
+  #pragma pack(push, 1)
+  struct Header
+  {
+    char Id;
+    uint32_t Size;
+  };
+  #pragma pack(pop)
+
 public:
+
+  void SetEpisode(UCarlaEpisode* ThisEpisode) {Episode = ThisEpisode;}
+
   void GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData = false);
 
   void PlayFrameData(UCarlaEpisode *ThisEpisode, std::unordered_map<uint32_t, uint32_t>& MappedId);
