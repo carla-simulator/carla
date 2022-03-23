@@ -10,10 +10,9 @@
 
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
-
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
-
 #include "EditorLevelLibrary.h"
+#include "FileHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Landscape.h"
 #include "LandscapeProxy.h"
@@ -21,68 +20,57 @@
 #include "ProceduralFoliageVolume.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 
+#define CUR_CLASS_FUNC (FString(__FUNCTION__))
+#define CUR_LINE  (FString::FromInt(__LINE__))
+#define CUR_CLASS_FUNC_LINE (CUR_CLASS_FUNC + "::" + CUR_LINE)
 
+DEFINE_LOG_CATEGORY(LogCarlaToolsMapGenerator);
 
-
-
-FString UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo)
+void UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo)
 {
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Map Generation %s %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
 
-  FString ErrorMsg = "";
+  // TODO: Check if directory exists and if it's empty
+  // The tool will need to create a new directory (which cannot share name with
+  // an existing one) to don't mess up with redirectors
 
-  // 1. Creating Levels
-  CreateMainLargeMap(MetaInfo);
-  CreateTilesMaps(MetaInfo);
+  // TODO: Check that the directory in metaInfo cannot finish in /, if does, delete it
 
-  return ErrorMsg;
+  // // 1. Creating tiles terrain
+  bool bTIlesSuccess = CreateTilesMaps(MetaInfo);
+  if(!bTIlesSuccess)
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking vegetation for %s"), 
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+
+  // 2. Create Main Large map
+  bool BLargeMapSuccess = CreateMainLargeMap(MetaInfo);
+  if(!BLargeMapSuccess)
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error creating Main Large Map for %s"), 
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+
+  
 }
 
-FString UMapGeneratorWidget::CookVegetationToTiles(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
+void UMapGeneratorWidget::CookVegetation(const FMapGeneratorMetaInfo& MetaInfo)
 {
-  FString ErrorMsg = "";
+  // 3. Add vegetation to tiles
+  bool bVegetationSuccess = CookVegetationToTiles(MetaInfo);
+  if(!bVegetationSuccess)
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking vegetation for %s"), 
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+}
 
-  for(auto Spawner : FoliageSpawners)
-  {
-    UWorld* World = GEditor->GetEditorWorldContext().World();
-    ULevel* Level = World->GetCurrentLevel();
+void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, 
+      TEXT("%s: Cooking vegetation to current tile. Vegetation type num: %d"), 
+      *CUR_CLASS_FUNC_LINE, FoliageSpawners.Num());
 
-    VectorRegister	Rotation{ 0,0,0 };
-    VectorRegister	Translation{ 0.0,0.0,0.0 };
-    VectorRegister Scale3D{ 2500,2500,900 };
-    EObjectFlags InObjectFlags = RF_Transactional;
-    FName InName = NAME_None;
-    
-    FTransform Transform{ Rotation,Translation,Scale3D };
-
-    UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
-    AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
-
-    UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
-    FoliageComponent->FoliageSpawner = Spawner;
-
-    TArray<FDesiredFoliageInstance> FoliageInstances;
-    bool result = FoliageComponent->GenerateProceduralContent(FoliageInstances);
-
-    if(result)
-    {
-      if (FoliageInstances.Num() > 0)
-      {
-        FoliageComponent->RemoveProceduralContent(false);
-
-        FFoliagePaintingGeometryFilter OverrideGeometryFilter;
-        OverrideGeometryFilter.bAllowLandscape = FoliageComponent->bAllowLandscape;
-        OverrideGeometryFilter.bAllowStaticMesh = FoliageComponent->bAllowStaticMesh;
-        OverrideGeometryFilter.bAllowBSP = FoliageComponent->bAllowBSP;
-        OverrideGeometryFilter.bAllowFoliage = FoliageComponent->bAllowFoliage;
-        OverrideGeometryFilter.bAllowTranslucent = FoliageComponent->bAllowTranslucent;
-
-        //FEdModeFoliage::AddInstances(FoliageComponent->GetWorld(), FoliageInstances, OverrideGeometryFilter, true);					
-        FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);					
-      }
-    }
-  }
-
-  return ErrorMsg;
+  bool result = CookVegetationToWorld(GEditor->GetEditorWorldContext().World(), FoliageSpawners);
+  if(!result)
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking vegetation for Current Tile"), 
+        *CUR_CLASS_FUNC_LINE);
 }
 
 bool UMapGeneratorWidget::LoadBaseTileWorld(FAssetData& WorldAssetData)
@@ -99,7 +87,31 @@ bool UMapGeneratorWidget::LoadBaseLargeMapWorld(FAssetData& WorldAssetData)
 
 bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath)
 {
-  TArray<FAssetData> AssetDatas;
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading World from %s"), 
+      *CUR_CLASS_FUNC_LINE, *BaseMapPath);
+
+  TArray<FAssetData> AssetsData;
+  bool success = LoadWorlds(AssetsData, BaseMapPath);
+
+  if(success && AssetsData.Num() > 0)
+  {
+    WorldAssetData = AssetsData.Pop();
+    return true; 
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error getting worlds from %s"), 
+      *CUR_CLASS_FUNC_LINE, *BaseMapPath);
+    return false;
+  }
+}
+
+bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading Worlds from %s"), 
+      *CUR_CLASS_FUNC_LINE, *BaseMapPath);
+
+  TArray<FAssetData> AssetsData;
   UObjectLibrary *MapObjectLibrary;
 
   // Loading Map from folder using object library
@@ -107,32 +119,35 @@ bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& B
   MapObjectLibrary->AddToRoot();
   MapObjectLibrary->LoadAssetDataFromPath(*BaseMapPath);
   MapObjectLibrary->LoadAssetsFromAssetData();
-  MapObjectLibrary->GetAssetDataList(AssetDatas);
-  if (AssetDatas.Num() > 0)
+  MapObjectLibrary->GetAssetDataList(AssetsData);
+
+  if (AssetsData.Num() > 0)
   {
-    // Extract first asset found in folder path (i.e. the BaseMap)
-    WorldAssetData = AssetDatas.Pop();
+    // Return whole list of world assets found in directory
+    WorldAssetsData = AssetsData;
     return true;
   }
   else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: No Worlds found in %s"), 
+      *CUR_CLASS_FUNC_LINE, *BaseMapPath);
     return false;
+  }
 }
 
 bool UMapGeneratorWidget::SaveWorld(
     FAssetData& WorldToBeSaved, 
     const FString& DestinationPath, 
-    const FString& WorldName)
+    const FString& WorldName,
+    bool bCheckFileExists)
 {
-  UWorld* World;
-  UObjectRedirector *BaseMapRedirector = 
-    Cast<UObjectRedirector>(WorldToBeSaved.GetAsset());
-  if(BaseMapRedirector != nullptr)
-    World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
-  else
-    World = CastChecked<UWorld>(WorldToBeSaved.GetAsset());
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Saving World to %s as %s"), 
+      *CUR_CLASS_FUNC_LINE, *DestinationPath, *WorldName);
+
+  UWorld* World = GetWorldFromAssetData(WorldToBeSaved);
 
   // Create Package
-  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Preparing Package");
+  // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Preparing Package");
   UPackage *Package = WorldToBeSaved.GetPackage();
   Package->SetFolderName("MapGeneratorPackage");
   Package->FullyLoad();
@@ -143,7 +158,7 @@ bool UMapGeneratorWidget::SaveWorld(
   World->Rename(*WorldName, World->GetOuter());
   const FString PackagePath = DestinationPath + "/" + WorldName;
   FAssetRegistryModule::AssetRenamed(World, *PackagePath);
-  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, World->GetMapName());
+  // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, World->GetMapName());
   World->MarkPackageDirty();
   World->GetOuter()->MarkPackageDirty();
 
@@ -152,9 +167,11 @@ bool UMapGeneratorWidget::SaveWorld(
     PackagePath, 
     FPackageName::GetMapPackageExtension());
 
-  if(FPaths::FileExists(*PackageFileName))
+  if(bCheckFileExists && FPaths::FileExists(*PackageFileName))
   {
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Package already Exists");
+    UE_LOG(LogCarlaToolsMapGenerator, Error, 
+        TEXT("%s: Could not save %s because it already exists."),
+        *PackageFileName); 
     return false;
   }
   return UPackage::SavePackage(
@@ -164,33 +181,100 @@ bool UMapGeneratorWidget::SaveWorld(
 
 bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaInfo)
 {
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating %s main large map in %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, *MetaInfo.DestinationPath);
   FAssetData WorldAssetData;
   bool bLoaded = LoadBaseLargeMapWorld(WorldAssetData);
-  bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MetaInfo.MapName);
+  bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MetaInfo.MapName, true);
 
   return true;
 }
 
 bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 {
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating %s tiles maps in %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, *MetaInfo.DestinationPath);
   FAssetData WorldAssetData;
 
   for(int i = 0; i < MetaInfo.SizeX; i++)
   {
     for(int j = 0; j < MetaInfo.SizeY; j++)
     {
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Tile map %s (%d_%d)"), 
+          *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, i, j);
       bool bLoaded = LoadBaseTileWorld(WorldAssetData);
+
+      if(!bLoaded)
+        return false;
 
       FMapGeneratorTileMetaInfo MetaTileInfo;
       MetaTileInfo.IndexX = i;
       MetaTileInfo.IndexY = j;
+      
+      // 1. Terrain 
       ApplyHeightMapToLandscape(WorldAssetData,MetaTileInfo);
 
       const FString MapName = 
           MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
-      bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MapName);
+      bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MapName, true);
+
+      if(!bSaved)
+        return false;
     }
   }
+  return true;
+}
+
+bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Cooking vegetation to %s tiles"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+
+  TArray<FAssetData> AssetsData;
+  const FString TilesPath = MetaInfo.DestinationPath;
+  bool success = LoadWorlds(AssetsData, TilesPath);
+  if(!success || AssetsData.Num() <= 0)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("No Tiles found in %s. Vegetation cooking Aborted!"), *TilesPath);
+    return false;
+  }
+
+  for(FAssetData AssetData : AssetsData)
+  {
+    UWorld* World = GetWorldFromAssetData(AssetData);
+
+    // Check if it is not a tile
+    if(!World->GetMapName().Contains("_Tile_"))
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s Skipped as it is not a tile"), *World->GetMapName())
+      continue;
+    }
+
+    const FString MapNameToLoad = TilesPath + "/" + World->GetMapName() + "." + World->GetMapName();
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Loading to editor %s"), *MapNameToLoad);
+    
+    // Load Map to editor. Required to spawn simulatee procedural foliage
+    bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
+    if(!bLoadedSuccess){
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Error Loading %s"), *MapNameToLoad);
+      return false;
+    }
+
+    // Cook vegetation to world
+    bool bVegetationSuccess = CookVegetationToWorld(World, MetaInfo.FoliageSpawners);
+    if(!bVegetationSuccess){
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Error Cooking Vegetation in %s"), *MapNameToLoad);
+      return false;
+    }
+
+    // Save world with vegetation spawned
+    bool bSaved = SaveWorld(AssetData, MetaInfo.DestinationPath, World->GetMapName());
+    if(!bSaved){
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Error Saving after Cooking Vegetation in %s"), *MapNameToLoad);
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -198,20 +282,79 @@ bool UMapGeneratorWidget::ApplyHeightMapToLandscape(
     FAssetData& WorldAssetData, 
     FMapGeneratorTileMetaInfo TileMetaInfo)
 {
-  UWorld* World;
-  UObjectRedirector* BaseMapRedirector = 
-    Cast<UObjectRedirector>(WorldAssetData.GetAsset());
-  if(BaseMapRedirector != nullptr)
-  {
-    World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
-  }
-  else
-  {
-    World = CastChecked<UWorld>(WorldAssetData.GetAsset());
-  }
+  UWorld* World = GetWorldFromAssetData(WorldAssetData);
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Applying Heigthmap to %s tile (%d_%d)"), 
+      *CUR_CLASS_FUNC_LINE, *World->GetMapName(), TileMetaInfo.IndexX, TileMetaInfo.IndexY);
+
   ALandscape* landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
       World, 
       ALandscape::StaticClass());
   AssignLandscapeHeightMap(landscape, TileMetaInfo);
   return true;
+}
+
+bool UMapGeneratorWidget::CookVegetationToWorld(
+  UWorld* World, 
+  const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Cooking vegetation to %s"), 
+      *CUR_CLASS_FUNC_LINE, *World->GetMapName());
+  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, World->GetMapName());
+  for(auto Spawner : FoliageSpawners)
+  {
+    ULevel* Level = World->GetCurrentLevel();
+
+    VectorRegister	Rotation{ 0,0,0 };
+    VectorRegister	Translation{ 0.0,0.0,0.0 };
+    VectorRegister Scale3D{ 2500,2500,900 };
+    EObjectFlags InObjectFlags = RF_Transactional;
+    FName InName = NAME_None;
+    
+    FTransform Transform{ Rotation,Translation,Scale3D };
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Creating Volume...");
+    UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
+    AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
+
+    UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
+    FoliageComponent->FoliageSpawner = Spawner;
+
+    TArray<FDesiredFoliageInstance> FoliageInstances;
+    bool result = FoliageComponent->GenerateProceduralContent(FoliageInstances);
+
+    if(result && FoliageInstances.Num() > 0)
+    {
+      FoliageComponent->RemoveProceduralContent(false);
+
+      FFoliagePaintingGeometryFilter OverrideGeometryFilter;
+      OverrideGeometryFilter.bAllowStaticMesh = FoliageComponent->bAllowStaticMesh;
+      OverrideGeometryFilter.bAllowBSP = FoliageComponent->bAllowBSP;
+      OverrideGeometryFilter.bAllowLandscape = FoliageComponent->bAllowLandscape;
+      OverrideGeometryFilter.bAllowFoliage = FoliageComponent->bAllowFoliage;
+      OverrideGeometryFilter.bAllowTranslucent = FoliageComponent->bAllowTranslucent;
+
+      FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);					
+    }
+    else
+    {
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Procedural content generation failed!"), 
+          *CUR_CLASS_FUNC_LINE);
+      return false;
+    }
+  }
+  
+
+  return true;
+}
+
+UWorld* UMapGeneratorWidget::GetWorldFromAssetData(FAssetData& WorldAssetData)
+{
+  UWorld* World;
+  UObjectRedirector *BaseMapRedirector = 
+    Cast<UObjectRedirector>(WorldAssetData.GetAsset());
+  if(BaseMapRedirector != nullptr)
+    World = CastChecked<UWorld>(BaseMapRedirector->DestinationObject);
+  else
+    World = CastChecked<UWorld>(WorldAssetData.GetAsset());
+
+  return World;
 }

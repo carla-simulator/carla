@@ -15,6 +15,8 @@
 
 #include "MapGeneratorWidget.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogCarlaToolsMapGenerator, Log, All);
+
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FMapGeneratorMetaInfo
 {
@@ -31,6 +33,9 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   int SizeY;
+
+  UPROPERTY(BlueprintReadWrite)
+  TArray<UProceduralFoliageSpawner*> FoliageSpawners;
 };
 
 USTRUCT(BlueprintType)
@@ -74,10 +79,13 @@ public:
   /// @a mapName, and saves them in @a destinationPath
   /// Returns a void string is success and an error message if the process failed
   UFUNCTION(Category="Map Generator",BlueprintCallable)
-  FString GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo);
+  void GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo);
+
+  UFUNCTION(Category="Map Generator",BlueprintCallable)
+  void CookVegetation(const FMapGeneratorMetaInfo& MetaInfo);
 
   UFUNCTION(Category="Map Generator", BlueprintCallable)
-  FString CookVegetationToTiles(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
+  void CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
 private:  
   /// Loads the base tile map and stores it in @a WorldAssetData
@@ -96,10 +104,14 @@ private:
   UFUNCTION()
   bool LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath);
 
+  UFUNCTION()
+  bool LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath);
+
   /// Saves a world contained in @a WorldToBeSaved, in the path defined in @a DestinationPath
   /// named as @a WorldName, as a package .umap
   UFUNCTION()
-  bool SaveWorld(FAssetData& WorldToBeSaved, const FString& DestinationPath, const FString& WorldName);
+  bool SaveWorld(FAssetData& WorldToBeSaved, const FString& DestinationPath, 
+      const FString& WorldName, bool bCheckFileExists = false);
 
   /// Takes the name of the map from @a MetaInfo and created the main map
   /// including all the actors needed by large map system
@@ -112,11 +124,20 @@ private:
   UFUNCTION()
   bool CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo);
 
+  UFUNCTION()
+  bool CookVegetationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
+
   /// Gets the Landscape from the input world @a WorldAssetData and
   /// applies the heightmap to it. The tile index is indexX and indexY in
   /// @a TileMetaInfo argument
   /// The funtions return true is success, otherwise false
   UFUNCTION()
   bool ApplyHeightMapToLandscape(FAssetData& WorldAssetData, FMapGeneratorTileMetaInfo TileMetaInfo);
+
+  UFUNCTION()
+  bool CookVegetationToWorld(UWorld* World, const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
+
+  UFUNCTION()
+  UWorld* GetWorldFromAssetData(FAssetData& WorldAssetData);
 };
 // #endif
