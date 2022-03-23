@@ -230,6 +230,8 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Cooking vegetation to %s tiles"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
 
+  //TODO: First check if there is elements in MetaInfo.FoliageSpawners
+
   TArray<FAssetData> AssetsData;
   const FString TilesPath = MetaInfo.DestinationPath;
   bool success = LoadWorlds(AssetsData, TilesPath);
