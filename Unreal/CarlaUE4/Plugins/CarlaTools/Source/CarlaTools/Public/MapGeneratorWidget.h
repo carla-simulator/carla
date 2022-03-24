@@ -87,6 +87,9 @@ public:
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   void CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
+  UFUNCTION(Category="Map Generator", BlueprintCallable)
+  FString SanitizeDirectory(FString InDirectory);
+
 private:  
   /// Loads the base tile map and stores it in @a WorldAssetData
   /// The funtions return true is success, otherwise false
