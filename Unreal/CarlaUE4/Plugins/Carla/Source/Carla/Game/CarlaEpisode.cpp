@@ -411,12 +411,14 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
-  GetFrameData().CreateRecorderEventAdd(
+  if (result.Key == EActorSpawnResultStatus::Success)
+  {
+    GetFrameData().CreateRecorderEventAdd(
         result.Value->GetActorId(),
         static_cast<uint8_t>(result.Value->GetActorType()),
         Transform,
-        std::move(thisActorDescription)
-      );
+        std::move(thisActorDescription));
+  }
   if (Recorder->IsEnabled())
   {
     if (result.Key == EActorSpawnResultStatus::Success)

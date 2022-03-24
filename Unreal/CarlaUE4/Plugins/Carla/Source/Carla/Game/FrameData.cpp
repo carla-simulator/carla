@@ -62,10 +62,10 @@ void FFrameData::PlayFrameData(
     std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
 
-  UE_LOG(LogCarla, Log, TEXT("Spawning %d Actors"), EventsAdd.GetEvents().size());
   for(const CarlaRecorderEventAdd &EventAdd : EventsAdd.GetEvents())
   {
-    // auto Result = CallbackEventAdd(
+    uint32_t OldId = EventAdd.DatabaseId;
+    // Todo: check memory corruption of EventAdd.DatabaseId
     auto Result = ProcessReplayerEventAdd(
         EventAdd.Location,
         EventAdd.Rotation,
@@ -83,33 +83,28 @@ void FFrameData::PlayFrameData(
       // actor created but with different id
       case 1:
         // mapping id (recorded Id is a new Id in replayer)
-        MappedId[EventAdd.DatabaseId] = Result.second;
+        MappedId[OldId] = Result.second;
         break;
 
       // actor reused from existing
       case 2:
         // mapping id (say desired Id is mapped to what)
-        MappedId[EventAdd.DatabaseId] = Result.second;
+        MappedId[OldId] = Result.second;
         break;
     }
-    UE_LOG(LogCarla, Log, TEXT("Spawn Old id %d New id %d"), EventAdd.DatabaseId, MappedId[EventAdd.DatabaseId]);
   }
 
-  UE_LOG(LogCarla, Log, TEXT("Destroying %d Actors"), EventsDel.GetEvents().size());
   for (const CarlaRecorderEventDel &EventDel : EventsDel.GetEvents())
   {
-    UE_LOG(LogCarla, Log, TEXT("Destroy Old id %d New id %d"), EventDel.DatabaseId, MappedId[EventDel.DatabaseId]);
     ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
     MappedId.erase(EventDel.DatabaseId);
   }
 
-  UE_LOG(LogCarla, Log, TEXT("Parenting %d Actors"), EventsParent.GetEvents().size());
   for (const CarlaRecorderEventParent &EventParent : EventsParent.GetEvents())
   {
     ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
   }
 
-  UE_LOG(LogCarla, Log, TEXT("Positioning %d Actors"), Positions.GetPositions().size());
   for (const CarlaRecorderPosition &Position : Positions.GetPositions())
   {
     CarlaRecorderPosition Pos = Position;
