@@ -676,9 +676,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
   }
   if (MinDistance != INFINITY)
   {
-    if(GEngine)
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("COLLISION"));	
-    DrawDebugPoint(GetWorld(), ClosestSurfacePoint, 5, FColor(255,0,0), false, 100.f);
+    //DrawDebugPoint(GetWorld(), ClosestSurfacePoint, 5, FColor(255,0,0), false, 100.f);
   }
 }
 
