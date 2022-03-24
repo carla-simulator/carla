@@ -366,7 +366,7 @@ void USpringBasedVegetationComponent::GenerateCollisionCapsules()
   {
     for (FSkeletonBone& Bone : Joint.Bones)
     {
-      if (Bone.Length < 1)
+      if (Bone.Length < 0.01f)
       {
         continue;
       }
@@ -411,6 +411,7 @@ void USpringBasedVegetationComponent::ComputeSpringStrengthForBranches()
     // DrawDebugLine(GetWorld(), ClosestPoint, JointLocation, FColor(0,0,255), false, 100.f, 0, 2);
     // DrawDebugPoint(GetWorld(), JointLocation, 5, FColor(255,0,0), false, 100.f);
   }
+  
 }
 
 void USpringBasedVegetationComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -598,6 +599,8 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
     std::vector<FJointProperties>& JointLocalPropertiesList,
     std::vector<FJointProperties>& JointPropertiesList)
 {
+  float MinDistance = INFINITY;
+  FVector ClosestSurfacePoint;
   for (auto& ActorCapsules : OverlappingActors)
   {
     AActor* CollidingActor = ActorCapsules.Key;
@@ -614,7 +617,15 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
     TArray<UPrimitiveComponent*>& CollidingCapsules = ActorCapsules.Value;
     for (UPrimitiveComponent* Capsule : CollidingCapsules)
     {
-      Primitive->AddForce(-Impulse);
+      //TODO:      
+      FVector auxVector;
+      float distance = SkeletalMesh->GetDistanceToCollision(CollidingActor->GetActorLocation(), auxVector);
+      if (distance < MinDistance)
+      {
+        MinDistance = distance;
+        ClosestSurfacePoint = auxVector;
+      }
+      //Primitive->AddForce(-Impulse);
       int JointId = CapsuleToJointId[Capsule];
       FSkeletonJoint& Joint = Skeleton.Joints[JointId];
       FJointProperties& JointProperties = JointLocalPropertiesList[Joint.JointId];
@@ -663,7 +674,14 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
     }
   }
+  if (MinDistance != INFINITY)
+  {
+    if(GEngine)
+      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("COLLISION"));	
+    DrawDebugPoint(GetWorld(), ClosestSurfacePoint, 5, FColor(255,0,0), false, 100.f);
+  }
 }
+
 
 void USpringBasedVegetationComponent::SolveEquationOfMotion(
     std::vector<FJointProperties>& JointPropertiesList,

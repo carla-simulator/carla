@@ -215,5 +215,5 @@ void FAckermannController::UpdateVehicleState(const ACarlaWheeledVehicle* Vehicl
 }
 
 void FAckermannController::UpdateVehiclePhysics(const ACarlaWheeledVehicle* Vehicle) {
-  VehicleMaxSteering = FMath::DegreesToRadians(Vehicle->GetMaximumSteerAngle());
+    VehicleMaxSteering = FMath::DegreesToRadians(Vehicle->GetMaximumSteerAngle());
 }
