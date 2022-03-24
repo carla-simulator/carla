@@ -31,12 +31,6 @@ void UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Map Generation %s %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
 
-  // TODO: Check if directory exists and if it's empty
-  // The tool will need to create a new directory (which cannot share name with
-  // an existing one) to don't mess up with redirectors
-
-  // TODO: Check that the directory in metaInfo cannot finish in /, if does, delete it
-
   // // 1. Creating tiles terrain
   bool bTIlesSuccess = CreateTilesMaps(MetaInfo);
   if(!bTIlesSuccess)
@@ -54,6 +48,8 @@ void UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo
 
 void UMapGeneratorWidget::CookVegetation(const FMapGeneratorMetaInfo& MetaInfo)
 {
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Cooking Vegetation to Tiles in %s %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
   // 3. Add vegetation to tiles
   bool bVegetationSuccess = CookVegetationToTiles(MetaInfo);
   if(!bVegetationSuccess)
@@ -71,6 +67,25 @@ void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFo
   if(!result)
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking vegetation for Current Tile"), 
         *CUR_CLASS_FUNC_LINE);
+}
+
+FString UMapGeneratorWidget::SanitizeDirectory(FString InDirectory)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Sanitazing directory: %s"), 
+        *CUR_CLASS_FUNC_LINE, *InDirectory);
+  // Check that the directory in metaInfo cannot finish in /, if does, delete it
+  while(InDirectory.EndsWith("/") || InDirectory.EndsWith("\\"))
+  {
+    if(InDirectory.EndsWith("/"))
+    {
+      InDirectory.RemoveFromEnd("/");
+    }
+    else if(InDirectory.EndsWith("\\"))
+    {
+      InDirectory.RemoveFromEnd("\\");
+    }
+  }
+  return InDirectory;
 }
 
 bool UMapGeneratorWidget::LoadBaseTileWorld(FAssetData& WorldAssetData)
@@ -230,7 +245,13 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Cooking vegetation to %s tiles"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
 
-  //TODO: First check if there is elements in MetaInfo.FoliageSpawners
+  // First check if there is elements in MetaInfo.FoliageSpawners
+  if(MetaInfo.FoliageSpawners.Num() == 0)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s Vegetation cooking skipped. No foliage spawners selected."), 
+        *MetaInfo.MapName);
+        return true;
+  }
 
   TArray<FAssetData> AssetsData;
   const FString TilesPath = MetaInfo.DestinationPath;
@@ -248,7 +269,7 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
     // Check if it is not a tile
     if(!World->GetMapName().Contains("_Tile_"))
     {
-      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s Skipped as it is not a tile"), *World->GetMapName())
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s Skipped as it is not a tile"), *World->GetMapName());
       continue;
     }
 
@@ -360,3 +381,4 @@ UWorld* UMapGeneratorWidget::GetWorldFromAssetData(FAssetData& WorldAssetData)
 
   return World;
 }
+
