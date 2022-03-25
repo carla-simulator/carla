@@ -123,6 +123,10 @@ void UCarlaSettings::LoadSettings()
     {
       StreamingPort = Value;
     }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-carla-secondary-port="), Value))
+    {
+      SecondaryPort = Value;
+    }
     FString StringQualityLevel;
     if (FParse::Value(FCommandLine::Get(), TEXT("-quality-level="), StringQualityLevel))
     {

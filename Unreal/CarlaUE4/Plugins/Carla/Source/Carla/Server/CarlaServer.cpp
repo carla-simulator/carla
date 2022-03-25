@@ -28,6 +28,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
+#include <carla/multigpu/router.h>
 #include <carla/Version.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
@@ -91,9 +92,10 @@ class FCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t RPCPort, uint16_t StreamingPort)
+  FPimpl(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort)
     : Server(RPCPort),
       StreamingServer(StreamingPort),
+      SecondaryServer(SecondaryPort),
       BroadcastStream(StreamingServer.MakeStream())
   {
     BindActions();
@@ -107,6 +109,8 @@ public:
   carla::streaming::Server StreamingServer;
 
   carla::streaming::Stream BroadcastStream;
+  
+  carla::multigpu::Router SecondaryServer;
 
   UCarlaEpisode *Episode = nullptr;
 
@@ -2272,16 +2276,19 @@ FCarlaServer::FCarlaServer() : Pimpl(nullptr) {}
 
 FCarlaServer::~FCarlaServer() {}
 
-FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
+FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort)
 {
-  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort);
+  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort, SecondaryPort);
   StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
+  // SecondaryPort = Pimpl->SecondaryServer.GetLocalEndpoint().port();
+
   UE_LOG(
       LogCarlaServer,
       Log,
-      TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d)"),
+      TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d, secondary=%d)"),
       RPCPort,
-      StreamingPort);
+      StreamingPort,
+      SecondaryPort);
   return Pimpl->BroadcastStream;
 }
 
@@ -2302,26 +2309,32 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
   check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
-  int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
-  int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+  int ThreadsPerServer = std::max(2u, NumberOfWorkerThreads / 3u);
+  int32_t RPCThreads;
+  int32_t StreamingThreads;
+  int32_t SecondaryThreads;
 
   UE_LOG(LogCarla, Log, TEXT("FCommandLine %s"), FCommandLine::Get());
 
   if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
   {
-    RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+    RPCThreads = ThreadsPerServer;
   }
   if(!FParse::Value(FCommandLine::Get(), TEXT("-StreamingThreads="), StreamingThreads))
   {
-    StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+    StreamingThreads = ThreadsPerServer;
+  }
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-SecondaryThreads="), SecondaryThreads))
+  {
+    SecondaryThreads = ThreadsPerServer;
   }
 
-  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
-        NumberOfWorkerThreads, RPCThreads, StreamingThreads);
+  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d, SecondaryThreads %d"),
+        NumberOfWorkerThreads, RPCThreads, StreamingThreads, SecondaryThreads);
 
   Pimpl->Server.AsyncRun(RPCThreads);
   Pimpl->StreamingServer.AsyncRun(StreamingThreads);
-
+  Pimpl->SecondaryServer.AsyncRun(SecondaryThreads);
 }
 
 void FCarlaServer::RunSome(uint32 Milliseconds)

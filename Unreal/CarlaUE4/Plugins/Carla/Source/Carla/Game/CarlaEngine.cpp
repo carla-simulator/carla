@@ -63,7 +63,8 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   if (!bIsRunning)
   {
     const auto StreamingPort = Settings.StreamingPort.Get(Settings.RPCPort + 1u);
-    auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort);
+    const auto SecondaryPort = Settings.SecondaryPort.Get(Settings.RPCPort + 2u);
+    auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
     Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
 
     WorldObserver.SetStream(BroadcastStream);
@@ -93,7 +94,7 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 
   CurrentEpisode->ApplySettings(CurrentSettings);
 
-  ResetFrameCounter();
+  ResetFrameCounter(GFrameNumber);
 
   // make connection between Episode and Recorder
   if (Recorder)
