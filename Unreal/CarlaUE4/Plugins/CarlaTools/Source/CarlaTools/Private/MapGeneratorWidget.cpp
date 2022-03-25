@@ -4,8 +4,6 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-// #if WITH_EDITOR
-
 #include "MapGeneratorWidget.h"
 
 #include "ActorFactories/ActorFactory.h"
@@ -217,24 +215,32 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
     {
       UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Tile map %s (%d_%d)"), 
           *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, i, j);
+      
+      // Loading tile template
       bool bLoaded = LoadBaseTileWorld(WorldAssetData);
-
-      if(!bLoaded)
+      if(!bLoaded){
+        UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error loading Base Tile World"), 
+            *CUR_CLASS_FUNC_LINE);
         return false;
+      }
 
       FMapGeneratorTileMetaInfo MetaTileInfo;
       MetaTileInfo.IndexX = i;
       MetaTileInfo.IndexY = j;
       
-      // 1. Terrain 
+      // Apply heighmap to tile landscape
       ApplyHeightMapToLandscape(WorldAssetData,MetaTileInfo);
 
       const FString MapName = 
           MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+      
+      // Save new tile map
       bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MapName, true);
-
-      if(!bSaved)
+      if(!bSaved){
+        UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error saving %s tile to %s"), 
+            *CUR_CLASS_FUNC_LINE, *MapName, *MetaInfo.DestinationPath);
         return false;
+      }
     }
   }
   return true;
@@ -253,6 +259,7 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
         return true;
   }
 
+  // Load all newly generated maps
   TArray<FAssetData> AssetsData;
   const FString TilesPath = MetaInfo.DestinationPath;
   bool success = LoadWorlds(AssetsData, TilesPath);
@@ -262,6 +269,7 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
     return false;
   }
 
+  // Cook vegetation for each of the maps
   for(FAssetData AssetData : AssetsData)
   {
     UWorld* World = GetWorldFromAssetData(AssetData);
@@ -269,31 +277,34 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
     // Check if it is not a tile
     if(!World->GetMapName().Contains("_Tile_"))
     {
-      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s Skipped as it is not a tile"), *World->GetMapName());
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: %s Skipped as it is not a tile"), 
+          *CUR_CLASS_FUNC_LINE, *World->GetMapName());
       continue;
     }
 
     const FString MapNameToLoad = TilesPath + "/" + World->GetMapName() + "." + World->GetMapName();
-    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Loading to editor %s"), *MapNameToLoad);
     
     // Load Map to editor. Required to spawn simulatee procedural foliage
     bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
     if(!bLoadedSuccess){
-      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Error Loading %s"), *MapNameToLoad);
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Loading %s"),
+          *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
       return false;
     }
 
     // Cook vegetation to world
     bool bVegetationSuccess = CookVegetationToWorld(World, MetaInfo.FoliageSpawners);
     if(!bVegetationSuccess){
-      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Error Cooking Vegetation in %s"), *MapNameToLoad);
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking Vegetation in %s"),
+          *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
       return false;
     }
 
     // Save world with vegetation spawned
     bool bSaved = SaveWorld(AssetData, MetaInfo.DestinationPath, World->GetMapName());
     if(!bSaved){
-      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("Error Saving after Cooking Vegetation in %s"), *MapNameToLoad);
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Saving after Cooking Vegetation in %s"),
+          *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
       return false;
     }
   }
@@ -322,7 +333,8 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Cooking vegetation to %s"), 
       *CUR_CLASS_FUNC_LINE, *World->GetMapName());
-  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, World->GetMapName());
+
+  // For each spawner create a procedural foliage volume and simulates the vegetation
   for(auto Spawner : FoliageSpawners)
   {
     ULevel* Level = World->GetCurrentLevel();
@@ -336,7 +348,8 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     FTransform Transform{ Rotation,Translation,Scale3D };
     GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Creating Volume...");
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
-    AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
+    AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(
+        AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
 
     UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
     FoliageComponent->FoliageSpawner = Spawner;
@@ -364,8 +377,6 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
       return false;
     }
   }
-  
-
   return true;
 }
 

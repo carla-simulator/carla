@@ -17,6 +17,7 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaToolsMapGenerator, Log, All);
 
+/// Struct used as container of basic map information
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FMapGeneratorMetaInfo
 {
@@ -38,6 +39,7 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
 };
 
+/// Struct used as container of basic tile information
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FMapGeneratorTileMetaInfo
 {
@@ -61,11 +63,6 @@ class CARLATOOLS_API UMapGeneratorWidget : public UEditorUtilityWidget
 {
   GENERATED_BODY()
 
-
-private:
-  // UPROPERTY()
-  // UObjectLibrary *MapObjectLibrary;
-
 public:
   /// This function invokes a blueprint event defined in widget blueprint 
   /// event graph, which sets a heightmap to the @a Landscape using
@@ -81,12 +78,19 @@ public:
   UFUNCTION(Category="Map Generator",BlueprintCallable)
   void GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo);
 
+  /// Function called by Widget Blueprint used to start the whole vegetation
+  /// process for map defined in @a MetaInfo
   UFUNCTION(Category="Map Generator",BlueprintCallable)
   void CookVegetation(const FMapGeneratorMetaInfo& MetaInfo);
 
+  /// Function invoked by the widget that cooks the vegetation defined in
+  /// @a FoliageSpawners only in the world opened in the editor
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   void CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
+  /// Utils funtion to format @a InDirectory so it gets sanitized in a 
+  /// format that unreal can access the directory, deleting unnecesary 
+  /// characters such as final '/' or '\'
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   FString SanitizeDirectory(FString InDirectory);
 
@@ -101,12 +105,15 @@ private:
   UFUNCTION()
   bool LoadBaseLargeMapWorld(FAssetData& WorldAssetData);
 
-  /// Loads the base template UWorld object from @a BaseMapPath and returns 
+  /// Loads a UWorld object from @a BaseMapPath and returns 
   /// it in @a WorldAssetData
-  /// The funtions return true is success, otherwise false
+  /// The funtion returns true is success, otherwise false
   UFUNCTION()
   bool LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath);
 
+  /// Loads a bunch of world objects located in @a BaseMapPath and 
+  /// returns them in @a WorldAssetsData.
+  /// The function returns true if success, otherwise false
   UFUNCTION()
   bool LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath);
 
@@ -127,6 +134,11 @@ private:
   UFUNCTION()
   bool CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo);
 
+  /// Searches for the specified map in the specified path in @a MetaInfo
+  /// and starts the vegetation cooking process for each of the tile.
+  /// IMPORTANT: Only maps with '_Tile_' tag in it name are processed as
+  /// vegetation is only applied to tiles.
+  /// The function returns true if success, otherwise false
   UFUNCTION()
   bool CookVegetationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
 
@@ -137,10 +149,13 @@ private:
   UFUNCTION()
   bool ApplyHeightMapToLandscape(FAssetData& WorldAssetData, FMapGeneratorTileMetaInfo TileMetaInfo);
 
+  /// Instantiate a procedural foliage volume for each element in @a FoliageSpawners
+  /// and cooks the corresponding vegetation to @a World
+  /// Return true if success, false otherwise
   UFUNCTION()
   bool CookVegetationToWorld(UWorld* World, const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
+  /// Returns the world object in @a WorldAssetData
   UFUNCTION()
   UWorld* GetWorldFromAssetData(FAssetData& WorldAssetData);
 };
-// #endif
