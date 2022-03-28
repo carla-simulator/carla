@@ -1,3 +1,7 @@
+## Latest
+
+  * Use MediaCapture to capture the scene for the camera RGB sensor. It speeds up the FPS
+
 ## CARLA 0.9.13
 
   * Added new **instance aware semantic segmentation** sensor `sensor.camera.instance_segmentation`
