@@ -2,6 +2,7 @@
 
   * Fixed the extra data in Directx textures, so we need to copy row by row on Windows to remove extra bytes on images
   * Restored gamma value to 2.2 instead of 2.4
+  * Added support to get and set vehicle wheel rotation and height.
 
 ## CARLA 0.9.14
 

@@ -1319,6 +1319,52 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_wheel_position) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float yaw, float pitch, float height) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "set_wheel_steer_direction",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetWheelSteerDirection(
+            static_cast<EVehicleWheelLocation>(WheelLocation), yaw);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_position",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    Response =
+        CarlaActor->SetWheelPitchAngle(
+            static_cast<EVehicleWheelLocation>(WheelLocation), pitch);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_position",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    Response =
+        CarlaActor->SetWheelHeight(
+            static_cast<EVehicleWheelLocation>(WheelLocation), height);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_position",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(get_wheel_steer_angle) << [this](
       const cr::ActorId ActorId,
       cr::VehicleWheelLocation WheelLocation) -> R<float>
@@ -1339,6 +1385,110 @@ void FCarlaServer::FPimpl::BindActions()
     {
       return RespondError(
           "get_wheel_steer_angle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return Angle;
+  };
+
+  BIND_SYNC(set_wheel_pitch_angle) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float AngleInDeg) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "set_wheel_pitch_angle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetWheelPitchAngle(
+            static_cast<EVehicleWheelLocation>(WheelLocation), AngleInDeg);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_pitch_angle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_pitch_angle) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "get_wheel_pitch_angle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    float Angle;
+    ECarlaServerResponse Response =
+        CarlaActor->GetWheelPitchAngle(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Angle);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_wheel_pitch_angle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return Angle;
+  };
+
+  BIND_SYNC(set_wheel_height) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float Height) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "set_wheel_height",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetWheelHeight(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Height);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_height",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_height) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "get_wheel_height",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    float Angle;
+    ECarlaServerResponse Response =
+        CarlaActor->GetWheelHeight(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Angle);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_wheel_height",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -2269,7 +2419,7 @@ void FCarlaServer::FPimpl::BindActions()
             c.description,
             c.transform,
             *c.parent,
-            cr::AttachmentType::Rigid) :
+            c.attachment_type) :
         spawn_actor(c.description, c.transform);
         if (!result.HasError())
         {
@@ -2310,7 +2460,8 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); },
       [=](auto, const C::ConsoleCommand& c) -> CR {       return console_command(c.cmd); },
       [=](auto, const C::SetTrafficLightState& c) { MAKE_RESULT(set_traffic_light_state(c.actor, c.traffic_light_state)); },
-      [=](auto, const C::ApplyLocation& c)        { MAKE_RESULT(set_actor_location(c.actor, c.location)); }
+      [=](auto, const C::ApplyLocation& c)        { MAKE_RESULT(set_actor_location(c.actor, c.location)); },
+      [=](auto, const C::SetWheelPosition& c) {     MAKE_RESULT(set_wheel_position(c.actor, c.location, c.yaw, c.pitch, c.height)); }
   );
 
 #undef MAKE_RESULT

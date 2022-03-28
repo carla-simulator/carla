@@ -12,7 +12,6 @@
 #include "Carla/Sensor/ImageUtil.h"
 
 #include "Async/Async.h"
-#include "Renderer/Public/GBufferView.h"
 
 #include <type_traits>
 

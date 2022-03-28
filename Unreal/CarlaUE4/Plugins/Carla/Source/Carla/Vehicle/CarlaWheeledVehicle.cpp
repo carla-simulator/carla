@@ -877,6 +877,210 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   }
 }
 
+void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
+#ifdef PHYSXVEHICLES_HAS_SET_PITCH_HEIGHT
+  if (bPhysicsEnabled == false)
+  {
+    check((uint8)WheelLocation >= 0)
+    check((uint8)WheelLocation < 4)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelPitchAngle((uint8)WheelLocation, AngleInDeg);
+  }
+  else
+  {
+    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+  }
+#else
+  static bool complained = false;
+  if (!complained) {
+    complained = true;
+    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Not supported."))
+  }
+#endif
+}
+
+float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation) {
+  check((uint8)WheelLocation >= 0)
+  check((uint8)WheelLocation < 4)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true)
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetRotationAngle();
+  }
+  else
+  {
+#ifdef PHYSXVEHICLES_HAS_SET_PITCH_HEIGHT
+    return VehicleAnim->GetWheelPitchAngle((uint8)WheelLocation);
+#else
+    static bool complained = false;
+    if (!complained) {
+      complained = true;
+      UE_LOG(LogTemp, Warning, TEXT("Cannot get wheel height. Not supported."))
+    }
+    return 0.0f;
+#endif
+  }
+}
+
+void ACarlaWheeledVehicle::SetWheelHeight(EVehicleWheelLocation WheelLocation, float Height) {
+#ifdef PHYSXVEHICLES_HAS_SET_PITCH_HEIGHT
+  if (bPhysicsEnabled == false)
+  {
+    check((uint8)WheelLocation >= 0)
+    check((uint8)WheelLocation < 4)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelHeight((uint8)WheelLocation, Height);
+  }
+  else
+  {
+    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+  }
+#else
+  static bool complained = false;
+  if (!complained) {
+    complained = true;
+    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel height. Not supported."))
+  }
+#endif
+}
+
+float ACarlaWheeledVehicle::GetWheelHeight(EVehicleWheelLocation WheelLocation) {
+
+  check((uint8)WheelLocation >= 0)
+  check((uint8)WheelLocation < 4)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true)
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSuspensionOffset();
+  }
+  else
+  {
+#ifdef PHYSXVEHICLES_HAS_SET_PITCH_HEIGHT
+    return VehicleAnim->GetWheelHeight((uint8)WheelLocation);
+#else
+    static bool complained = false;
+    if (!complained) {
+      complained = true;
+      UE_LOG(LogTemp, Warning, TEXT("Cannot get wheel height. Not supported."))
+    }
+    return 0.0f;
+#endif
+  }
+}
+
+void ACarlaWheeledVehicle::GetAllWheelSteerAngle(float* out) const {
+  const UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  const auto* Component = VehicleAnim->GetWheeledVehicleMovementComponent();
+  check(Component != nullptr)
+
+  if (bPhysicsEnabled == true)
+  {
+    const auto& wheels = Component->Wheels;
+    out[0] = wheels[0]->GetSteerAngle();
+    out[1] = wheels[1]->GetSteerAngle();
+    out[2] = wheels[2]->GetSteerAngle();
+    out[3] = wheels[3]->GetSteerAngle();
+  }
+  else
+  {
+#ifdef PHYSXVEHICLES_HAS_SET_PITCH_HEIGHT
+    out[0] = VehicleAnim->GetWheelRotAngle(0);
+    out[1] = VehicleAnim->GetWheelRotAngle(1);
+    out[2] = VehicleAnim->GetWheelRotAngle(2);
+    out[3] = VehicleAnim->GetWheelRotAngle(3);
+#else
+    static bool complained = false;
+    if (!complained) {
+      complained = true;
+      UE_LOG(LogTemp, Warning, TEXT("Cannot get wheel rotation angle. Not supported."))
+    }
+    out[0] = 0.0f;
+    out[1] = 0.0f;
+    out[2] = 0.0f;
+    out[3] = 0.0f;
+#endif
+  }
+}
+
+void ACarlaWheeledVehicle::GetAllWheelPitchAngle(float* out) const {
+  const UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  const auto* Component = VehicleAnim->GetWheeledVehicleMovementComponent();
+  check(Component != nullptr)
+
+  if (bPhysicsEnabled == true)
+  {
+    const auto& wheels = Component->Wheels;
+    out[0] = wheels[0]->GetRotationAngle();
+    out[1] = wheels[1]->GetRotationAngle();
+    out[2] = wheels[2]->GetRotationAngle();
+    out[3] = wheels[3]->GetRotationAngle();
+  }
+  else
+  {
+#ifdef PHYSXVEHICLES_HAS_SET_PITCH_HEIGHT
+    out[0] = VehicleAnim->GetWheelPitchAngle(0);
+    out[1] = VehicleAnim->GetWheelPitchAngle(1);
+    out[2] = VehicleAnim->GetWheelPitchAngle(2);
+    out[3] = VehicleAnim->GetWheelPitchAngle(3);
+#else
+    static bool complained = false;
+    if (!complained) {
+      complained = true;
+      UE_LOG(LogTemp, Warning, TEXT("Cannot get wheel pitch angle. Not supported."))
+    }
+    out[0] = 0.0f;
+    out[1] = 0.0f;
+    out[2] = 0.0f;
+    out[3] = 0.0f;
+#endif
+  }
+}
+
+void ACarlaWheeledVehicle::GetAllWheelHeight(float* out) const {
+  const UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  const auto* Component = VehicleAnim->GetWheeledVehicleMovementComponent();
+  check(Component != nullptr)
+
+  if (bPhysicsEnabled == true)
+  {
+    const auto& wheels = Component->Wheels;
+    out[0] = wheels[0]->GetSuspensionOffset();
+    out[1] = wheels[1]->GetSuspensionOffset();
+    out[2] = wheels[2]->GetSuspensionOffset();
+    out[3] = wheels[3]->GetSuspensionOffset();
+  }
+  else
+  {
+#ifdef PHYSXVEHICLES_HAS_SET_PITCH_HEIGHT
+    out[0] = VehicleAnim->GetWheelHeight(0);
+    out[1] = VehicleAnim->GetWheelHeight(1);
+    out[2] = VehicleAnim->GetWheelHeight(2);
+    out[3] = VehicleAnim->GetWheelHeight(3);
+#else
+    static bool complained = false;
+    if (!complained) {
+      complained = true;
+      UE_LOG(LogTemp, Warning, TEXT("Cannot get wheel height. Not supported."))
+    }
+    out[0] = 0.0f;
+    out[1] = 0.0f;
+    out[2] = 0.0f;
+    out[3] = 0.0f;
+#endif
+  }
+}
+
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   if(!GetCarlaMovementComponent<UDefaultMovementComponent>())
   {

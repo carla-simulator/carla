@@ -91,6 +91,22 @@ namespace client {
     return GetEpisode().Lock()->GetWheelSteerAngle(*this, wheel_location);
   }
 
+  void Vehicle::SetWheelPitchAngle(WheelLocation wheel_location, float angle_in_deg) {
+    GetEpisode().Lock()->SetWheelPitchAngle(*this, wheel_location, angle_in_deg);
+  }
+
+  float Vehicle::GetWheelPitchAngle(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelPitchAngle(*this, wheel_location);
+  }
+
+  void Vehicle::SetWheelHeight(WheelLocation wheel_location, float height) {
+    GetEpisode().Lock()->SetWheelHeight(*this, wheel_location, height);
+  }
+
+  float Vehicle::GetWheelHeight(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelHeight(*this, wheel_location);
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
   }
@@ -100,7 +116,7 @@ namespace client {
   }
 
   Vehicle::LightState Vehicle::GetLightState() const {
-    return GetEpisode().Lock()->GetVehicleLightState(*this).GetLightStateEnum();
+    return static_cast<Vehicle::LightState>(GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.light_state);
   }
 
   float Vehicle::GetSpeedLimit() const {
