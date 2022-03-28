@@ -11,6 +11,11 @@
 
 #include "CoreMinimal.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/multigpu/router.h>
+// #include <carla/multigpu/primaryCommands.h>
+#include <compiler/enable-ue4-macros.h>
+
 class UCarlaEpisode;
 
 class FCarlaServer
@@ -36,6 +41,8 @@ public:
   void Stop();
 
   FDataStream OpenStream() const;
+
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer();
 
 private:
 

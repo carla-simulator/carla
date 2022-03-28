@@ -9,6 +9,8 @@
 // #include "carla/Logging.h"
 #include "carla/streaming/detail/tcp/Message.h"
 #include "carla/ThreadPool.h"
+#include "carla/multigpu/primary.h"
+#include "carla/multigpu/commands.h"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -16,53 +18,35 @@
 #include <mutex>
 #include <vector>
 #include <sstream>
+#include <unordered_map>
 
 namespace carla {
 namespace multigpu {
 
-  class Primary;
+  // class Primary;
   class Listener;
 
-  class Router {
+  struct SessionInfo {
+    std::shared_ptr<Primary>  session;
+    carla::Buffer             buffer;
+  };
+
+  struct CommandHeader {
+    MultiGPUCommand id;
+    uint32_t size;
+  };
+
+  class Router : public std::enable_shared_from_this<Router> {
   public:
 
     Router(void);
-    ~Router();
     explicit Router(uint16_t port);
+    ~Router();
 
-    template <typename... Buffers>
-    void Write(Buffers &&... buffers) {
-      auto message = Primary::MakeMessage(std::move(buffers)...);
-      log_info("Writting to multi-gpu servers: ", message->size());
-      
-      // write to multiple servers
-      std::lock_guard<std::mutex> lock(_mutex);
-      for (auto &s : _sessions) {
-        if (s != nullptr) {
-          s->Write(message);
-        }
-      }
-    }
+    void Write(MultiGPUCommand id, Buffer &&buffer);
+    std::future<SessionInfo> WriteToNext(MultiGPUCommand id, Buffer &&buffer);
 
-    template <typename... Buffers>
-    void WriteToNext(Buffers &&... buffers) {
-      auto message = Primary::MakeMessage(std::move(buffers)...);
-      log_info("Writting to next multi-gpu server: ", message->size());
-      
-      // write to the next server only
-      std::lock_guard<std::mutex> lock(_mutex);
-      if (_next >= _sessions.size()) {
-        _next = 0;
-      }
-      if (_next < _sessions.size()) {
-        auto s = _sessions[_next];
-        if (s != nullptr) {
-          s->Write(message);
-        }
-      }
-      ++_next;
-    }
-
+    void SetCallbacks();
     void AsyncRun(size_t worker_threads);
 
     boost::asio::ip::tcp::endpoint GetLocalEndpoint() const;
@@ -73,18 +57,17 @@ namespace multigpu {
 
   private:
     void ConnectSession(std::shared_ptr<Primary> session);
-
     void DisconnectSession(std::shared_ptr<Primary> session);
-
     void ClearSessions();
-
     
+    // mutex and thread pool must be at the beginning to be destroyed last
     std::mutex                              _mutex;
     ThreadPool                              _pool;
     boost::asio::ip::tcp::endpoint          _endpoint;
     std::vector<std::shared_ptr<Primary>>   _sessions;
     std::shared_ptr<Listener>               _listener;
     int                                     _next;
+    std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>>   _promises;
   };
 
 } // namespace multigpu

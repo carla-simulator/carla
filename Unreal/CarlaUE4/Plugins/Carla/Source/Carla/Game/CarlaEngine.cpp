@@ -18,6 +18,10 @@
 #include "PhysicsEngine/PhysicsSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/multigpu/primaryCommands.h>
+#include <compiler/enable-ue4-macros.h>
+
 #include <thread>
 
 // =============================================================================
@@ -80,6 +84,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         &FCarlaEngine::OnEpisodeSettingsChanged);
 
     bIsRunning = true;
+
+    SecondaryServer = Server.GetSecondaryServer();
+    Commander.set_router(SecondaryServer);
   }
 
   bMapChanged = true;
@@ -159,6 +166,9 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
       {
         LightUpdatePending = CarlaLightSubsystem->IsUpdatePending();
       }
+    }
+
+    if (SecondaryServer->IsMultiGPU()) {
     }
 
     // send the worldsnapshot

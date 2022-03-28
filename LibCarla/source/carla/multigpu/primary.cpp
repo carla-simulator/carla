@@ -141,6 +141,7 @@ namespace multigpu {
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           self->_on_response(self, message->pop());
+          std::cout << "Getting data on listener\n";
           self->ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
@@ -154,7 +155,6 @@ namespace multigpu {
         auto self = weak.lock();
         if (!self) return;
         if (!ec && (message->size() > 0u)) {
-          DEBUG_ASSERT_EQ(bytes, sizeof(carla::streaming::detail::message_size_type));
           // Now that we know the size of the coming buffer, we can allocate our
           // buffer and start putting data into it.
           boost::asio::async_read(
@@ -165,8 +165,6 @@ namespace multigpu {
           if (ec) {
             log_error("Primary server: failed to read header: ", ec.message());
           }
-          // DEBUG_ONLY(printf("size  = ", message->size()));
-          // DEBUG_ONLY(printf("bytes = ", bytes));
           // Connect();
           self->Close();
         }

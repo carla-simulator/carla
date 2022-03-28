@@ -35,7 +35,8 @@ namespace detail {
     template <typename... Buffers>
     void Write(Buffers &&... buffers) {
       auto message = Session::MakeMessage(std::move(buffers)...);
-
+      log_warning("Try to write to stream: ", message->size());
+      
       // try write single stream
       auto session = _session.load();
       if (session != nullptr) {
@@ -77,6 +78,7 @@ namespace detail {
         DEBUG_ASSERT(session == _session.load());
         _session.store(nullptr);
         _sessions.clear();
+        log_warning("Last session disconnected");
       } else {
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),

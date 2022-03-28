@@ -14,6 +14,12 @@
 
 #include "Misc/CoreDelegates.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/multigpu/router.h>
+#include <carla/multigpu/primaryCommands.h>
+#include <compiler/enable-ue4-macros.h>
+
+
 class UCarlaSettings;
 struct FEpisodeSettings;
 
@@ -93,4 +99,7 @@ private:
   FDelegateHandle OnPostTickHandle;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
+
+  std::shared_ptr<carla::multigpu::Router> SecondaryServer;
+  carla::multigpu::PrimaryCommands Commander;
 };
