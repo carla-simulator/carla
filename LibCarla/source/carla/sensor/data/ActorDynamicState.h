@@ -12,6 +12,7 @@
 #include "carla/rpc/ActorState.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerControl.h"
 
 #include <cstdint>
@@ -63,6 +64,10 @@ namespace detail {
     rpc::TrafficLightState traffic_light_state;
     bool has_traffic_light;
     rpc::ActorId traffic_light_id;
+    float wheel_rotation[4];
+    float wheel_pitch[4];
+    float wheel_height[4];
+    rpc::VehicleLightState::flag_type light_state;
   };
 #pragma pack(pop)
 
@@ -143,8 +148,9 @@ namespace detail {
 
 #pragma pack(pop)
 
+ // Largest element detail::VehicleData
  static_assert(
-    sizeof(ActorDynamicState) == 119u,
+    sizeof(ActorDynamicState) == 146u,
     "Invalid ActorDynamicState size! "
     "If you modified this class please update the size here, else you may "
     "comment this assert, but your platform may have compatibility issues "

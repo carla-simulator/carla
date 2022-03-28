@@ -12,8 +12,11 @@
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Traffic/TrafficLightState.h"
 
+#include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/ActorState.h"
 #include "carla/rpc/AttachmentType.h"
+#include "carla/rpc/Command.h"
+#include <compiler/enable-ue4-macros.h>
 
 #include "Carla/Server/CarlaServerResponse.h"
 
@@ -278,6 +281,26 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetWheelPitchAngle(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelHeight(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelHeight(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&)
   {
@@ -489,6 +512,18 @@ public:
 
   virtual ECarlaServerResponse GetWheelSteerAngle(
       const EVehicleWheelLocation& WheelLocation, float& Angle);
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle);
+
+  virtual ECarlaServerResponse SetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float Height) final;
+
+  virtual ECarlaServerResponse GetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float& Height);
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 

@@ -14,8 +14,9 @@
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
-#include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WalkerControl.h"
 
 #ifdef _MSC_VER
@@ -55,15 +56,18 @@ namespace rpc {
       SpawnActor(ActorDescription description, const geom::Transform &transform)
         : description(std::move(description)),
           transform(transform) {}
-      SpawnActor(ActorDescription description, const geom::Transform &transform, ActorId parent)
+      SpawnActor(ActorDescription description, const geom::Transform &transform, ActorId parent,
+          AttachmentType attachment_type = AttachmentType::Rigid)
         : description(std::move(description)),
           transform(transform),
-          parent(parent) {}
+          parent(parent),
+          attachment_type(attachment_type) {}
       ActorDescription description;
       geom::Transform transform;
       boost::optional<ActorId> parent;
       std::vector<Command> do_after;
-      MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after);
+      AttachmentType attachment_type;
+      MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after, attachment_type);
     };
 
     struct DestroyActor : CommandBase<DestroyActor> {
@@ -213,6 +217,20 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor, enabled);
     };
 
+    struct SetWheelPosition : CommandBase<SetWheelPosition> {
+      SetWheelPosition() = default;
+      SetWheelPosition(ActorId id, VehicleWheelLocation loc, float yaw, float pitch, float height)
+        : actor(id),
+          location(loc),
+          yaw(yaw), pitch(pitch), height(height) {}
+      ActorId actor;
+      VehicleWheelLocation location;
+      float yaw;
+      float pitch;
+      float height;
+      MSGPACK_DEFINE_ARRAY(actor, location, yaw, pitch, height);
+    };
+
     struct SetEnableGravity : CommandBase<SetEnableGravity> {
       SetEnableGravity() = default;
       SetEnableGravity(ActorId id, bool value)
@@ -303,7 +321,8 @@ namespace rpc {
         SetVehicleLightState,
         ApplyLocation,
         ConsoleCommand,
-        SetTrafficLightState>;
+        SetTrafficLightState,
+        SetWheelPosition>;
 
     CommandType command;
 

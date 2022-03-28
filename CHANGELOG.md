@@ -7,6 +7,7 @@
   * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
   * Added `NormalsSensor`, a new sensor with normals information
   * Added support for N wheeled vehicles
+  * Added support to get and set vehicle wheel rotation and height.
 
 ## CARLA 0.9.13
 
