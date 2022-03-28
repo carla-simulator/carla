@@ -8,8 +8,10 @@
 #include "TrafficLightState.h"
 #include <queue>
 
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include <compiler/disable-ue4-macros.h>
 #include <carla/road/element/RoadInfoSpeed.h>
+#include <carla/road/element/RoadInfoSignal.h>
 #include <compiler/enable-ue4-macros.h>
 
 void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
