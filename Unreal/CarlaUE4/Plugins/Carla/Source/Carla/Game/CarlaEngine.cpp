@@ -20,6 +20,8 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/multigpu/primaryCommands.h>
+#include <carla/multigpu/secondary.h>
+#include <carla/multigpu/secondaryCommands.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <thread>
@@ -66,9 +68,12 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   if (!bIsRunning)
   {
-    const auto StreamingPort = Settings.StreamingPort.Get(Settings.RPCPort + 1u);
-    const auto SecondaryPort = Settings.SecondaryPort.Get(Settings.RPCPort + 2u);
-    auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
+    const auto StreamingPort = Settings.StreamingPort;
+    const auto SecondaryPort = Settings.SecondaryPort;
+    const auto PrimaryIP     = Settings.PrimaryIP;
+    const auto PrimaryPort   = Settings.PrimaryPort;
+    
+    auto BroadcastStream     = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
     Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
 
     WorldObserver.SetStream(BroadcastStream);
@@ -85,8 +90,18 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
 
     bIsRunning = true;
 
-    SecondaryServer = Server.GetSecondaryServer();
-    Commander.set_router(SecondaryServer);
+    // check to convert this as secondary server
+    if (!PrimaryIP.empty())
+    {
+      Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, std::bind(&carla::multigpu::SecondaryCommands::on_command, &SecCommander, std::placeholders::_1));
+      SecCommander.set_secondary(Secondary);
+      Secondary->Connect();
+    }
+    else
+    {
+      SecondaryServer = Server.GetSecondaryServer();
+      Commander.set_router(SecondaryServer);
+    }
   }
 
   bMapChanged = true;
@@ -169,6 +184,7 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     }
 
     if (SecondaryServer->IsMultiGPU()) {
+      Commander.SendFrameData(carla::Buffer());
     }
 
     // send the worldsnapshot

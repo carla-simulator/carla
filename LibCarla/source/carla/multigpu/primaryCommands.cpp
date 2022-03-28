@@ -25,22 +25,22 @@ PrimaryCommands::PrimaryCommands(std::shared_ptr<Router> router) :
 
 // broadcast to all secondary servers the frame data
 void PrimaryCommands::SendFrameData(carla::Buffer buffer) {
-
+  log_info("sending frame command");
 }
 
 // broadcast to all secondary servers the map to load
 void PrimaryCommands::SendLoadMap(std::string map) {
-  
+  log_info("sending load map command");
 }
 
 // send to who the router wants the request for a token
 void PrimaryCommands::SendGetToken(carla::streaming::detail::stream_id_type sensor_id) {
-
+  log_info("sending get token command");
 }
 
 // send to know if a connection is alive
 void PrimaryCommands::SendIsAlive() {
-
+  log_info("sending is alive command");
 }
 
 void PrimaryCommands::set_router(std::shared_ptr<Router> router) {

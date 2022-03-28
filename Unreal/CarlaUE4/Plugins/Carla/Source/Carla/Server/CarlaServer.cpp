@@ -97,8 +97,9 @@ public:
       StreamingServer(StreamingPort),
       BroadcastStream(StreamingServer.MakeStream())
   {
-    // we need to create shared_ptr from the router for some handlers
+    // we need to create shared_ptr from the router for some handlers to live
     SecondaryServer = std::make_shared<carla::multigpu::Router>(SecondaryPort);
+    SecondaryServer->SetCallbacks();
     BindActions();
   }
 

@@ -17,6 +17,8 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/multigpu/router.h>
 #include <carla/multigpu/primaryCommands.h>
+#include <carla/multigpu/secondary.h>
+#include <carla/multigpu/secondaryCommands.h>
 #include <compiler/enable-ue4-macros.h>
 
 
@@ -100,6 +102,8 @@ private:
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
-  std::shared_ptr<carla::multigpu::Router> SecondaryServer;
-  carla::multigpu::PrimaryCommands Commander;
+  std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
+  carla::multigpu::PrimaryCommands            Commander;
+  std::shared_ptr<carla::multigpu::Secondary> Secondary;
+  carla::multigpu::SecondaryCommands          SecCommander;
 };

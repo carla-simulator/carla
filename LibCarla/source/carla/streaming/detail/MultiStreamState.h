@@ -34,12 +34,10 @@ namespace detail {
 
     template <typename... Buffers>
     void Write(Buffers &&... buffers) {
-      auto message = Session::MakeMessage(std::move(buffers)...);
-      log_warning("Try to write to stream: ", message->size());
-      
       // try write single stream
       auto session = _session.load();
       if (session != nullptr) {
+        auto message = Session::MakeMessage(std::move(buffers)...);
         session->Write(std::move(message));
         // Return here, _session is only valid if we have a 
         // single session.
@@ -48,6 +46,7 @@ namespace detail {
 
       // try write multiple stream
       std::lock_guard<std::mutex> lock(_mutex);
+      auto message = Session::MakeMessage(std::move(buffers)...);
       for (auto &s : _sessions) {
         if (s != nullptr) {
           s->Write(message);
