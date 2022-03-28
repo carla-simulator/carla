@@ -1,7 +1,8 @@
-# Copyright (c) 2021 Intel Labs.
+# Copyright (c) 2022 Intel Corporation.
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
+
 
 from dataclasses import dataclass, field
 from typing import Optional
@@ -24,6 +25,7 @@ class Carla:
     traffic_manager_port: int = 8000
     respawn: bool = True
     townmap: Optional[str] = MISSING
+    retry: Optional[int] = MISSING
 
 @dataclass
 class Location:
@@ -58,11 +60,13 @@ class Transform:
 class Blueprint:
     name: str = MISSING
     attr: Optional[Dict[str, str]] = field(default_factory=lambda: {"image_size_x": 800, "image_size_y": 600, "gamma": 2.2})
-
+    pace: Optional[str] = MISSING
+    
 @dataclass
 class Actor:
     blueprint: Blueprint = Blueprint()
     transform: Transform = Transform()
+    destination_transform: Transform = Transform()
     attach_to: Optional[str] = MISSING
     attachment: str = "rigid"
 

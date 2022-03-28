@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-
-# Copyright (c) 2021 Intel Labs.
+#
+# Copyright (c) 2022 Intel Corporation.
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
+
 
 from __future__ import print_function
 from config_schema import ConfigSchema
@@ -105,16 +106,23 @@ def spawn_actors(conf, world, parent=None):
     actors = {} #{id: (actor, should_destroy)}
 
     for actor_conf in conf:
-        actor = conf_to_actor(actor_conf, world, parent=parent)
-        logger.info(f"Spawned actor: {actor.type_id} with id: {actor.id}")
+        # Pass parent because...
+        actor_list = conf_to_actor(actor_conf, world, parent=parent)
+        logger.info(f"Spawned actor: {actor_list[0].type_id} with id: {actor_list[0].id}")
 
-        # Save actor to dictionary
-        actors[actor.id] = (actor, True)
-        derived_parent = actor.parent
-        if derived_parent is not None and fnmatch.fnmatch(derived_parent.type_id, "vehicle.*"):
-            # If actor has a parent and it's parent is not the default parent, then it was spawned by another script and we should not destroy this actor
-            actors[derived_parent.id] = (derived_parent, derived_parent == parent)
-            logger.info(f"Found vehicle : {derived_parent.type_id} with id: {derived_parent.id} to enable autopilot")
+        for actor in actor_list:
+            # Save actor to dictionary
+            # For pedestrians, the ai walker controller is returned as a tuple (walker_controller, destination_transform)
+            if type(actor) is tuple and fnmatch.fnmatch(actor[0].type_id, "controller.ai.walker"):
+                actors[actor[0].id] = (actor[0], True, actor[1])
+                derived_parent = actor[0].parent
+            else:
+                actors[actor.id] = (actor, True, None)
+                derived_parent = actor.parent
+            if derived_parent is not None and (fnmatch.fnmatch(derived_parent.type_id, "vehicle.*") or fnmatch.fnmatch(derived_parent.type_id, "walker.pedestrian.*")):
+                # If actor has a parent and it's parent is not the default parent, then it was spawned by another script and we should not destroy this actor
+                actors[derived_parent.id] = (derived_parent, derived_parent == parent, None)
+                logger.info(f"Found actor : {derived_parent.type_id} with id: {derived_parent.id} to enable autopilot")
 
         attached_actors = spawn_actors(actor_conf.get("sensors", []), world, parent=actor)
         actors.update(attached_actors)
@@ -134,9 +142,29 @@ def conf_to_actor(conf, world, parent=None):
         transform = conf_to_carla_transform(conf.transform)
     attach_to = conf_to_attach_to(conf, world, default_attach_to=parent)
     attachment = conf_to_attachment(conf)
+    logger.info("Config: "+str(conf))
+    if "destination_transform" not in conf:
+        dest_transform = world.get_random_location_from_navigation()
+        logger.info(
+            f"Selected random destination point (none provided) x: {dest_transform.x}, y: {dest_transform.y}, z: {dest_transform.z} \n")
+    else:
+        dest_transform = conf_to_carla_transform(conf.destination_transform).location
 
-    return world.spawn_actor(blueprint, transform, attach_to=attach_to, attachment_type=attachment)
+    actor = world.spawn_actor(blueprint, transform, attach_to=attach_to, attachment_type=attachment)
+    # Spawn a walker controller to control the walker
+    if fnmatch.fnmatch(actor.type_id, "walker.pedestrian.*"):
+        walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+        walker_controller = world.spawn_actor(walker_controller_bp, carla.Transform(), attach_to=actor)
+        if conf.blueprint.get("pace") == "run":
+            print("Speed run: ", blueprint.get_attribute('speed').recommended_values[2])
+            print("Speed walk: ", blueprint.get_attribute('speed').recommended_values[1])
+            walker_controller.set_max_speed(float(blueprint.get_attribute('speed').recommended_values[2]))
+        else:
+            walker_controller.set_max_speed(float(blueprint.get_attribute('speed').recommended_values[1]))
 
+        return [actor, (walker_controller, dest_transform)]
+
+    return [actor]
 
 def conf_to_blueprint(conf, library):
     blueprints = library.filter(conf.name)
@@ -224,7 +252,7 @@ def save_sensor_static_metadata(sensors):
 def save_sensor_dynamic_metadata(sensor_name, sensorsnapshot, sensor):
     sensor_metadata = {}
     sensor_metadata['type'] = sensor_name.rsplit('.', 1)[0]
-    # Note that there is a small discrepancy between 'Actor' data and 'Actorsnapshot', so here we save both in case postprocessing needs any of them. 
+    # Note that there is a small discrepancy between 'Actor' data and 'Actorsnapshot', so here we save both in case postprocessing needs any of them.
     snapshot_transform = sensorsnapshot.get_transform()
     sensor_metadata['actorsnapshot_location'] = (snapshot_transform.location.x, snapshot_transform.location.y, snapshot_transform.location.z)
     sensor_metadata['actorsnapshot_rotation'] = (snapshot_transform.rotation.pitch, snapshot_transform.rotation.yaw, snapshot_transform.rotation.roll)
@@ -311,21 +339,35 @@ def data_saver_loop(conf):
     if conf.carla.get("seed"):
         random.seed(conf.carla.seed)
 
-    client = carla.Client(conf.carla.host, conf.carla.port)
+    # Try connecting "retry" (default = 10) times
+    client = None
+    for i in range(conf.carla.get("retry", 10)):
+        try:
+            client = carla.Client(conf.carla.host, conf.carla.port)
+            client.set_timeout(conf.carla.timeout)
 
-    logger.info(f"CARLA server version: {client.get_server_version()}")
-    logger.info(f"CARLA client version: {client.get_client_version()}")
-    client_version = client.get_client_version().split('-')[0]
-    server_version = client.get_server_version().split('-')[0]
-    assert client_version == server_version, "CARLA server and client should have same version"
-    assert version.parse(client_version) >= version.parse('0.9.13'), "CARLA version needs be >= '0.9.13'"
+            logger.info(f"CARLA server version: {client.get_server_version()}")
+            logger.info(f"CARLA client version: {client.get_client_version()}")
 
-    client.set_timeout(conf.carla.timeout)
+            client_version = client.get_client_version().split('-')[0]
+            server_version = client.get_server_version().split('-')[0]
+            assert client_version == server_version, "CARLA server and client should have same version"
+            assert version.parse(client_version) >= version.parse('0.9.13'), "CARLA version needs be >= '0.9.13'"
 
-    if conf.carla.get("townmap"):
-        logger.info(f"Loading map {conf.carla.townmap}.")
-        world = client.load_world(conf.carla.townmap)
-    world = client.get_world()
+            if conf.carla.get("townmap"):
+                logger.info(f"Loading map {conf.carla.townmap}.")
+                world = client.load_world(conf.carla.townmap)
+            world = client.get_world()
+
+        except RuntimeError:
+            client = None
+            logger.info("CARLA connection failed on attempt {i+1} of 10")
+            time.sleep(5)
+
+    max_frames = conf.get("max_frames", sys.maxsize)
+    tm_port = conf.carla.get("traffic_manager_port", 8000)
+    fps = conf.carla.get("fps", 30)
+    respawn = conf.carla.get("respawn", True)
 
     logger.info("Setting weather.")
     weather = carla.WeatherParameters(cloudiness=conf.weather.cloudiness, precipitation=conf.weather.precipitation, \
@@ -337,22 +379,17 @@ def data_saver_loop(conf):
     actor_dict = {}
     try:
         actor_dict = spawn_actors(conf.spawn_actors, world)
-        # actor_dict: {actor_id: (actor, should_destroy)}
-        for actor, _ in actor_dict.values():
-            # Skip non-vehicle actors
-            if not fnmatch.fnmatch(actor.type_id, "vehicle.*"):
-                continue
-            actor.set_autopilot(True)
-            actor.set_light_state(carla.VehicleLightState.NONE)
+        # actor_dict: {actor_id: (actor, should_destroy, destination)}
+        for actor, _, destination in actor_dict.values():
+            if fnmatch.fnmatch(actor.type_id, "controller.ai.walker"):
+                actor.start()
+                actor.go_to_location(destination)
+            if fnmatch.fnmatch(actor.type_id, "vehicle.*"):
+                actor.set_autopilot(True, tm_port)
+                actor.set_light_state(carla.VehicleLightState.NONE)
 
         sensor_list = list(map(lambda x: x[0], filter(lambda a: fnmatch.fnmatch(a[0].type_id, "sensor.*"), actor_dict.values())))
         sensor_id_to_sensor_type =  {actor.id: actor.type_id for actor in sensor_list}
-
-        local_frame_num = 0
-        max_frames = conf.get("max_frames", sys.maxsize)
-        tm_port = conf.carla.get("traffic_manager_port", 8000)
-        fps = conf.carla.get("fps", 30)
-        respawn = conf.carla.get("respawn", True)
 
         metadata_path = os.path.join(conf.output_dir, 'metadata')
         if not os.path.exists(metadata_path):
@@ -368,7 +405,7 @@ def data_saver_loop(conf):
         with open(metadata_static_file, 'w') as f:
             json.dump(metadata_static, f, indent=4)
 
-
+        local_frame_num = 0
         # Create a synchronous mode context.
         with CarlaSyncMode(client, *sensor_list, tm_port=tm_port, fps=fps, respawn=respawn) as sync_mode:
             while True:
@@ -415,7 +452,7 @@ def data_saver_loop(conf):
         logger.exception(error)
     finally:
         logger.info("Destroying actors")
-        for actor, should_destroy in actor_dict.values():
+        for actor, should_destroy, _ in actor_dict.values():
             if not should_destroy:
                 continue
             actor.destroy()
@@ -432,8 +469,9 @@ def main(conf: DictConfig):
     schema = OmegaConf.structured(ConfigSchema)
     OmegaConf.merge(schema, conf)
     logger.info('listening to server %s:%s', conf.carla.host, conf.carla.port)
+
     logger.info(OmegaConf.to_yaml(conf))
- 
+
     data_saver_loop(conf)
 
 
