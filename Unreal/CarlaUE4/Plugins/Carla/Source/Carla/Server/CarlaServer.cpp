@@ -29,6 +29,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/Version.h>
+#include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
@@ -50,6 +51,7 @@
 #include <carla/rpc/Vector2D.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleDoor.h>
+#include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
@@ -738,6 +740,21 @@ void FCarlaServer::FPimpl::BindActions()
     return true;
   };
 
+  BIND_SYNC(console_command) << [this](std::string cmd) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    APlayerController* PController= UGameplayStatics::GetPlayerController(Episode->GetWorld(), 0);
+    if( PController )
+    {
+        auto result = PController->ConsoleCommand(UTF8_TO_TCHAR(cmd.c_str()), true);
+        return !(
+          result.Contains(FString(TEXT("Command not recognized"))) ||
+          result.Contains(FString(TEXT("Error")))
+        );
+    }
+    return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
+  };
+
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(set_actor_location) << [this](
@@ -1354,6 +1371,81 @@ void FCarlaServer::FPimpl::BindActions()
     {
       return RespondError(
           "apply_control_to_vehicle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_ackermann_control_to_vehicle) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleAckermannControl Control) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "apply_ackermann_control_to_vehicle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyAckermannControlToVehicle(Control, EVehicleInputPriority::Client);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "apply_ackermann_control_to_vehicle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_ackermann_controller_settings) << [this](
+      cr::ActorId ActorId) -> R<cr::AckermannControllerSettings>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+        if (!CarlaActor)
+    {
+      return RespondError(
+          "get_ackermann_controller_settings",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    FAckermannControllerSettings Settings;
+    ECarlaServerResponse Response =
+        CarlaActor->GetAckermannControllerSettings(Settings);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_ackermann_controller_settings",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return cr::AckermannControllerSettings(Settings);
+  };
+
+  BIND_SYNC(apply_ackermann_controller_settings) << [this](
+      cr::ActorId ActorId,
+      cr::AckermannControllerSettings AckermannSettings) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "apply_ackermann_controller_settings",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyAckermannControllerSettings(FAckermannControllerSettings(AckermannSettings));
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "apply_ackermann_controller_settings",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -2038,11 +2130,12 @@ void FCarlaServer::FPimpl::BindActions()
           ActorId id = result.Get().id;
           auto set_id = carla::Functional::MakeOverload(
               [](C::SpawnActor &) {},
+              [](C::ConsoleCommand &) {},
               [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after)
           {
-            boost::apply_visitor(set_id, command.command);
-            boost::apply_visitor(self, command.command);
+            boost::variant2::visit(set_id, command.command);
+            boost::variant2::visit(self, command.command);
           }
           return id;
         }
@@ -2050,6 +2143,7 @@ void FCarlaServer::FPimpl::BindActions()
       },
       [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
+      [=](auto, const C::ApplyVehicleAckermannControl &c) {  MAKE_RESULT(apply_ackermann_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyVehiclePhysicsControl &c) {  MAKE_RESULT(apply_physics_control(c.actor, c.physics_control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
@@ -2067,7 +2161,11 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },
 //      [=](auto, const C::OpenVehicleDoor &c) {      MAKE_RESULT(open_vehicle_door(c.actor, c.door_idx)); },
 //      [=](auto, const C::CloseVehicleDoor &c) {     MAKE_RESULT(close_vehicle_door(c.actor, c.door_idx)); },
-      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
+      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); },
+      [=](auto, const C::ConsoleCommand& c) -> CR {       return console_command(c.cmd); },
+      [=](auto, const C::SetTrafficLightState& c) { MAKE_RESULT(set_traffic_light_state(c.actor, c.traffic_light_state)); },
+      [=](auto, const C::ApplyLocation& c)        { MAKE_RESULT(set_actor_location(c.actor, c.location)); }
+  );
 
 #undef MAKE_RESULT
 
@@ -2079,7 +2177,7 @@ void FCarlaServer::FPimpl::BindActions()
     result.reserve(commands.size());
     for (const auto &command : commands)
     {
-      result.emplace_back(boost::apply_visitor(command_visitor, command.command));
+      result.emplace_back(boost::variant2::visit(command_visitor, command.command));
     }
     if (do_tick_cue)
     {

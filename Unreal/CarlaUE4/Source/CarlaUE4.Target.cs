@@ -9,5 +9,6 @@ public class CarlaUE4Target : TargetRules
 	{
 		Type = TargetType.Game;
 		ExtraModuleNames.Add("CarlaUE4");
+		bUseLoggingInShipping = true;
 	}
 }

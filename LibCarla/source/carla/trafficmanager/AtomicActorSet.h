@@ -7,7 +7,7 @@
 #pragma once
 
 #include <mutex>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "carla/client/Actor.h"
@@ -25,7 +25,7 @@ namespace traffic_manager {
   private:
 
     std::mutex modification_mutex;
-    std::unordered_map<ActorId, ActorPtr> actor_set;
+    std::map<ActorId, ActorPtr> actor_set;
     int state_counter;
 
   public:

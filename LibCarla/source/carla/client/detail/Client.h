@@ -43,8 +43,10 @@
 namespace carla {
   class Buffer;
 namespace rpc {
+  class AckermannControllerSettings;
   class ActorDescription;
   class DebugShape;
+  class VehicleAckermannControl;
   class VehicleControl;
   class WalkerControl;
   class WalkerBoneControlIn;
@@ -249,6 +251,16 @@ namespace detail {
     void ApplyControlToVehicle(
         rpc::ActorId vehicle,
         const rpc::VehicleControl &control);
+
+    void ApplyAckermannControlToVehicle(
+        rpc::ActorId vehicle,
+        const rpc::VehicleAckermannControl &control);
+
+    rpc::AckermannControllerSettings GetAckermannControllerSettings(rpc::ActorId vehicle) const;
+
+    void ApplyAckermannControllerSettings(
+        rpc::ActorId vehicle,
+        const rpc::AckermannControllerSettings &settings);
 
     void EnableCarSim(
         rpc::ActorId vehicle,

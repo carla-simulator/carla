@@ -18,7 +18,5 @@ private:
     std::uniform_real_distribution<double> dist;
 };
 
-using RandomGeneratorMap = std::unordered_map<carla::rpc::ActorId, RandomGenerator>;
-
 } // namespace traffic_manager
 } // namespace carla
