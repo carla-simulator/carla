@@ -86,24 +86,22 @@ static auto ApplyBatchCommandsSync(
         bool autopilotValue = false;
 
         CommandType::CommandType& cmd_type = cmds[i].command;
-        const boost::typeindex::type_info& cmd_type_info = cmd_type.type();
 
         // check SpawnActor command
-        if (cmd_type_info == typeid(carla::rpc::Command::SpawnActor)) {
+        if (const auto *maybe_spawn_actor_cmd = boost::variant2::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
           // check inside 'do_after'
-          auto &spawn = boost::get<carla::rpc::Command::SpawnActor>(cmd_type);
-          for (auto &cmd : spawn.do_after) {
-            if (cmd.command.type() == typeid(carla::rpc::Command::SetAutopilot)) {
-              tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).tm_port;
-              autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd.command).enabled;
+          for (auto &cmd : maybe_spawn_actor_cmd->do_after) {
+            if (const auto *maybe_set_autopilot_command = boost::variant2::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
+              tm_port = maybe_set_autopilot_command->tm_port;
+              autopilotValue = maybe_set_autopilot_command->enabled;
               isAutopilot = true;
             }
           }
         }
         // check SetAutopilot command
-        else if (cmd_type_info == typeid(carla::rpc::Command::SetAutopilot)) {
-          tm_port = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).tm_port;
-          autopilotValue = boost::get<carla::rpc::Command::SetAutopilot>(cmd_type).enabled;
+        else if (const auto *maybe_set_autopilot_command = boost::variant2::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type)) {
+          tm_port = maybe_set_autopilot_command->tm_port;
+          autopilotValue = maybe_set_autopilot_command->enabled;
           isAutopilot = true;
         }
 

@@ -74,22 +74,22 @@ TEST(msgpack, actor) {
 TEST(msgpack, variant) {
   using mp = carla::MsgPack;
 
-  boost::variant<bool, float, std::string> var;
+  boost::variant2::variant<bool, float, std::string> var;
 
   var = true;
   auto result = mp::UnPack<decltype(var)>(mp::Pack(var));
-  ASSERT_EQ(result.which(), 0);
-  ASSERT_EQ(boost::get<bool>(result), true);
+  ASSERT_EQ(result.index(), 0);
+  ASSERT_EQ(boost::variant2::get<bool>(result), true);
 
   var = 42.0f;
   result = mp::UnPack<decltype(var)>(mp::Pack(var));
-  ASSERT_EQ(result.which(), 1);
-  ASSERT_EQ(boost::get<float>(result), 42.0f);
+  ASSERT_EQ(result.index(), 1);
+  ASSERT_EQ(boost::variant2::get<float>(result), 42.0f);
 
   var = std::string("hola!");
   result = mp::UnPack<decltype(var)>(mp::Pack(var));
-  ASSERT_EQ(result.which(), 2);
-  ASSERT_EQ(boost::get<std::string>(result), "hola!");
+  ASSERT_EQ(result.index(), 2);
+  ASSERT_EQ(boost::variant2::get<std::string>(result), "hola!");
 }
 
 TEST(msgpack, optional) {
