@@ -254,7 +254,7 @@ namespace nav {
         // build the visitor structure
         WalkerEventVisitor visitor(this, id, delta);
         // run the event
-        return boost::apply_visitor(visitor, rp.event);
+        return boost::variant2::visit(visitor, rp.event);
     }
 
 
