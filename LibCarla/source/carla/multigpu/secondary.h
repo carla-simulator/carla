@@ -12,6 +12,7 @@
 #include "carla/streaming/detail/tcp/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
+#include "carla/ThreadPool.h"
 
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
@@ -28,10 +29,6 @@ namespace carla {
 
 namespace multigpu {
 
-  /// A client that connects to a single stream.
-  ///
-  /// @warning This client should be stopped before releasing the shared pointer
-  /// or won't be destroyed.
   class Secondary
     : public std::enable_shared_from_this<Secondary>,
       private profiler::LifetimeProfiled,
@@ -42,16 +39,15 @@ namespace multigpu {
     using protocol_type = endpoint::protocol_type;
     using callback_function_type = std::function<void (Buffer)>;
 
-    Secondary(
-        boost::asio::io_context &io_context,
-        boost::asio::ip::tcp::endpoint ep,
-        callback_function_type callback);
-
+    Secondary(boost::asio::ip::tcp::endpoint ep, callback_function_type callback);
+    Secondary(std::string ip, uint16_t port, callback_function_type callback);
     ~Secondary();
 
     void Connect();
 
     void Stop();
+
+    void AsyncRun(size_t worker_threads);
 
     void Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message);
     
@@ -63,19 +59,14 @@ namespace multigpu {
 
     void ReadData();
 
-    callback_function_type _callback;
-
-    boost::asio::ip::tcp::socket _socket;
-
-    boost::asio::ip::tcp::endpoint _endpoint;
-
+    ThreadPool                      _pool;
+    boost::asio::ip::tcp::socket    _socket;
+    boost::asio::ip::tcp::endpoint  _endpoint;
     boost::asio::io_context::strand _strand;
-
-    boost::asio::deadline_timer _connection_timer;
-    
-    std::shared_ptr<BufferPool> _buffer_pool;
-
-    std::atomic_bool _done{false};
+    boost::asio::deadline_timer     _connection_timer;
+    std::shared_ptr<BufferPool>     _buffer_pool;
+    std::atomic_bool                _done {false};
+    callback_function_type          _callback;
   };
 
 } // namespace multigpu

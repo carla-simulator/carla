@@ -25,20 +25,40 @@ namespace carla {
 namespace multigpu {
 
   Secondary::Secondary(
-      boost::asio::io_context &io_context,
-      boost::asio::ip::tcp::endpoint ep,
-      callback_function_type callback)
-    : _callback(std::move(callback)),
-      _socket(io_context),
+    boost::asio::ip::tcp::endpoint ep,
+    callback_function_type callback) :
+      _pool(),
+      _callback(std::move(callback)),
       _endpoint(ep),
-      _strand(io_context),
-      _connection_timer(io_context),
-      _buffer_pool(std::make_shared<BufferPool>()) { }
+      _buffer_pool(std::make_shared<BufferPool>()),
+      _socket(_pool.io_context()),
+      _strand(_pool.io_context()),
+      _connection_timer(_pool.io_context()) { 
+    
+    }
+  
+
+  Secondary::Secondary(
+    std::string ip,
+    uint16_t port,
+    callback_function_type callback) :
+      _pool(),
+      _callback(std::move(callback)),
+      _buffer_pool(std::make_shared<BufferPool>()),
+      _socket(_pool.io_context()),
+      _strand(_pool.io_context()),
+      _connection_timer(_pool.io_context()) { 
+
+    boost::asio::ip::address ip_address = boost::asio::ip::address::from_string(ip);
+    _endpoint = boost::asio::ip::tcp::endpoint(ip_address, port);
+  }
 
   Secondary::~Secondary() {
+    _pool.Stop();
   }
 
   void Secondary::Connect() {
+    AsyncRun(2u);    
     std::weak_ptr<Secondary> weak = shared_from_this();
     boost::asio::post(_strand, [weak]() {
       auto self = weak.lock();
@@ -102,6 +122,10 @@ namespace multigpu {
         self->Connect();
       }
     });
+  }
+
+  void Secondary::AsyncRun(size_t worker_threads) {
+    _pool.AsyncRun(worker_threads);
   }
 
   void Secondary::Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message) {
