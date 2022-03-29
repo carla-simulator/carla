@@ -101,10 +101,18 @@ namespace detail {
       nav->SetPedestriansCrossFactor(percentage);
     }
 
+    void SetPedestriansSeed(unsigned int seed) {
+      auto nav = _navigation.load();
+      DEBUG_ASSERT(nav != nullptr);
+      nav->SetPedestriansSeed(seed);
+    }
+
     void AddPendingException(std::string e) {
       _pending_exceptions = true;
       _pending_exceptions_msg = e;
     }
+
+    bool HasMapChangedSinceLastCall();
 
   private:
 
@@ -135,6 +143,8 @@ namespace detail {
     const streaming::Token _token;
 
     bool _pending_exceptions = false;
+
+    bool _should_update_map = true;
   };
 
 } // namespace detail

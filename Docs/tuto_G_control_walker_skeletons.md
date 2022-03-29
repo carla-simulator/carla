@@ -5,6 +5,12 @@ skeletons of walkers from the CARLA Python API. The reference of
 all classes and methods available can be found at
 [Python API reference](python_api.md).
 
+*   [__Walker skeleton structure__](#walker-skeleton-structure)  
+*   [__Manually control walker bones__](#manually-control-walker-bones)  
+	*   [Connect to the simulator](#connect-to-the-simulator)  
+	*   [Spawn a walker](#spawn-a-walker)  
+	*   [Control walker skeletons](#control-walker-skeletons)  
+
 !!! note
     **This document assumes the user is familiar with the Python API**. <br>
     The user should read the first steps tutorial before reading this document.
@@ -86,12 +92,12 @@ crl_root
 ```
 
 ---
-## How to manually control a walker's bones
+## Manually control walker bones
 
 Following is a detailed step-by-step example of how to change the bone transforms of a walker
 from the CARLA Python API
 
-#### Connecting to the simulator
+### Connect to the simulator
 
 Import neccessary libraries used in this example
 
@@ -107,7 +113,7 @@ client = carla.Client('127.0.0.1', 2000)
 client.set_timeout(2.0)
 ```
 
-#### Spawning a walker
+### Spawn a walker
 
 Spawn a random walker at one of the map's spawn points
 
@@ -119,7 +125,7 @@ spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
 world.try_spawn_actor(blueprint, spawn_point)
 ```
 
-#### Controlling a walker's skeleton
+### Control walker skeletons
 
 A walker's skeleton can be modified by passing an instance of the WalkerBoneControl class
 to the walker's apply_control function. The WalkerBoneControl class contains the transforms

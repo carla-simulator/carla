@@ -5,10 +5,10 @@ view the contribution guidelines, then fill out the blanks below.
 
 Checklist:
 
-  - [ ] Your branch is up-to-date with the `master` branch and tested with latest changes
+  - [ ] Your branch is up-to-date with the `dev` branch and tested with latest changes
   - [ ] Extended the README / documentation, if necessary
   - [ ] Code compiles correctly
-  - [ ] All tests passing with `make check`
+  - [ ] All tests passing with `make check` (only Linux)
   - [ ] If relevant, update CHANGELOG.md with your changes
 
 -->

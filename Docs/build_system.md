@@ -3,7 +3,9 @@
 * [__Setup__](#setup)  
 * [__LibCarla__](#libcarla)  
 * [__CarlaUE4 and Carla plugin__](#carlaue4-and-carla-plugin)  
-* [__PythonAPI__](#pythonapi)  
+* [__PythonAPI__](#pythonapi)
+    - [Versions 0.9.12+](#versions-0912)
+    - [Versions prior to 0.9.12](#versions-prior-to-0912)
 
 > _This document is a work in progress, only the Linux build system is taken into account here._
 
@@ -44,36 +46,16 @@ make LibCarla
 
 Two configurations:
 
-<table class ="defTable">
-<thead>
-<th> </th>
-<th>Server</th>
-<th>Client</th>
-</thead>
-<tbody>
-<td><b>Unit tests<b></td>
-<td> Yes </td>
-<td> No </td>
-<tr>
-<td><b>Requirements</b></td>
-<td> rpclib, gtest, boost </td>
-<td> rpclib, boost </td>
-<tr>
-<td><b>std runtime</b></td>
-<td> LLVM's <code>libc++</code></td>
-<td> Default <code>libstdc++</code> </td>
-<tr>
-<td><b>Output</b></td>
-<td> headers and test exes </td>
-<td> <code>ibcarla_client.a</code></td>
-<tr>
-<td><b>Required by</b></td>
-<td> Carla plugin </td>
-<td> PythonAPI </td>
-</tbody>
-</table>
 
-<br>
+|  | Server | Client |
+| ---------- | ---------- | ---------- |
+| **Unit tests**        | Yes                   | No                    |
+| **Requirements**      | rpclib, gtest, boost  | rpclib, boost         |
+| **std runtime**       | LLVM's `libc++`       | Default `libstdc++`   |
+| **Output**            | headers and test exes | `ibcarla_client.a`    |
+| **Required by**       | Carla plugin          | PythonAPI             |
+
+
 
 ---
 ## CarlaUE4 and Carla plugin
@@ -94,9 +76,36 @@ make launch
 
 ---
 ## PythonAPI
+### Versions 0.9.12+
 
 Compiled using Python's `setuptools` ("setup.py"). Currently requires the following to be installed in the machine: Python, libpython-dev, and
-libboost-python-dev; both for Python 2.7 and 3.5.
+libboost-python-dev, pip>=20.3, wheel, and auditwheel.
+
+Command:
+
+```sh
+make PythonAPI
+```
+
+Creates two files that each contain the client library and correspond to the supported Python version on the system. One file is a `.whl` file and the other is an `.egg` file. This allows for the option of two different, mutually exclusive ways to use the client library. 
+
+>__A. .whl file__
+
+>>The `.whl` is installed using the command:
+
+>>      pip install <wheel_file>.whl
+
+>>There is no need to import the library path directly in scripts as is required in previous versions or `.egg` files (see section [__Versions prior to 0.9.12__](#versions-prior-to-0912)); `import carla` is sufficient.
+
+>__B. .egg file__
+
+>>See the section [__Versions prior to 0.9.12__](#versions-prior-to-0912) for more information.
+
+
+### Versions prior to 0.9.12
+
+Compiled using Python's `setuptools` ("setup.py"). Currently requires the following to be installed in the machine: Python, libpython-dev, and
+libboost-python-dev.
 
 Command
 

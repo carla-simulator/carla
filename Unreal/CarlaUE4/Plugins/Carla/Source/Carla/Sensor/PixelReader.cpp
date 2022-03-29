@@ -11,13 +11,6 @@
 #include "HighResScreenshot.h"
 #include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
 
-// For now we only support Vulkan on Windows.
-#if PLATFORM_WINDOWS
-#  define CARLA_WITH_VULKAN_SUPPORT 1
-#else
-#  define CARLA_WITH_VULKAN_SUPPORT 1
-#endif
-
 // =============================================================================
 // -- Local variables and types ------------------------------------------------
 // =============================================================================
@@ -43,7 +36,9 @@ struct LockTexture
 // -- Static local functions ---------------------------------------------------
 // =============================================================================
 
-#if CARLA_WITH_VULKAN_SUPPORT == 1
+// Temporal; this avoid allocating the array each time and also avoids checking
+// for a bigger texture, ReadSurfaceData will allocate the space needed.
+TArray<FColor> gPixels;
 
 static void WritePixelsToBuffer_Vulkan(
     const UTextureRenderTarget2D &RenderTarget,
@@ -51,29 +46,71 @@ static void WritePixelsToBuffer_Vulkan(
     uint32 Offset,
     FRHICommandListImmediate &InRHICmdList)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   check(IsInRenderingThread());
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
-    UE_LOG(LogCarla, Error, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
     return;
   }
 
   FIntPoint Rect = RenderResource->GetSizeXY();
-  // NS: Extra copy here, don't know how to avoid it.
-  TArray<FColor> Pixels;
-  InRHICmdList.ReadSurfaceData(
-      Texture,
-      FIntRect(0, 0, Rect.X, Rect.Y),
-      Pixels,
-      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
 
-  Buffer.copy_from(Offset, Pixels);
+  // NS: Extra copy here, don't know how to avoid it.
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Read Surface");
+    InRHICmdList.ReadSurfaceData(
+        Texture,
+        FIntRect(0, 0, Rect.X, Rect.Y),
+        gPixels,
+        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+  }
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
+    Buffer.copy_from(Offset, gPixels);
+  }
 }
 
-#endif // CARLA_WITH_VULKAN_SUPPORT
+// Temporal; this avoid allocating the array each time
+TArray<FFloat16Color> gFloatPixels;
+
+static void WriteFloatPixelsToBuffer_Vulkan(
+    const UTextureRenderTarget2D &RenderTarget,
+    carla::Buffer &Buffer,
+    uint32 Offset,
+    FRHICommandListImmediate &InRHICmdList)
+{
+  check(IsInRenderingThread());
+  gFloatPixels.Empty();
+  auto RenderResource =
+      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
+  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+  if (!Texture)
+  {
+    return;
+  }
+
+  FIntPoint Rect = RenderResource->GetSizeXY();
+
+  // NS: Extra copy here, don't know how to avoid it.
+  InRHICmdList.ReadSurfaceFloatData(
+      Texture,
+      FIntRect(0, 0, Rect.X, Rect.Y),
+      gFloatPixels,
+      CubeFace_PosX,0,0);
+
+  TArray<float> IntermediateBuffer;
+  IntermediateBuffer.Reserve(gFloatPixels.Num() * 2);
+  for (FFloat16Color& color : gFloatPixels) {
+    float x = (color.R.GetFloat() - 0.5f)*4.f;
+    float y = (color.G.GetFloat() - 0.5f)*4.f;
+    IntermediateBuffer.Add(x);
+    IntermediateBuffer.Add(y);
+  }
+  Buffer.copy_from(Offset, IntermediateBuffer);
+}
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
@@ -101,7 +138,8 @@ TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
 {
   const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
   TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
-  if (!WritePixelsToArray(RenderTarget, PixelData->Pixels))
+  TArray<FColor> Pixels(PixelData->Pixels.GetData(), PixelData->Pixels.Num());
+  if (!WritePixelsToArray(RenderTarget, Pixels))
   {
     return nullptr;
   }
@@ -135,26 +173,36 @@ void FPixelReader::WritePixelsToBuffer(
     UTextureRenderTarget2D &RenderTarget,
     carla::Buffer &Buffer,
     uint32 Offset,
-    FRHICommandListImmediate &
-#if CARLA_WITH_VULKAN_SUPPORT == 1
-    InRHICmdList
-#endif // CARLA_WITH_VULKAN_SUPPORT
+    FRHICommandListImmediate &InRHICmdList,
+    bool use16BitFormat
     )
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   check(IsInRenderingThread());
 
-#if CARLA_WITH_VULKAN_SUPPORT == 1
-  if (IsVulkanPlatform(GMaxRHIShaderPlatform))
+  if (IsVulkanPlatform(GMaxRHIShaderPlatform) || IsD3DPlatform(GMaxRHIShaderPlatform, false))
   {
-    WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
+    if (use16BitFormat)
+    {
+      WriteFloatPixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
+    }
+    else
+    {
+      WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
+    }
     return;
   }
-#endif // CARLA_WITH_VULKAN_SUPPORT
 
-  FRHITexture2D *Texture = RenderTarget.GetRenderTargetResource()->GetRenderTargetTexture();
+  FTextureRenderTargetResource* RenderTargetResource = RenderTarget.GetRenderTargetResource();
+  if(!RenderTargetResource)
+  {
+    return;
+  }
+
+  FRHITexture2D *Texture = RenderTargetResource->GetRenderTargetTexture();
   checkf(Texture != nullptr, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
 
-  const uint32 BytesPerPixel = 4u; // PF_R8G8B8A8
+  const uint32 BytesPerPixel = use16BitFormat ? 8u : 4u; // PF_R8G8B8A8 or PF_FloatRGBA
   const uint32 Width = Texture->GetSizeX();
   const uint32 Height = Texture->GetSizeY();
   const uint32 ExpectedStride = Width * BytesPerPixel;
@@ -182,57 +230,9 @@ void FPixelReader::WritePixelsToBuffer(
   {
     check(ExpectedStride == SrcStride);
     const uint8 *Source = Lock.Source;
-    Buffer.copy_from(Offset, Source, ExpectedStride * Height);
-  }
-}
-
-void FPixelReader::WritePixelsToArray(
-    UTextureRenderTarget2D &RenderTarget,
-    TArray<FColor>& Pixels,
-    FRHICommandListImmediate& RHICmdList)
-{
-
-  // check(IsInRenderingThread());
-
-  const FTextureRenderTarget2DResource* RenderResource =
-    static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
-  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
-  if (!Texture /* || !Texture->GetTexture2D() */)
-  {
-    UE_LOG(LogCarla, Error, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
-    return;
-  }
-
-  FIntPoint Rect = RenderResource->GetSizeXY();
-
-
-  {
-    SCOPE_CYCLE_COUNTER(STAT_CarlaSensorReadRT);
-
-    RHICmdList.ReadSurfaceData(
-      Texture,
-      FIntRect(0, 0, Rect.X, Rect.Y),
-      Pixels,
-      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
-    /*
-    void* ColorDataBuffer = nullptr;
-
-    int32 Width = 0, Height = 0;
-    RHICmdList.MapStagingSurface(Texture, ColorDataBuffer, Width, Height);
-
-    FColor* ColorBuffer = (FColor*)ColorDataBuffer;
-    FColor* Dest = &Pixels[0];
-
-    for (int32 Row = 0; Row < Height; ++Row)
+    if(Source)
     {
-      FMemory::Memcpy(Dest, ColorBuffer, sizeof(FColor)*Width);
-      ColorBuffer += Width;
-      Dest += Width;
+      Buffer.copy_from(Offset, Source, ExpectedStride * Height);
     }
-
-    RHICmdList.UnmapStagingSurface(Texture);
-    */
   }
-
 }

@@ -9,6 +9,7 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
 
+#include "Runtime/RenderCore/Public/RenderCommandFence.h"
 #include "SceneCaptureSensor.generated.h"
 
 class UDrawFrustumComponent;
@@ -60,6 +61,18 @@ public:
   bool ArePostProcessingEffectsEnabled() const
   {
     return bEnablePostProcessingEffects;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void Enable16BitFormat(bool Enable = false)
+  {
+    bEnable16BitFormat = Enable;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  bool Is16BitFormatEnabled() const
+  {
+    return bEnable16BitFormat;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -270,31 +283,27 @@ public:
     FPixelReader::SavePixelsToDisk(*CaptureRenderTarget, FilePath);
   }
 
-  void CopyTextureToAtlas();
-
-  bool CopyTextureFromAtlas(carla::Buffer &Buffer, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth);
-
-  virtual void SendPixels(const TArray<FColor>& /* AtlasImage */, uint32 /* AtlasTextureWidth */) {}
-
-  template <typename TSensor>
-  void SendPixelsInStream(TSensor &Sensor, const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
+  UFUNCTION(BlueprintCallable)
+  USceneCaptureComponent2D *GetCaptureComponent2D()
   {
-    auto Stream = GetDataStream(Sensor);
-    carla::Buffer Buffer = Stream.PopBufferFromPool();
+    return CaptureComponent2D;
+  }
 
-    CopyTextureFromAtlas(Buffer, AtlasImage, AtlasTextureWidth);
+  /// Immediate enqueues render commands of the scene at the current time.
+  void EnqueueRenderSceneImmediate();
 
-    {
-      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-      Stream.Send(Sensor, std::move(Buffer));
-    }
+  /// Blocks until the render thread has finished all it's tasks.
+  void WaitForRenderThreadToFinsih() {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::WaitForRenderThreadToFinsih);
+    // FlushRenderingCommands();
   }
 
 protected:
 
   virtual void BeginPlay() override;
 
-  virtual void Tick(float DeltaTime) override;
+  virtual void PrePhysTick(float DeltaSeconds) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -308,8 +317,6 @@ protected:
   UPROPERTY(EditAnywhere)
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
 
-  FIntVector PositionInAtlas;
-
   UPROPERTY(EditAnywhere)
   float TargetGamma = 2.2f;
 
@@ -321,10 +328,14 @@ protected:
   UPROPERTY(EditAnywhere)
   uint32 ImageHeight = 600u;
 
-  uint32 Offset = 0u;
-
   /// Whether to render the post-processing effects present in the scene.
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
+
+  /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
+  UPROPERTY(EditAnywhere)
+  bool bEnable16BitFormat = false;
+
+  FRenderCommandFence RenderFence;
 
 };

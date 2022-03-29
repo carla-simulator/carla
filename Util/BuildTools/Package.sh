@@ -1,24 +1,22 @@
 #! /bin/bash
 
-source $(dirname "$0")/Environment.sh
-
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
 DOC_STRING="Makes a packaged version of CARLA and other content packages ready for distribution."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...]"
+USAGE_STRING="Usage: $0 [-h|--help] [--config={Debug,Development,Shipping}] [--no-zip] [--clean-intermediate] [--packages=Name1,Name2,...] [--target-archive=]"
 
 PACKAGES="Carla"
 DO_TARBALL=true
 DO_CLEAN_INTERMEDIATE=false
 PROPS_MAP_NAME=PropsMap
 PACKAGE_CONFIG=Shipping
+USE_CARSIM=false
+SINGLE_PACKAGE=false
 
-OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,packages:,python3-version: -n 'parse-options' -- "$@"`
-
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+OPTS=`getopt -o h --long help,config:,no-zip,clean-intermediate,carsim,packages:,python-version,target-archive:, -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -36,6 +34,13 @@ while [[ $# -gt 0 ]]; do
     --packages )
       PACKAGES="$2"
       shift 2 ;;
+    --target-archive )
+      SINGLE_PACKAGE=true
+      TARGET_ARCHIVE="$2"
+      shift 2 ;;
+    --carsim )
+      USE_CARSIM=true;
+      shift ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -49,6 +54,7 @@ done
 # ==============================================================================
 # -- Prepare environment -------------------------------------------------------
 # ==============================================================================
+source $(dirname "$0")/Environment.sh
 
 if [ ! -d "${UE4_ROOT}" ]; then
   fatal_error "UE4_ROOT is not defined, or points to a non-existent directory, please set this environment variable."
@@ -88,6 +94,14 @@ log "Packaging version '${REPOSITORY_TAG}' (${PACKAGE_CONFIG})."
 if ${DO_CARLA_RELEASE} ; then
 
   pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
+
+  if ${USE_CARSIM} ; then
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+    echo "CarSim ON" > ${PWD}/Config/CarSimConfig.ini
+  else
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+    echo "CarSim OFF" > ${PWD}/Config/CarSimConfig.ini
+  fi
 
   log "Cooking CARLA project."
 
@@ -134,6 +148,7 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./Util/DockerUtils/dist/RecastBuilder" "${DESTINATION}/Tools/"
 
   copy_if_changed "./PythonAPI/carla/dist/*.egg" "${DESTINATION}/PythonAPI/carla/dist/"
+  copy_if_changed "./PythonAPI/carla/dist/*.whl" "${DESTINATION}/PythonAPI/carla/dist/"
   copy_if_changed "./PythonAPI/carla/agents/" "${DESTINATION}/PythonAPI/carla/agents"
   copy_if_changed "./PythonAPI/carla/scene_layout.py" "${DESTINATION}/PythonAPI/carla/"
   copy_if_changed "./PythonAPI/carla/requirements.txt" "${DESTINATION}/PythonAPI/carla/"
@@ -145,9 +160,12 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./PythonAPI/util/*.py" "${DESTINATION}/PythonAPI/util/"
   copy_if_changed "./PythonAPI/util/opendrive/" "${DESTINATION}/PythonAPI/util/opendrive/"
   copy_if_changed "./PythonAPI/util/requirements.txt" "${DESTINATION}/PythonAPI/util/"
-  copy_if_changed "./PythonAPI/carla/data/*" "${DESTINATION}/PythonAPI/carla/data"
 
   copy_if_changed "./Co-Simulation/" "${DESTINATION}/Co-Simulation/"
+
+  if [ -d "./Plugins/" ] ; then
+    copy_if_changed "./Plugins/" "${DESTINATION}/Plugins/"
+  fi
 
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/*.pcd" "${DESTINATION}/HDMaps/"
   copy_if_changed "./Unreal/CarlaUE4/Content/Carla/HDMaps/Readme.md" "${DESTINATION}/HDMaps/README"
@@ -174,7 +192,7 @@ if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
   rm -Rf ./CarlaUE4/Saved
   rm -Rf ./Engine/Saved
 
-  tar -czvf ${DESTINATION} *
+  tar -czf ${DESTINATION} *
 
   popd >/dev/null
 
@@ -197,14 +215,20 @@ fi
 # ==============================================================================
 
 PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
-MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPaths.txt
+MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPathsLinux.txt
 
 for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
 
   log "Preparing environment for cooking '${PACKAGE_NAME}'."
 
+  if ${SINGLE_PACKAGE} ; then
+      BUILD_FOLDER_TARGET=${CARLA_DIST_FOLDER}/${TARGET_ARCHIVE}_${REPOSITORY_TAG}
+  else
+      BUILD_FOLDER_TARGET=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
+  fi
+
   BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
-  DESTINATION=${BUILD_FOLDER}.tar.gz
+  DESTINATION=${BUILD_FOLDER_TARGET}.tar
   PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
 
   mkdir -p ${BUILD_FOLDER}
@@ -237,8 +261,6 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
     pushd "${BUILD_FOLDER}" > /dev/null
 
-    log "\nPackaging '${PACKAGE_NAME}'..."
-
     SUBST_PATH="${BUILD_FOLDER}/CarlaUE4"
     SUBST_FILE="${PACKAGE_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
@@ -264,20 +286,19 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
       fi
 
-      # binary files for navigation
+      # binary files for navigation and traffic manager
       BIN_FILE_PATH="${CARLAUE4_ROOT_FOLDER}/Content${i:5}"
       MAP_NAME=${BIN_FILE_PATH##*/}
-      BIN_FILE=$(find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.bin" -print -quit)
+      find "${CARLAUE4_ROOT_FOLDER}/Content" -name "${MAP_NAME}.bin" -print0 | while read -d $'\0' BIN_FILE
+      do
+        if [ -f "${BIN_FILE}" ] ; then
 
-      if [ -f "${BIN_FILE}" ] ; then
+          SUBST_FILE="${BIN_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
 
-        SUBST_FILE="${BIN_FILE/${CARLAUE4_ROOT_FOLDER}/${SUBST_PATH}}"
-
-        # Copy the package config file to package
-        mkdir -p "$(dirname ${SUBST_FILE})" && cp "${BIN_FILE}" "$_"
-
+          # Copy the package config file to package
+          mkdir -p "$(dirname ${SUBST_FILE})" && cp "${BIN_FILE}" "$_"
       fi
-
+      done
     done
 
     rm -Rf "./CarlaUE4/Metadata"
@@ -285,7 +306,11 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
     rm -f "./CarlaUE4/AssetRegistry.bin"
 
-    tar -czvf ${DESTINATION} *
+    if ${SINGLE_PACKAGE} ; then
+      tar -rf ${DESTINATION} *
+    else
+      tar -czf ${DESTINATION}.gz *
+    fi
 
     popd >/dev/null
 
@@ -301,14 +326,19 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
 fi ; done
 
+# compress the TAR if it is a single package
+if ${SINGLE_PACKAGE} ; then
+  gzip -f ${DESTINATION}
+fi
+
 # ==============================================================================
 # -- Log paths of generated packages -------------------------------------------
 # ==============================================================================
 
-for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
-  FINAL_PACKAGE=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}.tar.gz
-  log "Package '${PACKAGE_NAME}' created at ${FINAL_PACKAGE}"
-fi ; done
+# for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
+#   FINAL_PACKAGE=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}.tar.gz
+#   log "Package '${PACKAGE_NAME}' created at ${FINAL_PACKAGE}"
+# fi ; done
 
 if ${DO_CARLA_RELEASE} ; then
   if ${DO_TARBALL} ; then

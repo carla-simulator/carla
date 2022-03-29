@@ -5,6 +5,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import carla
+import time
 
 from . import SyncSmokeTest
 
@@ -21,6 +22,9 @@ class TestSpawnpoints(SyncSmokeTest):
 
             # load the map
             self.client.load_world(m)
+            # workaround: give time to UE4 to clean memory after loading (old assets)
+            time.sleep(5)
+            
             self.world = self.client.get_world()
 
             # get all spawn points
@@ -38,7 +42,7 @@ class TestSpawnpoints(SyncSmokeTest):
             for vehicle in blueprints:
                 batch = [(vehicle, t) for t in spawn_points]
                 batch = [carla.command.SpawnActor(*args) for args in batch]
-                response = self.client.apply_batch_sync(batch, True)
+                response = self.client.apply_batch_sync(batch, False)
 
                 self.assertFalse(any(x.error for x in response))
                 ids = [x.actor_id for x in response]

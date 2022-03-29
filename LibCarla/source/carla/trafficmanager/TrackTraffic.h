@@ -32,6 +32,9 @@ private:
     std::unordered_map<ActorId, std::unordered_set<GeoGridId>> actor_to_grids;
     /// Actors currently passing through grids.
     std::unordered_map<GeoGridId, ActorIdSet> grid_to_actors;
+    /// Current hero location.
+    cg::Location hero_location = cg::Location(0,0,0);
+
 
 public:
     TrackTraffic();
@@ -46,6 +49,13 @@ public:
                                         const std::vector<SimpleWaypointPtr> waypoints);
 
     ActorIdSet GetOverlappingVehicles(ActorId actor_id) const;
+    bool IsGeoGridFree(const GeoGridId geogrid_id) const;
+    void AddTakenGrid(const GeoGridId geogrid_id, const ActorId actor_id);
+
+    void SetHeroLocation(const cg::Location location);
+    cg::Location GetHeroLocation() const;
+
+
     /// Method to delete actor data from tracking.
     void DeleteActor(ActorId actor_id);
 

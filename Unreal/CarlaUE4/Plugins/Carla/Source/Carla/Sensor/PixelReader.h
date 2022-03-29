@@ -62,12 +62,7 @@ public:
   ///
   /// @pre To be called from game-thread.
   template <typename TSensor>
-  static void SendPixelsInRenderThread(TSensor &Sensor);
-
-  static void WritePixelsToArray(
-      UTextureRenderTarget2D &RenderTarget,
-      TArray<FColor>& Pixels,
-      FRHICommandListImmediate &InRHICmdList);
+  static void SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat = false);
 
 private:
 
@@ -78,7 +73,8 @@ private:
       UTextureRenderTarget2D &RenderTarget,
       carla::Buffer &Buffer,
       uint32 Offset,
-      FRHICommandListImmediate &InRHICmdList);
+      FRHICommandListImmediate &InRHICmdList,
+      bool use16BitFormat = false);
 
 };
 
@@ -87,17 +83,28 @@ private:
 // =============================================================================
 
 template <typename TSensor>
-void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
+void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
+
+  if (!Sensor.HasActorBegunPlay() || Sensor.IsPendingKill())
+  {
+    return;
+  }
+
+  /// Blocks until the render thread has finished all it's tasks.
+  Sensor.EnqueueRenderSceneImmediate();
 
   // Enqueue a command in the render-thread that will write the image buffer to
   // the data stream. The stream is created in the capture thus executed in the
   // game-thread.
   ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
   (
-    [&Sensor, Stream=Sensor.GetDataStream(Sensor)](auto &InRHICmdList) mutable
+    [&Sensor, Stream=Sensor.GetDataStream(Sensor), use16BitFormat](auto &InRHICmdList) mutable
     {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
+
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())
       {
@@ -106,13 +113,18 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor)
             *Sensor.CaptureRenderTarget,
             Buffer,
             carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-            InRHICmdList);
+            InRHICmdList, use16BitFormat);
 
+        if(Buffer.data())
         {
           SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
           Stream.Send(Sensor, std::move(Buffer));
         }
       }
     }
   );
+
+  // Blocks until the render thread has finished all it's tasks
+  Sensor.WaitForRenderThreadToFinsih();
 }

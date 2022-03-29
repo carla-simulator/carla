@@ -335,8 +335,8 @@ class SumoSimulation(object):
         # Retrieving net from configuration file.
         self.net = _get_sumo_net(cfg_file)
 
-        # Creating a random route to be able to spawn carla actors.
-        traci.route.add("carla_route", [traci.edge.getIDList()[0]])
+        # To keep track of the vehicle classes for which a route has been generated in sumo.
+        self._routes = set()
 
         # Variable to asign an id to new added actors.
         self._sequential_id = 0
@@ -424,7 +424,20 @@ class SumoSimulation(object):
         """
         actor_id = 'carla' + str(self._sequential_id)
         try:
-            traci.vehicle.add(actor_id, 'carla_route', typeID=type_id)
+            vclass = traci.vehicletype.getVehicleClass(type_id)
+            if vclass not in self._routes:
+                logging.debug('Creating route for %s vehicle class', vclass)
+                allowed_edges = [e for e in self.net.getEdges() if e.allows(vclass)]
+                if allowed_edges:
+                    traci.route.add("carla_route_{}".format(vclass), [allowed_edges[0].getID()])
+                    self._routes.add(vclass)
+                else:
+                    logging.error(
+                        'Could not found a route for %s. No vehicle will be spawned in sumo',
+                        type_id)
+                    return INVALID_ACTOR_ID
+
+            traci.vehicle.add(actor_id, 'carla_route_{}'.format(vclass), typeID=type_id)
         except traci.exceptions.TraCIException as error:
             logging.error('Spawn sumo actor failed: %s', error)
             return INVALID_ACTOR_ID

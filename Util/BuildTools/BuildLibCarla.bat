@@ -100,7 +100,7 @@ cd "%LIBCARLA_VSPROJECT_PATH%"
 rem Build libcarla server
 rem
 if %BUILD_SERVER% == true (
-    cmake -G "Visual Studio 15 2017 Win64"^
+    cmake -G "Visual Studio 16 2019" -A x64^
       -DCMAKE_BUILD_TYPE=Server^
       -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
       -DCMAKE_INSTALL_PREFIX="%LIBCARLA_SERVER_INSTALL_PATH:\=/%"^
@@ -114,7 +114,7 @@ if %BUILD_SERVER% == true (
 rem Build libcarla client
 rem
 if %BUILD_CLIENT% == true (
-    cmake -G "Visual Studio 15 2017 Win64"^
+    cmake -G "Visual Studio 16 2019" -A x64^
       -DCMAKE_BUILD_TYPE=Client^
       -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
       -DCMAKE_INSTALL_PREFIX="%LIBCARLA_CLIENT_INSTALL_PATH:\=/%"^
@@ -147,7 +147,7 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
+    echo %FILE_N% [ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
     echo           [ERROR] Possible causes:
     echo           [ERROR]  - Make sure you have Visual Studio installed.
     echo           [ERROR]  - Make sure you have the "x64 Visual C++ Toolset" in your path.

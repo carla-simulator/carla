@@ -11,6 +11,7 @@
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
 #include "carla/client/BlueprintLibrary.h"
+#include "carla/client/FileTransfer.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
 #include "carla/client/TimeoutException.h"
@@ -82,14 +83,27 @@ namespace detail {
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
 
-  EpisodeProxy Simulator::LoadEpisode(std::string map_name) {
+  EpisodeProxy Simulator::LoadEpisode(std::string map_name, bool reset_settings, rpc::MapLayer map_layers) {
     const auto id = GetCurrentEpisode().GetId();
-    _client.LoadEpisode(std::move(map_name));
-    size_t number_of_attempts = _client.GetTimeout().milliseconds() / 10u;
+    _client.LoadEpisode(std::move(map_name), reset_settings, map_layers);
+
+    // We are waiting 50ms for the server to reload the episode.
+    // If in this time we have not detected a change of episode, we try again
+    // 'number_of_attempts' times.
+    // TODO This time is completly arbitrary so we need to improve
+    // this pipeline to not depend in this time because this timeout
+    // could result that the client resume the simulation in different
+    // initial ticks when loading a map in syncronous mode.
+    size_t number_of_attempts = _client.GetTimeout().milliseconds() / 50u;
+
     for (auto i = 0u; i < number_of_attempts; ++i) {
       using namespace std::literals::chrono_literals;
-      _episode->WaitForState(10ms);
+      if (_client.GetEpisodeSettings().synchronous_mode)
+        _client.SendTickCue();
+
+      _episode->WaitForState(50ms);
       auto episode = GetCurrentEpisode();
+
       if (episode.GetId() != id) {
         return episode;
       }
@@ -99,13 +113,13 @@ namespace detail {
 
   EpisodeProxy Simulator::LoadOpenDriveEpisode(
       std::string opendrive,
-      const rpc::OpendriveGenerationParameters & params) {
+      const rpc::OpendriveGenerationParameters & params, bool reset_settings) {
     // The "OpenDriveMap" is an ".umap" located in:
     // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
     // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
     constexpr auto custom_opendrive_map = "OpenDriveMap";
     _client.CopyOpenDriveToServer(std::move(opendrive), params);
-    return LoadEpisode(custom_opendrive_map);
+    return LoadEpisode(custom_opendrive_map, reset_settings);
   }
 
   // ===========================================================================
@@ -125,9 +139,63 @@ namespace detail {
     return EpisodeProxy{shared_from_this()};
   }
 
-  SharedPtr<Map> Simulator::GetCurrentMap() {
-    return MakeShared<Map>(_client.GetMapInfo());
+  bool Simulator::ShouldUpdateMap(rpc::MapInfo& map_info) {
+    if (!_cached_map) {
+      return true;
+    }
+    if (map_info.name != _cached_map->GetName() ||
+        _open_drive_file.size() != _cached_map->GetOpenDrive().size()) {
+      return true;
+    }
+    return false;
   }
+
+  SharedPtr<Map> Simulator::GetCurrentMap() {
+    DEBUG_ASSERT(_episode != nullptr);
+    if (!_cached_map || _episode->HasMapChangedSinceLastCall()) {
+      rpc::MapInfo map_info = _client.GetMapInfo();
+      std::string map_name;
+      std::string map_base_path;
+      bool fill_base_string = false;
+      for (int i = map_info.name.size() - 1; i >= 0; --i) {
+        if (fill_base_string == false && map_info.name[i] != '/') {
+          map_name += map_info.name[i];
+        } else {
+          map_base_path += map_info.name[i];
+          fill_base_string = true;
+        }
+      }
+      std::reverse(map_name.begin(), map_name.end());
+      std::reverse(map_base_path.begin(), map_base_path.end());
+      std::string XODRFolder = map_base_path + "/OpenDrive/" + map_name + ".xodr";
+      if (FileTransfer::FileExists(XODRFolder) == false) _client.GetRequiredFiles();
+      _open_drive_file = _client.GetMapData();
+      _cached_map = MakeShared<Map>(map_info, _open_drive_file);
+    }
+
+    return _cached_map;
+  }
+
+  // ===========================================================================
+  // -- Required files ---------------------------------------------------------
+  // ===========================================================================
+
+
+    bool Simulator::SetFilesBaseFolder(const std::string &path) {
+      return _client.SetFilesBaseFolder(path);
+    }
+
+    std::vector<std::string> Simulator::GetRequiredFiles(const std::string &folder, const bool download) const {
+      return _client.GetRequiredFiles(folder, download);
+    }
+
+    void Simulator::RequestFile(const std::string &name) const {
+      _client.RequestFile(name);
+    }
+
+    std::vector<uint8_t> Simulator::GetCacheFile(const std::string &name, const bool request_otherwise) const {
+      return _client.GetCacheFile(name, request_otherwise);
+    }
 
   // ===========================================================================
   // -- Tick -------------------------------------------------------------------
@@ -175,9 +243,26 @@ namespace detail {
           "synchronous mode enabled with variable delta seconds. It is highly "
           "recommended to set 'fixed_delta_seconds' when running on synchronous mode.");
     }
+    else if (settings.synchronous_mode && settings.substepping) {
+      if(settings.max_substeps < 1 || settings.max_substeps > 16) {
+        log_warning(
+            "synchronous mode and substepping are enabled but the number of substeps is not valid. "
+            "Please be aware that this value needs to be in the range [1-16].");
+      }
+      double n_substeps = settings.fixed_delta_seconds.get() / settings.max_substep_delta_time;
+
+      if (n_substeps > static_cast<double>(settings.max_substeps)) {
+        log_warning(
+            "synchronous mode and substepping are enabled but the values for the simulation are not valid. "
+            "The values should fulfil fixed_delta_seconds <= max_substep_delta_time * max_substeps. "
+            "Be very careful about that, the time deltas are not guaranteed.");
+      }
+    }
     const auto frame = _client.SetEpisodeSettings(settings);
+
     using namespace std::literals::chrono_literals;
-    SynchronizeFrame(frame, *_episode, 10s);
+    SynchronizeFrame(frame, *_episode, 1s);
+
     return frame;
   }
 
@@ -221,6 +306,13 @@ namespace detail {
     auto navigation = _episode->CreateNavigationIfMissing();
     DEBUG_ASSERT(navigation != nullptr);
     navigation->SetPedestriansCrossFactor(percentage);
+  }
+
+  void Simulator::SetPedestriansSeed(unsigned int seed) {
+    DEBUG_ASSERT(_episode != nullptr);
+    auto navigation = _episode->CreateNavigationIfMissing();
+    DEBUG_ASSERT(navigation != nullptr);
+    navigation->SetPedestriansSeed(seed);
   }
 
   // ===========================================================================
@@ -293,6 +385,28 @@ namespace detail {
 
   void Simulator::FreezeAllTrafficLights(bool frozen) {
     _client.FreezeAllTrafficLights(frozen);
+  }
+
+  // =========================================================================
+  /// -- Texture updating operations
+  // =========================================================================
+
+  void Simulator::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture) {
+    _client.ApplyColorTextureToObjects(objects_name, parameter, Texture);
+  }
+
+  void Simulator::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture) {
+    _client.ApplyColorTextureToObjects(objects_name, parameter, Texture);
+  }
+
+  std::vector<std::string> Simulator::GetNamesOfAllObjects() const {
+    return _client.GetNamesOfAllObjects();
   }
 
 } // namespace detail

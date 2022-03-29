@@ -41,7 +41,8 @@ namespace rpc {
         float in_drag_coefficient,
         geom::Location in_center_of_mass,
         const std::vector<carla::geom::Vector2D> &in_steering_curve,
-        std::vector<WheelPhysicsControl> &in_wheels)
+        std::vector<WheelPhysicsControl> &in_wheels,
+        bool in_use_sweep_wheel_collision)
       : torque_curve(in_torque_curve),
         max_rpm(in_max_rpm),
         moi(in_moi),
@@ -57,7 +58,8 @@ namespace rpc {
         drag_coefficient(in_drag_coefficient),
         center_of_mass(in_center_of_mass),
         steering_curve(in_steering_curve),
-        wheels(in_wheels) {}
+        wheels(in_wheels),
+        use_sweep_wheel_collision(in_use_sweep_wheel_collision) {}
 
     const std::vector<GearPhysicsControl> &GetForwardGears() const {
       return forward_gears;
@@ -91,6 +93,14 @@ namespace rpc {
       steering_curve = in_steering_curve;
     }
 
+    void SetUseSweepWheelCollision(bool in_sweep) {
+      use_sweep_wheel_collision = in_sweep;
+    }
+
+    bool GetUseSweepWheelCollision() {
+      return use_sweep_wheel_collision;
+    }
+
     std::vector<geom::Vector2D> torque_curve = {geom::Vector2D(0.0f, 500.0f), geom::Vector2D(5000.0f, 500.0f)};
     float max_rpm = 5000.0f;
     float moi = 1.0f;
@@ -111,6 +121,8 @@ namespace rpc {
     std::vector<geom::Vector2D> steering_curve = {geom::Vector2D(0.0f, 1.0f), geom::Vector2D(10.0f, 0.5f)};
     std::vector<WheelPhysicsControl> wheels;
 
+    bool use_sweep_wheel_collision = false;
+
     bool operator!=(const VehiclePhysicsControl &rhs) const {
       return
         max_rpm != rhs.max_rpm ||
@@ -129,7 +141,8 @@ namespace rpc {
         drag_coefficient != rhs.drag_coefficient ||
         steering_curve != rhs.steering_curve ||
         center_of_mass != rhs.center_of_mass ||
-        wheels != rhs.wheels;
+        wheels != rhs.wheels ||
+        use_sweep_wheel_collision != rhs.use_sweep_wheel_collision;
     }
 
     bool operator==(const VehiclePhysicsControl &rhs) const {
@@ -180,6 +193,8 @@ namespace rpc {
       for (const auto &Wheel : Control.Wheels) {
         wheels.push_back(WheelPhysicsControl(Wheel));
       }
+
+      use_sweep_wheel_collision = Control.UseSweepWheelCollision;
     }
 
     operator FVehiclePhysicsControl() const {
@@ -229,6 +244,8 @@ namespace rpc {
       }
       Control.Wheels = Wheels;
 
+      Control.UseSweepWheelCollision = use_sweep_wheel_collision;
+
       return Control;
     }
 
@@ -249,7 +266,8 @@ namespace rpc {
         drag_coefficient,
         center_of_mass,
         steering_curve,
-        wheels);
+        wheels,
+        use_sweep_wheel_collision);
   };
 
 } // namespace rpc

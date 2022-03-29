@@ -54,7 +54,6 @@ using namespace std::chrono_literals;
     std::weak_ptr<Episode> weak = shared_from_this();
     _client.SubscribeToStream(_token, [weak](auto buffer) {
       auto self = weak.lock();
-
       if (self != nullptr) {
 
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
@@ -62,7 +61,7 @@ using namespace std::chrono_literals;
         auto prev = self->GetState();
 
         // TODO: Update how the map change is detected
-        // bool HasMapChanged = next->HasMapChanged();
+        bool HasMapChanged = next->HasMapChanged();
         bool UpdateLights = next->IsLightUpdatePending();
 
         /// Check for pending exceptions (Mainly TM server closed)
@@ -81,7 +80,7 @@ using namespace std::chrono_literals;
           bool episode_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
 
           do {
-            if (prev->GetFrame() >= next->GetFrame()) {
+            if (prev->GetFrame() >= next->GetFrame() && !episode_changed) {
               self->_on_tick_callbacks.Call(next);
               return;
             }
@@ -89,6 +88,10 @@ using namespace std::chrono_literals;
 
           if(UpdateLights) {
             self->_on_light_update_callbacks.Call(next);
+          }
+
+          if(HasMapChanged) {
+            self->_should_update_map = true;
           }
 
           /// Episode change
@@ -151,9 +154,17 @@ using namespace std::chrono_literals;
     traffic_manager::TrafficManager::Release();
   }
 
-void Episode::OnEpisodeChanged() {
-  traffic_manager::TrafficManager::Reset();
-}
+  void Episode::OnEpisodeChanged() {
+    traffic_manager::TrafficManager::Reset();
+  }
+
+  bool Episode::HasMapChangedSinceLastCall() {
+    if(_should_update_map) {
+      _should_update_map = false;
+      return true;
+    }
+    return false;
+  }
 
 } // namespace detail
 } // namespace client

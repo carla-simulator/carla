@@ -69,6 +69,98 @@
     - def_name: __str__
     # --------------------------------------
 
+  - class_name: FloatColor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a float RGBA color.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: r
+      type: float
+      doc: >
+        Red color.
+    - var_name: g
+      type: float
+      doc: >
+        Green color.
+    - var_name: b
+      type: float
+      doc: >
+        Blue color.
+    - var_name: a
+      type: float
+      doc: >
+        Alpha channel.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: r
+        type: float
+        default: 0
+      - param_name: g
+        type: float
+        default: 0
+      - param_name: b
+        type: float
+        default: 0
+      - param_name: a
+        type: float
+        default: 1.0
+      doc: >
+        Initializes a color, black by default. 
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.FloatColor
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.FloatColor
+    # --------------------------------------
+  
+  - class_name: OpticalFlowPixel
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a 2 dimensional vector representing an optical flow pixel.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+      doc: >
+        Optical flow in the x component. 
+    - var_name: y
+      type: float
+      doc: >
+        Optical flow in the y component.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0
+      - param_name: y
+        type: float
+        default: 0
+      doc: >
+        Initializes the Optical Flow Pixel. Zero by default. 
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.OpticalFlowPixel
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.OpticalFlowPixel
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
   - class_name: ActorAttribute
     # - DESCRIPTION ------------------------
     doc: >
@@ -211,7 +303,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Allows iteration within this class' attributes. 
+        Iterate over the carla.ActorAttribute that this blueprint has.  
     # --------------------------------------
     - def_name: __len__
       doc: >
@@ -254,7 +346,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Method that allows iteration within the blueprints provided. 
+        Iterate over the carla.ActorBlueprint stored in the library.  
     # --------------------------------------
     - def_name: __len__
       return: int 

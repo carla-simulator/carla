@@ -20,7 +20,12 @@ if [ -f "$1.xodr" ]; then
     # parse openDRIVE crosswalks (generate crosswalks.obj)
     python get_xodr_crosswalks.py -f "$1.xodr"
 else
-    echo "XODR file doesn't exist, ignoring crosswalks from openDRIVE"
+    if [ -f "$2.xodr" ]; then
+        # parse openDRIVE crosswalks (generate crosswalks.obj)
+        python get_xodr_crosswalks.py -f "$2.xodr"
+    else
+        echo "XODR file doesn't exist, ignoring crosswalks from openDRIVE"
+    fi
 fi
 
 # check if the 'crosswalks.obj' file exist

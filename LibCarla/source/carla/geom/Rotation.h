@@ -87,6 +87,12 @@ namespace geom {
       in_point = out_point;
     }
 
+    Vector3D RotateVector(const Vector3D& in_point) const {
+      Vector3D out_point = in_point;
+      RotateVector(out_point);
+      return out_point;
+    }
+
     void InverseRotateVector(Vector3D &in_point) const {
       // Applies the transposed of the matrix used in RotateVector function,
       // which is the rotation inverse.

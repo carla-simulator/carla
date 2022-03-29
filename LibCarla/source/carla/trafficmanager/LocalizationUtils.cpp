@@ -5,16 +5,19 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/trafficmanager/LocalizationUtils.h"
+#include "carla/trafficmanager/Constants.h"
+
 
 namespace carla {
 namespace traffic_manager {
+
+using constants::Collision::EPSILON;
 
 float DeviationCrossProduct(const cg::Location &reference_location,
                             const cg::Vector3D &heading_vector,
                             const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
-  float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
-  next_vector = next_vector.MakeSafeUnitVector(vector_magnitude_epsilon);
+  next_vector = next_vector.MakeSafeUnitVector(EPSILON);
   const float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
   return cross_z;
 }
@@ -23,12 +26,12 @@ float DeviationDotProduct(const cg::Location &reference_location,
                           const cg::Vector3D &heading_vector,
                           const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
-  float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
   next_vector.z = 0.0f;
-  next_vector = next_vector.MakeSafeUnitVector(vector_magnitude_epsilon);
+  next_vector = next_vector.MakeSafeUnitVector(EPSILON);
   cg::Vector3D heading_vector_flat(heading_vector.x, heading_vector.y, 0);
-  heading_vector_flat = heading_vector_flat.MakeSafeUnitVector(vector_magnitude_epsilon);
-  const float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+  heading_vector_flat = heading_vector_flat.MakeSafeUnitVector(EPSILON);
+  float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+  dot_product = std::max(0.0f, std::min(dot_product, 1.0f));
   return dot_product;
 }
 
@@ -58,8 +61,8 @@ TargetWPInfo GetTargetWaypoint(const Buffer &waypoint_buffer, const float &targe
   SimpleWaypointPtr target_waypoint = waypoint_buffer.front();
   const SimpleWaypointPtr &buffer_front = waypoint_buffer.front();
   uint64_t startPosn = static_cast<uint64_t>(std::fabs(target_point_distance * INV_MAP_RESOLUTION));
-  uint64_t index = 0;
-  /// Condition to determine forward or backward scanning of  WayPoint Buffer.
+  uint64_t index = startPosn;
+  /// Condition to determine forward or backward scanning of waypoint buffer.
 
   if (startPosn < waypoint_buffer.size()) {
     bool mScanForward = false;

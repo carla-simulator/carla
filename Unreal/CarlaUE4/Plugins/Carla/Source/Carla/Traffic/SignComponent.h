@@ -60,6 +60,8 @@ protected:
   TArray<std::pair<cr::RoadId, const cre::RoadInfoSignal*>>
       GetAllReferencesToThisSignal(const cr::Map &Map);
 
+  const cr::Signal* GetSignal(const cr::Map &Map) const;
+
   /// Generates a trigger box component in the parent actor
   /// BoxSize should be in Unreal units
   UBoxComponent* GenerateTriggerBox(const FTransform &BoxTransform,

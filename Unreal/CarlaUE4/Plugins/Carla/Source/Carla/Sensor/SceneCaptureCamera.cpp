@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 
+#include "Runtime/RenderCore/Public/RenderingThread.h"
+
 FActorDefinition ASceneCaptureCamera::GetSensorDefinition()
 {
   constexpr bool bEnableModifyingPostProcessEffects = true;
@@ -20,16 +22,10 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
 {
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
-
-  Offset = carla::sensor::SensorRegistry::get<ASceneCaptureCamera*>::type::header_offset;
 }
 
-void ASceneCaptureCamera::SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
+void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-#if !UE_BUILD_SHIPPING
-  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  if(!GameMode->IsCameraStreamEnabled()) return;
-#endif
-
-  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
+  FPixelReader::SendPixelsInRenderThread(*this);
 }

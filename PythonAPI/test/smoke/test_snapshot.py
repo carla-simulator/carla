@@ -6,6 +6,7 @@
 
 import carla
 import random
+import time
 
 from . import SyncSmokeTest
 
@@ -14,6 +15,8 @@ class TestSnapshot(SyncSmokeTest):
     def test_spawn_points(self):
         print("TestSnapshot.test_spawn_points")
         self.world = self.client.reload_world()
+        # workaround: give time to UE4 to clean memory after loading (old assets)
+        time.sleep(5)
 
         # Check why the world settings aren't applied after a reload
         self.settings = self.world.get_settings()
@@ -27,7 +30,7 @@ class TestSnapshot(SyncSmokeTest):
         vehicles = self.world.get_blueprint_library().filter('vehicle.*')
         batch = [(random.choice(vehicles), t) for t in spawn_points]
         batch = [carla.command.SpawnActor(*args) for args in batch]
-        response = self.client.apply_batch_sync(batch, True)
+        response = self.client.apply_batch_sync(batch, False)
 
         self.assertFalse(any(x.error for x in response))
         ids = [x.actor_id for x in response]

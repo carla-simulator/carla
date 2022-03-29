@@ -8,7 +8,7 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -21,15 +21,7 @@ import numpy as np
 import pygame
 import weakref
 import carla
-
-if sys.version_info.major == 3:
-    import libad_rss_python3 as rss
-    import libad_map_access_python3 as admap
-    import libad_rss_map_integration_python3 as rssmap
-else:
-    import libad_rss_python2 as rss
-    import libad_map_access_python2 as admap
-    import libad_rss_map_integration_python2 as rssmap
+from carla import ad
 
 
 class RssStateVisualizer(object):
@@ -66,25 +58,25 @@ class RssStateVisualizer(object):
                     object_name = " ".join(li).strip()[:15]
 
             mode = "?"
-            if state.actor_calculation_mode == rssmap.RssMode.Structured:
+            if state.actor_calculation_mode == ad.rss.map.RssMode.Structured:
                 mode = "S"
-            elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
+            elif state.actor_calculation_mode == ad.rss.map.RssMode.Unstructured:
                 mode = "U"
-            elif state.actor_calculation_mode == rssmap.RssMode.NotRelevant:
+            elif state.actor_calculation_mode == ad.rss.map.RssMode.NotRelevant:
                 mode = "-"
             item = '%4s % 2dm %8s' % (mode, state.distance, object_name)
 
             surface = self._font.render(item, True, (255, 255, 255))
             state_surface.blit(surface, (5, v_offset))
             color = (128, 128, 128)
-            if state.actor_calculation_mode != rssmap.RssMode.NotRelevant:
+            if state.actor_calculation_mode != ad.rss.map.RssMode.NotRelevant:
                 if state.is_dangerous:
                     color = (255, 0, 0)
                 else:
                     color = (0, 255, 0)
             pygame.draw.circle(state_surface, color, (12, v_offset + 7), 5)
             xpos = 184
-            if state.actor_calculation_mode == rssmap.RssMode.Structured:
+            if state.actor_calculation_mode == ad.rss.map.RssMode.Structured:
                 if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionOtherInFront") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionEgoFront")):
                     pygame.draw.polygon(
                         state_surface, (
@@ -111,13 +103,13 @@ class RssStateVisualizer(object):
                             255, 255, 255), ((xpos + 0, v_offset + 1 + 6), (xpos + 4, v_offset + 1 + 1), (xpos + 4, v_offset + 1 + 4),
                                              (xpos + 12, v_offset + 1 + 4), (xpos + 12, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 8), (xpos + 4, v_offset + 1 + 10)))
                     xpos += 14
-            elif state.actor_calculation_mode == rssmap.RssMode.Unstructured:
+            elif state.actor_calculation_mode == ad.rss.map.RssMode.Unstructured:
                 text = ""
-                if state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.DriveAway:
+                if state.rss_state.unstructuredSceneState.response == ad.rss.state.UnstructuredSceneResponse.DriveAway:
                     text = "  D"
-                elif state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.ContinueForward:
+                elif state.rss_state.unstructuredSceneState.response == ad.rss.state.UnstructuredSceneResponse.ContinueForward:
                     text = "  C"
-                elif state.rss_state.unstructuredSceneState.response == rss.UnstructuredSceneResponse.Brake:
+                elif state.rss_state.unstructuredSceneState.response == ad.rss.state.UnstructuredSceneResponse.Brake:
                     text = "  B"
                 surface = self._font.render(text, True, (255, 255, 255))
                 state_surface.blit(surface, (xpos, v_offset))
@@ -205,13 +197,13 @@ class RssUnstructuredSceneVisualizer(object):
         else:
             self._surface = None
 
-        self._calibration = np.identity(3)
-        self._calibration[0, 2] = self._dim[0] / 2.0
-        self._calibration[1, 2] = self._dim[1] / 2.0
-        self._calibration[0, 0] = self._calibration[1, 1] = self._dim[0] / \
+        if spawn_sensor:
+            self._calibration = np.identity(3)
+            self._calibration[0, 2] = self._dim[0] / 2.0
+            self._calibration[1, 2] = self._dim[1] / 2.0
+            self._calibration[0, 0] = self._calibration[1, 1] = self._dim[0] / \
             (2.0 * np.tan(90.0 * np.pi / 360.0))  # fov default: 90.0
 
-        if spawn_sensor:
             bp_library = self._world.get_blueprint_library()
             bp = bp_library.find('sensor.camera.rgb')
             bp.set_attribute('image_size_x', str(self._dim[0]))
@@ -491,10 +483,11 @@ class RssBoundingBoxVisualizer(object):
         """
         bounding_boxes = []
         for state in individual_rss_states:
-            if state.actor_calculation_mode != rssmap.RssMode.NotRelevant and state.is_dangerous:
+            if state.actor_calculation_mode != ad.rss.map.RssMode.NotRelevant and state.is_dangerous:
                 other_actor = state.get_actor(world)
-                bounding_boxes.append(RssBoundingBoxVisualizer.get_bounding_box(
-                    other_actor, camera_transform, calibration))
+                if other_actor:
+                    bounding_boxes.append(RssBoundingBoxVisualizer.get_bounding_box(
+                        other_actor, camera_transform, calibration))
         # filter objects behind camera
         bounding_boxes = [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
         return bounding_boxes
@@ -644,9 +637,9 @@ class RssDebugVisualizer(object):
         for road_segment in route.roadSegments:
             right_most_lane = road_segment.drivableLaneSegments[0]
             if right_most_lane.laneInterval.laneId not in right_lane_edges:
-                edge = admap.getRightProjectedENUEdge(right_most_lane.laneInterval)
+                edge = ad.map.route.getRightProjectedENUEdge(right_most_lane.laneInterval)
                 right_lane_edges[right_most_lane.laneInterval.laneId] = edge
-                intersection_lane = admap.Intersection.isLanePartOfAnIntersection(right_most_lane.laneInterval.laneId)
+                intersection_lane = ad.map.intersection.Intersection.isLanePartOfAnIntersection(right_most_lane.laneInterval.laneId)
 
                 color = carla.Color(r=(128 if dangerous else 255))
                 if intersection_lane:
@@ -656,9 +649,9 @@ class RssDebugVisualizer(object):
 
             left_most_lane = road_segment.drivableLaneSegments[-1]
             if left_most_lane.laneInterval.laneId not in left_lane_edges:
-                edge = admap.getLeftProjectedENUEdge(left_most_lane.laneInterval)
+                edge = ad.map.route.getLeftProjectedENUEdge(left_most_lane.laneInterval)
                 left_lane_edges[left_most_lane.laneInterval.laneId] = edge
-                intersection_lane = admap.Intersection.isLanePartOfAnIntersection(left_most_lane.laneInterval.laneId)
+                intersection_lane = ad.map.intersection.Intersection.isLanePartOfAnIntersection(left_most_lane.laneInterval.laneId)
                 color = carla.Color(g=(128 if dangerous else 255))
                 if intersection_lane:
                     color.b = 128 if dangerous else 255
@@ -667,14 +660,14 @@ class RssDebugVisualizer(object):
 
     def visualize_enu_edge(self, edge, color, z_offset):
         for point in edge:
-            carla_point = carla.Location(x=float(point.x), y=float(-1 * point.y), z=float(point.z + z_offset))
+            carla_point = carla.Location(x=float(point.x), y=-1. * float(point.y), z=float(point.z) + z_offset)
             self._world.debug.draw_point(carla_point, 0.1, color, 0.1, False)
 
     def visualize_rss_results(self, state_snapshot):
         for state in state_snapshot:
             other_actor = state.get_actor(self._world)
             if not other_actor:
-                print("Actor not found. Skip visualizing state {}".format(state))
+                # print("Actor not found. Skip visualizing state {}".format(state))
                 continue
             ego_point = self._player.get_location()
             ego_point.z += 0.05
@@ -686,10 +679,10 @@ class RssDebugVisualizer(object):
             point = other_actor.get_location()
             point.z += 0.05
             indicator_color = carla.Color(0, 255, 0)
-            dangerous = rss.isDangerous(state.rss_state)
+            dangerous = ad.rss.state.isDangerous(state.rss_state)
             if dangerous:
                 indicator_color = carla.Color(255, 0, 0)
-            elif state.rss_state.situationType == rss.SituationType.NotRelevant:
+            elif state.rss_state.situationType == ad.rss.situation.SituationType.NotRelevant:
                 indicator_color = carla.Color(150, 150, 150)
 
             if self._visualization_mode == RssDebugVisualizationMode.All:

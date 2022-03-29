@@ -10,6 +10,8 @@
 #include "carla/Time.h"
 #include "carla/client/DebugHelper.h"
 #include "carla/client/Landmark.h"
+#include "carla/client/Waypoint.h"
+#include "carla/client/Junction.h"
 #include "carla/client/LightManager.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/WorldSnapshot.h"
@@ -18,9 +20,14 @@
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/EpisodeSettings.h"
+#include "carla/rpc/EnvironmentObject.h"
+#include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/MapLayer.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <boost/optional.hpp>
 
@@ -56,6 +63,10 @@ namespace client {
     /// Return the map that describes this world.
     SharedPtr<Map> GetMap() const;
 
+    void LoadLevelLayer(rpc::MapLayer map_layers) const;
+
+    void UnloadLevelLayer(rpc::MapLayer map_layers) const;
+
     /// Return the list of blueprints available in this world. This blueprints
     /// can be used to spawning actor into the world.
     SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
@@ -74,7 +85,7 @@ namespace client {
     rpc::EpisodeSettings GetSettings() const;
 
     /// @return The id of the frame when the settings were applied.
-    uint64_t ApplySettings(const rpc::EpisodeSettings &settings);
+    uint64_t ApplySettings(const rpc::EpisodeSettings &settings, time_duration timeout);
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
@@ -134,9 +145,16 @@ namespace client {
     /// percentage of 1.0f means all pedestrians can cross roads if needed
     void SetPedestriansCrossFactor(float percentage);
 
+    /// set the seed to use with random numbers in the pedestrians module
+    void SetPedestriansSeed(unsigned int seed);
+
     SharedPtr<Actor> GetTrafficSign(const Landmark& landmark) const;
 
     SharedPtr<Actor> GetTrafficLight(const Landmark& landmark) const;
+
+    SharedPtr<Actor> GetTrafficLightFromOpenDRIVE(const road::SignId& sign_id) const;
+
+    void ResetAllTrafficLights();
 
     SharedPtr<LightManager> GetLightManager() const;
 
@@ -149,6 +167,68 @@ namespace client {
     };
 
     void FreezeAllTrafficLights(bool frozen);
+
+    /// Returns all the BBs of all the elements of the level
+    std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;
+
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const;
+
+    void EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const;
+
+    boost::optional<rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance = 10000.f) const;
+
+    boost::optional<rpc::LabelledPoint> GroundProjection(
+        geom::Location location, float search_distance = 10000.0) const;
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const;
+
+    std::vector<SharedPtr<Actor>> GetTrafficLightsFromWaypoint(
+        const Waypoint& waypoint, double distance) const;
+
+    std::vector<SharedPtr<Actor>> GetTrafficLightsInJunction(
+        const road::JuncId junc_id) const;
+
+    // std::vector<std::string> GetObjectNameList();
+
+    void ApplyColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyFloatColorTextureToObject(
+        const std::string &actor_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    void ApplyFloatColorTextureToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    void ApplyTexturesToObject(
+        const std::string &actor_name,
+        const rpc::TextureColor& diffuse_texture,
+        const rpc::TextureFloatColor& emissive_texture,
+        const rpc::TextureFloatColor& normal_texture,
+        const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
+
+    void ApplyTexturesToObjects(
+        const std::vector<std::string> &objects_names,
+        const rpc::TextureColor& diffuse_texture,
+        const rpc::TextureFloatColor& emissive_texture,
+        const rpc::TextureFloatColor& normal_texture,
+        const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
 
   private:
 

@@ -151,8 +151,7 @@ namespace client {
     }
 
     auto episode = GetEpisode().Lock();
-    SharedPtr<Map> map = episode->GetCurrentMap();
-
+    
     auto cb = std::make_shared<LaneInvasionCallback>(
         *vehicle,
         episode->GetCurrentMap(),

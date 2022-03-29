@@ -23,6 +23,10 @@
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
+#include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/VehicleWheels.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <boost/optional.hpp>
 
@@ -63,15 +67,24 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    EpisodeProxy ReloadEpisode() {
-      return LoadEpisode("");
+    EpisodeProxy ReloadEpisode(bool reset_settings = true) {
+      return LoadEpisode("", reset_settings);
     }
 
-    EpisodeProxy LoadEpisode(std::string map_name);
+    EpisodeProxy LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layers = rpc::MapLayer::All);
+
+    void LoadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.LoadLevelLayer(map_layers);
+    }
+
+    void UnloadLevelLayer(rpc::MapLayer map_layers) const {
+      _client.UnloadLevelLayer(map_layers);
+    }
 
     EpisodeProxy LoadOpenDriveEpisode(
         std::string opendrive,
-        const rpc::OpendriveGenerationParameters & params);
+        const rpc::OpendriveGenerationParameters & params,
+        bool reset_settings = true);
 
     /// @}
     // =========================================================================
@@ -109,6 +122,20 @@ namespace detail {
     std::vector<std::string> GetAvailableMaps() {
       return _client.GetAvailableMaps();
     }
+
+    /// @}
+    // =========================================================================
+    /// @name Required files related methods
+    // =========================================================================
+    /// @{
+
+    bool SetFilesBaseFolder(const std::string &path);
+
+    std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const;
+
+    void RequestFile(const std::string &name) const;
+
+    std::vector<uint8_t> GetCacheFile(const std::string &name, const bool request_otherwise) const;
 
     /// @}
     // =========================================================================
@@ -226,6 +253,31 @@ namespace detail {
       return _client.GetVehicleLightState(vehicle.GetId());
     }
 
+    /// Returns all the BBs of all the elements of the level
+    std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const {
+      return _client.GetLevelBBs(queried_tag);
+    }
+
+    std::vector<rpc::EnvironmentObject> GetEnvironmentObjects(uint8_t queried_tag) const {
+      return _client.GetEnvironmentObjects(queried_tag);
+    }
+
+    void EnableEnvironmentObjects(
+      std::vector<uint64_t> env_objects_ids,
+      bool enable) const {
+      _client.EnableEnvironmentObjects(env_objects_ids, enable);
+    }
+
+    std::pair<bool,rpc::LabelledPoint> ProjectPoint(
+        geom::Location location, geom::Vector3D direction, float search_distance) const {
+      return _client.ProjectPoint(location, direction, search_distance);
+    }
+
+    std::vector<rpc::LabelledPoint> CastRay(
+        geom::Location start_location, geom::Location end_location) const {
+      return _client.CastRay(start_location, end_location);
+    }
+
     /// @}
     // =========================================================================
     /// @name AI
@@ -243,6 +295,8 @@ namespace detail {
     }
 
     void SetPedestriansCrossFactor(float percentage);
+
+    void SetPedestriansSeed(unsigned int seed);
 
     /// @}
     // =========================================================================
@@ -302,6 +356,10 @@ namespace detail {
       return GetActorSnapshot(actor.GetId());
     }
 
+    rpc::ActorState GetActorState(const Actor &actor) const {
+      return GetActorSnapshot(actor).actor_state;
+    }
+
     geom::Location GetActorLocation(const Actor &actor) const {
       return GetActorSnapshot(actor).transform.location;
     }
@@ -314,24 +372,47 @@ namespace detail {
       return GetActorSnapshot(actor).velocity;
     }
 
-    void SetActorVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorVelocity(actor.GetId(), vector);
+    void SetActorTargetVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorTargetVelocity(actor.GetId(), vector);
     }
 
     geom::Vector3D GetActorAngularVelocity(const Actor &actor) const {
       return GetActorSnapshot(actor).angular_velocity;
     }
 
-    void SetActorAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
-      _client.SetActorAngularVelocity(actor.GetId(), vector);
+    void SetActorTargetAngularVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.SetActorTargetAngularVelocity(actor.GetId(), vector);
+    }
+    void EnableActorConstantVelocity(const Actor &actor, const geom::Vector3D &vector) {
+      _client.EnableActorConstantVelocity(actor.GetId(), vector);
     }
 
-    void AddActorImpulse(const Actor &actor, const geom::Vector3D &vector) {
-      _client.AddActorImpulse(actor.GetId(), vector);
+    void DisableActorConstantVelocity(const Actor &actor) {
+      _client.DisableActorConstantVelocity(actor.GetId());
+    }
+
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse) {
+      _client.AddActorImpulse(actor.GetId(), impulse);
+    }
+
+    void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse, const geom::Vector3D &location) {
+      _client.AddActorImpulse(actor.GetId(), impulse, location);
+    }
+
+    void AddActorForce(const Actor &actor, const geom::Vector3D &force) {
+      _client.AddActorForce(actor.GetId(), force);
+    }
+
+    void AddActorForce(const Actor &actor, const geom::Vector3D &force, const geom::Vector3D &location) {
+      _client.AddActorForce(actor.GetId(), force, location);
     }
 
     void AddActorAngularImpulse(const Actor &actor, const geom::Vector3D &vector) {
       _client.AddActorAngularImpulse(actor.GetId(), vector);
+    }
+
+    void AddActorTorque(const Actor &actor, const geom::Vector3D &torque) {
+      _client.AddActorAngularImpulse(actor.GetId(), torque);
     }
 
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
@@ -350,6 +431,10 @@ namespace detail {
       _client.SetActorSimulatePhysics(actor.GetId(), enabled);
     }
 
+    void SetActorEnableGravity(Actor &actor, bool enabled) {
+      _client.SetActorEnableGravity(actor.GetId(), enabled);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with vehicles
@@ -360,6 +445,10 @@ namespace detail {
       _client.SetActorAutopilot(vehicle.GetId(), enabled);
     }
 
+    void ShowVehicleDebugTelemetry(Vehicle &vehicle, bool enabled = true) {
+      _client.ShowVehicleDebugTelemetry(vehicle.GetId(), enabled);
+    }
+
     void SetLightsToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
       _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
@@ -368,12 +457,36 @@ namespace detail {
       _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
 
+    void ApplyAckermannControlToVehicle(Vehicle &vehicle, const rpc::VehicleAckermannControl &control) {
+      _client.ApplyAckermannControlToVehicle(vehicle.GetId(), control);
+    }
+
+    rpc::AckermannControllerSettings GetAckermannControllerSettings(const Vehicle &vehicle) const {
+      return _client.GetAckermannControllerSettings(vehicle.GetId());
+    }
+
+    void ApplyAckermannControllerSettings(Vehicle &vehicle, const rpc::AckermannControllerSettings &settings) {
+      _client.ApplyAckermannControllerSettings(vehicle.GetId(), settings);
+    }
+
     void ApplyControlToWalker(Walker &walker, const rpc::WalkerControl &control) {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }
 
-    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControl &control) {
-      _client.ApplyBoneControlToWalker(walker.GetId(), control);
+    rpc::WalkerBoneControlOut GetBonesTransform(Walker &walker) {
+      return _client.GetBonesTransform(walker.GetId());
+    }
+
+    void SetBonesTransform(Walker &walker, const rpc::WalkerBoneControlIn &bones) {
+      return _client.SetBonesTransform(walker.GetId(), bones);
+    }
+
+    void BlendPose(Walker &walker, float blend) {
+      return _client.BlendPose(walker.GetId(), blend);
+    }
+
+    void GetPoseFromAnimation(Walker &walker) {
+      return _client.GetPoseFromAnimation(walker.GetId());
     }
 
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
@@ -382,6 +495,46 @@ namespace detail {
 
     void SetLightStateToVehicle(Vehicle &vehicle, const rpc::VehicleLightState light_state) {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
+    }
+
+    void OpenVehicleDoor(Vehicle &vehicle, const rpc::VehicleDoor door_idx) {
+      _client.OpenVehicleDoor(vehicle.GetId(), door_idx);
+    }
+
+    void CloseVehicleDoor(Vehicle &vehicle, const rpc::VehicleDoor door_idx) {
+      _client.CloseVehicleDoor(vehicle.GetId(), door_idx);
+    }
+
+    void SetWheelSteerDirection(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelSteerDirection(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelSteerAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
+    }
+
+    void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
+      _client.EnableCarSim(vehicle.GetId(), simfile_path);
+    }
+
+    void UseCarSimRoad(Vehicle &vehicle, bool enabled) {
+      _client.UseCarSimRoad(vehicle.GetId(), enabled);
+    }
+
+    void EnableChronoPhysics(Vehicle &vehicle,
+        uint64_t MaxSubsteps,
+        float MaxSubstepDeltaTime,
+        std::string VehicleJSON,
+        std::string PowertrainJSON,
+        std::string TireJSON,
+        std::string BaseJSONPath) {
+      _client.EnableChronoPhysics(vehicle.GetId(),
+          MaxSubsteps,
+          MaxSubstepDeltaTime,
+          VehicleJSON,
+          PowertrainJSON,
+          TireJSON,
+          BaseJSONPath);
     }
 
     /// @}
@@ -410,8 +563,9 @@ namespace detail {
       return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
-      return _client.ReplayFile(std::move(name), start, duration, follow_id);
+    std::string ReplayFile(std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors);
     }
 
     void SetReplayerTimeFactor(double time_factor) {
@@ -466,6 +620,14 @@ namespace detail {
 
     void ResetTrafficLightGroup(TrafficLight &trafficLight) {
       _client.ResetTrafficLightGroup(trafficLight.GetId());
+    }
+
+    void ResetAllTrafficLights() {
+      _client.ResetAllTrafficLights();
+    }
+
+    std::vector<geom::BoundingBox> GetLightBoxes(const TrafficLight &trafficLight) const {
+      return _client.GetLightBoxes(trafficLight.GetId());
     }
 
     std::vector<ActorId> GetGroupTrafficLights(TrafficLight &trafficLight) {
@@ -529,8 +691,28 @@ namespace detail {
     void FreezeAllTrafficLights(bool frozen);
 
     /// @}
+    // =========================================================================
+    /// @name Texture updating operations
+    // =========================================================================
+    /// @{
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
+
+    /// @}
 
   private:
+
+    bool ShouldUpdateMap(rpc::MapInfo& map_info);
 
     Client _client;
 
@@ -539,6 +721,10 @@ namespace detail {
     std::shared_ptr<Episode> _episode;
 
     const GarbageCollectionPolicy _gc_policy;
+
+    SharedPtr<Map> _cached_map;
+
+    std::string _open_drive_file;
   };
 
 } // namespace detail

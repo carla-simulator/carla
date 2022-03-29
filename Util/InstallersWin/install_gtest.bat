@@ -64,7 +64,7 @@ if not exist "%GT_BUILD_DIR%" (
 cd "%GT_BUILD_DIR%"
 echo %FILE_N% Generating build...
 
-cmake .. -G "Visual Studio 15 2017 Win64"^
+cmake .. -G "Visual Studio 16 2019" -A x64^
     -DCMAKE_BUILD_TYPE=Release^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX="%GT_INSTALL_DIR:\=/%"^
@@ -116,8 +116,8 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
-    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] Possible causes:
+    echo %FILE_N% [Visual Studio 16 2019 Win64 ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
+    echo %FILE_N% [Visual Studio 16 2019 Win64 ERROR] Possible causes:
     echo %FILE_N%                - Make sure you have Visual Studio installed.
     echo %FILE_N%                - Make sure you have the "x64 Visual C++ Toolset" in your path.
     echo %FILE_N%                  For example using the "Visual Studio x64 Native Tools Command Prompt",

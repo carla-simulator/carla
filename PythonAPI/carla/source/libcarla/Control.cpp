@@ -5,11 +5,13 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/WheelPhysicsControl.h>
 #include <carla/rpc/WalkerControl.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 
 #include <ostream>
 
@@ -31,6 +33,15 @@ namespace rpc {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const VehicleAckermannControl &control) {
+    out << "VehicleAckermannControl(steer=" << std::to_string(control.steer)
+        << ", steer_speed=" << std::to_string(control.steer_speed)
+        << ", speed=" << std::to_string(control.speed)
+        << ", acceleration=" << std::to_string(control.acceleration)
+        << ", jerk=" << std::to_string(control.jerk) << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const WalkerControl &control) {
     out << "WalkerControl(direction=" << control.direction
         << ", speed=" << std::to_string(control.speed)
@@ -38,11 +49,26 @@ namespace rpc {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const WalkerBoneControl &control) {
-    out << "WalkerBoneControl(bone_transforms(";
+  std::ostream &operator<<(std::ostream &out, const WalkerBoneControlIn &control) {
+    out << "WalkerBoneControlIn(bone_transforms(";
     for (auto bone_transform : control.bone_transforms) {
       out << "(name="  << bone_transform.first
           << ", transform=" << bone_transform.second << ')';
+    }
+    out << "))";
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const BoneTransformDataOut &data) {
+    out << "BoneTransformDataOut(name="  << data.bone_name << ", world=" << data.world << ", component=" << data.component << ", relative=" << data.relative << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const WalkerBoneControlOut &control) {
+    out << "WalkerBoneControlOut(bone_transforms(";
+    for (auto bone_transform : control.bone_transforms) {
+      out << "(name="  << bone_transform.bone_name
+          << ", world=" << bone_transform.world << ", component=" << bone_transform.component << ", relative=" << bone_transform.relative << ')';
     }
     out << "))";
     return out;
@@ -62,6 +88,9 @@ namespace rpc {
         << ", radius=" << std::to_string(control.radius)
         << ", max_brake_torque=" << std::to_string(control.max_brake_torque)
         << ", max_handbrake_torque=" << std::to_string(control.max_handbrake_torque)
+        << ", lat_stiff_max_load=" << std::to_string(control.lat_stiff_max_load)
+        << ", lat_stiff_value=" << std::to_string(control.lat_stiff_value)
+        << ", long_stiff_value=" << std::to_string(control.long_stiff_value)
         << ", position=" << control.position << ')';
     return out;
   }
@@ -82,12 +111,23 @@ namespace rpc {
     << ", drag_coefficient=" << std::to_string(control.drag_coefficient)
     << ", center_of_mass=" << control.center_of_mass
     << ", steering_curve=" << control.steering_curve
-    << ", wheels=" << control.wheels << ')';
+    << ", wheels=" << control.wheels
+    << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision << ')';
     return out;
   }
+
+  std::ostream &operator<<(std::ostream &out, const AckermannControllerSettings &settings) {
+    out << "AckermannControllerSettings(speed_kp=" << std::to_string(settings.speed_kp)
+        << ", speed_ki=" << std::to_string(settings.speed_ki)
+        << ", speed_kd=" << std::to_string(settings.speed_kd)
+        << ", accel_kp=" << std::to_string(settings.accel_kp)
+        << ", accel_ki=" << std::to_string(settings.accel_ki)
+        << ", accel_kd=" << std::to_string(settings.accel_kd)  << ')';
+    return out;
+  }
+
 } // namespace rpc
 } // namespace carla
-
 
 static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
   std::vector<carla::geom::Vector2D> v;
@@ -108,16 +148,16 @@ static auto GetVectorOfVector2DFromList(const boost::python::list &list) {
 }
 
 static auto GetVectorOfBoneTransformFromList(const boost::python::list &list) {
-  std::vector<carla::rpc::BoneTransformData> v;
+  std::vector<carla::rpc::BoneTransformDataIn> v;
 
   auto length = boost::python::len(list);
   v.reserve(static_cast<size_t>(length));
   for (auto i = 0u; i < length; ++i) {
-    boost::python::extract<carla::rpc::BoneTransformData> ext(list[i]);
+    boost::python::extract<carla::rpc::BoneTransformDataIn> ext(list[i]);
     if (ext.check()) {
       v.push_back(ext);
     } else {
-      v.push_back(carla::rpc::BoneTransformData{
+      v.push_back(carla::rpc::BoneTransformDataIn{
         boost::python::extract<std::string>(list[i][0u]),
         boost::python::extract<carla::geom::Transform>(list[i][1u])});
     }
@@ -181,7 +221,7 @@ static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boos
 
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
   // Args names
-  const uint32_t NUM_ARGUMENTS = 16;
+  const uint32_t NUM_ARGUMENTS = 17;
   const char *args_names[NUM_ARGUMENTS] = {
     "torque_curve",
     "max_rpm",
@@ -201,7 +241,8 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
 
     "center_of_mass",
     "steering_curve",
-    "wheels"
+    "wheels",
+    "use_sweep_wheel_collision",
   };
 
   boost::python::object self = args[0];
@@ -223,16 +264,24 @@ boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boos
   return res;
 }
 
-static auto GetBonesTransform(const carla::rpc::WalkerBoneControl &self) {
-  const std::vector<carla::rpc::BoneTransformData> &bone_transform_data = self.bone_transforms;
+static auto GetBonesTransform(const carla::rpc::WalkerBoneControlIn &self) {
+  const std::vector<carla::rpc::BoneTransformDataIn> &bone_transform_data = self.bone_transforms;
   boost::python::object get_iter =
-      boost::python::iterator<const std::vector<carla::rpc::BoneTransformData>>();
+      boost::python::iterator<const std::vector<carla::rpc::BoneTransformDataIn>>();
   boost::python::object iter = get_iter(bone_transform_data);
   return boost::python::list(iter);
 }
 
-static void SetBonesTransform(carla::rpc::WalkerBoneControl &self, const boost::python::list &list) {
+static void SetBonesTransform(carla::rpc::WalkerBoneControlIn &self, const boost::python::list &list) {
   self.bone_transforms = GetVectorOfBoneTransformFromList(list);
+}
+
+static auto GetBonesTransformOut(const carla::rpc::WalkerBoneControlOut &self) {
+  const std::vector<carla::rpc::BoneTransformDataOut> &bone_transform_data = self.bone_transforms;
+  boost::python::object get_iter =
+      boost::python::iterator<const std::vector<carla::rpc::BoneTransformDataOut>>();
+  boost::python::object iter = get_iter(bone_transform_data);
+  return boost::python::list(iter);
 }
 
 boost::python::object WalkerBoneControl_init(boost::python::tuple args, boost::python::dict kwargs) {
@@ -287,6 +336,42 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cr::VehicleAckermannControl>("VehicleAckermannControl")
+    .def(init<float, float, float, float, float>(
+      (arg("steer") = 0.0f,
+      arg("steer_speed") = 0.0f,
+      arg("speed") = 0.0f,
+      arg("acceleration") = 0.0f,
+      arg("jerk") = 0.0f)))
+    .def_readwrite("steer", &cr::VehicleAckermannControl::steer)
+    .def_readwrite("steer_speed", &cr::VehicleAckermannControl::steer_speed)
+    .def_readwrite("speed", &cr::VehicleAckermannControl::speed)
+    .def_readwrite("acceleration", &cr::VehicleAckermannControl::acceleration)
+    .def_readwrite("jerk", &cr::VehicleAckermannControl::jerk)
+    .def("__eq__", &cr::VehicleAckermannControl::operator==)
+    .def("__ne__", &cr::VehicleAckermannControl::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::AckermannControllerSettings>("AckermannControllerSettings")
+    .def(init<float, float, float, float, float, float>(
+      (arg("speed_kp") = 0.0f,
+      arg("speed_ki") = 0.0f,
+      arg("speed_kd") = 0.0f,
+      arg("accel_kp") = 0.0f,
+      arg("accel_ki") = 0.0f,
+      arg("accel_kd") = 0.0f)))
+    .def_readwrite("speed_kp", &cr::AckermannControllerSettings::speed_kp)
+    .def_readwrite("speed_ki", &cr::AckermannControllerSettings::speed_ki)
+    .def_readwrite("speed_kd", &cr::AckermannControllerSettings::speed_kd)
+    .def_readwrite("accel_kp", &cr::AckermannControllerSettings::accel_kp)
+    .def_readwrite("accel_ki", &cr::AckermannControllerSettings::accel_ki)
+    .def_readwrite("accel_kd", &cr::AckermannControllerSettings::accel_kd)
+    .def("__eq__", &cr::AckermannControllerSettings::operator==)
+    .def("__ne__", &cr::AckermannControllerSettings::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cr::WalkerControl>("WalkerControl")
     .def(init<cg::Vector3D, float, bool>(
        (arg("direction") = cg::Vector3D{1.0f, 0.0f, 0.0f},
@@ -300,10 +385,48 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::WalkerBoneControl>("WalkerBoneControl")
+  class_<cr::BoneTransformDataIn>("bone_transform")
+    .def(init<>())
+    .def_readwrite("name", &std::pair<std::string, cg::Transform>::first)
+    .def_readwrite("transform", &std::pair<std::string, cg::Transform>::second)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<std::vector<cr::BoneTransformDataIn>>("vector_of_bones")
+    .def(init<>())
+    .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformDataIn>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::BoneTransformDataOut>("bone_transform_out")
+    .def(init<>())
+    .def_readwrite("name", &cr::BoneTransformDataOut::bone_name)
+    .def_readwrite("world", &cr::BoneTransformDataOut::world)
+    .def_readwrite("component", &cr::BoneTransformDataOut::component)
+    .def_readwrite("relative", &cr::BoneTransformDataOut::relative)
+    .def(self_ns::str(self_ns::self))
+    .def("__eq__", &cr::BoneTransformDataOut::operator==)
+    .def("__ne__", &cr::BoneTransformDataOut::operator!=)
+  ;
+
+  class_<std::vector<cr::BoneTransformDataOut>>("vector_of_bones_out")
+    .def(init<>())
+    .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformDataOut>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::WalkerBoneControlIn>("WalkerBoneControlIn")
     .def("__init__", raw_function(WalkerBoneControl_init))
     .def(init<>())
     .add_property("bone_transforms", &GetBonesTransform, &SetBonesTransform)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::WalkerBoneControlOut>("WalkerBoneControlOut")
+    .def("__init__", raw_function(WalkerBoneControl_init))
+    .def(init<>())
+    // .add_property("bone_transforms", &GetBonesTransformOut, &SetBonesTransformOut)
+    .add_property("bone_transforms", &GetBonesTransformOut)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -331,13 +454,16 @@ void export_control() {
   ;
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl")
-    .def(init<float, float, float, float, float, float, cg::Vector3D>(
+    .def(init<float, float, float, float, float, float, float, float, float, cg::Vector3D>(
         (arg("tire_friction")=2.0f,
          arg("damping_rate")=0.25f,
          arg("max_steer_angle")=70.0f,
          arg("radius")=30.0f,
          arg("max_brake_torque")=1500.0f,
          arg("max_handbrake_torque")=3000.0f,
+         arg("lat_stiff_max_load")=2.0f,
+         arg("lat_stiff_value")=17.0f,
+         arg("long_stiff_value")=1000.0f,
          arg("position")=cg::Vector3D{0.0f, 0.0f, 0.0f})))
     .def_readwrite("tire_friction", &cr::WheelPhysicsControl::tire_friction)
     .def_readwrite("damping_rate", &cr::WheelPhysicsControl::damping_rate)
@@ -345,6 +471,9 @@ void export_control() {
     .def_readwrite("radius", &cr::WheelPhysicsControl::radius)
     .def_readwrite("max_brake_torque", &cr::WheelPhysicsControl::max_brake_torque)
     .def_readwrite("max_handbrake_torque", &cr::WheelPhysicsControl::max_handbrake_torque)
+    .def_readwrite("lat_stiff_max_load", &cr::WheelPhysicsControl::lat_stiff_max_load)
+    .def_readwrite("lat_stiff_value", &cr::WheelPhysicsControl::lat_stiff_value)
+    .def_readwrite("long_stiff_value", &cr::WheelPhysicsControl::long_stiff_value)
     .def_readwrite("position", &cr::WheelPhysicsControl::position)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
@@ -373,6 +502,7 @@ void export_control() {
     .def_readwrite("center_of_mass", &cr::VehiclePhysicsControl::center_of_mass)
     .add_property("steering_curve", &GetSteeringCurve, &SetSteeringCurve)
     .add_property("wheels", &GetWheels, &SetWheels)
+    .def_readwrite("use_sweep_wheel_collision", &cr::VehiclePhysicsControl::use_sweep_wheel_collision)
     .def("__eq__", &cr::VehiclePhysicsControl::operator==)
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))

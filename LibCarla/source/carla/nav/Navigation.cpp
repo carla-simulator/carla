@@ -67,6 +67,11 @@ namespace nav {
     dtFreeNavMesh(_nav_mesh);
   }
 
+  // set the seed to use with random numbers
+  void Navigation::SetSeed(unsigned int seed) {
+    srand(seed);
+  }
+
   // load navigation data
   bool Navigation::Load(const std::string &filename) {
     std::ifstream f;

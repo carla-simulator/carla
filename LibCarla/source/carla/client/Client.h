@@ -54,19 +54,35 @@ namespace client {
       return _simulator->GetAvailableMaps();
     }
 
-    World ReloadWorld() const {
-      return World{_simulator->ReloadEpisode()};
+    bool SetFilesBaseFolder(const std::string &path) {
+      return _simulator->SetFilesBaseFolder(path);
     }
 
-    World LoadWorld(std::string map_name) const {
-      return World{_simulator->LoadEpisode(std::move(map_name))};
+    std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const {
+      return _simulator->GetRequiredFiles(folder, download);
+    }
+
+    void RequestFile(const std::string &name) const {
+      _simulator->RequestFile(name);
+    }
+
+    World ReloadWorld(bool reset_settings = true) const {
+      return World{_simulator->ReloadEpisode(reset_settings)};
+    }
+
+    World LoadWorld(
+        std::string map_name,
+        bool reset_settings = true,
+        rpc::MapLayer map_layers = rpc::MapLayer::All) const {
+      return World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
     }
 
     World GenerateOpenDriveWorld(
         std::string opendrive,
-        const rpc::OpendriveGenerationParameters & params) const {
+        const rpc::OpendriveGenerationParameters & params,
+        bool reset_settings = true) const {
       return World{_simulator->LoadOpenDriveEpisode(
-          std::move(opendrive), params)};
+          std::move(opendrive), params, reset_settings)};
     }
 
     /// Return an instance of the world currently active in the simulator.
@@ -104,8 +120,9 @@ namespace client {
       return _simulator->ShowRecorderActorsBlocked(name, min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration, uint32_t follow_id) {
-      return _simulator->ReplayFile(name, start, duration, follow_id);
+    std::string ReplayFile(std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors) {
+      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors);
     }
 
     void StopReplayer(bool keep_actors) {
@@ -129,13 +146,16 @@ namespace client {
     std::vector<rpc::CommandResponse> ApplyBatchSync(
         std::vector<rpc::Command> commands,
         bool do_tick_cue = false) const {
-      return _simulator->ApplyBatchSync(std::move(commands), do_tick_cue);
+      auto responses = _simulator->ApplyBatchSync(std::move(commands), false);
+      if (do_tick_cue)
+        _simulator->Tick(_simulator->GetNetworkingTimeout());
+
+      return responses;
     }
 
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;
-
   };
 
   inline Client::Client(

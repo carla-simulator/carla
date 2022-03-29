@@ -38,7 +38,7 @@ class FCarlaModule : public IModuleInterface
 	void RegisterSettings();
 	void UnregisterSettings();
 	bool HandleSettingsSaved();
-
+	void LoadChronoDll();
 
 public:
 

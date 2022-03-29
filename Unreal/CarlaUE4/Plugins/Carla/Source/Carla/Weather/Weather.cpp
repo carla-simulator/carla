@@ -30,6 +30,9 @@ void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
   UE_LOG(LogCarla, Log, TEXT("  - FogDistance = %.2f"), Weather.FogDistance);
   UE_LOG(LogCarla, Log, TEXT("  - FogFalloff = %.2f"), Weather.FogFalloff);
   UE_LOG(LogCarla, Log, TEXT("  - Wetness = %.2f"), Weather.Wetness);
+  UE_LOG(LogCarla, Log, TEXT("  - ScatteringIntensity = %.2f"), Weather.ScatteringIntensity);
+  UE_LOG(LogCarla, Log, TEXT("  - MieScatteringScale = %.2f"), Weather.MieScatteringScale);
+  UE_LOG(LogCarla, Log, TEXT("  - RayleighScatteringScale = %.2f"), Weather.RayleighScatteringScale);
 #endif // CARLA_WEATHER_EXTRA_LOG
 
   // Call the blueprint that actually changes the weather.

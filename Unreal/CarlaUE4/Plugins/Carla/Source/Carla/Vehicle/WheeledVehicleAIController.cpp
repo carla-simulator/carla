@@ -10,6 +10,8 @@
 #include "MapGen/RoadMap.h"
 #include "Traffic/RoutePlanner.h"
 #include "Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/CityMapGenerator.h"
+#include "Carla/Util/RandomEngine.h"
 
 #include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
@@ -128,6 +130,7 @@ void AWheeledVehicleAIController::OnUnPossess()
 
 void AWheeledVehicleAIController::Tick(const float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AWheeledVehicleAIController::Tick);
   Super::Tick(DeltaTime);
 
   if (!IsPossessingAVehicle())

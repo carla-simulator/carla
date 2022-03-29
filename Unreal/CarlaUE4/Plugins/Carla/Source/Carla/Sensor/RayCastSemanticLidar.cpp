@@ -19,6 +19,8 @@
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 
+namespace crp = carla::rpc;
+
 FActorDefinition ARayCastSemanticLidar::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeLidarDefinition(TEXT("ray_cast_semantic"));
@@ -62,18 +64,21 @@ void ARayCastSemanticLidar::CreateLasers()
   }
 }
 
-void ARayCastSemanticLidar::Tick(const float DeltaTime)
+void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::PostPhysTick);
   SimulateLidar(DeltaTime);
 
-  auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, SemanticLidarData, DataStream.PopBufferFromPool());
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
+    auto DataStream = GetDataStream(*this);
+    DataStream.Send(*this, SemanticLidarData, DataStream.PopBufferFromPool());
+  }
 }
 
 void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::SimulateLidar);
   const uint32 ChannelCount = Description.Channels;
   const uint32 PointsToScanWithOneLaser =
     FMath::RoundHalfFromZero(
@@ -93,51 +98,76 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
 
   const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
       SemanticLidarData.GetHorizontalAngle());
-  const float AngleDistanceOfTick = Description.RotationFrequency * 360.0f * DeltaTime;
+  const float AngleDistanceOfTick = Description.RotationFrequency * Description.HorizontalFov
+      * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
 
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
+  PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
-  ParallelFor(ChannelCount, [&](int32 idxChannel) {
-    for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
-      FHitResult HitResult;
-      const float VertAngle = LaserAngles[idxChannel];
-      const float HorizAngle = CurrentHorizontalAngle + AngleDistanceOfLaserMeasure * idxPtsOneLaser;
-      const bool PreprocessResult = PreprocessRay();
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
+    ParallelFor(ChannelCount, [&](int32 idxChannel) {
+      TRACE_CPUPROFILER_EVENT_SCOPE(ParallelForTask);
 
-      if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult)) {
-        WritePointAsync(idxChannel, HitResult);
-      }
-    };
-  });
+      FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
+      TraceParams.bTraceComplex = true;
+      TraceParams.bReturnPhysicalMaterial = false;
+
+      for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
+        FHitResult HitResult;
+        const float VertAngle = LaserAngles[idxChannel];
+        const float HorizAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfLaserMeasure
+            * idxPtsOneLaser, Description.HorizontalFov) - Description.HorizontalFov / 2;
+        const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
+
+        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams)) {
+          WritePointAsync(idxChannel, HitResult);
+        }
+      };
+    });
+  }
   GetWorld()->GetPhysicsScene()->GetPxScene()->unlockRead();
 
   FTransform ActorTransf = GetTransform();
   ComputeAndSaveDetections(ActorTransf);
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
-      std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, 360.0f));
+      std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, Description.HorizontalFov));
   SemanticLidarData.SetHorizontalAngle(HorizontalAngle);
 }
 
 void ARayCastSemanticLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
   RecordedHits.resize(Channels);
-  for (auto& aux : RecordedHits) {
-    aux.clear();
-    aux.reserve(MaxPointsPerChannel);
+
+  for (auto& hits : RecordedHits) {
+    hits.clear();
+    hits.reserve(MaxPointsPerChannel);
+  }
+}
+
+void ARayCastSemanticLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+  RayPreprocessCondition.resize(Channels);
+
+  for (auto& conds : RayPreprocessCondition) {
+    conds.clear();
+    conds.resize(MaxPointsPerChannel);
+    std::fill(conds.begin(), conds.end(), true);
   }
 }
 
 void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
+	TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   DEBUG_ASSERT(GetChannelCount() > channel);
   RecordedHits[channel].emplace_back(detection);
 }
 
 void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
+	TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
     PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-  SemanticLidarData.ResetSerPoints(PointsPerChannel);
+  SemanticLidarData.ResetMemory(PointsPerChannel);
 
   for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
     for (auto& hit : RecordedHits[idxChannel]) {
@@ -146,6 +176,8 @@ void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTra
       SemanticLidarData.WritePointSync(detection);
     }
   }
+
+  SemanticLidarData.WriteChannelCount(PointsPerChannel);
 }
 
 void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FSemanticDetection& Detection) const
@@ -158,22 +190,16 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 
     const FActorRegistry &Registry = GetEpisode().GetActorRegistry();
 
-    AActor* actor = HitInfo.Actor.Get();
+    const AActor* actor = HitInfo.Actor.Get();
     Detection.object_idx = 0;
-    Detection.object_tag = static_cast<uint32_t>(ECityObjectLabel::None);
+    Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
+
     if (actor != nullptr) {
 
-      FActorView view = Registry.Find(actor);
+      const FCarlaActor* view = Registry.FindCarlaActor(actor);
+      if(view)
+        Detection.object_idx = view->GetActorId();
 
-      if(view.IsValid()) {
-        const FActorInfo* ActorInfo = view.GetActorInfo();
-        Detection.object_idx = ActorInfo->Description.UId;
-
-        Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
-      }
-      else {
-        Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
-      }
     }
     else {
       UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
@@ -181,26 +207,26 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 }
 
 
-bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult) const
+bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult, FCollisionQueryParams& TraceParams) const
 {
-  FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
-  TraceParams.bTraceComplex = true;
-  TraceParams.bReturnPhysicalMaterial = false;
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
 
   FHitResult HitInfo(ForceInit);
 
   FTransform ActorTransf = GetTransform();
   FVector LidarBodyLoc = ActorTransf.GetLocation();
   FRotator LidarBodyRot = ActorTransf.Rotator();
+
   FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
   FRotator ResultRot = UKismetMathLibrary::ComposeRotators(
     LaserRot,
     LidarBodyRot
   );
+
   const auto Range = Description.Range;
   FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
 
-  GetWorld()->LineTraceSingleByChannel(
+  GetWorld()->ParallelLineTraceSingleByChannel(
     HitInfo,
     LidarBodyLoc,
     EndTrace,

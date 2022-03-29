@@ -22,14 +22,14 @@ CollisionStage::CollisionStage(
   const TrackTraffic &track_traffic,
   const Parameters &parameters,
   CollisionFrame &output_array,
-  cc::DebugHelper &debug_helper)
+  RandomGenerator &random_device)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
     parameters(parameters),
     output_array(output_array),
-    debug_helper(debug_helper) {}
+    random_device(random_device) {}
 
 void CollisionStage::Update(const unsigned long index) {
   ActorId obstacle_id = 0u;
@@ -41,12 +41,22 @@ void CollisionStage::Update(const unsigned long index) {
     const cg::Location ego_location = simulation_state.GetLocation(ego_actor_id);
     const Buffer &ego_buffer = buffer_map.at(ego_actor_id);
     const unsigned long look_ahead_index = GetTargetWaypoint(ego_buffer, JUNCTION_LOOK_AHEAD).second;
+    const float velocity = simulation_state.GetVelocity(ego_actor_id).Length();
 
     ActorIdSet overlapping_actors = track_traffic.GetOverlappingVehicles(ego_actor_id);
     std::vector<ActorId> collision_candidate_ids;
-
     // Run through vehicles with overlapping paths and filter them;
-    float collision_radius_square = SQUARE(MAX_COLLISION_RADIUS);
+    const float distance_to_leading = parameters.GetDistanceToLeadingVehicle(ego_actor_id);
+    float collision_radius_square = SQUARE(COLLISION_RADIUS_RATE * velocity + COLLISION_RADIUS_MIN);
+    if (velocity < 2.0f) {
+      const float length = simulation_state.GetDimensions(ego_actor_id).x;
+      const float collision_radius_stop = COLLISION_RADIUS_STOP + length;
+      collision_radius_square = SQUARE(collision_radius_stop);
+    }
+    if (distance_to_leading > collision_radius_square) {
+        collision_radius_square = SQUARE(distance_to_leading);
+    }
+
     for (ActorId overlapping_actor_id : overlapping_actors) {
       // If actor is within maximum collision avoidance and vertical overlap range.
       const cg::Location &overlapping_actor_location = simulation_state.GetLocation(overlapping_actor_id);
@@ -81,9 +91,9 @@ void CollisionStage::Update(const unsigned long index) {
                                                                        look_ahead_index);
         if (negotiation_result.first) {
           if ((other_actor_type == ActorType::Vehicle
-               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= pgen.next())
+               && parameters.GetPercentageIgnoreVehicles(ego_actor_id) <= random_device.next())
               || (other_actor_type == ActorType::Pedestrian
-                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= pgen.next())) {
+                  && parameters.GetPercentageIgnoreWalkers(ego_actor_id) <= random_device.next())) {
             collision_hazard = true;
             obstacle_id = other_actor_id;
             available_distance_margin = negotiation_result.second;
@@ -111,8 +121,9 @@ float CollisionStage::GetBoundingBoxExtention(const ActorId actor_id) {
 
   const float velocity = cg::Math::Dot(simulation_state.GetVelocity(actor_id), simulation_state.GetHeading(actor_id));
   float bbox_extension;
-  // Using a linear function to calculate boundary length.
-  bbox_extension = BOUNDARY_EXTENSION_RATE * velocity + BOUNDARY_EXTENSION_MINIMUM;
+  // Using a function to calculate boundary length.
+  float velocity_extension = VEL_EXT_FACTOR * velocity;
+  bbox_extension = BOUNDARY_EXTENSION_MINIMUM + velocity_extension * velocity_extension;
   // If a valid collision lock present, change boundary length to maintain lock.
   if (collision_locks.find(actor_id) != collision_locks.end()) {
     const CollisionLock &lock = collision_locks.at(actor_id);
@@ -143,7 +154,7 @@ LocationVector CollisionStage::GetBoundary(const ActorId actor_id) {
   float bbox_y = dimensions.y;
 
   const cg::Vector3D x_boundary_vector = heading_vector * (bbox_x + forward_extension);
-  const auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f).MakeUnitVector();
+  const auto perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f).MakeSafeUnitVector(EPSILON);
   const cg::Vector3D y_boundary_vector = perpendicular_vector * (bbox_y + forward_extension);
 
   // Four corners of the vehicle in top view clockwise order (left-handed system).
@@ -199,7 +210,7 @@ LocationVector CollisionStage::GetGeodesicBoundary(const ActorId actor_id) {
           const cg::Vector3D heading_vector = current_point->GetForwardVector();
           const cg::Location location = current_point->GetLocation();
           cg::Vector3D perpendicular_vector = cg::Vector3D(-heading_vector.y, heading_vector.x, 0.0f);
-          perpendicular_vector = perpendicular_vector.MakeUnitVector();
+          perpendicular_vector = perpendicular_vector.MakeSafeUnitVector(EPSILON);
           // Direction determined for the left-handed system.
           const cg::Vector3D scaled_perpendicular = perpendicular_vector * width;
           left_boundary.push_back(location + cg::Location(scaled_perpendicular));
@@ -304,15 +315,14 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   // Ego and other vehicle heading.
   const cg::Vector3D reference_heading = simulation_state.GetHeading(reference_vehicle_id);
   // Vector from ego position to position of the other vehicle.
-  const float vector_magnitude_epsilon = 2.0f * std::numeric_limits<float>::epsilon();
   cg::Vector3D reference_to_other = other_location - reference_location;
-  reference_to_other = reference_to_other.MakeSafeUnitVector(vector_magnitude_epsilon);
+  reference_to_other = reference_to_other.MakeSafeUnitVector(EPSILON);
 
   // Other vehicle heading.
   const cg::Vector3D other_heading = simulation_state.GetHeading(other_actor_id);
   // Vector from other vehicle position to ego position.
   cg::Vector3D other_to_reference = reference_location - other_location;
-  other_to_reference = other_to_reference.MakeSafeUnitVector(vector_magnitude_epsilon);
+  other_to_reference = other_to_reference.MakeSafeUnitVector(EPSILON);
 
   float reference_vehicle_length = simulation_state.GetDimensions(reference_vehicle_id).x * SQUARE_ROOT_OF_TWO;
   float other_vehicle_length = simulation_state.GetDimensions(other_actor_id).x * SQUARE_ROOT_OF_TWO;
@@ -335,7 +345,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
   bool ego_inside_junction = closest_point->CheckJunction();
   TrafficLightState reference_tl_state = simulation_state.GetTLS(reference_vehicle_id);
   bool ego_at_traffic_light = reference_tl_state.at_traffic_light;
-  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green;
+  bool ego_stopped_by_light = reference_tl_state.tl_state != TLS::Green && reference_tl_state.tl_state != TLS::Off;
   SimpleWaypointPtr look_ahead_point = reference_vehicle_buffer.at(reference_junction_look_ahead_index);
   bool ego_at_junction_entrance = !closest_point->CheckJunction() && look_ahead_point->CheckJunction();
 
@@ -346,10 +356,10 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
     GeometryComparison geometry_comparison = GetGeometryBetweenActors(reference_vehicle_id, other_actor_id);
 
     // Conditions for collision negotiation.
-    bool geodesic_path_bbox_touching = geometry_comparison.inter_geodesic_distance < 0.1;
-    bool vehicle_bbox_touching = geometry_comparison.inter_bbox_distance < 0.1;
-    bool ego_path_clear = geometry_comparison.other_vehicle_to_reference_geodesic > 0.1;
-    bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > 0.1;
+    bool geodesic_path_bbox_touching = geometry_comparison.inter_geodesic_distance < OVERLAP_THRESHOLD;
+    bool vehicle_bbox_touching = geometry_comparison.inter_bbox_distance < OVERLAP_THRESHOLD;
+    bool ego_path_clear = geometry_comparison.other_vehicle_to_reference_geodesic > OVERLAP_THRESHOLD;
+    bool other_path_clear = geometry_comparison.reference_vehicle_to_other_geodesic > OVERLAP_THRESHOLD;
     bool ego_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic < geometry_comparison.other_vehicle_to_reference_geodesic;
     bool other_path_priority = geometry_comparison.reference_vehicle_to_other_geodesic > geometry_comparison.other_vehicle_to_reference_geodesic;
     bool ego_angular_priority = reference_heading_to_other_dot< cg::Math::Dot(other_heading, other_to_reference);
@@ -365,7 +375,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
       hazard = true;
 
       const float reference_lead_distance = parameters.GetDistanceToLeadingVehicle(reference_vehicle_id);
-      const float specific_distance_margin = std::max(reference_lead_distance, BOUNDARY_EXTENSION_MINIMUM);
+      const float specific_distance_margin = std::max(reference_lead_distance, MIN_REFERENCE_DISTANCE);
       available_distance_margin = static_cast<float>(std::max(geometry_comparison.reference_vehicle_to_other_geodesic
                                                               - static_cast<double>(specific_distance_margin), 0.0));
 
@@ -380,7 +390,7 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
         // Check if the same vehicle is under lock.
         if (other_actor_id == lock.lead_vehicle_id) {
           // If the body of the lead vehicle is touching the reference vehicle bounding box.
-          if (geometry_comparison.other_vehicle_to_reference_geodesic < 0.1) {
+          if (geometry_comparison.other_vehicle_to_reference_geodesic < OVERLAP_THRESHOLD) {
             // Distance between the bodies of the vehicles.
             lock.distance_to_lead_vehicle = geometry_comparison.inter_bbox_distance;
           } else {
@@ -412,16 +422,6 @@ std::pair<bool, float> CollisionStage::NegotiateCollision(const ActorId referenc
 void CollisionStage::ClearCycleCache() {
   geodesic_boundary_map.clear();
   geometry_cache.clear();
-}
-
-void CollisionStage::DrawBoundary(const LocationVector &boundary) {
-  cg::Location one_meter_up(0.0f, 0.0f, 1.0f);
-  for (uint64_t i = 0u; i < boundary.size(); ++i) {
-    debug_helper.DrawLine(
-        boundary[i] + one_meter_up,
-        boundary[i+1 == boundary.size()? 0: i+1] + one_meter_up,
-        0.1f, {255u, 255u, 0u}, 0.05f);
-  }
 }
 
 } // namespace traffic_manager

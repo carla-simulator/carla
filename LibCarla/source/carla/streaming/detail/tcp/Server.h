@@ -12,6 +12,7 @@
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/post.hpp>
 
 #include <atomic>
 
@@ -45,12 +46,20 @@ namespace tcp {
     /// is closed.
     template <typename FunctorT1, typename FunctorT2>
     void Listen(FunctorT1 on_session_opened, FunctorT2 on_session_closed) {
-      _io_context.post([=]() {
+      boost::asio::post(_io_context, [=]() {
         OpenSession(
             _timeout,
             std::move(on_session_opened),
             std::move(on_session_closed));
       });
+    }
+
+    void SetSynchronousMode(bool is_synchro) {
+      _synchronous = is_synchro;
+    }
+
+    bool IsSynchronousMode() const {
+      return _synchronous;
     }
 
   private:
@@ -65,6 +74,8 @@ namespace tcp {
     boost::asio::ip::tcp::acceptor _acceptor;
 
     std::atomic<time_duration> _timeout;
+
+    bool _synchronous;
   };
 
 } // namespace tcp

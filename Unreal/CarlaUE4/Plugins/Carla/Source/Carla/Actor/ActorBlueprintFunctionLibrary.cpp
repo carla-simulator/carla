@@ -428,7 +428,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMode;
     ExposureMode.Id = TEXT("exposure_mode");
     ExposureMode.Type = EActorAttributeType::String;
-    ExposureMode.RecommendedValues = { TEXT("manual"), TEXT("histogram") };
+    ExposureMode.RecommendedValues = { TEXT("histogram"), TEXT("manual") };
     ExposureMode.bRestrictToRecommended = true;
 
     // Logarithmic adjustment for the exposure. Only used if a tonemapper is
@@ -441,7 +441,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureCompensation;
     ExposureCompensation.Id = TEXT("exposure_compensation");
     ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("-2.2") };
+    ExposureCompensation.RecommendedValues = { TEXT("0.0") };
     ExposureCompensation.bRestrictToRecommended = false;
 
     // - Manual ------------------------------------------------
@@ -460,7 +460,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ISO; // S
     ISO.Id = TEXT("iso");
     ISO.Type = EActorAttributeType::Float;
-    ISO.RecommendedValues = { TEXT("200.0") };
+    ISO.RecommendedValues = { TEXT("100.0") };
     ISO.bRestrictToRecommended = false;
 
     // Defines the size of the opening for the camera lens.
@@ -468,7 +468,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation Aperture; // N
     Aperture.Id = TEXT("fstop");
     Aperture.Type = EActorAttributeType::Float;
-    Aperture.RecommendedValues = { TEXT("8.0") };
+    Aperture.RecommendedValues = { TEXT("1.4") };
     Aperture.bRestrictToRecommended = false;
 
     // - Histogram ---------------------------------------------
@@ -478,7 +478,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMinBright;
     ExposureMinBright.Id = TEXT("exposure_min_bright");
     ExposureMinBright.Type = EActorAttributeType::Float;
-    ExposureMinBright.RecommendedValues = { TEXT("0.1") };
+    ExposureMinBright.RecommendedValues = { TEXT("10.0") };
     ExposureMinBright.bRestrictToRecommended = false;
 
     // The maximum brightness for auto exposure that limits the upper
@@ -486,7 +486,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ExposureMaxBright;
     ExposureMaxBright.Id = TEXT("exposure_max_bright");
     ExposureMaxBright.Type = EActorAttributeType::Float;
-    ExposureMaxBright.RecommendedValues = { TEXT("2.0") };
+    ExposureMaxBright.RecommendedValues = { TEXT("12.0") };
     ExposureMaxBright.bRestrictToRecommended = false;
 
     // The speed at which the adaptation occurs from a dark environment
@@ -646,6 +646,92 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeNormalsCameraDefinition(Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), TEXT("normals"));
+  AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
+
+  // FOV
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = { TEXT("90.0") };
+  FOV.bRestrictToRecommended = false;
+
+  // Resolution
+  FActorVariation ResX;
+  ResX.Id = TEXT("image_size_x");
+  ResX.Type = EActorAttributeType::Int;
+  ResX.RecommendedValues = { TEXT("800") };
+  ResX.bRestrictToRecommended = false;
+
+  FActorVariation ResY;
+  ResY.Id = TEXT("image_size_y");
+  ResY.Type = EActorAttributeType::Int;
+  ResY.RecommendedValues = { TEXT("600") };
+  ResY.bRestrictToRecommended = false;
+
+  // Lens parameters
+  FActorVariation LensCircleFalloff;
+  LensCircleFalloff.Id = TEXT("lens_circle_falloff");
+  LensCircleFalloff.Type = EActorAttributeType::Float;
+  LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
+  LensCircleFalloff.bRestrictToRecommended = false;
+
+  FActorVariation LensCircleMultiplier;
+  LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
+  LensCircleMultiplier.Type = EActorAttributeType::Float;
+  LensCircleMultiplier.RecommendedValues = { TEXT("0.0") };
+  LensCircleMultiplier.bRestrictToRecommended = false;
+
+  FActorVariation LensK;
+  LensK.Id = TEXT("lens_k");
+  LensK.Type = EActorAttributeType::Float;
+  LensK.RecommendedValues = { TEXT("-1.0") };
+  LensK.bRestrictToRecommended = false;
+
+  FActorVariation LensKcube;
+  LensKcube.Id = TEXT("lens_kcube");
+  LensKcube.Type = EActorAttributeType::Float;
+  LensKcube.RecommendedValues = { TEXT("0.0") };
+  LensKcube.bRestrictToRecommended = false;
+
+  FActorVariation LensXSize;
+  LensXSize.Id = TEXT("lens_x_size");
+  LensXSize.Type = EActorAttributeType::Float;
+  LensXSize.RecommendedValues = { TEXT("0.08") };
+  LensXSize.bRestrictToRecommended = false;
+
+  FActorVariation LensYSize;
+  LensYSize.Id = TEXT("lens_y_size");
+  LensYSize.Type = EActorAttributeType::Float;
+  LensYSize.RecommendedValues = { TEXT("0.08") };
+  LensYSize.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+      ResX,
+      ResY,
+      FOV,
+      LensCircleFalloff,
+      LensCircleMultiplier,
+      LensK,
+      LensKcube,
+      LensXSize,
+      LensYSize});
+
+  Success = CheckActorDefinition(Definition);
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
 {
   FActorDefinition Definition;
@@ -784,11 +870,19 @@ void UActorBlueprintFunctionLibrary::MakeRadarDefinition(
   PointsPerSecond.RecommendedValues = { TEXT("1500") };
   PointsPerSecond.bRestrictToRecommended = false;
 
+  // Noise seed
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
+
   Definition.Variations.Append({
     HorizontalFOV,
     VerticalFOV,
     Range,
-    PointsPerSecond});
+    PointsPerSecond,
+    NoiseSeed});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -841,11 +935,22 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   LowerFOV.Id = TEXT("lower_fov");
   LowerFOV.Type = EActorAttributeType::Float;
   LowerFOV.RecommendedValues = { TEXT("-30.0") };
+  // Horizontal FOV.
+  FActorVariation HorizontalFOV;
+  HorizontalFOV.Id = TEXT("horizontal_fov");
+  HorizontalFOV.Type = EActorAttributeType::Float;
+  HorizontalFOV.RecommendedValues = { TEXT("360.0") };
   // Atmospheric Attenuation Rate.
   FActorVariation AtmospAttenRate;
   AtmospAttenRate.Id = TEXT("atmosphere_attenuation_rate");
   AtmospAttenRate.Type = EActorAttributeType::Float;
   AtmospAttenRate.RecommendedValues = { TEXT("0.004") };
+  // Noise seed
+  FActorVariation NoiseSeed;
+  NoiseSeed.Id = TEXT("noise_seed");
+  NoiseSeed.Type = EActorAttributeType::Int;
+  NoiseSeed.RecommendedValues = { TEXT("0") };
+  NoiseSeed.bRestrictToRecommended = false;
   // Dropoff General Rate
   FActorVariation DropOffGenRate;
   DropOffGenRate.Id = TEXT("dropoff_general_rate");
@@ -868,14 +973,30 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.RecommendedValues = { TEXT("0.0") };
 
   if (Id == "ray_cast") {
-    Definition.Variations.Append(
-        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV,
-            AtmospAttenRate, DropOffGenRate, DropOffIntensityLimit,
-            DropOffAtZeroIntensity, StdDevLidar});
+    Definition.Variations.Append({
+      Channels,
+      Range,
+      PointsPerSecond,
+      Frequency,
+      UpperFOV,
+      LowerFOV,
+      AtmospAttenRate,
+      NoiseSeed,
+      DropOffGenRate,
+      DropOffIntensityLimit,
+      DropOffAtZeroIntensity,
+      StdDevLidar,
+      HorizontalFOV});
   }
   else if (Id == "ray_cast_semantic") {
-    Definition.Variations.Append(
-        {Channels, Range, PointsPerSecond, Frequency, UpperFOV, LowerFOV});
+    Definition.Variations.Append({
+      Channels,
+      Range,
+      PointsPerSecond,
+      Frequency,
+      UpperFOV,
+      LowerFOV,
+      HorizontalFOV});
   }
   else {
     DEBUG_ASSERT(false);
@@ -1009,6 +1130,12 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     EActorAttributeType::Int,
     FString::FromInt(Parameters.NumberOfWheels)});
   Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("generation"),
+    EActorAttributeType::Int,
+    FString::FromInt(Parameters.Generation)});
+  Success = CheckActorDefinition(Definition);
 }
 
 template <typename T, typename Functor>
@@ -1069,6 +1196,11 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
     TEXT("gender"),
     EActorAttributeType::String,
     GetGender(Parameters.Gender)});
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("generation"),
+    EActorAttributeType::Int,
+    FString::FromInt(Parameters.Generation)});
 
   Definition.Attributes.Emplace(FActorAttribute{
     TEXT("age"),
@@ -1389,8 +1521,8 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         RetrieveActorAttributeToFloat("lens_flare_intensity", Description.Variations, 0.1f));
     Camera->SetBloomIntensity(
         RetrieveActorAttributeToFloat("bloom_intensity", Description.Variations, 0.675f));
-    // Exposure
-    if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "manual") == "histogram")
+    // Exposure, histogram mode by default
+    if (RetrieveActorAttributeToString("exposure_mode", Description.Variations, "histogram") == "histogram")
     {
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Histogram);
     }
@@ -1399,18 +1531,18 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       Camera->SetExposureMethod(EAutoExposureMethod::AEM_Manual);
     }
     Camera->SetExposureCompensation(
-        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, -2.2f));
+        RetrieveActorAttributeToFloat("exposure_compensation", Description.Variations, 0.0f));
     Camera->SetShutterSpeed(
         RetrieveActorAttributeToFloat("shutter_speed", Description.Variations, 200.0f));
     Camera->SetISO(
-        RetrieveActorAttributeToFloat("iso", Description.Variations, 200.0f));
+        RetrieveActorAttributeToFloat("iso", Description.Variations, 100.0f));
     Camera->SetAperture(
-        RetrieveActorAttributeToFloat("fstop", Description.Variations, 8.0f));
+        RetrieveActorAttributeToFloat("fstop", Description.Variations, 1.4f));
 
     Camera->SetExposureMinBrightness(
-        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 0.1f));
+        RetrieveActorAttributeToFloat("exposure_min_bright", Description.Variations, 7.0f));
     Camera->SetExposureMaxBrightness(
-        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 2.0f));
+        RetrieveActorAttributeToFloat("exposure_max_bright", Description.Variations, 9.0f));
     Camera->SetExposureSpeedUp(
         RetrieveActorAttributeToFloat("exposure_speed_up", Description.Variations, 3.0f));
     Camera->SetExposureSpeedDown(
@@ -1488,8 +1620,12 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("upper_fov", Description.Variations, Lidar.UpperFovLimit);
   Lidar.LowerFovLimit =
       RetrieveActorAttributeToFloat("lower_fov", Description.Variations, Lidar.LowerFovLimit);
+  Lidar.HorizontalFov =
+      RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, Lidar.HorizontalFov);
   Lidar.AtmospAttenRate =
       RetrieveActorAttributeToFloat("atmosphere_attenuation_rate", Description.Variations, Lidar.AtmospAttenRate);
+  Lidar.RandomSeed =
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, Lidar.RandomSeed);
   Lidar.DropOffGenRate =
       RetrieveActorAttributeToFloat("dropoff_general_rate", Description.Variations, Lidar.DropOffGenRate);
   Lidar.DropOffIntensityLimit =
@@ -1537,7 +1673,7 @@ void UActorBlueprintFunctionLibrary::SetIMU(
   if (Description.Variations.Contains("noise_seed"))
   {
     IMU->SetSeed(
-      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+        RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
   }
   else
   {
@@ -1545,22 +1681,19 @@ void UActorBlueprintFunctionLibrary::SetIMU(
   }
 
   IMU->SetAccelerationStandardDeviation({
-    RetrieveActorAttributeToFloat("noise_accel_stddev_x", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_accel_stddev_y", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_accel_stddev_z", Description.Variations, 0.0f)
-  });
+      RetrieveActorAttributeToFloat("noise_accel_stddev_x", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_accel_stddev_y", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_accel_stddev_z", Description.Variations, 0.0f)});
 
   IMU->SetGyroscopeStandardDeviation({
-    RetrieveActorAttributeToFloat("noise_gyro_stddev_x", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_stddev_y", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_stddev_z", Description.Variations, 0.0f)
-  });
+      RetrieveActorAttributeToFloat("noise_gyro_stddev_x", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_stddev_y", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_stddev_z", Description.Variations, 0.0f)});
 
   IMU->SetGyroscopeBias({
-    RetrieveActorAttributeToFloat("noise_gyro_bias_x", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
-    RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)
-  });
+      RetrieveActorAttributeToFloat("noise_gyro_bias_x", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_bias_y", Description.Variations, 0.0f),
+      RetrieveActorAttributeToFloat("noise_gyro_bias_z", Description.Variations, 0.0f)});
 }
 
 void UActorBlueprintFunctionLibrary::SetRadar(
@@ -1570,14 +1703,24 @@ void UActorBlueprintFunctionLibrary::SetRadar(
   CARLA_ABFL_CHECK_ACTOR(Radar);
   constexpr float TO_CENTIMETERS = 1e2;
 
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    Radar->SetSeed(
+      RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    Radar->SetSeed(Radar->GetRandomEngine()->GenerateRandomSeed());
+  }
+
   Radar->SetHorizontalFOV(
-    RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
+      RetrieveActorAttributeToFloat("horizontal_fov", Description.Variations, 30.0f));
   Radar->SetVerticalFOV(
-    RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
+      RetrieveActorAttributeToFloat("vertical_fov", Description.Variations, 30.0f));
   Radar->SetRange(
-    RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
+      RetrieveActorAttributeToFloat("range", Description.Variations, 100.0f) * TO_CENTIMETERS);
   Radar->SetPointsPerSecond(
-    RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
+      RetrieveActorAttributeToInt("points_per_second", Description.Variations, 1500));
 }
 
 #undef CARLA_ABFL_CHECK_ACTOR

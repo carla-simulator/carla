@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Server/CarlaServer.h"
+#include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/NonCopyable.h"
 
 #include "Misc/CoreDelegates.h"
@@ -18,6 +20,8 @@ struct FEpisodeSettings;
 class FCarlaEngine : private NonCopyable
 {
 public:
+
+  static uint64_t FrameCounter;
 
   ~FCarlaEngine();
 
@@ -35,6 +39,27 @@ public:
   UCarlaEpisode *GetCurrentEpisode()
   {
     return CurrentEpisode;
+  }
+
+  void SetRecorder(ACarlaRecorder *InRecorder)
+  {
+    Recorder = InRecorder;
+  }
+
+  static uint64_t GetFrameCounter()
+  {
+    return FCarlaEngine::FrameCounter;
+  }
+
+  static uint64_t UpdateFrameCounter()
+  {
+    FCarlaEngine::FrameCounter += 1;
+    return FCarlaEngine::FrameCounter;
+  }
+
+  static void ResetFrameCounter(uint64_t Value = 0)
+  {
+    FCarlaEngine::FrameCounter = Value;
   }
 
 private:
@@ -58,6 +83,10 @@ private:
   FWorldObserver WorldObserver;
 
   UCarlaEpisode *CurrentEpisode = nullptr;
+
+  FEpisodeSettings CurrentSettings;
+
+  ACarlaRecorder *Recorder = nullptr;
 
   FDelegateHandle OnPreTickHandle;
 

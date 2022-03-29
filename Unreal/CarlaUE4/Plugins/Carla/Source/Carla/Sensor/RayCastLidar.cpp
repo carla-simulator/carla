@@ -19,7 +19,6 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
 #include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
 
 FActorDefinition ARayCastLidar::GetSensorDefinition()
 {
@@ -31,6 +30,7 @@ ARayCastLidar::ARayCastLidar(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer) {
 
   RandomEngine = CreateDefaultSubobject<URandomEngine>(TEXT("RandomEngine"));
+  SetSeed(Description.RandomSeed);
 }
 
 void ARayCastLidar::Set(const FActorDescription &ActorDescription)
@@ -54,14 +54,16 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
-void ARayCastLidar::Tick(const float DeltaTime)
+void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  ASensor::Tick(DeltaTime);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastLidar::PostPhysTick);
   SimulateLidar(DeltaTime);
 
-  auto DataStream = GetDataStream(*this);
-  DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
+    auto DataStream = GetDataStream(*this);
+    DataStream.Send(*this, LidarData, DataStream.PopBufferFromPool());
+  }
 }
 
 float ARayCastLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const
@@ -95,11 +97,14 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   return Detection;
 }
 
-  bool ARayCastLidar::PreprocessRay() const {
-    if(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate)
-      return false;
-    else
-      return true;
+  void ARayCastLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+    Super::PreprocessRays(Channels, MaxPointsPerChannel);
+
+    for (auto ch = 0u; ch < Channels; ch++) {
+      for (auto p = 0u; p < MaxPointsPerChannel; p++) {
+        RayPreprocessCondition[ch][p] = !(DropOffGenActive && RandomEngine->GetUniformFloat() < Description.DropOffGenRate);
+      }
+    }
   }
 
   bool ARayCastLidar::PostprocessDetection(FDetection& Detection) const
@@ -120,13 +125,18 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
   void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-    LidarData.ResetSerPoints(PointsPerChannel);
+
+    LidarData.ResetMemory(PointsPerChannel);
 
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
       for (auto& hit : RecordedHits[idxChannel]) {
         FDetection Detection = ComputeDetection(hit, SensorTransform);
         if (PostprocessDetection(Detection))
           LidarData.WritePointSync(Detection);
+        else
+          PointsPerChannel[idxChannel]--;
       }
     }
+
+    LidarData.WriteChannelCount(PointsPerChannel);
   }

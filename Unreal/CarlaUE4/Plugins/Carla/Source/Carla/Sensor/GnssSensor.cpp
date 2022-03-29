@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"
@@ -30,12 +32,17 @@ void AGnssSensor::Set(const FActorDescription &ActorDescription)
   UActorBlueprintFunctionLibrary::SetGnss(ActorDescription, this);
 }
 
-void AGnssSensor::Tick(float DeltaSeconds)
+void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  Super::Tick(DeltaSeconds);
+  TRACE_CPUPROFILER_EVENT_SCOPE(AGnssSensor::PostPhysTick);
 
-  carla::geom::Location Location = GetActorLocation();
-
+  FVector ActorLocation = GetActorLocation();
+  ALargeMapManager * LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if (LargeMap)
+  {
+    ActorLocation = LargeMap->LocalToGlobalLocation(ActorLocation);
+  }
+  carla::geom::Location Location = ActorLocation;
   carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
 
   // Compute the noise for the sensor
@@ -48,8 +55,11 @@ void AGnssSensor::Tick(float DeltaSeconds)
   double Longitude = CurrentLocation.longitude + LongitudeBias + LonError;
   double Altitude = CurrentLocation.altitude + AltitudeBias + AltError;
 
-  auto Stream = GetDataStream(*this);
-  Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("AGnssSensor Stream Send");
+    auto Stream = GetDataStream(*this);
+    Stream.Send(*this, carla::geom::GeoLocation{Latitude, Longitude, Altitude});
+  }
 }
 
 void AGnssSensor::SetLatitudeDeviation(float Value)

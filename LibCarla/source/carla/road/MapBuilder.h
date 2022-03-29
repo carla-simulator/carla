@@ -172,6 +172,25 @@ namespace road {
         const double pitch,
         const double roll);
 
+    void AddSignalPositionInertial(
+        const SignId signal_id,
+        const double x,
+        const double y,
+        const double z,
+        const double hdg,
+        const double pitch,
+        const double roll);
+
+    void AddSignalPositionRoad(
+        const SignId signal_id,
+        const RoadId road_id,
+        const double s,
+        const double t,
+        const double zOffset,
+        const double hOffset,
+        const double pitch,
+        const double roll);
+
     element::RoadInfoSignal* AddSignalReference(
         Road* road,
         const SignId signal_id,
@@ -366,6 +385,10 @@ namespace road {
 
     /// Generates a default validity field for signal references with missing validity record in OpenDRIVE
     void GenerateDefaultValiditiesForSignalReferences();
+
+    /// Removes signal references with lane validity equal to [0,0]
+    /// as they have no effect on any road
+    void RemoveZeroLaneValiditySignalReferences();
 
     /// Checks signals overlapping driving lanes and emits a warning
     void CheckSignalsOnRoads(Map &map);

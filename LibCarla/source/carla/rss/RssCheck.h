@@ -144,6 +144,11 @@ public:
   /// @brief destructor
   ~RssCheck();
 
+  /// @brief get the logger of this
+  std::shared_ptr<spdlog::logger> GetLogger() {
+    return _logger;
+  }
+
   /// @brief main function to trigger the RSS check at a certain point in time
   ///
   /// This function has to be called cyclic with increasing timestamps to ensure
@@ -174,6 +179,9 @@ public:
 
   /// @brief sets the current log level
   void SetLogLevel(const spdlog::level::level_enum &log_level);
+
+  /// @brief sets the current log level
+  void SetMapLogLevel(const spdlog::level::level_enum &map_log_level);
 
   /// @returns the current mode for respecting the road boundaries (@see also
   /// RssSensor::GetRoadBoundariesMode())

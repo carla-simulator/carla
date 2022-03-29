@@ -27,27 +27,53 @@
     - var_name: semantic_tags
       type: list(int)
       doc: >
-        A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with "pole" and "traffic light". These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](ref_sensors.md#semantic-segmentation-camera). 
+        A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with `Pole` and `TrafficLight`. These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](ref_sensors.md#semantic-segmentation-camera). 
     - var_name: type_id
       type: str
       doc: >
-        The identifier of the blueprint this actor was based on, e.g. "vehicle.ford.mustang".
+        The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.
 
     # - METHODS ----------------------------
     methods:
+    - def_name: add_angular_impulse
+      params:
+      - param_name: angular_impulse
+        type: carla.Vector3D
+        param_units: degrees*s
+        doc: >
+          Angular impulse vector in global coordinates. 
+      doc: >
+        Applies an angular impulse at the center of mass of the actor. This method should be used for instantaneous torques, usually applied once. Use __<font color="#7fb800">add_torque()</font>__ to apply rotation forces over a period of time.
+    # --------------------------------------
+    - def_name: add_force
+      params:
+      - param_name: force
+        type: carla.Vector3D
+        param_units: N
+        doc: >
+          Force vector in global coordinates. 
+      doc: >
+        Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
+    # --------------------------------------
     - def_name: add_impulse
       params:
       - param_name: impulse
         type: carla.Vector3D
+        param_units: N*s
+        doc: >
+          Impulse vector in global coordinates. 
       doc: >
-        Adds an impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
+        Applies an impulse at the center of mass of the actor. This method should be used for instantaneous forces, usually applied once. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.
     # --------------------------------------
-    - def_name: add_angular_impulse
+    - def_name: add_torque
       params:
-      - param_name: impulse
+      - param_name: torque
         type: carla.Vector3D
+        param_units: degrees
+        doc: >
+          Torque vector in global coordinates. 
       doc: >
-        Adds an angular impulse to the actor. The parameter `impulse` determines magnitude and global axis where it is applied.  
+        Applies a torque at the center of mass of the actor. This method should be used for torques that are applied over a certain period of time. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply a torque that only lasts an instant.  
     # --------------------------------------
     - def_name: destroy
       return: bool
@@ -56,18 +82,102 @@
       warning: >
         This method blocks the script until the destruction is completed by the simulator.
     # --------------------------------------
+    - def_name: disable_constant_velocity
+      doc: >
+        Disables any constant velocity previously set for a carla.Vehicle actor.  
+    # --------------------------------------
+    - def_name: enable_chrono_physics
+      params:
+        - param_name: max_substeps
+          type: int
+          doc: >
+            Max number of Chrono substeps
+        - param_name: max_substep_delta_time
+          type: int
+          doc: >
+            Max size of substep
+        - param_name: vehicle_json
+          type: str
+          doc: >
+            Path to vehicle json file relative to `base_json_path`
+        - param_name: powertrain_json
+          type: str
+          doc: >
+            Path to powertrain json file relative to `base_json_path`
+        - param_name: tire_json
+          type: str
+          doc: >
+            Path to tire json file relative to `base_json_path`
+        - param_name: base_json_path
+          type: str
+          doc: >
+            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).
+      doc: >
+        Enables Chrono physics on a spawned vehicle.
+      note: >
+        Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+      warning: >
+        Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+    # --------------------------------------
+    - def_name: enable_constant_velocity
+      params:
+      - param_name: velocity
+        type: carla.Vector3D
+        doc: >
+          Velocity vector in local space.  
+        param_units: m/s
+      doc: >
+        Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
+      note: >
+        Only carla.Vehicle actors can use this method.  
+      warning: >
+        Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
+    # --------------------------------------
+    - def_name: show_debug_telemetry
+      params:
+      - param_name: enabled
+        type: bool
+        default: True
+      doc: >
+        Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so if you enable a second one, the previous will be automatically disabled.
+    # --------------------------------------
+    - def_name: open_door
+      params:
+      - param_name: door_idx
+        type: carla.VehicleDoor
+        doc: >
+          door index
+      doc: >
+        Open the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to open all available doors.
+      note: >
+        Only carla.Vehicle actors can use this method.
+    # --------------------------------------
+    - def_name: close_door
+      params:
+      - param_name: door_idx
+        type: carla.VehicleDoor
+        doc: >
+          door index
+      doc: >
+        Close the door door_idx if the vehicle has it. Use carla.VehicleDoor.All to close all available doors.
+      note: >
+        Only carla.Vehicle actors can use this method.
+    # --------------------------------------
     - def_name: get_acceleration
       return: carla.Vector3D
+      return_units: m/s<sup>2</sup>
       doc: >
         Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
+      return_units: deg/s
       doc: >
         Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_location
       return: carla.Location
+      return_units: meters
       doc: >
         Returns the actor's location the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
@@ -78,6 +188,7 @@
     # --------------------------------------
     - def_name: get_velocity
       return: carla.Vector3D
+      return_units: m/s
       doc: >
         Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.
     # --------------------------------------
@@ -86,17 +197,19 @@
       doc: >
         Returns the world this actor belongs to.
     # --------------------------------------
-    - def_name: set_angular_velocity
+    - def_name: set_target_angular_velocity
       params:
       - param_name: angular_velocity
         type: carla.Vector3D
+        param_units: deg/s
       doc: >
-        Changes the actor's angular velocity vector.
+        Sets the actor's angular velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
     # --------------------------------------
     - def_name: set_location
       params:
       - param_name: location
         type: carla.Location
+        param_units: meters
       doc: >
         Teleports the actor to a given location.
     # --------------------------------------
@@ -115,15 +228,22 @@
       doc: >
         Teleports the actor to a given transform (location and rotation). 
     # --------------------------------------
-    - def_name: set_velocity
+    - def_name: set_target_velocity
       params:
       - param_name: velocity
         type: carla.Vector3D
       doc: >
-        Sets the actor's velocity vector.
+        Sets the actor's velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+    - def_name: set_enable_gravity
+      params:
+      - param_name: enabled
+        type: bool
+      doc: >
+        Enables or disables gravity for the actor. __Default__ is True.
+
   - class_name: VehicleLightState
     # - DESCRIPTION ------------------------
     doc: >
@@ -167,7 +287,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        The vehicle's collider volume.
+        Bounding box containing the geometry of the vehicle. Its location and rotation are relative to the vehicle it is attached to. 
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
@@ -198,16 +318,17 @@
       return: carla.VehicleLightState
       doc: >
         Returns a flag representing the vehicle light state,
-        this represents which lights are active or not
+        this represents which lights are active or not.
     # --------------------------------------
     - def_name: get_physics_control
       return: carla.VehiclePhysicsControl
       doc: >
         The simulator returns the last physics control applied to this vehicle.
-      warning: This function does call the simulator to retrieve the value.
+      warning: This method does call the simulator to retrieve the value.
     # --------------------------------------
     - def_name: get_speed_limit
       return: float
+      return_units: m/s
       doc: >
         The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
     # --------------------------------------
@@ -221,6 +342,23 @@
       doc: >
         The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator.
         If no traffic light is currently affecting the vehicle, returns <b>green</b>.
+    # --------------------------------------
+    - def_name: enable_carsim
+      params:
+      - param_name: simfile_path
+        type: str
+        doc: >
+          Path to the `.simfile` file with the parameters of the simulation.
+      doc: >
+        Enables the CarSim physics solver for this particular vehicle. In order for this function to work, there needs to be a valid license manager running on the server side.
+        The control inputs are redirected to CarSim which will provide the position and orientation of the vehicle for every frame.
+    # --------------------------------------
+    - def_name: use_carsim_road
+      params:
+      - param_name: enabled
+        type: bool
+      doc: >
+        Enables or disables the usage of CarSim vs terrain file specified in the `.simfile`. By default this option is disabled and CarSim uses unreal engine methods to process the geometry of the scene.
     # --------------------------------------
     - def_name: set_autopilot
       params:
@@ -244,6 +382,27 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+    - def_name: set_wheel_steer_direction
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+        - param_name: angle_in_deg
+          type: float
+      doc: >
+        Sets the angle of a vehicle's wheel visually.
+      warning: >
+        Does not affect the physics of the vehicle.
+    # --------------------------------------
+    - def_name: get_wheel_steer_angle
+      return: float
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+      doc: >
+        Returns the physics angle in degrees of a vehicle's wheel.
+      note: >
+        Returns the angle based on the physics of the wheel, not the visual angle.
+    # --------------------------------------
 
   - class_name: Walker
     parent: carla.Actor
@@ -255,7 +414,7 @@
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
-        The walker's collider defined by a bounding box.
+        Bounding box containing the geometry of the walker. Its location and rotation are relative to the walker it is attached to. 
     # - METHODS ----------------------------
     methods:
     - def_name: apply_control
@@ -265,17 +424,52 @@
       doc: >
         On the next tick, the control will move the walker in a certain direction with a certain speed. Jumps can be commanded too.   
     # --------------------------------------
-    - def_name: apply_control
-      params:
-      - param_name: control
-        type: carla.WalkerBoneControl
-      doc: >
-        On the next tick, the control defines a list of bone transformations that will be applied to the walker's skeleton. 
-    # --------------------------------------
     - def_name: get_control
       return: carla.WalkerControl
       doc: >
         The client returns the control applied to this walker during last tick. The method does not call the simulator.
+    # --------------------------------------
+    - def_name: get_bones
+      return: carla.WalkerBoneControlOut
+      doc: >
+        Return the structure with all the bone transformations from the actor. For each bone, we get the name and its transform in three different spaces:
+          - name: bone name
+          - world: transform in world coordinates
+          - component: transform based on the pivot of the actor
+          - relative: transform based on the bone parent
+    # --------------------------------------
+    - def_name: set_bones
+      params:
+      - param_name: bones
+        type: carla.WalkerBoneControlIn
+        param_units: list of pairs (bone_name, transform) for the bones that we want to set
+      doc: >
+        Set the bones of the actor. For each bone we want to set we use a relative transform. Only the bones in this list will be set. For each bone you need to setup this info:
+          - name: bone name
+          - relative: transform based on the bone parent
+    # --------------------------------------
+    - def_name: blend_pose
+      params:
+      - param_name: blend_value
+        type: float
+        param_units: value from 0 to 1 with the blend percentage
+      doc: >
+        Set the blending value of the custom pose with the animation. The values can be:
+          - 0: will show only the animation
+          - 1: will show only the custom pose (set by the user with set_bones())
+          - any other: will interpolate all the bone positions between animation and the custom pose
+    # --------------------------------------
+    - def_name: show_pose
+      doc: >
+        Show the custom pose and hide the animation (same as calling blend_pose(1))
+    # --------------------------------------
+    - def_name: hide_pose
+      doc: >
+        Hide the custom pose and show the animation (same as calling blend_pose(0))
+    # --------------------------------------
+    - def_name: get_pose_from_animation
+      doc: >
+        Make a copy of the current animation frame as the custom pose. Initially the custom pose is the neutral pedestrian pose.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -291,6 +485,7 @@
       params:
       - param_name: destination
         type: carla.Location
+        param_units: meters
       doc: >
         Sets the destination that the pedestrian will reach.
     # --------------------------------------
@@ -307,8 +502,9 @@
       - param_name: speed
         type: float
         default: 1.4
+        param_units: m/s
         doc: >
-          speed in m/s. An easy walking speed is set by default. 
+          An easy walking speed is set by default. 
       doc: >
         Sets a speed for the walker in meters per second.
     # --------------------------------------
@@ -330,7 +526,7 @@
   - class_name: TrafficLightState
     # - DESCRIPTION ------------------------
     doc: >
-      All possible states for traffic lights. These can either change at a specific time step or be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to see an example. 
+      All possible states for traffic lights. These can either change at a specific time step or be changed manually. The snipet in carla.TrafficLight.set_state changes the state of a traffic light on the fly.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: Red
@@ -346,7 +542,7 @@
     doc: >
       A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
            
-        Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually. Take a look at this [recipe](ref_code_recipes.md#traffic-lights-recipe) to learn how to do so. 
+        Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: state
@@ -369,6 +565,7 @@
     # --------------------------------------
     - def_name: get_elapsed_time
       return: float
+      return_units: seconds
       doc: >
         The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.
     # --------------------------------------
@@ -377,13 +574,13 @@
       doc: >
         Returns all traffic lights in the group this one belongs to. 
       note: >
-        This function calls the simulator.
+        This method calls the simulator.
     # --------------------------------------
     - def_name: reset_group
       doc: >
         Resets the state of the traffic lights of the group to the initial state at the start of the simulation.
       note: >
-        This function calls the simulator.
+        This method calls the simulator.
     # --------------------------------------
     - def_name: get_pole_index
       return: int
@@ -397,18 +594,21 @@
     # --------------------------------------
     - def_name: get_green_time
       return: float
+      return_units: seconds 
       doc: >
-        The client returns the seconds set for the traffic light to be green according to last tick. The method does not call the simulator.
+        The client returns the time set for the traffic light to be green, according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_red_time
       return: float
+      return_units: seconds
       doc: >
-        The client returns the seconds set for the traffic light to be red according to last tick. The method does not call the simulator.
+        The client returns the time set for the traffic light to be red, according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_yellow_time
       return: float
+      return_units: seconds
       doc: >
-        The client returns the the seconds set for the traffic light to be yellow according to last tick. The method does not call the simulator.
+        The client returns the time set for the traffic light to be yellow, according to last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: set_state
       params:
@@ -421,23 +621,93 @@
       params:
       - param_name: green_time
         type: float
+        param_units: seconds
         doc: >
-          Sets a given time (in seconds) for the green light to be active.
+          Sets a given time for the green light to be active.
     # --------------------------------------
     - def_name: set_red_time
       params:
       - param_name: red_time
         type: float
+        param_units: seconds
       doc: >
-        Sets a given time (in seconds) for the red state to be active.
+        Sets a given time for the red state to be active.
     # --------------------------------------
     - def_name: set_yellow_time
       params:
       - param_name: yellow_time
         type: float
+        param_units: seconds
       doc: >
-        Sets a given time (in seconds) for the yellow light to be active.
+        Sets a given time for the yellow light to be active.
+    # --------------------------------------
+    - def_name: get_affected_lane_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the positions and lanes where the traffic light is having an effect.
+    # --------------------------------------
+    - def_name: get_light_boxes
+      return: list(carla.BoundingBox)
+      doc: >
+        Returns a list of the bounding boxes encapsulating each light box of the traffic light.
+    # --------------------------------------
+    - def_name: get_opendrive_id
+      return: str
+      doc: >
+        Returns the OpenDRIVE id of this traffic light.
+    # --------------------------------------
+    - def_name: get_stop_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the stop position for the traffic light. These waypoints are computed from the trigger boxes of the traffic light that indicate where a vehicle should stop.
     # --------------------------------------
     - def_name: __str__
+    # --------------------------------------
+  - class_name: VehicleWheelLocation
+    doc: >
+      `enum` representing the position of each wheel on a vehicle. 
+      Used to identify the target wheel when setting an angle in carla.Vehicle.set_wheel_steer_direction or carla.Vehicle.get_wheel_steer_angle.
+  # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: FL_Wheel
+      doc: >
+        Front left wheel of a 4 wheeled vehicle.
+    - var_name: FR_Wheel
+      doc: >
+        Front right wheel of a 4 wheeled vehicle.
+    - var_name: BL_Wheel
+      doc: >
+        Back left wheel of a 4 wheeled vehicle.
+    - var_name: BR_Wheel
+      doc: >
+        Back right wheel of a 4 wheeled vehicle.
+    - var_name: Front_Wheel
+      doc: >
+        Front wheel of a 2 wheeled vehicle.
+    - var_name: Back_Wheel
+      doc: >
+        Back wheel of a 2 wheeled vehicle.
+    # --------------------------------------
+  - class_name: VehicleDoor
+    doc: >
+      Possible index representing the possible doors that can be open.
+      Notice that not all possible doors are able to open in some vehicles.
+  # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: FL
+      doc: >
+        Front left door.
+    - var_name: FR
+      doc: >
+        Front right door.
+    - var_name: RL
+      doc: >
+        Back left door.
+    - var_name: RR
+      doc: >
+        Back right door.
+    - var_name: All
+      doc: >
+        Represents all doors.
     # --------------------------------------
 ...

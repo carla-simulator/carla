@@ -11,6 +11,7 @@
 #include "TrafficLightState.h"
 #include "TrafficLightComponent.h"
 #include "Containers/Map.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "TrafficLightController.generated.h"
 
 class ATrafficLightGroup;
@@ -73,6 +74,13 @@ public:
   void AddTrafficLight(UTrafficLightComponent * TrafficLight);
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
+  void RemoveTrafficLight(UTrafficLightComponent * TrafficLight);
+
+  void AddCarlaActorTrafficLight(FCarlaActor* CarlaActor);
+
+  void RemoveCarlaActorTrafficLight(FCarlaActor* CarlaActor);
+
+  UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
   bool IsCycleFinished() const;
 
   UFUNCTION(Category = "Traffic Controller", BlueprintCallable)
@@ -117,6 +125,15 @@ public:
 
   const ATrafficLightGroup* GetGroup() const;
 
+  ETrafficLightState GetCurrentLightState() const
+  {
+    return CurrentLightState;
+  }
+  void SetCurrentLightState(ETrafficLightState NewState)
+  {
+    CurrentLightState = NewState;
+  }
+
 private:
 
   void SetStateTime(const ETrafficLightState State, float NewTime);
@@ -140,6 +157,8 @@ private:
   UPROPERTY(Category = "Traffic Controller", EditAnywhere)
   TArray<UTrafficLightComponent *> TrafficLights;
 
+  TArray<FCarlaActor *> TrafficLightCarlaActors;
+
   UPROPERTY(Category = "Traffic Controller", VisibleAnywhere)
   ATrafficLightGroup* TrafficLightGroup;
 
@@ -150,4 +169,5 @@ private:
   UPROPERTY()
   float ElapsedTime = 0;
 
+  ETrafficLightState CurrentLightState = ETrafficLightState::Green;
 };

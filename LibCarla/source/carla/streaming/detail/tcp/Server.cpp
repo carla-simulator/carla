@@ -6,6 +6,8 @@
 
 #include "carla/streaming/detail/tcp/Server.h"
 
+#include <boost/asio/post.hpp>
+
 #include "carla/Logging.h"
 
 #include <memory>
@@ -18,7 +20,8 @@ namespace tcp {
   Server::Server(boost::asio::io_context &io_context, endpoint ep)
     : _io_context(io_context),
       _acceptor(_io_context, std::move(ep)),
-      _timeout(time_duration::seconds(10u)) {}
+      _timeout(time_duration::seconds(10u)),
+      _synchronous(false) {}
 
   void Server::OpenSession(
       time_duration timeout,
@@ -26,7 +29,7 @@ namespace tcp {
       ServerSession::callback_function_type on_closed) {
     using boost::system::error_code;
 
-    auto session = std::make_shared<ServerSession>(_io_context, timeout);
+    auto session = std::make_shared<ServerSession>(_io_context, timeout, *this);
 
     auto handle_query = [on_opened, on_closed, session](const error_code &ec) {
       if (!ec) {
@@ -38,7 +41,7 @@ namespace tcp {
 
     _acceptor.async_accept(session->_socket, [=](error_code ec) {
       // Handle query and open a new session immediately.
-      _io_context.post([=]() { handle_query(ec); });
+      boost::asio::post(_io_context, [=]() { handle_query(ec); });
       OpenSession(timeout, on_opened, on_closed);
     });
   }

@@ -27,7 +27,7 @@ public:
 
   void Set(const FActorDescription &Description) override;
 
-  void Tick(float DeltaSeconds) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
 private:
 

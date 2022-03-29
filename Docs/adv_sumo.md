@@ -3,12 +3,12 @@
 
 CARLA has developed a co-simulation feature with SUMO. This allows to distribute the tasks at will, and exploit the capabilities of each simulation in favour of the user.
 
-*   [__Requisites__](#requisites)
-*   [__Run a custom co-simulation__](#run-a-custom-co-simulation)
-	*   [Create CARLA vtypes](#create-carla-vtypes)
-	*   [Create the SUMO net](#create-the-sumo-net)
-	*   [Run the synchronization](#run-the-synchronization)
-*   [__Spawn NPCs controlled by SUMO__](#spawn-npcs-controlled-by-sumo)
+*   [__Requisites__](#requisites)  
+*   [__Run a custom co-simulation__](#run-a-custom-co-simulation)  
+	*   [Create CARLA vtypes](#create-carla-vtypes)  
+	*   [Create the SUMO net](#create-the-sumo-net)  
+	*   [Run the synchronization](#run-the-synchronization)  
+*   [__Spawn NPCs controlled by SUMO__](#spawn-npcs-controlled-by-sumo)  
 
 ---
 ## Requisites
@@ -27,13 +27,13 @@ Run a CARLA simulation with __Town04__.
 cd ~/carla
 ./CarlaUE4.sh
 cd PythonAPI/util
-python config.py --map Town04
+python3 config.py --map Town04
 ```
 
 Then, run the SUMO co-simulation example.  
 ```sh
 cd ~/carla/Co-Simulation/Sumo
-python run_synchronization.py examples/Town04.sumocfg  --sumo-gui
+python3 run_synchronization.py examples/Town04.sumocfg  --sumo-gui
 ```
 !!! Important
     
@@ -83,7 +83,7 @@ Once a simulation is ready and saved as a `.sumocfg`, it is ready to run. There 
 *   __`--tls-manager`__ *(default: none)* — Choose which simulator should manage the traffic lights. The other will update those accordingly. The options are `carla`, `sumo`, and `none`. If `none` is chosen, traffic lights will not be synchronized. Each vehicle would only obey the traffic lights in the simulator that spawn it. 
 
 ```sh
-python run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
+python3 run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
 ```
 
 !!! Warning
@@ -94,9 +94,9 @@ python run_synchronization.py <SUMOCFG FILE> --tls-manager carla --sumo-gui
 
 The co-simulation with SUMO makes for an additional feature. Vehicles can be spawned in CARLA through SUMO, and managed by the later as the Traffi Manager would do.  
 
-The script `spawn_npc_sumo.py` is almost equivalent to the already-known `spawn_npc.py`. This script automatically generates a SUMO network in a temporal folder, based on the active town in CARLA. The script will create random routes and let the vehicles roam around.
+The script `spawn_npc_sumo.py` is almost equivalent to the already-known `generate_traffic.py`. This script automatically generates a SUMO network in a temporal folder, based on the active town in CARLA. The script will create random routes and let the vehicles roam around.
 
-As the script runs a synchronous simulation, and spawns vehicles in it, the arguments are the same that appear in `run_synchronization.py` and `spawn_npc.py`.
+As the script runs a synchronous simulation, and spawns vehicles in it, the arguments are the same that appear in `run_synchronization.py` and `generate_traffic.py`.
 
 *   __`--host`__ *(default: 127.0.0.1)* — IP of the host server.  
 *   __`--port`__ *(default: 2000)* — TCP port to listen to.  
@@ -114,7 +114,7 @@ As the script runs a synchronous simulation, and spawns vehicles in it, the argu
 # Spawn 10 vehicles, that will be managed by SUMO instead of Traffic Manager.
 # CARLA in charge of traffic lights.
 # Open a window for SUMO visualization.
-python spawn_sumo_npc.py -n 10 --tls-manager carla --sumo-gui
+python3 spawn_sumo_npc.py -n 10 --tls-manager carla --sumo-gui
 ```
 
 ---
@@ -125,7 +125,7 @@ Open CARLA and mess around for a while. If there are any doubts, feel free to po
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

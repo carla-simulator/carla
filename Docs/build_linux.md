@@ -1,110 +1,41 @@
 # Linux build
 
-* [__Linux build command summary__](#linux-build-command-summary)
-* [__Requirements__](#requirements)
-	* [System specifics](#system-specifics)
-	* [Dependencies](#dependencies)
-* [__GitHub__](#github)
-* [__Unreal Engine__](#unreal-engine)
-* [__CARLA build__](#carla-build)
-	* [Clone repository](#clone-repository)
-	* [Get assets](#get-assets)
-	* [Set the environment variable](#set-the-environment-variable)
-	* [make CARLA](#make-carla)
+This guide details how to build CARLA from source on Linux. There are two parts. Part one details system requirements and installations of required software, and part two details how to actually build and run CARLA.  
 
-The build process can be quite long and tedious. The **[F.A.Q.](build_faq.md)** section contains the most common issues and solutions that appear during the installation. However, the CARLA forum is open for anybody to post unexpected issues, doubts or suggestions. There is a specific section for installation issues on Linux. Feel free to login and become part of the community.
+The build process is long (4 hours or more) and involves several kinds of software. It is highly recommended to read through the guide fully before starting. 
 
-<div class="build-buttons">
-<p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
-</p>
-</div>
+If you come across errors or difficulties then have a look at the **[F.A.Q.](build_faq.md)** page which offers solutions for the most common complications. Alternatively, use the [CARLA forum](https://github.com/carla-simulator/carla/discussions) to post any queries you may have.
+
+- [__Part One: Prerequisites__](#part-one-prerequisites)
+    - [System requirements](#system-requirements)
+    - [Software requirements](#software-requirements)
+        - [Unreal Engine](#unreal-engine)
+- [__Part Two: Build CARLA__](#part-two-build-carla)
+    - [Clone the CARLA repository](#clone-the-carla-repository)
+    - [Get assets](#get-assets)
+    - [Set Unreal Engine environment variable](#set-unreal-engine-environment-variable)
+    - [Build CARLA](#build-carla)
+    - [Other make commands](#other-make-commands)
 
 ---
-## Linux build command summary
+## Part One: Prerequisites
 
-<details>
-<summary> Show command lines to build on Linux</summary>
+### System requirements
 
-```sh
-# Make sure to meet the minimum requirements and read the documentation to understand each step.
-
-# Install dependencies.
-sudo apt-get update &&
-sudo apt-get install wget software-properties-common &&
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test &&
-wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add - &&
-sudo apt-add-repository "deb http://apt.llvm.org/$(lsb_release -c --short)/ llvm-toolchain-$(lsb_release -c --short)-8 main" &&
-sudo apt-get update
-
-# Additional dependencies for Ubuntu 18.04.
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
-pip2 install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1
-
-# Additional dependencies for previous Ubuntu versions.
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
-pip2 install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1 &&
-pip2 install --user distro &&
-pip3 install --user distro
-
-# Change default clang version.
-sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
-sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
-
-# Get a GitHub and a UE account, and link both.
-# Install git.
-
-# Download Unreal Engine 4.24.
-git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.24
-cd ~/UnrealEngine_4.24
-
-# Download and install the UE patch
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
-patch --strip=4 < ~/430667-13636743-patch.txt
-
-# Build UE
-./Setup.sh && ./GenerateProjectFiles.sh && make
-
-# Open the UE Editor to check everything works properly.
-cd ~/UnrealEngine_4.24/Engine/Binaries/Linux && ./UE4Editor
-
-# Clone the CARLA repository.
-git clone https://github.com/carla-simulator/carla
-
-# Get the CARLA assets.
-cd ~/carla
-./Update.sh
-
-# Set the environment variable.
-export UE4_ROOT=~/UnrealEngine_4.24
-
-# make the CARLA server and the CARLA client.
-make launch
-make PythonAPI
-
-# Press play in the Editor to initialize the server, and run an example script to test CARLA.
-cd PythonAPI/examples
-python3 spawn_npc.py
-```
-</details>
-
----
-## Requirements
-
-### System specifics
-
-* __Ubuntu 18.04.__ CARLA provides support for previous Ubuntu versions up to 16.04. **However** proper compilers are needed for UE to work properly. The required dependencies for both Ubuntu 18.04 and previous versions are listed below. Make sure to install the ones corresponding to the system.
-* __30GB disk space.__ Installing all the software needed and CARLA itself will require quite a lot of space, especially Unreal Engine. Make sure to have around 30/50GB of free disk space.
-* __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 4GB GPU. A dedicated GPU is highly recommended for machine learning.
-* __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Be sure neither the firewall nor any other application block these.
+* __Ubuntu 18.04.__ CARLA provides support for previous Ubuntu versions up to 16.04. **However** proper compilers are needed for Unreal Engine to work properly. Dependencies for Ubuntu 18.04 and previous versions are listed separatedly below. Make sure to install the ones corresponding to your system.
+* __130 GB disk space.__ Carla will take around 31 GB and Unreal Engine will take around 91 GB so have about 130 GB free to account for both of these plus additional minor software installations. 
+* __An adequate GPU.__ CARLA aims for realistic simulations, so the server needs at least a 6 GB GPU although 8 GB is recommended. A dedicated GPU is highly recommended for machine learning. 
+* __Two TCP ports and good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
 
 
-### Dependencies
+!!! Warning
+    __If you are upgrading from CARLA 0.9.12 to 0.9.13__: you must first upgrade the CARLA fork of the UE4 engine to the latest version. See the [__Unreal Engine__](#unreal-engine) section for details on upgrading UE4
 
-CARLA needs many dependencies to run. Some of them are built automatically during this process, such as *Boost.Python*. Others are binaries that should be installed before starting the build (*cmake*, *clang*, different versions of *Python* and much more). In order to do so, run the commands below in a terminal window.
+
+
+### Software requirements
+
+CARLA requires many different kinds of software to run. Some are built during the CARLA build process itself, such as *Boost.Python*. Others are binaries that should be installed before starting the build (*cmake*, *clang*, different versions of *Python*, etc.). To install these requirements, run the following commands:
 
 ```sh
 sudo apt-get update &&
@@ -115,94 +46,96 @@ sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8
 sudo apt-get update
 ```
 
-!!! Important
-    The following commands differ depending on the Ubuntu version. While the only change is `libpng16-dev` becoming `libpng-dev`, the full set of commands is here twice to ease the copy.
+!!! Warning
+    The following commands depend on your Ubuntu version. Make sure to choose accordingly. 
 
 __Ubuntu 18.04__.
+
 ```sh
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
-pip2 install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1 &&
-pip2 install --user distro &&
-pip3 install --user distro
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
 ```
 __Previous Ubuntu__ versions.
+
 ```sh
-sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev libxerces-c-dev &&
-pip2 install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1 &&
-pip2 install --user distro &&
-pip3 install --user distro
+sudo apt-get install build-essential clang-8 lld-8 g++-7 cmake ninja-build libvulkan1 python python-pip python-dev python3-dev python3-pip libpng16-dev libtiff5-dev libjpeg-dev tzdata sed curl unzip autoconf libtool rsync libxml2-dev git
 ```
 
-To avoid compatibility issues between Unreal Engine and the CARLA dependencies, it is recommended to use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
+__All Ubuntu systems__.
+
+To avoid compatibility issues between Unreal Engine and the CARLA dependencies, use the same compiler version and C++ runtime library to compile everything. The CARLA team uses clang-8 and LLVM's libc++. Change the default clang version to compile Unreal Engine and the CARLA dependencies.
 
 ```sh
 sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/clang++ 180 &&
 sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 ```
 
+Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip` or `pip3`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
+
+```sh
+# For Python 3
+pip3 -V
+
+# For Python 2
+pip -V
+```
+
+If you need to upgrade:
+
+```sh
+# For Python 3
+pip3 install --upgrade pip
+
+# For Python 2
+pip install --upgrade pip
+```
+
+You must install the following Python dependencies:
+
+```sh
+pip install --user setuptools &&
+pip3 install --user -Iv setuptools==47.3.1 &&
+pip install --user distro &&
+pip3 install --user distro &&
+pip install --user wheel &&
+pip3 install --user wheel auditwheel
+```
+
 ---
-## GitHub
 
-A [GitHub](https://github.com/) account will be needed, as CARLA content is organized in different repositories in there. Also, [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) will be used in this build guide when facilitating commands to be run in terminal.
-
-In order to access the Unreal Engine repositories, which are set to private, create an [Unreal Engine](https://www.unrealengine.com/en-US/feed) account and connect it to a GitHub account. To do so, there is a section in Unreal Engine's profile settings under the name of __Connected accounts__. [Here](https://www.unrealengine.com/en-US/blog/updated-authentication-process-for-connecting-epic-github-accounts) is a brief explanation just in case.
-
-!!! Warning
-    New Unreal Engine accounts need activation. After creating the account, a verification mail will be sent. Check it out, or the UE repository will be shown as non-existent in the following steps.
-
----
 ## Unreal Engine
 
-The current version of CARLA runs on __Unreal Engine 4.24__ only. The path is irrelevant, but for the sake of this tutorial, installation will be done under `~/UnrealEngine_4.24`. If the path chosen differs, remember to change it accordingly when running the commands on terminal.
+Starting with version 0.9.12, CARLA uses a modified fork of Unreal Engine 4.26. This fork contains patches specific to CARLA.
 
-!!! Note
-    Alternatively, there is this [guide](https://docs.unrealengine.com/en-US/Platforms/Linux/BeginnerLinuxDeveloper/SettingUpAnUnrealWorkflow/index.html) to build UE on Linux. When consulting it, remember that CARLA will need the __4.24 release__, not the latest.
+Be aware that to download this fork of Unreal Engine, __you need to have a GitHub account linked to Unreal Engine's account__. If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further.
 
-Clone the content for Unreal Engine 4.24 in a local computer.
+__1.__ Clone the content for CARLA's fork of Unreal Engine 4.26 to your local computer:
+
 ```sh
-git clone --depth=1 -b 4.24 https://github.com/EpicGames/UnrealEngine.git ~/UnrealEngine_4.24
+    git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git ~/UnrealEngine_4.26
 ```
-Get into said folder. Remember, this is the path where UE4.24 has been cloned.
+__2.__ Navigate into the directory where you cloned the repository:
 ```sh
-cd ~/UnrealEngine_4.24
-```
-
-Get a patch for Unreal Engine. The patch fixes some Vulkan visualization issues that may occur when changing the map. Download and install it with the following commands.
-```sh
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
-patch --strip=4 < ~/430667-13636743-patch.txt
+    cd ~/UnrealEngine_4.26
 ```
 
-Make the build.
+__3.__ Make the build. This may take an hour or two depending on your system. 
 ```sh
-./Setup.sh && ./GenerateProjectFiles.sh && make
+    ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
 
-!!! Warning
-    If UE has already been built, install the patch and make the build again.
-
-Unreal Engine should be installed in the system. Run `Engine/Binaries/Linux/UE4Editor.sh` to open the Editor and check it out.
+__4.__ Open the Editor to check that Unreal Engine has been installed properly.
 ```sh
-cd ~/UnrealEngine_4.24/Engine/Binaries/Linux && ./UE4Editor
+    cd ~/UnrealEngine_4.26/Engine/Binaries/Linux && ./UE4Editor
 ```
-
-In case something went wrong, it is related with Unreal Engine There is not much CARLA can do about it. However, the [build documentation](https://github.com/EpicGames/UnrealEngine/blob/release/Engine/Build/BatchFiles/Linux/README.md) provided by Unreal Engine may be helpful.
 
 ---
-## CARLA build
-The system should be ready to start building CARLA. Just for clarity, a brief summary so far.
 
-* Minimum technical requirements to run CARLA are suitable.
-* Dependencies have been properly installed.
-* GitHub account is ready.
-* Unreal Engine 4.24 runs smooth.
+## Part Two: Build CARLA 
 
 !!! Note
     Downloading aria2 with `sudo apt-get install aria2` will speed up the following commands.
 
-### Clone repository
+### Clone the CARLA repository
 
 <div class="build-buttons">
 <p>
@@ -210,109 +143,183 @@ The system should be ready to start building CARLA. Just for clarity, a brief su
 <span class="icon icon-github"></span> CARLA repository</a>
 </p>
 </div>
-The official repository of the project. Either download and extract it or clone it using the following command line.
+The button above will take you to the official repository of the project. Either download from there and extract it locally or clone it using the following command:
 
 ```sh
-git clone https://github.com/carla-simulator/carla
+        git clone https://github.com/carla-simulator/carla
 ```
 
-Now the latest content for the project, known as `master` branch in the repository, has been copied in local.
-
 !!! Note
-    The `master` branch contains the latest fixes and features. Stable code is inside the `stable` and previous CARLA versions have their own branch. Always remember to check the current branch in git with the command `git branch`.
+    The `master` branch contains the current release of CARLA with the latest fixes and features. Previous CARLA versions are tagged with the version name. Always remember to check the current branch in git with the command `git branch`. 
+
 
 ### Get assets
 
-Only the assets package is yet to be donwloaded. These are stored separately to make the repository a bit lighter. CARLA cannot be built without the assets. There is a script that downloads and extracts the latest content version. The package is >3GB, so downloading it may take some time.
+You will need to download the __latest__ assets to work with the current version of CARLA. We provide a script to automate this process. To use the script, run the following command in the CARLA root folder:
 
-Get into the root carla folder. The path should correspond with the repository just cloned:
 ```sh
-cd ~/carla
+        ./Update.sh
 ```
-Run the script to get the assets.
-```sh
-./Update.sh
-```
+
+The assets will be downloaded and extracted to the appropriate location.
+
 !!! Important
-    To get the assets currently in development, visit [Update CARLA](build_update.md#get-development-assets) and read __Get development assets__.
+    To download the assets currently in development, visit [Update CARLA](build_update.md#get-development-assets) and read __Get development assets__.
 
+To download the assets for a __specific version__ of CARLA:
 
-### Set the environment variable
-
-This is necessary for CARLA to find the Unreal Engine 4.24 installation folder.
+1. From the root CARLA directory, navigate to `\Util\ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
+2. Extract the assets in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
+3. Extract the file with a command similar to the following:
 
 ```sh
-export UE4_ROOT=~/UnrealEngine_4.24
+        tar -xvzf <assets_file_name>.tar.gz.tar -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
 ```
 
-The variable should be added to `~/.bashrc` or `~/.profile` to be set persistently session-wide. Otherwise, it will only be accessible from the current shell.
+### Set Unreal Engine environment variable
 
-### make CARLA
+For CARLA to find the correct installation of Unreal Engine, we need to set the CARLA environment variable.
 
-The last step is to finally build CARLA. There are different `make` commands to build the different modules. All of them run in the root CARLA folder.
+To set the variable for this session only:
+
+```sh
+    export UE4_ROOT=~/UnrealEngine_4.26
+```
+
+To set the variable so it persists across sessions:
+
+__1.__ Open `~/.bashrc` or `./profile`.  
+```sh
+    gedit ~/.bashrc
+
+    # or 
+
+    gedit ~/.profile
+```
+
+__2.__ Add the following line to the bottom of the file: 
+
+```sh
+    export UE4_ROOT=~/UnrealEngine_4.26 
+```
+
+__3.__ Save the file and reset the terminal.  
+
+
+### Build CARLA
+This section outlines the commands to build CARLA. __All commands should be run in the root CARLA folder.__
+
+There are two parts to the build process for CARLA, compiling the client and compiling the server.
 
 !!! Warning
-    Make sure to run `make launch` to prepare the server and `make PythonAPI` for the client.
+    Make sure to run `make PythonAPI` to prepare the client and `make launch` for the server.
     Alternatively `make LibCarla` will prepare the CARLA library to be imported anywhere.
 
-* __make launch__ compiles the server simulator and launches Unreal Engine. Press **Play** to start the spectator view and close the editor window to exit. Camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.
-```sh
-make launch
-```
-The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the city will not show properly until then.
+__1.__ __Compile the Python API client__:
 
-* __make PythonAPI__ compiles the API client, necessary to grant control over the simulation. It is only needed the first time. Remember to run it again when updating CARLA. Scripts will be able to run after this command is executed. The following example will spawn some life into the town.
+The Python API client grants control over the simulation. Compilation of the Python API client is required the first time you build CARLA and again after you perform any updates. After the client is compiled, you will be able to run scripts to interact with the simulation.
+
+The following command compiles the Python API client:
 
 ```sh
-make PythonAPI && cd PythonAPI/examples && python3 spawn_npc.py
+    make PythonAPI
 ```
+
+Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory.
+
+```sh
+    # Delete versions as required
+    make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
+```
+
+The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
+
+__A. `.egg` file__
+
+>The `.egg` file does not need to be installed. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
+
+>If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
+
+__B. `.whl` file__
+
+>The `.whl` file should be installed using `pip` or `pip3`:
+
+```sh
+# Python 3
+pip3 install <path/to/wheel>.whl
+
+# Python 2
+pip install <path/to/wheel>.whl
+```
+
+>This `.whl` file cannot be distributed as it is built specifically for your OS.
+
+!!! Warning
+    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
+
+
+__2.__ __Compile the server__:
+
+The following command compiles and launches Unreal Engine. Run this command each time you want to launch the server or use the Unreal Engine editor:
+
+```sh
+    make launch
+```
+
+The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the map will not show properly until then.
+
+
+__3.__ __Start the simulation__:
+
+Press **Play** to start the server simulation. The camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
+
+Test the simulator using the example scripts inside `PythonAPI\examples`.  With the simulator running, open a new terminal for each script and run the following commands to spawn some life into the town and create a weather cycle:
+
+```sh
+        # Terminal A 
+        cd PythonAPI/examples
+        python3 -m pip install -r requirements.txt
+        python3 generate_traffic.py  
+
+        # Terminal B
+        cd PythonAPI/examples
+        python3 dynamic_weather.py 
+```
+
 !!! Important
-    If the simulation is running at very low FPS rates, go to `Edit/Editor preferences/Performance` in the UE editor and disable __Use less CPU when in background__.
+    If the simulation is running at a very low FPS rate, go to `Edit -> Editor preferences -> Performance` in the Unreal Engine editor and disable `Use less CPU when in background`.
 
-Now CARLA is ready to go. Here is a brief summary of the most useful `make` commands available.
 
-<table class ="defTable">
-<thead>
-<th>Command</th>
-<th>Description</th>
-</thead>
-<tbody>
-<td><code>make help</code> </td>
-<td>Prints all available commands.</td>
-</tr>
-<tr>
-<td><code>make launch</code></td>
-<td>Launches CARLA server in Editor window.</td>
-</tr>
-<tr>
-<td><code>make PythonAPI</code></td>
-<td>Builds the CARLA client.</td>
-</tr>
-<tr>
-<td><code>make package</code></td>
-<td>Builds CARLA and creates a packaged version for distribution.</td>
-</tr>
-<tr>
-<td><code>make clean</code></td>
-<td>Deletes all the binaries and temporals generated by the build system.</td>
-</tr>
-<tr>
-<td><code>make rebuild</code></td>
-<td>make clean and make launch both in one command.</td>
-</tbody>
-</table>
+
+### Other make commands
+
+There are more `make` commands that you may find useful. Find them in the table below:  
+
+| Command | Description |
+| ------- | ------- |
+| `make help`                                                           | Prints all available commands.                                        |
+| `make launch`                                                         | Launches CARLA server in Editor window.                               |
+| `make PythonAPI`                                                      | Builds the CARLA client.                                              |
+| `make LibCarla`                                                       | Prepares the CARLA library to be imported anywhere.                   |
+| `make package`                                                        | Builds CARLA and creates a packaged version for distribution.         |
+| `make clean`                                                          | Deletes all the binaries and temporals generated by the build system. |
+| `make rebuild`                                                        | `make clean` and `make launch` both in one command.                   |
 
 ---
-<br>
-Keep reading this section to learn how to update the build or take some first steps in CARLA.
+
+Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues regarding this guide.  
+
+Up next, learn how to update the CARLA build or take your first steps in the simulation, and learn some core concepts.  
 <div class="build-buttons">
-<p>
-<a href="../core_concepts" target="_blank" class="btn btn-neutral" title="Learn about CARLA core concepts">
-Go to __First steps__</a>
-</p>
 
 <p>
 <a href="../build_update" target="_blank" class="btn btn-neutral" title="Learn how to update the build">
 Update CARLA</a>
 </p>
+
+<p>
+<a href="../core_concepts" target="_blank" class="btn btn-neutral" title="Learn about CARLA core concepts">
+First steps</a>
+</p>
+
 </div>

@@ -34,7 +34,7 @@ public:
 
   void SetOwner(AActor *Owner) override;
 
-  void Tick(float DeltaTime) override;
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   const carla::geom::Vector3D ComputeAccelerometerNoise(
       const FVector &Accelerometer);

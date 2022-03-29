@@ -5,14 +5,18 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/streaming/detail/tcp/ServerSession.h"
+#include "carla/streaming/detail/tcp/Server.h"
 
 #include "carla/Debug.h"
 #include "carla/Logging.h"
 
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/post.hpp>
 
 #include <atomic>
+#include <thread>
 
 namespace carla {
 namespace streaming {
@@ -23,9 +27,11 @@ namespace tcp {
 
   ServerSession::ServerSession(
       boost::asio::io_context &io_context,
-      const time_duration timeout)
+      const time_duration timeout,
+      Server &server)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
           std::string("tcp server session ") + std::to_string(SESSION_COUNTER)),
+      _server(server),
       _session_id(SESSION_COUNTER++),
       _socket(io_context),
       _timeout(timeout),
@@ -45,7 +51,7 @@ namespace tcp {
 
     StartTimer();
     auto self = shared_from_this(); // To keep myself alive.
-    _strand.post([=]() {
+    boost::asio::post(_strand, [=]() {
 
       auto handle_query = [this, self, callback=std::move(on_opened)](
           const boost::system::error_code &ec,
@@ -53,7 +59,7 @@ namespace tcp {
         if (!ec) {
           DEBUG_ASSERT_EQ(bytes_received, sizeof(_stream_id));
           log_debug("session", _session_id, "for stream", _stream_id, " started");
-          _strand.context().post([=]() { callback(self); });
+          boost::asio::post(_strand.context(), [=]() { callback(self); });
         } else {
           log_error("session", _session_id, ": error retrieving stream id :", ec.message());
           CloseNow();
@@ -65,7 +71,7 @@ namespace tcp {
       boost::asio::async_read(
           _socket,
           boost::asio::buffer(&_stream_id, sizeof(_stream_id)),
-          _strand.wrap(handle_query));
+          boost::asio::bind_executor(_strand, handle_query));
     });
   }
 
@@ -73,13 +79,21 @@ namespace tcp {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     auto self = shared_from_this();
-    _strand.post([=]() {
+    boost::asio::post(_strand, [=]() {
       if (!_socket.is_open()) {
         return;
       }
       if (_is_writing) {
-        log_debug("session", _session_id, ": connection too slow: message discarded");
-        return;
+        if (_server.IsSynchronousMode()) {
+          // wait until previous message has been sent
+          while (_is_writing) {
+            std::this_thread::yield();
+          }
+        } else {
+          // ignore this message
+          log_debug("session", _session_id, ": connection too slow: message discarded");
+          return;
+        }      
       }
       _is_writing = true;
 
@@ -100,12 +114,12 @@ namespace tcp {
       boost::asio::async_write(
           _socket,
           message->GetBufferSequence(),
-          _strand.wrap(handle_sent));
+          handle_sent);
     });
   }
 
   void ServerSession::Close() {
-    _strand.post([self=shared_from_this()]() { self->CloseNow(); });
+    boost::asio::post(_strand, [self=shared_from_this()]() { self->CloseNow(); });
   }
 
   void ServerSession::StartTimer() {
@@ -124,12 +138,11 @@ namespace tcp {
   }
 
   void ServerSession::CloseNow() {
-    DEBUG_ASSERT(_strand.running_in_this_thread());
     _deadline.cancel();
     if (_socket.is_open()) {
       _socket.close();
     }
-    _strand.context().post([self=shared_from_this()]() {
+    boost::asio::post(_strand.context(), [self=shared_from_this()]() {
       DEBUG_ASSERT(self->_on_closed);
       self->_on_closed(self);
     });

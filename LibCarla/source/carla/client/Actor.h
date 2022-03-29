@@ -26,6 +26,8 @@ namespace client {
       : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(init.GetDisplayId()),
         Super(std::move(init)) {}
 
+    using ActorState::GetBoundingBox;
+
     virtual ~Actor() = default;
 
     /// Return the current location of the actor.
@@ -64,26 +66,54 @@ namespace client {
     /// Teleport and rotate the actor to @a transform.
     void SetTransform(const geom::Transform &transform);
 
-    /// Set the actor velocity.
-    void SetVelocity(const geom::Vector3D &vector);
+    /// Set the actor velocity before applying physics.
+    void SetTargetVelocity(const geom::Vector3D &vector);
 
-    /// Set the angular velocity of the actor
-    void SetAngularVelocity(const geom::Vector3D &vector);
+    /// Set the angular velocity of the actor before applying physics.
+    void SetTargetAngularVelocity(const geom::Vector3D &vector);
 
-    /// Add impulse to the actor.
+    /// Enable a constant velocity mode
+    void EnableConstantVelocity(const geom::Vector3D &vector);
+
+    /// Disable the constant velocity mode
+    void DisableConstantVelocity();
+
+    /// Add impulse to the actor at its center of mass.
     void AddImpulse(const geom::Vector3D &vector);
+
+    /// Add impulse to the actor at certain location.
+    void AddImpulse(const geom::Vector3D &impulse, const geom::Vector3D &location);
+
+    /// Add force to the actor at its center of mass.
+    void AddForce(const geom::Vector3D &force);
+
+    /// Add force to the actor at certain location.
+    void AddForce(const geom::Vector3D &force, const geom::Vector3D &location);
 
     /// Add angular impulse to the actor.
     void AddAngularImpulse(const geom::Vector3D &vector);
 
+    /// Add a torque to the actor.
+    void AddTorque(const geom::Vector3D &vector);
+
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);
 
-    /// @warning This method only checks whether this instance of Actor has
-    /// called the Destroy() method, it does not check whether the actor is
-    /// actually alive in the simulator.
+    /// Enable or disable gravity on this actor.
+    void SetEnableGravity(bool enabled = true);
+
+    rpc::ActorState GetActorState() const;
+
     bool IsAlive() const {
-      return _is_alive && GetEpisode().IsValid();
+      return GetEpisode().IsValid() && (GetActorState() != rpc::ActorState::PendingKill && GetActorState() != rpc::ActorState::Invalid) ;
+    }
+
+    bool IsDormant() const {
+      return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Dormant;
+    }
+
+    bool IsActive() const {
+      return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Active;
     }
 
     /// Tell the simulator to destroy this Actor, and return whether the actor
@@ -99,9 +129,6 @@ namespace client {
       return Super::GetActorDescription();
     }
 
-  private:
-
-    bool _is_alive = true;
   };
 
 } // namespace client

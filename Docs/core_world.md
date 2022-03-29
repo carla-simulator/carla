@@ -2,7 +2,7 @@
 
 The client and the world are two of the fundamentals of CARLA, a necessary abstraction to operate the simulation and its actors.  
 
-This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](https://forum.carla.org/) is there to solve them.  
+This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](https://github.com/carla-simulator/carla/discussions/) is there to solve them.  
 
 *   [__The client__](#the-client)  
 	*   [Client creation](#client-creation)  
@@ -28,7 +28,7 @@ Take a look at [__carla.Client__](python_api.md#carla.Client) in the Python API 
 
 ### Client creation
 
-Two things are needed. The __IP__ address identifying it, and __two TCP ports__ to communicate with the server. An optional third parameter sets the amount of working threads. By default this is set to all (`0`). [This code recipe](ref_code_recipes.md#parse-client-creation-arguments) shows how to parse these as arguments when running the script. 
+Two things are needed. The __IP__ address identifying it, and __two TCP ports__ to communicate with the server. An optional third parameter sets the amount of working threads. By default this is set to all (`0`). The [carla.Client](python_api.md#carla.Client.__init__) in the Python API reference contains a snipet that shows how to parse these as arguments when running the script. 
 
 ```py
 client = carla.Client('localhost', 2000)
@@ -52,7 +52,7 @@ A client can connect and retrieve the current world fairly easily.
 
 ```py
 world = client.get_world()
-
+```
 
 The client can also get a list of available maps to change the current one. This will destroy the current world and create a new one.
 ```py
@@ -181,7 +181,7 @@ Street lights are categorized using their attribute __light_group__, of type [__
 
 ```py
 # Get the light manager and lights
-lmanager = world.get_light_manager()
+lmanager = world.get_lightmanager()
 mylights = lmanager.get_all_lights()
 
 # Custom a specific light
@@ -224,7 +224,7 @@ debug = world.debug
 debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
 ```
 
-This example is extended in a [code recipe](ref_code_recipes.md#debug-bounding-box-recipe) to draw boxes for every actor in a world snapshot. 
+This example is extended in a snipet in [carla.DebugHelper](python_api.md#carla.DebugHelper.draw_box) that shows how to draw boxes for every actor in a world snapshot. 
 
 ### World snapshots
 
@@ -264,7 +264,7 @@ Keep reading to learn more. Visit the forum to post any doubts or suggestions th
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
 CARLA forum</a>
 </p>
 </div>

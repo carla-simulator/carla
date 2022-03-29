@@ -115,7 +115,7 @@ if not exist "%XERCESC_INSTALL_DIR%include" (
     mkdir "%XERCESC_INSTALL_DIR%include"
 )
 
-cmake -G "Visual Studio 15 2017 Win64"^
+cmake .. -G "Visual Studio 16 2019" -A x64^
   -DCMAKE_INSTALL_PREFIX="%XERCESC_INSTALL_DIR:\=/%"^
   -DBUILD_SHARED_LIBS=OFF^
   "%BUILD_DIR%%XERCESC_BASENAME%-%XERCESC_VERSION%-source"

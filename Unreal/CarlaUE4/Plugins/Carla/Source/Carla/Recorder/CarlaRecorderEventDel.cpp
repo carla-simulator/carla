@@ -21,12 +21,12 @@ void CarlaRecorderEventDel::Write(std::ofstream &OutFile) const
 
 //---------------------------------------------
 
-inline void CarlaRecorderEventsDel::Clear(void)
+void CarlaRecorderEventsDel::Clear(void)
 {
     Events.clear();
 }
 
-inline void CarlaRecorderEventsDel::Add(const CarlaRecorderEventDel &Event)
+void CarlaRecorderEventsDel::Add(const CarlaRecorderEventDel &Event)
 {
     Events.push_back(std::move(Event));
 }

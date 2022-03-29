@@ -82,4 +82,7 @@ struct CARLA_API FVehiclePhysicsControl
 
   // Wheels Setup
   TArray<FWheelPhysicsControl> Wheels;
+
+  UPROPERTY(Category = "Vehicle Wheels Configuration", EditAnywhere, BlueprintReadWrite)
+  bool UseSweepWheelCollision = false;
 };

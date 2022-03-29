@@ -10,6 +10,11 @@
 #include <sstream>
 #include <string>
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/VehicleLightState.h>
+#include <carla/rpc/VehiclePhysicsControl.h>
+#include <compiler/enable-ue4-macros.h>
+
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
   if (File.eof())
@@ -659,9 +664,18 @@ std::string CarlaRecorderQuery::QueryCollisions(std::string Filename, char Categ
           Collision.Read(File);
 
           int Valid = 0;
+
           // get categories for both actors
-          uint8_t Type1 = Categories[Actors[Collision.DatabaseId1].Type];
-          uint8_t Type2 = Categories[Actors[Collision.DatabaseId2].Type];
+          uint8_t Type1, Type2;
+          if (Collision.DatabaseId1 != uint32_t(-1))
+            Type1 = Categories[Actors[Collision.DatabaseId1].Type];
+          else
+            Type1 = 'o'; // other non-actor object
+          
+          if (Collision.DatabaseId2 != uint32_t(-1))
+            Type2 = Categories[Actors[Collision.DatabaseId2].Type];
+          else
+            Type2 = 'o'; // other non-actor object
 
           // filter actor 1
           if (Category1 == 'a')

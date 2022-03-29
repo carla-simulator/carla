@@ -20,6 +20,13 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   RootComponent = Mesh;
 }
 
+void ASensor::BeginPlay()
+{
+  Super::BeginPlay();
+  OnPostTickDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(
+      this, &ASensor::PostPhysTickInternal);
+}
+
 void ASensor::Set(const FActorDescription &Description)
 {
   // set the tick interval of the sensor
@@ -29,6 +36,14 @@ void ASensor::Set(const FActorDescription &Description)
         UActorBlueprintFunctionLibrary::ActorAttributeToFloat(Description.Variations["sensor_tick"],
         0.0f));
   }
+}
+
+void ASensor::Tick(const float DeltaTime)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::Tick);
+  Super::Tick(DeltaTime);
+  ReadyToTick = true;
+  PrePhysTick(DeltaTime);
 }
 
 void ASensor::SetSeed(const int32 InSeed)
@@ -61,4 +76,16 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
   Stream = FDataStream();
+
+  FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickDelegate);
+}
+
+void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::PostPhysTickInternal);
+  if(ReadyToTick)
+  {
+    PostPhysTick(World, TickType, DeltaSeconds);
+    ReadyToTick = false;
+  }
 }

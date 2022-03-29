@@ -45,7 +45,7 @@ Import
 
 Create a `.json` file in the root folder of the package. Name the file after the package. Note that this will be the distribution name. The content of the file will describe a JSON array of __maps__ and __props__ with basic information for each of them.  
 
-__Maps__ are not part of this tutorial, so this definition will be empty. There is a specific tutorial to [__add a new map__](tuto_A_add_map.md).  
+__Maps__ are not part of this tutorial, so this definition will be empty. There is a specific tutorial to [__add a new map__](tuto_M_custom_map_overview.md).  
 
 __Props__ need the following parameters.  
 
@@ -57,22 +57,30 @@ __Props__ need the following parameters.
 	*   `medium`  
 	*   `big`  
 	*   `huge`  
-*   __tag__ value for the semantic segmentation. If the tag is misspelled, it will be read as `None`. 
-	*   `None`
-	*   `Buildings`
-	*   `Fences`
-	*   `Pedestrians`
+*   __tag__ value for the semantic segmentation. If the tag is misspelled, it will be read as `Unlabeled`. 
+	*   `Bridge`
+	*   `Building`
+	*   `Dynamic`
+	*   `Fence`
+	*   `Ground`
+	*   `GuardRail`
+	*   `Other`
+	*   `Pedestrian`
 	*   `Pole`
-	*   `Props`
 	*   `RailTrack`
 	*   `Road`
-	*   `RoadLines`
-	*   `Sidewalk`
+	*   `RoadLine`
+	*   `SideWalk`
+	*   `Sky`
+	*   `Static`
 	*   `Terrain`
-	*   `TrafficSigns`
+	*   `TrafficLight`
+	*   `TrafficSign`
+	*   `Unlabeled`
 	*   `Vegetation`
 	*   `Vehicles`
-	*   `Walls`
+	*   `Wall`
+	*   `Water`
 
 In the end, the `.json` should look similar to the one below.
 
@@ -111,7 +119,7 @@ __1. Build a Docker image of Unreal Engine.__ Follow [these instructions](https:
 __2. Run the script to cook the props.__ In the folder `~/carla/Util/Docker` there is a script that connects with the Docker image previously created, and makes the ingestion automatically. It only needs the path for the input and output files, and the name of the package to be ingested.  
 
 ```sh
-python docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets  --package=Package01
+python3 docker_tools.py --input ~/path_to_package --output ~/path_for_output_assets  --package=Package01
 ```
 
 __3. Locate the package__. The Docker should have generated the package `Package01.tar.gz` in the output path. This is the standalone package for the assets. 
@@ -153,7 +161,7 @@ That is all there is to know about the different ways to import new props into C
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

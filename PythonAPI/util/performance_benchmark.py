@@ -75,6 +75,13 @@ def define_weather():
     list_weather.append(weather01)
     list_weather.append(weather02)
 
+    if args.weather is not None:
+      try:
+        new_list = [list_weather[int(i)] for i in args.weather]
+        list_weather = new_list
+      except IndexError as error:
+        print("Warning!! The list of types of weather introduced is not valid. Using all available.")
+
   return list_weather
 
 
@@ -83,34 +90,58 @@ def define_sensors():
 
   if args.tm:
     sensors00 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                'width': 300, 'height': 200, 'fov': 100, 'label': '1. cam-300x200'}]
+                'width': 300, 'height': 200, 'fov': 100, 'label': '0. cam-300x200'}]
 
     list_sensor_specs.append(sensors00)
 
   else:
     sensors00 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': '1. cam-300x200'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '0. cam-1920x1080'}]
 
     sensors01 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 800, 'height': 600, 'fov': 100, 'label': '2. cam-800x600'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '1. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors02 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 1900, 'height': 1080, 'fov': 100, 'label': '3. cam-1900x1080'}]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '2. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 90.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors03 = [{'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': '4. cam-300x200'},
-                 {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.4, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
-                  'width': 300, 'height': 200, 'fov': 100, 'label': 'cam-300x200'},
-                 ]
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': '3. cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 90.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 180.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'},
+                  {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 270.0,
+                  'width': 1920, 'height': 1080, 'fov': 100, 'label': 'cam-1920x1080'}]
 
     sensors04 = [{'type': 'sensor.lidar.ray_cast', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0,
-                  'label': '5. LIDAR'}]
+                  'pts_per_sec': '100000', 'label': '4. LIDAR: 100k'}]
+
+    sensors05 = [{'type': 'sensor.lidar.ray_cast', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0,
+                  'pts_per_sec': '500000', 'label': '5. LIDAR: 500k'}]
+
+    sensors06 = [{'type': 'sensor.lidar.ray_cast', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'yaw': 0.0, 'pitch': 0.0, 'roll': 0.0,
+                  'pts_per_sec': '1000000', 'label': '6. LIDAR: 1M'}]
 
     list_sensor_specs.append(sensors00)
     list_sensor_specs.append(sensors01)
     list_sensor_specs.append(sensors02)
     list_sensor_specs.append(sensors03)
     list_sensor_specs.append(sensors04)
+    list_sensor_specs.append(sensors05)
+    list_sensor_specs.append(sensors06)
+
+    if args.sensors is not None:
+      try:
+        new_list = [list_sensor_specs[int(i)] for i in args.sensors]
+        list_sensor_specs = new_list
+      except IndexError as error:
+        print("Warning!! The list of sensors introduced is not valid. Using all available.")
 
   return list_sensor_specs
 
@@ -135,7 +166,18 @@ def define_environments():
 
   return list_env_specs
 
+def define_maps(client):
+  maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
+  maps = sorted(maps)
 
+  if args.maps is not None:
+    all_good = all(elem in maps for elem in args.maps)
+    if all_good:
+      maps = sorted(args.maps)
+    else:
+      print("Warning!! The list of maps introduced is not valid. Using all available.")
+
+  return maps
 class CallBack(object):
     def __init__(self):
         self._lock = threading.Lock()
@@ -151,7 +193,7 @@ class CallBack(object):
             return self._current_fps
 
 
-def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, client):
+def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, client, tick):
   global sensors_callback
   sensors_ret = []
   blueprint_library = world.get_blueprint_library()
@@ -179,7 +221,7 @@ def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, clie
       bp.set_attribute('channels', '32')
       bp.set_attribute('upper_fov', '15')
       bp.set_attribute('lower_fov', '-30')
-      bp.set_attribute('points_per_second', '500000')
+      bp.set_attribute('points_per_second', str(sensor_spec['pts_per_sec']))
       sensor_location = carla.Location(
         x=sensor_spec['x'],
         y=sensor_spec['y'],
@@ -238,57 +280,59 @@ def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, clie
   # some settings
   percentagePedestriansRunning = 0.0      # how many pedestrians will run
   percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
-  # 1. take all the random locations to spawn
-  spawn_points = []
-  for i in range(n_walkers):
-    spawn_point = carla.Transform()
-    loc = world.get_random_location_from_navigation()
-    if (loc != None):
-      spawn_point.location = loc
-      spawn_points.append(spawn_point)
-  # 2. we spawn the walker object
-  batch = []
-  walker_speed = []
-  for spawn_point in spawn_points:
-    # set as not invincible
-    if walker_bp.has_attribute('is_invincible'):
-      walker_bp.set_attribute('is_invincible', 'false')
-    # set the max speed
-    if walker_bp.has_attribute('speed'):
-      # walking
-      walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
-    else:
-      print("Walker has no speed")
-      walker_speed.append(0.0)
-    batch.append(SpawnActor(walker_bp, spawn_point))
-  results = client.apply_batch_sync(batch, True)
-  walker_speed2 = []
-  for i in range(len(results)):
-    if results[i].error:
-      logging.error(results[i].error)
-    else:
-      walkers_list.append({"id": results[i].actor_id})
-      walker_speed2.append(walker_speed[i])
-  walker_speed = walker_speed2
-  # 3. we spawn the walker controller
-  batch = []
-  walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
-  for i in range(len(walkers_list)):
-    batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
-  results = client.apply_batch_sync(batch, True)
-  for i in range(len(results)):
-    if results[i].error:
-      logging.error(results[i].error)
-    else:
-      walkers_list[i]["con"] = results[i].actor_id
-    # 4. we put altogether the walkers and controllers id to get the objects from their id
-  for i in range(len(walkers_list)):
-    all_id.append(walkers_list[i]["con"])
-    all_id.append(walkers_list[i]["id"])
+  if n_walkers > 0:
+    # 1. take all the random locations to spawn
+    spawn_points = []
+    for i in range(n_walkers):
+      spawn_point = carla.Transform()
+      loc = world.get_random_location_from_navigation()
+      if (loc != None):
+        spawn_point.location = loc
+        spawn_points.append(spawn_point)
+    # 2. we spawn the walker object
+    batch = []
+    walker_speed = []
+    for spawn_point in spawn_points:
+      # set as not invincible
+      if walker_bp.has_attribute('is_invincible'):
+        walker_bp.set_attribute('is_invincible', 'false')
+      # set the max speed
+      if walker_bp.has_attribute('speed'):
+        # walking
+        walker_speed.append(walker_bp.get_attribute('speed').recommended_values[1])
+      else:
+        print("Walker has no speed")
+        walker_speed.append(0.0)
+      batch.append(SpawnActor(walker_bp, spawn_point))
+    results = client.apply_batch_sync(batch, True)
+    walker_speed2 = []
+    for i in range(len(results)):
+      if results[i].error:
+        logging.error(results[i].error)
+      else:
+        walkers_list.append({"id": results[i].actor_id})
+        walker_speed2.append(walker_speed[i])
+    walker_speed = walker_speed2
+    # 3. we spawn the walker controller
+    batch = []
+    walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+    for i in range(len(walkers_list)):
+      batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+    results = client.apply_batch_sync(batch, True)
+    for i in range(len(results)):
+      if results[i].error:
+        logging.error(results[i].error)
+      else:
+        walkers_list[i]["con"] = results[i].actor_id
+      # 4. we put altogether the walkers and controllers id to get the objects from their id
+    for i in range(len(walkers_list)):
+      all_id.append(walkers_list[i]["con"])
+      all_id.append(walkers_list[i]["id"])
+
   all_actors = world.get_actors(all_id)
 
-  # wait for a tick to ensure client receives the last transform of the walkers we have just created
-  world.wait_for_tick()
+  # ensures client has received the last transform of the walkers we have just created
+  tick()
 
   # 5. initialize each controller and set target to walk to (list is [controler, actor, controller, actor ...])
   # set how many pedestrians can cross the road
@@ -311,6 +355,21 @@ def create_environment(world, sensors, n_vehicles, n_walkers, spawn_points, clie
 # -- Benchmarking functions --------------------------------------------------------------------------------------------
 # ======================================================================================================================
 
+def set_world_settings(world, args = None):
+
+  if args == None:
+    settings = world.get_settings()
+    settings.synchronous_mode = False
+    settings.fixed_delta_seconds = 0.0
+    settings.no_rendering_mode = False
+    world.apply_settings(settings)
+  else:
+    settings = world.get_settings()
+    settings.synchronous_mode = args.sync
+    settings.fixed_delta_seconds = args.fixed_dt if args.sync else 0.0
+    settings.no_rendering_mode = args.no_render_mode
+    world.apply_settings(settings)
+
 def run_benchmark(world, sensors, n_vehicles, n_walkers, client, debug=False):
   global sensors_callback
 
@@ -319,14 +378,21 @@ def run_benchmark(world, sensors, n_vehicles, n_walkers, client, debug=False):
   list_fps = []
   sensor_list = None
 
-  vehicles_list, walkers_list, all_id, all_actors, sensors_ret = create_environment(world, sensors, n, n_walkers, spawn_points, client)
+  tick = world.tick if args.sync else world.wait_for_tick
+  set_world_settings(world, args)
+
+  vehicles_list, walkers_list, all_id, all_actors, sensors_ret = create_environment(world, sensors, n, n_walkers, spawn_points, client, tick)
 
   if sensors_ret:
     sensor_list = sensors_ret
 
+  # Allow some time for the server to finish the initialization
+  for _i in range(0, 50):
+    tick()
+
   ticks = 0
   while ticks < int(args.ticks):
-    _ = world.wait_for_tick()
+    _ = tick()
     if debug:
       print("== Samples {} / {}".format(ticks + 1, args.ticks))
 
@@ -355,6 +421,8 @@ def run_benchmark(world, sensors, n_vehicles, n_walkers, client, debug=False):
 
   print('\ndestroying %d walkers' % len(walkers_list))
   client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+
+  set_world_settings(world)
 
   return list_fps
 
@@ -405,7 +473,7 @@ def get_total(records):
 def get_system_specs():
   str_system = ""
   cpu_info = cpuinfo.get_cpu_info()
-  str_system += "CPU {} {}. ".format(cpu_info['brand'], cpu_info['family'])
+  str_system += "CPU {} {}. ".format(cpu_info.get('brand', 'Unknown'), cpu_info.get('family', 'Unknown'))
 
   memory_info = psutil.virtual_memory()
   str_system += "{:03.2f} GB RAM memory. ".format(memory_info.total / (1024 * 1024 * 1024))
@@ -419,58 +487,87 @@ def get_system_specs():
   return str_system
 
 
+def show_benchmark_scenarios(maps):
+  print("Available maps")
+  for map in sorted(maps):
+    print("  - %s" % map)
+  print("Available sensors")
+  for i,sensors in enumerate(define_sensors()):
+    sensor_str = ""
+    for sensor in sensors:
+      sensor_str += (sensor['label'] + " ")
+    print('  - %s' % (sensor_str))
+  print("Available types of weather")
+  for i,weather in enumerate(define_weather()):
+    print('  - %i: %s' % (i, weather['name']))
+  print("Available Enviroments")
+  for i,env in enumerate(define_environments()):
+    print('  - %i: %s' % (i, str(env)))
+
+
 def main(args):
-  client = carla.Client(args.host, int(args.port))
-  client.set_timeout(60.0)
-  pygame.init()
 
-  records = {}
-  maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
+  try:
+    client = carla.Client(args.host, int(args.port))
+    client.set_timeout(150.0)
+    pygame.init()
 
-  for town in sorted(maps):
-    world = client.load_world(town)
+    records = {}
+    maps = define_maps(client)
 
-    # set to async mode
-    settings = world.get_settings()
-    settings.synchronous_mode = False
-    settings.fixed_delta_seconds = None
-    world.apply_settings(settings)
+    if args.show_scenarios:
+      show_benchmark_scenarios(maps)
+      return
 
-    # spectator pointing to the sky to reduce rendering impact
-    spectator = world.get_spectator()
-    spectator.set_transform(carla.Transform(carla.Location(z=500), carla.Rotation(pitch=90)))
+    #maps = ["Town04_Opt"]
 
-    for weather in define_weather():
-      world.set_weather(weather["parameter"])
-      for env in define_environments():
-        for sensors in define_sensors():
-          list_fps = run_benchmark(world, sensors, env["vehicles"], env["walkers"], client)
-          mean, std = compute_mean_std(list_fps)
-          sensor_str = ""
-          for sensor in sensors:
-            sensor_str += (sensor['label'] + " ")
+    for town in maps:
+      world = client.load_world(town)
+      time.sleep(5)
 
-          record = {
-            'town': town,
-            'sensors': sensor_str,
-            'weather': weather["name"],
-            'n_vehicles': env["vehicles"],
-            'n_walkers': env["walkers"],
-            'samples': args.ticks,
-            'fps_mean': mean,
-            'fps_std': std
-          }
+      # set to async mode
+      set_world_settings(world)
 
-          env_str = str(env["vehicles"]) + str(env["walkers"])
+      # spectator pointing to the sky to reduce rendering impact
+      spectator = world.get_spectator()
+      spectator.set_transform(carla.Transform(carla.Location(z=500), carla.Rotation(pitch=90)))
 
-          if env_str not in records:
-            records[env_str] = []
-          records[env_str].append(record)
-          print(record)
+      for weather in define_weather():
+        world.set_weather(weather["parameter"])
+        for env in define_environments():
+          for sensors in define_sensors():
+            list_fps = run_benchmark(world, sensors, env["vehicles"], env["walkers"], client)
+            mean, std = compute_mean_std(list_fps)
+            sensor_str = ""
+            for sensor in sensors:
+              sensor_str += (sensor['label'] + " ")
 
-  system_specs = get_system_specs()
-  serialize_records(records, system_specs, args.file)
-  pygame.quit()
+            record = {
+              'town': town,
+              'sensors': sensor_str,
+              'weather': weather["name"],
+              'n_vehicles': env["vehicles"],
+              'n_walkers': env["walkers"],
+              'samples': args.ticks,
+              'fps_mean': mean,
+              'fps_std': std
+            }
+
+            env_str = str(env["vehicles"]) + str(env["walkers"])
+
+            if env_str not in records:
+              records[env_str] = []
+            records[env_str].append(record)
+            print(record)
+
+    system_specs = get_system_specs()
+    serialize_records(records, system_specs, args.file)
+    pygame.quit()
+
+  except KeyboardInterrupt:
+      set_world_settings(world)
+      client.reload_world()
+      print('\nCancelled by user. Bye!')
 
 
 if __name__ == '__main__':
@@ -482,6 +579,15 @@ if __name__ == '__main__':
   parser.add_argument('--file', type=str, help='Write results into a txt file', default="benchmark.md")
   parser.add_argument('--tm', action='store_true', help='Switch to traffic manager benchmark')
   parser.add_argument('--ticks', default=100, help='Number of ticks for each scenario (default: 100)')
+  parser.add_argument('--sync', default=True, action='store_true', help='Synchronous mode execution (default)')
+  parser.add_argument('--async', dest='sync', action='store_false', help='Asynchronous mode execution')
+  parser.add_argument('--fixed_dt', type=float, default=0.05, help='Time interval for the simulator in synchronous mode (default: 0.05)')
+  parser.add_argument('--render_mode', dest='no_render_mode', action='store_false', help='Execute with spectator')
+  parser.add_argument('--no_render_mode', default=True, action='store_true', help='Execute in no rendering mode (default)')
+  parser.add_argument('--show_scenarios', default=False, action='store_true', help='Show the scenarios to benchmark and return (default=False)')
+  parser.add_argument('--sensors', nargs="+", default=None, help='List of sensors to benchmark, by default all defined ones')
+  parser.add_argument('--maps', nargs="+", default=None, help='List of maps to benchmark, by default all defined ones')
+  parser.add_argument('--weather', nargs="+", default=None, help='List of weather types to benchmark, by default all defined ones')
 
   args = parser.parse_args()
 

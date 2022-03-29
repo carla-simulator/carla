@@ -6,6 +6,8 @@ using UnrealBuildTool;
 
 public class Carla : ModuleRules
 {
+  bool UsingCarSim = false;
+  bool UsingChrono = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -18,6 +20,29 @@ public class Carla : ModuleRules
     if (IsWindows(Target))
     {
       bEnableExceptions = true;
+    }
+
+    // Read config about carsim
+    string CarlaPluginPath = Path.GetFullPath( ModuleDirectory );
+    string ConfigDir =  Path.GetFullPath(Path.Combine(CarlaPluginPath, "../../../../Config/"));
+    string OptionalModulesFile = Path.Combine(ConfigDir, "OptionalModules.ini");
+    string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
+    foreach (string line in text)
+    {
+      if (line.Contains("CarSim ON"))
+      {
+        Console.WriteLine("Enabling carsim");
+        UsingCarSim = true;
+        PublicDefinitions.Add("WITH_CARSIM");
+        PrivateDefinitions.Add("WITH_CARSIM");
+      }
+      if (line.Contains("Chrono ON"))
+      {
+        Console.WriteLine("Enabling chrono");
+        UsingChrono = true;
+        PublicDefinitions.Add("WITH_CHRONO");
+        PrivateDefinitions.Add("WITH_CHRONO");
+      }
     }
 
     PublicIncludePaths.AddRange(
@@ -42,6 +67,10 @@ public class Carla : ModuleRules
         // ... add other public dependencies that you statically link with here ...
       }
       );
+    if (UsingCarSim)
+    {
+      PublicDependencyModuleNames.AddRange(new string[] { "CarSim" });
+    }
 
 	 if (Target.Type == TargetType.Editor)
 	 {
@@ -64,10 +93,17 @@ public class Carla : ModuleRules
         "PhysXVehicles",
         "PhysXVehicleLib",
         "Slate",
-        "SlateCore"
+        "SlateCore",
+        "PhysicsCore"
         // ... add private dependencies that you statically link with here ...
       }
       );
+    if (UsingCarSim)
+    {
+      PrivateDependencyModuleNames.AddRange(new string[] { "CarSim" });
+      PrivateIncludePathModuleNames.AddRange(new string[] { "CarSim" });
+    }
+
 
     DynamicallyLoadedModuleNames.AddRange(
       new string[]
@@ -92,6 +128,19 @@ public class Carla : ModuleRules
     {
       return false;
     }
+  }
+
+  private void AddDynamicLibrary(string library)
+  {
+    PublicAdditionalLibraries.Add(library);
+    RuntimeDependencies.Add(library);
+    PublicDelayLoadDLLs.Add(library);
+  }
+  private void AddDllDependency(string PathToFolder, string DllName)
+  {
+    string Source = Path.Combine(PathToFolder, DllName);
+    string Destination = Path.Combine("$(BinaryOutputDir)", DllName);
+    RuntimeDependencies.Add(Destination, Source);
   }
 
   delegate string ADelegate(string s);
@@ -131,6 +180,18 @@ public class Carla : ModuleRules
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
       }
+      if (UsingChrono)
+      {
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoEngine_vehicle")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_vehicle")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("ChronoModels_robot")));
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoEngine_vehicle.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_vehicle.dll");
+        AddDllDependency(Path.Combine(LibCarlaInstallPath, "dll"), "ChronoModels_robot.dll");
+        bUseRTTI = true;
+      }
     }
     else
     {
@@ -142,6 +203,21 @@ public class Carla : ModuleRules
       else
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+      }
+      if (UsingChrono)
+      {
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++.so.1.0"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1"));
+        RuntimeDependencies.Add(Path.Combine(LibCarlaInstallPath, "lib", "libc++abi.so.1.0"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoEngine_vehicle.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_vehicle.so"));
+        AddDynamicLibrary(Path.Combine(LibCarlaInstallPath, "lib", "libChronoModels_robot.so"));
+        bUseRTTI = true;
+        bEnableExceptions = true;
       }
     }
 
@@ -155,5 +231,7 @@ public class Carla : ModuleRules
     PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
     PublicDefinitions.Add("LIBCARLA_NO_EXCEPTIONS");
     PublicDefinitions.Add("PUGIXML_NO_EXCEPTIONS");
+    PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
+    PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
   }
 }

@@ -101,11 +101,25 @@ void export_commands() {
     .def_readwrite("control", &cr::Command::ApplyVehicleControl::control)
   ;
 
+  class_<cr::Command::ApplyVehicleAckermannControl>("ApplyVehicleAckermannControl")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cr::VehicleAckermannControl>, (arg("actor"), arg("control")))
+    .def(init<cr::ActorId, cr::VehicleAckermannControl>((arg("actor_id"), arg("control"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyVehicleAckermannControl::actor)
+    .def_readwrite("control", &cr::Command::ApplyVehicleAckermannControl::control)
+  ;
+
   class_<cr::Command::ApplyWalkerControl>("ApplyWalkerControl")
     .def("__init__", &command_impl::CustomInit<ActorPtr, cr::WalkerControl>, (arg("actor"), arg("control")))
     .def(init<cr::ActorId, cr::WalkerControl>((arg("actor_id"), arg("control"))))
     .def_readwrite("actor_id", &cr::Command::ApplyWalkerControl::actor)
     .def_readwrite("control", &cr::Command::ApplyWalkerControl::control)
+  ;
+
+  class_<cr::Command::ApplyVehiclePhysicsControl>("ApplyVehiclePhysicsControl")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cr::VehiclePhysicsControl>, (arg("actor"), arg("physics_control")))
+    .def(init<cr::ActorId, cr::VehiclePhysicsControl>((arg("actor_id"), arg("physics_control"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyVehiclePhysicsControl::actor)
+    .def_readwrite("physics_control", &cr::Command::ApplyVehiclePhysicsControl::physics_control)
   ;
 
   class_<cr::Command::ApplyTransform>("ApplyTransform")
@@ -123,18 +137,18 @@ void export_commands() {
     .def_readwrite("speed", &cr::Command::ApplyWalkerState::speed)
   ;
 
-  class_<cr::Command::ApplyVelocity>("ApplyVelocity")
+  class_<cr::Command::ApplyTargetVelocity>("ApplyTargetVelocity")
     .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("velocity")))
     .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("velocity"))))
-    .def_readwrite("actor_id", &cr::Command::ApplyVelocity::actor)
-    .def_readwrite("velocity", &cr::Command::ApplyVelocity::velocity)
+    .def_readwrite("actor_id", &cr::Command::ApplyTargetVelocity::actor)
+    .def_readwrite("velocity", &cr::Command::ApplyTargetVelocity::velocity)
   ;
 
-  class_<cr::Command::ApplyAngularVelocity>("ApplyAngularVelocity")
+  class_<cr::Command::ApplyTargetAngularVelocity>("ApplyTargetAngularVelocity")
     .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("angular_velocity")))
     .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("angular_velocity"))))
-    .def_readwrite("actor_id", &cr::Command::ApplyAngularVelocity::actor)
-    .def_readwrite("angular_velocity", &cr::Command::ApplyAngularVelocity::angular_velocity)
+    .def_readwrite("actor_id", &cr::Command::ApplyTargetAngularVelocity::actor)
+    .def_readwrite("angular_velocity", &cr::Command::ApplyTargetAngularVelocity::angular_velocity)
   ;
 
   class_<cr::Command::ApplyImpulse>("ApplyImpulse")
@@ -144,11 +158,25 @@ void export_commands() {
     .def_readwrite("impulse", &cr::Command::ApplyImpulse::impulse)
   ;
 
+  class_<cr::Command::ApplyForce>("ApplyForce")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("force")))
+    .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("force"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyForce::actor)
+    .def_readwrite("force", &cr::Command::ApplyForce::force)
+  ;
+
   class_<cr::Command::ApplyAngularImpulse>("ApplyAngularImpulse")
     .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("impulse")))
     .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("impulse"))))
     .def_readwrite("actor_id", &cr::Command::ApplyAngularImpulse::actor)
     .def_readwrite("impulse", &cr::Command::ApplyAngularImpulse::impulse)
+  ;
+
+  class_<cr::Command::ApplyTorque>("ApplyTorque")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, cg::Vector3D>, (arg("actor"), arg("torque")))
+    .def(init<cr::ActorId, cg::Vector3D>((arg("actor_id"), arg("torque"))))
+    .def_readwrite("actor_id", &cr::Command::ApplyTorque::actor)
+    .def_readwrite("torque", &cr::Command::ApplyTorque::torque)
   ;
 
   class_<cr::Command::SetSimulatePhysics>("SetSimulatePhysics")
@@ -158,12 +186,26 @@ void export_commands() {
     .def_readwrite("enabled", &cr::Command::SetSimulatePhysics::enabled)
   ;
 
+  class_<cr::Command::SetEnableGravity>("SetEnableGravity")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, bool>, (arg("actor"), arg("enabled")))
+    .def(init<cr::ActorId, bool>((arg("actor_id"), arg("enabled"))))
+    .def_readwrite("actor_id", &cr::Command::SetEnableGravity::actor)
+    .def_readwrite("enabled", &cr::Command::SetEnableGravity::enabled)
+  ;
+
   class_<cr::Command::SetAutopilot>("SetAutopilot")
     .def("__init__", &command_impl::CustomInit<ActorPtr, bool, uint16_t>, (arg("actor"), arg("enabled"), arg("tm_port") = TM_DEFAULT_PORT ))
     .def(init<cr::ActorId, bool, uint16_t>((arg("actor_id"), arg("enabled"), arg("tm_port") = TM_DEFAULT_PORT )))
     .def_readwrite("actor_id", &cr::Command::SetAutopilot::actor)
     .def_readwrite("tm_port", &cr::Command::SetAutopilot::tm_port)
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
+  ;
+
+  class_<cr::Command::ShowDebugTelemetry>("ShowDebugTelemetry")
+    .def("__init__", &command_impl::CustomInit<ActorPtr, bool, uint16_t>, (arg("actor"), arg("enabled")))
+    .def(init<cr::ActorId, bool>((arg("actor_id"), arg("enabled"))))
+    .def_readwrite("actor_id", &cr::Command::ShowDebugTelemetry::actor)
+    .def_readwrite("enabled", &cr::Command::ShowDebugTelemetry::enabled)
   ;
 
   class_<cr::Command::SetVehicleLightState>("SetVehicleLightState")
@@ -176,14 +218,19 @@ void export_commands() {
   implicitly_convertible<cr::Command::SpawnActor, cr::Command>();
   implicitly_convertible<cr::Command::DestroyActor, cr::Command>();
   implicitly_convertible<cr::Command::ApplyVehicleControl, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyVehicleAckermannControl, cr::Command>();
   implicitly_convertible<cr::Command::ApplyWalkerControl, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyVehiclePhysicsControl, cr::Command>();
   implicitly_convertible<cr::Command::ApplyTransform, cr::Command>();
   implicitly_convertible<cr::Command::ApplyWalkerState, cr::Command>();
-  implicitly_convertible<cr::Command::ApplyVelocity, cr::Command>();
-  implicitly_convertible<cr::Command::ApplyAngularVelocity, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyTargetVelocity, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyTargetAngularVelocity, cr::Command>();
   implicitly_convertible<cr::Command::ApplyImpulse, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyForce, cr::Command>();
   implicitly_convertible<cr::Command::ApplyAngularImpulse, cr::Command>();
+  implicitly_convertible<cr::Command::ApplyTorque, cr::Command>();
   implicitly_convertible<cr::Command::SetSimulatePhysics, cr::Command>();
+  implicitly_convertible<cr::Command::SetEnableGravity, cr::Command>();
   implicitly_convertible<cr::Command::SetAutopilot, cr::Command>();
   implicitly_convertible<cr::Command::SetVehicleLightState, cr::Command>();
 }

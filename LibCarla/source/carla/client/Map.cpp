@@ -11,6 +11,7 @@
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/Map.h"
 #include "carla/road/RoadTypes.h"
+#include "carla/trafficmanager/InMemoryMap.h"
 
 #include <sstream>
 
@@ -26,22 +27,24 @@ namespace client {
     return std::move(*map);
   }
 
-  Map::Map(rpc::MapInfo description)
+  Map::Map(rpc::MapInfo description, std::string xodr_content)
     : _description(std::move(description)),
-      _map(MakeMap(_description.open_drive_file)) {}
-
+      _map(MakeMap(xodr_content)){
+    open_drive_file = xodr_content;
+  }
   Map::Map(std::string name, std::string xodr_content)
     : Map(rpc::MapInfo{
     std::move(name),
-    std::move(xodr_content),
-    std::vector<geom::Transform>{}}) {}
+    std::vector<geom::Transform>{}}, xodr_content) {
+    open_drive_file = xodr_content;
+  }
 
   Map::~Map() = default;
 
   SharedPtr<Waypoint> Map::GetWaypoint(
   const geom::Location &location,
   bool project_to_road,
-  uint32_t lane_type) const {
+  int32_t lane_type) const {
     boost::optional<road::element::Waypoint> waypoint;
     if (project_to_road) {
       waypoint = _map.GetClosestWaypointOnRoad(location, lane_type);
@@ -179,6 +182,10 @@ namespace client {
       }
     }
     return result;
+  }
+
+  void Map::CookInMemoryMap(const std::string& path) const {
+    traffic_manager::InMemoryMap::Cook(shared_from_this(), path);
   }
 
 } // namespace client

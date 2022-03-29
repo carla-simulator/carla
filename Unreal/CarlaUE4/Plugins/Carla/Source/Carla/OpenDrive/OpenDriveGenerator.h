@@ -19,6 +19,17 @@
 #include "OpenDriveGenerator.generated.h"
 
 UCLASS()
+class CARLA_API AProceduralMeshActor : public AActor
+{
+  GENERATED_BODY()
+public:
+  AProceduralMeshActor();
+
+  UPROPERTY(Category = "Procedural Mesh Actor", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  UProceduralMeshComponent* MeshComponent;
+};
+
+UCLASS()
 class CARLA_API AOpenDriveGenerator : public AActor
 {
   GENERATED_BODY()

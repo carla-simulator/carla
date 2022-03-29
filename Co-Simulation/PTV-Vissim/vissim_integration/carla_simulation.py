@@ -94,7 +94,7 @@ class CarlaSimulation(object):
 
         vehicle.set_transform(transform)
         if velocity is not None:
-            vehicle.set_velocity(velocity)
+            vehicle.set_target_velocity(velocity)
 
         if lights is not None:
             vehicle.set_light_state(carla.VehicleLightState(lights))

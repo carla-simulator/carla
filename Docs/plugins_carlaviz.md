@@ -2,12 +2,12 @@
 
 The carlaviz plugin is used to visualize the simulation in a web browser. A windows with some basic representation of the scene is created. Actors are updated on-the-fly, sensor data can be retrieved, and additional text, lines and polylines can be drawn in the scene.  
 
-*	[__General information__](#general-information)  
-	*	[Support](#support)  
-*	[__Get carlaviz__](#get-carlaviz)  
-	*	[Prerequisites](#prerequisites)  
-	*	[Download the plugin](#download-the-plugin)  
-*	[__Utilities__](#utilities)  
+*   [__General information__](#general-information)  
+	*   [Support](#support)  
+*   [__Get carlaviz__](#get-carlaviz)  
+	*   [Prerequisites](#prerequisites)  
+	*   [Download the plugin](#download-the-plugin)  
+*   [__Utilities__](#utilities)  
 
 ---
 ## General information
@@ -17,8 +17,8 @@ The carlaviz plugin is used to visualize the simulation in a web browser. A wind
 
 ### Support
 
-*   __Linux__ — CARLA 0.9.6, 0.9.7, 0.9.8, 0.9.9.  
-*   __Windows__ — CARLA 0.9.9.  
+*   __Linux__ — CARLA 0.9.6, 0.9.7, 0.9.8, 0.9.9, 0.9.10.  
+*   __Windows__ — CARLA 0.9.9, 0.9.10.  
 *   __Build from source__ — Latest updates.  
 
 ---
@@ -40,13 +40,14 @@ docker pull mjxu96/carlaviz:0.9.6
 docker pull mjxu96/carlaviz:0.9.7
 docker pull mjxu96/carlaviz:0.9.8
 docker pull mjxu96/carlaviz:0.9.9
+docker pull mjxu96/carlaviz:0.9.10
 
 # Pull this image if working on a CARLA build from source
-docker pull carlasim/carlaviz:latest
+docker pull mjxu96/carlaviz:latest
 ```
 
 !!! Important
-    Currently in Windows there is only support for 0.9.9.  
+    Currently in Windows there is only support for 0.9.9 and 0.9.10.  
 
 CARLA up to 0.9.9 (included) is set to be single-stream. For later versions, multi-streaming for sensors is implemented.  
 
@@ -68,10 +69,14 @@ __1. Run CARLA.__
 
 __2. Run carlaviz.__ In another terminal run the following command according to the Docker image that has been downloaded.  
 
-Change `<name_of_Docker_image>` for the name of the image previously downloaded, e.g. `carlasim/carlaviz:latest` or `mjxu96/carlaviz:0.9.9`.  
+Change `<name_of_Docker_image>` for the name of the image previously downloaded, e.g. `mjxu96/carlaviz:latest` or `mjxu96/carlaviz:0.9.10`.  
 
 ```sh
+# On Linux system
 docker run -it --network="host" -e CARLAVIZ_HOST_IP=localhost -e CARLA_SERVER_IP=localhost -e CARLA_SERVER_PORT=2000 <name_of_Docker_image>
+
+# On Windows/MacOS system
+docker run -it -e CARLAVIZ_HOST_IP=localhost -e CARLA_SERVER_IP=host.docker.internal -e CARLA_SERVER_PORT=2000 -p 8080-8081:8080-8081 -p 8089:8089 <name_of_Docker_image>
 ```
 
 If the everything has been properly set, carlaviz will show a successful message similar to the following.  
@@ -118,10 +123,11 @@ Here is a list of options available for visualization. Additional elements may s
 	*   `/stop_sign` — Show the map's stop signs in the visualization window.  
 
 
-Try to spawn some actors. These will be automatically updated in the visualization window.  
+Try to spawn some actors. These will be automatically updated in the visualization window.
 ```sh
 cd PythonAPI/examples
-python3 spawn_npc.py -n 10 -w 5
+# Spawns actors in a synchronous mode simulation
+python3 generate_traffic.py -n 10 -w 5
 ```
 
 ![carlaviz_full](img/plugins_carlaviz_full.jpg)
@@ -144,7 +150,7 @@ That is all there is to know about the carlaviz plugin. If there are any doubts,
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

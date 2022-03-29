@@ -50,10 +50,9 @@ void AObstacleDetectionSensor::Set(const FActorDescription &Description)
 #endif
 }
 
-void AObstacleDetectionSensor::Tick(float DeltaSeconds)
+void AObstacleDetectionSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
-  Super::Tick(DeltaSeconds);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(AObstacleDetectionSensor::PostPhysTick);
   const FVector &Start = GetActorLocation();
   const FVector &End = Start + (GetActorForwardVector() * Distance);
   UWorld* CurrentWorld = GetWorld();
@@ -137,8 +136,8 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
   {
     const auto &Episode = GetEpisode();
     GetDataStream(*this).Send(*this,
-        Episode.SerializeActor(Episode.FindOrFakeActor(Actor)),
-        Episode.SerializeActor(Episode.FindOrFakeActor(OtherActor)),
+        Episode.SerializeActor(Actor),
+        Episode.SerializeActor(OtherActor),
         HitDistance/100.0f);
   }
 }

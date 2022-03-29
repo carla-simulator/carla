@@ -28,6 +28,10 @@ Use ARROWS or WASD keys for control.
     R            : toggle recording images to disk
 
     F2           : toggle RSS visualization mode
+    F3           : increase log level
+    F4           : decrease log level
+    F5           : increase map log level
+    F6           : decrease map log level
     B            : toggle RSS Road Boundaries Mode
     G            : RSS check drop current route
     T            : toggle RSS
@@ -52,7 +56,7 @@ import sys
 import signal
 
 try:
-    sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
@@ -87,6 +91,10 @@ try:
     from pygame.locals import K_ESCAPE
     from pygame.locals import K_F1
     from pygame.locals import K_F2
+    from pygame.locals import K_F3
+    from pygame.locals import K_F4
+    from pygame.locals import K_F5
+    from pygame.locals import K_F6
     from pygame.locals import K_LEFT
     from pygame.locals import K_RIGHT
     from pygame.locals import K_SLASH
@@ -102,7 +110,6 @@ try:
     from pygame.locals import K_q
     from pygame.locals import K_r
     from pygame.locals import K_s
-    from pygame.locals import K_t
     from pygame.locals import K_w
     from pygame.locals import K_l
     from pygame.locals import K_i
@@ -409,6 +416,20 @@ class VehicleControl(object):
                 elif event.key == K_F2:
                     if self._world and self._world.rss_sensor:
                         self._world.rss_sensor.toggle_debug_visualization_mode()
+                elif event.key == K_F3:
+                    if self._world and self._world.rss_sensor:
+                        self._world.rss_sensor.decrease_log_level()
+                        self._restrictor.set_log_level(self._world.rss_sensor.log_level)
+                elif event.key == K_F4:
+                    if self._world and self._world.rss_sensor:
+                        self._world.rss_sensor.increase_log_level()
+                        self._restrictor.set_log_level(self._world.rss_sensor.log_level)
+                elif event.key == K_F5:
+                    if self._world and self._world.rss_sensor:
+                        self._world.rss_sensor.decrease_map_log_level()
+                elif event.key == K_F6:
+                    if self._world and self._world.rss_sensor:
+                        self._world.rss_sensor.increase_map_log_level()
                 elif event.key == K_b:
                     if self._world and self._world.rss_sensor:
                         if self._world.rss_sensor.sensor.road_boundaries_mode == carla.RssRoadBoundariesMode.Off:
@@ -420,12 +441,6 @@ class VehicleControl(object):
                 elif event.key == K_g:
                     if self._world and self._world.rss_sensor:
                         self._world.rss_sensor.drop_route()
-                elif event.key == K_t:
-                    if self._world and self._world.rss_sensor:
-                        if self._world.rss_sensor.assertive_parameters:
-                            self._world.rss_sensor.set_default_parameters()
-                        else:
-                            self._world.rss_sensor.set_assertive_parameters()
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_q:
                         self._control.gear = 1 if self._control.reverse else -1

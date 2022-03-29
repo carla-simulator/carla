@@ -16,7 +16,14 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
-#include "PhysicsEngine/BodySetupEnums.h"
+#include "PhysicsCore/Public/BodySetupEnums.h"
+
+AProceduralMeshActor::AProceduralMeshActor()
+{
+  PrimaryActorTick.bCanEverTick = false;
+  MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("RootComponent"));
+  RootComponent = MeshComponent;
+}
 
 AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
@@ -77,11 +84,8 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     {
       continue;
     }
-    AActor *TempActor = GetWorld()->SpawnActor<AActor>();
-    UProceduralMeshComponent *TempPMC = NewObject<UProceduralMeshComponent>(TempActor);
-    TempPMC->RegisterComponent();
-    TempPMC->AttachToComponent(
-        TempActor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
     TempPMC->bUseAsyncCooking = true;
     TempPMC->bUseComplexAsSimpleCollision = true;
     TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -165,8 +169,7 @@ void AOpenDriveGenerator::BeginPlay()
 {
   Super::BeginPlay();
 
-  // Search for "{project_content_folder}/Carla/Maps/OpenDrive/{current_map_name}.xodr"
-  const FString XodrContent = UOpenDrive::LoadXODR(GetWorld()->GetMapName());
+  const FString XodrContent = UOpenDrive::GetXODR(GetWorld());
   LoadOpenDrive(XodrContent);
 
   GenerateAll();

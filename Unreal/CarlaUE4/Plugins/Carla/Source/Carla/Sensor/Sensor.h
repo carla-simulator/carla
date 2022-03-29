@@ -33,6 +33,8 @@ public:
 
   virtual void Set(const FActorDescription &Description);
 
+  virtual void BeginPlay();
+
   /// Replace the FDataStream associated with this sensor.
   ///
   /// @warning Do not change the stream after BeginPlay. It is not thread-safe.
@@ -41,11 +43,21 @@ public:
     Stream = std::move(InStream);
   }
 
+  FDataStream MoveDataStream()
+  {
+    return std::move(Stream);
+  }
+
   /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {
     return Stream.GetToken();
   }
+
+  void Tick(const float DeltaTime) final;
+
+  virtual void PrePhysTick(float DeltaSeconds) {}
+  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
@@ -94,7 +106,14 @@ protected:
 
 private:
 
+  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+
   FDataStream Stream;
 
+  FDelegateHandle OnPostTickDelegate;
+
   const UCarlaEpisode *Episode = nullptr;
+
+  /// Allows the sensor to tick with the tick rate from UE4.
+  bool ReadyToTick = false;
 };

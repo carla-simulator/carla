@@ -84,14 +84,14 @@ def main():
 
     args = parse_args()
     carla_image_name = "carla:latest"
-    inbox_assets_path = '/home/ue4/carla/Import'
+    inbox_assets_path = '/home/carla/carla/Import'
     client = docker.from_env()
 
     # All possible Docker arguments are here:
     # https://docker-py.readthedocs.io/en/stable/containers.html
     container_args = {
         "image": carla_image_name,
-        "user": 'ue4',
+        "user": 'carla',
         "auto_remove": True,
         "stdin_open": True,
         "tty": True,
@@ -114,24 +114,24 @@ def main():
             docker_utils.exec_command(
                 carla_container,
                 'make import',
-                user='ue4', verbose=args.verbose, ignore_error=False)
+                user='carla', verbose=args.verbose, ignore_error=False)
 
             docker_utils.exec_command(
                 carla_container,
                 'make package ARGS="--packages=' + str(args.packages) + '"',
-                user='ue4', verbose=args.verbose, ignore_error=False)
+                user='carla', verbose=args.verbose, ignore_error=False)
         else:
             # Just create a package of the whole project
             docker_utils.exec_command(
                 carla_container,
                 'make package',
-                user='ue4', verbose=args.verbose, ignore_error=False)
+                user='carla', verbose=args.verbose, ignore_error=False)
 
         # Get the files routes to export
         files_to_copy = docker_utils.get_file_paths(
             carla_container,
-            '/home/ue4/carla/Dist/*.tar.gz',
-            user='ue4', verbose=args.verbose)
+            '/home/carla/carla/Dist/*.tar.gz',
+            user='carla', verbose=args.verbose)
 
         # Copy these fles to the output folder
         docker_utils.extract_files(carla_container, files_to_copy, args.output)

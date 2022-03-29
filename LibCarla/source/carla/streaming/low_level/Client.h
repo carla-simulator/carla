@@ -46,12 +46,14 @@ namespace low_level {
       }
     }
 
+    /// @warning cannot subscribe twice to the same stream (even if it's a
+    /// MultiStream).
     template <typename Functor>
     void Subscribe(
         boost::asio::io_context &io_context,
         token_type token,
         Functor &&callback) {
-
+      DEBUG_ASSERT_EQ(_clients.find(token.get_stream_id()), _clients.end());
       if (!token.has_address()) {
         token.set_address(_fallback_address);
       }
@@ -64,15 +66,10 @@ namespace low_level {
     }
 
     void UnSubscribe(token_type token) {
-      auto id = token.get_stream_id();
-      for (auto it=_clients.begin(); it!=_clients.end(); ) {
-        if (it->first == id) {
-          log_info("Unsubscribing from stream:", id);
-          it->second->Stop();
-          it = _clients.erase(it);
-        } else {
-          ++it;
-        }
+      auto it = _clients.find(token.get_stream_id());
+      if (it != _clients.end()) {
+        it->second->Stop();
+        _clients.erase(it);
       }
     }
 
@@ -80,7 +77,7 @@ namespace low_level {
 
     boost::asio::ip::address _fallback_address;
 
-    std::unordered_multimap<
+    std::unordered_map<
         detail::stream_id_type,
         std::shared_ptr<underlying_client>> _clients;
   };

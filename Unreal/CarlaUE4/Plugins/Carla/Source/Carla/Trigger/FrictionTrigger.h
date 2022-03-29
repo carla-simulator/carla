@@ -6,6 +6,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "Carla/Game/CarlaEpisode.h"
 
 #include "FrictionTrigger.generated.h"
 
@@ -18,7 +19,7 @@ private:
 
   void Init();
 
-  void UpdateWheelsFriction(AActor *OtherActor, float NewFriction);
+  void UpdateWheelsFriction(AActor *OtherActor, TArray<float>& NewFriction);
 
 public:
 
@@ -62,6 +63,9 @@ protected:
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   virtual void Tick(float DeltaTime) override;
+
+  // Save old frictions
+  TArray<float> OldFrictionValues;
 
 public:
 

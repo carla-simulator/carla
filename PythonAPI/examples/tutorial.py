@@ -110,7 +110,7 @@ def main():
             npc = world.try_spawn_actor(bp, transform)
             if npc is not None:
                 actor_list.append(npc)
-                npc.set_autopilot()
+                npc.set_autopilot(True)
                 print('created %s' % npc.type_id)
 
         time.sleep(5)

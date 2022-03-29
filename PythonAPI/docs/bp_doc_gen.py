@@ -164,7 +164,7 @@ def generate_pb_docs():
                 md.list_push(code(attr.id))
                 md.text(' ' + parentheses(italic(str(attr.type))))
                 if attr.is_modifiable:
-                    md.text(sub(italic(' – Modifiable')))
+                    md.text(' ' + sub(italic('- Modifiable')))
                 md.list_popn()
             md.list_pop()
             md.list_pop()

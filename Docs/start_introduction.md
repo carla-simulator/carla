@@ -3,8 +3,8 @@
 ![Welcome to CARLA](img/welcome.png)
 
 !!! important
-    This documentation refers to the latest development versions of CARLA, 0.9.0 or
-    later. There is another documentation for the stable version 0.8 [here](https://carla.readthedocs.io/en/stable/getting_started/), though it should only be used for specific queries. 
+    This document refers to the latest version of CARLA. For documentation of previous versions, select the required version in the bottom right hand corner where you see this button: ![docs_version_panel](img/docs_version_panel.jpg)
+
 
 CARLA is an open-source autonomous driving simulator. It was built from scratch to serve as a modular and flexible API to address a range of tasks involved in the problem of autonomous driving. One of the main goals of CARLA is to help democratize autonomous driving R&D, serving as a tool that can be easily accessed and customized by users. To do so, the simulator has to meet the requirements of different use cases within the general problem of driving (e.g. learning driving policies, training perception algorithms, etc.). CARLA is grounded on Unreal Engine to run the simulation and uses the OpenDRIVE standard (1.4 as today) to define roads and urban settings. Control over the simulation is granted through an API handled in Python and C++ that is constantly growing as the project does.    
   
@@ -14,7 +14,7 @@ In order to smooth the process of developing, training and validating driving sy
 ## The simulator
 
 The CARLA simulator consists of a scalable client-server architecture.  
-The server is responsible of everything related with the simulation itself: sensor rendering, computation of physics, updates on the world-state and its actors and much more. As it aims for realistic results, the best fit would be running the server with a dedicated GPU, especially when dealing with machine learning.  
+The server is responsible for everything related with the simulation itself: sensor rendering, computation of physics, updates on the world-state and its actors and much more. As it aims for realistic results, the best fit would be running the server with a dedicated GPU, especially when dealing with machine learning.  
 The client side consists of a sum of client modules controlling the logic of actors on scene and setting world conditions. This is achieved by leveraging the CARLA API (in Python or C++), a layer that mediates between server and client that is constantly evolving to provide new functionalities.
 
 ![CARLA Modules](img/carla_modules.png)

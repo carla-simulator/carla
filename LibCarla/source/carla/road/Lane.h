@@ -26,7 +26,7 @@ namespace road {
   public:
 
     /// Can be used as flags
-    enum class LaneType : uint32_t {
+    enum class LaneType : int32_t {
       None          = 0x1,
       Driving       = 0x1 << 1,
       Stop          = 0x1 << 2,
@@ -48,7 +48,7 @@ namespace road {
       Exit          = 0x1 << 18,
       OffRamp       = 0x1 << 19,
       OnRamp        = 0x1 << 20,
-      Any           = 0xFFFFFFFE
+      Any           = -2 // 0xFFFFFFFE
     };
 
   public:

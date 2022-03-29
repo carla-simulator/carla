@@ -44,6 +44,10 @@ namespace client {
     }
   }
 
+  void Vehicle::ShowDebugTelemetry(bool enabled) {
+    GetEpisode().Lock()->ShowVehicleDebugTelemetry(*this, enabled);
+  }
+
   void Vehicle::ApplyControl(const Control &control) {
     if (!_is_control_sticky || (control != _control)) {
       GetEpisode().Lock()->ApplyControlToVehicle(*this, control);
@@ -51,12 +55,40 @@ namespace client {
     }
   }
 
+  void Vehicle::ApplyAckermannControl(const AckermannControl &control) {
+    GetEpisode().Lock()->ApplyAckermannControlToVehicle(*this, control);
+  }
+
+  rpc::AckermannControllerSettings Vehicle::GetAckermannControllerSettings() const {
+    return GetEpisode().Lock()->GetAckermannControllerSettings(*this);
+  }
+
+  void Vehicle::ApplyAckermannControllerSettings(const rpc::AckermannControllerSettings &settings) {
+    GetEpisode().Lock()->ApplyAckermannControllerSettings(*this, settings);
+  }
+
   void Vehicle::ApplyPhysicsControl(const PhysicsControl &physics_control) {
     GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
   }
 
+  void Vehicle::OpenDoor(const VehicleDoor door_idx) {
+    GetEpisode().Lock()->OpenVehicleDoor(*this, rpc::VehicleDoor(door_idx));
+  }
+
+  void Vehicle::CloseDoor(const VehicleDoor door_idx) {
+    GetEpisode().Lock()->CloseVehicleDoor(*this, rpc::VehicleDoor(door_idx));
+  }
+
   void Vehicle::SetLightState(const LightState &light_state) {
     GetEpisode().Lock()->SetLightStateToVehicle(*this, rpc::VehicleLightState(light_state));
+  }
+
+  void Vehicle::SetWheelSteerDirection(WheelLocation wheel_location, float angle_in_deg) {
+    GetEpisode().Lock()->SetWheelSteerDirection(*this, wheel_location, angle_in_deg);
+  }
+
+  float Vehicle::GetWheelSteerAngle(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelSteerAngle(*this, wheel_location);
   }
 
   Vehicle::Control Vehicle::GetControl() const {
@@ -86,6 +118,30 @@ namespace client {
   SharedPtr<TrafficLight> Vehicle::GetTrafficLight() const {
     auto id = GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.traffic_light_id;
     return boost::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
+  }
+
+  void Vehicle::EnableCarSim(std::string simfile_path) {
+    GetEpisode().Lock()->EnableCarSim(*this, simfile_path);
+  }
+
+  void Vehicle::UseCarSimRoad(bool enabled) {
+    GetEpisode().Lock()->UseCarSimRoad(*this, enabled);
+  }
+
+  void Vehicle::EnableChronoPhysics(
+      uint64_t MaxSubsteps,
+      float MaxSubstepDeltaTime,
+      std::string VehicleJSON,
+      std::string PowertrainJSON,
+      std::string TireJSON,
+      std::string BaseJSONPath) {
+    GetEpisode().Lock()->EnableChronoPhysics(*this,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        VehicleJSON,
+        PowertrainJSON,
+        TireJSON,
+        BaseJSONPath);
   }
 
 } // namespace client

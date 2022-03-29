@@ -223,6 +223,8 @@ namespace road {
     geom::Transform _transform;
 
     std::set<ContId> _controllers;
+
+    bool _using_inertial_position = false;
   };
 
 } // road

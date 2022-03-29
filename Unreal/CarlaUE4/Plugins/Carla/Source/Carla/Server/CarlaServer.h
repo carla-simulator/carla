@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Carla/Actor/ActorView.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Sensor/DataStream.h"
 
 #include "CoreMinimal.h"

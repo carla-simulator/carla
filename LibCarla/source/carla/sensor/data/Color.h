@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/rpc/Color.h"
+#include "carla/rpc/FloatColor.h"
 
 #include <cstdint>
 
@@ -36,15 +37,43 @@ namespace data {
     operator rpc::Color() const {
       return {r, g, b};
     }
+    operator rpc::FloatColor() const {
+      return {r/255.f, g/255.f, b/255.f, a/255.f};
+    }
 
     uint8_t b = 0u;
     uint8_t g = 0u;
     uint8_t r = 0u;
     uint8_t a = 0u;
+    MSGPACK_DEFINE_ARRAY(r, g, b, a);
   };
 #pragma pack(pop)
 
   static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
+
+#pragma pack(push, 1)
+  /// Optical flow pixel format. 2 channel float data.
+  struct OpticalFlowPixel {
+    OpticalFlowPixel() = default;
+    OpticalFlowPixel(const OpticalFlowPixel &) = default;
+
+    OpticalFlowPixel(float x, float y)
+      : x(x), y(y) {}
+
+    OpticalFlowPixel &operator=(const OpticalFlowPixel &) = default;
+
+    bool operator==(const OpticalFlowPixel &rhs) const  {
+      return (x == rhs.x) && (y == rhs.y);
+    }
+
+    bool operator!=(const OpticalFlowPixel &rhs) const  {
+      return !(*this == rhs);
+    }
+
+    float x = 0;
+    float y = 0;
+  };
+#pragma pack(pop)
 
 } // namespace data
 } // namespace sensor

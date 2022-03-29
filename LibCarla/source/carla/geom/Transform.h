@@ -69,6 +69,13 @@ namespace geom {
       in_point = out_point;
     }
 
+    /// Applies this transformation to @a in_vector (rotation only).
+    void TransformVector(Vector3D &in_vector) const {
+      auto out_vector = in_vector;
+      rotation.RotateVector(out_vector); // First rotate
+      in_vector = out_vector;
+    }
+
     /// Applies the inverse of this transformation to @a in_point
     void InverseTransformPoint(Vector3D &in_point) const {
       auto out_point = in_point;

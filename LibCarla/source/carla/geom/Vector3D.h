@@ -50,6 +50,10 @@ namespace geom {
        return std::sqrt(SquaredLength());
     }
 
+    Vector3D Abs() const {
+       return Vector3D(abs(x), abs(y), abs(z));
+    }
+
     Vector3D MakeUnitVector() const {
       const float length = Length();
       DEVELOPMENT_ASSERT(length > 2.0f * std::numeric_limits<float>::epsilon());

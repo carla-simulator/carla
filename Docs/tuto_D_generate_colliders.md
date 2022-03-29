@@ -6,13 +6,17 @@ There are two approaches to create the new colliders, but they are not completel
 
 *   __Raycast colliders__ — This approach requires some basic 3D modelling skills. A secondary collider is added to the vehicle so that raycast-based sensors such as the LIDAR retrieve more precise data.  
 *   __Physics colliders__ — This approach follows the [tutorial](https://bitbucket.org/yankagan/carla-content/wiki/Home) created by the contributor __[Yan Kaganovsky / yankagan](https://github.com/yankagan)__ to create a mesh with no need of manual modelling. This mesh is then used as main collider for the vehicle, for physics and sensor detection (unless a secondary collider is added).  
+
 ---
+
 *   [__Raycast colliders__](#raycast-colliders)  
 	*   [1-Export the vehicle FBX](#1-export-the-vehicle-fbx)  
 	*   [2-Generate a low density mesh](#2-generate-a-low-density-mesh)  
 	*   [3-Import the mesh into UE](#3-import-the-mesh-into-ue)  
 	*   [4-Add the mesh as collider](#4-add-the-mesh-as-collider)  
+
 ---
+
 *   [__Physics colliders__](#physics-colliders)  
 	*   [0-Prerequisites](#0-prerequisites)  
 	*   [1-Define custom collision for wheels in Unreal Editor](#1-define-custom-collision-for-wheels-in-unreal-editor)  
@@ -130,7 +134,7 @@ Open CARLA and mess around for a while. If there are any doubts, feel free to po
 
 <div class="build-buttons">
 <p>
-<a href="https://forum.carla.org/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
+<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
 CARLA forum</a>
 </p>
 </div>

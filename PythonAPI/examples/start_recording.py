@@ -90,8 +90,13 @@ def main():
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
-            blueprints = [x for x in blueprints if not x.id.endswith('isetta')]
+            blueprints = [x for x in blueprints if not x.id.endswith('microlino')]
             blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
+            blueprints = [x for x in blueprints if not x.id.endswith('cybertruck')]
+            blueprints = [x for x in blueprints if not x.id.endswith('t2')]
+            blueprints = [x for x in blueprints if not x.id.endswith('sprinter')]
+            blueprints = [x for x in blueprints if not x.id.endswith('firetruck')]
+            blueprints = [x for x in blueprints if not x.id.endswith('ambulance')]
 
         spawn_points = world.get_map().get_spawn_points()
         number_of_spawn_points = len(spawn_points)

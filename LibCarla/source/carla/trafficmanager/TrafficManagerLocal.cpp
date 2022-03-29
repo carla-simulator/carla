@@ -4,6 +4,10 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <algorithm>
+
+#include "carla/Logging.h"
+
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
@@ -29,7 +33,6 @@ TrafficManagerLocal::TrafficManagerLocal(
 
     episode_proxy(episode_proxy),
     world(cc::World(episode_proxy)),
-    debug_helper(world.MakeDebugHelper()),
 
     localization_stage(LocalizationStage(vehicle_id_list,
                                          buffer_map,
@@ -37,8 +40,9 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          track_traffic,
                                          local_map,
                                          parameters,
+                                         marked_for_removal,
                                          localization_frame,
-                                         debug_helper)),
+                                         random_device)),
 
     collision_stage(CollisionStage(vehicle_id_list,
                                    simulation_state,
@@ -46,13 +50,15 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    track_traffic,
                                    parameters,
                                    collision_frame,
-                                   debug_helper)),
+                                   random_device)),
 
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
                                           simulation_state,
                                           buffer_map,
                                           parameters,
-                                          tl_frame)),
+                                          world,
+                                          tl_frame,
+                                          random_device)),
 
     motion_plan_stage(MotionPlanStage(vehicle_id_list,
                                       simulation_state,
@@ -66,11 +72,21 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       localization_frame,
                                       collision_frame,
                                       tl_frame,
-                                      control_frame)),
+                                      world,
+                                      control_frame,
+                                      random_device,
+                                      local_map)),
+
+    vehicle_light_stage(VehicleLightStage(vehicle_id_list,
+                                          buffer_map,
+                                          parameters,
+                                          world,
+                                          control_frame)),
 
     alsm(ALSM(registered_vehicles,
               buffer_map,
               track_traffic,
+              marked_for_removal,
               parameters,
               world,
               local_map,
@@ -78,7 +94,8 @@ TrafficManagerLocal::TrafficManagerLocal(
               localization_stage,
               collision_stage,
               traffic_light_stage,
-              motion_plan_stage)),
+              motion_plan_stage,
+              vehicle_light_stage)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
@@ -97,9 +114,22 @@ TrafficManagerLocal::~TrafficManagerLocal() {
 }
 
 void TrafficManagerLocal::SetupLocalMap() {
-  const carla::SharedPtr<cc::Map> world_map = world.GetMap();
+  const carla::SharedPtr<const cc::Map> world_map = world.GetMap();
   local_map = std::make_shared<InMemoryMap>(world_map);
-  local_map->SetUp();
+
+  auto files = episode_proxy.Lock()->GetRequiredFiles("TM");
+  if (!files.empty()) {
+    auto content = episode_proxy.Lock()->GetCacheFile(files[0], true);
+    if (content.size() != 0) {
+      local_map->Load(content);
+    } else {
+      log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
+      local_map->SetUp();
+    }
+  } else {
+    log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
+    local_map->SetUp();
+  }
 }
 
 void TrafficManagerLocal::Start() {
@@ -115,15 +145,17 @@ void TrafficManagerLocal::Run() {
   control_frame.reserve(INITIAL_SIZE);
   current_reserved_capacity = INITIAL_SIZE;
 
+  size_t last_frame = 0;
   while (run_traffic_manger.load()) {
 
     bool synchronous_mode = parameters.GetSynchronousMode();
     bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+    parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
     // Wait for external trigger to initiate cycle in synchronous mode.
     if (synchronous_mode) {
       std::unique_lock<std::mutex> lock(step_execution_mutex);
-      step_begin_trigger.wait(lock, [this]() {return step_begin.load();});
+      step_begin_trigger.wait(lock, [this]() {return step_begin.load() || !run_traffic_manger.load();});
       step_begin.store(false);
     }
 
@@ -131,13 +163,23 @@ void TrafficManagerLocal::Run() {
     if (!synchronous_mode && hybrid_physics_mode) {
       TimePoint current_instance = chr::system_clock::now();
       chr::duration<float> elapsed_time = current_instance - previous_update_instance;
-      float time_to_wait = HYBRID_MODE_DT - elapsed_time.count();
-      if (time_to_wait > 0.0f) {
-        std::this_thread::sleep_for(chr::duration<float>(time_to_wait));
+      chr::duration<float> time_to_wait = chr::duration<float>(HYBRID_MODE_DT) - elapsed_time;
+      if (time_to_wait > chr::duration<float>(0.0f)) {
+        std::this_thread::sleep_for(time_to_wait);
       }
       previous_update_instance = current_instance;
     }
 
+    // Stop TM from processing the same frame more than once
+    if (!synchronous_mode) {
+      carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
+      if (timestamp.frame == last_frame) {
+        continue;
+      }
+      last_frame = timestamp.frame;
+    }
+
+    std::unique_lock<std::mutex> registration_lock(registration_mutex);
     // Updating simulation state, actor life cycle and performing necessary cleanup.
     alsm.Update();
 
@@ -145,7 +187,6 @@ void TrafficManagerLocal::Run() {
     int current_registered_vehicles_state = registered_vehicles.GetState();
     unsigned long number_of_vehicles = vehicle_id_list.size();
     if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
-
       vehicle_id_list = registered_vehicles.GetIDList();
       number_of_vehicles = vehicle_id_list.size();
 
@@ -170,6 +211,11 @@ void TrafficManagerLocal::Run() {
     tl_frame.clear();
     tl_frame.resize(number_of_vehicles);
     control_frame.clear();
+    // Reserve two frames for each vehicle: one for the ApplyVehicleControl command,
+    // and one for the optional SetVehicleLightState command
+    control_frame.reserve(2 * number_of_vehicles);
+    // Resize to accomodate at least all ApplyVehicleControl commands,
+    // that will be inserted by the motion_plan_stage stage.
     control_frame.resize(number_of_vehicles);
 
     // Run core operation stages.
@@ -180,25 +226,24 @@ void TrafficManagerLocal::Run() {
       collision_stage.Update(index);
     }
     collision_stage.ClearCycleCache();
-
+    vehicle_light_stage.UpdateWorldInfo();
     for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
       traffic_light_stage.Update(index);
       motion_plan_stage.Update(index);
+      vehicle_light_stage.Update(index);
     }
 
-    // Building the command array for current cycle.
-    std::vector<carla::rpc::Command> batch_command(number_of_vehicles);
-    for (unsigned long i = 0u; i < number_of_vehicles; ++i) {
-      batch_command.at(i) = control_frame.at(i);
-    }
+    registration_lock.unlock();
 
     // Sending the current cycle's batch command to the simulator.
     if (synchronous_mode) {
-      episode_proxy.Lock()->ApplyBatchSync(std::move(batch_command), false);
+      episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
       step_end.store(true);
       step_end_trigger.notify_one();
     } else {
-      episode_proxy.Lock()->ApplyBatch(std::move(batch_command), false);
+      if (control_frame.size() > 0){
+        episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+      }
     }
   }
 }
@@ -218,6 +263,9 @@ bool TrafficManagerLocal::SynchronousTick() {
 void TrafficManagerLocal::Stop() {
 
   run_traffic_manger.store(false);
+  if (parameters.GetSynchronousMode()) {
+    step_begin_trigger.notify_one();
+  }
 
   if (worker_thread) {
     if (worker_thread->joinable()) {
@@ -258,7 +306,6 @@ void TrafficManagerLocal::Release() {
 }
 
 void TrafficManagerLocal::Reset() {
-
   Release();
   episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
   world = cc::World(episode_proxy);
@@ -267,16 +314,16 @@ void TrafficManagerLocal::Reset() {
 }
 
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
+  std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {
-
+  std::lock_guard<std::mutex> registration_lock(registration_mutex);
   std::vector<ActorId> actor_id_list;
   for (auto &actor : actor_list) {
-    actor_id_list.push_back(actor->GetId());
+    alsm.RemoveActor(actor->GetId(), true);
   }
-  registered_vehicles.Remove(actor_id_list);
 }
 
 void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
@@ -285,6 +332,11 @@ void TrafficManagerLocal::SetPercentageSpeedDifference(const ActorPtr &actor, co
 
 void TrafficManagerLocal::SetGlobalPercentageSpeedDifference(const float percentage) {
   parameters.SetGlobalPercentageSpeedDifference(percentage);
+}
+
+/// Method to set the automatic management of the vehicle lights
+void TrafficManagerLocal::SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) {
+  parameters.SetUpdateVehicleLights(actor, do_update);
 }
 
 void TrafficManagerLocal::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
@@ -327,12 +379,68 @@ void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const fl
   parameters.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerLocal::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomLeftLaneChangePercentage(actor, percentage);
+}
+
+void TrafficManagerLocal::SetRandomRightLaneChangePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetRandomRightLaneChangePercentage(actor, percentage);
+}
+
 void TrafficManagerLocal::SetHybridPhysicsMode(const bool mode_switch) {
   parameters.SetHybridPhysicsMode(mode_switch);
 }
 
 void TrafficManagerLocal::SetHybridPhysicsRadius(const float radius) {
   parameters.SetHybridPhysicsRadius(radius);
+}
+
+void TrafficManagerLocal::SetOSMMode(const bool mode_switch) {
+  parameters.SetOSMMode(mode_switch);
+}
+
+void TrafficManagerLocal::SetCustomPath(const ActorPtr &actor, const Path path, const bool empty_buffer) {
+  parameters.SetCustomPath(actor, path, empty_buffer);
+}
+
+void TrafficManagerLocal::RemoveUploadPath(const ActorId &actor_id, const bool remove_path) {
+  parameters.RemoveUploadPath(actor_id, remove_path);
+}
+
+void TrafficManagerLocal::UpdateUploadPath(const ActorId &actor_id, const Path path) {
+  parameters.UpdateUploadPath(actor_id, path);
+}
+
+void TrafficManagerLocal::SetImportedRoute(const ActorPtr &actor, const Route route, const bool empty_buffer) {
+  parameters.SetImportedRoute(actor, route, empty_buffer);
+}
+
+void TrafficManagerLocal::RemoveImportedRoute(const ActorId &actor_id, const bool remove_path) {
+  parameters.RemoveImportedRoute(actor_id, remove_path);
+}
+
+void TrafficManagerLocal::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
+  parameters.UpdateImportedRoute(actor_id, route);
+}
+
+void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
+  parameters.SetRespawnDormantVehicles(mode_switch);
+}
+
+void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
+  parameters.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
+}
+
+void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
+  parameters.SetMaxBoundaries(lower, upper);
+}
+
+Action TrafficManagerLocal::GetNextAction(const ActorId &actor_id) {
+  return localization_stage.ComputeNextAction(actor_id);
+}
+
+ActionBuffer TrafficManagerLocal::GetActionBuffer(const ActorId &actor_id) {
+  return localization_stage.ComputeActionBuffer(actor_id);
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
@@ -344,45 +452,13 @@ bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
   return true;
 }
 
-void TrafficManagerLocal::ResetAllTrafficLights() {
-
-  // Filter based on wildcard pattern.
-  const auto world_traffic_lights = world.GetActors()->Filter("*traffic_light*");
-
-  std::vector<TLGroup> list_of_all_groups;
-  TLGroup tl_to_freeze;
-  std::vector<carla::ActorId> list_of_ids;
-  for (auto iter = world_traffic_lights->begin(); iter != world_traffic_lights->end(); iter++) {
-    auto tl = *iter;
-    if (!(std::find(list_of_ids.begin(), list_of_ids.end(), tl->GetId()) != list_of_ids.end())) {
-      const TLGroup tl_group = boost::static_pointer_cast<cc::TrafficLight>(tl)->GetGroupTrafficLights();
-      list_of_all_groups.push_back(tl_group);
-      for (uint64_t i = 0u; i < tl_group.size(); i++) {
-        list_of_ids.push_back(tl_group.at(i).get()->GetId());
-        if (i != 0u) {
-          tl_to_freeze.push_back(tl_group.at(i));
-        }
-      }
-    }
-  }
-
-  for (TLGroup &tl_group : list_of_all_groups) {
-    tl_group.front()->SetState(TLS::Green);
-    std::for_each(
-        tl_group.begin() + 1, tl_group.end(),
-        [](auto &tl) { tl->SetState(TLS::Red); });
-  }
-
-  while (!CheckAllFrozen(tl_to_freeze)) {
-    for (auto &tln : tl_to_freeze) {
-      tln->SetState(TLS::Red);
-      tln->Freeze(true);
-    }
-  }
-}
-
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {
+  const bool previous_mode = parameters.GetSynchronousMode();
   parameters.SetSynchronousMode(mode);
+  if (previous_mode && !mode) {
+    step_begin.store(true);
+    step_begin_trigger.notify_one();
+  }
 }
 
 void TrafficManagerLocal::SetSynchronousModeTimeOutInMiliSecond(double time) {
@@ -395,6 +471,12 @@ carla::client::detail::EpisodeProxy &TrafficManagerLocal::GetEpisodeProxy() {
 
 std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
   return registered_vehicles.GetIDList();
+}
+
+void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
+  seed = _seed;
+  random_device = RandomGenerator(seed);
+  world.ResetAllTrafficLights();
 }
 
 } // namespace traffic_manager

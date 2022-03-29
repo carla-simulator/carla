@@ -17,6 +17,12 @@ namespace osm2odr {
         << ", elevation_layer_height=" << settings.elevation_layer_height << ")";
     return out;
   }
+  void SetOsmWayTypes(OSM2ODRSettings& self, boost::python::list input) {
+    self.osm_highways_types = PythonLitstToVector<std::string>(input);
+  }
+  void SetTLExcludedWayTypes(OSM2ODRSettings& self, boost::python::list input) {
+    self.tl_excluded_highways_types = PythonLitstToVector<std::string>(input);
+  }
 }
 
 void export_osm2odr() {
@@ -29,6 +35,12 @@ void export_osm2odr() {
     .add_property("offset_y", &OSM2ODRSettings::offset_y, &OSM2ODRSettings::offset_y)
     .add_property("default_lane_width", &OSM2ODRSettings::default_lane_width, &OSM2ODRSettings::default_lane_width)
     .add_property("elevation_layer_height", &OSM2ODRSettings::elevation_layer_height, &OSM2ODRSettings::elevation_layer_height)
+    .add_property("proj_string", &OSM2ODRSettings::proj_string, &OSM2ODRSettings::proj_string)
+    .add_property("center_map", &OSM2ODRSettings::center_map, &OSM2ODRSettings::center_map)
+    .add_property("generate_traffic_lights", &OSM2ODRSettings::generate_traffic_lights, &OSM2ODRSettings::generate_traffic_lights)
+    .add_property("all_junctions_with_traffic_lights", &OSM2ODRSettings::all_junctions_traffic_lights, &OSM2ODRSettings::all_junctions_traffic_lights)
+    .def("set_osm_way_types", &SetOsmWayTypes, arg("way_types"))
+    .def("set_traffic_light_excluded_way_types", &SetTLExcludedWayTypes, arg("way_types"))
     .def(self_ns::str(self_ns::self))
   ;
 

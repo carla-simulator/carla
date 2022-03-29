@@ -22,16 +22,10 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'"));
-
-  Offset = carla::sensor::SensorRegistry::get<ASemanticSegmentationCamera*>::type::header_offset;
 }
 
-void ASemanticSegmentationCamera::SendPixels(const TArray<FColor>& AtlasImage, uint32 AtlasTextureWidth)
+void ASemanticSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-#if !UE_BUILD_SHIPPING
-  ACarlaGameModeBase* GameMode = Cast<ACarlaGameModeBase>(GetWorld()->GetAuthGameMode());
-  if(!GameMode->IsCameraStreamEnabled()) return;
-#endif
-
-  SendPixelsInStream(*this, AtlasImage, AtlasTextureWidth);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASemanticSegmentationCamera::PostPhysTick);
+  FPixelReader::SendPixelsInRenderThread(*this);
 }

@@ -35,8 +35,8 @@ rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
 if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 
-set RECAST_HASH=cdce4e
-set RECAST_COMMIT=cdce4e1a270fdf1f3942d4485954cc5e136df1df
+set RECAST_HASH=0b13b0
+set RECAST_COMMIT=0b13b0d288ac96fdc5347ee38299511c6e9400db
 set RECAST_SRC=recast-%RECAST_HASH%-src
 set RECAST_SRC_DIR=%BUILD_DIR%%RECAST_SRC%\
 set RECAST_INSTALL=recast-%RECAST_HASH%-install
@@ -68,7 +68,7 @@ if not exist "%RECAST_BUILD_DIR%" (
 cd "%RECAST_BUILD_DIR%"
 echo %FILE_N% Generating build...
 
-cmake .. -G "Visual Studio 15 2017 Win64"^
+cmake .. -G "Visual Studio 16 2019" -A x64^
     -DCMAKE_BUILD_TYPE=Release^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX="%RECAST_INSTALL_DIR:\=/%"^
@@ -123,8 +123,8 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] An error ocurred while installing using Visual Studio 15 2017 Win64.
-    echo %FILE_N% [Visual Studio 15 2017 Win64 ERROR] Possible causes:
+    echo %FILE_N% [Visual Studio 16 2019 Win64 ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
+    echo %FILE_N% [Visual Studio 16 2019 Win64 ERROR] Possible causes:
     echo %FILE_N%                - Make sure you have Visual Studio installed.
     echo %FILE_N%                - Make sure you have the "x64 Visual C++ Toolset" in your path.
     echo %FILE_N%                  For example using the "Visual Studio x64 Native Tools Command Prompt",

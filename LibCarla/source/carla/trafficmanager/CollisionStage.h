@@ -8,8 +8,6 @@
 #include "boost/geometry/geometries/point_xy.hpp"
 #include "boost/geometry/geometries/polygon.hpp"
 
-#include "carla/client/DebugHelper.h"
-
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/RandomGenerator.h"
@@ -52,7 +50,6 @@ private:
   const TrackTraffic &track_traffic;
   const Parameters &parameters;
   CollisionFrame &output_array;
-  cc::DebugHelper &debug_helper;
   // Structure keeping track of blocking lead vehicles.
   CollisionLockMap collision_locks;
   // Structures to cache geodesic boundaries of vehicle and
@@ -60,7 +57,7 @@ private:
   // to avoid repeated computation within a cycle.
   GeometryComparisonMap geometry_cache;
   GeodesicBoundaryMap geodesic_boundary_map;
-  RandomGenerator<> pgen;
+  RandomGenerator &random_device;
 
   // Method to determine if a vehicle is on a collision path to another.
   std::pair<bool, float> NegotiateCollision(const ActorId reference_vehicle_id,
@@ -93,7 +90,7 @@ public:
                  const TrackTraffic &track_traffic,
                  const Parameters &parameters,
                  CollisionFrame &output_array,
-                 cc::DebugHelper& debug_helper);
+                 RandomGenerator &random_device);
 
   void Update (const unsigned long index) override;
 

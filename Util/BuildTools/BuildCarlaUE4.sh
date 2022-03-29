@@ -1,18 +1,6 @@
 #! /bin/bash
 
 # ==============================================================================
-# -- Set up environment --------------------------------------------------------
-# ==============================================================================
-
-source $(dirname "$0")/Environment.sh
-
-if [ ! -d "${UE4_ROOT}" ]; then
-  fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
-else
-  log "Using Unreal Engine at '$UE4_ROOT'"
-fi
-
-# ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
@@ -24,17 +12,17 @@ REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
 BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
+USE_CARSIM=false
+USE_CHRONO=false
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl -n 'parse-options' -- "$@"`
-
-if [ $? != 0 ] ; then echo "$USAGE_STRING" ; exit 2 ; fi
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,chrono -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
-while true; do
+while [[ $# -gt 0 ]]; do
   case "$1" in
     --gdb )
       GDB="gdb --args";
@@ -59,15 +47,33 @@ while true; do
     --opengl )
       RHI="-opengl";
       shift ;;
+    --carsim )
+      USE_CARSIM=true;
+      shift ;;
+    --chrono )
+      USE_CHRONO=true
+      shift ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
       exit 1
       ;;
     * )
-      break ;;
+      shift ;;
   esac
 done
+
+# ==============================================================================
+# -- Set up environment --------------------------------------------------------
+# ==============================================================================
+
+source $(dirname "$0")/Environment.sh
+
+if [ ! -d "${UE4_ROOT}" ]; then
+  fatal_error "UE4_ROOT is not defined, or points to a non-existant directory, please set this environment variable."
+else
+  log "Using Unreal Engine at '$UE4_ROOT'"
+fi
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_CARLAUE4} || ${LAUNCH_UE4_EDITOR}; }; then
   fatal_error "Nothing selected to be done."
@@ -114,6 +120,21 @@ fi
 # ==============================================================================
 
 if ${BUILD_CARLAUE4} ; then
+
+  OPTIONAL_MODULES_TEXT=""
+  if ${USE_CARSIM} ; then
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+    OPTIONAL_MODULES_TEXT="CarSim ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+    OPTIONAL_MODULES_TEXT="CarSim OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
+  if ${USE_CHRONO} ; then
+    OPTIONAL_MODULES_TEXT="Chrono ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  else
+    OPTIONAL_MODULES_TEXT="Chrono OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
+  echo ${OPTIONAL_MODULES_TEXT} > ${PWD}/Config/OptionalModules.ini
 
   if [ ! -f Makefile ]; then
 

@@ -27,6 +27,9 @@ struct CARLA_API FVehicleParameters
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   int32 NumberOfWheels = 4;
 
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  int32 Generation = 0;
+
   /// (OPTIONAL) Use for custom classification of vehicles.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString ObjectType;

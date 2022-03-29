@@ -470,7 +470,7 @@ class MapImage(object):
         opendrive_hash = str(hash_func.hexdigest())
 
         # Build path for saving or loading the cached rendered map
-        filename = carla_map.name + "_" + opendrive_hash + ".tga"
+        filename = carla_map.name.split('/')[-1] + "_" + opendrive_hash + ".tga"
         dirname = os.path.join("cache", "no_rendering_mode")
         full_path = str(os.path.join(dirname, filename))
 

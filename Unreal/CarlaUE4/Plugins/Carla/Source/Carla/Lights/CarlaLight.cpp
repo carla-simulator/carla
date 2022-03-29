@@ -17,12 +17,24 @@ void UCarlaLight::BeginPlay()
 {
   Super::BeginPlay();
 
+  RegisterLight();
+}
+
+void UCarlaLight::RegisterLight()
+{
+  if(bRegistered)
+  {
+    return;
+  }
+
   UWorld *World = GetWorld();
   if(World)
   {
     UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
     CarlaLightSubsystem->RegisterLight(this);
   }
+
+  bRegistered = true;
 }
 
 void UCarlaLight::OnComponentDestroyed(bool bDestroyingHierarchy)

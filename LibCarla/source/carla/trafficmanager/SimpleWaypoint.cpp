@@ -134,5 +134,13 @@ namespace traffic_manager {
     return waypoint->GetTransform();
   }
 
+  void SimpleWaypoint::SetRoadOption(RoadOption _road_option) {
+    road_option = _road_option;
+  }
+
+  RoadOption SimpleWaypoint::GetRoadOption() {
+    return road_option;
+  }
+
 } // namespace traffic_manager
 } // namespace carla

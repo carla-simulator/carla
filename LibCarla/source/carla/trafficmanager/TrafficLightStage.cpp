@@ -7,7 +7,6 @@
 namespace carla {
 namespace traffic_manager {
 
-using constants::TrafficLight::NO_SIGNAL_PASSTHROUGH_INTERVAL;
 using constants::TrafficLight::DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL;
 using constants::WaypointSelection::JUNCTION_LOOK_AHEAD;
 
@@ -16,55 +15,61 @@ TrafficLightStage::TrafficLightStage(
   const SimulationState &simulation_state,
   const BufferMap &buffer_map,
   const Parameters &parameters,
-  TLFrame &output_array)
+  const cc::World &world,
+  TLFrame &output_array,
+  RandomGenerator &random_device)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),
     parameters(parameters),
-    output_array(output_array) {}
+    world(world),
+    output_array(output_array),
+    random_device(random_device) {}
 
 void TrafficLightStage::Update(const unsigned long index) {
   bool traffic_light_hazard = false;
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
-  const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
-  const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
+  if (!simulation_state.IsDormant(ego_actor_id)) {
+    const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
+    const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
 
-  const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
-  const TimeInstance current_time = chr::system_clock::now();
+    const JunctionID junction_id = look_ahead_point->GetWaypoint()->GetJunctionId();
+    current_timestamp = world.GetSnapshot().GetTimestamp();
 
-  const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
-  const TLS traffic_light_state = tl_state.tl_state;
-  const bool is_at_traffic_light = tl_state.at_traffic_light;
+    const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
+    const TLS traffic_light_state = tl_state.tl_state;
+    const bool is_at_traffic_light = tl_state.at_traffic_light;
 
-  // We determine to stop if the current position of the vehicle is not a
-  // junction and there is a red or yellow light.
-  if (is_at_traffic_light &&
-      traffic_light_state != TLS::Green &&
-      parameters.GetPercentageRunningLight(ego_actor_id) <= pgen.next()) {
+    // We determine to stop if the current position of the vehicle is not a
+    // junction and there is a red or yellow light.
+    if (is_at_traffic_light &&
+        traffic_light_state != TLS::Green &&
+        traffic_light_state != TLS::Off &&
+        parameters.GetPercentageRunningLight(ego_actor_id) <= random_device.next()) {
 
-    traffic_light_hazard = true;
+      traffic_light_hazard = true;
+    }
+    // Handle entry negotiation at non-signalised junction.
+    else if (look_ahead_point->CheckJunction() &&
+            !is_at_traffic_light &&
+            traffic_light_state != TLS::Green &&
+            traffic_light_state != TLS::Off &&
+            parameters.GetPercentageRunningSign(ego_actor_id) <= random_device.next()) {
+
+      traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_timestamp);
+    }
   }
-  // Handle entry negotiation at non-signalised junction.
-  else if (look_ahead_point->CheckJunction()
-           && !is_at_traffic_light
-           && traffic_light_state != TLS::Green
-           && parameters.GetPercentageRunningSign(ego_actor_id) <= pgen.next()) {
-
-    traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_time);
-  }
-
   output_array.at(index) = traffic_light_hazard;
 }
 
 bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,
-                                                    const TimeInstance current_time) {
+                                                    cc::Timestamp timestamp) {
 
   bool traffic_light_hazard = false;
 
   if (vehicle_last_junction.find(ego_actor_id) == vehicle_last_junction.end()) {
-    // Initializing new map entry for the actor with
-    // an arbitrary and different junction id.
+    // Initializing new map entry for the actor with  an arbitrary and different junction id.
     vehicle_last_junction.insert({ego_actor_id, junction_id + 1});
   }
 
@@ -78,29 +83,29 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
       need_to_issue_new_ticket = true;
     } else {
 
-      const TimeInstance &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
-      const chr::duration<double> diff = current_time - previous_ticket;
-      if (diff.count() > DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL) {
+      const cc::Timestamp &previous_ticket = vehicle_last_ticket.at(ego_actor_id);
+      const double diff = timestamp.elapsed_seconds - previous_ticket.elapsed_seconds;
+      if (diff > DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL) {
         need_to_issue_new_ticket = true;
       }
     }
 
     // If new ticket is needed for the vehicle, then query the junction
-    // ticket map
-    // and update the map value to the new ticket value.
+    // ticket map and update the map value to the new ticket value.
     if (need_to_issue_new_ticket) {
       if (junction_last_ticket.find(junction_id) != junction_last_ticket.end()) {
 
-        TimeInstance &last_ticket = junction_last_ticket.at(junction_id);
-        const chr::duration<double> diff = current_time - last_ticket;
-        if (diff.count() > 0.0) {
-          last_ticket = current_time + chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
+        cc::Timestamp &last_ticket = junction_last_ticket.at(junction_id);
+        const double diff = timestamp.elapsed_seconds - last_ticket.elapsed_seconds;
+        if (diff > 0.0) {
+          last_ticket.elapsed_seconds = timestamp.elapsed_seconds + DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL;
         } else {
-          last_ticket += chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL);
+          last_ticket.elapsed_seconds += DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL;
         }
       } else {
-        junction_last_ticket.insert({junction_id, current_time +
-                                      chr::seconds(NO_SIGNAL_PASSTHROUGH_INTERVAL)});
+        cc::Timestamp &new_ticket = timestamp;
+        new_ticket.elapsed_seconds += DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL;
+        junction_last_ticket.insert({junction_id, new_ticket});
       }
       if (vehicle_last_ticket.find(ego_actor_id) != vehicle_last_ticket.end()) {
         vehicle_last_ticket.at(ego_actor_id) = junction_last_ticket.at(junction_id);
@@ -111,9 +116,9 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
   }
 
   // If current time is behind ticket time, then do not enter junction.
-  const TimeInstance &current_ticket = vehicle_last_ticket.at(ego_actor_id);
-  const chr::duration<double> diff = current_ticket - current_time;
-  if (diff.count() > 0.0) {
+  const cc::Timestamp current_ticket = vehicle_last_ticket.at(ego_actor_id);
+  const double diff = current_ticket.elapsed_seconds - timestamp.elapsed_seconds;
+  if (diff > 0.0) {
     traffic_light_hazard = true;
   }
 

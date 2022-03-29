@@ -23,7 +23,7 @@
 
 #include "Containers/Array.h"
 #include "GameFramework/HUD.h"
-
+#include "WheeledVehicleMovementComponent.h"
 #include "CarlaHUD.generated.h"
 
 struct HUDString
@@ -49,6 +49,9 @@ public:
   }
 
   virtual void DrawHUD() override;
+
+  UWheeledVehicleMovementComponent* DebugVehicle{nullptr};
+  void AddDebugVehicleForTelemetry(UWheeledVehicleMovementComponent* Veh) { DebugVehicle = Veh; }
 
   void AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime);
 

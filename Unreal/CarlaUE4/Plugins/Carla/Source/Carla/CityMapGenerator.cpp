@@ -22,6 +22,8 @@
 #include <sstream>
 #endif // CARLA_ROAD_GENERATOR_EXTRA_LOG
 
+namespace crp = carla::rpc;
+
 // =============================================================================
 // -- Private types ------------------------------------------------------------
 // =============================================================================
@@ -248,7 +250,7 @@ static bool LineTrace(
 
   if (Success) {
     for (FHitResult &Item : OutHits) {
-      if (ATagger::MatchComponent(*Item.Component, ECityObjectLabel::Roads)) {
+      if (ATagger::MatchComponent(*Item.Component, crp::CityObjectLabel::Roads)) {
         HitResult = Item;
         return true;
       }

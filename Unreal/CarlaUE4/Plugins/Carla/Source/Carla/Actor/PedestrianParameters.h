@@ -52,4 +52,7 @@ struct CARLA_API FPedestrianParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<float> Speed;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  int32 Generation = 0;
 };
