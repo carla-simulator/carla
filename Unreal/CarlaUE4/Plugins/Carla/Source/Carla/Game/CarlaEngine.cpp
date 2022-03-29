@@ -93,19 +93,22 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     // check to convert this as secondary server
     if (!PrimaryIP.empty())
     {
+      // we are secondary server, connecting to primary server
+      bIsPrimaryServer = false;
       Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, std::bind(&carla::multigpu::SecondaryCommands::on_command, &SecCommander, std::placeholders::_1));
       SecCommander.set_secondary(Secondary);
       Secondary->Connect();
     }
     else
     {
+      // we are primary server, starting server
+      bIsPrimaryServer = true;
       SecondaryServer = Server.GetSecondaryServer();
       Commander.set_router(SecondaryServer);
     }
   }
 
   bMapChanged = true;
-
 }
 
 void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
@@ -166,12 +169,18 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
   {
     if (bIsPrimaryServer)
     {
-      GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode());
-      std::ostringstream OutStream;
-      GetCurrentEpisode()->GetFrameData().Write(OutStream);
-      // OutStream.str()
-      // send frame data to secondary
-      GetCurrentEpisode()->GetFrameData().Clear();
+      if (SecondaryServer->HasClientsConnected()) {
+        GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode());
+        std::ostringstream OutStream;
+        GetCurrentEpisode()->GetFrameData().Write(OutStream);
+        
+        // send frame data to secondary
+        std::string Tmp(OutStream.str());
+        Commander.SendFrameData(carla::Buffer((unsigned char *) Tmp.c_str(), (size_t) Tmp.size()));
+
+        GetCurrentEpisode()->GetFrameData().Clear();
+        
+      }
     }
     else
     {
@@ -202,10 +211,6 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
       {
         LightUpdatePending = CarlaLightSubsystem->IsUpdatePending();
       }
-    }
-
-    if (SecondaryServer->IsMultiGPU()) {
-      Commander.SendFrameData(carla::Buffer());
     }
 
     // send the worldsnapshot

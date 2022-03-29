@@ -20,11 +20,11 @@ PrimaryCommands::PrimaryCommands() {
 
 PrimaryCommands::PrimaryCommands(std::shared_ptr<Router> router) :
   _router(router) {
-  
 }
 
 // broadcast to all secondary servers the frame data
 void PrimaryCommands::SendFrameData(carla::Buffer buffer) {
+  _router->Write(MultiGPUCommand::SEND_FRAME, std::move(buffer));
   log_info("sending frame command");
 }
 

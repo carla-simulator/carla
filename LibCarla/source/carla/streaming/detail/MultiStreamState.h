@@ -55,7 +55,7 @@ namespace detail {
     }
 
     bool AreClientsListening() {
-      return _sessions.size();
+      return (_sessions.size() > 0);
     }
 
   private:

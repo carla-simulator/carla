@@ -51,7 +51,7 @@ namespace multigpu {
 
     boost::asio::ip::tcp::endpoint GetLocalEndpoint() const;
 
-    bool IsMultiGPU() {
+    bool HasClientsConnected() {
       return (!_sessions.empty());
     }
 
