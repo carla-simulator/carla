@@ -13,6 +13,7 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Game/FrameData.h"
 
 #include "GameFramework/Pawn.h"
 
@@ -233,6 +234,8 @@ public:
 
   bool DestroyActor(carla::rpc::ActorId ActorId)
   {
+    GetFrameData().AddEvent(
+        CarlaRecorderEventDel{ActorId});
     if (Recorder->IsEnabled())
     {
       // recorder event
@@ -289,6 +292,8 @@ public:
 
   void SetCurrentMapOrigin(const FIntVector& NewOrigin) { CurrentMapOrigin = NewOrigin; }
 
+  FFrameData& GetFrameData() { return FrameData; }
+
 private:
 
   friend class ACarlaGameModeBase;
@@ -340,4 +345,6 @@ private:
   carla::geom::GeoLocation MapGeoReference;
 
   FIntVector CurrentMapOrigin;
+
+  FFrameData FrameData;
 };

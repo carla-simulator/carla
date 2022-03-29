@@ -54,6 +54,10 @@ namespace detail {
       }
     }
 
+    bool AreClientsListening() {
+      return _sessions.size();
+    }
+
   private:
 
     void ConnectSession(std::shared_ptr<Session> session) final {

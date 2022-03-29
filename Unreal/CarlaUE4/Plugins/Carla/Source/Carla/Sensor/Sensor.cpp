@@ -42,6 +42,10 @@ void ASensor::Tick(const float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::Tick);
   Super::Tick(DeltaTime);
+  if(!Stream.AreClientsListening())
+  {
+    return;
+  }
   ReadyToTick = true;
   PrePhysTick(DeltaTime);
 }

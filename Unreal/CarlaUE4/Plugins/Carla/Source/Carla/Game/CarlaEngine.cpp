@@ -157,12 +157,33 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   }
 }
 
+
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   // tick the recorder/replayer system
   if (GetCurrentEpisode())
   {
+    if (bIsPrimaryServer)
+    {
+      GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode());
+      std::ostringstream OutStream;
+      GetCurrentEpisode()->GetFrameData().Write(OutStream);
+      // OutStream.str()
+      // send frame data to secondary
+      GetCurrentEpisode()->GetFrameData().Clear();
+    }
+    else
+    {
+      // play frame data
+      // get frame data from primary
+      std::istringstream InStream;
+      // InStream.str(InStr);
+      GetCurrentEpisode()->GetFrameData().Read(InStream);
+      GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
+      GetCurrentEpisode()->GetFrameData().Clear();
+    }
+
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();
     if (EpisodeRecorder)
     {

@@ -104,6 +104,9 @@ protected:
   UPROPERTY()
   URandomEngine *RandomEngine = nullptr;
 
+  UPROPERTY()
+  bool bIsActive = false;
+
 private:
 
   void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
@@ -116,4 +119,5 @@ private:
 
   /// Allows the sensor to tick with the tick rate from UE4.
   bool ReadyToTick = false;
+
 };
