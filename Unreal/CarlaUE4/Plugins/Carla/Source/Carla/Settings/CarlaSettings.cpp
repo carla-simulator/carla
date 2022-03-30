@@ -70,6 +70,8 @@ static void LoadSettingsFromConfig(
   {
     ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("WorldPort"), Settings.RPCPort);
     ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("RPCPort"), Settings.RPCPort);
+    Settings.StreamingPort = Settings.RPCPort + 1u;
+    Settings.SecondaryPort = Settings.RPCPort + 2u;
     ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("StreamingPort"), Settings.StreamingPort);
     ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("SecondaryPort"), Settings.SecondaryPort);
     FString Tmp;
@@ -124,6 +126,8 @@ void UCarlaSettings::LoadSettings()
         FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value))
     {
       RPCPort = Value;
+      StreamingPort = Value + 1u;
+      SecondaryPort = Value + 2u;
     }
     if (FParse::Value(FCommandLine::Get(), TEXT("-carla-streaming-port="), Value))
     {

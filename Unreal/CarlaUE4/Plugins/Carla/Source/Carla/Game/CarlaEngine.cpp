@@ -128,7 +128,13 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             break;
           
           case carla::multigpu::MultiGPUCommand::YOU_ALIVE:
+          {
+            std::string msg("Yes, I'm alive");
+            carla::Buffer buf((unsigned char *) msg.c_str(), (size_t) msg.size());
+            carla::log_info("responding is alive command");
+            Secondary->Write(std::move(buf));
             break;
+          }
         }
       });
       Secondary->Connect();
@@ -215,18 +221,7 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
         Commander.SendFrameData(carla::Buffer(std::move((unsigned char *) Tmp.c_str()), (size_t) Tmp.size()));
 
         GetCurrentEpisode()->GetFrameData().Clear();
-        
       }
-    }
-    else
-    {
-      // // play frame data
-      // // get frame data from primary
-      // std::istringstream InStream;
-      // // InStream.str(InStr);
-      // GetCurrentEpisode()->GetFrameData().Read(InStream);
-      // GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
-      // GetCurrentEpisode()->GetFrameData().Clear();
     }
 
     auto* EpisodeRecorder = GetCurrentEpisode()->GetRecorder();

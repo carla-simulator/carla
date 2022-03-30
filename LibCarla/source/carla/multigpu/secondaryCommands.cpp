@@ -28,7 +28,7 @@ void SecondaryCommands::on_command(Buffer buffer) {
   Buffer data(buffer.data() + sizeof(CommandHeader), header->size);
   _callback(header->id, std::move(data));
 
-  log_info("Secondary got a command to process");
+  // log_info("Secondary got a command to process");
 }
 
 

@@ -155,6 +155,35 @@ namespace multigpu {
     });
   }
   
+  void Secondary::Write(Buffer buffer) {
+    auto message = Secondary::MakeMessage(std::move(buffer));
+
+    DEBUG_ASSERT(message != nullptr);
+    DEBUG_ASSERT(!message->empty());
+    std::weak_ptr<Secondary> weak = shared_from_this();
+    boost::asio::post(_strand, [=]() {
+      auto self = weak.lock();
+      if (!self) return;
+      if (!self->_socket.is_open()) {
+        return;
+      }
+
+      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
+        auto self = weak.lock();
+        if (!self) return;
+        if (ec) {
+          log_error("error sending data: ", ec.message());
+        }
+      };
+
+      // _deadline.expires_from_now(_timeout);
+      boost::asio::async_write(
+          self->_socket,
+          message->GetBufferSequence(),
+          boost::asio::bind_executor(self->_strand, handle_sent));
+    });
+  }
+  
   void Secondary::Write(std::string text) {
     std::weak_ptr<Secondary> weak = shared_from_this();
     boost::asio::post(_strand, [=]() {

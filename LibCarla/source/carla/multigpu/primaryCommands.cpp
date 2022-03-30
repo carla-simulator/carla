@@ -40,7 +40,12 @@ void PrimaryCommands::SendGetToken(carla::streaming::detail::stream_id_type sens
 
 // send to know if a connection is alive
 void PrimaryCommands::SendIsAlive() {
+  std::string msg("Are you alive?");
+  carla::Buffer buf((unsigned char *) msg.c_str(), (size_t) msg.size());
   log_info("sending is alive command");
+  auto fut = _router->WriteToNext(MultiGPUCommand::YOU_ALIVE, std::move(buf));
+  auto response = fut.get();
+  log_info("response from alive command: ", response.buffer.data());
 }
 
 void PrimaryCommands::set_router(std::shared_ptr<Router> router) {

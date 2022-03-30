@@ -8,6 +8,7 @@
 
 #include "carla/Buffer.h"
 #include "carla/NonCopyable.h"
+#include "carla/TypeTraits.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/streaming/detail/tcp/Message.h"
 #include "carla/streaming/detail/Token.h"
@@ -50,8 +51,16 @@ namespace multigpu {
     void AsyncRun(size_t worker_threads);
 
     void Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message);
-    
+    void Write(Buffer buffer);
     void Write(std::string text);
+
+    template <typename... Buffers>
+    static auto MakeMessage(Buffers &&... buffers) {
+      static_assert(
+          are_same<Buffer, Buffers...>::value,
+          "This function only accepts arguments of type Buffer.");
+      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::move(buffers)...);
+    }
 
   private:
 
