@@ -14,17 +14,18 @@
 namespace carla {
 namespace multigpu {
 
-// using session = std::shared_ptr<Primary>;
-using callback_response = std::function<void(carla::Buffer)>;
-
 class SecondaryCommands {
   
+  using callback_type = std::function<void(MultiGPUCommand, carla::Buffer)>;
+
   public:
   void set_secondary(std::shared_ptr<Secondary> secondary);
+  void set_callback(callback_type callback);
   void on_command(Buffer buffer);
 
   private:
-  std::shared_ptr<Secondary> _secondary;
+  std::shared_ptr<Secondary>  _secondary;
+  callback_type               _callback;
 };
 
 } // namespace multigpu

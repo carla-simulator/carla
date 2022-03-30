@@ -11,13 +11,23 @@
 namespace carla {
 namespace multigpu {
 
-using callback_response = std::function<void(carla::Buffer)>;
-
 void SecondaryCommands::set_secondary(std::shared_ptr<Secondary> secondary) {
   _secondary = secondary;  
 }
 
+void SecondaryCommands::set_callback(callback_type callback) {
+  _callback = callback;
+}
+
 void SecondaryCommands::on_command(Buffer buffer) {
+  // get the header
+  CommandHeader *header;
+  header = reinterpret_cast<CommandHeader *>(buffer.data());
+  
+  // send only data to the callback
+  Buffer data(buffer.data() + sizeof(CommandHeader), header->size);
+  _callback(header->id, std::move(data));
+
   log_info("Secondary got a command to process");
 }
 

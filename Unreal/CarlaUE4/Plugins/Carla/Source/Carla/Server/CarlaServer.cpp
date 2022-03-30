@@ -2349,6 +2349,11 @@ void FCarlaServer::RunSome(uint32 Milliseconds)
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 
+void FCarlaServer::Tick()
+{
+  ++Pimpl->TickCuesReceived;
+}
+
 bool FCarlaServer::TickCueReceived()
 {
   if (Pimpl->TickCuesReceived > 0u)

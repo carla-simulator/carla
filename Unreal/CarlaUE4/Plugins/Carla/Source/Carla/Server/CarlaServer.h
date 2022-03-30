@@ -36,6 +36,8 @@ public:
 
   void RunSome(uint32 Milliseconds);
 
+  void Tick();
+  
   bool TickCueReceived();
 
   void Stop();

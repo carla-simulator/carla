@@ -31,11 +31,6 @@ namespace multigpu {
     carla::Buffer             buffer;
   };
 
-  struct CommandHeader {
-    MultiGPUCommand id;
-    uint32_t size;
-  };
-
   class Router : public std::enable_shared_from_this<Router> {
   public:
 

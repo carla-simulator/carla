@@ -20,6 +20,10 @@ enum MultiGPUCommand : uint32_t {
   YOU_ALIVE
 };
 
+struct CommandHeader {
+  MultiGPUCommand id;
+  uint32_t size;
+};
 
 } // namespace multigpu
 } // namespace carla
