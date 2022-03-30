@@ -6,7 +6,6 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaEngine.h"
-#include "Carla/Logging.h"
 
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
@@ -20,6 +19,7 @@
 #include "Carla/MapGen/LargeMapManager.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/Logging.h>
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/secondary.h>
@@ -112,10 +112,13 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             CarlaStreamBuffer TempStream((char *) Data.data(), Data.size());
             std::istream InStream(&TempStream);
             // InStream.str(Data.data());
-            GetCurrentEpisode()->GetFrameData().Read(InStream);
-            GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
-            GetCurrentEpisode()->GetFrameData().Clear();            
-            carla::log_info("frame data processed on secondary");
+            if(GetCurrentEpisode())
+            {
+              GetCurrentEpisode()->GetFrameData().Read(InStream);
+              // GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
+              // GetCurrentEpisode()->GetFrameData().Clear();            
+              // carla::log_info("frame data processed on secondary");
+            }
             // forces a tick
             Server.Tick();
             carla::log_info("forcing tick");
@@ -198,6 +201,12 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     if (CurrentEpisode != nullptr)
     {
       CurrentEpisode->TickTimers(DeltaSeconds);
+    }
+    if (GetCurrentEpisode())
+    {
+      GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
+      GetCurrentEpisode()->GetFrameData().Clear();            
+      carla::log_info("frame data processed on secondary");
     }
   }
 }
