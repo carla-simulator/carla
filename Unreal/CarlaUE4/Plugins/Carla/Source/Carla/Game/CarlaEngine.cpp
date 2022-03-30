@@ -202,7 +202,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     {
       CurrentEpisode->TickTimers(DeltaSeconds);
     }
-    if (GetCurrentEpisode())
+    if (!bIsPrimaryServer && GetCurrentEpisode())
     {
       GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
       GetCurrentEpisode()->GetFrameData().Clear();            
