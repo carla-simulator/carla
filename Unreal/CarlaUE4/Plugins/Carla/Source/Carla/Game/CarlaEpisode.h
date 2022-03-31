@@ -234,8 +234,11 @@ public:
 
   bool DestroyActor(carla::rpc::ActorId ActorId)
   {
-    GetFrameData().AddEvent(
-        CarlaRecorderEventDel{ActorId});
+    if (bIsPrimaryServer)
+    {
+      GetFrameData().AddEvent(
+          CarlaRecorderEventDel{ActorId});
+    }
     if (Recorder->IsEnabled())
     {
       // recorder event
@@ -293,6 +296,8 @@ public:
   void SetCurrentMapOrigin(const FIntVector& NewOrigin) { CurrentMapOrigin = NewOrigin; }
 
   FFrameData& GetFrameData() { return FrameData; }
+
+  bool bIsPrimaryServer = true;
 
 private:
 

@@ -283,11 +283,13 @@ void UCarlaEpisode::AttachActors(
 
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
 
-  GetFrameData().AddEvent(
-      CarlaRecorderEventParent{
+  if (bIsPrimaryServer)
+  {
+    GetFrameData().AddEvent(
+        CarlaRecorderEventParent{
           FindCarlaActor(Child)->GetActorId(),
-          FindCarlaActor(Parent)->GetActorId()
-      });
+          FindCarlaActor(Parent)->GetActorId()});
+  }
   // recorder event
   if (Recorder->IsEnabled())
   {
@@ -411,7 +413,7 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
-  if (result.Key == EActorSpawnResultStatus::Success)
+  if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
   {
     GetFrameData().CreateRecorderEventAdd(
         result.Value->GetActorId(),

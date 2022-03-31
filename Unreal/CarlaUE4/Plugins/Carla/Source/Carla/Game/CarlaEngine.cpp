@@ -175,6 +175,8 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
   }
 
   Server.NotifyBeginEpisode(Episode);
+
+  Episode.bIsPrimaryServer = bIsPrimaryServer;
 }
 
 void FCarlaEngine::NotifyEndEpisode()
