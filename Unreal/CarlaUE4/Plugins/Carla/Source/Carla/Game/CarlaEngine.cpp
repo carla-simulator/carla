@@ -115,9 +115,10 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             if(GetCurrentEpisode())
             {
               GetCurrentEpisode()->GetFrameData().Read(InStream);
-              // GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
-              // GetCurrentEpisode()->GetFrameData().Clear();            
-              // carla::log_info("frame data processed on secondary");
+              {
+                std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
+                FramesToProcess.emplace_back(GetCurrentEpisode()->GetFrameData());
+              }
             }
             // forces a tick
             Server.Tick();
@@ -206,8 +207,12 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     }
     if (!bIsPrimaryServer && GetCurrentEpisode())
     {
-      GetCurrentEpisode()->GetFrameData().PlayFrameData(GetCurrentEpisode(), MappedId);
-      GetCurrentEpisode()->GetFrameData().Clear();            
+      if (FramesToProcess.size())
+      {
+        std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
+        FramesToProcess.front().PlayFrameData(GetCurrentEpisode(), MappedId);
+        FramesToProcess.erase(FramesToProcess.begin()); // remove first element
+      }
       carla::log_info("frame data processed on secondary");
     }
   }

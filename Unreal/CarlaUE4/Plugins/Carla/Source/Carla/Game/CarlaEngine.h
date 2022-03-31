@@ -21,6 +21,7 @@
 #include <carla/multigpu/secondaryCommands.h>
 #include <compiler/enable-ue4-macros.h>
 
+#include <mutex>
 
 class UCarlaSettings;
 struct FEpisodeSettings;
@@ -110,4 +111,7 @@ private:
   carla::multigpu::PrimaryCommands            Commander;
   std::shared_ptr<carla::multigpu::Secondary> Secondary;
   carla::multigpu::SecondaryCommands          SecCommander;
+  
+  std::vector<FFrameData> FramesToProcess; 
+  std::mutex FrameToProcessMutex;
 };
