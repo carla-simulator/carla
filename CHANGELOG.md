@@ -12,6 +12,8 @@
   * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
   * Added `NormalsSensor`, a new sensor with normals information
   * Added support for N wheeled vehicles
+  * Added support for new batch commands ConsoleCommand, ApplyLocation (to actor), SetTrafficLightState
+  * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
 
 ## CARLA 0.9.13
 
