@@ -262,6 +262,7 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
 
     // send the worldsnapshot
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
+    CurrentEpisode->GetSensorManager().PostPhysTick(World, TickType, DeltaSeconds);
     ResetSimulationState();
   }
 }

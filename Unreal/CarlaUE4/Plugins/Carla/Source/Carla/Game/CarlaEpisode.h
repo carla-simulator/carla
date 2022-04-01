@@ -14,6 +14,7 @@
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Game/FrameData.h"
+#include "Carla/Sensor/SensorManager.h"
 
 #include "GameFramework/Pawn.h"
 
@@ -297,6 +298,8 @@ public:
 
   FFrameData& GetFrameData() { return FrameData; }
 
+  FSensorManager& GetSensorManager() { return SensorManager; }
+
   bool bIsPrimaryServer = true;
 
 private:
@@ -352,4 +355,6 @@ private:
   FIntVector CurrentMapOrigin;
 
   FFrameData FrameData;
+
+  FSensorManager SensorManager;
 };

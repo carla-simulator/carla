@@ -106,12 +106,12 @@ private:
   bool bIsPrimaryServer = true;
 
   std::unordered_map<uint32_t, uint32_t> MappedId;
-  
+
   std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
   carla::multigpu::PrimaryCommands            Commander;
   std::shared_ptr<carla::multigpu::Secondary> Secondary;
   carla::multigpu::SecondaryCommands          SecCommander;
-  
-  std::vector<FFrameData> FramesToProcess; 
+
+  std::vector<FFrameData> FramesToProcess;
   std::mutex FrameToProcessMutex;
 };

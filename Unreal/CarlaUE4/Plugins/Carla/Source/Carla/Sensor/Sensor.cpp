@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/SensorManager.h"
 
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
@@ -23,8 +24,9 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
 void ASensor::BeginPlay()
 {
   Super::BeginPlay();
-  OnPostTickDelegate = FWorldDelegates::OnWorldPostActorTick.AddUObject(
-      this, &ASensor::PostPhysTickInternal);
+  UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  FSensorManager& SensorManager = Episode->GetSensorManager();
+  SensorManager.RegisterSensor(this);
 }
 
 void ASensor::Set(const FActorDescription &Description)
@@ -81,7 +83,9 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   Stream = FDataStream();
 
-  FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickDelegate);
+  UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  FSensorManager& SensorManager = Episode->GetSensorManager();
+  SensorManager.DeRegisterSensor(this);
 }
 
 void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds)
