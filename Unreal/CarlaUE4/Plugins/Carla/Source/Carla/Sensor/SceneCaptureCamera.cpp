@@ -6,6 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
+#include "Carla/Sensor/NetMediaCapture.h"
 
 #include "Runtime/RenderCore/Public/RenderingThread.h"
 
@@ -24,8 +25,54 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
 }
 
+void ASceneCaptureCamera::BeginPlay()
+{
+  Super::BeginPlay();
+
+  MediaOutput = NewObject<UNetMediaOutput>();
+  UE_LOG(LogCarla, Log, TEXT("NetMediaOutput created"));
+  MediaOutput->CreateMediaCapture();
+  UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
+  if (MediaCapture)
+  {
+    FMediaCaptureOptions CaptureOptions;
+    CaptureOptions.bSkipFrameWhenRunningExpensiveTasks = false;
+    MediaCapture->CaptureTextureRenderTarget2D(GetCaptureRenderTarget(), CaptureOptions);
+    
+    // callback
+    MediaCapture->SetCallback([Sensor=this](std::vector<uint8_t> InBuffer, int32 Width, int32 Height, EPixelFormat PixelFormat)
+	  {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("OnCapturedUserCallback");
+
+      /// @todo Can we make sure the sensor is not going to be destroyed?
+      if (!Sensor->IsPendingKill())
+      {
+        auto Stream = Sensor->GetDataStream(*Sensor);
+        auto Buffer = Stream.PopBufferFromPool();
+        Buffer.copy_from(carla::sensor::s11n::ImageSerializer::header_offset, boost::asio::buffer(InBuffer.data(), InBuffer.size()));
+        if(Buffer.data())
+        {
+          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
+          Stream.Send(*Sensor, std::move(Buffer));
+        }
+      }
+    });
+  }
+}
+
+void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  // stop capturing
+  UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
+  if (MediaCapture)
+  {
+    MediaCapture->StopCapture(false);
+  }
+}
+
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
-  FPixelReader::SendPixelsInRenderThread(*this);
+  CaptureComponent2D->CaptureScene();
 }

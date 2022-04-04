@@ -191,15 +191,15 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   if (TickType == ELevelTick::LEVELTICK_All)
   {
-    // update frame counter
-    UpdateFrameCounter();
-
     // process RPC commands
     do
     {
       Server.RunSome(10u);
     }
     while (bSynchronousMode && !Server.TickCueReceived());
+
+    // update frame counter
+    UpdateFrameCounter();
 
     if (CurrentEpisode != nullptr)
     {

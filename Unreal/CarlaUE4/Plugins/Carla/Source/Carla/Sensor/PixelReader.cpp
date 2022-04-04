@@ -46,7 +46,7 @@ static void WritePixelsToBuffer_Vulkan(
     uint32 Offset,
     FRHICommandListImmediate &InRHICmdList)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer_Vulkan");
   check(IsInRenderingThread());
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
@@ -177,7 +177,7 @@ void FPixelReader::WritePixelsToBuffer(
     bool use16BitFormat
     )
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
   check(IsInRenderingThread());
 
   if (IsVulkanPlatform(GMaxRHIShaderPlatform) || IsD3DPlatform(GMaxRHIShaderPlatform, false))

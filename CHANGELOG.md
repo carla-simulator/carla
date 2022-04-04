@@ -1,5 +1,6 @@
 ## Latest
 
+  * Use MediaCapture to capture the scene for the camera RGB sensor. It speeds up the FPS
   * Added native ackermann controller:
     - `apply_ackermann_control`:  to apply an ackermann control command to a vehicle
     - `get_ackermann_controller_settings`: to get the last ackermann controller settings applied

@@ -264,7 +264,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
     ++TickCuesReceived;
-    return FCarlaEngine::GetFrameCounter();
+    return FCarlaEngine::GetFrameCounter() + 1;
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
