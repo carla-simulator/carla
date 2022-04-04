@@ -51,4 +51,7 @@ struct CARLA_API FWeatherParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin = "0.0", ClampMax = "2.0", UIMin = "0.0", UIMax = "2.0"))
   float RayleighScatteringScale = 0.0331f;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool DustStorm = false;
 };
