@@ -8,7 +8,7 @@
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderEventAdd::Write(std::ofstream &OutFile) const
+void CarlaRecorderEventAdd::Write(std::ostream &OutFile) const
 {
     // database id
     WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -34,7 +34,7 @@ void CarlaRecorderEventAdd::Write(std::ofstream &OutFile) const
     }
 }
 
-void CarlaRecorderEventAdd::Read(std::ifstream &InFile)
+void CarlaRecorderEventAdd::Read(std::istream &InFile)
 {
     // database id
     ReadValue<uint32_t>(InFile, this->DatabaseId);
@@ -77,7 +77,7 @@ void CarlaRecorderEventsAdd::Add(const CarlaRecorderEventAdd &Event)
     Events.push_back(std::move(Event));
 }
 
-void CarlaRecorderEventsAdd::Write(std::ofstream &OutFile)
+void CarlaRecorderEventsAdd::Write(std::ostream &OutFile)
 {
     // write the packet id
     WriteValue<char>(OutFile, static_cast<char>(CarlaRecorderPacketId::EventAdd));
@@ -101,4 +101,21 @@ void CarlaRecorderEventsAdd::Write(std::ofstream &OutFile)
     OutFile.seekp(PosStart, std::ios::beg);
     WriteValue<uint32_t>(OutFile, Total);
     OutFile.seekp(PosEnd, std::ios::beg);
+}
+
+void CarlaRecorderEventsAdd::Read(std::istream &InFile)
+{
+    CarlaRecorderEventAdd EventAdd;
+    uint16_t i, Total;
+    ReadValue<uint16_t>(InFile, Total);
+    for (i = 0; i < Total; ++i)
+    {
+        EventAdd.Read(InFile);
+        Add(EventAdd);
+    }
+}
+
+const std::vector<CarlaRecorderEventAdd>& CarlaRecorderEventsAdd::GetEvents()
+{
+    return Events;
 }

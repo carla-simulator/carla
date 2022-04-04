@@ -14,16 +14,20 @@ BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
 USE_CHRONO=false
+EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,chrono -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,chrono,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --editor-flags )
+      EDITOR_FLAGS=$2
+      shift ;;
     --gdb )
       GDB="gdb --args";
       shift ;;
@@ -163,7 +167,7 @@ fi
 if ${LAUNCH_UE4_EDITOR} ; then
 
   log "Launching UE4Editor..."
-  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI}
+  ${GDB} ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${PWD}/CarlaUE4.uproject" ${RHI} ${EDITOR_FLAGS}
 
 else
 

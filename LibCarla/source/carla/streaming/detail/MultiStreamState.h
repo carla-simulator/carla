@@ -34,11 +34,10 @@ namespace detail {
 
     template <typename... Buffers>
     void Write(Buffers &&... buffers) {
-      auto message = Session::MakeMessage(std::move(buffers)...);
-
       // try write single stream
       auto session = _session.load();
       if (session != nullptr) {
+        auto message = Session::MakeMessage(std::move(buffers)...);
         session->Write(std::move(message));
         // Return here, _session is only valid if we have a 
         // single session.
@@ -47,11 +46,16 @@ namespace detail {
 
       // try write multiple stream
       std::lock_guard<std::mutex> lock(_mutex);
+      auto message = Session::MakeMessage(std::move(buffers)...);
       for (auto &s : _sessions) {
         if (s != nullptr) {
           s->Write(message);
         }
       }
+    }
+
+    bool AreClientsListening() {
+      return (_sessions.size() > 0);
     }
 
   private:
@@ -77,6 +81,7 @@ namespace detail {
         DEBUG_ASSERT(session == _session.load());
         _session.store(nullptr);
         _sessions.clear();
+        log_warning("Last session disconnected");
       } else {
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),

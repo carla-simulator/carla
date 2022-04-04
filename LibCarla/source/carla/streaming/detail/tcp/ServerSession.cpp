@@ -140,12 +140,11 @@ namespace tcp {
   void ServerSession::CloseNow() {
     _deadline.cancel();
     if (_socket.is_open()) {
+      boost::system::error_code ec;
+      _socket.shutdown(boost::asio::socket_base::shutdown_both, ec);
       _socket.close();
     }
-    boost::asio::post(_strand.context(), [self=shared_from_this()]() {
-      DEBUG_ASSERT(self->_on_closed);
-      self->_on_closed(self);
-    });
+    _on_closed(shared_from_this());
     log_debug("session", _session_id, "closed");
   }
 
