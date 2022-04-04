@@ -38,7 +38,7 @@ void export_weather() {
   namespace cr = carla::rpc;
 
   auto cls = class_<cr::WeatherParameters>("WeatherParameters")
-    .def(init<float, float, float, float, float, float, float, float, float, float, float, float, float, float>(
+    .def(init<float, float, float, float, float, float, float, float, float, float, float, float, float, bool>(
         (arg("cloudiness")=0.0f,
          arg("precipitation")=0.0f,
          arg("precipitation_deposits")=0.0f,
