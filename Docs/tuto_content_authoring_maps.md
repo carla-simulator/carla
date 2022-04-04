@@ -12,19 +12,20 @@ In this tutorial we will cover the process of creating a simple map for use with
 * __[Traffic signs](#traffic-signs)__ 
 * __[Materials](#materials)__
 * __[Road painter](#road-painter)__
-    * [__What is the road painter?__](#what-is-the-road-painter)
-    * [__Before you begin__](#before-you-begin)
-    * [__Road painter actor, master material and render target__](#establish-the-road-painter-master-material-and-render-target)
-    * [__Prepare the master material__](#prepare-the-master-material)
-    * [__Paint the road__](#paint-the-road)
-    * [__Update the appearance of lane markings__](#update-the-appearance-of-lane-markings)
-    * [__Next steps__](#next-steps)
+    * [What is the road painter?](#what-is-the-road-painter)
+    * [Road painter actor, master material and render target](#establish-the-road-painter-master-material-and-render-target)
+    * [Prepare the master material](#prepare-the-master-material)
+    * [Paint the road](#paint-the-road)
+    * [Update the appearance of lane markings](#update-the-appearance-of-lane-markings)
+    * [Next steps](#next-steps)
+* __[Trees and vegetation](#trees-and-vegetation)__
+    * [Foliage tool](#foliage-tool)
 
 
 
 ## Prerequisites
 
-To follow this guide, you will need to build CARLA from source, so that you may use the unreal editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoardRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
+To follow this guide, you will need to build CARLA from source, so that you may use the Unreal Editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoardRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
 
 
 ## Create a road network using RoadRunner
@@ -33,7 +34,7 @@ Open RoadRunner and create a new scene. Choose the Road Plan Tool and right clic
 
 ![roadrunner_draw](img/tuto_content_authoring_maps/drawing_roads.gif)
 
-For the purpose of this tutorial we use a simple oval road with a junction in the middle. For more building more advanced networks please refer to the [__roadrunner documentation__](https://es.mathworks.com/products/roadrunner.html).
+For the purpose of this tutorial we use a simple oval road with a junction in the middle. For building more advanced networks please refer to the [__roadrunner documentation__](https://es.mathworks.com/products/roadrunner.html).
 
 ![roadrunner_road](img/tuto_content_authoring_maps/simple_crossroads.png)
 
@@ -43,9 +44,13 @@ Once you have created your desired road network, in the RoadRunner menu bar choo
 
 RoadRunner is the best application for creating custom maps. There are alternatives such as [__OpenStreetMap__](tuto_G_openstreetmap.md) that focus on generating maps from real road maps. 
 
+## TrueVision designer
+
+RoadRunner is a proprietary software that requires MATLAB. Some institutions like universities may have deals with MathWorks such that some users may be able to acquire a RoadRunner license. If you don't have budget for a license, a convenient open source alternative to RoadRunner is the [__TrueVision Designer__](https://www.truevision.ai/designer). This app has many of the same features as RoadRunner and is useful if you cannot acquire a license for RoadRunner. 
+
 ## Importing your road network into CARLA
 
-The important export files needed for CARLA are the `.xodr` file and the `.fbx` file. Copy or move these files into the *Import* folder inside the root directory of the CARLA repository where you have built from source. 
+The important export files needed for CARLA are the `.xodr` file and the `.fbx` file. Copy or move these files into the `Import` folder inside the root directory of the CARLA repository where you have built from source. 
 
 ![roadrunner_imports](img/tuto_content_authoring_maps/rr_import.png)
 
@@ -69,18 +74,18 @@ There are several elements needed to create an asset in CARLA:
 - [__Normal map__](https://en.wikipedia.org/wiki/Normal_mapping) - a 2D image defining the directions of the normals on the surface of the object, to add 3D variations to the object's surface
 - ORM map - a map defining the regions of metallicity, roughness and ambient oclussion
 
-The ORM map utilises the channels of a standard RGBA encoded image to encode the map of metallic regions, roughness and ambient occlusion. As we define the map here, the red channel defines the metalic map, the green channel the roughness and the blue channels the ambient occlusion. These maps (as well as the diffuse and normal maps) can be created using an application such as [__Adobe Substance 3D painter__](https://www.adobe.com/products/substance3d-painter.html).
+The ORM map utilises the channels of a standard RGBA encoded image to encode the map of metallic regions, roughness and ambient occlusion. As we define the map here, the red channel defines the metalic map, the green channel the roughness and the blue channel is the ambient occlusion. These maps (as well as the diffuse and normal maps) can be created using an application such as [__Adobe Substance 3D painter__](https://www.adobe.com/products/substance3d-painter.html).
 
-Create a new folder in some appropriate location using the Unreal content browser. Within this folder you can either right click and select `Import to folder_location` near the top of the context menu, or drag and drop files directly into the content browser. 
+Create a new folder in some appropriate location using the Unreal content browser. Within this folder you can either right click and select `Import to PATH/TO/FOLDER` near the top of the context menu, or drag and drop files directly into the content browser. 
 
 We will import an FBX file containing the base mesh and the UV map, that we have exported from Blender.
 
 ![farmhouse_blender](img/tuto_content_authoring_maps/farmhouse_blender.png)
 
-In the context menu, ensure that in the __Mesh__ section *Import Normals* is selected
- for *Normal Import Method* and that in the __Material__ section that *Do Not Create Material* is selected. Deselect *Import Textures* in the __Materials__ section since we will import them manually. These choices would differ if you wanted to use some textures already embedded in your FBX file. 
+In the context menu, ensure that in the __Mesh__ section `Import Normals` is selected
+ for `Normal Import Method` and that in the __Material__ section that `Do Not Create Material` is selected. Deselect `Import Textures` in the __Materials__ section since we will import them manually. These choices would differ if you wanted to use some textures already embedded in your FBX file. 
 
- Select *Import All*. Once the import has completed, double click on the imported asset that appears in the content browser to edit it. 
+ Select `Import All`. Once the import has completed, double click on the imported asset that appears in the content browser to edit it. 
 
 ![farmhouse_edit](img/tuto_content_authoring_maps/farmhouse_ue_edit.png)
 
@@ -88,7 +93,7 @@ We should now import the textures, the diffuse texture for the diffuse colors, t
 
 Open the ORM map by double clicking and deselect the `sRGB` option, to ensure the texture is correctly applied. 
 
-Right click in the content browser and select *Material* from the menu. A new matrial will be created in the content browser. Double click to edit it. Shift select the textures you imported and drag them into the material edit window, you will now get 3 new nodes in the material node editor. 
+Right click in the content browser and select `Material` from the menu. A new matrial will be created in the content browser. Double click to edit it. Shift select the textures you imported and drag them into the material edit window, you will now get 3 new nodes in the material node editor. 
 
 ![material_init](img/tuto_content_authoring_maps/material_init.png)
 
@@ -120,7 +125,7 @@ This concludes the Map authorship guide. Now you know how to create a road netwo
 
 To add traffic lights to your new map:
 
-__1.__ From the _Content Browser_, navigate to `Content/Carla/Static/TrafficLight/StreetLights_01`. You will find several different traffic light blueprints to choose from.
+__1.__ From the _Content Browser_, navigate to `Content > Carla > Static > TrafficLight > StreetLights_01`. You will find several different traffic light blueprints to choose from.
 
 __2.__ Drag the traffic lights into the scene and position them in the desired location. Press the space bar on your keyboard to toggle between positioning, rotation, and scaling tools.
 
@@ -142,9 +147,9 @@ __5.__ Traffic light timing is only configurable through the Python API. See the
 
 ## Traffic signs
 
-To add traffic lights to your new map:
+To add traffic signs to your new map:
 
-__1.__ From the _Content Browser_, navigate to `Content/Carla/Static/TrafficSign`. You will find several different traffic light blueprints to choose from.
+__1.__ From the _Content Browser_, navigate to `Content > Carla > Static > TrafficSign`. You will find several different traffic light blueprints to choose from.
 
 __2.__ Drag the traffic lights into the scene and position them in the desired location. Press the space bar on your keyboard to toggle between positioning, rotation, and scaling tools.
 
@@ -173,18 +178,18 @@ The road painter uses the OpenDRIVE information to paint the roads. Make sure th
 
 __1. Create the `RoadPainter` actor.__
 
-1. In the _Content Browser_, navigate to `Content/Carla/Blueprints/LevelDesign`.
+1. In the _Content Browser_, navigate to `Content > Carla > Blueprints > LevelDesign`.
 2. Drag the `RoadPainter` into the scene.
 
 __2. Create the Render Target.__
 
-1. In the _Content Browser_, navigate to `Content/Carla/Blueprints/LevelDesign/RoadPainterAssets`.
+1. In the _Content Browser_, navigate to `Content > Carla > Blueprints > LevelDesign > RoadPainterAssets`.
 2. Right-click on the `RenderTarget` file and select `Duplicate`.
 3. Rename to `Tutorial_RenderTarget`.
 
 __3. Create the master material instance.__
 
-1. In the _Content Browser_, navigate to `Game/Carla/Static/GenericMaterials/RoadPainterMaterials`.
+1. In the _Content Browser_, navigate to `Game > Carla > Static > GenericMaterials > RoadPainterMaterials`.
 2. Right-click on `M_RoadMaster` and select _Create Material Instance_.
 3. Rename to `Tutorial_RoadMaster`.
 
@@ -235,7 +240,7 @@ You can change the textures for each material by selecting the following values 
 - Normal
 - ORMH
 
-Explore some of the CARLA textures available in `Game/Carla/Static/GenericMaterials/Asphalt/Textures`.
+Explore some of the CARLA textures available in `Game > Carla > Static > GenericMaterials > Asphalt > Textures`.
 
 ---
 
@@ -293,7 +298,7 @@ This section also contains options to erase the applied changes.
 <br>
 __5. Add decals and meshes.__
 
-You can explore the available decals and meshes in `Content/Carla/Static/Decals` and `Content/Carla/Static`. Add them to road painter by extending and adding to the _Decals Spawn_ and _Meshes Spawn_ arrays. For each one you can configure the following parameters:
+You can explore the available decals and meshes in `Content > Carla Static > Decals` and `Content > Carla > Static`. Add them to road painter by extending and adding to the _Decals Spawn_ and _Meshes Spawn_ arrays. For each one you can configure the following parameters:
 
 - _Number of Decals/Meshes_ - The amount of each decal or mesh to paint.
 - _Decal/Mesh Scale_ — Scale of the decal/mesh per axis.
@@ -343,7 +348,7 @@ After you have painted the roads, you can update the appearance of the road mark
 
 __1. Make a copy of the master material.__
 
-1. In the _Content Browser_, navigate to `Game/Carla/Static/GenericMaterials/RoadPainterMaterials`.
+1. In the _Content Browser_, navigate to `Game > Carla > Static > GenericMaterials > RoadPainterMaterials`.
 2. Right-click on `Tutorial_RoadMaster` and select _Create Material Instance_.
 3. Rename to `Tutorial_LaneMarkings`.
 
@@ -361,16 +366,32 @@ Drag the material onto the lane markings you wish to color. Repeat the whole pro
 
 ---
 
+## Trees and Vegetation
+
+The CARLA content library has a comprehensive set of vegitation blueprints for you to add further realism to the off-road areas of your maps like sidewalks, parks, hillsides, fields and forrests. 
+
+Navigate to the vegitation folder in the CARLA content library: `Carla > Static > Vegitation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
+
+![map_materials](img/tuto_content_authoring_maps/add_tree.png)
+
+### Foliage tool
+
+A useful tool for trees and vegitation is the [__Unreal Engine foliage tool__](https://docs.unrealengine.com/4.27/en-US/BuildingWorlds/Foliage/). Activate the tool by selecting the `mode` from the mode dropdown in the toolbar.
+
+![foliage_tool](img/tuto_content_authoring_maps/select_foliage_tool.png)
+
+Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set an appropiate density in the density field, then paint into the map with your foliage item. 
+
+![foliage_paint](img/tuto_content_authoring_maps/foliage_paint.gif)
+
 ## Next steps
 
 Continue customizing your map using the tools and guides below:
 
 - [Implement sub-levels in your map.](tuto_M_custom_layers.md)
-- [Add and configure traffic lights and signs.](tuto_M_custom_add_tl.md)
 - [Add buildings with the procedural building tool.](tuto_M_custom_buildings.md)
 - [Customize the weather](tuto_M_custom_weather_landscape.md#weather-customization)
 - [Customize the landscape with serial meshes.](tuto_M_custom_weather_landscape.md#add-serial-meshes)
-
 Once you have finished with the customization, you can [generate the pedestrian navigation information](tuto_M_generate_pedestrian_navigation.md).
 
 ---

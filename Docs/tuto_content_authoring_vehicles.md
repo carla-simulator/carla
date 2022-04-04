@@ -6,7 +6,7 @@ CARLA provides a comprehensive set of vehicles out of the box in the blueprint l
 
 The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. After rigging and importing, blueprints need to be set for the car and the wheels. Then apply matierials and add the glass parts of the vehicle. We will cover these steps in the following guide.
 
-* __[Rigging](#Rigging-the-vehicle-using-an-armature)__   
+* __[Rigging](#rigging-the-vehicle-using-an-armature)__   
 	* [Import](#import)  
 	* [Armature](#add-an-armature)
     * [Parenting](#parenting)
@@ -80,11 +80,11 @@ Once you have assigned all of the mesh parts to the armature you can test if it 
 
 ### Export
 
-Now we will export our rigged model into FBX format for import into Unreal Engine. Select `Export > FBX (.fbx)` from the File menu. In the **Object Types* section of the *Include* panel, shift select the *Armature* and *Mesh* options. 
+Now we will export our rigged model into FBX format for import into Unreal Engine. Select `Export > FBX (.fbx)` from the File menu. In the `Object Types` section of the `Include` panel, shift select the `Armature` and `Mesh` options. 
 
-In the *Transform* panel. Change *Forward* to *X Forward* and change *Up* to *Z Up*. This is important to ensure the vehicle is oriented correctly in the Unreal Engine. 
+In the `Transform` panel. Change `Forward` to `X Forward` and change `Up` to `Z Up`. This is important to ensure the vehicle is oriented correctly in the Unreal Engine. 
 
-In the *Armature* section uncheck *Add Leaf Bones* and uncheck *Bake Animation*.
+In the `Armature` section uncheck `Add Leaf Bones` and uncheck `Bake Animation`.
 
 ![export_fbx](img/tuto_content_authoring_vehicles/export_fbx.gif)
 
@@ -98,19 +98,19 @@ You will now have 3 things in your content browswer directory, the mesh, the ske
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/regenerate_body.png)
 
-First, select the main body, in the *Details* menu on the right, change the *Linear Damping* to 0.0 in the *Physics* section, check *Simulation Generates Hit Events* in the *Collision* section and change the *Primitive Type* from *Capsule* to *Box* in the *Body Creation* section. Then press *Regenterate bodies*. The capsule will now change to a rectangular box. Then select the wheels. 
+First, select the main body, in the `Details` menu on the right, change the `Linear Damping` to 0.0 in the `Physics` section, check `Simulation Generates Hit Events` in the `Collision` section and change the `Primitive Type` from `Capsule` to `Box` in the `Body Creation` section. Then press `Regenterate bodies`. The capsule will now change to a rectangular box. Then select the wheels. 
 
-Now select the wheels (in the *Skeleton Tree* section on the left). Change *Linear Damping* to 0.0, set *Physics Type* to *Kinematic*, set *Collision Response* toe *Disabled* and select the *Primitive Type* as *Sphere*. Press *Re-generate Bodies* once more.
+Now select the wheels (in the `Skeleton Tree` section on the left). Change `Linear Damping` to 0.0, set `Physics Type` to `Kinematic`, set `Collision Response` toe `Disabled` and select the `Primitive Type` as `Sphere`. Press `Re-generate Bodies` once more.
 
 ![regenerate_wheels](img/tuto_content_authoring_vehicles/regenerate_wheels.png)
 
 ### Creating the animation
 
-In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for *VehicleAnimInstance* in the *Parent Class* section and for the *Target Skeleton* search for the skeleton corresponding to your new vehicle, you should be able to see the name in your content browser. After selecting these two things press OK. This will create a new animation blueprint for your vehicle.
+In the content browser directory where you have your new vehicle asset, right click and choose `Animation > Animation Blueprint`. In the popup that opens, search for `VehicleAnimInstance` in the `Parent Class` section and for the `Target Skeleton` search for the skeleton corresponding to your new vehicle, you should be able to see the name in your content browser. After selecting these two things press OK. This will create a new animation blueprint for your vehicle.
 
 ![animation_blueprint](img/tuto_content_authoring_vehicles/create_anim_blueprint.png)
 
-To simplify things, we can copy the animation from another vehicle. In a second content browser, open `Content > Carla > Static > Vehicles > 4Wheeled` and choose any vehicle. Open the animation blueprint of your chosen vehicle and then copy all nodes that are not the *Output pose* node from this into your new animation blueprint. Connect the nodes by dragging a new connection between the final node to the output node. Press compile and the animation blueprint is now set.
+To simplify things, we can copy the animation from another vehicle. In a second content browser, open `Content > Carla > Static > Vehicles > 4Wheeled` and choose any vehicle. Open the animation blueprint of your chosen vehicle and then copy all nodes that are not the `Output pose` node from this into your new animation blueprint. Connect the nodes by dragging a new connection between the final node to the output node. Press compile and the animation blueprint is now set.
 
 ![copy_nodes](img/tuto_content_authoring_vehicles/copy_nodes.gif)
 
@@ -120,19 +120,19 @@ Navigate with your content browser into `Content > Carla > Blueprints > Vehicles
 
 ![copy_wheels](img/tuto_content_authoring_vehicles/copy_wheels.png)
 
-Right click in the content browser directory where your new vehicle assets are and chose *Blueprint Class*. search in the *All Classes* menu for *BaseVehiclePawn* and choose this class. Name the blueprint and open it. Select *Mesh* in the *Components* tab on the left and then drag the vehicle mesh into the Mesh section on the right hand side.
+Right click in the content browser directory where your new vehicle assets are and chose `Blueprint Class`. search in the `All Classes` menu for `BaseVehiclePawn` and choose this class. Name the blueprint and open it. Select `Mesh` in the `Components` tab on the left and then drag the vehicle mesh into the Mesh section on the right hand side.
 
 ![blueprint_with_mesh](img/tuto_content_authoring_vehicles/blueprint_with_mesh.png)
 
-In *Anim Class* search for the animation corresponding to your new vehicle that you set up in the previous step.
+In `Anim Class` search for the animation corresponding to your new vehicle that you set up in the previous step.
 
-Next, select *Vehicle Movement* in the *Components* menu of the blueprint class and in the right *Details* menu navigate to the *Vehicle Setup* section. Now for each wheel, find the relevant wheel blueprint that you previously copied and renamed for the *Wheel Class* attribute. Do the same for each wheel. Compile and save.
+Next, select `Vehicle Movement` in the `Components` menu of the blueprint class and in the right `Details` menu navigate to the `Vehicle Setup` section. Now for each wheel, find the relevant wheel blueprint that you previously copied and renamed for the `Wheel Class` attribute. Do the same for each wheel. Compile and save.
 
 ![wheel_setup](img/tuto_content_authoring_vehicles/wheel_setup.gif)
 
 Now navigate to `Content > Carla > Blueprints > Vehicles > VehicleFactory` and double click this to open the Vehicle Factory.
 
-Select the *Vehicles* node and expand the *Vehicles* item in the *Default value* section on the right hand side.
+Select the `Vehicles` node and expand the `Vehicles` item in the `Default value` section on the right hand side.
 
 ![vehicle_factry](img/tuto_content_authoring_vehicles/vehicle_factory.png)
 
@@ -155,13 +155,13 @@ The Unreal Editor boasts a comprehensive materials workflow that facilitates the
 
 ### Applying a material to your vehicle
 
-CARLA provides a prototype material for replicating the glossy finish of vehicles that can mimic numerous different types of vehicle paint jobs and features. Open Unreal editor and in the content browser, locate the material in `Content > Carla > Static > GenericMaterials > 00_MastersOpt`. The basic material is called *M_CarPaint_Master*. Right click on this material and choose *Create Material Instance* from the context material. Name it and move it into the folder where your new vehicle content is stored.
+CARLA provides a prototype material for replicating the glossy finish of vehicles that can mimic numerous different types of vehicle paint jobs and features. Open Unreal editor and in the content browser, locate the material in `Content > Carla > Static > GenericMaterials > 00_MastersOpt`. The basic material is called `M_CarPaint_Master`. Right click on this material and choose `Create Material Instance` from the context material. Name it and move it into the folder where your new vehicle content is stored.
 
 In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there. 
 
 ![add_model](img/tuto_content_authoring_vehicles/add_model.gif)
 
-Now, in the details panel on the right hand side, drag your new material instance into the *Element 0* position of the *Materials* section. You will see the bodywork take on a new grey, glossy material property.
+Now, in the details panel on the right hand side, drag your new material instance into the `Element 0` position of the `Materials` section. You will see the bodywork take on a new grey, glossy material property.
 
 ![apply_material](img/tuto_content_authoring_vehicles/apply_material
 .gif)
@@ -182,7 +182,7 @@ The clear coat settings govern the appearance of the finish and how it reacts to
 ![change_roughness](img/tuto_content_authoring_vehicles/change_roughness
 .gif)
 
-An important parameter to govern the "shinyness" or "glossyness" of your car is the *Clear Coat Intensity*. High values close to 1 will make the coat shiny and glossy.
+An important parameter to govern the "shinyness" or "glossyness" of your car is the `Clear Coat Intensity`. High values close to 1 will make the coat shiny and glossy.
 
 #### __Orange peel__ 
 
@@ -193,7 +193,7 @@ Finishes on real cars (particularly on mass produced cars for the general market
 
 #### __Flakes__
 
-Some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a *metallic* or *pearlescant* appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic metallic finishes, it would be 
+Some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a `metallic` or `pearlescant` appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic metallic finishes, it would be 
 
 ![flakes](img/tuto_content_authoring_vehicles/flakes
 .gif)
@@ -233,7 +233,7 @@ Shift select the 4 glass layers and drag them into the map so you can see them.
 
 ### Glass material
 
-Double click the external layer of the glass, then navigate in a second content browser window to `Content > Carla > Static > Vehicles > GeneralMaterials` and find the *Glass* material. Drag the glass material to the material slot of the mesh item. Repeat this process for each layer of the glass.
+Double click the external layer of the glass, then navigate in a second content browser window to `Content > Carla > Static > Vehicles > GeneralMaterials` and find the `Glass` material. Drag the glass material to the material slot of the mesh item. Repeat this process for each layer of the glass.
 
 The glass will now be transparent, but with reflectivity that reflects nearby objects and light sources. You should also check the interior glass, ensure there is a proper glass effect there.
 
@@ -243,7 +243,13 @@ The glass will now be transparent, but with reflectivity that reflects nearby ob
 
 For a quicker way to produce the glass parts of vehicles, the only critical part is the outermost glass layer. You can apply the glass material to this in Unreal Editor and get a result that might be suitable to your needs, however, views from inside the vehicle (i.e. if you instantiate a camera on the dashboard or behind the steering wheel) will seem to have no glass (no refraction or reflection). We recommend the above process to produce maximally realistic glass.
 
+Now you have created the blueprint, added meshes, completed rigging, created materials for the paint finish and the glass, you should have a very realistic looking vehicle.
+
+![finished_lincoln](img/tuto_content_authoring_vehicles/finished_lincoln.png)
+
 ## Wheels
+
+If you copied the wheels when you were [creating the blueprint](#creating-the-blueprint), this might suit your purposes if your vehicle is very similar to vehicles that are already in the CARLA library. However, if your vehicle has non-standard wheel dimensions or grip charactertistics, you should follow this section to set up your wheel blueprints to best match the physical characteristics of your vehicle's wheels.
 
 For the wheels of CARLA vehicles, we need to set up a blueprint class for each wheel to deal with the mechanics and collision properties. You will set up 4 blueprint classes, we recommend the following prefixes or suffixes to identify the wheels:
 
@@ -264,12 +270,12 @@ Double click on the blueprint to adjust it:
 
 ### Collision mesh
 
-Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content broswer locate the *CollisionWheel* mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the 
-*Collision Mesh* slot in the details panel of the blueprint. This will improve performance without any noticable deficit to physics simulation.
+Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content broswer locate the `CollisionWheel` mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the 
+`Collision Mesh` slot in the details panel of the blueprint. This will improve performance without any noticable deficit to physics simulation.
 
 ### Tire configuration
 
-Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the *CommonTireConfig* configuration and drag it onto the *Tire Config* section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behaviour of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust. 
+Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the `CommonTireConfig` configuration and drag it onto the `Tire Config` section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behaviour of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust. 
 
 ### Wheel dimensions
 
@@ -277,14 +283,14 @@ Next, in your 3D application, measure the diameter of your wheel. In Blender, th
 
 ![tire_dimensions](img/tuto_content_authoring_vehicles/tire_dimensions.png)
 
-Now plug these numbers into the *Wheel* section of the blueprint.Take care to remember to half the diameter for the radius and also that Unreal Editor works in units of centimeters. For the wheel mass, we recommend looking for specifications on the internet, find the right tire model or a similar one to estimate the correct mass (in kilograms).
+Now plug these numbers into the `Wheel` section of the blueprint.Take care to remember to half the diameter for the radius and also that Unreal Editor works in units of centimeters. For the wheel mass, we recommend looking for specifications on the internet, find the right tire model or a similar one to estimate the correct mass (in kilograms).
 
 ![bp_wheel_dimensions](img/tuto_content_authoring_vehicles/bp_wheel_dimensions.png)
 
 
-*Affected by handbrake* should be checked for both rear wheels. 
+`Affected by handbrake` should be checked for both rear wheels. 
 
-*Steer angle* should be set to the maximum intended steer angle for both front wheels and set to zero for both rear wheels.
+`Steer angle` should be set to the maximum intended steer angle for both front wheels and set to zero for both rear wheels.
 
 ### __Suspension characteristics__
 
