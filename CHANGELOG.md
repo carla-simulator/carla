@@ -1,3 +1,15 @@
+## Latest
+
+  * Added native ackermann controller:
+    - `apply_ackermann_control`:  to apply an ackermann control command to a vehicle
+    - `get_ackermann_controller_settings`: to get the last ackermann controller settings applied
+    - `apply_ackermann_controller_settings`: to apply new ackermann controller settings
+  * Fixed bug causing the Traffic Manager to not be deterministic when using hybrid mode
+  * Added `NormalsSensor`, a new sensor with normals information
+  * Added support for N wheeled vehicles
+  * Added support for new batch commands ConsoleCommand, ApplyLocation (to actor), SetTrafficLightState
+  * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
+
 ## CARLA 0.9.13
 
   * Added new **instance aware semantic segmentation** sensor `sensor.camera.instance_segmentation`
