@@ -35,9 +35,8 @@ nav:
   - 'C++ reference': 'ref_cpp.md'  
 
 - CARLA Ecosystem:
-  - 'ANSYS': 'adv_ansys.md'
-  - 'MathWorks': 'adv_ansys.md'
   - 'ROS': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
+  - 'MathWorks': 'large_map_roadrunner.md'
   - 'SUMO': 'adv_sumo.md'
   - 'Scenic': 'tuto_G_scenic.md'
   - 'Chrono': 'tuto_G_chrono.md'
@@ -45,11 +44,12 @@ nav:
   - 'PTV Vissim': 'adv_ptv.md'
   - 'RSS': 'adv_rss.md'
   - 'AWS': 'tuto_G_rllib_integration.md'
+  - 'ANSYS': 'ecosys_ansys.md'
   
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
-  - 'Coding standards': 'cont_coding_standards.md'
+  - 'Coding standards': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
  
 markdown_extensions:
