@@ -21,6 +21,6 @@ void FSensorManager::PostPhysTick(UWorld *World, ELevelTick TickType, float Delt
 {
   for(ASensor* Sensor : SensorList)
   {
-    Sensor->PostPhysTick(World, TickType, DeltaSeconds);
+    Sensor->PostPhysTickInternal(World, TickType, DeltaSeconds);
   }
 }

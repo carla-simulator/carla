@@ -58,6 +58,7 @@ public:
 
   virtual void PrePhysTick(float DeltaSeconds) {}
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
+  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
@@ -108,8 +109,6 @@ protected:
   bool bIsActive = false;
 
 private:
-
-  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   FDataStream Stream;
 
