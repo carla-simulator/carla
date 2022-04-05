@@ -10,6 +10,7 @@
 #include "carla/streaming/detail/tcp/Message.h"
 #include "carla/ThreadPool.h"
 #include "carla/multigpu/primary.h"
+#include "carla/multigpu/primaryCommands.h"
 #include "carla/multigpu/commands.h"
 
 #include <boost/asio/io_context.hpp>
@@ -50,6 +51,10 @@ namespace multigpu {
       return (!_sessions.empty());
     }
 
+    PrimaryCommands &GetCommander() {
+      return _commander;
+    }
+
   private:
     void ConnectSession(std::shared_ptr<Primary> session);
     void DisconnectSession(std::shared_ptr<Primary> session);
@@ -63,6 +68,7 @@ namespace multigpu {
     std::shared_ptr<Listener>               _listener;
     int                                     _next;
     std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>>   _promises;
+    PrimaryCommands                         _commander;
   };
 
 } // namespace multigpu

@@ -41,7 +41,7 @@
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
-#include "carla/rpc/LabelledPoint.h"
+#include <carla/rpc/LabelledPoint.h>
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/MapLayer.h>
@@ -62,7 +62,7 @@
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
-#include <carla/streaming/Server.h>
+#include <carla/streaming/detail/Types.h>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
@@ -763,6 +763,21 @@ void FCarlaServer::FPimpl::BindActions()
         );
     }
     return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
+  };
+
+  BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type sensor_id) -> R<carla::streaming::Token>
+  {
+    REQUIRE_CARLA_EPISODE();
+    if (SecondaryServer->HasClientsConnected() && sensor_id > 1)
+    {
+      // multi-gpu
+      return SecondaryServer->GetCommander().SendGetToken(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      return StreamingServer.GetToken(sensor_id);
+    }
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2376,6 +2391,12 @@ FDataStream FCarlaServer::OpenStream() const
   return Pimpl->StreamingServer.MakeStream();
 }
 
-std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer() {
+std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer() 
+{
   return Pimpl->GetSecondaryServer();
+}
+
+carla::streaming::Server &FCarlaServer::GetStreamingServer() 
+{
+  return Pimpl->StreamingServer;
 }

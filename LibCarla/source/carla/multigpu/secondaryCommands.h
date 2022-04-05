@@ -7,21 +7,23 @@
 #pragma once
 
 // #include "carla/Logging.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/buffer.h"
 #include "carla/multigpu/commands.h"
-#include "carla/multigpu/secondary.h"
+#include <functional>
 
 namespace carla {
 namespace multigpu {
 
-class SecondaryCommands {
-  
-  using callback_type = std::function<void(MultiGPUCommand, carla::Buffer)>;
+class Secondary;
 
+class SecondaryCommands {
   public:
+
+  using callback_type = std::function<void(MultiGPUCommand, carla::Buffer)>;
+  
   void set_secondary(std::shared_ptr<Secondary> secondary);
   void set_callback(callback_type callback);
-  void on_command(Buffer buffer);
+  void process_command(Buffer buffer);
 
   private:
   std::shared_ptr<Secondary>  _secondary;

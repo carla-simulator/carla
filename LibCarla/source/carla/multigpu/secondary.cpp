@@ -26,24 +26,23 @@ namespace multigpu {
 
   Secondary::Secondary(
     boost::asio::ip::tcp::endpoint ep,
-    callback_function_type callback) :
+    SecondaryCommands::callback_type callback) :
       _pool(),
-      _callback(std::move(callback)),
       _endpoint(ep),
       _buffer_pool(std::make_shared<BufferPool>()),
       _socket(_pool.io_context()),
       _strand(_pool.io_context()),
       _connection_timer(_pool.io_context()) { 
-    
+
+      _commander.set_callback(callback);
     }
   
 
   Secondary::Secondary(
     std::string ip,
     uint16_t port,
-    callback_function_type callback) :
+    SecondaryCommands::callback_type callback) :
       _pool(),
-      _callback(std::move(callback)),
       _buffer_pool(std::make_shared<BufferPool>()),
       _socket(_pool.io_context()),
       _strand(_pool.io_context()),
@@ -51,6 +50,7 @@ namespace multigpu {
 
     boost::asio::ip::address ip_address = boost::asio::ip::address::from_string(ip);
     _endpoint = boost::asio::ip::tcp::endpoint(ip_address, port);
+    _commander.set_callback(callback);
   }
 
   Secondary::~Secondary() {
@@ -58,7 +58,10 @@ namespace multigpu {
   }
 
   void Secondary::Connect() {
-    AsyncRun(2u);    
+    AsyncRun(2u);
+
+    _commander.set_secondary(shared_from_this());
+
     std::weak_ptr<Secondary> weak = shared_from_this();
     boost::asio::post(_strand, [weak]() {
       auto self = weak.lock();
@@ -236,7 +239,7 @@ namespace multigpu {
           DEBUG_ASSERT_NE(bytes, 0u);
           // Move the buffer to the callback function and start reading the next
           // piece of data.
-          self->_callback(message->pop());
+          self->GetCommander().process_command(message->pop());
           self->ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
