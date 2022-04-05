@@ -24,7 +24,7 @@
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
-#include <carla/streaming/endpoint.h>
+#include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
