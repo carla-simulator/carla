@@ -2357,22 +2357,11 @@ void FCarlaServer::Tick()
 
 bool FCarlaServer::TickCueReceived()
 {
-#if 1
   auto k = Pimpl->TickCuesReceived.fetch_sub(1, std::memory_order_acquire);
   bool flag = (k > 0);
   if (!flag)
     (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
   return flag;
-#else
-  while (true)
-  {
-    auto prior = Pimpl->TickCuesReceived.load(std::memory_order_acquire);
-    if (prior <= 0)
-      return false;
-    if (Pimpl->TickCuesReceived.compare_exchange_weak(prior, prior - 1, std::memory_order_acquire, std::memory_order_relaxed))
-      return true;
-  }
-#endif
 }
 
 void FCarlaServer::Stop()
