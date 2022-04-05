@@ -69,6 +69,7 @@ void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
   {
     MediaCapture->StopCapture(false);
   }
+  Super::EndPlay(EndPlayReason);
 }
 
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
