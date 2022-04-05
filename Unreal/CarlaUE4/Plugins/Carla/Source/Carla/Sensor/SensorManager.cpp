@@ -19,11 +19,8 @@ void FSensorManager::DeRegisterSensor(ASensor* Sensor)
 
 void FSensorManager::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  UE_LOG(LogCarla, Log, TEXT("Num sensors %d"), SensorList.Num());
   for(ASensor* Sensor : SensorList)
   {
-    UE_LOG(LogCarla, Log, TEXT("Running sensor %s"), *Sensor->GetName());
     Sensor->PostPhysTickInternal(World, TickType, DeltaSeconds);
   }
-  UE_LOG(LogCarla, Log, TEXT("Done with sensors"));
 }
