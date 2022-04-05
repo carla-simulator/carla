@@ -7,7 +7,7 @@
 #pragma once
 
 // #include "carla/Logging.h"
-#include "carla/buffer.h"
+#include "carla/Buffer.h"
 #include "carla/multigpu/commands.h"
 #include <functional>
 
