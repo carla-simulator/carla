@@ -84,8 +84,11 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
   Stream = FDataStream();
 
   UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  FSensorManager& SensorManager = Episode->GetSensorManager();
-  SensorManager.DeRegisterSensor(this);
+  if(Episode)
+  {
+    FSensorManager& SensorManager = Episode->GetSensorManager();
+    SensorManager.DeRegisterSensor(this);
+  }
 }
 
 void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds)

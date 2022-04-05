@@ -25,6 +25,7 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData)
     {
       // save the transform for props
       case FCarlaActor::ActorType::Other:
+      case FCarlaActor::ActorType::Sensor:
         AddActorPosition(View);
         break;
 
@@ -102,7 +103,7 @@ void FFrameData::PlayFrameData(
 
   for (const CarlaRecorderEventParent &EventParent : EventsParent.GetEvents())
   {
-    ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
+    // ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
   }
 
   for (const CarlaRecorderPosition &Position : Positions.GetPositions())
