@@ -10,7 +10,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/TypeTraits.h"
 #include "carla/profiler/LifetimeProfiled.h"
-#include "carla/multigpu/SecondaryCommands.h"
+#include "carla/multigpu/secondaryCommands.h"
 #include "carla/streaming/detail/tcp/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
