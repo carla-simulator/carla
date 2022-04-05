@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,6 +10,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/TypeTraits.h"
 #include "carla/profiler/LifetimeProfiled.h"
+#include "carla/multigpu/SecondaryCommands.h"
 #include "carla/streaming/detail/tcp/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
@@ -38,10 +39,9 @@ namespace multigpu {
 
     using endpoint = boost::asio::ip::tcp::endpoint;
     using protocol_type = endpoint::protocol_type;
-    using callback_function_type = std::function<void (Buffer)>;
 
-    Secondary(boost::asio::ip::tcp::endpoint ep, callback_function_type callback);
-    Secondary(std::string ip, uint16_t port, callback_function_type callback);
+    Secondary(boost::asio::ip::tcp::endpoint ep, SecondaryCommands::callback_type callback);
+    Secondary(std::string ip, uint16_t port, SecondaryCommands::callback_type callback);
     ~Secondary();
 
     void Connect();
@@ -53,6 +53,10 @@ namespace multigpu {
     void Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message);
     void Write(Buffer buffer);
     void Write(std::string text);
+
+    SecondaryCommands &GetCommander() {
+      return _commander;
+    }
 
     template <typename... Buffers>
     static auto MakeMessage(Buffers &&... buffers) {
@@ -68,14 +72,14 @@ namespace multigpu {
 
     void ReadData();
 
-    ThreadPool                      _pool;
-    boost::asio::ip::tcp::socket    _socket;
-    boost::asio::ip::tcp::endpoint  _endpoint;
-    boost::asio::io_context::strand _strand;
-    boost::asio::deadline_timer     _connection_timer;
-    std::shared_ptr<BufferPool>     _buffer_pool;
-    std::atomic_bool                _done {false};
-    callback_function_type          _callback;
+    ThreadPool                        _pool;
+    boost::asio::ip::tcp::socket      _socket;
+    boost::asio::ip::tcp::endpoint    _endpoint;
+    boost::asio::io_context::strand   _strand;
+    boost::asio::deadline_timer       _connection_timer;
+    std::shared_ptr<BufferPool>       _buffer_pool;
+    std::atomic_bool                  _done {false};
+    SecondaryCommands                 _commander;
   };
 
 } // namespace multigpu

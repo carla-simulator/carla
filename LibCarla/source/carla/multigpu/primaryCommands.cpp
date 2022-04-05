@@ -7,10 +7,12 @@
 #include "carla/multigpu/primaryCommands.h"
 
 // #include "carla/Logging.h"
-#include "carla/streaming/detail/Types.h"
-#include "carla/streaming/detail/tcp/Message.h"
 #include "carla/multigpu/commands.h"
 #include "carla/multigpu/primary.h"
+#include "carla/multigpu/router.h"
+#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Token.h"
+#include "carla/streaming/detail/Types.h"
 
 namespace carla {
 namespace multigpu {
@@ -25,17 +27,25 @@ PrimaryCommands::PrimaryCommands(std::shared_ptr<Router> router) :
 // broadcast to all secondary servers the frame data
 void PrimaryCommands::SendFrameData(carla::Buffer buffer) {
   _router->Write(MultiGPUCommand::SEND_FRAME, std::move(buffer));
-  log_info("sending frame command");
+  // log_info("sending frame command");
 }
 
 // broadcast to all secondary servers the map to load
 void PrimaryCommands::SendLoadMap(std::string map) {
+  // carla::Buffer buf((unsigned char *) map.c_str(), (size_t) map.size());
   log_info("sending load map command");
 }
 
 // send to who the router wants the request for a token
-void PrimaryCommands::SendGetToken(carla::streaming::detail::stream_id_type sensor_id) {
-  log_info("sending get token command");
+token_type PrimaryCommands::SendGetToken(carla::streaming::detail::stream_id_type sensor_id) {
+  log_info("asking for a token");
+  carla::Buffer buf((carla::Buffer::value_type *) &sensor_id, (size_t) sizeof(carla::streaming::detail::stream_id_type));
+  auto fut = _router->WriteToNext(MultiGPUCommand::GET_TOKEN, std::move(buf));
+
+  auto response = fut.get();
+  log_info("got a token");
+  token_type new_token(*reinterpret_cast<carla::streaming::detail::token_data *>(response.buffer.data()));
+  return new_token;
 }
 
 // send to know if a connection is alive

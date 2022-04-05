@@ -93,6 +93,25 @@ namespace detail {
     }
   }
 
+  token_type Dispatcher::GetToken(stream_id_type sensor_id) {
+    std::lock_guard<std::mutex> lock(_mutex);
+    log_info("Searching sensor id: ", sensor_id);
+    auto search = _stream_map.find(sensor_id);
+    if (search != _stream_map.end()) {
+      log_info("Found sensor id: ", sensor_id);
+      auto stream_state = search->second.lock();
+      if (stream_state != nullptr) {
+        log_info("Getting token from stream ", sensor_id, " on port ", stream_state->token().get_port());
+        return stream_state->token();
+      } else {
+        log_info("Could not lock");
+      }
+    } else {
+      log_info("Not Found sensor id: ", sensor_id);
+    }
+    return token_type();
+  }
+
 } // namespace detail
 } // namespace streaming
 } // namespace carla

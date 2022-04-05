@@ -58,6 +58,8 @@ void Router::SetCallbacks() {
     }
   };
 
+  _commander.set_router(shared_from_this());
+
   _listener->Listen(on_open, on_close, on_response);
   log_info("Listening at ", _endpoint);
 }

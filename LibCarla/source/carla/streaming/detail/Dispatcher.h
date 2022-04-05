@@ -36,6 +36,8 @@ namespace detail {
     bool RegisterSession(std::shared_ptr<Session> session);
 
     void DeregisterSession(std::shared_ptr<Session> session);
+    
+    token_type GetToken(stream_id_type sensor_id);
 
   private:
 

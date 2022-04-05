@@ -6,7 +6,7 @@
 
 // #include "carla/Logging.h"
 #include "carla/multigpu/secondaryCommands.h"
-#include "carla/multigpu/commands.h"
+// #include "carla/streaming/detail/tcp/Message.h"
 
 namespace carla {
 namespace multigpu {
@@ -19,7 +19,7 @@ void SecondaryCommands::set_callback(callback_type callback) {
   _callback = callback;
 }
 
-void SecondaryCommands::on_command(Buffer buffer) {
+void SecondaryCommands::process_command(Buffer buffer) {
   // get the header
   CommandHeader *header;
   header = reinterpret_cast<CommandHeader *>(buffer.data());

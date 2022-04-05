@@ -78,6 +78,8 @@ namespace detail {
       return {get_address(), _token.port};
     }
 
+  public:
+  
     template <typename Protocol>
     explicit token_type(
         stream_id_type stream_id,
@@ -97,12 +99,15 @@ namespace detail {
       _token.protocol = get_protocol<Protocol>();
     }
 
-  public:
 
     token_type() = default;
     token_type(const token_type &) = default;
 
     token_type(const Token &rhs);
+
+    explicit token_type(token_data data) {
+      _token = data;
+    }
 
     operator Token() const;
 

@@ -24,6 +24,8 @@
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
+#include <carla/streaming/endpoint.h>
+#include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <thread>
@@ -97,9 +99,10 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     {
       // we are secondary server, connecting to primary server
       bIsPrimaryServer = false;
-      Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, std::bind(&carla::multigpu::SecondaryCommands::on_command, &SecCommander, std::placeholders::_1));
-      SecCommander.set_secondary(Secondary);
-      SecCommander.set_callback([=](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data){
+      Secondary = std::make_shared<carla::multigpu::Secondary>(
+        PrimaryIP, 
+        PrimaryPort, 
+        [=](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
         struct CarlaStreamBuffer : public std::streambuf
         {
             CarlaStreamBuffer(char *buf, std::size_t size) { setg(buf, buf, buf + size); }
@@ -107,13 +110,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         switch (Id) {
           case carla::multigpu::MultiGPUCommand::SEND_FRAME:
           {
-            // play frame data
-            // get frame data from primary
-            CarlaStreamBuffer TempStream((char *) Data.data(), Data.size());
-            std::istream InStream(&TempStream);
-            // InStream.str(Data.data());
             if(GetCurrentEpisode())
             {
+              // convert frame data from buffer to istream
+              CarlaStreamBuffer TempStream((char *) Data.data(), Data.size());
+              std::istream InStream(&TempStream);
               GetCurrentEpisode()->GetFrameData().Read(InStream);
               {
                 std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
@@ -122,14 +123,22 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             }
             // forces a tick
             Server.Tick();
-            carla::log_info("forcing tick");
             break;
           }
           case carla::multigpu::MultiGPUCommand::LOAD_MAP:
             break;
           
           case carla::multigpu::MultiGPUCommand::GET_TOKEN:
+          {
+            // get the sensor id
+            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            // query dispatcher
+            carla::streaming::detail::token_type token(Server.GetStreamingServer().GetToken(sensor_id));
+            carla::Buffer buf(reinterpret_cast<unsigned char *>(&token), (size_t) sizeof(token));
+            carla::log_info("responding with a token for port ", token.get_port());
+            Secondary->Write(std::move(buf));
             break;
+          }
           
           case carla::multigpu::MultiGPUCommand::YOU_ALIVE:
           {
@@ -150,7 +159,6 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       // we are primary server, starting server
       bIsPrimaryServer = true;
       SecondaryServer = Server.GetSecondaryServer();
-      Commander.set_router(SecondaryServer);
     }
   }
 
@@ -234,7 +242,7 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
         
         // send frame data to secondary
         std::string Tmp(OutStream.str());
-        Commander.SendFrameData(carla::Buffer(std::move((unsigned char *) Tmp.c_str()), (size_t) Tmp.size()));
+        SecondaryServer->GetCommander().SendFrameData(carla::Buffer(std::move((unsigned char *) Tmp.c_str()), (size_t) Tmp.size()));
 
         GetCurrentEpisode()->GetFrameData().Clear();
       }

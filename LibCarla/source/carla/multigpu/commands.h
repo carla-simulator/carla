@@ -6,9 +6,7 @@
 
 #pragma once
 
-// #include "carla/Logging.h"
-#include "carla/streaming/detail/tcp/Message.h"
-#include "carla/multigpu/primary.h"
+#include <cstdint>
 
 namespace carla {
 namespace multigpu {
