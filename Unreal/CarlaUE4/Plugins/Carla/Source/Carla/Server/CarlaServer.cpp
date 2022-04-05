@@ -68,6 +68,7 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
+#include <atomic>
 #include <map>
 #include <tuple>
 
@@ -120,7 +121,7 @@ public:
 
   UCarlaEpisode *Episode = nullptr;
 
-  size_t TickCuesReceived = 0u;
+  std::atomic_size_t TickCuesReceived { 0u };
 
 private:
 
@@ -263,8 +264,8 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
-    ++TickCuesReceived;
-    return FCarlaEngine::GetFrameCounter() + 1;
+    (void)TickCuesReceived.fetch_add(1, std::memory_order_release);
+    return FCarlaEngine::GetFrameCounter();
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2351,17 +2352,16 @@ void FCarlaServer::RunSome(uint32 Milliseconds)
 
 void FCarlaServer::Tick()
 {
-  ++Pimpl->TickCuesReceived;
+  (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
 }
 
 bool FCarlaServer::TickCueReceived()
 {
-  if (Pimpl->TickCuesReceived > 0u)
-  {
-    --(Pimpl->TickCuesReceived);
-    return true;
-  }
-  return false;
+  auto k = Pimpl->TickCuesReceived.fetch_sub(1, std::memory_order_acquire);
+  bool flag = (k > 0);
+  if (!flag)
+    (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
+  return flag;
 }
 
 void FCarlaServer::Stop()
