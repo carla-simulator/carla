@@ -103,6 +103,17 @@ void export_blueprint() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<crpc::FloatColor>("FloatColor")
+    .def(init<float, float, float, float>(
+        (arg("r")=0, arg("g")=0.f, arg("b")=0.f, arg("a")=1.0f)))
+    .def_readwrite("r", &crpc::FloatColor::r)
+    .def_readwrite("g", &crpc::FloatColor::g)
+    .def_readwrite("b", &crpc::FloatColor::b)
+    .def_readwrite("a", &crpc::FloatColor::a)
+    .def("__eq__", &crpc::FloatColor::operator==)
+    .def("__ne__", &crpc::FloatColor::operator!=)
+  ;
+
   class_<csd::OpticalFlowPixel>("OpticalFlowPixel")
     .def(init<float, float>(
         (arg("x")=0, arg("y")=0)))

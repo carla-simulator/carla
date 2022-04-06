@@ -330,29 +330,15 @@ def copy_roadpainter_config_files(package_name):
 
     two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")
-    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
-    if not os.path.exists(package_config_path):
-        try:
-            os.makedirs(package_config_path)
-        except OSError as exc:
-            if exc.errno != errno.EEXIST:
-                raise
-    shutil.copy(final_path, package_config_path)
-
-
-def copy_roadpainter_config_files(package_name):
-    """Copies roadpainter configuration files into Unreal content folder"""
-
-    two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")
-    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
-    if not os.path.exists(package_config_path):
-        try:
-            os.makedirs(package_config_path)
-        except OSError as exc:
-            if exc.errno != errno.EEXIST:
-                raise
-    shutil.copy(final_path, package_config_path)
+    if os.path.exists(final_path):
+        package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
+        if not os.path.exists(package_config_path):
+            try:
+                os.makedirs(package_config_path)
+            except OSError as exc:
+                if exc.errno != errno.EEXIST:
+                    raise
+        shutil.copy(final_path, package_config_path)
 
 
 def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, batch_size):
@@ -448,15 +434,13 @@ def import_assets_from_json_list(json_list, batch_size):
             # and place it inside unreal in the provided path (by the json file)
             maps = []
             props = []
+            tile_size = 2000
             if "maps" in data:
                 maps = data["maps"]
+                if len(maps) > 0 and "tile_size" in maps[0]:
+                    tile_size = maps[0]["tile_size"]
             if "props" in data:
                 props = data["props"]
-
-            if "tile_size" in maps[0]:
-                tile_size = maps[0]["tile_size"]
-            else:
-                tile_size = 2000
 
             package_name = filename.replace(".json", "")
 
@@ -464,7 +448,7 @@ def import_assets_from_json_list(json_list, batch_size):
             thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
             thr.start()
 
-            if ("tiles" in maps[0]):
+            if (len(maps) > 0 and "tiles" in maps[0]):
                 import_assets(package_name, dirname, props, maps, 1, tile_size, batch_size)
             else:
                 import_assets(package_name, dirname, props, maps, 0, 0, 0)
@@ -480,9 +464,9 @@ def import_assets_from_json_list(json_list, batch_size):
             if len(maps) > 0:
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
                 load_asset_materials_commandlet(package_name)
+                build_binary_for_tm(package_name, dirname, maps)
             thr.join()
 
-            build_binary_for_tm(package_name, dirname, maps)
 
 def load_asset_materials_commandlet(package_name):
     commandlet_name = "LoadAssetMaterials"
@@ -526,6 +510,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
         # get the target name
         target_name = umap["name"]
         xodr_filename = os.path.basename(umap["xodr"])
+        xodr_path_target = ""
 
         # copy the XODR file into docker utils folder
         if "xodr" in umap and umap["xodr"] and os.path.isfile(os.path.join(dirname, umap["xodr"])):
@@ -540,6 +525,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
 
             fbx_filename = os.path.basename(tile)
             fbx_name_no_ext = os.path.splitext(fbx_filename)[0]
+            fbx_path_target = ""
 
             # copy the FBX file into docker utils folder
             if os.path.isfile(os.path.join(dirname, tile)):
@@ -580,7 +566,8 @@ def build_binary_for_navigation(package_name, dirname, maps):
             if os.path.exists(fbx_path_target):
                 os.remove(fbx_path_target)
 
-        os.remove(xodr_path_target)
+        if os.path.exists(xodr_path_target):
+            os.remove(xodr_path_target)
 
 
 def build_binary_for_tm(package_name, dirname, maps):

@@ -32,11 +32,13 @@ class TestSensorTickTime(SyncSmokeTest):
 
     sensor_exception = {
       "sensor.camera.depth",
+      "sensor.camera.normals",
       "sensor.camera.optical_flow",
       "sensor.camera.rgb",
       "sensor.camera.semantic_segmentation",
       "sensor.camera.dvs",
-      "sensor.other.obstacle"
+      "sensor.other.obstacle",
+      "sensor.camera.instance_segmentation"
     }
     spawned_sensors = []
     sensor_tick = 1.0

@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "FileTransfer.h"
+#include "carla/Version.h"
 
 namespace carla {
 namespace client {
@@ -33,11 +34,21 @@ namespace client {
   bool FileTransfer::FileExists(std::string file) {
     // Check if the file exists or not
     struct stat buffer;
-    return (stat((_filesBaseFolder + file).c_str(), &buffer) == 0);
+    std::string fullpath = _filesBaseFolder;
+    fullpath += "/";
+    fullpath += ::carla::version();
+    fullpath += "/";
+    fullpath += file;
+
+    return (stat(fullpath.c_str(), &buffer) == 0);
   }
 
   bool FileTransfer::WriteFile(std::string path, std::vector<uint8_t> content) {
-    std::string writePath = _filesBaseFolder + path;
+    std::string writePath = _filesBaseFolder;
+    writePath += "/";
+    writePath += ::carla::version();
+    writePath += "/";
+    writePath += path;
 
     // Validate and create the file path
     carla::FileSystem::ValidateFilePath(writePath);
@@ -56,8 +67,13 @@ namespace client {
   }
 
   std::vector<uint8_t> FileTransfer::ReadFile(std::string path) {
+    std::string fullpath = _filesBaseFolder;
+    fullpath += "/";
+    fullpath += ::carla::version();
+    fullpath += "/";
+    fullpath += path;
     // Read the binary file from the base folder
-    std::ifstream file(_filesBaseFolder + path, std::ios::binary);
+    std::ifstream file(fullpath, std::ios::binary);
     std::vector<uint8_t> content(std::istreambuf_iterator<char>(file), {});
     return content;
   }

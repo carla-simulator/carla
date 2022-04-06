@@ -365,7 +365,7 @@ void export_sensor_data() {
   namespace css = carla::sensor::s11n;
 
   // Fake image returned from optical flow to color conversion
-  // fakes the regular image object
+  // fakes the regular image object. Only used for visual purposes
   class_<FakeImage>("FakeImage", no_init)
       .def(vector_indexing_suite<std::vector<uint8_t>>())
       .add_property("width", &FakeImage::Width)

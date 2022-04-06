@@ -11,6 +11,7 @@
 #include "TrafficLightState.h"
 #include "TrafficLightComponent.h"
 #include "Containers/Map.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "TrafficLightController.generated.h"
 
 class ATrafficLightGroup;

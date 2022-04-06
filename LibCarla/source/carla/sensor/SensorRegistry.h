@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -30,6 +30,7 @@
 // 2. Add a forward-declaration of the sensor here.
 class ACollisionSensor;
 class ADepthCamera;
+class ANormalsCamera;
 class ADVSCamera;
 class AGnssSensor;
 class AInertialMeasurementUnit;
@@ -41,6 +42,7 @@ class ARayCastSemanticLidar;
 class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
+class AInstanceSegmentationCamera;
 class ARssSensor;
 class FWorldObserver;
 
@@ -57,6 +59,7 @@ namespace sensor {
   using SensorRegistry = CompositeSerializer<
     std::pair<ACollisionSensor *, s11n::CollisionEventSerializer>,
     std::pair<ADepthCamera *, s11n::ImageSerializer>,
+    std::pair<ANormalsCamera *, s11n::ImageSerializer>,
     std::pair<ADVSCamera *, s11n::DVSEventArraySerializer>,
     std::pair<AGnssSensor *, s11n::GnssSerializer>,
     std::pair<AInertialMeasurementUnit *, s11n::IMUSerializer>,
@@ -69,6 +72,7 @@ namespace sensor {
     std::pair<ARssSensor *, s11n::NoopSerializer>,
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
+    std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>
   >;
 
@@ -82,6 +86,7 @@ namespace sensor {
 // 4. Include the sensor here.
 #include "Carla/Sensor/CollisionSensor.h"
 #include "Carla/Sensor/DepthCamera.h"
+#include "Carla/Sensor/NormalsCamera.h"
 #include "Carla/Sensor/DVSCamera.h"
 #include "Carla/Sensor/GnssSensor.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
@@ -94,6 +99,7 @@ namespace sensor {
 #include "Carla/Sensor/RssSensor.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
+#include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla/Sensor/WorldObserver.h"
 
 #endif // LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES

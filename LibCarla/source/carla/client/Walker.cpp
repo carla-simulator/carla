@@ -18,12 +18,25 @@ namespace client {
     }
   }
 
-  void Walker::ApplyControl(const BoneControl &bone_control) {
-    GetEpisode().Lock()->ApplyBoneControlToWalker(*this, bone_control);
-  }
-
   Walker::Control Walker::GetWalkerControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.walker_control;
   }
+
+  Walker::BoneControlOut Walker::GetBonesTransform() {
+    return GetEpisode().Lock()->GetBonesTransform(*this);
+  }
+
+  void Walker::SetBonesTransform(const Walker::BoneControlIn &bones) {
+    return GetEpisode().Lock()->SetBonesTransform(*this, bones);
+  }
+
+  void Walker::BlendPose(float blend) {
+    return GetEpisode().Lock()->BlendPose(*this, blend);
+  }
+
+  void Walker::GetPoseFromAnimation() {
+    return GetEpisode().Lock()->GetPoseFromAnimation(*this);
+  }
+
 } // namespace client
 } // namespace carla

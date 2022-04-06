@@ -512,6 +512,7 @@ void UPrepareAssetsForCookingCommandlet::GenerateMapPathsFile(
   if (!PropsMapPath.IsEmpty())
   {
     MapPathData.Append(PropsMapPath + TEXT("/PropsMap"));
+    MapPathDataLinux.Append(PropsMapPath + TEXT("/PropsMap"));
   }
   else
   {

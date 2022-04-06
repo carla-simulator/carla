@@ -6,14 +6,15 @@
 
 #pragma once
 
-#include "Carla/Walker/WalkerBoneControl.h"
+#include "Carla/Walker/WalkerBoneControlIn.h"
+#include "Carla/Walker/WalkerBoneControlOut.h"
 #include "Carla/Walker/WalkerControl.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/Controller.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include <boost/variant.hpp>
+#include <carla/rpc/WalkerBoneControlIn.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "WalkerController.generated.h"
@@ -22,24 +23,6 @@ UCLASS()
 class CARLA_API AWalkerController : public AController
 {
   GENERATED_BODY()
-
-private:
-
-  class ControlTickVisitor : public boost::static_visitor<>
-  {
-  public:
-
-    ControlTickVisitor(AWalkerController *Controller)
-      : Controller(Controller) {}
-
-    void operator()(const FWalkerControl &WalkerControl);
-
-    void operator()(FWalkerBoneControl &WalkerBoneControl);
-
-  private:
-
-    AWalkerController *Controller;
-  };
 
 public:
 
@@ -59,26 +42,25 @@ public:
   UFUNCTION(BlueprintCallable)
   void ApplyWalkerControl(const FWalkerControl &InControl);
 
-  void ApplyWalkerControl(const FWalkerBoneControl &InBoneControl);
-
   UFUNCTION(BlueprintCallable)
   const FWalkerControl GetWalkerControl() const
   {
-    return Control.which() == 0u ? boost::get<FWalkerControl>(Control) : FWalkerControl{};
+    return Control;
   }
 
   UFUNCTION(BlueprintCallable)
-  const FWalkerBoneControl GetBoneWalkerControl() const
-  {
-    return Control.which() == 1u ? boost::get<FWalkerBoneControl>(Control) : FWalkerBoneControl{};
-  }
+  void GetBonesTransform(FWalkerBoneControlOut &WalkerBones);
 
   UFUNCTION(BlueprintCallable)
-  void SetManualBones(const bool bIsEnabled);
+  void SetBonesTransform(const FWalkerBoneControlIn &WalkerBones);
+
+  UFUNCTION(BlueprintCallable)
+  void BlendPose(float Blend);
+
+  UFUNCTION(BlueprintCallable)
+  void GetPoseFromAnimation();
 
 private:
 
-  boost::variant<FWalkerControl, FWalkerBoneControl> Control;
-
-  bool bManualBones;
+  FWalkerControl Control;
 };

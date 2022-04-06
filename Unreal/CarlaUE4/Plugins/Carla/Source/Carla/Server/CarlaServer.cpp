@@ -29,9 +29,11 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/Version.h>
+#include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/BoneTransformDataIn.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
@@ -49,15 +51,19 @@
 #include <carla/rpc/Vector2D.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleDoor.h>
+#include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehicleLightStateList.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/streaming/Server.h>
+#include <carla/rpc/Texture.h>
+#include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
@@ -329,6 +335,99 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("opendrive could not be correctly parsed");
     }
     return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_color_texture_to_objects) << [this](
+      const std::vector<std::string> &actors_name,
+      const cr::MaterialParameter& parameter,
+      const cr::TextureColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<AActor*> ActorsToPaint;
+    for(const std::string& actor_name : actors_name)
+    {
+      AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+      if (ActorToPaint)
+      {
+        ActorsToPaint.Add(ActorToPaint);
+      }
+    }
+
+    if(!ActorsToPaint.Num())
+    {
+      RESPOND_ERROR("unable to find Actor to apply the texture");
+    }
+
+    UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
+
+    for(AActor* ActorToPaint : ActorsToPaint)
+    {
+      GameMode->ApplyTextureToActor(
+          ActorToPaint,
+          UETexture,
+          parameter);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(apply_float_color_texture_to_objects) << [this](
+      const std::vector<std::string> &actors_name,
+      const cr::MaterialParameter& parameter,
+      const cr::TextureFloatColor& Texture) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<AActor*> ActorsToPaint;
+    for(const std::string& actor_name : actors_name)
+    {
+      AActor* ActorToPaint = GameMode->FindActorByName(cr::ToFString(actor_name));
+      if (ActorToPaint)
+      {
+        ActorsToPaint.Add(ActorToPaint);
+      }
+    }
+
+    if(!ActorsToPaint.Num())
+    {
+      RESPOND_ERROR("unable to find Actor to apply the texture");
+    }
+
+    UTexture2D* UETexture = GameMode->CreateUETexture(Texture);
+
+    for(AActor* ActorToPaint : ActorsToPaint)
+    {
+      GameMode->ApplyTextureToActor(
+          ActorToPaint,
+          UETexture,
+          parameter);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_names_of_all_objects) << [this]() -> R<std::vector<std::string>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    TArray<FString> NamesFString = GameMode->GetNamesOfAllActors();
+    std::vector<std::string> NamesStd;
+    for (const FString &Name : NamesFString)
+    {
+      NamesStd.emplace_back(cr::FromFString(Name));
+    }
+    return NamesStd;
   };
 
   // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -639,6 +738,21 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("internal error: unable to destroy actor");
     }
     return true;
+  };
+
+  BIND_SYNC(console_command) << [this](std::string cmd) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    APlayerController* PController= UGameplayStatics::GetPlayerController(Episode->GetWorld(), 0);
+    if( PController )
+    {
+        auto result = PController->ConsoleCommand(UTF8_TO_TCHAR(cmd.c_str()), true);
+        return !(
+          result.Contains(FString(TEXT("Command not recognized"))) ||
+          result.Contains(FString(TEXT("Error")))
+        );
+    }
+    return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1263,6 +1377,81 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(apply_ackermann_control_to_vehicle) << [this](
+      cr::ActorId ActorId,
+      cr::VehicleAckermannControl Control) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "apply_ackermann_control_to_vehicle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyAckermannControlToVehicle(Control, EVehicleInputPriority::Client);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "apply_ackermann_control_to_vehicle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_ackermann_controller_settings) << [this](
+      cr::ActorId ActorId) -> R<cr::AckermannControllerSettings>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+        if (!CarlaActor)
+    {
+      return RespondError(
+          "get_ackermann_controller_settings",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    FAckermannControllerSettings Settings;
+    ECarlaServerResponse Response =
+        CarlaActor->GetAckermannControllerSettings(Settings);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_ackermann_controller_settings",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return cr::AckermannControllerSettings(Settings);
+  };
+
+  BIND_SYNC(apply_ackermann_controller_settings) << [this](
+      cr::ActorId ActorId,
+      cr::AckermannControllerSettings AckermannSettings) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "apply_ackermann_controller_settings",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->ApplyAckermannControllerSettings(FAckermannControllerSettings(AckermannSettings));
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "apply_ackermann_controller_settings",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(apply_control_to_walker) << [this](
       cr::ActorId ActorId,
       cr::WalkerControl Control) -> R<void>
@@ -1288,28 +1477,118 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
-  BIND_SYNC(apply_bone_control_to_walker) << [this](
-      cr::ActorId ActorId,
-      cr::WalkerBoneControl Control) -> R<void>
+  BIND_SYNC(get_bones_transform) << [this](
+      cr::ActorId ActorId) -> R<cr::WalkerBoneControlOut>
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
       return RespondError(
-          "apply_bone_control_to_walker",
+          "get_bones_transform",
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
+    FWalkerBoneControlOut Bones;
     ECarlaServerResponse Response =
-        CarlaActor->ApplyBoneControlToWalker(Control);
+        CarlaActor->GetBonesTransform(Bones);
     if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
-          "apply_bone_control_to_walker",
+          "get_bones_transform",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
+    
+    std::vector<carla::rpc::BoneTransformDataOut> BoneData;
+    for (auto Bone : Bones.BoneTransforms) 
+    {
+      carla::rpc::BoneTransformDataOut Data;
+      Data.bone_name = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
+      FWalkerBoneControlOutData Transforms = Bone.Get<1>();
+      Data.world = Transforms.World;
+      Data.component = Transforms.Component;
+      Data.relative = Transforms.Relative;
+      BoneData.push_back(Data);
+    }
+    return carla::rpc::WalkerBoneControlOut(BoneData);
+  };
+
+  BIND_SYNC(set_bones_transform) << [this](
+      cr::ActorId ActorId,
+      carla::rpc::WalkerBoneControlIn Bones) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "set_bones_transform",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    FWalkerBoneControlIn Bones2 = FWalkerBoneControlIn(Bones);
+    ECarlaServerResponse Response = CarlaActor->SetBonesTransform(Bones2);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_bones_transform",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(blend_pose) << [this](
+      cr::ActorId ActorId,
+      float Blend) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "blend_pose",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response = CarlaActor->BlendPose(Blend);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "blend_pose",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_pose_from_animation) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_pose_from_animation",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response = CarlaActor->GetPoseFromAnimation();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_pose_from_animation",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    
     return R<void>::Success();
   };
 
@@ -1851,11 +2130,12 @@ void FCarlaServer::FPimpl::BindActions()
           ActorId id = result.Get().id;
           auto set_id = carla::Functional::MakeOverload(
               [](C::SpawnActor &) {},
+              [](C::ConsoleCommand &) {},
               [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after)
           {
-            boost::apply_visitor(set_id, command.command);
-            boost::apply_visitor(self, command.command);
+            boost::variant2::visit(set_id, command.command);
+            boost::variant2::visit(self, command.command);
           }
           return id;
         }
@@ -1863,6 +2143,7 @@ void FCarlaServer::FPimpl::BindActions()
       },
       [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
+      [=](auto, const C::ApplyVehicleAckermannControl &c) {  MAKE_RESULT(apply_ackermann_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyVehiclePhysicsControl &c) {  MAKE_RESULT(apply_physics_control(c.actor, c.physics_control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
@@ -1880,7 +2161,11 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },
 //      [=](auto, const C::OpenVehicleDoor &c) {      MAKE_RESULT(open_vehicle_door(c.actor, c.door_idx)); },
 //      [=](auto, const C::CloseVehicleDoor &c) {     MAKE_RESULT(close_vehicle_door(c.actor, c.door_idx)); },
-      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
+      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); },
+      [=](auto, const C::ConsoleCommand& c) -> CR {       return console_command(c.cmd); },
+      [=](auto, const C::SetTrafficLightState& c) { MAKE_RESULT(set_traffic_light_state(c.actor, c.traffic_light_state)); },
+      [=](auto, const C::ApplyLocation& c)        { MAKE_RESULT(set_actor_location(c.actor, c.location)); }
+  );
 
 #undef MAKE_RESULT
 
@@ -1892,7 +2177,7 @@ void FCarlaServer::FPimpl::BindActions()
     result.reserve(commands.size());
     for (const auto &command : commands)
     {
-      result.emplace_back(boost::apply_visitor(command_visitor, command.command));
+      result.emplace_back(boost::variant2::visit(command_visitor, command.command));
     }
     if (do_tick_cue)
     {

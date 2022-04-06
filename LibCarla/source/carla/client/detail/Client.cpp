@@ -10,14 +10,17 @@
 #include "carla/Version.h"
 #include "carla/client/FileTransfer.h"
 #include "carla/client/TimeoutException.h"
+#include "carla/rpc/AckermannControllerSettings.h"
 #include "carla/rpc/ActorDescription.h"
-#include "carla/rpc/BoneTransformData.h"
+#include "carla/rpc/BoneTransformDataIn.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/Response.h"
+#include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehicleLightState.h"
-#include "carla/rpc/WalkerBoneControl.h"
+#include "carla/rpc/WalkerBoneControlIn.h"
+#include "carla/rpc/WalkerBoneControlOut.h"
 #include "carla/rpc/WalkerControl.h"
 #include "carla/streaming/Client.h"
 
@@ -159,6 +162,24 @@ namespace detail {
   void Client::CopyOpenDriveToServer(std::string opendrive, const rpc::OpendriveGenerationParameters & params) {
     // Await response, we need to be sure in this one.
     _pimpl->CallAndWait<void>("copy_opendrive_to_file", std::move(opendrive), params);
+  }
+
+  void Client::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture) {
+    _pimpl->CallAndWait<void>("apply_color_texture_to_objects", objects_name, parameter, Texture);
+  }
+
+  void Client::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture) {
+    _pimpl->CallAndWait<void>("apply_float_color_texture_to_objects", objects_name, parameter, Texture);
+  }
+
+  std::vector<std::string> Client::GetNamesOfAllObjects() const {
+    return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
   }
 
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
@@ -386,7 +407,7 @@ namespace detail {
   }
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
-    _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
+    _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
 
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
@@ -403,6 +424,19 @@ namespace detail {
 
   void Client::ApplyControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleControl &control) {
     _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
+  }
+
+  void Client::ApplyAckermannControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleAckermannControl &control) {
+    _pimpl->AsyncCall("apply_ackermann_control_to_vehicle", vehicle, control);
+  }
+
+  rpc::AckermannControllerSettings Client::GetAckermannControllerSettings(
+      rpc::ActorId vehicle) const {
+    return _pimpl->CallAndWait<carla::rpc::AckermannControllerSettings>("get_ackermann_controller_settings", vehicle);
+  }
+
+  void Client::ApplyAckermannControllerSettings(rpc::ActorId vehicle, const rpc::AckermannControllerSettings &settings) {
+    _pimpl->AsyncCall("apply_ackermann_controller_settings", vehicle, settings);
   }
 
   void Client::EnableCarSim(rpc::ActorId vehicle, std::string simfile_path) {
@@ -435,8 +469,21 @@ namespace detail {
     _pimpl->AsyncCall("apply_control_to_walker", walker, control);
   }
 
-  void Client::ApplyBoneControlToWalker(rpc::ActorId walker, const rpc::WalkerBoneControl &control) {
-    _pimpl->AsyncCall("apply_bone_control_to_walker", walker, control);
+  rpc::WalkerBoneControlOut Client::GetBonesTransform(rpc::ActorId walker) {
+    auto res = _pimpl->CallAndWait<rpc::WalkerBoneControlOut>("get_bones_transform", walker);
+    return res;
+  }
+
+  void Client::SetBonesTransform(rpc::ActorId walker, const rpc::WalkerBoneControlIn &bones) {
+    _pimpl->AsyncCall("set_bones_transform", walker, bones);
+  }
+
+  void Client::BlendPose(rpc::ActorId walker, float blend) {
+    _pimpl->AsyncCall("blend_pose", walker, blend);
+  }
+
+  void Client::GetPoseFromAnimation(rpc::ActorId walker) {
+    _pimpl->AsyncCall("get_pose_from_animation", walker);
   }
 
   void Client::SetTrafficLightState(

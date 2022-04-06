@@ -71,6 +71,8 @@ namespace nav {
     bool GetAgentRoute(ActorId id, carla::geom::Location from, carla::geom::Location to,
     std::vector<carla::geom::Location> &path, std::vector<unsigned char> &area);
 
+    /// set the seed to use with random numbers
+    void SetSeed(unsigned int seed);
     /// create the crowd object
     void CreateCrowd(void);
     /// create a new walker

@@ -19,15 +19,18 @@
 #include "Carla/Game/CarlaStatics.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/AckermannControllerSettings.h>
 #include "carla/rpc/LabelledPoint.h"
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/MapLayer.h>
+#include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehicleLightStateList.h>
-#include <carla/rpc/WalkerBoneControl.h>
+#include <carla/rpc/WalkerBoneControlIn.h>
+#include <carla/rpc/WalkerBoneControlOut.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -798,6 +801,7 @@ ECarlaServerResponse FVehicleActor::ApplyControlToVehicle(
   {
     FVehicleData* ActorData = GetActorData<FVehicleData>();
     ActorData->Control = Control;
+    ActorData->bAckermannControlActive = false;
   }
   else
   {
@@ -807,6 +811,27 @@ ECarlaServerResponse FVehicleActor::ApplyControlToVehicle(
       return ECarlaServerResponse::NotAVehicle;
     }
     Vehicle->ApplyVehicleControl(Control, Priority);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::ApplyAckermannControlToVehicle(
+      const FVehicleAckermannControl& AckermannControl, const EVehicleInputPriority& Priority)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    ActorData->AckermannControl = AckermannControl;
+    ActorData->bAckermannControlActive = true;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->ApplyVehicleAckermannControl(AckermannControl, Priority);
   }
   return ECarlaServerResponse::Success;
 }
@@ -826,6 +851,66 @@ ECarlaServerResponse FVehicleActor::GetVehicleControl(FVehicleControl& VehicleCo
       return ECarlaServerResponse::NotAVehicle;
     }
     VehicleControl = Vehicle->GetVehicleControl();
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetVehicleAckermannControl(FVehicleAckermannControl& VehicleAckermannControl)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    VehicleAckermannControl = ActorData->AckermannControl;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    VehicleAckermannControl = Vehicle->GetVehicleAckermannControl();
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetAckermannControllerSettings(
+  FAckermannControllerSettings& AckermannSettings)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    AckermannSettings = ActorData->AckermannControllerSettings;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    AckermannSettings = Vehicle->GetAckermannControllerSettings();
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::ApplyAckermannControllerSettings(
+      const FAckermannControllerSettings& AckermannSettings)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    ActorData->AckermannControllerSettings = AckermannSettings;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Vehicle->ApplyAckermannControllerSettings(AckermannSettings);
   }
   return ECarlaServerResponse::Success;
 }
@@ -1247,8 +1332,7 @@ ECarlaServerResponse FWalkerActor::ApplyControlToWalker(
   return ECarlaServerResponse::Success;
 }
 
-ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
-    const FWalkerBoneControl& Control)
+ECarlaServerResponse FWalkerActor::GetBonesTransform(FWalkerBoneControlOut& Bones)
 {
   if (IsDormant())
   {
@@ -1265,7 +1349,73 @@ ECarlaServerResponse FWalkerActor::ApplyBoneControlToWalker(
     {
       return ECarlaServerResponse::WalkerIncompatibleController;
     }
-    Controller->ApplyWalkerControl(Control);
+    Controller->GetBonesTransform(Bones);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::SetBonesTransform(const FWalkerBoneControlIn& Bones)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->SetBonesTransform(Bones);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::BlendPose(float Blend)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->BlendPose(Blend);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FWalkerActor::GetPoseFromAnimation()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Pawn = Cast<APawn>(GetActor());
+    if (Pawn == nullptr)
+    {
+      return ECarlaServerResponse::NotAWalker;
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      return ECarlaServerResponse::WalkerIncompatibleController;
+    }
+    Controller->GetPoseFromAnimation();
   }
   return ECarlaServerResponse::Success;
 }

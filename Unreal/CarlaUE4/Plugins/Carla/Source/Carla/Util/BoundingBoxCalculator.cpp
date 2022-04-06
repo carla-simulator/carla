@@ -5,13 +5,21 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Game/Tagger.h"
+#include "Carla/Traffic/TrafficLightBase.h"
+
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/ObjectLabel.h>
+#include <compiler/enable-ue4-macros.h>
 
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
+#include "Components/BoxComponent.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Engine/SkeletalMeshSocket.h"

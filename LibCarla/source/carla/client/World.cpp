@@ -160,6 +160,10 @@ namespace client {
     _episode.Lock()->SetPedestriansCrossFactor(percentage);
   }
 
+  void World::SetPedestriansSeed(unsigned int seed) {
+    _episode.Lock()->SetPedestriansSeed(seed);
+  }
+
   SharedPtr<Actor> World::GetTrafficSign(const Landmark& landmark) const {
     SharedPtr<ActorList> actors = GetActors();
     SharedPtr<TrafficSign> result;
@@ -289,6 +293,94 @@ namespace client {
       }
     }
     return Result;
+  }
+
+  void World::ApplyColorTextureToObject(
+      const std::string &object_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture) {
+    _episode.Lock()->ApplyColorTextureToObjects({object_name}, parameter, Texture);
+  }
+
+  void World::ApplyColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureColor& Texture) {
+    _episode.Lock()->ApplyColorTextureToObjects(objects_name, parameter, Texture);
+  }
+
+  void World::ApplyFloatColorTextureToObject(
+      const std::string &object_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture) {
+    _episode.Lock()->ApplyColorTextureToObjects({object_name}, parameter, Texture);
+  }
+
+  void World::ApplyFloatColorTextureToObjects(
+      const std::vector<std::string> &objects_name,
+      const rpc::MaterialParameter& parameter,
+      const rpc::TextureFloatColor& Texture) {
+    _episode.Lock()->ApplyColorTextureToObjects(objects_name, parameter, Texture);
+  }
+
+  std::vector<std::string> World::GetNamesOfAllObjects() const {
+    return _episode.Lock()->GetNamesOfAllObjects();
+  }
+
+  void World::ApplyTexturesToObject(
+      const std::string &object_name,
+      const rpc::TextureColor& diffuse_texture,
+      const rpc::TextureFloatColor& emissive_texture,
+      const rpc::TextureFloatColor& normal_texture,
+      const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture)
+  {
+    if (diffuse_texture.GetWidth() && diffuse_texture.GetHeight()) {
+      ApplyColorTextureToObject(
+          object_name, rpc::MaterialParameter::Tex_Diffuse, diffuse_texture);
+    }
+    if (normal_texture.GetWidth() && normal_texture.GetHeight()) {
+      ApplyFloatColorTextureToObject(
+          object_name, rpc::MaterialParameter::Tex_Normal, normal_texture);
+    }
+    if (ao_roughness_metallic_emissive_texture.GetWidth() &&
+        ao_roughness_metallic_emissive_texture.GetHeight()) {
+      ApplyFloatColorTextureToObject(
+          object_name,
+          rpc::MaterialParameter::Tex_Ao_Roughness_Metallic_Emissive,
+          ao_roughness_metallic_emissive_texture);
+    }
+    if (emissive_texture.GetWidth() && emissive_texture.GetHeight()) {
+      ApplyFloatColorTextureToObject(
+          object_name, rpc::MaterialParameter::Tex_Emissive, emissive_texture);
+    }
+  }
+
+  void World::ApplyTexturesToObjects(
+      const std::vector<std::string> &objects_names,
+      const rpc::TextureColor& diffuse_texture,
+      const rpc::TextureFloatColor& emissive_texture,
+      const rpc::TextureFloatColor& normal_texture,
+      const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture)
+  {
+    if (diffuse_texture.GetWidth() && diffuse_texture.GetHeight()) {
+      ApplyColorTextureToObjects(
+          objects_names, rpc::MaterialParameter::Tex_Diffuse, diffuse_texture);
+    }
+    if (normal_texture.GetWidth() && normal_texture.GetHeight()) {
+      ApplyFloatColorTextureToObjects(
+          objects_names, rpc::MaterialParameter::Tex_Normal, normal_texture);
+    }
+    if (ao_roughness_metallic_emissive_texture.GetWidth() &&
+        ao_roughness_metallic_emissive_texture.GetHeight()) {
+      ApplyFloatColorTextureToObjects(
+          objects_names,
+          rpc::MaterialParameter::Tex_Ao_Roughness_Metallic_Emissive,
+          ao_roughness_metallic_emissive_texture);
+    }
+    if (emissive_texture.GetWidth() && emissive_texture.GetHeight()) {
+      ApplyFloatColorTextureToObjects(
+          objects_names, rpc::MaterialParameter::Tex_Emissive, emissive_texture);
+    }
   }
 
 } // namespace client

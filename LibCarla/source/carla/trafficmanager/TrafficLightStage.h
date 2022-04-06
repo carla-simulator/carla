@@ -26,7 +26,7 @@ private:
   /// Map containing the previous junction visited by a vehicle.
   std::unordered_map<ActorId, JunctionID> vehicle_last_junction;
   TLFrame &output_array;
-  RandomGeneratorMap &random_devices;
+  RandomGenerator &random_device;
   cc::Timestamp current_timestamp;
 
   bool HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,
@@ -39,7 +39,7 @@ public:
                     const Parameters &parameters,
                     const cc::World &world,
                     TLFrame &output_array,
-                    RandomGeneratorMap &random_devices);
+                    RandomGenerator &random_device);
 
   void Update(const unsigned long index) override;
 

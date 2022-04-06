@@ -180,6 +180,12 @@ namespace std {
     return PrintList(out, vector_of_stuff);
   }
 
+  template <typename T, typename H>
+  std::ostream &operator<<(std::ostream &out, const std::pair<T,H> &data) {
+    out << "(" << data.first << "," << data.second << ")";
+    return out;
+  }
+
 } // namespace std
 
 static carla::time_duration TimeDurationFromSeconds(double seconds) {

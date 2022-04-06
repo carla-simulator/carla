@@ -25,6 +25,8 @@
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/LabelledPoint.h"
 #include "carla/rpc/VehicleWheels.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <boost/optional.hpp>
 
@@ -294,6 +296,8 @@ namespace detail {
 
     void SetPedestriansCrossFactor(float percentage);
 
+    void SetPedestriansSeed(unsigned int seed);
+
     /// @}
     // =========================================================================
     /// @name General operations with actors
@@ -453,12 +457,36 @@ namespace detail {
       _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
 
+    void ApplyAckermannControlToVehicle(Vehicle &vehicle, const rpc::VehicleAckermannControl &control) {
+      _client.ApplyAckermannControlToVehicle(vehicle.GetId(), control);
+    }
+
+    rpc::AckermannControllerSettings GetAckermannControllerSettings(const Vehicle &vehicle) const {
+      return _client.GetAckermannControllerSettings(vehicle.GetId());
+    }
+
+    void ApplyAckermannControllerSettings(Vehicle &vehicle, const rpc::AckermannControllerSettings &settings) {
+      _client.ApplyAckermannControllerSettings(vehicle.GetId(), settings);
+    }
+
     void ApplyControlToWalker(Walker &walker, const rpc::WalkerControl &control) {
       _client.ApplyControlToWalker(walker.GetId(), control);
     }
 
-    void ApplyBoneControlToWalker(Walker &walker, const rpc::WalkerBoneControl &control) {
-      _client.ApplyBoneControlToWalker(walker.GetId(), control);
+    rpc::WalkerBoneControlOut GetBonesTransform(Walker &walker) {
+      return _client.GetBonesTransform(walker.GetId());
+    }
+
+    void SetBonesTransform(Walker &walker, const rpc::WalkerBoneControlIn &bones) {
+      return _client.SetBonesTransform(walker.GetId(), bones);
+    }
+
+    void BlendPose(Walker &walker, float blend) {
+      return _client.BlendPose(walker.GetId(), blend);
+    }
+
+    void GetPoseFromAnimation(Walker &walker) {
+      return _client.GetPoseFromAnimation(walker.GetId());
     }
 
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
@@ -661,6 +689,24 @@ namespace detail {
     }
 
     void FreezeAllTrafficLights(bool frozen);
+
+    /// @}
+    // =========================================================================
+    /// @name Texture updating operations
+    // =========================================================================
+    /// @{
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
 
     /// @}
 

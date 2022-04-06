@@ -31,6 +31,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/rpc/Texture.h"
+#include "carla/rpc/MaterialParameter.h"
 
 #include <functional>
 #include <memory>
@@ -41,11 +43,14 @@
 namespace carla {
   class Buffer;
 namespace rpc {
+  class AckermannControllerSettings;
   class ActorDescription;
   class DebugShape;
+  class VehicleAckermannControl;
   class VehicleControl;
   class WalkerControl;
-  class WalkerBoneControl;
+  class WalkerBoneControlIn;
+  class WalkerBoneControlOut;
 }
 namespace sensor {
   class SensorData;
@@ -101,6 +106,18 @@ namespace detail {
 
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureColor& Texture);
+
+    void ApplyColorTextureToObjects(
+        const std::vector<std::string> &objects_name,
+        const rpc::MaterialParameter& parameter,
+        const rpc::TextureFloatColor& Texture);
+
+    std::vector<std::string> GetNamesOfAllObjects() const;
 
     rpc::EpisodeInfo GetEpisodeInfo();
 
@@ -235,6 +252,16 @@ namespace detail {
         rpc::ActorId vehicle,
         const rpc::VehicleControl &control);
 
+    void ApplyAckermannControlToVehicle(
+        rpc::ActorId vehicle,
+        const rpc::VehicleAckermannControl &control);
+
+    rpc::AckermannControllerSettings GetAckermannControllerSettings(rpc::ActorId vehicle) const;
+
+    void ApplyAckermannControllerSettings(
+        rpc::ActorId vehicle,
+        const rpc::AckermannControllerSettings &settings);
+
     void EnableCarSim(
         rpc::ActorId vehicle,
         std::string simfile_path);
@@ -267,9 +294,19 @@ namespace detail {
         rpc::ActorId walker,
         const rpc::WalkerControl &control);
 
-    void ApplyBoneControlToWalker(
+    rpc::WalkerBoneControlOut GetBonesTransform(
+        rpc::ActorId walker);
+
+    void SetBonesTransform(
         rpc::ActorId walker,
-        const rpc::WalkerBoneControl &control);
+        const rpc::WalkerBoneControlIn &bones);
+
+    void BlendPose(
+        rpc::ActorId walker, 
+        float blend);
+
+    void GetPoseFromAnimation(
+        rpc::ActorId walker);
 
     void SetTrafficLightState(
         rpc::ActorId traffic_light,
