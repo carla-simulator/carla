@@ -117,6 +117,10 @@ namespace detail {
       return _token.stream_id;
     }
 
+    void set_stream_id(stream_id_type id) {
+      _token.stream_id = id;
+    }
+
     bool has_address() const {
       return _token.address_type != token_data::address::not_set;
     }

@@ -16,16 +16,6 @@ namespace carla {
 namespace streaming {
 namespace detail {
 
-  template <typename StreamStateT, typename StreamMapT>
-  static auto MakeStreamState(const token_type &cached_token, StreamMapT &stream_map) {
-    auto ptr = std::make_shared<StreamStateT>(cached_token);
-    auto result = stream_map.emplace(std::make_pair(cached_token.get_stream_id(), ptr));
-    if (!result.second) {
-      throw_exception(std::runtime_error("failed to create stream!"));
-    }
-    return ptr;
-  }
-
   Dispatcher::~Dispatcher() {
     // Disconnect all the sessions from their streams, this should kill any
     // session remaining since at this point the io_context should be already
@@ -50,7 +40,19 @@ namespace detail {
     std::lock_guard<std::mutex> lock(_mutex);
     ++_cached_token._token.stream_id; // id zero only happens in overflow.
     log_info("Created new stream:", _cached_token._token.stream_id);
-    return MakeStreamState<MultiStreamState>(_cached_token, _stream_map);
+    std::shared_ptr<MultiStreamState> ptr;
+    auto search = _stream_map.find(_cached_token.get_stream_id());
+    if (search == _stream_map.end()) {
+      ptr = std::make_shared<MultiStreamState>(_cached_token);
+      auto result = _stream_map.emplace(std::make_pair(_cached_token.get_stream_id(), ptr));
+      if (!result.second) {
+        throw_exception(std::runtime_error("failed to create stream!"));
+      }
+      return carla::streaming::Stream(ptr);
+    } else {
+      ptr = search->second.lock();
+      return carla::streaming::Stream(ptr);
+    }
   }
 
   bool Dispatcher::RegisterSession(std::shared_ptr<Session> session) {
@@ -107,7 +109,13 @@ namespace detail {
         log_info("Could not lock");
       }
     } else {
-      log_info("Not Found sensor id: ", sensor_id);
+      log_info("Not Found sensor id, creating sensor stream: ", sensor_id);
+      token_type temp_token(_cached_token);
+      temp_token.set_stream_id(sensor_id);
+      auto ptr = std::make_shared<MultiStreamState>(temp_token);
+      auto result = _stream_map.emplace(std::make_pair(temp_token.get_stream_id(), ptr));
+      log_info("Created token from stream ", sensor_id, " on port ", temp_token.get_port());
+      return temp_token;
     }
     return token_type();
   }

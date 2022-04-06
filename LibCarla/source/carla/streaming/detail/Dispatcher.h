@@ -9,6 +9,7 @@
 #include "carla/streaming/EndPoint.h"
 #include "carla/streaming/Stream.h"
 #include "carla/streaming/detail/Session.h"
+#include "carla/streaming/detail/Stream.h"
 #include "carla/streaming/detail/Token.h"
 
 #include <memory>
@@ -19,7 +20,8 @@ namespace carla {
 namespace streaming {
 namespace detail {
 
-  class StreamStateBase;
+  class MultiStreamState;
+  using StreamMap = std::unordered_map<stream_id_type, std::weak_ptr<MultiStreamState>>;
 
   /// Keeps the mapping between streams and sessions.
   class Dispatcher {
@@ -49,9 +51,7 @@ namespace detail {
 
     token_type _cached_token;
 
-    std::unordered_map<
-        stream_id_type,
-        std::weak_ptr<StreamStateBase>> _stream_map;
+    StreamMap _stream_map;
   };
 
 } // namespace detail
