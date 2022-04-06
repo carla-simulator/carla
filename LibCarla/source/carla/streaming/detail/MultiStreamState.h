@@ -58,8 +58,6 @@ namespace detail {
       return (_sessions.size() > 0);
     }
 
-  private:
-
     void ConnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
       std::lock_guard<std::mutex> lock(_mutex);
@@ -102,6 +100,8 @@ namespace detail {
       _session.store(nullptr);
       log_debug("Disconnecting all multistream sessions");
     }
+
+  private:
 
     std::mutex _mutex;
 
