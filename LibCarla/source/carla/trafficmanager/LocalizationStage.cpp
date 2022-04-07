@@ -22,7 +22,7 @@ LocalizationStage::LocalizationStage(
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  RandomGeneratorMap &random_devices)
+  RandomGenerator &random_device)
     : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
@@ -31,7 +31,7 @@ LocalizationStage::LocalizationStage(
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
-    random_devices(random_devices){}
+    random_device(random_device){}
 
 void LocalizationStage::Update(const unsigned long index) {
 
@@ -120,9 +120,9 @@ void LocalizationStage::Update(const unsigned long index) {
     const float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
     const float perc_random_leftlanechange = parameters.GetRandomLeftLaneChangePercentage(actor_id);
     const float perc_random_rightlanechange = parameters.GetRandomRightLaneChangePercentage(actor_id);
-    const bool is_keep_right = perc_keep_right > random_devices.at(actor_id).next();
-    const bool is_random_left_change = perc_random_leftlanechange >= random_devices.at(actor_id).next();
-    const bool is_random_right_change = perc_random_rightlanechange >= random_devices.at(actor_id).next();
+    const bool is_keep_right = perc_keep_right > random_device.next();
+    const bool is_random_left_change = perc_random_leftlanechange >= random_device.next();
+    const bool is_random_right_change = perc_random_rightlanechange >= random_device.next();
 
     // Determine which of the parameters we should apply.
     if (is_keep_right || is_random_right_change) {
@@ -135,7 +135,7 @@ void LocalizationStage::Update(const unsigned long index) {
         lane_change_direction = false;
       } else {
         // Both a left and right lane changes are forced. Choose between one of them.
-        lane_change_direction = FIFTYPERC > random_devices.at(actor_id).next();
+        lane_change_direction = FIFTYPERC > random_device.next();
       }
     }
   }
@@ -194,7 +194,7 @@ void LocalizationStage::Update(const unsigned long index) {
       uint64_t selection_index = 0u;
       // Pseudo-randomized path selection if found more than one choice.
       if (next_waypoints.size() > 1) {
-        double r_sample = random_devices.at(actor_id).next();
+        double r_sample = random_device.next();
         selection_index = static_cast<uint64_t>(r_sample*next_waypoints.size()*0.01);
       } else if (next_waypoints.size() == 0) {
         if (!parameters.GetOSMMode()) {

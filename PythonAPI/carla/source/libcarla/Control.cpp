@@ -5,6 +5,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <carla/rpc/WheelPhysicsControl.h>
@@ -29,6 +30,15 @@ namespace rpc {
         << ", reverse=" << boolalpha(control.reverse)
         << ", manual_gear_shift=" << boolalpha(control.manual_gear_shift)
         << ", gear=" << std::to_string(control.gear) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const VehicleAckermannControl &control) {
+    out << "VehicleAckermannControl(steer=" << std::to_string(control.steer)
+        << ", steer_speed=" << std::to_string(control.steer_speed)
+        << ", speed=" << std::to_string(control.speed)
+        << ", acceleration=" << std::to_string(control.acceleration)
+        << ", jerk=" << std::to_string(control.jerk) << ')';
     return out;
   }
 
@@ -105,6 +115,17 @@ namespace rpc {
     << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision << ')';
     return out;
   }
+
+  std::ostream &operator<<(std::ostream &out, const AckermannControllerSettings &settings) {
+    out << "AckermannControllerSettings(speed_kp=" << std::to_string(settings.speed_kp)
+        << ", speed_ki=" << std::to_string(settings.speed_ki)
+        << ", speed_kd=" << std::to_string(settings.speed_kd)
+        << ", accel_kp=" << std::to_string(settings.accel_kp)
+        << ", accel_ki=" << std::to_string(settings.accel_ki)
+        << ", accel_kd=" << std::to_string(settings.accel_kd)  << ')';
+    return out;
+  }
+
 } // namespace rpc
 } // namespace carla
 
@@ -312,6 +333,42 @@ void export_control() {
     .def_readwrite("gear", &cr::VehicleControl::gear)
     .def("__eq__", &cr::VehicleControl::operator==)
     .def("__ne__", &cr::VehicleControl::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::VehicleAckermannControl>("VehicleAckermannControl")
+    .def(init<float, float, float, float, float>(
+      (arg("steer") = 0.0f,
+      arg("steer_speed") = 0.0f,
+      arg("speed") = 0.0f,
+      arg("acceleration") = 0.0f,
+      arg("jerk") = 0.0f)))
+    .def_readwrite("steer", &cr::VehicleAckermannControl::steer)
+    .def_readwrite("steer_speed", &cr::VehicleAckermannControl::steer_speed)
+    .def_readwrite("speed", &cr::VehicleAckermannControl::speed)
+    .def_readwrite("acceleration", &cr::VehicleAckermannControl::acceleration)
+    .def_readwrite("jerk", &cr::VehicleAckermannControl::jerk)
+    .def("__eq__", &cr::VehicleAckermannControl::operator==)
+    .def("__ne__", &cr::VehicleAckermannControl::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::AckermannControllerSettings>("AckermannControllerSettings")
+    .def(init<float, float, float, float, float, float>(
+      (arg("speed_kp") = 0.0f,
+      arg("speed_ki") = 0.0f,
+      arg("speed_kd") = 0.0f,
+      arg("accel_kp") = 0.0f,
+      arg("accel_ki") = 0.0f,
+      arg("accel_kd") = 0.0f)))
+    .def_readwrite("speed_kp", &cr::AckermannControllerSettings::speed_kp)
+    .def_readwrite("speed_ki", &cr::AckermannControllerSettings::speed_ki)
+    .def_readwrite("speed_kd", &cr::AckermannControllerSettings::speed_kd)
+    .def_readwrite("accel_kp", &cr::AckermannControllerSettings::accel_kp)
+    .def_readwrite("accel_ki", &cr::AckermannControllerSettings::accel_ki)
+    .def_readwrite("accel_kd", &cr::AckermannControllerSettings::accel_kd)
+    .def("__eq__", &cr::AckermannControllerSettings::operator==)
+    .def("__ne__", &cr::AckermannControllerSettings::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 

@@ -69,8 +69,8 @@ void VehicleLightStage::Update(const unsigned long index) {
 
   // Determine brake light state
   for (size_t cc = 0; cc < control_frame.size(); cc++) {
-    if (control_frame[cc].command.type() == typeid(carla::rpc::Command::ApplyVehicleControl)) {
-      carla::rpc::Command::ApplyVehicleControl& ctrl = boost::get<carla::rpc::Command::ApplyVehicleControl>(control_frame[cc].command);
+    if (auto* maybe_ctrl = boost::variant2::get_if<carla::rpc::Command::ApplyVehicleControl>(&control_frame[cc].command)) {
+      carla::rpc::Command::ApplyVehicleControl& ctrl = *maybe_ctrl;
       if (ctrl.actor == actor_id) {
         brake_lights = (ctrl.control.brake > 0.5); // hard braking, avoid blinking for throttle control
         break;

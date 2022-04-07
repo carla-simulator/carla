@@ -9,6 +9,7 @@
 
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/CarlaActor.h"
+#include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
@@ -18,10 +19,13 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Traffic/TrafficLightController.h"
+#include "Carla/Traffic/TrafficLightGroup.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Engine/StaticMeshActor.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Components/BoxComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/VehicleLightState.h>
