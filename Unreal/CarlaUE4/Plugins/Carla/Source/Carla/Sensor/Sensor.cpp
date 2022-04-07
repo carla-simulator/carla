@@ -44,7 +44,23 @@ void ASensor::Tick(const float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::Tick);
   Super::Tick(DeltaTime);
-  if(!Stream.AreClientsListening())
+  if (bClientsListening)
+  {
+    if(!Stream.AreClientsListening())
+    {
+      OnLastClientDisconnected();
+      bClientsListening = false;
+    }
+  }
+  else
+  {
+    if(Stream.AreClientsListening())
+    {
+      OnFirstClientConnected();
+      bClientsListening = true;
+    }
+  }
+  if(!bClientsListening)
   {
     return;
   }
