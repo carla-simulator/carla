@@ -4,7 +4,7 @@ CARLA provides a comprehensive set of vehicles out of the box in the blueprint l
 
 3D modelling of detailed vehicles is highly complex and requires a significant degree of skill. We therefore refer the reader to alternative sources of documentation on 3D modelling, since this is beyond the scope of this guide. There are, however, numerous sources of vehicle models in both free and proprietary online repositories. Hence the user has many options to turn to for creating custom vehicles for use in CARLA.
 
-The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. After rigging and importing, blueprints need to be set for the car and the wheels. Then apply matierials and add the glass parts of the vehicle. We will cover these steps in the following guide.
+The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. After rigging and importing, blueprints need to be set for the car and the wheels. Then apply materials and add the glass parts of the vehicle. We will cover these steps in the following guide.
 
 * __[Rigging](#rigging-the-vehicle-using-an-armature)__   
 	* [Import](#import)  
@@ -42,7 +42,7 @@ To look realistic within the simulation, the car needs to have rotating and whee
 
 ### Import 
 
-Import or model the vehicle model mesh in your 3D modelling application. In this guide we will use Blender 3D. Ensure that the wheels are seperable from the main body. Each wheel must be accessible as a distinct object. 
+Import or model the vehicle model mesh in your 3D modelling application. In this guide we will use Blender 3D. Ensure that the wheels are separable from the main body. Each wheel must be accessible as a distinct object. 
 
 ![model_in_blender](img/tuto_content_authoring_vehicles/model_in_blender.png)
 
@@ -50,13 +50,13 @@ It is important to ensure that the vehicle faces in the positive X direction, so
 
 ### Add an armature
 
-Now add an armature to the center of the vehicle, ensure the object is properly centered, the root of the armature bone should be set at the origin. Switch to edit mode and rotate the arumature 90 around the x axis. 
+Now add an armature to the center of the vehicle, ensure the object is properly centered, the root of the armature bone should be set at the origin. Switch to edit mode and rotate the armature 90 around the x axis. 
 
 ![armature_init](img/tuto_content_authoring_vehicles/armature_init.png)
 
 Now select the armature and add 4 more bones. Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. This can be achieved by locating the 3D cursor at the center of each wheel in edit mode. Select one of the wheels in object mode, select a vertex, press A to select all vertices then `Shift+S` and select `Cursor to selected`. This will locate the cursor in the center of the wheel. Then, in object mode, select the armature, switch to edit mode, select a bone and choose `Selection to cursor`. Your bone will now coincide with the wheel. Rotate each bone such that it lines up with the base of the armature. 
 
-For each wheel, it is recommended to name the bone accoring to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone. 
+For each wheel, it is recommended to name the bone according to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone. 
 
 ![armature_full](img/tuto_content_authoring_vehicles/full_armature_blender.png)
 
@@ -94,7 +94,7 @@ Launch the Unreal Editor with the `make launch` command from the CARLA root dire
 
 ### Setting the physics asset
 
-You will now have 3 things in your content browswer directory, the mesh, the skeleton and the physics asset. Double click on the physics asset to adjust it.
+You will now have 3 things in your content browser directory, the mesh, the skeleton and the physics asset. Double click on the physics asset to adjust it.
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/regenerate_body.png)
 
@@ -134,7 +134,7 @@ Now navigate to `Content > Carla > Blueprints > Vehicles > VehicleFactory` and d
 
 Select the `Vehicles` node and expand the `Vehicles` item in the `Default value` section on the right hand side.
 
-![vehicle_factry](img/tuto_content_authoring_vehicles/vehicle_factory.png)
+![vehicle_factory](img/tuto_content_authoring_vehicles/vehicle_factory.png)
 
 Press the plus icon to add your new vehicle. Scroll down to the last entry and expand it, it should be empty. Name the make and model of your vehicle and under the class section find your blueprint class that you created in the previous section. Leave the number of wheels as 4 and put the generation as 2. Compile and save. Do a global save for safety and you are now..ready to run your vehicle in a simulation. 
 
@@ -151,7 +151,7 @@ As it is, the vehicle currently has no textures or colors applied. The next step
 
 Once you have your vehicle imported as a basic asset with the mesh and blueprints laid out, you now want to add materials to your vehicle to facilitate photorealistic rendering in the Unreal Engine, for maximum fidelity in your machine learning training data.
 
-The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realitic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch. 
+The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realistic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch. 
 
 ### Applying a material to your vehicle
 
@@ -170,7 +170,7 @@ Double click on the material in the content browser and we can start editing the
 
 #### __Color__
 
-The color settings govern the overal color of the car. The base color is simply the primary color of the car this will govern the overall color:
+The color settings govern the overall color of the car. The base color is simply the primary color of the car this will govern the overall color:
 
 ![change_base_color](img/tuto_content_authoring_vehicles/change_base_color
 .gif)
@@ -182,7 +182,7 @@ The clear coat settings govern the appearance of the finish and how it reacts to
 ![change_roughness](img/tuto_content_authoring_vehicles/change_roughness
 .gif)
 
-An important parameter to govern the "shinyness" or "glossyness" of your car is the `Clear Coat Intensity`. High values close to 1 will make the coat shiny and glossy.
+An important parameter to govern the "shininess" or "glossiness" of your car is the `Clear Coat Intensity`. High values close to 1 will make the coat shiny and glossy.
 
 #### __Orange peel__ 
 
@@ -200,16 +200,16 @@ Some cars have paint jobs that include flakes of other material, such as metals 
 
 #### __Dust__
 
-Cars often accumulate grease and dust on the body that adds additiomal texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint. 
+Cars often accumulate grease and dust on the body that adds additional texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint. 
 
 ![dust](img/tuto_content_authoring_vehicles/dust
 .gif)
 
 ## Glass
 
-Creating realistic glass in CARLA requires some tricks to capture the real refractive and reflective behaviour of glass used in motor vehicles. The CARLA garage vehicles have 4 layers of meshes for the glass, with 2 different materials. The layers are separated by a few millimeters and there are separate materials for the interior and exterior facing glass layers to ensure that the glass looks realistic from both inside and outside the vehicle.
+Creating realistic glass in CARLA requires some tricks to capture the real refractive and reflective behavior of glass used in motor vehicles. The CARLA garage vehicles have 4 layers of meshes for the glass, with 2 different materials. The layers are separated by a few millimeters and there are separate materials for the interior and exterior facing glass layers to ensure that the glass looks realistic from both inside and outside the vehicle.
 
-There are 2 layers of glass for the appearence of the vehicle from outside and 2 layers for the appearence of glass from the interior of the vehicle. What makes glass look like glass is the reflections coming from both surfaces of the glass that makes a very subtle doubling of the reflection.
+There are 2 layers of glass for the appearance of the vehicle from outside and 2 layers for the appearance of glass from the interior of the vehicle. What makes glass look like glass is the reflections coming from both surfaces of the glass that makes a very subtle doubling of the reflection.
 
 ### Glass meshes
 
@@ -249,7 +249,7 @@ Now you have created the blueprint, added meshes, completed rigging, created mat
 
 ## Wheels
 
-If you copied the wheels when you were [creating the blueprint](#creating-the-blueprint), this might suit your purposes if your vehicle is very similar to vehicles that are already in the CARLA library. However, if your vehicle has non-standard wheel dimensions or grip charactertistics, you should follow this section to set up your wheel blueprints to best match the physical characteristics of your vehicle's wheels.
+If you copied the wheels when you were [creating the blueprint](#creating-the-blueprint), this might suit your purposes if your vehicle is very similar to vehicles that are already in the CARLA library. However, if your vehicle has non-standard wheel dimensions or grip characteristics, you should follow this section to set up your wheel blueprints to best match the physical characteristics of your vehicle's wheels.
 
 For the wheels of CARLA vehicles, we need to set up a blueprint class for each wheel to deal with the mechanics and collision properties. You will set up 4 blueprint classes, we recommend the following prefixes or suffixes to identify the wheels:
 
@@ -270,12 +270,12 @@ Double click on the blueprint to adjust it:
 
 ### Collision mesh
 
-Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content broswer locate the `CollisionWheel` mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the 
+Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content browser locate the `CollisionWheel` mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the 
 `Collision Mesh` slot in the details panel of the blueprint. This will improve performance without any noticable deficit to physics simulation.
 
 ### Tire configuration
 
-Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the `CommonTireConfig` configuration and drag it onto the `Tire Config` section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behaviour of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust. 
+Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the `CommonTireConfig` configuration and drag it onto the `Tire Config` section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behavior of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust. 
 
 ### Wheel dimensions
 
@@ -294,7 +294,7 @@ Now plug these numbers into the `Wheel` section of the blueprint.Take care to re
 
 ### __Suspension characteristics__
 
-The default values here provide a resonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type. 
+The default values here provide a reasonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type. 
 
 
 ## Lights

@@ -25,12 +25,12 @@ In this tutorial we will cover the process of creating a simple map for use with
 
 ## Prerequisites
 
-To follow this guide, you will need to build CARLA from source, so that you may use the Unreal Editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoardRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
+To follow this guide, you will need to build CARLA from source, so that you may use the Unreal Editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoadRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
 
 
 ## Create a road network using RoadRunner
 
-Open RoadRunner and create a new scene. Choose the Road Plan Tool and right click in the workspace to drop the first control point for the road. Click and drag elswhere in the workspace to extend the road. 
+Open RoadRunner and create a new scene. Choose the Road Plan Tool and right click in the workspace to drop the first control point for the road. Click and drag elsewhere in the workspace to extend the road. 
 
 ![roadrunner_draw](img/tuto_content_authoring_maps/drawing_roads.gif)
 
@@ -72,9 +72,9 @@ There are several elements needed to create an asset in CARLA:
 - [__UV map__](https://en.wikipedia.org/wiki/UV_mapping) - a mapping of 3D vertices and edges to a 2D texture space to match textures with 3D locations
 - [__Texture__](https://en.wikipedia.org/wiki/Texture_mapping) - a 2D image defining the colors and patterns to appear on the surface of the 3D object
 - [__Normal map__](https://en.wikipedia.org/wiki/Normal_mapping) - a 2D image defining the directions of the normals on the surface of the object, to add 3D variations to the object's surface
-- ORM map - a map defining the regions of metallicity, roughness and ambient oclussion
+- ORM map - a map defining the regions of metallicity, roughness and ambient occlusion
 
-The ORM map utilises the channels of a standard RGBA encoded image to encode the map of metallic regions, roughness and ambient occlusion. As we define the map here, the red channel defines the metalic map, the green channel the roughness and the blue channel is the ambient occlusion. These maps (as well as the diffuse and normal maps) can be created using an application such as [__Adobe Substance 3D painter__](https://www.adobe.com/products/substance3d-painter.html).
+The ORM map utilizes the channels of a standard RGBA encoded image to encode the map of metallic regions, roughness and ambient occlusion. As we define the map here, the red channel defines the metallic map, the green channel the roughness and the blue channel is the ambient occlusion. These maps (as well as the diffuse and normal maps) can be created using an application such as [__Adobe Substance 3D painter__](https://www.adobe.com/products/substance3d-painter.html).
 
 Create a new folder in some appropriate location using the Unreal content browser. Within this folder you can either right click and select `Import to PATH/TO/FOLDER` near the top of the context menu, or drag and drop files directly into the content browser. 
 
@@ -93,7 +93,7 @@ We should now import the textures, the diffuse texture for the diffuse colors, t
 
 Open the ORM map by double clicking and deselect the `sRGB` option, to ensure the texture is correctly applied. 
 
-Right click in the content browser and select `Material` from the menu. A new matrial will be created in the content browser. Double click to edit it. Shift select the textures you imported and drag them into the material edit window, you will now get 3 new nodes in the material node editor. 
+Right click in the content browser and select `Material` from the menu. A new material will be created in the content browser. Double click to edit it. Shift select the textures you imported and drag them into the material edit window, you will now get 3 new nodes in the material node editor. 
 
 ![material_init](img/tuto_content_authoring_maps/material_init.png)
 
@@ -119,7 +119,7 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 
 Now you can save the map, using the "Save Current" option in the top left of the workspace and it is ready to use. Play the simulation.
 
-This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA. You may now read how to [__package a map for use in CARLA standalond version__](tuto_M_manual_map_package.md)
+This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA. You may now read how to [__package a map for use in CARLA standalone version__](tuto_M_manual_map_package.md)
 
 ## Traffic lights
 
@@ -157,7 +157,7 @@ __3.__ Adjust the [`trigger volume`][triggerlink] for each traffic sign by selec
 
 ## Materials
 
-The CARLA content library has a multitude of useful materials ready to use to change the look of your maps. In your content browser, navigate to `Carla > Static > GenericMaterials`. In here you will find numerous materials you can use to alter the appearence of your map. 
+The CARLA content library has a multitude of useful materials ready to use to change the look of your maps. In your content browser, navigate to `Carla > Static > GenericMaterials`. In here you will find numerous materials you can use to alter the appearance of your map. 
 
 You can test the materials rapidly by drag and drop onto map elements:
 
@@ -166,7 +166,7 @@ You can test the materials rapidly by drag and drop onto map elements:
 
 # Road Painter
 
-The road painter is a tool that can be used to customise the appearance of the road, adding extra realism with additional textures, decals and meshes.
+The road painter is a tool that can be used to customize the appearance of the road, adding extra realism with additional textures, decals and meshes.
 
 ## What is the road painter?
 
@@ -368,19 +368,19 @@ Drag the material onto the lane markings you wish to color. Repeat the whole pro
 
 ## Trees and Vegetation
 
-The CARLA content library has a comprehensive set of vegitation blueprints for you to add further realism to the off-road areas of your maps like sidewalks, parks, hillsides, fields and forrests. 
+The CARLA content library has a comprehensive set of vegetation blueprints for you to add further realism to the off-road areas of your maps like sidewalks, parks, hillsides, fields and forrest. 
 
-Navigate to the vegitation folder in the CARLA content library: `Carla > Static > Vegitation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
+Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Visitation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
 
 ![map_materials](img/tuto_content_authoring_maps/add_tree.png)
 
 ### Foliage tool
 
-A useful tool for trees and vegitation is the [__Unreal Engine foliage tool__](https://docs.unrealengine.com/4.27/en-US/BuildingWorlds/Foliage/). Activate the tool by selecting the `mode` from the mode dropdown in the toolbar.
+A useful tool for trees and vegetation is the [__Unreal Engine foliage tool__](https://docs.unrealengine.com/4.27/en-US/BuildingWorlds/Foliage/). Activate the tool by selecting the `mode` from the mode dropdown in the toolbar.
 
 ![foliage_tool](img/tuto_content_authoring_maps/select_foliage_tool.png)
 
-Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set an appropiate density in the density field, then paint into the map with your foliage item. 
+Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set an appropriate density in the density field, then paint into the map with your foliage item. 
 
 ![foliage_paint](img/tuto_content_authoring_maps/foliage_paint.gif)
 

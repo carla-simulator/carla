@@ -33,6 +33,8 @@ nav:
   - 'Blueprint library': 'bp_library.md'
   - 'Python API': 'python_api.md'  
   - 'C++ reference': 'ref_cpp.md'  
+  - 'Tutorials': 'tutorials.md'
+  - 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
   - 'ROS': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
