@@ -7,7 +7,8 @@
 #include "FrameData.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Actor/CarlaActor.h"
-
+#include "Carla/Game/CarlaEngine.h"
+#include "Carla/Game/CarlaEpisode.h"
 
 
 void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData)
@@ -56,6 +57,7 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData)
         break;
     }
   }
+  GetFrameCounter();
 }
 
 void FFrameData::PlayFrameData(
@@ -150,6 +152,7 @@ void FFrameData::PlayFrameData(
     ProcessReplayerLightScene(Light);
   }
 
+  SetFrameCounter();
 }
 
 void FFrameData::Clear()
@@ -169,6 +172,7 @@ void FFrameData::Clear()
   TriggerVolumes.Clear();
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
+  FrameCounter.FrameCounter = 0;
 }
 
 void FFrameData::Write(std::ostream& OutStream)
@@ -183,6 +187,7 @@ void FFrameData::Write(std::ostream& OutStream)
   LightVehicles.Write(OutStream);
   LightScenes.Write(OutStream);
   TrafficLightTimes.Write(OutStream);
+  FrameCounter.Write(OutStream);
 }
 void FFrameData::Read(std::istream& InStream)
 {
@@ -237,6 +242,10 @@ void FFrameData::Read(std::istream& InStream)
       // scene lights animation
       case static_cast<char>(CarlaRecorderPacketId::SceneLight):
         LightScenes.Read(InStream);
+        break;
+
+      case static_cast<char>(CarlaRecorderPacketId::FrameCounter):
+        FrameCounter.Read(InStream);
         break;
 
       // unknown packet, just skip
@@ -577,6 +586,10 @@ void FFrameData::AddBoundingBox(const CarlaRecorderActorBoundingBox &ActorBoundi
   BoundingBoxes.Add(ActorBoundingBox);
 }
 
+void FFrameData::GetFrameCounter()
+{
+  FrameCounter.FrameCounter = FCarlaEngine::GetFrameCounter();
+}
 
 // create or reuse an actor for replaying
 std::pair<int, FCarlaActor*> FFrameData::TryToCreateReplayerActor(
@@ -978,6 +991,11 @@ bool FFrameData::SetActorSimulatePhysics(FCarlaActor* CarlaActor, bool bEnabled)
     return false;
   }
   return true;
+}
+
+void FFrameData::SetFrameCounter()
+{
+  FCarlaEngine::ResetFrameCounter(FrameCounter.FrameCounter);
 }
 
 FCarlaActor *FFrameData::FindTrafficLightAt(FVector Location)

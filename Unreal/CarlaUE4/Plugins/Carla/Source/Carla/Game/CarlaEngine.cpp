@@ -223,6 +223,11 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       }
       carla::log_info("frame data processed on secondary");
     }
+    else
+    {
+      // update frame counter
+      UpdateFrameCounter();
+    }
   }
 }
 
