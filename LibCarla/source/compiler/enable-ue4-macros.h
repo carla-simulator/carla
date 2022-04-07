@@ -2250,5 +2250,6 @@
 #pragma pop_macro("VERIFYD3D11RESIZEVIEWPORTRESULT")
 #pragma pop_macro("CLEANUP_ON_FAIL")
 #pragma pop_macro("RETURN_FALSE_ON_FAIL")
+#pragma pop_macro("PI")
 
 #undef LIBCARLA_INCLUDED_FROM_UE4
