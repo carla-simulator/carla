@@ -10,6 +10,7 @@
   * Added support for N wheeled vehicles
   * Added support for new batch commands ConsoleCommand, ApplyLocation (to actor), SetTrafficLightState
   * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
+  * Added post process effects for rainy and dusty weathers.
 
 ## CARLA 0.9.13
 

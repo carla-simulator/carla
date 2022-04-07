@@ -171,6 +171,14 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
   Episode.EpisodeSettings.FixedDeltaSeconds = FCarlaEngine_GetFixedDeltaSeconds();
   CurrentEpisode = &Episode;
 
+  // Reset map settings
+  UWorld* World = CurrentEpisode->GetWorld();
+  ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(World);
+  if (LargeMapManager)
+  {
+    CurrentSettings.TileStreamingDistance = LargeMapManager->GetLayerStreamingDistance();
+    CurrentSettings.ActorActiveDistance = LargeMapManager->GetActorStreamingDistance();
+  }
   CurrentEpisode->ApplySettings(CurrentSettings);
 
   ResetFrameCounter(GFrameNumber);
