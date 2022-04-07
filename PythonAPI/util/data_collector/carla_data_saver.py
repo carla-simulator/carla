@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2022 Intel Corporation.
+# Copyright (C) 2022 Intel Corporation
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-
-from __future__ import print_function
 from config_schema import ConfigSchema
 from omegaconf import DictConfig, OmegaConf
 import hydra
 import carla
-import numpy as np
 import random
 from queue import Queue
 import time
@@ -112,9 +109,9 @@ def spawn_actors(conf, world, parent=None):
 
         for actor in actor_list:
             # Save actor to dictionary
-            # For pedestrians, the ai walker controller is returned as a tuple (walker_controller, destination_transform)
+            # For pedestrians, the ai walker controller is returned as a tuple (walker_controller, destination_transform, walker_speed)
             if type(actor) is tuple and fnmatch.fnmatch(actor[0].type_id, "controller.ai.walker"):
-                actors[actor[0].id] = (actor[0], True, actor[1])
+                actors[actor[0].id] = (actor[0], True, (actor[1], actor[2]))
                 derived_parent = actor[0].parent
             else:
                 actors[actor.id] = (actor, True, None)
@@ -155,14 +152,10 @@ def conf_to_actor(conf, world, parent=None):
     if fnmatch.fnmatch(actor.type_id, "walker.pedestrian.*"):
         walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
         walker_controller = world.spawn_actor(walker_controller_bp, carla.Transform(), attach_to=actor)
-        if conf.blueprint.get("pace") == "run":
-            print("Speed run: ", blueprint.get_attribute('speed').recommended_values[2])
-            print("Speed walk: ", blueprint.get_attribute('speed').recommended_values[1])
-            walker_controller.set_max_speed(float(blueprint.get_attribute('speed').recommended_values[2]))
-        else:
-            walker_controller.set_max_speed(float(blueprint.get_attribute('speed').recommended_values[1]))
+        walker_speed = conf.blueprint.get("speed", float(blueprint.get_attribute('speed').recommended_values[1])) # Set default value to walking speed 1.7 m/s
+        logger.debug("Recommended value for walker speed: " + str(blueprint.get_attribute('speed').recommended_values))  # Recommended values
 
-        return [actor, (walker_controller, dest_transform)]
+        return [actor, (walker_controller, dest_transform, walker_speed)]
 
     return [actor]
 
@@ -291,7 +284,7 @@ def save_actors_dynamic_metadata(actors, worldsnapshot, world):
     actors_data = {}
     for id, actor in actors.items():
         actorsnapshot = worldsnapshot.find(id)
-        if actorsnapshot is None:
+        if actorsnapshot is None or fnmatch.fnmatch(actor['type'], "controller.ai.walker"):
             continue
 
         actor_data = {}
@@ -341,7 +334,8 @@ def data_saver_loop(conf):
 
     # Try connecting "retry" (default = 10) times
     client = None
-    for i in range(conf.carla.get("retry", 10)):
+    retry = conf.carla.get("retry", 10)
+    for i in range(retry):
         try:
             client = carla.Client(conf.carla.host, conf.carla.port)
             client.set_timeout(conf.carla.timeout)
@@ -357,11 +351,13 @@ def data_saver_loop(conf):
             if conf.carla.get("townmap"):
                 logger.info(f"Loading map {conf.carla.townmap}.")
                 world = client.load_world(conf.carla.townmap)
-            world = client.get_world()
+            else:
+                world = client.get_world()
+            break
 
         except RuntimeError:
             client = None
-            logger.info("CARLA connection failed on attempt {i+1} of 10")
+            logger.info(f"CARLA connection failed on attempt {i+1} of {retry}")
             time.sleep(5)
 
     max_frames = conf.get("max_frames", sys.maxsize)
@@ -379,11 +375,14 @@ def data_saver_loop(conf):
     actor_dict = {}
     try:
         actor_dict = spawn_actors(conf.spawn_actors, world)
-        # actor_dict: {actor_id: (actor, should_destroy, destination)}
-        for actor, _, destination in actor_dict.values():
+        # actor_dict: {actor_id: (actor, should_destroy, (destination, speed))}
+        for actor, _, walker_attr in actor_dict.values():
+            if walker_attr:
+                destination, speed = walker_attr[0], walker_attr[1]
             if fnmatch.fnmatch(actor.type_id, "controller.ai.walker"):
                 actor.start()
                 actor.go_to_location(destination)
+                actor.set_max_speed(speed)
             if fnmatch.fnmatch(actor.type_id, "vehicle.*"):
                 actor.set_autopilot(True, tm_port)
                 actor.set_light_state(carla.VehicleLightState.NONE)
@@ -455,6 +454,8 @@ def data_saver_loop(conf):
         for actor, should_destroy, _ in actor_dict.values():
             if not should_destroy:
                 continue
+            if fnmatch.fnmatch(actor.type_id, "controller.ai.walker"):
+                actor.stop()
             actor.destroy()
 
         print('done.')

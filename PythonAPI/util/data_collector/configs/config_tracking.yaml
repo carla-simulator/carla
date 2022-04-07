@@ -6,6 +6,7 @@ carla:
     fps: 30
     timeout: 2.0
   seed: 30
+  townmap: "Town10HD"
   traffic_manager_port: 8000
   retry: 10
 
@@ -27,7 +28,7 @@ spawn_actors:
   - blueprint:
       name: "walker.pedestrian.*"
       attr: {role_name: "hero1", is_invincible: "false"}
-      pace: "walk"
+      speed: 1.4  # Between 1 and 2 m/s (default is 1.4 m/s).
     transform:
       location: {x: -91, y: 170, z: 0.6}
       rotation: {yaw: -90.0}
@@ -56,7 +57,7 @@ spawn_actors:
   - blueprint:
       name: "walker.pedestrian.*"
       attr: {role_name: "hero2", is_invincible: "false"}
-      pace: "walk"
+      speed: 2.0
     transform:
       location: {x: -91, y: 150, z: 0.6}
       rotation: {yaw: 90.0}

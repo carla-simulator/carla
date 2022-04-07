@@ -6,6 +6,7 @@ carla:
     fps: 30
     timeout: 2.0
   townmap: "Town10HD"
+  traffic_manager_port: 8000
 
 weather:
   cloudiness: 0.0

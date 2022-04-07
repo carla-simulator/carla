@@ -7,6 +7,7 @@ carla:
     timeout: 2.0
   seed: 90
   townmap: "Town10HD"
+  traffic_manager_port: 8000
 
 output_dir: "_out"
 max_frames: 50 
@@ -26,7 +27,8 @@ spawn_actors:
   - blueprint: 
       name: "walker.pedestrian.*"
       attr: {role_name: "hero1", is_invincible: "false"}
-      pace: "run"
+      # Between 1 and 2 m/s (default is 1.4 m/s).
+      speed: 2.0
     transform: 
       location: {x: -113, y: -25, z: 0.6}
       rotation: {yaw: 90.0}
