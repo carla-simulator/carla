@@ -151,7 +151,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         }
       });
       Secondary->Connect();
-      // set this server in synchrono mode
+      // set this server in synchronous mode
       bSynchronousMode = true;
     }
     else
@@ -179,6 +179,16 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
     CurrentSettings.TileStreamingDistance = LargeMapManager->GetLayerStreamingDistance();
     CurrentSettings.ActorActiveDistance = LargeMapManager->GetActorStreamingDistance();
   }
+
+  // set this server in synchronous mode if this is a secondary server
+  if (!bIsPrimaryServer )
+  {
+    // CurrentSettings.bSynchronousMode = true;
+    // CurrentSettings.FixedDeltaSeconds = 0.05;
+    CurrentSettings.bNoRenderingMode = true;
+    bSynchronousMode = true;
+  }
+
   CurrentEpisode->ApplySettings(CurrentSettings);
 
   ResetFrameCounter(GFrameNumber);
@@ -229,7 +239,12 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
         FramesToProcess.front().PlayFrameData(GetCurrentEpisode(), MappedId);
         FramesToProcess.erase(FramesToProcess.begin()); // remove first element
       }
-      carla::log_info("frame data processed on secondary");
+      // carla::log_info("frame data processed on secondary");
+    }
+    else
+    {
+      // update frame counter
+      UpdateFrameCounter();
     }
   }
 }

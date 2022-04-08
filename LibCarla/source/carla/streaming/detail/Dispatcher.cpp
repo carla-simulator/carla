@@ -67,7 +67,7 @@ namespace detail {
         return true;
       }
     }
-    log_error("Invalid session: no stream available with id", session->get_stream_id());
+    // log_error("Invalid session: no stream available with id", session->get_stream_id());
     return false;
   }
 

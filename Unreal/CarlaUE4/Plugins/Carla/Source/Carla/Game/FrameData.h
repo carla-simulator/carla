@@ -22,6 +22,7 @@
 #include "Carla/Recorder/CarlaRecorderFrames.h"
 #include "Carla/Recorder/CarlaRecorderInfo.h"
 #include "Carla/Recorder/CarlaRecorderPosition.h"
+#include "Carla/Recorder/CarlaRecorderFrameCounter.h"
 
 #include <sstream>
 
@@ -49,6 +50,7 @@ class FFrameData
   CarlaRecorderPlatformTime PlatformTime;
   CarlaRecorderPhysicsControls PhysicsControls;
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
+  CarlaRecorderFrameCounter FrameCounter;
 
   #pragma pack(push, 1)
   struct Header
@@ -103,6 +105,8 @@ private:
   void AddActorKinematics(FCarlaActor *CarlaActor);
   void AddActorBoundingBox(FCarlaActor *CarlaActor);
 
+  void GetFrameCounter();
+
   std::pair<int, FCarlaActor*> TryToCreateReplayerActor(
       FVector &Location,
       FVector &Rotation,
@@ -145,6 +149,8 @@ private:
   void SetWalkerSpeed(uint32_t ActorId, float Speed);
   // enable / disable physics for an actor
   bool SetActorSimulatePhysics(FCarlaActor *CarlaActor, bool bEnabled);
+
+  void SetFrameCounter();
 
   FCarlaActor* FindTrafficLightAt(FVector Location);
 
