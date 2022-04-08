@@ -43,8 +43,8 @@ token_type PrimaryCommands::SendGetToken(carla::streaming::detail::stream_id_typ
   auto fut = _router->WriteToNext(MultiGPUCommand::GET_TOKEN, std::move(buf));
 
   auto response = fut.get();
-  log_info("got a token");
   token_type new_token(*reinterpret_cast<carla::streaming::detail::token_data *>(response.buffer.data()));
+  log_info("got a token: ", new_token.get_stream_id(), ", ", new_token.get_port());
   return new_token;
 }
 
