@@ -112,11 +112,13 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           {
             if(GetCurrentEpisode())
             {
+              TRACE_CPUPROFILER_EVENT_SCOPE_STR("MultiGPUCommand::SEND_FRAME");
               // convert frame data from buffer to istream
               CarlaStreamBuffer TempStream((char *) Data.data(), Data.size());
               std::istream InStream(&TempStream);
               GetCurrentEpisode()->GetFrameData().Read(InStream);
               {
+                TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.emplace_back");
                 std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
                 FramesToProcess.emplace_back(GetCurrentEpisode()->GetFrameData());
               }
@@ -180,13 +182,10 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
     CurrentSettings.ActorActiveDistance = LargeMapManager->GetActorStreamingDistance();
   }
 
-  // set this server in synchronous mode if this is a secondary server
-  if (!bIsPrimaryServer )
+  if (!bIsPrimaryServer)
   {
-    // CurrentSettings.bSynchronousMode = true;
-    // CurrentSettings.FixedDeltaSeconds = 0.05;
+    // set this secondary server with no-rendering mode
     CurrentSettings.bNoRenderingMode = true;
-    bSynchronousMode = true;
   }
 
   CurrentEpisode->ApplySettings(CurrentSettings);
@@ -221,11 +220,22 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     UpdateFrameCounter();
 
     // process RPC commands
-    do
+    if (bIsPrimaryServer)
     {
-      Server.RunSome(10u);
+      do
+      {
+        Server.RunSome(10u);
+      }
+      while (bSynchronousMode && !Server.TickCueReceived());
     }
-    while (bSynchronousMode && !Server.TickCueReceived());
+    else
+    {
+      do
+      {
+        Server.RunSome(10u);
+      }
+      while (!FramesToProcess.size());
+    }
 
     if (CurrentEpisode != nullptr)
     {
@@ -235,16 +245,11 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
     {
       if (FramesToProcess.size())
       {
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.PlayFrameData");
         std::lock_guard<std::mutex> Lock(FrameToProcessMutex);
         FramesToProcess.front().PlayFrameData(GetCurrentEpisode(), MappedId);
         FramesToProcess.erase(FramesToProcess.begin()); // remove first element
       }
-      // carla::log_info("frame data processed on secondary");
-    }
-    else
-    {
-      // update frame counter
-      UpdateFrameCounter();
     }
   }
 }
