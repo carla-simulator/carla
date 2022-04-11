@@ -244,10 +244,29 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   PACKAGE_FILE=$(<${PACKAGE_PATH_FILE})
   MAPS_TO_COOK=$(<${MAP_LIST_FILE})
 
-  # Cook maps
-  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
-      -run=cook -map="${MAPS_TO_COOK}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
-      -OutputDir="${BUILD_FOLDER}"
+
+  # Cook maps in batches
+  MAX_STRINGLENGTH=1000
+  IFS="+" read -ra MAP_LIST <<< $MAPS_TO_COOK
+  TOTAL=0
+  MAP_STRING=""
+  for MAP in "${MAP_LIST[@]}"; do
+    if (($(($TOTAL+${#MAP})) > $MAX_STRINGLENGTH)); then
+      echo "Cooking $MAP_STRING"
+      ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+          -run=cook -map="${MAP_STRING}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
+          -OutputDir="${BUILD_FOLDER}" -iterate
+      MAP_STRING=""
+      TOTAL=0
+    fi
+    MAP_STRING=$MAP_STRING+$MAP
+    TOTAL=$(($TOTAL+${#MAP}))
+  done
+  if (($TOTAL > 0)); then
+    ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+        -run=cook -map="${MAP_STRING}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
+        -OutputDir="${BUILD_FOLDER}" -iterate
+  fi
 
   PROP_MAP_FOLDER="${PACKAGE_PATH}/Maps/${PROPS_MAP_NAME}"
 
