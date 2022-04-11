@@ -65,6 +65,17 @@ export UE4_ROOT=/PATH/TO/UnrealEngine # or add it in your .zshrc
 
 NOTE: if you run into any `mono_os_sem_destroy: semaphore_destroy failed with error ...` errors, simply run the `xcodebuild` command above again. Do this until UE4 compiles, there is a race condition somewhere in the Mac build.
 
+NOTE 2: some users (much thanks!) have reported needing to edit this line in `UnrealEngine/Engine/Source/Programs/UnrealBuildTool/Platform/Mac/MacToolChain.cs:218` as follows:
+```cs
+// in MacToolChain.cs:218
+
+// old
+Result += " -Wall -Werror";
+
+// new
+Result += " -Wall"; // build on M1 sometimes fails with -Werror
+```
+
 ## Build CARLA 
 
 Note: This time, the build procedure is somewhat hacky and fragmanted by nature of using different architectures, but it still works reasonably well. The procedure is as follows:
