@@ -1,6 +1,6 @@
 # Custom assets
 
-CARLA has a wealth of assets available out of the box including full towns and cities with road networks, buildings and infrastructure, vehicles and pedestrians to populate your simulations. For many applications, you may want to add your own assets and CARLA is fully capable of loading new assets created entirely by the user for maximum extensability. 
+CARLA has a wealth of assets available out of the box including full towns and cities with road networks, buildings and infrastructure, vehicles and pedestrians to populate your simulations. However, for many applications, you may want to add your own assets and CARLA is fully capable of loading new assets created entirely by the user for maximum extensability. 
 
 The following documentation details numerous techniques for creating your own assets and adding them to CARLA.
 

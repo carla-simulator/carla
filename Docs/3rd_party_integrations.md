@@ -6,6 +6,7 @@ CARLA has been developed to integrate with several 3rd party applications in ord
 -   [__ROS bridge__](https://carla.readthedocs.io/projects/ros-bridge/en/latest/)
 -   [__SUMO__](adv_sumo.md)  
 -   [__Scenic__](tuto_G_scenic.md)
+-   [__CarSIM__](tuto_G_carsim_integration.md)
 -   [__Chrono__](tuto_G_chrono.md)
 -   [__OpenDRIVE__](adv_opendrive.md) 
 -   [__PTV Vissim__](adv_ptv.md)

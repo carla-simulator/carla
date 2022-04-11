@@ -12,7 +12,7 @@ Below you will find in depth documentation on the many extensive features of CAR
 
 ## Traffic Simulation
 
-[__ Traffic Simulation Overview__](ts_traffic_simulation_overview.md) — An overview of the different options available to populate your scenes with traffic.
+[__ Traffic Simulation Overview__](ts_traffic_simulation_overview.md) — An overview of the different options available to populate your scenes with traffic.  
 [__Traffic Manager__](adv_traffic_manager.md) — Simulate urban traffic by setting vehicles to autopilot mode.  
 
 ## References
@@ -22,10 +22,10 @@ Below you will find in depth documentation on the many extensive features of CAR
 
 ## Custom Maps
 
-[__Overview of custom maps in CARLA__](tuto_M_custom_map_overview.md) — An overview of the process and options involved in adding a custom, standard sized map. 
+[__Overview of custom maps in CARLA__](tuto_M_custom_map_overview.md) — An overview of the process and options involved in adding a custom, standard sized map.   
 [__Create a map in RoadRunner__](tuto_M_generate_map.md) — How to generate a customs, standard sized map in RoadRunner.  
 [__ Import map in CARLA package__](tuto_M_add_map_package.md) How to import a map in a CARLA package.  
-[__Import map in CARLA source build__](tuto_M_add_map_source.md) — How to import a map in CARLA built from source. 
+[__Import map in CARLA source build__](tuto_M_add_map_source.md) — How to import a map in CARLA built from source.  
 [__Alternative ways to import maps__](tuto_M_add_map_alternative.md) — Alternative methods to import maps.  
 [__ Manually prepare map package__](tuto_M_manual_map_package.md) — How to prepare a map for manual import.  
 [__Customizing maps: Layered maps__](tuto_M_custom_layers.md) — How to create sub-layers in your custom map.  
