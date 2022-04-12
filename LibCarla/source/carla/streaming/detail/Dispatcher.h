@@ -21,7 +21,7 @@ namespace streaming {
 namespace detail {
 
   class MultiStreamState;
-  using StreamMap = std::unordered_map<stream_id_type, std::weak_ptr<MultiStreamState>>;
+  using StreamMap = std::unordered_map<stream_id_type, std::shared_ptr<MultiStreamState>>;
 
   /// Keeps the mapping between streams and sessions.
   class Dispatcher {
@@ -42,8 +42,6 @@ namespace detail {
     token_type GetToken(stream_id_type sensor_id);
 
   private:
-
-    void ClearExpiredStreams();
 
     // We use a mutex here, but we assume that sessions and streams won't be
     // created too often.

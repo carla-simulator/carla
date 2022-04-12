@@ -24,10 +24,8 @@ namespace detail {
 #ifndef LIBCARLA_NO_EXCEPTIONS
       try {
 #endif // LIBCARLA_NO_EXCEPTIONS
-        auto stream_state = pair.second.lock();
-        if (stream_state != nullptr) {
-          stream_state->ClearSessions();
-        }
+        auto stream_state = pair.second;
+        stream_state->ClearSessions();
 #ifndef LIBCARLA_NO_EXCEPTIONS
       } catch (const std::exception &e) {
         log_error("failed to clear sessions:", e.what());
@@ -39,18 +37,22 @@ namespace detail {
   carla::streaming::Stream Dispatcher::MakeStream() {
     std::lock_guard<std::mutex> lock(_mutex);
     ++_cached_token._token.stream_id; // id zero only happens in overflow.
-    log_info("Created new stream:", _cached_token._token.stream_id);
+    log_info("New stream:", _cached_token._token.stream_id);
     std::shared_ptr<MultiStreamState> ptr;
     auto search = _stream_map.find(_cached_token.get_stream_id());
     if (search == _stream_map.end()) {
+      // creating new stream
       ptr = std::make_shared<MultiStreamState>(_cached_token);
       auto result = _stream_map.emplace(std::make_pair(_cached_token.get_stream_id(), ptr));
       if (!result.second) {
         throw_exception(std::runtime_error("failed to create stream!"));
       }
+      log_info("Stream created");
       return carla::streaming::Stream(ptr);
     } else {
-      ptr = search->second.lock();
+      // reusing existing stream
+      log_info("Stream reused");
+      ptr = search->second;
       return carla::streaming::Stream(ptr);
     }
   }
@@ -60,38 +62,23 @@ namespace detail {
     std::lock_guard<std::mutex> lock(_mutex);
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      auto stream_state = search->second.lock();
-      if (stream_state != nullptr) {
-        log_info("Connecting session (stream ", session->get_stream_id(), ")");
-        stream_state->ConnectSession(std::move(session));
-        return true;
-      }
+      auto stream_state = search->second;
+      log_info("Connecting session (stream ", session->get_stream_id(), ")");
+      stream_state->ConnectSession(std::move(session));
+      return true;
     }
-    // log_error("Invalid session: no stream available with id", session->get_stream_id());
+    log_error("Invalid session: no stream available with id", session->get_stream_id());
     return false;
   }
 
   void Dispatcher::DeregisterSession(std::shared_ptr<Session> session) {
     DEBUG_ASSERT(session != nullptr);
     std::lock_guard<std::mutex> lock(_mutex);
-    ClearExpiredStreams();
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      auto stream_state = search->second.lock();
-      if (stream_state != nullptr) {
-        log_info("Disconnecting session (stream ", session->get_stream_id(), ")");
-        stream_state->DisconnectSession(session);
-      }
-    }
-  }
-
-  void Dispatcher::ClearExpiredStreams() {
-    for (auto it = _stream_map.begin(); it != _stream_map.end(); ) {
-      if (it->second.expired()) {
-        it = _stream_map.erase(it);
-      } else {
-        ++it;
-      }
+      auto stream_state = search->second;
+      log_info("Disconnecting session (stream ", session->get_stream_id(), ")");
+      stream_state->DisconnectSession(session);
     }
   }
 
@@ -101,19 +88,18 @@ namespace detail {
     auto search = _stream_map.find(sensor_id);
     if (search != _stream_map.end()) {
       log_info("Found sensor id: ", sensor_id);
-      auto stream_state = search->second.lock();
-      if (stream_state != nullptr) {
-        log_info("Getting token from stream ", sensor_id, " on port ", stream_state->token().get_port());
-        return stream_state->token();
-      } else {
-        log_info("Could not lock");
-      }
+      auto stream_state = search->second;
+      log_info("Getting token from stream ", sensor_id, " on port ", stream_state->token().get_port());
+      return stream_state->token();
     } else {
       log_info("Not Found sensor id, creating sensor stream: ", sensor_id);
       token_type temp_token(_cached_token);
       temp_token.set_stream_id(sensor_id);
       auto ptr = std::make_shared<MultiStreamState>(temp_token);
       auto result = _stream_map.emplace(std::make_pair(temp_token.get_stream_id(), ptr));
+      if (!result.second) {
+        log_info("Failed to create multistream for stream ", sensor_id, " on port ", temp_token.get_port());
+      }
       log_info("Created token from stream ", sensor_id, " on port ", temp_token.get_port());
       return temp_token;
     }
