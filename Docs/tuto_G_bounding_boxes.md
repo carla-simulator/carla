@@ -295,4 +295,191 @@ cv2.destroyAllWindows()
 
 ![3D_bbox_vehicles](img/tuto_G_bounding_box/3d_bbox_vehicle.gif)
 
+### 2D bounding boxes
 
+It is common for neural networks to be trained to detect 2D bounding boxes rather than the 3D bounding boxes demonstrated above. The previous script can be easily extended to generate 2D bounding boxes. We simply need to use the extremities of the 3D bounding boxes. We find, for each bounding box we render, the leftmost, rightmost, highest and lowest projected vertex in image coordinates. 
+
+```py
+
+while True:
+    
+    # Retrieve and reshape the image
+    world.tick()
+    image = image_queue.get()
+
+    img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+
+    # Get the camera matrix 
+    world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+
+    for npc in world.get_actors().filter('*vehicle*'):
+
+        # Filter out the ego vehicle
+        if npc.id != vehicle.id:
+
+            bb = npc.bounding_box
+            dist = npc.get_transform().location.distance(vehicle.get_transform().location)
+
+            # Filter for the vehicles within 50m
+            if dist < 50:
+
+            # Calculate the dot product between the forward vector
+            # of the vehicle and the vector between the vehicle
+            # and the other vehicle. We threshold this dot product
+            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+                forward_vec = vehicle.get_transform().get_forward_vector()
+                ray = npc.get_transform().location - vehicle.get_transform().location
+
+                if forward_vec.dot(ray) > 1:
+                    p1 = get_image_point(bb.location, K, world_2_camera)http://host.robots.ox.ac.uk/pascal/VOC/
+                    verts = [v for v in bb.get_world_vertices(npc.get_transform())]
+                    x_max = -10000
+                    x_min = 10000
+                    y_max = -10000
+                    y_min = 10000
+
+                    for vert in verts:
+                        p = get_image_point(vert, K, world_2_camera)
+                        # Find the rightmost vertex
+                        if p[0] > x_max:
+                            x_max = p[0]
+                        # Find the leftmost vertex
+                        if p[0] < x_min:
+                            x_min = p[0]
+                        # Find the highest vertex
+                        if p[1] > y_max:
+                            y_max = p[1]
+                        # Find the lowest  vertex
+                        if p[1] < y_min:
+                            y_min = p[1]
+
+                    cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
+                    cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+                    cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
+                    cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+
+
+    cv2.imshow('ImageWindowName',img)
+    if cv2.waitKey(1) == ord('q'):
+        break
+cv2.destroyAllWindows()
+
+```
+
+![2D_bbox_vehicles](img/tuto_G_bounding_box/2d_bbox.gif)
+
+## Exporting bounding boxes
+
+Rendering bounding boxes is useful for us to ensure the bounding boxes are correct for debugging purposes. However, if we wanted to use them practically in training a neural network, we will want to export them. There are a number of different formats used by the common data repositories used for autonomous driving and object detection, such as [__KITTI__](http://www.cvlibs.net/datasets/kitti/) or [__PASCAL VOC__](http://host.robots.ox.ac.uk/pascal/VOC/).
+
+These datasets commonly use JSON or XML formats to store annotations. There is a convenient Python library for the PASCAL VOC format. 
+
+```py
+
+from pascal_voc_writer import Writer
+
+...
+...
+...
+
+
+while True:
+    # Retrieve the image
+    world.tick()
+    image = image_queue.get()
+
+    # Get the camera matrix 
+    world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
+    
+    frame_path = 'output/%06d' % image.frame
+    
+    # Save the image
+    image.save_to_disk(frame_path + '.png')
+    
+    # Initialize the exporter
+    writer = Writer(frame_path + '.png', image_w, image_h)
+    
+    for npc in world.get_actors().filter('*vehicle*'):
+        if npc.id != vehicle.id:
+            bb = npc.bounding_box
+            dist = npc.get_transform().location.distance(vehicle.get_transform().location)
+            if dist < 50:
+                forward_vec = vehicle.get_transform().get_forward_vector()
+                ray = npc.get_transform().location - vehicle.get_transform().location
+                if forward_vec.dot(ray) > 1:
+                    p1 = get_image_point(bb.location, K, world_2_camera)
+                    verts = [v for v in bb.get_world_vertices(npc.get_transform())]
+                    x_max = -10000
+                    x_min = 10000
+                    y_max = -10000
+                    y_min = 10000
+                    for vert in verts:
+                        p = get_image_point(vert, K, world_2_camera)
+                        if p[0] > x_max:
+                            x_max = p[0]
+                        if p[0] < x_min:
+                            x_min = p[0]
+                        if p[1] > y_max:
+                            y_max = p[1]
+                        if p[1] < y_min:
+                            y_min = p[1]
+        
+                    # Add the object to the frame (ensure it is inside the image)
+                    if x_min > 0 and x_max < image_w and y_min > 0 and y_max < image_h: 
+                        writer.addObject('vehicle', x_min, y_min, x_max, y_max)
+    
+    # Save the bounding boxes in the scene
+    writer.save(frame_path + '.xml')
+                            
+
+```
+
+For every rendered frame of your simulation, you will now export an accompanying XML file containing the details of the bounding boxes in the frame. 
+
+![xml_bbox_files](img/tuto_G_bounding_box/xml_bbox_files.png)
+
+In the PASCAL VOC format, the XML files contain information referring to the accompanying image file, the image dimensions and can include details such as vehicle type if needed. 
+
+```xml
+<!-- Example PASCAL VOC format file-->
+<annotation>
+    <folder>output</folder>
+    <filename>023235.png</filename>
+    <path>/home/matt/Documents/temp/output/023235.png</path>
+    <source>
+        <database>Unknown</database>
+    </source>
+    <size>
+        <width>800</width>
+        <height>600</height>
+        <depth>3</depth>
+    </size>
+    <segmented>0</segmented>
+    <object>
+        <name>vehicle</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>503</xmin>
+            <ymin>310</ymin>
+            <xmax>511</xmax>
+            <ymax>321</ymax>
+        </bndbox>
+    </object>    <object>
+        <name>vehicle</name>
+        <pose>Unspecified</pose>
+        <truncated>0</truncated>
+        <difficult>0</difficult>
+        <bndbox>
+            <xmin>490</xmin>
+            <ymin>310</ymin>
+            <xmax>498</xmax>
+            <ymax>321</ymax>
+        </bndbox>
+    </object>
+</annotation>
+
+```
+
+It should be noted that in this tutorial we have not accounted for overlapping bounding boxes. Additional work would be required in order to identify foreground bounding boxes in the case where they overlap.  
