@@ -196,14 +196,7 @@ def main():
         blueprintsWalkers = get_actor_blueprints(world, args.filterw, args.generationw)
 
         if args.safe:
-            blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
-            blueprints = [x for x in blueprints if not x.id.endswith('microlino')]
-            blueprints = [x for x in blueprints if not x.id.endswith('carlacola')]
-            blueprints = [x for x in blueprints if not x.id.endswith('cybertruck')]
-            blueprints = [x for x in blueprints if not x.id.endswith('t2')]
-            blueprints = [x for x in blueprints if not x.id.endswith('sprinter')]
-            blueprints = [x for x in blueprints if not x.id.endswith('firetruck')]
-            blueprints = [x for x in blueprints if not x.id.endswith('ambulance')]
+            blueprints = [x for x in blueprints if x.get_attribute('base_type') == 'car']
 
         blueprints = sorted(blueprints, key=lambda bp: bp.id)
 
