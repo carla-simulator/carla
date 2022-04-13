@@ -84,6 +84,8 @@ public:
   void SetLightState(LightId id, const LightState& new_state);
   void SetLightGroup(LightId id, LightGroup group);
 
+  void SetDayNightCycle(const bool active);
+
 private:
 
   const LightState& RetrieveLightState(LightId id) const;

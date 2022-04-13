@@ -39,6 +39,16 @@ public:
     return Weather;
   }
 
+  /// Returns whether the day night cycle is active (automatic on/off switch when changin to night mode)
+  UFUNCTION(BlueprintCallable)
+  const bool &GetDayNightCycle() const
+  {
+    return DayNightCycle;
+  }
+
+  /// Update the day night cycle
+  void SetDayNightCycle(const bool &active);
+
 protected:
 
   UFUNCTION(BlueprintImplementableEvent)
@@ -48,4 +58,7 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   FWeatherParameters Weather;
+
+  UPROPERTY(EditAnywhere, Category = "Weather")
+  bool DayNightCycle = true;
 };

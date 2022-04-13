@@ -5,6 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CarlaLightSubsystem.h"
+#include "Carla/Weather/Weather.h"
+#include "Kismet/GameplayStatics.h"
 
 //using cr = carla::rpc;
 
@@ -98,6 +100,19 @@ UCarlaLight* UCarlaLightSubsystem::GetLight(int Id)
     return Lights[Id];
   }
   return nullptr;
+}
+
+void UCarlaLightSubsystem::SetDayNightCycle(const bool active) {
+  TArray<AActor*> WeatherActors;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWeather::StaticClass(), WeatherActors);
+  if (WeatherActors.Num())
+  {
+    if (AWeather* WeatherActor = Cast<AWeather>(WeatherActors[0]))
+    {
+      WeatherActor->SetDayNightCycle(active);
+    }
+  }
+  std::cout << "Calling the server weather to change the day night cycle to " << active << std::endl;
 }
 
 void UCarlaLightSubsystem::SetClientStatesdirty(FString ClientThatUpdate)
