@@ -1,6 +1,6 @@
 # Foundations
 
-This page introduces the fundamental concepts required to understand how the CARLA server and API operate and communicate. CARLA operates using a server-client architecture, whereby the CARLA server runs the simulation and instructions are sent to it by the clients. The clients communicate with the server through the [__Python API__](python_api.md). To use the Python API you must install the module through PIP:
+This page introduces the fundamental concepts required to understand how the CARLA server and client operate and communicate through the API. CARLA operates using a server-client architecture, whereby the CARLA server runs the simulation and instructions are sent to it by the client(s). The client code communicates with the server using the [__API__](python_api.md). To use the Python API you must install the module through PIP:
 
 ```sh
 pip install carla-simulator # Python 2
@@ -63,7 +63,7 @@ world = client.get_world()
 The world object can be used to access objects within the simulation, such as weather, vehicles, traffic lights, buildings and the map using its many methods:
 
 ```py
-map = world.get_map()
+level = world.get_map()
 
 weather = world.get_weather()
 
@@ -76,9 +76,9 @@ CARLA has a client-server architecture. The server runs the simulation. The clie
 
 By default, CARLA runs in __asynchronous mode__.
 
-Essentially, in __asynchronous mode__ the CARLA server runs in it's own time, as fast as it can. Client requests are handled on the fly. In __synchronous mode__ the client, or your Python code, takes the reigns and tells the server when to update.
+Essentially, in __asynchronous mode__ the CARLA server runs as fast as it can. Client requests are handled on the fly. In __synchronous mode__ the client, running your Python code, takes the reigns and tells the server when to update.
 
-__Asynchronous mode__ is an appropriate mode to run CARLA in if you are experimenting or setting up a simulation, so you can fly around the map with the spectator as you place your actors. When you want to start producing training data or deploying an agent within the simulation, it is advised that you use the __synchronous mode__ since this will give you more control and predictability.
+__Asynchronous mode__ is an appropriate mode to run CARLA if you are experimenting or setting up a simulation, so you can fly around the map with the spectator as you place your actors. When you want to start producing training data or deploying an agent within the simulation, it is advised that you use the __synchronous mode__ since this will give you more control and predictability.
 
 Read more about [__synchronous and asynchronous modes__](adv_synchrony_timestep.md).
 
@@ -92,12 +92,13 @@ Changing between synchronous and asynchronous mode is just a matter of a boolean
 ```py
 settings = world.get_settings()
 settings.synchronous_mode = True # Enables synchronous mode
+settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
 ```
 !!! Warning
     If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
 
-To disable synchronous mode just set the variable to false or use the script `PythonAPI/util/config.py`. 
+To disable synchronous mode just set the variable to `False` or use the script `PythonAPI/util/config.py`. 
 ```sh
 cd PythonAPI/util && python3 config.py --no-sync # Disables synchronous mode
 ``` 

@@ -53,6 +53,12 @@ If you need to learn more about Scenic, then read their ["Getting Started with S
 
 ---
 
+## CarSIM
+
+CARLA's integration with CarSim allows vehicle controls in CARLA to be forwarded to CarSim. CarSim will do all required physics calculations of the vehicle and return the new state to CARLA. 
+
+Learn how to use CARLA alongside CarSIM [here](tuto_G_carsim_integration.md).
+
 ## OpenDRIVE
 
 [__OpenDRIVE__](https://www.asam.net/standards/detail/opendrive/) is an open format specification used to describe the logic of a road network intended to standardise the discription of road networks in digital format and allow different applications to exchange data on road networks. Please refer to the full documentation [__here__](adv_opendrive.md)

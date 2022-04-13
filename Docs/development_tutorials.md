@@ -1,6 +1,6 @@
 # Development
 
-CARLA is open source and designed to be highly extensible, allowing for users to create custom functionality or content to suit specialized applications or specific needs. The following   
+CARLA is open source and designed to be highly extensible. This  allows users to create custom functionality or content to suit specialized applications or specific needs. The following tutorials detail how to achieve specific development aims with the CARLA codebase:  
 
 - [__Make release__](tuto_D_make_release.md)
 - [__Upgrading content__](tuto_D_contribute_assets.md)

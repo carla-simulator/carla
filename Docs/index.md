@@ -64,8 +64,8 @@ CARLA forum</a>
 
 ## Tutorials
 
-There are numerous tutorials with code and guidelines for using CARLA in different use cases. Please check the [tutorials page](tutorials.md) for help with your work.
+There are numerous tutorials covering CARLA features with code and guidelines for varied use cases. Please check the [tutorials page](tutorials.md) for help with your work.
 
 ## Extended documentation
 
-The pages above cover most of the core concepts and features of CARLA, there is additional documentation in the [extended documentation](ext_docs.md) section covering some of the advanced features.
+The pages above cover most of the core concepts and features of CARLA. There is additional documentation in the [extended documentation](ext_docs.md) section covering advanced features in more depth.

@@ -1,6 +1,6 @@
 # Extended documentation
 
-Below you will find in depth documentation on the many extensive features of CARLA.
+Below, you will find in depth documentation on the many extensive features of CARLA.
 
 ## Advanced concepts
  
