@@ -29,7 +29,7 @@
   * Comments should not exceed 80 columns, code may exceed this limit a bit in
     rare occasions if it results in clearer code.
   * Compilation should not give any error or warning
-    (`clang++-8 -Wall -Wextra -std=C++14 -Wno-missing-braces`).
+    (`clang++ -Wall -Wextra -std=C++14 -Wno-missing-braces`).
   * The use of `throw` is forbidden, use `carla::throw_exception` instead.
   * Unreal C++ code (CarlaUE4 and Carla plugin) follow the
     [Unreal Engine's Coding Standard][ue4link] with the exception of using
