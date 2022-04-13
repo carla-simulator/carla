@@ -37,14 +37,14 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-10 >/dev/null 2>&1 || {
-  echo >&2 "clang 8 is required, but it's not installed.";
+command -v /usr/bin/clang++ >/dev/null 2>&1 || {
+  echo >&2 "clang1is required, but it's not installed.";
   exit 1;
 }
 
 CXX_TAG=c10
-export CC=/usr/bin/clang-10
-export CXX=/usr/bin/clang++-10
+export CC=/usr/bin/clang
+export CXX=/usr/bin/clang++
 
 source $(dirname "$0")/Environment.sh
 
@@ -148,7 +148,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-8.0"
+    BOOST_TOOLSET="clang"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
