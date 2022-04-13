@@ -33,6 +33,8 @@
 
 #include "CarlaWheeledVehicle.generated.h"
 
+#include <utility>
+
 class UBoxComponent;
 
 UENUM()
