@@ -31,9 +31,9 @@
 #endif
 //-------------------------------------------
 
-#include "CarlaWheeledVehicle.generated.h"
-
 #include <utility>
+
+#include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
 
