@@ -15,8 +15,8 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-xenial-8
           packages:
-            - g++-7 # we need this one for the libstdc++.
-            - clang-8
+            - g++ # we need this one for the libstdc++.
+            - clang
             - ninja-build
             - python
             - python-pip
