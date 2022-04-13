@@ -8,6 +8,7 @@
 
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
+#include "Components/SplineComponent.h"
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
@@ -17,6 +18,7 @@
 #include "ProceduralFoliageComponent.h"
 #include "ProceduralFoliageVolume.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
+#include "Runtime/Engine/Public/DrawDebugHelpers.h"
 
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
@@ -50,9 +52,15 @@ void UMapGeneratorWidget::CookVegetation(const FMapGeneratorMetaInfo& MetaInfo)
       *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
   // 3. Add vegetation to tiles
   bool bVegetationSuccess = CookVegetationToTiles(MetaInfo);
-  if(!bVegetationSuccess)
+  if(!bVegetationSuccess){
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking vegetation for %s"), 
         *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+  }
+  else
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: SUCCESS Cooking Vegetation to Tiles in %s %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
+  }
 }
 
 void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners)
@@ -84,6 +92,39 @@ FString UMapGeneratorWidget::SanitizeDirectory(FString InDirectory)
     }
   }
   return InDirectory;
+}
+
+AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Generating Waterbodies"), 
+        *CUR_CLASS_FUNC_LINE);
+
+  UWorld* World = GetWorld();
+
+  float ActorZCoord = GetLandscapeSurfaceHeight(World, 0, 0, false);
+  FVector Location(0, 0, ActorZCoord);
+  FRotator Rotation(0,0,0);
+  FActorSpawnParameters SpawnInfo;
+  
+  
+  AActor* RiverActor =  World->SpawnActor<AActor>(
+      RiverClass, 
+      Location, 
+      Rotation, 
+      SpawnInfo);
+
+  USplineComponent* RiverSpline = RiverActor->FindComponentByClass<USplineComponent>();
+
+  int NumberOfPoints = RiverSpline->GetNumberOfSplinePoints();
+
+  for(int i = 0; i < NumberOfPoints; i++)
+  {
+    FVector PointPosition = RiverSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World);
+    PointPosition.Z = GetLandscapeSurfaceHeight(World, PointPosition.X, PointPosition.Y, false);
+    RiverSpline->SetLocationAtSplinePoint(i, PointPosition, ESplineCoordinateSpace::World, true);
+  }
+
+  return RiverActor;
 }
 
 bool UMapGeneratorWidget::LoadBaseTileWorld(FAssetData& WorldAssetData)
@@ -393,3 +434,43 @@ UWorld* UMapGeneratorWidget::GetWorldFromAssetData(FAssetData& WorldAssetData)
   return World;
 }
 
+float UMapGeneratorWidget::GetLandscapeSurfaceHeight(UWorld* World, float x, float y, bool bDrawDebugLines)
+{
+  if(World)
+  {
+    FVector RayStartingPoint(x, y, 999999);
+    FVector RayEndPoint(x, y, -999999);
+
+    // Raytrace
+    FHitResult HitResult;
+    World->LineTraceSingleByObjectType(
+        OUT HitResult,
+        RayStartingPoint,
+        RayEndPoint,
+        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
+        FCollisionQueryParams());
+
+    // Draw debug line.
+    if (bDrawDebugLines)
+    {
+      FColor LineColor;
+
+      if (HitResult.GetActor()) LineColor = FColor::Red;
+      else LineColor = FColor::Green;
+
+      DrawDebugLine(
+          World,
+          RayStartingPoint,
+          RayEndPoint,
+          LineColor,
+          true,
+          5.f,
+          0.f,
+          10.f);
+    }
+
+    // Return Z Location.
+    if (HitResult.GetActor()) return HitResult.ImpactPoint.Z;
+  }
+  return 0.0f;
+}

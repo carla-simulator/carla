@@ -94,6 +94,9 @@ public:
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   FString SanitizeDirectory(FString InDirectory);
 
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
+
 private:  
   /// Loads the base tile map and stores it in @a WorldAssetData
   /// The funtions return true is success, otherwise false
@@ -158,4 +161,7 @@ private:
   /// Returns the world object in @a WorldAssetData
   UFUNCTION()
   UWorld* GetWorldFromAssetData(FAssetData& WorldAssetData);
+
+  UFUNCTION()
+  float GetLandscapeSurfaceHeight(UWorld* World, float x, float y, bool bDrawDebugLines);
 };
