@@ -1374,6 +1374,10 @@ Changes the color of each element in `lights` to the corresponding in `colors`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
         - `colors` (_list([carla.Color](#carla.Color))_) - List of colors to be applied.  
+- <a name="carla.LightManager.set_day_night_cycle"></a>**<font color="#7fb800">set_day_night_cycle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**active**</font>)  
+All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__.  
+    - **Parameters:**
+        - `active` (_bool_) - (De)activation of the day-night cycle.    
 - <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  
 Changes the intensity of each element in `lights` to the corresponding in `intensities`.  
     - **Parameters:**
