@@ -30,7 +30,7 @@ Below, you will find in depth documentation on the many extensive features of CA
 [__ Manually prepare map package__](tuto_M_manual_map_package.md) — How to prepare a map for manual import.  
 [__Customizing maps: Layered maps__](tuto_M_custom_layers.md) — How to create sub-layers in your custom map.  
 [__ Customizing maps: Traffic lights and signs__](tuto_M_custom_add_tl.md) — How to add traffic lights and signs to your custom map.  
-[__ Customizing maps: Road painter__](tuto_M_custom_road_painter.md) — How to use the road painter tool to change the appearance of the road  
+[__ Customizing maps: Road painter__](tuto_M_custom_road_painter.md) — How to use the road painter tool to change the appearance of the road.
 [__Customizing Maps: Procedural Buildings__](tuto_M_custom_buildings.md) — Populate your custom map with buildings.  
 [__ Customizing maps: Weather and landscape__](tuto_M_custom_weather_landscape.md) — Create the weather profile for your custom map and populate the landscape.  
 [__Generate pedestrian navigation__](tuto_M_generate_pedestrian_navigation.md) — Obtain the information needed for walkers to move around.  
