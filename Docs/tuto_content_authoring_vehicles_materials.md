@@ -2,7 +2,7 @@
 
 Once you have your vehicle imported as a basic asset with the mesh and blueprints laid out, you now want to add materials to your vehicle to facilitate photorealistic rendering in the Unreal Engine, for maximum fidelity in your machine learning training data.
 
-The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realitic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch. 
+The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realistic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch. 
 
 ### Applying a material to your vehicle
 
@@ -21,7 +21,7 @@ Double click on the material in the content browser and we can start editing the
 
 
 
-__Color__ - The color settings govern the overal color of the car. The base color is simply the primary color of the car this will govern the overall color:
+__Color__ - The color settings govern the overall color of the car. The base color is simply the primary color of the car this will govern the overall color:
 
 ![change_base_color](img/tuto_content_authoring_vehicles/change_base_color
 .gif)
@@ -31,7 +31,7 @@ __Clear coat__ - the clear coat settings govern the appearance of the finish and
 ![change_roughness](img/tuto_content_authoring_vehicles/change_roughness
 .gif)
 
-An important parameter to govern the "shinyness" or "glossyness" of your car is the *Clear Coat Intensity*. High values close to 1 will make the coat shiny and glossy.
+An important parameter to govern the "shininess" or "glossiness" of your car is the *Clear Coat Intensity*. High values close to 1 will make the coat shiny and glossy.
 
 __Orange peel__ - finishes on real cars (particularly on mass produced cars for the general market) tend to have imperfections that appear as slight ripples in the paint. The orange peel effect mimics this and makes cars look more realistic.
 

@@ -6,6 +6,7 @@ CARLA has been developed to integrate with several 3rd party applications in ord
 -   [__ROS bridge__](https://carla.readthedocs.io/projects/ros-bridge/en/latest/)
 -   [__SUMO__](adv_sumo.md)  
 -   [__Scenic__](tuto_G_scenic.md)
+-   [__CarSIM__](tuto_G_carsim_integration.md)
 -   [__Chrono__](tuto_G_chrono.md)
 -   [__OpenDRIVE__](adv_opendrive.md) 
 -   [__PTV Vissim__](adv_ptv.md)
@@ -51,6 +52,12 @@ Scenic is a set of libraries and a language for scenario specification and scene
 If you need to learn more about Scenic, then read their ["Getting Started with Scenic"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) guide and have a look at their tutorials for creating [static](https://scenic-lang.readthedocs.io/en/latest/tutorials/tutorial.html) and [dynamic](https://scenic-lang.readthedocs.io/en/latest/tutorials/dynamics.html) scenarios.
 
 ---
+
+## CarSIM
+
+CARLA's integration with CarSim allows vehicle controls in CARLA to be forwarded to CarSim. CarSim will do all required physics calculations of the vehicle and return the new state to CARLA. 
+
+Learn how to use CARLA alongside CarSIM [here](tuto_G_carsim_integration.md).
 
 ## OpenDRIVE
 

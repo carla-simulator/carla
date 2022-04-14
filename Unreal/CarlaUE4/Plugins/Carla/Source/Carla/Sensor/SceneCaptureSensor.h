@@ -318,7 +318,7 @@ protected:
   USceneCaptureComponent2D *CaptureComponent2D = nullptr;
 
   UPROPERTY(EditAnywhere)
-  float TargetGamma = 2.2f;
+  float TargetGamma = 2.4f;
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)

@@ -17,14 +17,14 @@ TrafficLightStage::TrafficLightStage(
   const Parameters &parameters,
   const cc::World &world,
   TLFrame &output_array,
-  RandomGeneratorMap &random_devices)
+  RandomGenerator &random_device)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),
     parameters(parameters),
     world(world),
     output_array(output_array),
-    random_devices(random_devices) {}
+    random_device(random_device) {}
 
 void TrafficLightStage::Update(const unsigned long index) {
   bool traffic_light_hazard = false;
@@ -46,7 +46,7 @@ void TrafficLightStage::Update(const unsigned long index) {
     if (is_at_traffic_light &&
         traffic_light_state != TLS::Green &&
         traffic_light_state != TLS::Off &&
-        parameters.GetPercentageRunningLight(ego_actor_id) <= random_devices.at(ego_actor_id).next()) {
+        parameters.GetPercentageRunningLight(ego_actor_id) <= random_device.next()) {
 
       traffic_light_hazard = true;
     }
@@ -55,7 +55,7 @@ void TrafficLightStage::Update(const unsigned long index) {
             !is_at_traffic_light &&
             traffic_light_state != TLS::Green &&
             traffic_light_state != TLS::Off &&
-            parameters.GetPercentageRunningSign(ego_actor_id) <= random_devices.at(ego_actor_id).next()) {
+            parameters.GetPercentageRunningSign(ego_actor_id) <= random_device.next()) {
 
       traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_timestamp);
     }

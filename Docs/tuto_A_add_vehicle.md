@@ -244,13 +244,13 @@ Adding an N wheeled vehicle follows the same import pipeline as that for 4 wheel
 
 __5.__ __Configure the Animation Blueprint for an N wheeled vehicle__
 
-Searh for **BaseVehiclePawnNW**
+Search for `BaseVehiclePawnNW` and press **_Select_**.
 
 ![n_wheel_base](../img/base_nw.png)
 
 __6.__ __Prepare the vehicle and wheel blueprints__
 
-Go to the folder of any of any native CARLA vehicles in Carla/Blueprints/Vehicles. From the Content Browser, copy the four wheel blueprints into the blueprint folder for your own vehicle. Rename the files to replace the old vehicle name with your own vehicle name.
+Go to the folder of any native CARLA vehicles in Carla/Blueprints/Vehicles. From the Content Browser, copy the four wheel blueprints into the blueprint folder for your own vehicle. Rename the files to replace the old vehicle name with your own vehicle name.
 
 Copy the four wheels and copy again for additional wheels. In the case of a 6 wheeled vehicle, you will need 6 different wheels: FLW, FRW, MLW, MRW, RLW, RRW.
 
@@ -262,14 +262,14 @@ Follow section __7__ as above for the 4 wheeled vehicle. The key difference in t
 
 __8.__ __Configure vehicle blueprint__
 
-In the Details panel, search for wheel. You will find settings for each of the wheels. For each one, click on Wheel Class and search for the BP_<vehicle_name>_<wheel_name> file that corresponds to the correct wheel position.
+In the Details panel, search for `wheel`. You will find settings for each of the wheels. For each one, click on Wheel Class and search for the BP_<vehicle_name>_<wheel_name> file that corresponds to the correct wheel position.
 
 This is correct, but just to specify, in the case of N wheeled vehicles, you need to set ALL the wheels. This is an example with a 6 wheeled vehicle:
 
 ![n_wheel_config](../img/nwheel_config.png)
 
 
-Finally, an additional consideration is setting the differential. In the case of a 4 wheeled vehicle, we have different presets of differentials (Limited Slip, Open 4W etc.) but with N wheeled vehicles, you need to choose on which wheels you want to apply torque. In this case, I’ve chosen that only the middle and rear wheels have torque, while the front wheels don’t. The numbers are going to be the same as the image above this text (e.g. 0 will be the Front Left Wheel, as specified above).
+Finally, an additional consideration is setting the differential. In the case of a 4 wheeled vehicle, we have different presets of differentials (Limited Slip, Open 4W etc.) but with N wheeled vehicles, you need to choose on which wheels you want to apply torque. In this case, we have chosen only the middle and rear wheels have torque, while the front wheels don’t, you can specify other configurations. The numbers are going to be the same as the image above this text (e.g. 0 will be the Front Left Wheel, as specified above).
 
 ![n_wheel_mech](../img/nwheel_mech_setup.png)
 

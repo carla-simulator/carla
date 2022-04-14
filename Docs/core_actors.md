@@ -1,6 +1,6 @@
 # Actors and blueprints
 
-Actors in CARLA are things that perform actions within the simulation, and they can affect other actors. Actors in CARLA includes vehicles and walkers and also sensors, traffic signs, traffic lights and the spectator. It is crucial to have full understanding on how to operate on them.  
+Actors in CARLA are the elements that perform actions within the simulation, and they can affect other actors. Actors in CARLA includes vehicles and walkers and also sensors, traffic signs, traffic lights and the spectator. It is crucial to have full understanding on how to operate on them.  
 
 This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the __tutorials__ in this documentation and share doubts and ideas in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/).  
 
