@@ -31,6 +31,8 @@
 #endif
 //-------------------------------------------
 
+#include <utility>
+
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
@@ -342,6 +344,9 @@ private:
   bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
+  float RolloverBehaviorForce = 0.35;
+  int RolloverBehaviorTracker = 0;
+
 public:
 
   /// Set the rotation of the car wheels indicated by the user
@@ -396,5 +401,12 @@ private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPrimitiveComponent*, UPhysicsConstraintComponent*> CollisionDisableConstraints;
+
+  /// Rollovers tend to have too much angular velocity, resulting in the vehicle doing a full 360º flip.
+  /// This function progressively reduces the vehicle's angular velocity so that it ends up upside down instead.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ApplyRolloverBehavior();
+
+  void CheckRollover(const float roll, const std::pair<float, float> threshold_roll);
 
 };
