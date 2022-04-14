@@ -7,6 +7,8 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/NetMediaCapture.h"
+#include "Carla/Game/CarlaEngine.h"
+#include <chrono>
 
 #include "Runtime/RenderCore/Public/RenderingThread.h"
 
@@ -28,72 +30,36 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
 void ASceneCaptureCamera::BeginPlay()
 {
   Super::BeginPlay();
-
-  MediaOutput = NewObject<UNetMediaOutput>();
-  UE_LOG(LogCarla, Log, TEXT("NetMediaOutput created"));
-  MediaOutput->CreateMediaCapture();
-  UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
-  if (MediaCapture)
-  {
-    // callback
-    MediaCapture->SetCallback([Sensor=this](std::vector<uint8_t> InBuffer, int32 Width, int32 Height, EPixelFormat PixelFormat)
-	  {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("OnCapturedUserCallback");
-
-      /// @todo Can we make sure the sensor is not going to be destroyed?
-      if (!Sensor->IsPendingKill())
-      {
-        auto Stream = Sensor->GetDataStream(*Sensor);
-        auto Buffer = Stream.PopBufferFromPool();
-        Buffer.copy_from(carla::sensor::s11n::ImageSerializer::header_offset, boost::asio::buffer(InBuffer.data(), InBuffer.size()));
-        if(Buffer.data())
-        {
-          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-          TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-          Stream.Send(*Sensor, std::move(Buffer));
-        }
-      }
-    });
-  }
 }
 
 void ASceneCaptureCamera::OnFirstClientConnected()
 {
-  if (MediaOutput)
-  {
-    UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
-    FMediaCaptureOptions CaptureOptions;
-    CaptureOptions.bSkipFrameWhenRunningExpensiveTasks = false;
-    MediaCapture->CaptureTextureRenderTarget2D(GetCaptureRenderTarget(), CaptureOptions);
-  }
 }
 
 void ASceneCaptureCamera::OnLastClientDisconnected()
 {
-  // stop capturing
-  if(MediaOutput)
-  {
-    UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
-    if (MediaCapture)
-    {
-      MediaCapture->StopCapture(false);
-    }
-  }
 }
 
 void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  // stop capturing
-  UNetMediaCapture *MediaCapture = MediaOutput->GetMediaCapture();
-  if (MediaCapture)
-  {
-    MediaCapture->StopCapture(false);
-  }
   Super::EndPlay(EndPlayReason);
 }
 
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
-  CaptureComponent2D->CaptureScene();
+  ENQUEUE_RENDER_COMMAND(MeasureTime)
+  (
+    [](auto &InRHICmdList)
+    {
+      std::chrono::time_point<std::chrono::high_resolution_clock> Time = 
+          std::chrono::high_resolution_clock::now();
+      auto Duration = std::chrono::duration_cast< std::chrono::milliseconds >(Time.time_since_epoch());
+      uint64_t Milliseconds = Duration.count();
+      FString ProfilerText = FString("(Render)Frame: ") + FString::FromInt(FCarlaEngine::GetFrameCounter()) + 
+          FString(" Time: ") + FString::FromInt(Milliseconds);
+      TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
+    }
+  );
+  FPixelReader::SendPixelsInRenderThread(*this);
 }
