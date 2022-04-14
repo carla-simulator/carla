@@ -288,6 +288,12 @@ static boost::python::list LightManagerGetLightState(
   return result;
 }
 
+static void LightManagerSetDayNightCycle(
+  cc::LightManager& self,
+  const bool active) {
+  self.SetDayNightCycle(active);
+}
+
 /*******************/
 
 void export_lightmanager() {
@@ -345,6 +351,7 @@ void export_lightmanager() {
       .def("set_light_state", &LightManagerSetLightState, (arg("lights"), arg("light_state")))
       .def("set_light_states", &LightManagerSetVectorLightState, (arg("lights"), arg("light_states")))
       .def("get_light_state", &LightManagerGetLightState, (arg("lights")))
+      .def("set_day_night_cycle", &LightManagerSetDayNightCycle, (arg("active")))
     ;
 
 }

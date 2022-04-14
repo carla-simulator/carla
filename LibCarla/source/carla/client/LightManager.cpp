@@ -321,5 +321,9 @@ void LightManager::ApplyChanges() {
   }
 }
 
+void LightManager::SetDayNightCycle(const bool active) {
+  _episode.Lock()->UpdateDayNightCycle(active);
+}
+
 } // namespace client
 } // namespace carla

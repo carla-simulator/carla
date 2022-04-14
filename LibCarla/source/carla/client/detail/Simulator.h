@@ -678,6 +678,10 @@ namespace detail {
       _client.UpdateServerLightsState(lights, discard_client);
     }
 
+    void UpdateDayNightCycle(const bool active) const {
+      _client.UpdateDayNightCycle(active);
+    }
+
     size_t RegisterLightUpdateChangeEvent(std::function<void(WorldSnapshot)> callback) {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->RegisterLightUpdateChangeEvent(std::move(callback));
