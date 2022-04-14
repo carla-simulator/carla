@@ -13,6 +13,7 @@
   * Added `NormalsSensor`, a new sensor with normals information
   * Added support for N wheeled vehicles
   * Added support for new batch commands ConsoleCommand, ApplyLocation (to actor), SetTrafficLightState
+  * Added new API function: `set_day_night_cycle` at the LightManager, to (de)activate the automatic switch of the lights when the simulation changes from day to night mode, and viceversa.
   * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
   * Added post process effects for rainy and dusty weathers.
 

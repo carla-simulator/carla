@@ -49,3 +49,8 @@ void AWeather::SetWeather(const FWeatherParameters &InWeather)
 {
   Weather = InWeather;
 }
+
+void AWeather::SetDayNightCycle(const bool &active)
+{
+  DayNightCycle = active;
+}
