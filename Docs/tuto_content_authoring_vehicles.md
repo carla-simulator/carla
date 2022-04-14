@@ -6,11 +6,14 @@ CARLA provides a comprehensive set of vehicles out of the box in the blueprint l
 
 The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. After rigging and importing, blueprints need to be set for the car and the wheels. Then apply materials and add the glass parts of the vehicle. We will cover these steps in the following guide.
 
+* __[Modeling](#modeling)__   
+	* [Naming conventions](#naming-conventions)  
 * __[Rigging](#rigging-the-vehicle-using-an-armature)__   
 	* [Import](#import)  
 	* [Armature](#add-an-armature)
     * [Parenting](#parenting)
-    * [Assignment](#assigning-car-parts-to-bones)  
+    * [Assignment](#assigning-car-parts-to-bones) 
+	* [Blender add-on](#blender-ue4-vehicle-rigging-add-on)
     * [Export](#export)  
 * __[Import into Unreal Engine](#importing-into-unreal-engine)__   
 	* [Physics asset](#setting-the-physics-asset)  
@@ -35,6 +38,27 @@ The key factors in preparing a custom vehicle for CARLA lie in rigging the vehic
 * __[Lights](#lights)__
 	* [UV map](#uv-map)
 	* [Importing](#importing)
+
+## Modeling
+
+Vehicles should have between 50,000 and 100,000 faces. We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of actual cars as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters. 
+
+### Naming conventions
+
+For ease and consistency we recommend that you divide the vehicle into the following parts and name them accordingly. Details specific to glass and lights will be covered in later sections:
+
+>1. __Bodywork__: The metallic part of the vehicle. This material is changed to Unreal Engine material. Logos and details can be added but, to be visible, they must be painted in a different color by using the alpha channels in the Unreal Engine editor.
+- __Glass_Ext__: A layer of glass that allows visibility from the outside to the inside of the vehicle.
+- __Glass_Int__: A layer of glass that allows visibility from the inside to the outside of the vehicle.
+- __Lights__: Headlights, indicator lights, etc.
+- __LightGlass_Ext__: A layer of glass that allows visibility from the outside to the inside of the light.
+- __LightGlass_Int__: A layer of glass that allows visibility from the inside to the outside of the light.
+- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
+- __Interior__: Any other details that don't fit in the above sections can go into _Interior_.
+
+Materials should be named using the format `M_CarPart_CarName`, e.g, `M_Bodywork_Mustang`.
+
+Textures should be named using the format `T_CarPart_CarName`, e.g, `T_Bodywork_Mustang`. Textures should be sized as 2048x2048.
 
 ## Rigging the vehicle using an armature
 
@@ -77,6 +101,10 @@ Select the mesh tab of the properties (the green triangle). Inside the vertex gr
 Once you have assigned all of the mesh parts to the armature you can test if it works by selecting the armature and moving to pose mode and moving the relevant bones. The vehicle base bone should move the whole vehicle, while the wheel bones should each move and rotate their respective wheels. Ensure to undo any posing you might do with `Ctrl+Z`.
 
 ![test_armature](img/tuto_content_authoring_vehicles/test_armature.gif)
+
+### Blender UE4 vehicle rigging add-on
+
+There is a very useful add on for blender for rigging a vehicle for import into CARLA that helps streamline the above steps. Please see the [__add-on webpage__](https://continuebreak.com/creations/ue4-vehicle-rigging-addon-blender/) for instructions.
 
 ### Export
 
