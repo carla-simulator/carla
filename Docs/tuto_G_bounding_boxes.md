@@ -370,7 +370,9 @@ cv2.destroyAllWindows()
 
 ## Exporting bounding boxes
 
-Rendering bounding boxes is useful for us to ensure the bounding boxes are correct for debugging purposes. However, if we wanted to use them practically in training a neural network, we will want to export them. There are a number of different formats used by the common data repositories used for autonomous driving and object detection, such as [__KITTI__](http://www.cvlibs.net/datasets/kitti/) or [__PASCAL VOC__](http://host.robots.ox.ac.uk/pascal/VOC/).
+Rendering bounding boxes is useful for us to ensure the bounding boxes are correct for debugging purposes. However, if we wanted to use them practically in training a neural network, we will want to export them. There are a number of different formats used by the common data repositories used for autonomous driving and object detection, such as [__KITTI__](http://www.cvlibs.net/datasets/kitti/) or [__PASCAL VOC__](http://host.robots.ox.ac.uk/pascal/VOC/) or [__MicroSoft COCO__](https://cocodataset.org/#home).
+
+### Pascal VOC format
 
 These datasets commonly use JSON or XML formats to store annotations. There is a convenient Python library for the PASCAL VOC format. 
 
@@ -482,4 +484,65 @@ In the PASCAL VOC format, the XML files contain information referring to the acc
 
 ```
 
-It should be noted that in this tutorial we have not accounted for overlapping bounding boxes. Additional work would be required in order to identify foreground bounding boxes in the case where they overlap.  
+### MicroSoft COCO format
+
+Another popular export format is [__MicroSoft COCO__](https://cocodataset.org/#home). The COCO format uses JSON files to save references to images and annotations. The format includes the images and annotations in the fields of a single JSON file, along with information on the dataset and licenses. In contrast to some other formats, references to all collected images and all associated annotations go in the same file.
+
+You should create a JSON dictionary similar to the following example:
+
+```py
+simulation_dataset = {
+    "info": {},
+
+    "licenses": [
+    {
+        "url": "http://creativecommons.org/licenses/by-nc-sa/2.0/",
+        "id": 1,
+        "name": "Attribution-NonCommercial-ShareAlike License"
+    }],
+
+    "images": [...,
+        {
+        "license": 1,
+        "file_name": "023235.png",
+        "height": 600,
+        "width": 800,
+        "date_captured": "2022-04-14 17:02:52",
+        "id": 23235
+    },
+        ...
+    ],
+
+    "categories": [...
+        {"supercategory": "vehicle", "id": 10, "name": "vehicle" },
+    ...],
+
+    "annotations": [
+        ...,
+        {
+            "segmentation": [],
+            "area": 9262.89,
+            "iscrowd": 0,
+            "image_id": 23235,
+            "bbox": [503.3, 310.4, 118.3, 78.3]
+        },
+        ...
+    ]
+}
+```
+
+The info and licenses sections should be filled accordingly or left empty. The images from your simulation should be stored in an array in the `images` field of the dictionary. The bounding boxes should be stored in the `annotations` field of the dictionary with the matching `image_id`. The bounding box is stored as `[x_min, y_min, width, height]`.
+
+The Python JSON library can then be used to save the dictionary as a JSON file:
+
+```py
+import json
+
+with open('simulation_data.json', 'w') as json_file:
+    json.dump(simulation_dataset, json_file)
+```
+
+More details about the COCO data format can be found [__here__](https://www.immersivelimit.com/tutorials/create-coco-annotations-from-scratch/#create-custom-coco-dataset)
+
+
+*It should be noted that in this tutorial we have not accounted for overlapping bounding boxes. Additional work would be required in order to identify foreground bounding boxes in the case where they overlap.*  
