@@ -1126,6 +1126,18 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     Parameters.ObjectType});
 
   Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("base_type"),
+    EActorAttributeType::String,
+    Parameters.BaseType});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("special_type"),
+    EActorAttributeType::String,
+    Parameters.SpecialType});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
     TEXT("number_of_wheels"),
     EActorAttributeType::Int,
     FString::FromInt(Parameters.NumberOfWheels)});
@@ -1135,6 +1147,18 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     TEXT("generation"),
     EActorAttributeType::Int,
     FString::FromInt(Parameters.Generation)});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("has_dynamic_doors"),
+    EActorAttributeType::Bool,
+    Parameters.HasDynamicDoors ? TEXT("true") : TEXT("false")});
+  Success = CheckActorDefinition(Definition);
+
+  Definition.Attributes.Emplace(FActorAttribute{
+    TEXT("has_lights"),
+    EActorAttributeType::Bool,
+    Parameters.HasLights ? TEXT("true") : TEXT("false")});
   Success = CheckActorDefinition(Definition);
 }
 

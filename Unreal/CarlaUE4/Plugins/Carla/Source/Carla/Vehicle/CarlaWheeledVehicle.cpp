@@ -957,3 +957,33 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->AttachToComponent(
       GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
 }
+
+void ACarlaWheeledVehicle::ApplyRolloverBehavior()
+{
+  auto roll = GetVehicleTransform().Rotator().Roll;
+
+  // The angular velocity reduction is applied in 4 stages, to improve its smoothness
+  switch (RolloverBehaviorTracker) {
+    case 0: CheckRollover(roll, std::make_pair(130.0, 230.0));      break;
+    case 1: CheckRollover(roll, std::make_pair(140.0, 220.0));      break;
+    case 2: CheckRollover(roll, std::make_pair(150.0, 210.0));      break;
+    case 3: CheckRollover(roll, std::make_pair(160.0, 200.0));      break;
+    case 4: break;
+    default:
+      RolloverBehaviorTracker = 4;
+  }
+
+  // In case the vehicle recovers, reset the rollover tracker
+  if (RolloverBehaviorTracker > 0 && -30 < roll && roll < 30){
+    RolloverBehaviorTracker = 0;
+  }
+}
+
+void ACarlaWheeledVehicle::CheckRollover(const float roll, const std::pair<float, float> threshold_roll){
+  if (threshold_roll.first < roll && roll < threshold_roll.second){
+    auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
+    auto angular_velocity = RootComponent->GetPhysicsAngularVelocityInDegrees();
+    RootComponent->SetPhysicsAngularVelocity((1 - RolloverBehaviorForce) * angular_velocity);
+    RolloverBehaviorTracker += 1;
+  }
+}
