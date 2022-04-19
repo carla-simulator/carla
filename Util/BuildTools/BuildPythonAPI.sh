@@ -50,8 +50,11 @@ done
 
 source $(dirname "$0")/Environment.sh
 
-export CC=clang-8
-export CXX=clang++-8
+if [[ -z "${CARLA_CLANG_VERSION_MAJOR}" ]]; then
+  fatal_error "Missing clang version variable."
+fi
+export CC=clang-$CARLA_CLANG_VERSION_MAJOR
+export CXX=clang++-$CARLA_CLANG_VERSION_MAJOR
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_PYTHONAPI} ; }; then
   fatal_error "Nothing selected to be done."
