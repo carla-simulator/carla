@@ -9,7 +9,6 @@ waypoints and avoiding other vehicles. The agent also responds to traffic lights
 It can also make use of the global route planner to follow a specifed route
 """
 
-import math
 import carla
 
 from agents.navigation.basic_agent import BasicAgent
@@ -39,11 +38,7 @@ class ConstantVelocityAgent(BasicAgent):
         self._current_speed = vehicle.get_velocity().length()  # [m/s]
         self._constant_velocity_stop_time = None
 
-        # Additional parameters
         self._restart_time = float('inf')  # Time after collision before the constant velocity behavior starts again
-        self._acceleration = float('inf')  # Acceleration of the agent [m/s^2]
-        self._deceleration = float('inf')  # Deceleration of the agent [m/s^2]
-        self._forced_turn_time = 0  # Initial time used in forced lane following mode [s]
 
         if 'restart_time' in opt_dict:
             self._restart_time = opt_dict['restart_time']
@@ -51,12 +46,6 @@ class ConstantVelocityAgent(BasicAgent):
             self._use_basic_behavior = opt_dict['use_basic_behavior']
         if 'force_lane_following' in opt_dict:
             self._force_lane_following = opt_dict['force_lane_following']
-        if 'acceleration' in opt_dict:
-            self._acceleration = opt_dict['acceleration']
-        if 'deceleration' in opt_dict:
-            self._deceleration = opt_dict['acceleration']
-        if 'forced_turn_time' in opt_dict:
-            self._forced_turn_time = opt_dict['forced_turn_time']
 
         self.is_constant_velocity_active = True
         self._set_collision_sensor()
@@ -78,15 +67,9 @@ class ConstantVelocityAgent(BasicAgent):
         self.is_constant_velocity_active = True
         self._set_constant_velocity(self._target_speed)
 
-    def _set_constant_velocity(self, target_speed):
+    def _set_constant_velocity(self, speed):
         """Forces the agent to drive at the specified speed"""
-        delta_t = self._world.get_snapshot().timestamp.delta_seconds
-        if target_speed > self._current_speed:
-            self._current_speed = min(self._current_speed + self._acceleration * delta_t, target_speed)
-        elif target_speed < self._current_speed:
-            self._current_speed = max(self._current_speed - self._deceleration * delta_t, target_speed)
-
-        self._vehicle.enable_constant_velocity(carla.Vector3D(self._current_speed, 0, 0))
+        self._vehicle.enable_constant_velocity(carla.Vector3D(speed, 0, 0))
 
     def run_step(self):
         """Execute one step of navigation."""
@@ -125,28 +108,10 @@ class ConstantVelocityAgent(BasicAgent):
         # The longitudinal PID is overwritten by the constant velocity but it is
         # still useful to apply it so that the vehicle isn't moving with static wheels
         control = self._local_planner.run_step()
-
-        if self._forced_turn_time > 0:
-
-            target_wp = self._local_planner.target_waypoint
-            vehicle_transform = self._vehicle.get_transform()
-            vehicle_location = self._vehicle.get_location()
-            target_direction = target_wp.transform.location - vehicle_location
-
-            pitch = math.degrees(math.asin(target_direction.z))
-            yaw = math.degrees(math.atan2(target_direction.y, target_direction.x))
-
-            self._vehicle.set_transform(carla.Transform(
-                vehicle_location,
-                carla.Rotation(roll=vehicle_transform.rotation.roll, pitch=pitch, yaw=yaw)))
-
-            self._forced_turn_time -= self._world.get_snapshot().timestamp.delta_seconds
-
         if hazard_detected:
             self._set_constant_velocity(hazard_speed)
         else:
             self._set_constant_velocity(self._target_speed)
-
 
         return control
 
