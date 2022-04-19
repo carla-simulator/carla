@@ -37,16 +37,16 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-source $(dirname "$0")/Environment.sh
-
-command -v /usr/bin/clang++-$CARLA_CLANG_VERSION_MAJOR >/dev/null 2>&1 || {
-  echo >&2 "clang-$CARLA_CLANG_VERSION_MAJOR is required, but it's not installed.";
+command -v /usr/bin/clang++-8 >/dev/null 2>&1 || {
+  echo >&2 "clang 8 is required, but it's not installed.";
   exit 1;
 }
 
-CXX_TAG=c$CARLA_CLANG_VERSION_MAJOR
-export CC=/usr/bin/clang-$CARLA_CLANG_VERSION_MAJOR
-export CXX=/usr/bin/clang++-$CARLA_CLANG_VERSION_MAJOR
+CXX_TAG=c8
+export CC=/usr/bin/clang-8
+export CXX=/usr/bin/clang++-8
+
+source $(dirname "$0")/Environment.sh
 
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
@@ -148,7 +148,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-$CARLA_CLANG_VERSION_MAJOR.0"
+    BOOST_TOOLSET="clang-8.0"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
