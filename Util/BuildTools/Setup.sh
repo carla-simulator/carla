@@ -37,14 +37,16 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++ >/dev/null 2>&1 || {
-  echo >&2 "clang1is required, but it's not installed.";
+source $(dirname "$0")/Environment.sh
+
+command -v /usr/bin/clang++-$CARLA_CLANG_VERSION_MAJOR >/dev/null 2>&1 || {
+  echo >&2 "clang-$CARLA_CLANG_VERSION_MAJOR is required, but it's not installed.";
   exit 1;
 }
 
-CXX_TAG=c10
-export CC=/usr/bin/clang
-export CXX=/usr/bin/clang++
+CXX_TAG=c$CARLA_CLANG_VERSION_MAJOR
+export CC=/usr/bin/clang-$CARLA_CLANG_VERSION_MAJOR
+export CXX=/usr/bin/clang++-$CARLA_CLANG_VERSION_MAJOR
 
 source $(dirname "$0")/Environment.sh
 
@@ -148,7 +150,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang"
+    BOOST_TOOLSET="clang-$CARLA_CLANG_VERSION_MAJOR.0"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
