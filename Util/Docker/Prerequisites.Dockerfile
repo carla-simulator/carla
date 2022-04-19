@@ -12,9 +12,9 @@ RUN apt-get update ; \
   apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main" && \
   apt-get update ; \
   apt-get install -y build-essential \
-    clang \
-    lld \
-    g++ \
+    clang-8 \
+    lld-8 \
+    g++-7 \
     cmake \
     ninja-build \
     libvulkan1 \
