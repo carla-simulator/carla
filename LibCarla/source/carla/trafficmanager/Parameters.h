@@ -37,8 +37,10 @@ struct ChangeLaneInfo {
 class Parameters {
 
 private:
-  /// Target velocity map for individual vehicles.
+  /// Target velocity map for individual vehicles, based on a % diffrerence from speed limit.
   AtomicMap<ActorId, float> percentage_difference_from_speed_limit;
+  /// Target velocity map for individual vehicles, based on a desired velocity.
+  AtomicMap<ActorId, float> exact_desired_speed;
   /// Global target velocity limit % difference.
   float global_percentage_difference_from_limit = 0;
   /// Map containing a set of actors to be ignored during collision detection.
@@ -103,6 +105,9 @@ public:
   /// Set a vehicle's % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
   void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
+
+  /// Set a vehicle's exact desired velocity.
+  void SetDesiredSpeed(const ActorPtr &actor, const float value);
 
   /// Set a global % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.

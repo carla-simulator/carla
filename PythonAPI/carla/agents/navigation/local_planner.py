@@ -77,6 +77,7 @@ class LocalPlanner(object):
         self._max_steer = 0.8
         self._offset = 0
         self._base_min_distance = 3.0
+        self._distance_ratio = 0.5
         self._follow_speed_limits = False
 
         # Overload parameters
@@ -101,6 +102,8 @@ class LocalPlanner(object):
                 self._offset = opt_dict['offset']
             if 'base_min_distance' in opt_dict:
                 self._base_min_distance = opt_dict['base_min_distance']
+            if 'distance_ratio' in opt_dict:
+                self._distance_ratio = opt_dict['distance_ratio']
             if 'follow_speed_limits' in opt_dict:
                 self._follow_speed_limits = opt_dict['follow_speed_limits']
 
@@ -223,7 +226,7 @@ class LocalPlanner(object):
         # Purge the queue of obsolete waypoints
         veh_location = self._vehicle.get_location()
         vehicle_speed = get_speed(self._vehicle) / 3.6
-        self._min_distance = self._base_min_distance + 0.5 *vehicle_speed
+        self._min_distance = self._base_min_distance + self._distance_ratio * vehicle_speed
 
         num_waypoint_removed = 0
         for waypoint, _ in self._waypoints_queue:

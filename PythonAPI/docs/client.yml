@@ -512,6 +512,19 @@
       doc: >
         Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
     # --------------------------------------
+    - def_name: set_desired_speed
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose speed is being changed.
+      - param_name: speed
+        type: float
+        doc: >
+          Desired speed at which the vehicle will move.
+      doc: >
+        Sets the speed of a vehicle to the specified value.
+    # --------------------------------------
     - def_name: set_hybrid_physics_mode
       params:
       - param_name: enabled
