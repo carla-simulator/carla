@@ -241,5 +241,23 @@ private:
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   bool bAutoComputeStrength = true;
 
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float MaxYaw = 0.0f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float MaxPitch = 180.0f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float MaxRoll = 180.0f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float XMultiplier = 0.5f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float YMultiplier = 0.5f;
+
+  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+  float ZMultiplier = 1.0f;
+
 };
 

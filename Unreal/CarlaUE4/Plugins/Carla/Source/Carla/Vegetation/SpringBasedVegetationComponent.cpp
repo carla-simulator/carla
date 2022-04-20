@@ -616,16 +616,18 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
     Eigen::Vector3d CollisionImpulse = ToEigenVector(Impulse)/100.f;
     TArray<UPrimitiveComponent*>& CollidingCapsules = ActorCapsules.Value;
     for (UPrimitiveComponent* Capsule : CollidingCapsules)
-    {
-      //TODO:      
+    {   
       FVector auxVector;
-      float distance = SkeletalMesh->GetDistanceToCollision(CollidingActor->GetActorLocation(), auxVector);
+      float distance = Primitive->GetClosestPointOnCollision(Capsule->GetComponentLocation(), auxVector);
+      float DistanceToRoot = 0.0f;
       if (distance < MinDistance)
       {
         MinDistance = distance;
         ClosestSurfacePoint = auxVector;
+        const FVector RootLocation = Skeleton.Joints[0].GlobalTransform.GetLocation();
+        DistanceToRoot = FMath::Sqrt(std::pow(auxVector.X - RootLocation.X, 2) + std::pow(auxVector.Y - RootLocation.Y, 2) + std::pow(auxVector.Z - RootLocation.Z, 2));
       }
-      //Primitive->AddForce(-Impulse);
+      
       int JointId = CapsuleToJointId[Capsule];
       FSkeletonJoint& Joint = Skeleton.Joints[JointId];
       FJointProperties& JointProperties = JointLocalPropertiesList[Joint.JointId];
@@ -635,6 +637,9 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       Eigen::Vector3d CollisionTorque = Eigen::Vector3d::Zero();
 
       // CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(CollisionImpulse + CollisionForces);
+
+      //const float SpringStrength = std::max(Joint.SpringStrength - (DistanceToRoot * 3.0f, 0.0f);
+      const float SpringStrength = Joint.SpringStrength;
       
       // Contact forces due to spring strength
       FRotator CurrRotator = Joint.Transform.Rotator();
@@ -643,15 +648,21 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
           CurrRotator.Pitch - RestRotator.Pitch, 
           CurrRotator.Yaw - RestRotator.Yaw, 
           CurrRotator.Roll - RestRotator.Roll);
-      Eigen::Vector3d SpringTorque = Joint.SpringStrength*RotatorToEigenVector(DeltaRotator);
+      Eigen::Vector3d SpringTorque = SpringStrength*RotatorToEigenVector(DeltaRotator);
       Eigen::Vector3d JointCapsuleVector = JointGlobalPosition - CapsulePosition;
       Eigen::Vector3d SpringForce = SpringTorque.cross(JointCapsuleVector)*JointCapsuleVector.squaredNorm();
-      Primitive->AddForce(-ToUnrealVector(SpringForce)*100.f);
-      Eigen::Vector3d RepulsionForce = SpringForce;
+      
+      const Eigen::Vector3d Multiplier {XMultiplier, YMultiplier, -ZMultiplier};
+      Eigen::Vector3d RepulsionForce = SpringForce.cwiseProduct(Multiplier);      
+      //Primitive->AddForce(-ToUnrealVector(RepulsionForce)*100.f);
+      Primitive->AddForceAtLocation(-ToUnrealVector(RepulsionForce)*100.f, Capsule->GetComponentLocation());
       
       // force to repel geometry overlapping
       Eigen::Vector3d OverlappingForces = (CapsulePosition - ColliderPosition).normalized()*CollisionForceParameter;
-      Primitive->AddForce(-ToUnrealVector(OverlappingForces)*100.f);
+      OverlappingForces = OverlappingForces.cwiseProduct(Multiplier);
+      
+      //Primitive->AddForce(-ToUnrealVector(OverlappingForces)*100.f);      
+      Primitive->AddForceAtLocation(-ToUnrealVector(OverlappingForces)*100.f, Capsule->GetComponentLocation());
 
       // FRotator CurrRotator = Joint.Transform.Rotator();
       // FRotator RestRotator = Joint.RestingAngles;
@@ -676,6 +687,7 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
   }
   if (MinDistance != INFINITY)
   {
+    
     //DrawDebugPoint(GetWorld(), ClosestSurfacePoint, 5, FColor(255,0,0), false, 100.f);
   }
 }
@@ -812,13 +824,41 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     Eigen::Vector3d FinalNewTheta = U*NewTheta;
     Eigen::Vector3d FinalNewThetaVelocity = U*NewThetaVelocity;
     Eigen::Vector3d FinalNewThetaAccel = U*NewThetaAccel;
-    FRotator NewAngle(
-        RestRotator.Pitch + FMath::RadiansToDegrees(FinalNewTheta(1)),
-        RestRotator.Yaw - FMath::RadiansToDegrees(FinalNewTheta(2)),
-        RestRotator.Roll + FMath::RadiansToDegrees(FinalNewTheta(0)));
+    //TODO: que el mathradianstodegrees no se pase de un maximo de rotación.
+    //finalnewtheta devuelve la diferecnia con respecto al hueso en reposo.
+    //finalnewtheta está en radianes y los rotator en grados.
+    //float maxAngle editable desde editor en grados.
+    //mirar Fmathclamp
+    //si se pasa de angulo cambiar angular velocity y angular acceleration a 0
+    //si se pasa el new angle.yaw setear solo angular vel y angular acce a 0, pero el resto no
+    auto NewPitch = FMath::RadiansToDegrees(FinalNewTheta(1));
+    auto NewYaw = FMath::RadiansToDegrees(FinalNewTheta(2));
+    auto NewRoll = FMath::RadiansToDegrees(FinalNewTheta(0));
+    
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
+    if (NewPitch > MaxPitch){
+      NewPitch = MaxPitch;
+      NewAngularVelocity.Pitch = 0.0f;
+      NewAngularAccel.Pitch = 0.0f;
+    }
 
+    if (NewYaw > MaxYaw){
+      NewYaw = MaxYaw;
+      NewAngularVelocity.Yaw = 0.0f;
+      NewAngularAccel.Yaw = 0.0f;
+    }
+
+    if (NewRoll > MaxRoll){
+      NewRoll = MaxRoll;
+      NewAngularVelocity.Roll = 0.0f;
+      NewAngularAccel.Roll = 0.0f;
+    }
+
+    FRotator NewAngle(
+            RestRotator.Pitch + NewPitch,
+            RestRotator.Yaw - NewYaw,
+            RestRotator.Roll + NewRoll);
     SOLVER_LOG(Log, "FinalNewTheta \n %s \n FinalNewThetaVelocity \n %s \n FinalNewThetaAccel \n %s",
         *EigenToFString(FinalNewTheta), *EigenToFString(FinalNewThetaVelocity), *EigenToFString(FinalNewThetaAccel));
     SOLVER_LOG(Log, "New angle %s, new angular velocity %s, new angular accel %s",
