@@ -1,5 +1,6 @@
 ## Latest
 
+  * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
   * Added new ConstantVelocityAgent
   * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
   * Added 4 new attributes to all vehicles:
