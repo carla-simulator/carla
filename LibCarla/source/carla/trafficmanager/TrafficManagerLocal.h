@@ -161,6 +161,9 @@ public:
   /// If less than 0, it's a % increase.
   void SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage);
 
+  /// Set a vehicle's exact desired velocity.
+  void SetDesiredSpeed(const ActorPtr &actor, const float value);
+
   /// Methos to set a global % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage);
