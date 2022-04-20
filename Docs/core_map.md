@@ -1,4 +1,4 @@
-# 3rd. Maps and navigation
+# Maps and navigation
 
 After discussing about the world and its actors, it is time to put everything into place and understand the map and how do the actors navigate it.  
 
@@ -15,6 +15,15 @@ After discussing about the world and its actors, it is time to put everything in
 - [__CARLA maps__](#carla-maps)  
 	- [Non-layered maps](#non-layered-maps)
 	- [Layered maps](#layered-maps)
+- [__Custom maps__](#custom-maps)
+	- [Overview](tuto_M_custom_map_overview.md)
+	- [Road painting](tuto_M_custom_road_painter.md)
+	- [Custom buildings](tuto_M_custom_buildings.md) 
+	- [Generate map](tuto_M_generate_map.md)
+	- [Add map package](tuto_M_add_map_package.md)
+	- [Add map source](tuto_M_add_map_source.md)
+	- [Alternative methods](tuto_M_add_map_alternative.md)
+
 
 ---
 ## The map
@@ -266,20 +275,15 @@ See an example of all layers being loaded and unloaded in sequence:
 
 
 ---
-That is a wrap as regarding maps and navigation in CARLA. The next step takes a closer look into sensors types, and the data they retrieve.  
 
-Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading. 
-<div text-align: center>
-<div class="build-buttons">
-<p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
-CARLA forum</a>
-</p>
-</div>
-<div class="build-buttons">
-<p>
-<a href="../core_sensors" target="_blank" class="btn btn-neutral" title="4th. Sensors and data">
-4th. Sensors and data</a>
-</p>
-</div>
-</div>
+## Custom maps
+
+CARLA is designed to be extensible and highly customisable for specialist applications. Therefore, in addition to the many maps and assets already avaiable in CARLA out of the box, it is possible to create and import new maps, road networks and assets to populate bespoke environments in a CARLA simulation. The following documents detail the steps needed to build and integrate custom maps:  
+
+* [__Overview__](tuto_M_custom_map_overview.md)
+* [__Road painting__](tuto_M_custom_road_painter.md)
+* [__Custom buildings__](tuto_M_custom_buildings.md) 
+* [__Generate map__](tuto_M_generate_map.md)
+* [__Add map package__](tuto_M_add_map_package.md)
+* [__Add map source__](tuto_M_add_map_source.md)
+* [__Alternative methods__](tuto_M_add_map_alternative.md)

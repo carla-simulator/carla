@@ -1,5 +1,12 @@
 ## Latest
 
+  * Added new ConstantVelocityAgent
+  * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
+  * Added 4 new attributes to all vehicles:
+    - `base_type` can be use as a vehicle classification. The possible values are  *car*, *truck*, *van*, *motorcycle* and *bycicle*.
+    - `special_type` provides more information about the vehicle. It is currently restricted to *electric*, *emergency* and *taxi*, and not all vehicles have this attribute filled.
+    - `has_dynamics_doors` can either be *true* or *false* depending on whether or not the vehicle has doors that can be opened using the API.
+    - `has_lights` works in the same way as *has_dynamic_doors*, but differentiates between vehicles with lights, and those that don't.
   * Added native ackermann controller:
     - `apply_ackermann_control`:  to apply an ackermann control command to a vehicle
     - `get_ackermann_controller_settings`: to get the last ackermann controller settings applied
@@ -8,6 +15,7 @@
   * Added `NormalsSensor`, a new sensor with normals information
   * Added support for N wheeled vehicles
   * Added support for new batch commands ConsoleCommand, ApplyLocation (to actor), SetTrafficLightState
+  * Added new API function: `set_day_night_cycle` at the LightManager, to (de)activate the automatic switch of the lights when the simulation changes from day to night mode, and viceversa.
   * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
   * Added post process effects for rainy and dusty weathers.
 

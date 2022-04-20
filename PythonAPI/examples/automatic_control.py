@@ -60,6 +60,7 @@ from carla import ColorConverter as cc
 
 from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
+from agents.navigation.constant_velocity_agent import ConstantVelocityAgent  # pylint: disable=import-error
 
 
 # ==============================================================================
@@ -80,6 +81,29 @@ def get_actor_display_name(actor, truncate=250):
     name = ' '.join(actor.type_id.replace('_', '.').title().split('.')[1:])
     return (name[:truncate - 1] + u'\u2026') if len(name) > truncate else name
 
+def get_actor_blueprints(world, filter, generation):
+    bps = world.get_blueprint_library().filter(filter)
+
+    if generation.lower() == "all":
+        return bps
+
+    # If the filter returns only one bp, we assume that this one needed
+    # and therefore, we ignore the generation
+    if len(bps) == 1:
+        return bps
+
+    try:
+        int_generation = int(generation)
+        # Check if generation is in available generations
+        if int_generation in [1, 2]:
+            bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
+            return bps
+        else:
+            print("   Warning! Actor Generation is not valid. No actor will be spawned.")
+            return []
+    except:
+        print("   Warning! Actor Generation is not valid. No actor will be spawned.")
+        return []
 
 # ==============================================================================
 # -- World ---------------------------------------------------------------
@@ -108,6 +132,7 @@ class World(object):
         self._weather_presets = find_weather_presets()
         self._weather_index = 0
         self._actor_filter = args.filter
+        self._actor_generation = args.generation
         self.restart(args)
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
@@ -120,7 +145,7 @@ class World(object):
         cam_pos_id = self.camera_manager.transform_index if self.camera_manager is not None else 0
 
         # Get a random blueprint.
-        blueprint = random.choice(self.world.get_blueprint_library().filter(self._actor_filter))
+        blueprint = random.choice(get_actor_blueprints(self.world, self._actor_filter, self._actor_generation))
         blueprint.set_attribute('role_name', 'hero')
         if blueprint.has_attribute('color'):
             color = random.choice(blueprint.get_attribute('color').recommended_values)
@@ -566,19 +591,17 @@ class CameraManager(object):
         self._parent = parent_actor
         self.hud = hud
         self.recording = False
+        bound_x = 0.5 + self._parent.bounding_box.extent.x
         bound_y = 0.5 + self._parent.bounding_box.extent.y
+        bound_z = 0.5 + self._parent.bounding_box.extent.z
         attachment = carla.AttachmentType
         self._camera_transforms = [
-            (carla.Transform(
-                carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=8.0)), attachment.SpringArm),
-            (carla.Transform(
-                carla.Location(x=1.6, z=1.7)), attachment.Rigid),
-            (carla.Transform(
-                carla.Location(x=5.5, y=1.5, z=1.5)), attachment.SpringArm),
-            (carla.Transform(
-                carla.Location(x=-8.0, z=6.0), carla.Rotation(pitch=6.0)), attachment.SpringArm),
-            (carla.Transform(
-                carla.Location(x=-1, y=-bound_y, z=0.5)), attachment.Rigid)]
+            (carla.Transform(carla.Location(x=-2.0*bound_x, y=+0.0*bound_y, z=2.0*bound_z), carla.Rotation(pitch=8.0)), attachment.SpringArm),
+            (carla.Transform(carla.Location(x=+0.8*bound_x, y=+0.0*bound_y, z=1.3*bound_z)), attachment.Rigid),
+            (carla.Transform(carla.Location(x=+1.9*bound_x, y=+1.0*bound_y, z=1.2*bound_z)), attachment.SpringArm),
+            (carla.Transform(carla.Location(x=-2.8*bound_x, y=+0.0*bound_y, z=4.6*bound_z), carla.Rotation(pitch=6.0)), attachment.SpringArm),
+            (carla.Transform(carla.Location(x=-1.0, y=-1.0*bound_y, z=0.4*bound_z)), attachment.Rigid)]
+
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB'],
@@ -712,8 +735,13 @@ def game_loop(args):
         world = World(client.get_world(), hud, args)
         controller = KeyboardControl(world)
         if args.agent == "Basic":
-            agent = BasicAgent(world.player)
-        else:
+            agent = BasicAgent(world.player, 30)
+        elif args.agent == "Constant":
+            agent = ConstantVelocityAgent(world.player, 30)
+            ground_loc = world.world.ground_projection(world.player.get_location(), 5)
+            if ground_loc:
+                world.player.set_location(ground_loc.location + carla.Location(z=0.01))
+        elif args.agent == "Behavior":
             agent = BehaviorAgent(world.player, behavior=args.behavior)
 
         # Set the agent destination
@@ -739,7 +767,7 @@ def game_loop(args):
             if agent.done():
                 if args.loop:
                     agent.set_destination(random.choice(spawn_points).location)
-                    world.hud.notification("The target has been reached, searching for another target", seconds=4.0)
+                    world.hud.notification("Target reached", seconds=4.0)
                     print("The target has been reached, searching for another target")
                 else:
                     print("The target has been reached, stopping the simulation")
@@ -804,13 +832,18 @@ def main():
         default='vehicle.*',
         help='Actor filter (default: "vehicle.*")')
     argparser.add_argument(
+        '--generation',
+        metavar='G',
+        default='2',
+        help='restrict to certain actor generation (values: "1","2","All" - default: "2")')
+    argparser.add_argument(
         '-l', '--loop',
         action='store_true',
         dest='loop',
         help='Sets a new random destination upon reaching the previous one (default: False)')
     argparser.add_argument(
         "-a", "--agent", type=str,
-        choices=["Behavior", "Basic"],
+        choices=["Behavior", "Basic", "Constant"],
         help="select which agent to run",
         default="Behavior")
     argparser.add_argument(

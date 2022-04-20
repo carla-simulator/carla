@@ -87,6 +87,7 @@ void export_trafficmanager() {
   class_<ctm::TrafficManager>("TrafficManager", no_init)
     .def("get_port", &ctm::TrafficManager::Port)
     .def("vehicle_percentage_speed_difference", &ctm::TrafficManager::SetPercentageSpeedDifference)
+    .def("set_desired_speed", &ctm::TrafficManager::SetDesiredSpeed)
     .def("global_percentage_speed_difference", &ctm::TrafficManager::SetGlobalPercentageSpeedDifference)
     .def("update_vehicle_lights", &ctm::TrafficManager::SetUpdateVehicleLights)
     .def("collision_detection", &ctm::TrafficManager::SetCollisionDetection)

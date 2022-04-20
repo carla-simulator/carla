@@ -1374,6 +1374,10 @@ Changes the color of each element in `lights` to the corresponding in `colors`.
     - **Parameters:**
         - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
         - `colors` (_list([carla.Color](#carla.Color))_) - List of colors to be applied.  
+- <a name="carla.LightManager.set_day_night_cycle"></a>**<font color="#7fb800">set_day_night_cycle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**active**</font>)  
+All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__.  
+    - **Parameters:**
+        - `active` (_bool_) - (De)activation of the day-night cycle.    
 - <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  
 Changes the intensity of each element in `lights` to the corresponding in `intensities`.  
     - **Parameters:**
@@ -2420,6 +2424,11 @@ Sets the upper and lower boundaries for dormant actors to be respawned near the 
         - `upper_bound` (_float_) - The maximum distance in meters from the hero vehicle that a dormant actor will be respawned.  
     - **Warning:** <font color="#ED2F2F">_The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than 25.
 _</font>  
+- <a name="carla.TrafficManager.set_desired_speed"></a>**<font color="#7fb800">set_desired_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**speed**</font>)  
+Sets the speed of a vehicle to the specified value.  
+    - **Parameters:**
+        - `actor` (_[carla.Actor](#carla.Actor)_) - Vehicle whose speed is being changed.  
+        - `speed` (_float_) - Desired speed at which the vehicle will move.  
 - <a name="carla.TrafficManager.set_global_distance_to_leading_vehicle"></a>**<font color="#7fb800">set_global_distance_to_leading_vehicle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
 Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.  
     - **Parameters:**
