@@ -265,6 +265,12 @@ def main():
         type=float,
         help='Mie scattering scale [0.0, 5.0]')
     argparser.add_argument(
+        '--dust_storm', '-ds',
+        metavar='ds',
+        default=None,
+        type=float,
+        help='Dust storm strength [0.0, 100.0]')
+    argparser.add_argument(
         '--cars',
         metavar='Cars',
         default=None,
