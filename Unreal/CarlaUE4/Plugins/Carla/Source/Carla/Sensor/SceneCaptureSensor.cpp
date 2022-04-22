@@ -460,6 +460,12 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   CaptureComponent2D->CaptureScene();
 }
 
+void ASceneCaptureSensor::EnqueueRenderSceneImmediateWithGBuffer(GBufferView::FGBufferData& OutGBufferData) {
+  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
+  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+  CaptureComponent2D->CaptureSceneWithGBuffer(OutGBufferData);
+}
+
 void ASceneCaptureSensor::BeginPlay()
 {
   using namespace SceneCaptureSensor_local_ns;

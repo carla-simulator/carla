@@ -10,6 +10,7 @@
 #include "Carla/Sensor/Sensor.h"
 
 #include "Runtime/RenderCore/Public/RenderCommandFence.h"
+#include "Runtime/Renderer/Public/GBufferView.h"
 #include "SceneCaptureSensor.generated.h"
 
 class UDrawFrustumComponent;
@@ -291,6 +292,8 @@ public:
 
   /// Immediate enqueues render commands of the scene at the current time.
   void EnqueueRenderSceneImmediate();
+
+  void EnqueueRenderSceneImmediateWithGBuffer(GBufferView::FGBufferData& OutGBufferData);
 
   /// Blocks until the render thread has finished all it's tasks.
   void WaitForRenderThreadToFinsih() {
