@@ -117,7 +117,7 @@ class GlobalRoutePlanner(object):
             else:
                 next_wps = wp1.next(self._sampling_resolution)
                 if len(next_wps) == 0:
-                    break
+                    continue
                 seg_dict['path'].append(next_wps[0])
             self._topology.append(seg_dict)
 
