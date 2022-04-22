@@ -37,16 +37,18 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
+CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang -dumpversion)")
+
 source $(dirname "$0")/Environment.sh
 
-command -v /usr/bin/clang++-$CARLA_CLANG_VERSION_MAJOR >/dev/null 2>&1 || {
-  echo >&2 "clang-$CARLA_CLANG_VERSION_MAJOR is required, but it's not installed.";
+command -v /usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR >/dev/null 2>&1 || {
+  echo >&2 "clang-$CARLA_LLVM_VERSION_MAJOR is required, but it's not installed.";
   exit 1;
 }
 
-CXX_TAG=c$CARLA_CLANG_VERSION_MAJOR
-export CC=/usr/bin/clang-$CARLA_CLANG_VERSION_MAJOR
-export CXX=/usr/bin/clang++-$CARLA_CLANG_VERSION_MAJOR
+CXX_TAG=c$CARLA_LLVM_VERSION_MAJOR
+export CC=/usr/bin/clang-$CARLA_LLVM_VERSION_MAJOR
+export CXX=/usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR
 
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
@@ -58,7 +60,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-$CARLA_CLANG_VERSION_MAJOR.0
+LLVM_BASENAME=llvm-$CARLA_LLVM_VERSION_MAJOR.0
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -70,9 +72,9 @@ else
 
   log "Retrieving libc++."
 
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
-  git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
+  git clone --depth=1 -b release_${CARLA_LLVM_VERSION_MAJOR}0  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
+  git clone --depth=1 -b release_${CARLA_LLVM_VERSION_MAJOR}0  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
+  git clone --depth=1 -b release_${CARLA_LLVM_VERSION_MAJOR}0  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
 
   log "Compiling libc++."
 
@@ -148,7 +150,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-$CARLA_CLANG_VERSION_MAJOR.0"
+    BOOST_TOOLSET="clang-$CARLA_LLVM_VERSION_MAJOR.0"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"

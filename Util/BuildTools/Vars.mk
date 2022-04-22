@@ -1,7 +1,5 @@
 # Here CURDIR is assumed to be the root folder of the project.
 
-export CARLA_CLANG_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang -dumpversion)")
-
 CARLA_ROOT_FOLDER=${CURDIR}
 CARLA_BUILD_FOLDER=${CURDIR}/Build
 CARLA_DIST_FOLDER=${CURDIR}/Dist

@@ -78,6 +78,8 @@ fi
 # ==============================================================================
 ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
 
+CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang -dumpversion)")
+
 #
 # Since it it not possible with boost-python to build more than one python version at once (find_package has some bugs)
 # we have to build it for every version in a separate colcon build
@@ -92,9 +94,9 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd "${ADRSS_COLCON_WORKSPACE}" >/dev/null
     if [ "${CMAKE_PREFIX_PATH}" == "" ]; then
-      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install;${CARLA_BUILD_FOLDER}/proj-install"
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.72.0-c$CARLA_LLVM_VERSION_MAJOR-install;${CARLA_BUILD_FOLDER}/proj-install"
     else
-      CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH};${CARLA_BUILD_FOLDER}/boost-1.72.0-c8-install;${CARLA_BUILD_FOLDER}/proj-install"
+      CMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH};${CARLA_BUILD_FOLDER}/boost-1.72.0-c$CARLA_LLVM_VERSION_MAJOR-install;${CARLA_BUILD_FOLDER}/proj-install"
     fi
 
     # get the python version of the binding to be built
