@@ -48,14 +48,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang -dumpversion)")
+
 source $(dirname "$0")/Environment.sh
 
-if [[ -z "${CARLA_CLANG_VERSION_MAJOR}" ]]; then
+if [[ -z "${CARLA_LLVM_VERSION_MAJOR}" ]]; then
   fatal_error "Missing clang version variable."
 fi
 
-export CC=clang-$CARLA_CLANG_VERSION_MAJOR
-export CXX=clang++-$CARLA_CLANG_VERSION_MAJOR
+export CC=clang-$CARLA_LLVM_VERSION_MAJOR
+export CXX=clang++-$CARLA_LLVM_VERSION_MAJOR
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_PYTHONAPI} ; }; then
   fatal_error "Nothing selected to be done."
