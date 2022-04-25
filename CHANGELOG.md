@@ -16,6 +16,7 @@
   * Added new API function: `set_day_night_cycle` at the LightManager, to (de)activate the automatic switch of the lights when the simulation changes from day to night mode, and viceversa.
   * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
   * Added post process effects for rainy and dusty weathers.
+  * Check for the version of the installed Clang compiler during build.
 
 ## CARLA 0.9.13
 
