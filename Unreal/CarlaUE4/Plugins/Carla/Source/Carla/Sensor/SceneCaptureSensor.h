@@ -293,8 +293,6 @@ public:
   /// Immediate enqueues render commands of the scene at the current time.
   void EnqueueRenderSceneImmediate();
 
-  void EnqueueRenderSceneImmediateWithGBuffer(GBufferView::FGBufferData& OutGBufferData);
-
   /// Blocks until the render thread has finished all it's tasks.
   void WaitForRenderThreadToFinsih() {
     TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::WaitForRenderThreadToFinsih);
@@ -338,6 +336,12 @@ protected:
   /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
+
+  /// Whether to also record the contents of the GBuffer.
+  UPROPERTY(EditAnywhere)
+  bool bCaptureGBuffer = false;
+
+  GBufferView::FGBufferData* GBufferContents;
 
   FRenderCommandFence RenderFence;
 

@@ -457,13 +457,17 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-  CaptureComponent2D->CaptureScene();
-}
 
-void ASceneCaptureSensor::EnqueueRenderSceneImmediateWithGBuffer(GBufferView::FGBufferData& OutGBufferData) {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
-  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-  CaptureComponent2D->CaptureSceneWithGBuffer(OutGBufferData);
+  if (!bCaptureGBuffer)
+  {
+    CaptureComponent2D->CaptureScene();
+  }
+  else
+  {
+    if (GBufferContents == nullptr)
+      GBufferContents = new GBufferView::FGBufferData();
+    CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferContents);
+  }
 }
 
 void ASceneCaptureSensor::BeginPlay()
