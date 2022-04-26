@@ -148,6 +148,7 @@ void LocalizationStage::Update(const unsigned long index) {
   if (!recently_not_executed_lane_change) {
     float distance_frm_previous = cg::Math::DistanceSquared(last_lane_change_swpt.at(actor_id)->GetLocation(), vehicle_location);
     done_with_previous_lane_change = distance_frm_previous > lane_change_distance;
+    if (done_with_previous_lane_change) last_lane_change_swpt.erase(actor_id);
   }
   bool auto_or_force_lane_change = parameters.GetAutoLaneChange(actor_id) || force_lane_change;
   bool front_waypoint_not_junction = !front_waypoint->CheckJunction();
@@ -503,14 +504,20 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
         break;
       }
       SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
-      PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
 
       // Remove the imported waypoint from the path if it's close to the last one.
       if (next_wp_selection->DistanceSquared(imported) < 30.0f) {
         imported_path.erase(imported_path.begin());
+        std::vector<SimpleWaypointPtr> possible_waypoints = next_wp_selection->GetNextWaypoint();
+        if (std::find(possible_waypoints.begin(), possible_waypoints.end(), imported) != possible_waypoints.end()) {
+          // If the lane is changing, only push the new waypoint
+          PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+        }
         PushWaypoint(actor_id, track_traffic, waypoint_buffer, imported);
         latest_imported = imported_path.front();
         imported = local_map->GetWaypoint(latest_imported);
+      } else {
+        PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
       }
     }
     if (imported_path.empty()) {
