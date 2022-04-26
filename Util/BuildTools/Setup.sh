@@ -37,7 +37,13 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang -dumpversion)")
+CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | grep -o -E "[[:digit:]]+.[[:digit:]]+.[[:digit:]]+")")
+
+if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
+  fatal_error "Failed to retrieve the installed version of the clang compiler."
+else
+  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
+fi
 
 source $(dirname "$0")/Environment.sh
 

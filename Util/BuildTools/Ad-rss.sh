@@ -78,7 +78,13 @@ fi
 # ==============================================================================
 ADRSS_INSTALL_DIR="${CARLA_BUILD_FOLDER}/${ADRSS_BASENAME}/install"
 
-CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang -dumpversion)")
+CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | grep -o -E "[[:digit:]]+.[[:digit:]]+.[[:digit:]]+")")
+
+if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
+  fatal_error "Failed to retrieve the installed version of the clang compiler."
+else
+  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
+fi
 
 #
 # Since it it not possible with boost-python to build more than one python version at once (find_package has some bugs)

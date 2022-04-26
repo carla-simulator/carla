@@ -89,12 +89,14 @@ if ${BUILD_OSM2ODR} ; then
   mkdir -p ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
 
-  CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang -dumpversion)")
+  CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | grep -o -E "[[:digit:]]+.[[:digit:]]+.[[:digit:]]+")")
   
-  if [[ -z "${CARLA_LLVM_VERSION_MAJOR}" ]]; then
-    fatal_error "Missing clang version variable."
+  if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
+    fatal_error "Failed to retrieve the installed version of the clang compiler."
+  else
+    echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
   fi
-  
+
   export CC=/usr/bin/clang-$CARLA_LLVM_VERSION_MAJOR
   export CXX=/usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR
 
