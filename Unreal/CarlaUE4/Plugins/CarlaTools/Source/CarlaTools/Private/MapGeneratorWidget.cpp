@@ -20,6 +20,10 @@
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 #include "Runtime/Engine/Public/DrawDebugHelpers.h"
 
+#include "EditorAssetLibrary.h"
+#include "ObjectEditorUtils.h"
+#include "UObject/UnrealType.h"
+
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
 #define CUR_CLASS_FUNC_LINE (CUR_CLASS_FUNC + "::" + CUR_LINE)
@@ -34,7 +38,7 @@ void UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo
   // // 1. Creating tiles terrain
   bool bTIlesSuccess = CreateTilesMaps(MetaInfo);
   if(!bTIlesSuccess)
-    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking vegetation for %s"), 
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Creating Tile for %s"), 
         *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
 
   // 2. Create Main Large map
@@ -127,6 +131,37 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
   return RiverActor;
 }
 
+void UMapGeneratorWidget::LandscapePostEditEvent(ALandscape* Landscape)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Landscape Post Edit Event Called"), 
+      *CUR_CLASS_FUNC_LINE);
+  
+  // FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
+  // if(!PropertyToUpdate){
+  //   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
+  //     *CUR_CLASS_FUNC_LINE);
+  // }
+  // FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate, EPropertyChangeType::Interactive);
+  // Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
+
+  // static const FName PropertyName(TEXT("CollisionMipLevel"));
+  // FObjectEditorUtils::SetPropertyValue<ALandscape, int32>(Landscape, PropertyName, 1);
+
+  FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
+  int32* PropertyValue = PropertyToUpdate->ContainerPtrToValuePtr<int32>(Landscape);
+  if(!PropertyToUpdate){
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
+      *CUR_CLASS_FUNC_LINE);
+      return;
+  }
+
+  *PropertyValue += 1; // Increment
+
+  FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate);
+  Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
+  Landscape->PostEditChange();
+}
+
 bool UMapGeneratorWidget::LoadBaseTileWorld(FAssetData& WorldAssetData)
 {
   const FString BaseMapPath= TEXT("/CarlaTools/MapGenerator/BaseMap/Tiles");
@@ -200,19 +235,21 @@ bool UMapGeneratorWidget::SaveWorld(
 
   UWorld* World = GetWorldFromAssetData(WorldToBeSaved);
 
+  const FString PackagePath = DestinationPath + "/" + WorldName;
+
   // Create Package
-  // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Preparing Package");
   UPackage *Package = WorldToBeSaved.GetPackage();
-  Package->SetFolderName("MapGeneratorPackage");
+  Package->SetFolderName(*WorldName);
+  // Package->SetFolderName(*PackagePath);
+  // Package->SetFolderName("MapGeneratorPackage");
   Package->FullyLoad();
   Package->MarkPackageDirty();
   FAssetRegistryModule::AssetCreated(World);
   
   // Rename new World
   World->Rename(*WorldName, World->GetOuter());
-  const FString PackagePath = DestinationPath + "/" + WorldName;
+  
   FAssetRegistryModule::AssetRenamed(World, *PackagePath);
-  // GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, World->GetMapName());
   World->MarkPackageDirty();
   World->GetOuter()->MarkPackageDirty();
 
@@ -254,7 +291,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
   {
     for(int j = 0; j < MetaInfo.SizeY; j++)
     {
-      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Tile map %s (%d_%d)"), 
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating tile map %s (%d_%d)"), 
           *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, i, j);
       
       // Loading tile template
@@ -265,15 +302,17 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         return false;
       }
 
-      FMapGeneratorTileMetaInfo MetaTileInfo;
-      MetaTileInfo.IndexX = i;
-      MetaTileInfo.IndexY = j;
+      // FMapGeneratorTileMetaInfo MetaTileInfo;
+      // MetaTileInfo.IndexX = i;
+      // MetaTileInfo.IndexY = j;
       
       // Apply heighmap to tile landscape
-      ApplyHeightMapToLandscape(WorldAssetData,MetaTileInfo);
+      // ApplyHeightMapToLandscape(WorldAssetData, MetaTileInfo);
 
       const FString MapName = 
           MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+      // const FString MapName = "PreprocessedMap_" + FString::FromInt(i*MetaInfo.SizeX+j);
+     
       
       // Save new tile map
       bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MapName, true);
@@ -282,8 +321,73 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, *MapName, *MetaInfo.DestinationPath);
         return false;
       }
+      // const FString PreprocessedName = MetaInfo.DestinationPath + "/PreprocessedMap_" + FString::FromInt(i*MetaInfo.SizeX+j);
+      // UObject* bDuplicateResult = UEditorAssetLibrary::DuplicateAsset(
+      //     "'/CarlaTools/Content/MapGenerator/BaseMap/Tiles/MapGeneratorBaseMap.umap'",
+      //     PreprocessedName);
+      // if(bDuplicateResult == nullptr){
+      //   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Not Duplicated Tile"), 
+      //       *CUR_CLASS_FUNC_LINE);
+      //   return false;
+      // }
+
     }
   }
+  // SaveWorld(WorldAssetData, "/CarlaTools/MapGenerator/BaseMap/Tiles", "MapGeneratorBaseMap");
+  FText ErrorUnloadingStr;
+  bool bUnload = FEditorFileUtils::AttemptUnloadInactiveWorldPackage(WorldAssetData.GetPackage(),ErrorUnloadingStr);
+  if(!bUnload){
+    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error unloading Base map: %s"), 
+        *CUR_CLASS_FUNC_LINE, *ErrorUnloadingStr.ToString());
+    return false;
+  }
+
+  //  Applying heightmap
+  TArray<FAssetData> TilesAssetData;
+  bool bTilesLoaded = LoadWorlds(TilesAssetData, MetaInfo.DestinationPath);
+  if(!bTilesLoaded){
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error loading tiles before heightmap"), 
+        *CUR_CLASS_FUNC_LINE);
+    return false;
+  }
+
+
+
+  for(FAssetData TileData : TilesAssetData)
+  // for(int i = 0; i < MetaInfo.SizeX; i++)
+  {
+    // for(int j = 0; j < MetaInfo.SizeY; j++)
+    // {
+      // Tile ID from Name
+      FString TileName = TileData.AssetName.ToString();
+      TArray<FString> Tokens;
+      TileName.ParseIntoArray(Tokens, TEXT("_"), true);
+      int i = FCString::Atoi(*Tokens[Tokens.Num()-2]);
+      int j = FCString::Atoi(*Tokens[Tokens.Num()-1]);
+
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Modifying Heightmap in tile %s (%d_%d)"), 
+          *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, i, j);
+
+      // FAssetData TileData = TilesAssetData[i*MetaInfo.SizeX + j];
+      FMapGeneratorTileMetaInfo MetaTileInfo;
+      MetaTileInfo.IndexX = i;
+      MetaTileInfo.IndexY = j;
+      ApplyHeightMapToLandscape(TileData,MetaTileInfo);
+
+      // TODO: Used existing name instead of creating a new one
+      const FString MapName = 
+          MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+
+      bool bSaved = SaveWorld(TileData, MetaInfo.DestinationPath, MapName, false);
+      if(!bSaved){
+        UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error saving %s tile to %s"), 
+            *CUR_CLASS_FUNC_LINE, *MapName, *MetaInfo.DestinationPath);
+        return false;
+      }
+    // }
+  }
+
+  //////////////////////////////////////////
   return true;
 }
 
