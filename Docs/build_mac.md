@@ -115,6 +115,7 @@ make LibCarla # now in arm64!
 
 make PythonAPI # now in arm64
 ...
+# remember to follow step 5 above to install the built .egg file in the PYTHONPATH
 
 make check # unit tests to verify everything works!
 ...
