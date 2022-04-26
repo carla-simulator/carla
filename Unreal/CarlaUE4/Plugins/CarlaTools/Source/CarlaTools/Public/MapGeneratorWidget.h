@@ -97,6 +97,9 @@ public:
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  void LandscapePostEditEvent(ALandscape* Landscaoe);
+
 private:  
   /// Loads the base tile map and stores it in @a WorldAssetData
   /// The funtions return true is success, otherwise false
