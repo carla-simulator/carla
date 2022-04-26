@@ -464,9 +464,9 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   }
   else
   {
-    if (GBufferContents == nullptr)
-      GBufferContents = new GBufferView::FGBufferData();
-    CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferContents);
+    if (GBuffer == nullptr)
+      GBuffer = new GBufferView::FGBufferData();
+    CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
   }
 }
 

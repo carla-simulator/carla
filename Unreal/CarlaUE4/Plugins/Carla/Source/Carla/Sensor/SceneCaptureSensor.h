@@ -10,7 +10,6 @@
 #include "Carla/Sensor/Sensor.h"
 
 #include "Runtime/RenderCore/Public/RenderCommandFence.h"
-#include "Runtime/Renderer/Public/GBufferView.h"
 #include "SceneCaptureSensor.generated.h"
 
 class UDrawFrustumComponent;
@@ -341,7 +340,7 @@ protected:
   UPROPERTY(EditAnywhere)
   bool bCaptureGBuffer = false;
 
-  GBufferView::FGBufferData* GBufferContents;
+  GBufferView::FGBufferData* GBuffer;
 
   FRenderCommandFence RenderFence;
 
