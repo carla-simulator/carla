@@ -1,5 +1,8 @@
 ## Latest
 
+  * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
+  * Added new ConstantVelocityAgent
+  * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
   * Added 4 new attributes to all vehicles:
     - `base_type` can be use as a vehicle classification. The possible values are  *car*, *truck*, *van*, *motorcycle* and *bycicle*.
     - `special_type` provides more information about the vehicle. It is currently restricted to *electric*, *emergency* and *taxi*, and not all vehicles have this attribute filled.
