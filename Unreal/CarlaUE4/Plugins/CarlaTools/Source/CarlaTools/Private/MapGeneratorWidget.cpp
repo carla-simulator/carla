@@ -147,19 +147,27 @@ void UMapGeneratorWidget::LandscapePostEditEvent(ALandscape* Landscape)
   // static const FName PropertyName(TEXT("CollisionMipLevel"));
   // FObjectEditorUtils::SetPropertyValue<ALandscape, int32>(Landscape, PropertyName, 1);
 
-  FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
-  int32* PropertyValue = PropertyToUpdate->ContainerPtrToValuePtr<int32>(Landscape);
-  if(!PropertyToUpdate){
-    UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
-      *CUR_CLASS_FUNC_LINE);
-      return;
-  }
 
-  *PropertyValue += 1; // Increment
+  // Post edit event
+  // FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
+  // int32* PropertyValue = PropertyToUpdate->ContainerPtrToValuePtr<int32>(Landscape);
+  // if(!PropertyToUpdate){
+  //   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
+  //     *CUR_CLASS_FUNC_LINE);
+  //     return;
+  // }
 
-  FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate);
-  Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
-  Landscape->PostEditChange();
+  // *PropertyValue += 1; // Increment
+
+  // FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate);
+  // Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
+  // Landscape->PostEditChange();
+
+
+  // Recreate Collision Components
+  Landscape->RecreateCollisionComponents();
+
+
 }
 
 bool UMapGeneratorWidget::LoadBaseTileWorld(FAssetData& WorldAssetData)
@@ -372,6 +380,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       FMapGeneratorTileMetaInfo MetaTileInfo;
       MetaTileInfo.IndexX = i;
       MetaTileInfo.IndexY = j;
+      MetaTileInfo.MapMetaInfo = MetaInfo;
       ApplyHeightMapToLandscape(TileData,MetaTileInfo);
 
       // TODO: Used existing name instead of creating a new one
@@ -384,6 +393,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, *MapName, *MetaInfo.DestinationPath);
         return false;
       }
+
+      
     // }
   }
 
@@ -465,10 +476,28 @@ bool UMapGeneratorWidget::ApplyHeightMapToLandscape(
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Applying Heigthmap to %s tile (%d_%d)"), 
       *CUR_CLASS_FUNC_LINE, *World->GetMapName(), TileMetaInfo.IndexX, TileMetaInfo.IndexY);
 
-  ALandscape* landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
+  /****** Loading World  ******/
+  // UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Loading %s tile to Editor (%d_%d)"), 
+  //     *CUR_CLASS_FUNC_LINE, *World->GetMapName(), TileMetaInfo.IndexX, TileMetaInfo.IndexY);
+  // const FString TilesPath = TileMetaInfo.MapMetaInfo.DestinationPath;
+  // const FString MapNameToLoad = TilesPath + "/" + World->GetMapName() + "." + World->GetMapName();
+  // bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
+  // if(!bLoadedSuccess){
+  //   UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Loading %s"),
+  //       *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
+  //   return false;
+  // }
+  /****************************/
+
+  ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
       World, 
       ALandscape::StaticClass());
-  AssignLandscapeHeightMap(landscape, TileMetaInfo);
+  AssignLandscapeHeightMap(Landscape, TileMetaInfo);
+
+  LandscapePostEditEvent(Landscape);
+
+  // FEditorFileUtils::SaveCurrentLevel();
+
   return true;
 }
 
