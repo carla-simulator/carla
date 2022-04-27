@@ -174,11 +174,27 @@ private:
 
   /// Workaround material for the center lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeYellow;
+  UMaterialInstance *MarkingNodeYellow1;
+
+  /// Workaround material for the center lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeYellow2;
+
+  /// Workaround material for the center lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeYellow3;
 
   /// Workaround material for exterior lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeWhite;
+  UMaterialInstance *MarkingNodeWhite1;
+
+  /// Workaround material for exterior lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeWhite2;
+
+  /// Workaround material for exterior lane markings
+  UPROPERTY()
+  UMaterialInstance *MarkingNodeWhite3;
 
   /// Workaround material for the TerrainNodes
   UPROPERTY()

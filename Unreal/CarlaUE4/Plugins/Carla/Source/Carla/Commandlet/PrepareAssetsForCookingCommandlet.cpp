@@ -50,9 +50,17 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 #if WITH_EDITORONLY_DATA
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
-  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeYellowMaterial(TEXT(
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeYellowMaterial1(TEXT(
     "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V3.M_Road_03_Tiled_V3'"));
-  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeWhiteMaterial(TEXT(
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeYellowMaterial2(TEXT(
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V3.M_Road_03_Tiled_V3'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeYellowMaterial3(TEXT(
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V3.M_Road_03_Tiled_V3'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeWhiteMaterial1(TEXT(
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeWhiteMaterial2(TEXT(
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeWhiteMaterial3(TEXT(
     "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V2.M_Road_03_Tiled_V2'"));
@@ -68,8 +76,12 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   GutterNodeMaterialInstance = (UMaterialInstance *) GutterNodeMaterial.Object;
   CurbNodeMaterialInstance = (UMaterialInstance *) CurbNodeMaterial.Object;
   TerrainNodeMaterialInstance = (UMaterialInstance *) TerrainNodeMaterial.Object;
-  MarkingNodeYellow = (UMaterialInstance *)MarkingNodeYellowMaterial.Object;
-  MarkingNodeWhite = (UMaterialInstance *)MarkingNodeWhiteMaterial.Object;
+  MarkingNodeYellow1 = (UMaterialInstance *)MarkingNodeYellowMaterial1.Object;
+  MarkingNodeYellow2 = (UMaterialInstance *)MarkingNodeYellowMaterial2.Object;  // Slightly faded out
+  MarkingNodeYellow3 = (UMaterialInstance *)MarkingNodeYellowMaterial3.Object;  // Almost faded out
+  MarkingNodeWhite1 = (UMaterialInstance *)MarkingNodeWhiteMaterial1.Object;
+  MarkingNodeWhite2 = (UMaterialInstance *)MarkingNodeWhiteMaterial2.Object;  // Slightly faded out
+  MarkingNodeWhite3 = (UMaterialInstance *)MarkingNodeWhiteMaterial3.Object;  // Almost faded out
   RoadNodeMaterial = (UMaterialInstance *) RoadNode.Object;
   SidewalkNodeMaterialInstance = (UMaterialInstance *) SidewalkNode.Object;
 #endif
@@ -218,13 +230,26 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           {
             for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
             {
-              if (MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString().Contains("Yellow"))
+              auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
+              if (MaterialName.Contains("Marking1"))
               {
-                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeYellow);
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeWhite1);
+              }
+              else if (MaterialName.Contains("Marking2")){
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeWhite2);
+              }
+              else if (MaterialName.Contains("Marking3")){
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeWhite3);
+              }
+              else if (MaterialName.Contains("MarkingYellow1")){
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeYellow1);
+              }
+              else if (MaterialName.Contains("MarkingYellow2")){
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeYellow2);
               }
               else
               {
-                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeWhite);
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingNodeYellow3);
               }
             }
           }
@@ -234,7 +259,17 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           }
           else if (AssetName.Contains(SSTags::R_TERRAIN))
           {
-            MeshActor->GetStaticMeshComponent()->SetMaterial(0, TerrainNodeMaterialInstance);
+            for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
+            {
+              auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
+              if (MaterialName.Contains("Grass1"))
+              {
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, SidewalkNodeMaterialInstance);
+              }
+              else{
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, TerrainNodeMaterialInstance);
+              }
+            }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
           else if (AssetName.Contains(SSTags::R_SIDEWALK1) || AssetName.Contains(SSTags::R_SIDEWALK2))
@@ -242,13 +277,13 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
             MeshActor->GetStaticMeshComponent()->SetMaterial(0, SidewalkNodeMaterialInstance);
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
-          else if (AssetName.Contains(SSTags::R_CURB1) || AssetName.Contains(SSTags::R_CURB2)) {
-
+          else if (AssetName.Contains(SSTags::R_CURB1) || AssetName.Contains(SSTags::R_CURB2))
+          {
             MeshActor->GetStaticMeshComponent()->SetMaterial(0, CurbNodeMaterialInstance);
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
-          else if (AssetName.Contains(SSTags::R_GUTTER1) || AssetName.Contains(SSTags::R_GUTTER2)) {
-
+          else if (AssetName.Contains(SSTags::R_GUTTER1) || AssetName.Contains(SSTags::R_GUTTER2))
+          {
             MeshActor->GetStaticMeshComponent()->SetMaterial(0, GutterNodeMaterialInstance);
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
