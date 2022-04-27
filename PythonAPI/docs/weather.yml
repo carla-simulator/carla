@@ -77,6 +77,11 @@
       type: float
       doc: >
           Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
+    # --------------------------------------
+    - var_name: dust_storm
+      type: float
+      doc: >
+          Determines the strength of the dust storm weather. Values range from 0 to 100.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
