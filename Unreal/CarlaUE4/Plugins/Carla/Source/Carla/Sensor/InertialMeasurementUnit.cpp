@@ -153,7 +153,7 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscope()
       RootComponent->GetRelativeTransform().GetRotation();
 
   const FVector FVectorGyroscope =
-      SensorLocalRotation.RotateVector(AngularVelocity);
+      SensorLocalRotation.UnrotateVector(AngularVelocity);
 
   // Cast from FVector to our Vector3D to correctly send the data in rad/s
   // and apply the desired noise function, in this case a normal distribution
