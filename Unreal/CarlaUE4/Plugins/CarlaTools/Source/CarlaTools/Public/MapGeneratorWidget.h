@@ -45,6 +45,9 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
 {
   GENERATED_USTRUCT_BODY();
 
+  UPROPERTY(BlueprintReadWrite)
+  FMapGeneratorMetaInfo MapMetaInfo;
+
   UPROPERTY(BlueprintReadWrite)   
   bool bIsTiled = true;
 
