@@ -33,11 +33,24 @@ public:
       UTextureRenderTarget2D &RenderTarget,
       TArray<FColor> &BitMap);
 
+  /// Copy the pixels in @a RenderTarget into @a BitMap.
+  ///
+  /// @pre To be called from game-thread.
+  static bool WritePixelsToArray(
+      FRHITexture* RenderTarget,
+      TArray<FColor> &BitMap);
+
   /// Dump the pixels in @a RenderTarget.
   ///
   /// @pre To be called from game-thread.
   static TUniquePtr<TImagePixelData<FColor>> DumpPixels(
       UTextureRenderTarget2D &RenderTarget);
+
+  /// Dump the pixels in @a RenderTarget.
+  ///
+  /// @pre To be called from game-thread.
+  static TUniquePtr<TImagePixelData<FColor>> DumpPixels(
+      FRHITexture* RenderTarget);
 
   /// Asynchronously save the pixels in @a RenderTarget to disk.
   ///
@@ -51,6 +64,13 @@ public:
   /// @pre To be called from game-thread.
   static TFuture<bool> SavePixelsToDisk(
       TUniquePtr<TImagePixelData<FColor>> PixelData,
+      const FString &FilePath);
+
+  /// Asynchronously save the pixels in @a RenderTarget to disk.
+  ///
+  /// @pre To be called from game-thread.
+  static TFuture<bool> SavePixelsToDisk(
+      FRHITexture* RenderTarget,
       const FString &FilePath);
 
   /// Convenience function to enqueue a render command that sends the pixels

@@ -154,10 +154,62 @@ bool FPixelReader::WritePixelsToArray(
   return RTResource->ReadPixels(BitMap, ReadPixelFlags);
 }
 
+bool FPixelReader::WritePixelsToArray(
+    FRHITexture* RenderTarget,
+    TArray<FColor> &OutPixels)
+{
+  check(IsInGameThread());
+  
+  struct FReadSurfaceContext
+  {
+      FRHITexture* Texture;
+      TArray<FColor>* OutData;
+      FIntRect Rect;
+      FReadSurfaceDataFlags Flags;
+  };
+
+  auto XYZ = RenderTarget->GetSizeXYZ();
+
+  FReadSurfaceContext Context =
+  {
+      RenderTarget,
+      &OutPixels,
+      FIntRect(0, 0, XYZ.X, XYZ.Y),
+      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
+  };
+
+  ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
+  [Context](FRHICommandListImmediate& RHICmdList)
+  {
+      RHICmdList.ReadSurfaceData(
+          Context.Texture,
+          Context.Rect,
+          *Context.OutData,
+          Context.Flags
+      );
+  });
+  FlushRenderingCommands();
+  return true;
+}
+
 TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
     UTextureRenderTarget2D &RenderTarget)
 {
   const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
+  TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
+  TArray<FColor> Pixels(PixelData->Pixels.GetData(), PixelData->Pixels.Num());
+  if (!WritePixelsToArray(RenderTarget, Pixels))
+  {
+    return nullptr;
+  }
+  return PixelData;
+}
+
+TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
+    FRHITexture* RenderTarget)
+{
+  auto XYZ = RenderTarget->GetSizeXYZ();
+  const FIntPoint DestSize(XYZ.X, XYZ.Y);
   TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
   TArray<FColor> Pixels(PixelData->Pixels.GetData(), PixelData->Pixels.Num());
   if (!WritePixelsToArray(RenderTarget, Pixels))
@@ -188,6 +240,13 @@ TFuture<bool> FPixelReader::SavePixelsToDisk(
 
   FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
   return HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
+}
+
+TFuture<bool> FPixelReader::SavePixelsToDisk(
+    FRHITexture* RenderTarget,
+    const FString &FilePath)
+{
+  return SavePixelsToDisk(DumpPixels(RenderTarget), FilePath);
 }
 
 void FPixelReader::WritePixelsToBuffer(
