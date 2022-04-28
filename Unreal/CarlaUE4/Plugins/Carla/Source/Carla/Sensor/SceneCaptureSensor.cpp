@@ -21,6 +21,8 @@
 #include "Misc/CoreDelegates.h"
 #include "RHICommandList.h"
 
+#include "Runtime/Renderer/Public/GBufferView.h"
+
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
 // =============================================================================
@@ -458,15 +460,39 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
-  if (!bCaptureGBuffer)
+  GBufferView::FGBufferData Data = {};
+  CaptureComponent2D->CaptureSceneWithGBuffer(&Data);
+
+  static size_t counter = 0;
+
+  for (auto& PRT : Data.GBuffers)
   {
-    CaptureComponent2D->CaptureScene();
-  }
-  else
-  {
-    if (GBuffer == nullptr)
-      GBuffer = new GBufferView::FGBufferData();
-    CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
+    if (!PRT.IsValid())
+    {
+      UE_LOG(LogCarla, Warning, TEXT("Attempted to save a null IPooledRenderTarget with FPixelReader::SavePixelsToDisk."));
+      continue;
+    }
+    
+    auto& RT = PRT->GetRenderTargetItem();
+    if (!RT.IsValid())
+    {
+      UE_LOG(LogCarla, Warning, TEXT("Attempted to save a null FSceneRenderTargetItem with FPixelReader::SavePixelsToDisk."));
+      continue;
+    }
+
+    auto RHITexture = RT.TargetableTexture;
+    if (RHITexture == nullptr)
+      RHITexture = RT.ShaderResourceTexture;
+
+    if (RHITexture == nullptr)
+    {
+      UE_LOG(LogCarla, Warning, TEXT("Attempted to save a null FRHITexture with FPixelReader::SavePixelsToDisk."));
+      continue;
+    }
+
+    UE_LOG(LogCarla, Log, TEXT("Saving texture..."));
+    FPixelReader::SavePixelsToDisk(RHITexture, FString::Printf(TEXT("%u.png"), counter));
+    ++counter;
   }
 }
 

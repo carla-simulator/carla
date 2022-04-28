@@ -8,9 +8,7 @@
 
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
-
 #include "Runtime/RenderCore/Public/RenderCommandFence.h"
-#include "Runtime/Renderer/Public/GBufferView.h"
 #include "SceneCaptureSensor.generated.h"
 
 class UDrawFrustumComponent;
@@ -336,12 +334,6 @@ protected:
   /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
-
-  /// Whether to also record the contents of the GBuffer.
-  UPROPERTY(EditAnywhere)
-  bool bCaptureGBuffer = true;
-
-  GBufferView::FGBufferData* GBuffer;
 
   FRenderCommandFence RenderFence;
 

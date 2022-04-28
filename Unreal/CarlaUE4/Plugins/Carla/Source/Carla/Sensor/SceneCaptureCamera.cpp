@@ -6,7 +6,6 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
-
 #include "Runtime/RenderCore/Public/RenderingThread.h"
 
 FActorDefinition ASceneCaptureCamera::GetSensorDefinition()

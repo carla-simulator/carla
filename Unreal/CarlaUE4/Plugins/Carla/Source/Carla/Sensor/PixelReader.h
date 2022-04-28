@@ -64,13 +64,21 @@ public:
   template <typename TSensor>
   static void SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat = false);
 
-private:
-
   /// Copy the pixels in @a RenderTarget into @a Buffer.
   ///
   /// @pre To be called from render-thread.
   static void WritePixelsToBuffer(
       UTextureRenderTarget2D &RenderTarget,
+      carla::Buffer &Buffer,
+      uint32 Offset,
+      FRHICommandListImmediate &InRHICmdList,
+      bool use16BitFormat = false);
+
+  /// Copy the pixels in @a RenderTarget into @a Buffer.
+  ///
+  /// @pre To be called from render-thread.
+  static void WritePixelsToBuffer(
+      FRHITexture* RHITexture,
       carla::Buffer &Buffer,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,
