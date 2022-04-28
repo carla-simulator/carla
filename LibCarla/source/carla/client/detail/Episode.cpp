@@ -86,7 +86,7 @@ using namespace std::chrono_literals;
             }
           } while (!self->_state.compare_exchange(&prev, next));
 
-          if(UpdateLights) {
+          if(UpdateLights || HasMapChanged) {
             self->_on_light_update_callbacks.Call(next);
           }
 
