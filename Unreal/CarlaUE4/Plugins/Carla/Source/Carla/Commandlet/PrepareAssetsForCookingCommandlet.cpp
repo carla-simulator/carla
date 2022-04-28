@@ -261,14 +261,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           {
             for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
             {
-              auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
-              if (MaterialName.Contains("Grass1"))
-              {
-                MeshActor->GetStaticMeshComponent()->SetMaterial(i, SidewalkNodeMaterialInstance);
-              }
-              else{
-                MeshActor->GetStaticMeshComponent()->SetMaterial(i, TerrainNodeMaterialInstance);
-              }
+              MeshActor->GetStaticMeshComponent()->SetMaterial(i, TerrainNodeMaterialInstance);
             }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
