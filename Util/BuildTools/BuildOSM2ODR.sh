@@ -89,7 +89,7 @@ if ${BUILD_OSM2ODR} ; then
   mkdir -p ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
 
-  CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | grep -o -E "[[:digit:]]+.[[:digit:]]+.[[:digit:]]+")")
+  CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/')")
   
   if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
     fatal_error "Failed to retrieve the installed version of the clang compiler."
