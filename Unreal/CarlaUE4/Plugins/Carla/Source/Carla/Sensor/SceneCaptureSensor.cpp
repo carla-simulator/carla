@@ -461,9 +461,28 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
   GBufferView::FGBufferData Data = {};
-  CaptureComponent2D->CaptureSceneWithGBuffer(&Data);
+  CaptureComponent2D->CaptureSceneWithGBuffer(Data);
+  FlushRenderingCommands();
 
   static size_t counter = 0;
+
+  if (!Data.EnteredDeferredRenderer)
+  {
+      UE_LOG(LogCarla, Warning, TEXT("Did not enter deferred renderer."));
+      return;
+  }
+
+  if (!Data.CanCaptureGBuffer)
+  {
+      UE_LOG(LogCarla, Warning, TEXT("Could not capture GBuffer."));
+      return;
+  }
+
+  if (!Data.AnyWritten)
+  {
+      UE_LOG(LogCarla, Warning, TEXT("No GBuffers were written."));
+      return;
+  }
 
   for (auto& PRT : Data.GBuffers)
   {
@@ -491,7 +510,10 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
     }
 
     UE_LOG(LogCarla, Log, TEXT("Saving texture..."));
-    FPixelReader::SavePixelsToDisk(RHITexture, FString::Printf(TEXT("%u.png"), counter));
+    if (!FPixelReader::SavePixelsToDisk(RHITexture, FString::Printf(TEXT("%u.png"), counter)).Get())
+    {
+      UE_LOG(LogCarla, Warning, TEXT("Failed to save texture."));
+    }
     ++counter;
   }
 }

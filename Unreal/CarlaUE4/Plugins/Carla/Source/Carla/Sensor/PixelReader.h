@@ -98,7 +98,7 @@ public:
   ///
   /// @pre To be called from render-thread.
   static void WritePixelsToBuffer(
-      FRHITexture* RHITexture,
+      FRHITexture* RenderTarget,
       carla::Buffer &Buffer,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,

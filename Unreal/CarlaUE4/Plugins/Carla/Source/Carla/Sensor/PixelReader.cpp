@@ -164,31 +164,24 @@ bool FPixelReader::WritePixelsToArray(
   {
       FRHITexture* Texture;
       TArray<FColor>* OutData;
-      FIntRect Rect;
-      FReadSurfaceDataFlags Flags;
   };
 
-  auto XYZ = RenderTarget->GetSizeXYZ();
-
-  FReadSurfaceContext Context =
-  {
-      RenderTarget,
-      &OutPixels,
-      FIntRect(0, 0, XYZ.X, XYZ.Y),
-      FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX)
-  };
+  FReadSurfaceContext Context = { RenderTarget, &OutPixels };
 
   ENQUEUE_RENDER_COMMAND(ReadSurfaceCommand)(
   [Context](FRHICommandListImmediate& RHICmdList)
   {
-      RHICmdList.ReadSurfaceData(
-          Context.Texture,
-          Context.Rect,
-          *Context.OutData,
-          Context.Flags
-      );
+    auto XYZ = Context.Texture->GetSizeXYZ();
+    check(XYZ.X + XYZ.Y + XYZ.Z != 0);
+    RHICmdList.ReadSurfaceData(
+        Context.Texture,
+        FIntRect(0, 0, XYZ.X, XYZ.Y),
+        *Context.OutData,
+        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
   });
+
   FlushRenderingCommands();
+  check(Context.OutData->Num() != 0);
   return true;
 }
 
@@ -209,6 +202,7 @@ TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
     FRHITexture* RenderTarget)
 {
   auto XYZ = RenderTarget->GetSizeXYZ();
+  check(XYZ.X + XYZ.Y + XYZ.Z != 0);
   const FIntPoint DestSize(XYZ.X, XYZ.Y);
   TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
   TArray<FColor> Pixels(PixelData->Pixels.GetData(), PixelData->Pixels.Num());
@@ -216,6 +210,7 @@ TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
   {
     return nullptr;
   }
+  check(PixelData->Pixels.Num() != 0);
   return PixelData;
 }
 
