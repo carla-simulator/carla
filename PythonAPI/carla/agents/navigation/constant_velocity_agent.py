@@ -22,7 +22,7 @@ class ConstantVelocityAgent(BasicAgent):
     wait for a bit, and then start again.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}):
+    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
         """
         Initialization the agent parameters, the local and the global planner.
 
@@ -30,8 +30,10 @@ class ConstantVelocityAgent(BasicAgent):
             :param target_speed: speed (in Km/h) at which the vehicle will move
             :param opt_dict: dictionary in case some of its parameters want to be changed.
                 This also applies to parameters related to the LocalPlanner.
+            :param map_inst: carla.Map instance to avoid the expensive call of getting it.
+            :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
         """
-        super(ConstantVelocityAgent, self).__init__(vehicle, target_speed, opt_dict=opt_dict)
+        super().__init__(vehicle, target_speed, opt_dict=opt_dict, map_inst=map_inst, grp_inst=grp_inst)
 
         self._use_basic_behavior = False  # Whether or not to use the BasicAgent behavior when the constant velocity is down
         self._target_speed = target_speed / 3.6  # [m/s]

@@ -26,7 +26,7 @@ class BasicAgent(object):
     as well as to change its parameters in case a different driving mode is desired.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}):
+    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
         """
         Initialization the agent paramters, the local and the global planner.
 
@@ -34,10 +34,20 @@ class BasicAgent(object):
             :param target_speed: speed (in Km/h) at which the vehicle will move
             :param opt_dict: dictionary in case some of its parameters want to be changed.
                 This also applies to parameters related to the LocalPlanner.
+            :param map_inst: carla.Map instance to avoid the expensive call of getting it.
+            :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
+
         """
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
-        self._map = self._world.get_map()
+        if map_inst:
+            if isinstance(map_inst, carla.Map):
+                self._map = map_inst
+            else:
+                print("Warning: Ignoring the given map as it is not a 'carla.Map'")
+                self._map = self._world.get_map()
+        else:
+            self._map = self._world.get_map()
         self._last_traffic_light = None
 
         # Base parameters
@@ -68,8 +78,15 @@ class BasicAgent(object):
             self._max_steering = opt_dict['max_brake']
 
         # Initialize the planners
-        self._local_planner = LocalPlanner(self._vehicle, opt_dict=opt_dict)
-        self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
+        self._local_planner = LocalPlanner(self._vehicle, opt_dict=opt_dict, map_inst=self._map)
+        if grp_inst:
+            if isinstance(grp_inst, GlobalRoutePlanner):
+                self._global_planner = grp_inst
+            else:
+                print("Warning: Ignoring the given map as it is not a 'carla.Map'")
+                self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
+        else:
+            self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
 
     def add_emergency_stop(self, control):
         """
