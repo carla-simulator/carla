@@ -8,6 +8,8 @@
 #include "TrafficLightState.h"
 #include <queue>
 
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 #include <compiler/disable-ue4-macros.h>
 #include <carla/road/element/RoadInfoSpeed.h>
 #include <compiler/enable-ue4-macros.h>
@@ -38,27 +40,43 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
         if(Map.GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
           continue;
 
-        // Get 90% of the half size of the width of the lane
-        float BoxSize = static_cast<float>(
-            0.9*Map.GetLaneWidth(signal_waypoint)*0.5);
+        auto box_waypoint = signal_waypoint;
+        // Prevent adding the bounding box inside the intersection
+        if (Map.IsJunction(RoadId)) {
+          auto previous_waypoints = Map.GetPrevious(signal_waypoint, 2.0);
+          if (previous_waypoints.size() == 1) {
+            box_waypoint = previous_waypoints.front();
+          }
+        }
+
+        // Get 50% of the half size of the width of the lane
+        float BoxWidth = static_cast<float>(
+            0.5f*Map.GetLaneWidth(box_waypoint)*0.5);
+        float BoxLength = 1.5f;
+        float BoxHeight = 1.0f;
         // Prevent a situation where the road width is 0,
         // this could happen in a lane that is just appearing
-        BoxSize = std::max(0.01f, BoxSize);
+        BoxWidth = std::max(0.01f, BoxWidth);
         // Get min and max
-        double LaneLength = Map.GetLane(signal_waypoint).GetLength();
-        double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
+        double LaneLength = Map.GetLane(box_waypoint).GetLength();
+        double LaneDistance = Map.GetLane(box_waypoint).GetDistance();
         if(lane < 0)
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - BoxSize,
+          box_waypoint.s = FMath::Clamp(box_waypoint.s - BoxWidth,
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         else
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + BoxSize,
+          box_waypoint.s = FMath::Clamp(box_waypoint.s + BoxWidth,
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
-        float UnrealBoxSize = 100*BoxSize;
-        GenerateStopBox(Map.ComputeTransform(signal_waypoint), UnrealBoxSize);
+        FTransform BoxTransform = Map.ComputeTransform(box_waypoint);
+        ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
+        if (LargeMapManager)
+        {
+          BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
+        }
+        GenerateStopBox(BoxTransform, FVector(100*BoxLength, 100*BoxWidth, 100*BoxHeight));
 
         auto Predecessors = Map.GetPredecessors(signal_waypoint);
         for(auto &Prev : Predecessors)
@@ -110,7 +128,14 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
             // This could happen in a lane that is just appearing
             BoxSize = std::max(0.01f, BoxSize);
             float UEBoxSize = 100*BoxSize;
-            GenerateCheckBox(Map.ComputeTransform(NextWaypoint), UEBoxSize);
+
+            FTransform BoxTransform = Map.ComputeTransform(NextWaypoint);
+            ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
+            if (LargeMapManager)
+            {
+              BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
+            }
+            GenerateCheckBox(BoxTransform, UEBoxSize);
             while (true)
             {
               auto Next = Map.GetNext(NextWaypoint, 2*BoxSize);
@@ -123,8 +148,12 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
               {
                 break;
               }
-
-              GenerateCheckBox(Map.ComputeTransform(NextWaypoint), UEBoxSize);
+              BoxTransform = Map.ComputeTransform(NextWaypoint);
+              if (LargeMapManager)
+              {
+                BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
+              }
+              GenerateCheckBox(BoxTransform, UEBoxSize);
             }
             // Cover the road before the junction
             // Hard coded anticipation time (boxes placed prior to the junction)
@@ -166,7 +195,7 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
 }
 
 void UStopSignComponent::GenerateStopBox(const FTransform BoxTransform,
-    float BoxSize)
+    const FVector BoxSize)
 {
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
   BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UStopSignComponent::OnOverlapBeginStopEffectBox);
