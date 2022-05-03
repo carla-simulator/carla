@@ -41,9 +41,12 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
 
         // Prevent adding the bounding box inside the intersection
         if (Map.IsJunction(RoadId)) {
-          auto previous_waypoints = Map.GetPrevious(signal_waypoint, 2.0);
-          if (previous_waypoints.size() == 1) {
-            signal_waypoint = previous_waypoints.front();
+          auto predecessors = Map.GetPredecessors(signal_waypoint);
+          if (predecessors.size() == 1) {
+            auto predecessor = predecessors.front();
+            if (!Map.IsJunction(predecessor.road_id)) {
+              signal_waypoint = predecessor;
+            }
           }
         }
 
@@ -64,12 +67,12 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
         double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
         if(lane < 0)
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - BoxWidth,
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - (BoxLength + 1.5f),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         else
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + BoxWidth,
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + (BoxLength + 1.5f),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         FTransform BoxTransform = Map.ComputeTransform(signal_waypoint);
