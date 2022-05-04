@@ -1,5 +1,6 @@
 ## Latest
 
+  * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
   * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
   * Added new ConstantVelocityAgent
   * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
@@ -19,6 +20,8 @@
   * Added new API function: `set_day_night_cycle` at the LightManager, to (de)activate the automatic switch of the lights when the simulation changes from day to night mode, and viceversa.
   * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
   * Added post process effects for rainy and dusty weathers.
+  * Switched data type of the dust storm weather parameter from bool to float.
+  * Check for the version of the installed Clang compiler during build.
 
 ## CARLA 0.9.13
 

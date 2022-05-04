@@ -25,9 +25,9 @@ SUN_PRESETS = {
     'sunset': (0.5, 0.0)}
 
 WEATHER_PRESETS = {
-    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0331],
-    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.75, 0.1, 10.0, 0.0, 0.03, 0.0331],
-    'rain': [100.0, 80.0, 90.0, 100.0, 7.0, 0.75, 0.1, 100.0, 0.0, 0.03, 0.0331]}
+    'clear': [10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.0331, 0.0],
+    'overcast': [80.0, 0.0, 0.0, 50.0, 2.0, 0.75, 0.1, 10.0, 0.0, 0.03, 0.0331, 0.0],
+    'rain': [100.0, 80.0, 90.0, 100.0, 7.0, 0.75, 0.1, 100.0, 0.0, 0.03, 0.0331, 0.0]}
 
 CAR_LIGHTS = {
     'None' : [carla.VehicleLightState.NONE],
@@ -77,6 +77,7 @@ def apply_weather_presets(args, weather):
             weather.scattering_intensity = WEATHER_PRESETS[args.weather][8]
             weather.mie_scattering_scale = WEATHER_PRESETS[args.weather][9]
             weather.rayleigh_scattering_scale = WEATHER_PRESETS[args.weather][10]
+            weather.dust_storm = WEATHER_PRESETS[args.weather][11]
         else:
             print("[ERROR]: Command [--weather | -w] '" + args.weather + "' not known")
             sys.exit(1)
@@ -110,6 +111,8 @@ def apply_weather_values(args, weather):
         weather.mie_scattering_scale = args.miescatteringscale
     if args.rayleighscatteringscale is not None:
         weather.rayleigh_scattering_scale = args.rayleighscatteringscale
+    if args.dust_storm is not None:
+        weather.dust_storm = args.dust_storm
 
 
 def apply_lights_to_cars(args, world):
@@ -261,6 +264,12 @@ def main():
         default=None,
         type=float,
         help='Mie scattering scale [0.0, 5.0]')
+    argparser.add_argument(
+        '--dust_storm', '-ds',
+        metavar='ds',
+        default=None,
+        type=float,
+        help='Dust storm strength [0.0, 100.0]')
     argparser.add_argument(
         '--cars',
         metavar='Cars',
