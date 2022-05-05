@@ -35,6 +35,8 @@ namespace detail {
 
     carla::streaming::Stream MakeStream();
 
+    void CloseStream(carla::streaming::detail::stream_id_type id);
+
     bool RegisterSession(std::shared_ptr<Session> session);
 
     void DeregisterSession(std::shared_ptr<Session> session);

@@ -39,6 +39,8 @@ namespace detail {
       if (session != nullptr) {
         auto message = Session::MakeMessage(std::move(buffers)...);
         session->Write(std::move(message));
+        // log_info("sensor ", session->get_stream_id()," data sent ", message->size(), " by");        
+        log_info("sensor ", session->get_stream_id()," data sent");        
         // Return here, _session is only valid if we have a 
         // single session.
         return; 
@@ -46,10 +48,14 @@ namespace detail {
 
       // try write multiple stream
       std::lock_guard<std::mutex> lock(_mutex);
-      auto message = Session::MakeMessage(std::move(buffers)...);
-      for (auto &s : _sessions) {
-        if (s != nullptr) {
-          s->Write(message);
+      if (_sessions.size() > 0) {
+        auto message = Session::MakeMessage(std::move(buffers)...);
+        for (auto &s : _sessions) {
+          if (s != nullptr) {
+            s->Write(message);
+            // log_info("sensor ", s->get_stream_id()," data sent ", message->size(), " by");
+            log_info("sensor ", s->get_stream_id()," data sent ");
+         }
         }
       }
     }
@@ -74,6 +80,7 @@ namespace detail {
     void DisconnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
       std::lock_guard<std::mutex> lock(_mutex);
+      log_info("Calling DisconnectSession for ", session->get_stream_id());
       if (_sessions.size() == 0) return;
       if (_sessions.size() == 1) {
         DEBUG_ASSERT(session == _session.load());
@@ -96,6 +103,11 @@ namespace detail {
 
     void ClearSessions() final {
       std::lock_guard<std::mutex> lock(_mutex);
+      for (auto &s : _sessions) {
+        if (s != nullptr) {
+          s->Close();
+        }
+      }
       _sessions.clear();
       _session.store(nullptr);
       log_debug("Disconnecting all multistream sessions");
