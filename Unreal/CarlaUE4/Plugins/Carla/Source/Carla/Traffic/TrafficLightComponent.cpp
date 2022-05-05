@@ -65,14 +65,16 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
         // Get min and max
         double LaneLength = Map.GetLane(signal_waypoint).GetLength();
         double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
+        // Safe distance to avoid overlapping the bounding box with the intersection
+        float AdditionalDistance = 1.5f;
         if(lane < 0)
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - (BoxLength + 1.5f),
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s - (BoxLength + AdditionalDistance),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         else
         {
-          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + (BoxLength + 1.5f),
+          signal_waypoint.s = FMath::Clamp(signal_waypoint.s + (BoxLength + AdditionalDistance),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         FTransform BoxTransform = Map.ComputeTransform(signal_waypoint);
