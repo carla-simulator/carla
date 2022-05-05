@@ -65,14 +65,16 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
         // Get min and max
         double LaneLength = Map.GetLane(box_waypoint).GetLength();
         double LaneDistance = Map.GetLane(box_waypoint).GetDistance();
+        // Safe distance to avoid overlapping the bounding box with the intersection
+        float AdditionalDistance = 1.5f;
         if(lane < 0)
         {
-          box_waypoint.s = FMath::Clamp(box_waypoint.s - (BoxLength + 1.5f),
+          box_waypoint.s = FMath::Clamp(box_waypoint.s - (BoxLength + AdditionalDistance),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         else
         {
-          box_waypoint.s = FMath::Clamp(box_waypoint.s + (BoxLength + 1.5f),
+          box_waypoint.s = FMath::Clamp(box_waypoint.s + (BoxLength + AdditionalDistance),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         FTransform BoxTransform = Map.ComputeTransform(box_waypoint);
