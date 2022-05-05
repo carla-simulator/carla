@@ -20,6 +20,7 @@
 #include "HighResScreenshot.h"
 #include "Misc/CoreDelegates.h"
 #include "RHICommandList.h"
+#include "ImageUtil.h"
 
 #include "Runtime/Renderer/Public/GBufferView.h"
 
@@ -460,32 +461,46 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
-  GBufferView::FGBufferData Data = {};
-  CaptureComponent2D->CaptureSceneWithGBuffer(Data);
+  GBufferView::FGBufferData GBuffer = {};
+  CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
   FlushRenderingCommands();
 
-  static size_t counter = 0;
+  static size_t Counter = 0;
 
-  if (!Data.EnteredDeferredRenderer)
-  {
-      UE_LOG(LogCarla, Warning, TEXT("Did not enter deferred renderer."));
-      return;
-  }
-
-  if (!Data.CanCaptureGBuffer)
+  if (!GBuffer.CouldCaptureGBuffer)
   {
       UE_LOG(LogCarla, Warning, TEXT("Could not capture GBuffer."));
       return;
   }
 
-  if (!Data.AnyWritten)
+  static constexpr const TCHAR* TextureNames[] =
   {
-      UE_LOG(LogCarla, Warning, TEXT("No GBuffers were written."));
-      return;
-  }
+    TEXT("SceneColor"),
+    TEXT("SceneDepth"),
+    TEXT("GBufferA"),
+    TEXT("GBufferB"),
+    TEXT("GBufferC"),
+    TEXT("GBufferD"),
+    TEXT("GBufferE"),
+    TEXT("GBufferF"),
+    TEXT("Velocity"),
+    TEXT("SSAO")
+  };
 
-  for (auto& PRT : Data.GBuffers)
+  static_assert(sizeof(TextureNames) / sizeof(TextureNames[0]) == GBufferView::FGBufferData::TextureCount, "");
+
+  for (size_t i = 0; i != GBufferView::FGBufferData::TextureCount; ++i)
   {
+    auto Name = TextureNames[i];
+    
+    if ((GBuffer.PresenceMask & (1U << i)) == 0)
+    {
+      UE_LOG(LogCarla, Log, TEXT("Skipping texture %s, since it's not being used in the current rendering mode."), Name);
+      continue;
+    }
+
+    auto& PRT = GBuffer.GBufferTextures[i];
+
     if (!PRT.IsValid())
     {
       UE_LOG(LogCarla, Warning, TEXT("Attempted to save a null IPooledRenderTarget with FPixelReader::SavePixelsToDisk."));
@@ -499,9 +514,9 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       continue;
     }
 
-    auto RHITexture = RT.TargetableTexture;
+    auto RHITexture = RT.TargetableTexture->GetTexture2D();
     if (RHITexture == nullptr)
-      RHITexture = RT.ShaderResourceTexture;
+      RHITexture = RT.ShaderResourceTexture->GetTexture2D();
 
     if (RHITexture == nullptr)
     {
@@ -509,13 +524,47 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       continue;
     }
 
-    UE_LOG(LogCarla, Log, TEXT("Saving texture..."));
-    if (!FPixelReader::SavePixelsToDisk(RHITexture, FString::Printf(TEXT("%u.png"), counter)).Get())
+    auto Extent = GBuffer.Extent;
+    UE_LOG(LogCarla, Log, TEXT("Exporting %ux%u texture (Format=%u)..."), Extent.X, Extent.Y, (unsigned)RHITexture->GetFormat());
+    bool Result = ImageUtil::ExportAndVisit(RHITexture, Extent, [i, RHITexture, Name, Extent](auto&& Pixels)
     {
-      UE_LOG(LogCarla, Warning, TEXT("Failed to save texture."));
+      using T = typename std::remove_reference_t<decltype(Pixels)>::ElementType;
+      if (i == 0)
+      {
+        for (auto& e : Pixels)
+          e.A = 255;
+      }
+      TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
+      ImageTask->PixelData = MakeUnique<TImagePixelData<T>>(Extent, TArray64<T>(MoveTemp(Pixels)));
+      ImageTask->Filename = FString::Printf(TEXT("C:\\carla-screenshots\\%u-%s.png"), Counter, Name);
+      ImageTask->Format = EImageFormat::PNG;
+      ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
+      ImageTask->bOverwriteFile = true;
+      ImageTask->PixelPreProcessors.Add(TAsyncAlphaWrite<T>(255));
+      FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
+      check(HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask)).Get());
+    });
+
+    if (!Result)
+    {
+      UE_LOG(LogCarla, Log, TEXT("Failed to export texture %s, since it's pixel format is PF_DepthStencil."), Name);
     }
-    ++counter;
   }
+  ++Counter;
+
+	auto TMP = new GBufferView::FGBufferData();
+	*TMP = MoveTemp(GBuffer);
+	ENQUEUE_RENDER_COMMAND(FGBufferData_DestroyInRenderThread)(
+	[TMP](FRHICommandListImmediate& RHICmdList)
+	{
+		for (auto& PRT : TMP->GBufferTextures)
+		{
+			if (!PRT.IsValid())
+				continue;
+			PRT.SafeRelease();
+		}
+		delete TMP;
+	});
 }
 
 void ASceneCaptureSensor::BeginPlay()
