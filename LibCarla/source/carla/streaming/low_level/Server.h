@@ -65,6 +65,10 @@ namespace low_level {
       return _dispatcher.MakeStream();
     }
 
+    void CloseStream(carla::streaming::detail::stream_id_type id) {
+      return _dispatcher.CloseStream(id);
+    }
+
     void SetSynchronousMode(bool is_synchro) {
       _server.SetSynchronousMode(is_synchro);
     }
@@ -82,6 +86,7 @@ namespace low_level {
         }
       };
       auto on_session_closed = [this](auto session) {
+        log_info("on_session_closed called");
         _dispatcher.DeregisterSession(session);
       };
       _server.Listen(on_session_opened, on_session_closed);

@@ -10,6 +10,7 @@
 
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Game/CarlaStatics.h"
 
 ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
@@ -97,6 +98,10 @@ void ASensor::PostActorCreated()
 void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
   Super::EndPlay(EndPlayReason);
+  
+  // close all sessions associated to the sensor stream
+  UCarlaStatics::GetGameInstance(GetEpisode().GetWorld())->GetServer().GetStreamingServer().CloseStream(carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id());
+
   Stream = FDataStream();
 
   UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
