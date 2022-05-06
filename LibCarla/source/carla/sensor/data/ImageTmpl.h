@@ -10,6 +10,8 @@
 #include "carla/sensor/data/Array.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/OpticalFlowImageSerializer.h"
+#include "carla/sensor/s11n/GBufferUint8Serializer.h"
+#include "carla/sensor/s11n/GBufferFloatSerializer.h"
 
 namespace carla {
 namespace sensor {
@@ -26,6 +28,8 @@ namespace data {
 
     friend Serializer;
     friend SerializerOpticalFlow;
+    friend s11n::GBufferUint8Serializer;
+    friend s11n::GBufferFloatSerializer;
 
     explicit ImageTmpl(RawData &&data)
       : Super(Serializer::header_offset, std::move(data)) {

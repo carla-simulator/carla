@@ -36,6 +36,11 @@ namespace client {
     _is_listening = true;
   }
 
+  void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
+    log_debug(GetDisplayId(), ": subscribing to stream");
+    GetEpisode().Lock()->SubscribeToGBuffer(*this, GBufferId, std::move(callback));
+  }
+
   void ServerSideSensor::Stop() {
     if (!_is_listening) {
       log_warning(

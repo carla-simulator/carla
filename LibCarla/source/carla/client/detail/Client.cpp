@@ -582,6 +582,19 @@ namespace detail {
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
+  void Client::SubscribeToGBuffer(
+      rpc::ActorId ActorId,
+      uint32_t GBufferId,
+      std::function<void(Buffer)> callback)
+  {
+    std::vector<unsigned char> token_data = 
+        _pimpl->CallAndWait<std::vector<unsigned char>> 
+        ("get_gbuffer_token", ActorId, GBufferId);
+    streaming::Token token;
+      std::memcpy(&token.data[0u], token_data.data(), token_data.size());
+    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+  }
+
   void Client::DrawDebugShape(const rpc::DebugShape &shape) {
     _pimpl->AsyncCall("draw_debug_shape", shape);
   }

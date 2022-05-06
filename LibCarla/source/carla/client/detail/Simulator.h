@@ -592,6 +592,11 @@ namespace detail {
 
     void UnSubscribeFromSensor(const Sensor &sensor);
 
+    void SubscribeToGBuffer(
+        Actor &actor,
+        uint32_t GBufferId,
+        std::function<void(SharedPtr<sensor::SensorData>)> callback);
+
     /// @}
     // =========================================================================
     /// @name Operations with traffic lights

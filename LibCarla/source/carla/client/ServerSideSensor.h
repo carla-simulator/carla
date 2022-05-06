@@ -26,6 +26,7 @@ namespace client {
     /// several instances of Sensor (even in different processes) may point to
     /// the same sensor in the simulator.
     void Listen(CallbackFunctionType callback) override;
+    void ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback);
 
     /// Stop listening for new measurements.
     void Stop() override;
