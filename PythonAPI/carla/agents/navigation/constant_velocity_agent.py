@@ -39,6 +39,7 @@ class ConstantVelocityAgent(BasicAgent):
         self._target_speed = target_speed / 3.6  # [m/s]
         self._current_speed = vehicle.get_velocity().length()  # [m/s]
         self._constant_velocity_stop_time = None
+        self._collision_sensor = None
 
         self._restart_time = float('inf')  # Time after collision before the constant velocity behavior starts again
 
@@ -54,7 +55,7 @@ class ConstantVelocityAgent(BasicAgent):
         self._set_constant_velocity(target_speed)
 
     def set_target_speed(self, speed):
-        """Changes the target speed of the agent"""
+        """Changes the target speed of the agent [km/h]"""
         self._target_speed = speed / 3.6
         self._local_planner.set_speed(speed)
 
@@ -121,3 +122,8 @@ class ConstantVelocityAgent(BasicAgent):
         blueprint = self._world.get_blueprint_library().find('sensor.other.collision')
         self._collision_sensor = self._world.spawn_actor(blueprint, carla.Transform(), attach_to=self._vehicle)
         self._collision_sensor.listen(lambda event: self.stop_constant_velocity())
+
+    def destroy_sensor(self):
+        if self._collision_sensor:
+            self._collision_sensor.destroy()
+            self._collision_sensor = None
