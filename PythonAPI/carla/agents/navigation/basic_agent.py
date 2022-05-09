@@ -219,7 +219,11 @@ class BasicAgent(object):
         self._ignore_vehicles = active
 
     def lane_change(self, direction, same_lane_time=0, other_lane_time=0, lane_change_time=2):
-        """Changes the path so that the vehicle performs a lane change"""
+        """
+        Changes the path so that the vehicle performs a lane change.
+        Use 'direction' to specify either a 'left' or 'right' lane change,
+        and the other 3 fine tune the maneuver
+        """
         speed = self._vehicle.get_velocity().length()
         path = self._generate_lane_change_path(
             self._map.get_waypoint(self._vehicle.get_location()),
@@ -231,6 +235,9 @@ class BasicAgent(object):
             1,
             self._sampling_resolution
         )
+        if not path:
+            print("WARNING: Ignoring the lane change as no path was found")
+
         self.set_global_plan(path)
 
     def _affected_by_traffic_light(self, lights_list=None, max_distance=None):
