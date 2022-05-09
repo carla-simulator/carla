@@ -462,6 +462,9 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
   GBufferView::FGBufferData GBuffer = {};
+  GBuffer.OwningActor = this;
+  GBuffer.ExpectedExtent = FIntPoint(GetImageWidth(), GetImageHeight());
+  GBuffer.DesiredMask = ~UINT64_C(0);
   CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
   FlushRenderingCommands();
 
@@ -493,7 +496,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   {
     auto Name = TextureNames[i];
     
-    if ((GBuffer.PresenceMask & (1U << i)) == 0)
+    if ((GBuffer.ExtractedMask & (UINT64_C(1) << i)) == 0)
     {
       UE_LOG(LogCarla, Log, TEXT("Skipping texture %s, since it's not being used in the current rendering mode."), Name);
       continue;
@@ -524,8 +527,9 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       continue;
     }
 
-    auto Extent = GBuffer.Extent;
+    auto Extent = GBuffer.TextureExtents[i];
     UE_LOG(LogCarla, Log, TEXT("Exporting %ux%u texture (Format=%u)..."), Extent.X, Extent.Y, (unsigned)RHITexture->GetFormat());
+    
     bool Result = ImageUtil::ExportAndVisit(RHITexture, Extent, [i, RHITexture, Name, Extent](auto&& Pixels)
     {
       using T = typename std::remove_reference_t<decltype(Pixels)>::ElementType;
@@ -551,20 +555,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
     }
   }
   ++Counter;
-
-	auto TMP = new GBufferView::FGBufferData();
-	*TMP = MoveTemp(GBuffer);
-	ENQUEUE_RENDER_COMMAND(FGBufferData_DestroyInRenderThread)(
-	[TMP](FRHICommandListImmediate& RHICmdList)
-	{
-		for (auto& PRT : TMP->GBufferTextures)
-		{
-			if (!PRT.IsValid())
-				continue;
-			PRT.SafeRelease();
-		}
-		delete TMP;
-	});
+  GBuffer.DestroyInRenderThread();
 }
 
 void ASceneCaptureSensor::BeginPlay()

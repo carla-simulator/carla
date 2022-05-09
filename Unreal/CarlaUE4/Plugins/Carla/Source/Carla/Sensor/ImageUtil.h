@@ -19,8 +19,8 @@ namespace ImageUtil
 
 
 
-    template <typename F>
-    bool ExportAndVisit(FRHITexture2D* Texture, FIntPoint Extent, F&& Visitor)
+    template <typename Function>
+    bool ExportAndVisit(FRHITexture2D* Texture, FIntPoint Extent, Function&& Visitor, FRenderCommandFence* Fence = nullptr)
     {
         switch (Texture->GetFormat())
         {
@@ -28,14 +28,14 @@ namespace ImageUtil
             case PF_FloatRGBA:
             {
                 TArray<FFloat16Color> Pixels;
-                ExportTexturePixels(Texture, Extent, Pixels, nullptr);
+                ExportTexturePixels(Texture, Extent, Pixels, Fence);
                 Visitor(MoveTemp(Pixels));
                 break;
             }
             case PF_A32B32G32R32F:
             {
                 TArray<FLinearColor> Pixels;
-                ExportTexturePixels(Texture, Extent, Pixels, nullptr);
+                ExportTexturePixels(Texture, Extent, Pixels, Fence);
                 Visitor(MoveTemp(Pixels));
                 break;
             }
@@ -46,14 +46,14 @@ namespace ImageUtil
             case PF_A16B16G16R16:
             {
                 TArray<FColor> Pixels;
-                ExportTexturePixels(Texture, Extent, Pixels, nullptr);
+                ExportTexturePixels(Texture, Extent, Pixels, Fence);
                 Visitor(MoveTemp(Pixels));
                 break;
             }
             /* case PF_DepthStencil:
             {
                 TArray<FLinearColor> Pixels;
-                ExportTexturePixels(Texture, Extent, Pixels, nullptr);
+                ExportTexturePixels(Texture, Extent, Pixels, Fence);
                 Visitor(MoveTemp(Pixels));
                 break;
             } */
