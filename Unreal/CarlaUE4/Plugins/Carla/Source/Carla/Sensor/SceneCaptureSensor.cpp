@@ -11,7 +11,7 @@
 
 #include "Async/Async.h"
 #include "Components/DrawFrustumComponent.h"
-#include "Components/SceneCaptureComponent2D.h"
+#include "UE4_Overridden/SceneCaptureComponent_CARLA.h"
 #include "Components/StaticMeshComponent.h"
 #include "ContentStreaming.h"
 #include "Engine/Classes/Engine/Scene.h"
@@ -65,7 +65,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
 
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
+  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D_CARLA>(
       FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
   CaptureComponent2D->SetupAttachment(RootComponent);
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
@@ -462,7 +462,8 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
   GBufferView::FGBufferData GBuffer = {};
-  GBuffer.OwningActor = this;
+  GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
+  check(GBuffer.OwningActor != nullptr);
   GBuffer.ExpectedExtent = FIntPoint(GetImageWidth(), GetImageHeight());
   GBuffer.DesiredMask = ~UINT64_C(0);
   CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);

@@ -9,10 +9,10 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
 #include "Runtime/RenderCore/Public/RenderCommandFence.h"
+#include "UE4_Overridden/SceneCaptureComponent_CARLA.h"
 #include "SceneCaptureSensor.generated.h"
 
 class UDrawFrustumComponent;
-class USceneCaptureComponent2D;
 class UStaticMeshComponent;
 class UTextureRenderTarget2D;
 
@@ -314,7 +314,7 @@ protected:
 
   /// Scene capture component.
   UPROPERTY(EditAnywhere)
-  USceneCaptureComponent2D *CaptureComponent2D = nullptr;
+  USceneCaptureComponent2D_CARLA *CaptureComponent2D = nullptr;
 
   UPROPERTY(EditAnywhere)
   float TargetGamma = 2.4f;
