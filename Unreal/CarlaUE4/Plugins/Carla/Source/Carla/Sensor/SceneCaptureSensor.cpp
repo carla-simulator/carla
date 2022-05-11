@@ -65,7 +65,7 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
 
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D_CARLA>(
+  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
       FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
   CaptureComponent2D->SetupAttachment(RootComponent);
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
@@ -541,7 +541,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       }
       TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
       ImageTask->PixelData = MakeUnique<TImagePixelData<T>>(Extent, TArray64<T>(MoveTemp(Pixels)));
-      ImageTask->Filename = FString::Printf(TEXT("C:\\carla-screenshots\\%u-%s.png"), Counter, Name);
+      ImageTask->Filename = FString::Printf(TEXT("M:\\carla-screenshots\\%u-%s.png"), Counter, Name);
       ImageTask->Format = EImageFormat::PNG;
       ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
       ImageTask->bOverwriteFile = true;

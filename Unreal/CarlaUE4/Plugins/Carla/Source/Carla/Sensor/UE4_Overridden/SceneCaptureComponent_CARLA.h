@@ -27,7 +27,7 @@ public:
 
     const AActor* ViewActor;
 
-	inline virtual const AActor* GetViewOwner() const override { return ViewActor; }
+	virtual const AActor* GetViewOwner() const override;
 };
 
 
@@ -42,7 +42,7 @@ public:
 
     const AActor* ViewActor;
 
-	inline virtual const AActor* GetViewOwner() const override { return ViewActor; }
+	virtual const AActor* GetViewOwner() const override;
 };
 
 
@@ -57,5 +57,5 @@ public:
 
     const AActor* ViewActor;
 
-	inline virtual const AActor* GetViewOwner() const override { return ViewActor; }
+	virtual const AActor* GetViewOwner() const override;
 };

@@ -7,12 +7,14 @@
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
-#include <string_view>
+#include <functional>
 
 
 
 namespace ImageUtil
 {
+    void ExportTextureDataAsync(FRHITexture2D* Texture, FIntPoint Extent, std::function<void(EPixelFormat, TArray<uint8>&&)> callback);
+
     void ExportTexturePixels(FRHITexture2D* Texture, FIntPoint Extent, TArray<FColor>& OutPixels, FRenderCommandFence* Fence = nullptr);
     void ExportTexturePixels(FRHITexture2D* Texture, FIntPoint Extent, TArray<FLinearColor>& OutPixels, FRenderCommandFence* Fence = nullptr);
     void ExportTexturePixels(FRHITexture2D* Texture, FIntPoint Extent, TArray<FFloat16Color>& OutPixels, FRenderCommandFence* Fence = nullptr);
