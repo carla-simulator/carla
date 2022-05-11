@@ -17,7 +17,7 @@ class FObjectInitializer;
 
 
 
-UCLASS(abstract, hidecategories=(Collision, Object, Physics, SceneComponent, Mobility))
+UCLASS(hidecategories=(Collision, Object, Physics, SceneComponent, Mobility))
 class CARLA_API USceneCaptureComponent_CARLA : public USceneCaptureComponent
 {
 	GENERATED_BODY()
@@ -32,7 +32,7 @@ public:
 
 
 
-UCLASS(abstract, hidecategories=(Collision, Object, Physics, SceneComponent, Mobility))
+UCLASS(hidecategories=(Collision, Object, Physics, SceneComponent, Mobility))
 class CARLA_API USceneCaptureComponent2D_CARLA : public USceneCaptureComponent2D
 {
 	GENERATED_BODY()
@@ -47,7 +47,7 @@ public:
 
 
 
-UCLASS(abstract, hidecategories=(Collision, Object, Physics, SceneComponent, Mobility))
+UCLASS(hidecategories=(Collision, Object, Physics, SceneComponent, Mobility))
 class CARLA_API USceneCaptureComponentCube_CARLA : public USceneCaptureComponentCube
 {
 	GENERATED_BODY()

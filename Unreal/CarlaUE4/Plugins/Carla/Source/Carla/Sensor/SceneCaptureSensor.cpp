@@ -65,8 +65,10 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureRenderTarget->AddressX = TextureAddress::TA_Clamp;
   CaptureRenderTarget->AddressY = TextureAddress::TA_Clamp;
 
-  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D>(
-      FName(*FString::Printf(TEXT("SceneCaptureComponent2D_%d"), SCENE_CAPTURE_COUNTER)));
+  CaptureComponent2D = CreateDefaultSubobject<USceneCaptureComponent2D_CARLA>(
+      FName(*FString::Printf(TEXT("USceneCaptureComponent2D_CARLA_%d"), SCENE_CAPTURE_COUNTER)));
+  check(CaptureComponent2D != nullptr);
+  CaptureComponent2D->ViewActor = this;
   CaptureComponent2D->SetupAttachment(RootComponent);
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
 
@@ -530,18 +532,12 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
 
     auto Extent = GBuffer.TextureExtents[i];
     UE_LOG(LogCarla, Log, TEXT("Exporting %ux%u texture (Format=%u)..."), Extent.X, Extent.Y, (unsigned)RHITexture->GetFormat());
-    
-    bool Result = ImageUtil::ExportAndVisit(RHITexture, Extent, [i, RHITexture, Name, Extent](auto&& Pixels)
+    bool Result = ImageUtil::ExportAndVisit(RHITexture, Extent, [i, Name, Extent](auto&& Pixels)
     {
       using T = typename std::remove_reference_t<decltype(Pixels)>::ElementType;
-      if (i == 0)
-      {
-        for (auto& e : Pixels)
-          e.A = 255;
-      }
       TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
       ImageTask->PixelData = MakeUnique<TImagePixelData<T>>(Extent, TArray64<T>(MoveTemp(Pixels)));
-      ImageTask->Filename = FString::Printf(TEXT("M:\\carla-screenshots\\%u-%s.png"), Counter, Name);
+      ImageTask->Filename = FString::Printf(TEXT("C:\\carla-screenshots\\%u-%s.png"), Counter, Name);
       ImageTask->Format = EImageFormat::PNG;
       ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
       ImageTask->bOverwriteFile = true;
@@ -549,11 +545,6 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
       check(HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask)).Get());
     });
-
-    if (!Result)
-    {
-      UE_LOG(LogCarla, Log, TEXT("Failed to export texture %s, since it's pixel format is PF_DepthStencil."), Name);
-    }
   }
   ++Counter;
   GBuffer.DestroyInRenderThread();
