@@ -37,6 +37,7 @@ namespace rpc {
     Dynamic      =  20u,
     Water        =  21u,
     Terrain      =  22u,
+    Parking      =  23u,
     Any          =  0xFF
   };
 

@@ -41,6 +41,7 @@ namespace detail {
         {170u, 120u,  50u}, // dynamic       =  20u,
         { 45u,  60u, 150u}, // water         =  21u,
         {145u, 170u, 100u}, // terrain       =  22u,
+        {142u,   0u,   0u}, // parking       =  23u,
         // {  0u,   0u,  70u}, // truck
         // {  0u,   0u,  90u}, // caravan
         // {  0u,   0u, 110u}, // trailer
