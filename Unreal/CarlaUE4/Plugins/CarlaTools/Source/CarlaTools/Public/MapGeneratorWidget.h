@@ -101,7 +101,10 @@ public:
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
-  void LandscapePostEditEvent(ALandscape* Landscaoe);
+  void LandscapePostEditEvent(ALandscape* Landscape);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  bool DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaInfo& MetaInfo);
 
 private:  
   /// Loads the base tile map and stores it in @a WorldAssetData
@@ -119,6 +122,9 @@ private:
   /// The funtion returns true is success, otherwise false
   UFUNCTION()
   bool LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath);
+
+  UFUNCTION()
+  bool LoadWorldByName(FAssetData& WorldAssetData, const FString& BaseMapPath, const FString& MapName);
 
   /// Loads a bunch of world objects located in @a BaseMapPath and 
   /// returns them in @a WorldAssetsData.
