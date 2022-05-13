@@ -27,6 +27,7 @@ namespace cg = carla::geom;
 using ActorId = carla::ActorId;
 using ActorPtr = carla::SharedPtr<cc::Actor>;
 using JunctionID = carla::road::JuncId;
+using Junction = carla::SharedPtr<carla::client::Junction>;
 using SimpleWaypointPtr = std::shared_ptr<SimpleWaypoint>;
 using Buffer = std::deque<SimpleWaypointPtr>;
 using BufferMap = std::unordered_map<carla::ActorId, Buffer>;
