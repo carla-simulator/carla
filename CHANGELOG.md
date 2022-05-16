@@ -1,7 +1,10 @@
 ## Latest
 
   * Added failure state to vehicles, which can be retrieved by using `Vehicle.get_failure_state()`. Only Rollover failure state is currently supported.
+  * Fixed bug causing the TM to block the simulation when another client teleported a vehicle with no physics.
+  * Added check to avoid adding procedural trigger boxes inside intersections.
   * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
+  * Python agents now have a function to lane change.
   * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
   * Added new ConstantVelocityAgent
   * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
