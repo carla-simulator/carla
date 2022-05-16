@@ -162,6 +162,13 @@ void export_actor() {
     .value("All", cr::VehicleDoor::All)
   ;
 
+  enum_<cr::VehicleFailureState>("VehicleFailureState")
+    .value("NONE", cr::VehicleFailureState::None)
+    .value("Rollover", cr::VehicleFailureState::Rollover)
+    .value("Engine", cr::VehicleFailureState::Engine)
+    .value("TirePuncture", cr::VehicleFailureState::TirePuncture)
+  ;
+
   class_<cc::Vehicle, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Vehicle>>("Vehicle",
       no_init)
       .def("apply_control", &cc::Vehicle::ApplyControl, (arg("control")))
@@ -186,6 +193,7 @@ void export_actor() {
       .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
       .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
+      .def("get_failure_state", &cc::Vehicle::GetFailureState)
       .def(self_ns::str(self_ns::self))
   ;
 
