@@ -134,8 +134,6 @@ def extract_masks(im, category_ids, combine_twowheeled=False, twowheeled_as_pede
             if np.sum(extract_obj_binary) > 0:
                 contours, _ = cv2.findContours(extract_obj_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
                 # TBD: Support partial occlusion using IoU of segmentation mask area and 3d bounding boxes from carla projected into 2d space
-                if len(contours) > 1:
-                    is_crowd = 1
                 if label == carla_labels.index("TrafficLight"):
                     # Treat TrafficLight differently as we want to only extract lights (do not include poles)
                     for contour in contours:
