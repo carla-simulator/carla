@@ -1,5 +1,8 @@
 ## Latest
 
+  * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.
+  * Fixed bug causing the `Vehicle.get_traffic_light_state()` function not notify about the green to yellow and yellow to red light state changes.
+  * Fixed bug causing the `Vehicle.is_at_traffic_light()` function to return *false* if the traffic light was green.
   * Fixed bug causing the TM to block the simulation when another client teleported a vehicle with no physics.
   * Added check to avoid adding procedural trigger boxes inside intersections.
   * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
