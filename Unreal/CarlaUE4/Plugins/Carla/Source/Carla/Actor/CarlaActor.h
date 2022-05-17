@@ -243,6 +243,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -472,6 +477,8 @@ public:
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
 
+  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&) final;
+
   virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
 
   virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor DoorIdx) final;
@@ -594,7 +601,7 @@ public:
   virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
 
   virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) final;
-  
+
   virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) final;
 
   virtual ECarlaServerResponse BlendPose(float Blend);

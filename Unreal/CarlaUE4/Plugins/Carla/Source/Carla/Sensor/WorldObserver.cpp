@@ -61,6 +61,9 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
           state.vehicle_data.has_traffic_light = false;
         }
       }
+      // Get the failure state by checking the rollover one as it is the only one currently implemented.
+      // This will have to be expanded once more states are added
+      state.vehicle_data.failure_state = Vehicle->GetFailureState();
     }
   }
 
