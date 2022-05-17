@@ -10,6 +10,8 @@
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "UObject/UObjectGlobals.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include "PhysXPublic.h"
 #include "PhysXVehicleManager.h"
@@ -41,9 +43,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
-
-  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
-
+  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent")); 
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -197,6 +197,25 @@ void ACarlaWheeledVehicle::BeginPlay()
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
   }
+
+  //InitFoliagePool();
+}
+
+void ACarlaWheeledVehicle::UpdateSphereOverlap()
+{
+  //TODO (luis): sphere overlap
+  const TArray<TEnumAsByte< EObjectTypeQuery >>ToCollide { UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic) };
+  TArray<AActor*> ToIgnore;
+  GetOwner()->GetAllChildActors(ToIgnore, true);
+  ToIgnore.Add(GetOwner());
+
+  UKismetSystemLibrary::SphereOverlapActors(GetWorld(),
+ 			GetActorLocation(),
+ 			SphereRadius,
+ 			ToCollide,
+ 			nullptr,
+ 			ToIgnore,
+ 			SphereOverlappedActors);
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -526,6 +545,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
           GetVehicleMovement());
     check(Vehicle4W != nullptr);
 
+    
+
     // Engine Setup
     Vehicle4W->EngineSetup.TorqueCurve.EditorCurveData = PhysicsControl.TorqueCurve;
     Vehicle4W->EngineSetup.MaxRPM = PhysicsControl.MaxRPM;
@@ -732,6 +753,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
+  
 }
 
 void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)
