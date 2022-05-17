@@ -2682,6 +2682,9 @@ Enables or disables the usage of CarSim vs terrain file specified in the `.simfi
 - <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the control applied in the last tick. The method does not call the simulator.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
+- <a name="carla.Vehicle.get_failure_state"></a>**<font color="#7fb800">get_failure_state</font>**(<font color="#00a6ed">**self**</font>)  
+Vehicle have failure states, to  indicate that it is incapable of continuing its route. This function returns the vehicle's specific failure state, or in other words, the cause that resulted in it.  
+    - **Return:** _[carla.VehicleFailureState](#carla.VehicleFailureState)_  
 - <a name="carla.Vehicle.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a flag representing the vehicle light state, this represents which lights are active or not.  
     - **Return:** _[carla.VehicleLightState](#carla.VehicleLightState)_  
@@ -2782,6 +2785,17 @@ Back left door.
 Back right door.  
 - <a name="carla.VehicleDoor.All"></a>**<font color="#f8805a">All</font>**  
 Represents all doors.  
+
+---
+
+## carla.VehicleFailureState<a name="carla.VehicleFailureState"></a>
+Enum containing the different failure states of a vehicle, from which the it cannot recover. These are returned by __<font color="#7fb800">get_failure_state()</font>__ and only Rollover is currently implemented.  
+
+### Instance Variables
+- <a name="carla.VehicleFailureState.NONE"></a>**<font color="#f8805a">NONE</font>**  
+- <a name="carla.VehicleFailureState.Rollover"></a>**<font color="#f8805a">Rollover</font>**  
+- <a name="carla.VehicleFailureState.Engine"></a>**<font color="#f8805a">Engine</font>**  
+- <a name="carla.VehicleFailureState.TirePuncture"></a>**<font color="#f8805a">TirePuncture</font>**  
 
 ---
 

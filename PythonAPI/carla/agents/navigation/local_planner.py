@@ -40,7 +40,7 @@ class LocalPlanner(object):
     unless a given global plan has already been specified.
     """
 
-    def __init__(self, vehicle, opt_dict={}):
+    def __init__(self, vehicle, opt_dict={}, map_inst=None):
         """
         :param vehicle: actor to apply to local planner logic onto
         :param opt_dict: dictionary of arguments with different parameters:
@@ -53,10 +53,18 @@ class LocalPlanner(object):
             max_brake: maximum brake applied to the vehicle
             max_steering: maximum steering applied to the vehicle
             offset: distance between the route waypoints and the center of the lane
+        :param map_inst: carla.Map instance to avoid the expensive call of getting it.
         """
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
-        self._map = self._world.get_map()
+        if map_inst:
+            if isinstance(map_inst, carla.Map):
+                self._map = map_inst
+            else:
+                print("Warning: Ignoring the given map as it is not a 'carla.Map'")
+                self._map = self._world.get_map()
+        else:
+            self._map = self._world.get_map()
 
         self._vehicle_controller = None
         self.target_waypoint = None
