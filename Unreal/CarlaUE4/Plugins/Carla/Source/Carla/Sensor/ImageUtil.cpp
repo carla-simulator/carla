@@ -1,86 +1,94 @@
-#include "ImageUtil.h"
-#include "Async/Async.h"
-#include "CoreMinimal.h"
-#include "ImageUtils.h"
+#include "Carla/Sensor/ImageUtil.h"
+#include "Runtime/RHI/Public/RHISurfaceDataConversion.h"
 #include <thread>
 
 
 
 namespace ImageUtil
 {
-    void ExportTextureDataAsync(FRHITexture2D* Texture, FIntPoint Extent, std::function<void(EPixelFormat, TArray<uint8>&&)> Callback)
+    TArray<FColor> ExtractTexturePixelsFromReadback(
+		FRHIGPUTextureReadback* Readback,
+        FIntPoint SourceExtent,
+        FIntPoint DestinationExtent,
+		EPixelFormat Format)
     {
-        ENQUEUE_RENDER_COMMAND(ExportPixels_FFloat16Color)(
-            [Texture, Extent, Callback = std::move(Callback)](FRHICommandListImmediate& RHICmdList)
-            {
-                auto Format = Texture->GetFormat();
-                auto ReadBack = new FRHIGPUTextureReadback(TEXT("ExportTextureReadBack"));
-                ReadBack->EnqueueCopy(RHICmdList, Texture, FResolveRect(0, 0, Extent.X, Extent.Y));
-                RHICmdList.Transition(FRHITransitionInfo(Texture, ERHIAccess::CopySrc, ERHIAccess::Present));
-                AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [Extent, Format, ReadBack, Callback = std::move(Callback)]
-                {
-                    while (!ReadBack->IsReady())
-                        std::this_thread::yield();
-                    auto PixelFormat = GPixelFormats[Format];
-                    TArray<uint8> Buffer;
-                    Buffer.AddUninitialized(Extent.X * Extent.Y * PixelFormat.BlockSizeX * PixelFormat.BlockSizeY);
-                    auto Data = ReadBack->Lock(Buffer.Num());
-                    FMemory::Memcpy(Buffer.GetData(), Data, Buffer.Num());
-                    ReadBack->Unlock();
-                    Callback(Format, MoveTemp(Buffer));
-                });
-            }
-        );
-    }
-
-    void ExportTexturePixels(FRHITexture2D* Texture, FIntPoint Extent, TArray<FFloat16Color>& OutPixels, FRenderCommandFence* Fence)
-    {
-        ENQUEUE_RENDER_COMMAND(ExportPixels_FFloat16Color)(
-            [Texture, Extent, &OutPixels, Fence](FRHICommandListImmediate& RHICmdList)
-            {
-                auto Rect = FIntRect(0, 0, Extent.X, Extent.Y);
-                RHICmdList.ReadSurfaceFloatData(Texture, Rect, OutPixels, FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-                if (Fence != nullptr)
-                    Fence->BeginFence();
-            }
-        );
+        TArray<FColor> Result;
+        check(Readback->IsReady());
         
-        if (Fence == nullptr)
-            FlushRenderingCommands();
+        auto FormatInfo = GPixelFormats[Format];
+        auto BlockSizeX = FormatInfo.BlockSizeX;
+        auto BlockSizeY = FormatInfo.BlockSizeY;
+        auto BlockBytes = FormatInfo.BlockBytes;
+        auto OutPixelCount = DestinationExtent.X * DestinationExtent.Y;
+	    Result.AddUninitialized(OutPixelCount);
+        
+        void* MappedPtr;
+        int32 SourcePitch;
+        Readback->LockTexture(FRHICommandListExecutor::GetImmediateCommandList(), MappedPtr, SourcePitch);
+		check(MappedPtr != nullptr);
+        auto Data = (uint8*)MappedPtr;
+		SourcePitch *= BlockBytes;
+
+        switch (Format)
+        {
+	        case PF_FloatRGBA:
+	        	for (int32 Y = 0; Y < DestinationExtent.Y; Y++)
+	        	{
+	        		auto SrcPtr = (FFloat16Color*)(Data + Y * SourcePitch);
+	        		auto DestPtr = Result.GetData() + Y * DestinationExtent.X;
+	        		for (int32 X = 0; X < DestinationExtent.X; X++)
+	        		{
+	        			*DestPtr = FLinearColor((float)SrcPtr->R, (float)SrcPtr->G, (float)SrcPtr->B, (float)SrcPtr->A).ToFColor(true);
+	        			++SrcPtr;
+	        			++DestPtr;
+	        		}
+	        	}
+	        	break;
+            case PF_R16F:
+				ConvertRawR16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+	        	break;
+	        case PF_R8G8B8A8:
+				ConvertRawR8G8B8A8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+				break;
+	        case PF_B8G8R8A8:
+				ConvertRawB8G8R8A8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+				break;
+	        case PF_A2B10G10R10:
+				ConvertRawR10G10B10A2DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+	        	break;
+	        case PF_R16G16B16A16_UNORM:
+	        case PF_R16G16B16A16_SNORM:
+				ConvertRawR16G16B16A16FDataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
+	        	break;
+	        case PF_FloatR11G11B10:
+				ConvertRawR11G11B10DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
+	        	break;
+	        case PF_R32G32B32A32_UINT:
+				ConvertRawR32G32B32A32DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
+	        	break;
+	        case PF_X24_G8:
+				ConvertRawR24G8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), FReadSurfaceDataFlags());
+	        	break;
+	        case PF_R32_FLOAT:
+				ConvertRawR32DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), FReadSurfaceDataFlags());
+	        	break;
+	        case PF_R16G16B16A16_UINT:
+	        case PF_R16G16B16A16_SINT:
+				ConvertRawR16G16B16A16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+	        	break;
+			case PF_R16G16_UINT:
+				ConvertRawR16G16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+	        	break;
+            case PF_G8:
+                UE_LOG(LogCarla, Warning, TEXT("PING"));
+				ConvertRawR8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+	        	break;
+	        default:
+                UE_LOG(LogCarla, Warning, TEXT("Unsupported format %llu"), (unsigned long long)Format);
+                check(false);
+                break;
+        }
+
+        return Result;
     }
-
-    void ExportTexturePixels(FRHITexture2D* Texture, FIntPoint Extent, TArray<FLinearColor>& OutPixels, FRenderCommandFence* Fence)
-    {
-        ENQUEUE_RENDER_COMMAND(ExportPixels_FLinearColor)(
-            [Texture, Extent, &OutPixels, Fence](FRHICommandListImmediate& RHICmdList)
-            {
-                auto Rect = FIntRect(0, 0, Extent.X, Extent.Y);
-                RHICmdList.ReadSurfaceData(Texture, Rect, OutPixels, FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
-                if (Fence != nullptr)
-                    Fence->BeginFence();
-            }
-        );
-
-        if (Fence == nullptr)
-            FlushRenderingCommands();
-    }
-
-    void ExportTexturePixels(FRHITexture2D* Texture, FIntPoint Extent, TArray<FColor>& OutPixels, FRenderCommandFence* Fence)
-    {
-        ENQUEUE_RENDER_COMMAND(ExportPixels_FColor)(
-            [Texture, Extent, &OutPixels, Fence](FRHICommandListImmediate& RHICmdList)
-            {
-                auto Rect = FIntRect(0, 0, Extent.X, Extent.Y);
-                RHICmdList.ReadSurfaceData(Texture, Rect, OutPixels, FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
-
-                if (Fence != nullptr)
-                    Fence->BeginFence();
-            }
-        );
-
-        if (Fence == nullptr)
-            FlushRenderingCommands();
-    }
-
 }

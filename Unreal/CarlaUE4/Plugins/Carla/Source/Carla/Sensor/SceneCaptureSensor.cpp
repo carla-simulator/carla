@@ -6,12 +6,11 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
-
 #include "Carla/Game/CarlaStatics.h"
+#include "ImageUtil.h"
 
 #include "Async/Async.h"
 #include "Components/DrawFrustumComponent.h"
-#include "UE4_Overridden/SceneCaptureComponent_CARLA.h"
 #include "Components/StaticMeshComponent.h"
 #include "ContentStreaming.h"
 #include "Engine/Classes/Engine/Scene.h"
@@ -20,9 +19,11 @@
 #include "HighResScreenshot.h"
 #include "Misc/CoreDelegates.h"
 #include "RHICommandList.h"
-#include "ImageUtil.h"
-
 #include "Runtime/Renderer/Public/GBufferView.h"
+
+#include <mutex>
+#include <atomic>
+#include <thread>
 
 static auto SCENE_CAPTURE_COUNTER = 0u;
 
@@ -463,91 +464,67 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
-  GBufferView::FGBufferData GBuffer = {};
-  GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
-  check(GBuffer.OwningActor != nullptr);
-  GBuffer.ExpectedExtent = FIntPoint(GetImageWidth(), GetImageHeight());
-  GBuffer.DesiredMask = ~UINT64_C(0);
-  CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
+  auto GBuffer = new GBufferView::FGBufferData();
+  GBuffer->OwningActor = CaptureComponent2D->GetViewOwner();
+  GBuffer->DesiredTexturesMask = UINT64_MAX ^ 2;
+  for (auto& Payload : GBuffer->Payloads)
+    Payload.Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
+  CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
   FlushRenderingCommands();
 
   static size_t Counter = 0;
+  auto CounterValue = Counter;
+  ++Counter;
 
-  if (!GBuffer.CouldCaptureGBuffer)
+  AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [CounterValue, GBuffer]
   {
-      UE_LOG(LogCarla, Warning, TEXT("Could not capture GBuffer."));
-      return;
-  }
-
-  static constexpr const TCHAR* TextureNames[] =
-  {
-    TEXT("SceneColor"),
-    TEXT("SceneDepth"),
-    TEXT("GBufferA"),
-    TEXT("GBufferB"),
-    TEXT("GBufferC"),
-    TEXT("GBufferD"),
-    TEXT("GBufferE"),
-    TEXT("GBufferF"),
-    TEXT("Velocity"),
-    TEXT("SSAO")
-  };
-
-  static_assert(sizeof(TextureNames) / sizeof(TextureNames[0]) == GBufferView::FGBufferData::TextureCount, "");
-
-  for (size_t i = 0; i != GBufferView::FGBufferData::TextureCount; ++i)
-  {
-    auto Name = TextureNames[i];
-    
-    if ((GBuffer.ExtractedMask & (UINT64_C(1) << i)) == 0)
+    static constexpr const TCHAR* TextureNames[] =
     {
-      UE_LOG(LogCarla, Log, TEXT("Skipping texture %s, since it's not being used in the current rendering mode."), Name);
-      continue;
-    }
+      TEXT("SceneColor"),
+      TEXT("SceneDepth"),
+      TEXT("GBufferA"),
+      TEXT("GBufferB"),
+      TEXT("GBufferC"),
+      TEXT("GBufferD"),
+      TEXT("GBufferE"),
+      TEXT("GBufferF"),
+      TEXT("Velocity"),
+      TEXT("SSAO")
+    };
 
-    auto& PRT = GBuffer.GBufferTextures[i];
+    static_assert(sizeof(TextureNames) / sizeof(TextureNames[0]) == GBufferView::TextureCount, "");
 
-    if (!PRT.IsValid())
+    for (size_t i = 0; i != GBufferView::TextureCount; ++i)
     {
-      UE_LOG(LogCarla, Warning, TEXT("Attempted to save a null IPooledRenderTarget with FPixelReader::SavePixelsToDisk."));
-      continue;
-    }
-    
-    auto& RT = PRT->GetRenderTargetItem();
-    if (!RT.IsValid())
-    {
-      UE_LOG(LogCarla, Warning, TEXT("Attempted to save a null FSceneRenderTargetItem with FPixelReader::SavePixelsToDisk."));
-      continue;
-    }
-
-    auto RHITexture = RT.TargetableTexture->GetTexture2D();
-    if (RHITexture == nullptr)
-      RHITexture = RT.ShaderResourceTexture->GetTexture2D();
-
-    if (RHITexture == nullptr)
-    {
-      UE_LOG(LogCarla, Warning, TEXT("Attempted to save a null FRHITexture with FPixelReader::SavePixelsToDisk."));
-      continue;
-    }
-
-    auto Extent = GBuffer.TextureExtents[i];
-    UE_LOG(LogCarla, Log, TEXT("Exporting %ux%u texture (Format=%u)..."), Extent.X, Extent.Y, (unsigned)RHITexture->GetFormat());
-    bool Result = ImageUtil::ExportAndVisit(RHITexture, Extent, [i, Name, Extent](auto&& Pixels)
-    {
-      using T = typename std::remove_reference_t<decltype(Pixels)>::ElementType;
-      TUniquePtr<FImageWriteTask> ImageTask = MakeUnique<FImageWriteTask>();
-      ImageTask->PixelData = MakeUnique<TImagePixelData<T>>(Extent, TArray64<T>(MoveTemp(Pixels)));
-      ImageTask->Filename = FString::Printf(TEXT("C:\\carla-screenshots\\%u-%s.png"), Counter, Name);
+      auto Name = TextureNames[i];
+      if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) == 0)
+      {
+        UE_LOG(LogCarla, Log, TEXT("Skipping unrequested texture %s..."), Name);
+        continue;
+      }
+      auto& Payload = GBuffer->Payloads[i];
+      auto Readback = Payload.Readback.Get();
+      check(Readback != nullptr);
+      while (!Readback->IsReady())
+        std::this_thread::yield();
+      auto Extent = Payload.Extent;
+      auto InternalExtent = Payload.InternalExtent;
+      auto Format = Payload.Format;
+      check(Format != PF_Unknown);
+      UE_LOG(LogCarla, Log, TEXT("Attempting to export %s texture (Extent = %ux%u, Format=%u, Frame=%u)..."), Name, Extent.X, Extent.Y, (unsigned)Format, CounterValue);
+      auto Pixels = ImageUtil::ExtractTexturePixelsFromReadback(Readback, InternalExtent, Extent, Format);
+      auto ImageTask = MakeUnique<FImageWriteTask>();
+      ImageTask->PixelData = MakeUnique<TImagePixelData<FColor>>(Extent, TArray64<FColor>(MoveTemp(Pixels)));
+      ImageTask->Filename = FString::Printf(TEXT("M:\\carla-screenshots\\%u-%s.png"), CounterValue, Name);
       ImageTask->Format = EImageFormat::PNG;
       ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
       ImageTask->bOverwriteFile = true;
-      ImageTask->PixelPreProcessors.Add(TAsyncAlphaWrite<T>(255));
+      ImageTask->PixelPreProcessors.Add(TAsyncAlphaWrite<FColor>(255));
       FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
       check(HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask)).Get());
-    });
-  }
-  ++Counter;
-  GBuffer.DestroyInRenderThread();
+    }
+    delete GBuffer;
+  });
 }
 
 void ASceneCaptureSensor::BeginPlay()

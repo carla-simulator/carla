@@ -8,7 +8,6 @@
 
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
-#include "Runtime/RenderCore/Public/RenderCommandFence.h"
 #include "UE4_Overridden/SceneCaptureComponent_CARLA.h"
 #include "SceneCaptureSensor.generated.h"
 
