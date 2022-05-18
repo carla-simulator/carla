@@ -489,23 +489,21 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
             if (Path.Contains("Plant"))
               continue;
 
-          FTransform transform;
-          Mesh->GetInstanceTransform(i, transform, false);
+          FTransform OriginalTransform;
+          Mesh->GetInstanceTransform(i, OriginalTransform, false);
           FSphereInMesh sim;
           sim.ComponentID = Mesh->GetUniqueID();
           sim.InstanceIndex = i;
-          sim.OriginalTransform = transform;
+          sim.OriginalTransform = OriginalTransform;
           if (!IsMeshInList(sim))
           {
-            sim.SpawnedActor = SpawnFoliage(transform, Path);
+            FTransform HideTransform {OriginalTransform};
+            HideTransform.SetLocation({0.0f, 0.0f, -1000000.0f});
+            sim.SpawnedActor = SpawnFoliage(OriginalTransform, HideTransform, Path);
             if (sim.SpawnedActor)
             {
               bool added = AddElementToList(sim);
-              FTransform aux {transform};
-              aux.SetLocation({0.0f, 0.0f, -1000000.0f});
-              Mesh->UpdateInstanceTransform(i, aux);
-              if (added)
-                GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::White, FString::Printf(TEXT("Added element to Array")));
+              Mesh->UpdateInstanceTransform(i, HideTransform);
             }
           }
         }
@@ -514,7 +512,7 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
   }
 
   UFUNCTION()
-  AActor* SpawnFoliage(const FTransform& transform, FString Path)
+  AActor* SpawnFoliage(const FTransform& OriginalTransform, const FTransform& HideTransform, const FString& Path)
   {
     TArray< FString > ParsedString;
     Path.ParseIntoArray(ParsedString, TEXT("/"), false);
@@ -550,9 +548,12 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
       SpawnedClass = *CastedBlueprint->GeneratedClass;
       GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "BP Class found: " + FullClassPath);
 
-      AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(SpawnedClass, transform.GetLocation(), transform.Rotator());
-      if (SpawnScale > 0.01f)
+      AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(SpawnedClass, HideTransform.GetLocation(), HideTransform.Rotator());
+      if (SpawnScale > 1.001f || SpawnScale < 0.999f)
         SpawnedActor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
+      else
+        SpawnedActor->SetActorScale3D(OriginalTransform.GetScale3D());
+      SpawnedActor->SetActorLocation(OriginalTransform.GetLocation());
       return SpawnedActor;
     }
     return nullptr;
@@ -570,14 +571,12 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
         {
           if (element.ComponentID == Mesh->GetUniqueID())
           {
-            GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Found instance in Array")));
             const float DistanceToOriginalMesh = GetDistanceToInstancedMesh(element.OriginalTransform);
             if (DistanceToOriginalMesh > SphereRadius)
             {
               Mesh->UpdateInstanceTransform(element.InstanceIndex, element.OriginalTransform);
               element.SpawnedActor->Destroy();
               element = FSphereInMesh();
-              GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Deleted element from Array")));
             }
           }
         }
