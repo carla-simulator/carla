@@ -28,6 +28,7 @@
   * Added post process effects for rainy and dusty weathers.
   * Switched data type of the dust storm weather parameter from bool to float.
   * Check for the version of the installed Clang compiler during build.
+  * Added support for retrieving CarlaActor's ID from instance segmentation camera, enabling associating instance labels with bounding boxes, vehicles' type, etc.
 
 ## CARLA 0.9.13
 
