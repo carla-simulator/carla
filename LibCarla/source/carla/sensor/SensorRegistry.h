@@ -47,8 +47,8 @@ class ASemanticSegmentationCamera;
 class AInstanceSegmentationCamera;
 class ARssSensor;
 class FWorldObserver;
-class FCameraGBufferUint8;
-class FCameraGBufferFloat;
+struct FCameraGBufferUint8;
+struct FCameraGBufferFloat;
 
 namespace carla {
 namespace sensor {

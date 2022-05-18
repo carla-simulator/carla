@@ -2033,11 +2033,63 @@ void FCarlaServer::FPimpl::BindActions()
         ECarlaServerResponse::ActorTypeMismatch,
         " Actor Id: " + FString::FromInt(ActorId));
     }
-    // switch case GBufferId
-    const auto &Token = Sensor->CameraGBuffers.SceneColor.GetToken();
-    std::vector<unsigned char> TokenData(std::begin(Token.data), std::end(Token.data));
-    // const auto &Token = Sensor->GetToken();
-    return TokenData;
+
+    switch (GBufferId)
+    {
+      case 0:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SceneColor.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 1:
+      {
+        const auto &Token = Sensor->CameraGBuffers.SceneDepth.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 2:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferA.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 3:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferB.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 4:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferC.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 5:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferD.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 6:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferE.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 7:
+      {
+        const auto &Token = Sensor->CameraGBuffers.GBufferF.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 8:
+      {
+        const auto &Token = Sensor->CameraGBuffers.Velocity.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      case 9:
+      {
+        const auto &Token = Sensor->CameraGBuffers.AmbientOclusion.GetToken();
+        return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
+      }
+      default:
+        UE_LOG(LogCarla, Error, TEXT("Requested invalid GBuffer ID %u"), GBufferId);
+        return {};
+    }
   };
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

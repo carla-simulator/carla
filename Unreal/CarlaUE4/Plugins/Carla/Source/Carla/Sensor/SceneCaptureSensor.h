@@ -379,6 +379,8 @@ public:
     FCameraGBufferUint8 GBufferB;
     FCameraGBufferUint8 GBufferC;
     FCameraGBufferUint8 GBufferD;
+    FCameraGBufferUint8 GBufferE;
+    FCameraGBufferUint8 GBufferF;
     FCameraGBufferFloat Velocity;
     FCameraGBufferFloat AmbientOclusion;
   } CameraGBuffers;
@@ -420,7 +422,5 @@ protected:
   /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
-
-  FRenderCommandFence RenderFence;
 
 };

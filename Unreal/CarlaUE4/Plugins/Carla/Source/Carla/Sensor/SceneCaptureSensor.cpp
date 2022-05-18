@@ -8,7 +8,7 @@
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "ImageUtil.h"
-
+/*
 #include "Async/Async.h"
 #include "Components/DrawFrustumComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -19,7 +19,8 @@
 #include "HighResScreenshot.h"
 #include "Misc/CoreDelegates.h"
 #include "RHICommandList.h"
-#include "Runtime/Renderer/Public/GBufferView.h"
+*/
+#include "Renderer/Public/GBufferView.h"
 
 #include <mutex>
 #include <atomic>
