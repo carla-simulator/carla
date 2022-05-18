@@ -335,6 +335,8 @@ void export_world() {
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
     .def("get_names_of_all_objects", CALL_RETURNING_LIST(cc::World, GetNamesOfAllObjects))
+    .def("set_instance_tagging_style", &cc::World::SetInstanceTaggingStyle, (arg("style")="internal_id"))
+    .def("get_instance_tagging_style", &cc::World::GetInstanceTaggingStyle)
     .def("apply_color_texture_to_object", &cc::World::ApplyColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
     .def("apply_float_color_texture_to_object", &cc::World::ApplyFloatColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
     .def("apply_textures_to_object", &cc::World::ApplyTexturesToObject, (arg("object_name"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))

@@ -172,11 +172,6 @@ void ACarlaGameModeBase::BeginPlay()
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
   ReadyToRegisterObjects = true;
 
-  if (true) { /// @todo If semantic segmentation enabled.
-    ATagger::TagActorsInLevel(*World, true);
-    TaggerDelegate->SetSemanticSegmentationEnabled();
-  }
-
   // HACK: fix transparency see-through issues
   // The problem: transparent objects are visible through walls.
   // This is due to a weird interaction between the SkyAtmosphere component,
@@ -192,6 +187,11 @@ void ACarlaGameModeBase::BeginPlay()
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+
+  if (true) { /// @todo If semantic segmentation enabled.
+    ATagger::TagActorsInLevel(*World, *Episode, true, bTagForInstanceSegmentation);
+    TaggerDelegate->SetSemanticSegmentationEnabled();
+  }
 
   if (Episode->Weather != nullptr)
   {
@@ -231,6 +231,16 @@ void ACarlaGameModeBase::BeginPlay()
     }
   }
   EnableOverlapEvents();
+}
+
+void ACarlaGameModeBase::SetTaggingStyle(bool InTagForInstanceSegmentation)
+{
+  UWorld* World = GetWorld();
+  check(World != nullptr);
+
+  // Re-tag actors in the current episode
+  bTagForInstanceSegmentation = InTagForInstanceSegmentation;
+  ATagger::TagActorsInLevel(*World, GetCarlaEpisode(), true, bTagForInstanceSegmentation);
 }
 
 TArray<FString> ACarlaGameModeBase::GetNamesOfAllActors()
@@ -757,7 +767,7 @@ void ACarlaGameModeBase::OnLoadStreamLevel()
   if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
   {
     RegisterEnvironmentObjects();
-    ATagger::TagActorsInLevel(*GetWorld(), true);
+    ATagger::TagActorsInLevel(*GetWorld(), GetCarlaEpisode(), true);
   }
 }
 

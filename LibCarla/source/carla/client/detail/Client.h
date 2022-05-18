@@ -119,6 +119,10 @@ namespace detail {
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 
+    void SetInstanceTaggingStyle(const std::string &style);
+
+    std::string GetInstanceTaggingStyle();
+
     rpc::EpisodeInfo GetEpisodeInfo();
 
     rpc::MapInfo GetMapInfo();

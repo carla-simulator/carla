@@ -230,6 +230,10 @@ namespace client {
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 
+  void SetInstanceTaggingStyle(const std::string &style);
+
+  std::string GetInstanceTaggingStyle();
+
   private:
 
     detail::EpisodeProxy _episode;

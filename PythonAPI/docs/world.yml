@@ -875,6 +875,20 @@
       doc: >
         Returns a list of the names of all objects in the scene that can be painted with the apply texture functions.
     # --------------------------------------
+    - def_name: set_instance_tagging_style
+      params:
+      - param_name: style
+        type: str
+        doc: >
+          Sets the style for tagging actors, which affects the results from [Instance segmentation camera](https://carla.readthedocs.io/en/latest/ref_sensors/#instance-segmentation-camera). Value can be either `actor_id` (meshes are colored by Carla's actor ID) or `internal_id` (meshes are colored by Unreal's internal ID).  __Default is `internal_id`__.
+      note: >
+        Should be used after all actors are spawned. `actor_id` can match other information of the actors, e.g., bounding boxes and vehicle types.
+    # --------------------------------------
+    - def_name: get_instance_tagging_style
+      return: str
+      doc: >
+        Returns the current style used for tagging actors. 
+    # --------------------------------------
     - def_name: __str__
       return:
         string
@@ -956,7 +970,7 @@
         doc: >
           Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
-        Draws a box, ussually to act for object colliders. 
+        Draws a box, usually to act for object colliders. 
         
     # --------------------------------------
     - def_name: draw_line

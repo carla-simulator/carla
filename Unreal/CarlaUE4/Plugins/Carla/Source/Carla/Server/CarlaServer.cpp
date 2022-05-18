@@ -430,6 +430,45 @@ void FCarlaServer::FPimpl::BindActions()
     return NamesStd;
   };
 
+  BIND_SYNC(set_instance_tagging_style) << [this](const std::string &style) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    bool bTagForInstanceSegmentation = false;
+    if (style == "actor_id") 
+    {
+      bTagForInstanceSegmentation = true;
+    } 
+    else if (style != "internal_id")
+    {
+      RESPOND_ERROR("instance tagging style can be either \"internal_id\" or \"actor_id\"");
+    }
+    GameMode->SetTaggingStyle(bTagForInstanceSegmentation);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_instance_tagging_style) << [this]() -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    if (!GameMode)
+    {
+      RESPOND_ERROR("unable to find CARLA game mode");
+    }
+    if (GameMode->GetTaggingStyle())
+    {
+      return "actor_id";
+    } 
+    else
+    {
+      return "internal_id";
+    }
+  };
+
   // ~~ Episode settings and info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(get_episode_info) << [this]() -> R<cr::EpisodeInfo>

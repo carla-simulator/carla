@@ -112,6 +112,13 @@ public:
 
   TArray<FString> GetNamesOfAllActors();
 
+  UFUNCTION(Exec, Category = "CARLA Game Mode")
+  void SetTaggingStyle(bool bForInstanceSegmentation);
+
+  bool GetTaggingStyle() const {
+    return bTagForInstanceSegmentation;
+  }
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -186,6 +193,8 @@ private:
   int PendingLevelsToUnLoad = 0;
 
   bool ReadyToRegisterObjects = false;
+
+  bool bTagForInstanceSegmentation = false;
 
   // We keep a global uuid to allow the load/unload layer methods to be called
   // in the same tick

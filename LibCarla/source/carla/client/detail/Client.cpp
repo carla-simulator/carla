@@ -182,6 +182,14 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
   }
 
+  void Client::SetInstanceTaggingStyle(const std::string &style) {
+    _pimpl->CallAndWait<void>("set_instance_tagging_style", style);
+  }
+
+  std::string Client::GetInstanceTaggingStyle() {
+    return _pimpl->CallAndWait<std::string>("get_instance_tagging_style");
+  }
+
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
     return _pimpl->CallAndWait<rpc::EpisodeInfo>("get_episode_info");
   }

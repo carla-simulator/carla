@@ -435,6 +435,14 @@ namespace detail {
       _client.SetActorEnableGravity(actor.GetId(), enabled);
     }
 
+    void SetInstanceTaggingStyle(const std::string &style) {
+      _client.SetInstanceTaggingStyle(style);
+    }
+
+    std::string GetInstanceTaggingStyle() {
+      return _client.GetInstanceTaggingStyle();
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with vehicles

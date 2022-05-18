@@ -327,6 +327,14 @@ namespace client {
     return _episode.Lock()->GetNamesOfAllObjects();
   }
 
+  void World::SetInstanceTaggingStyle(const std::string &style) {
+    _episode.Lock()->SetInstanceTaggingStyle(style);
+  }
+
+  std::string World::GetInstanceTaggingStyle() {
+   return _episode.Lock()->GetInstanceTaggingStyle();
+  }
+
   void World::ApplyTexturesToObject(
       const std::string &object_name,
       const rpc::TextureColor& diffuse_texture,
