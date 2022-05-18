@@ -301,7 +301,7 @@ class BehaviorAgent(BasicAgent):
                 self._behavior.max_speed,
                 self._speed_limit - self._behavior.speed_lim_dist])
             self._local_planner.set_speed(target_speed)
-        control = self._local_planner.run_step(debug=debug)
+            control = self._local_planner.run_step(debug=debug)
 
         return control
 
