@@ -14,8 +14,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
 
-#include <boost/variant/apply_visitor.hpp>
-
 AWalkerController::AWalkerController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -166,23 +164,18 @@ void AWalkerController::GetPoseFromAnimation()
   SkeletalMesh->SnapshotPose(WalkerAnim->Snap);
 }
 
-void AWalkerController::ControlTickVisitor::operator()(const FWalkerControl &WalkerControl)
-{
-  auto *Character = Controller->GetCharacter();
-  if (!Character) return;
-
-  Character->AddMovementInput(WalkerControl.Direction,
-        WalkerControl.Speed / Controller->GetMaximumWalkSpeed());
-  if (WalkerControl.Jump)
-  {
-    Character->Jump();
-  }
-}
-
 void AWalkerController::Tick(float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AWalkerController::Tick);
   Super::Tick(DeltaSeconds);
-  AWalkerController::ControlTickVisitor ControlTickVisitor(this);
-  boost::apply_visitor(ControlTickVisitor, Control);
+
+  auto *Character = GetCharacter();
+  if (!Character) return;
+
+  Character->AddMovementInput(Control.Direction,
+        Control.Speed / GetMaximumWalkSpeed());
+  if (Control.Jump)
+  {
+    Character->Jump();
+  }
 }

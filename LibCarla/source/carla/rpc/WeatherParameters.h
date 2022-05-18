@@ -43,6 +43,7 @@ namespace rpc {
     static WeatherParameters SoftRainNight;
     static WeatherParameters MidRainyNight;
     static WeatherParameters HardRainNight;
+    static WeatherParameters DustStorm;
 
     /// @}
 
@@ -61,7 +62,8 @@ namespace rpc {
         float in_wetness,
         float in_scattering_intensity,
         float in_mie_scattering_scale,
-        float in_rayleigh_scattering_scale)
+        float in_rayleigh_scattering_scale,
+        float in_dust_storm)
       : cloudiness(in_cloudiness),
         precipitation(in_precipitation),
         precipitation_deposits(in_precipitation_deposits),
@@ -74,7 +76,8 @@ namespace rpc {
         wetness(in_wetness),
         scattering_intensity(in_scattering_intensity),
         mie_scattering_scale(in_mie_scattering_scale),
-        rayleigh_scattering_scale(in_rayleigh_scattering_scale) {}
+        rayleigh_scattering_scale(in_rayleigh_scattering_scale),
+        dust_storm(in_dust_storm) {}
 
     float cloudiness = 0.0f;
     float precipitation = 0.0f;
@@ -89,6 +92,7 @@ namespace rpc {
     float scattering_intensity = 0.0f;
     float mie_scattering_scale = 0.0f;
     float rayleigh_scattering_scale = 0.0331f;
+    float dust_storm = 0.0f;
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
 
@@ -105,7 +109,8 @@ namespace rpc {
         wetness(Weather.Wetness),
         scattering_intensity(Weather.ScatteringIntensity),
         mie_scattering_scale(Weather.MieScatteringScale),
-        rayleigh_scattering_scale(Weather.RayleighScatteringScale) {}
+        rayleigh_scattering_scale(Weather.RayleighScatteringScale),
+        dust_storm(Weather.DustStorm) {}
 
     operator FWeatherParameters() const {
       FWeatherParameters Weather;
@@ -122,7 +127,7 @@ namespace rpc {
       Weather.ScatteringIntensity = scattering_intensity;
       Weather.MieScatteringScale = mie_scattering_scale;
       Weather.RayleighScatteringScale = rayleigh_scattering_scale;
-
+      Weather.DustStorm = dust_storm;
       return Weather;
     }
 
@@ -142,7 +147,8 @@ namespace rpc {
           wetness != rhs.wetness ||
           scattering_intensity != rhs.scattering_intensity ||
           mie_scattering_scale != rhs.mie_scattering_scale ||
-          rayleigh_scattering_scale != rhs.rayleigh_scattering_scale;
+          rayleigh_scattering_scale != rhs.rayleigh_scattering_scale ||
+          dust_storm != rhs.dust_storm;
     }
 
     bool operator==(const WeatherParameters &rhs) const {
@@ -162,7 +168,8 @@ namespace rpc {
         wetness,
         scattering_intensity,
         mie_scattering_scale,
-        rayleigh_scattering_scale);
+        rayleigh_scattering_scale,
+        dust_storm);
   };
 
 } // namespace rpc

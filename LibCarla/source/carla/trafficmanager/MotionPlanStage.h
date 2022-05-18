@@ -22,7 +22,7 @@ using TLMap = std::unordered_map<std::string, SharedPtr<client::Actor>>;
 class MotionPlanStage: Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
-  const SimulationState &simulation_state;
+  SimulationState &simulation_state;
   const Parameters &parameters;
   const BufferMap &buffer_map;
   TrackTraffic &track_traffic;
@@ -42,7 +42,7 @@ private:
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
-  RandomGeneratorMap &random_devices;
+  RandomGenerator &random_device;
   const LocalMapPtr &local_map;
   TLMap tl_map;
 
@@ -70,7 +70,7 @@ private:
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
-                  const SimulationState &simulation_state,
+                  SimulationState &simulation_state,
                   const Parameters &parameters,
                   const BufferMap &buffer_map,
                   TrackTraffic &track_traffic,
@@ -83,7 +83,7 @@ public:
                   const TLFrame &tl_frame,
                   const cc::World &world,
                   ControlFrame &output_array,
-                  RandomGeneratorMap &random_devices,
+                  RandomGenerator &random_device,
                   const LocalMapPtr &local_map);
 
   void Update(const unsigned long index);

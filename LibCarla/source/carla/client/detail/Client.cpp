@@ -10,11 +10,13 @@
 #include "carla/Version.h"
 #include "carla/client/FileTransfer.h"
 #include "carla/client/TimeoutException.h"
+#include "carla/rpc/AckermannControllerSettings.h"
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/BoneTransformDataIn.h"
 #include "carla/rpc/Client.h"
 #include "carla/rpc/DebugShape.h"
 #include "carla/rpc/Response.h"
+#include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerBoneControlIn.h"
@@ -405,7 +407,7 @@ namespace detail {
   }
 
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
-    _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
+    _pimpl->CallAndWait<void>("set_actor_simulate_physics", actor, enabled);
   }
 
   void Client::SetActorEnableGravity(rpc::ActorId actor, const bool enabled) {
@@ -422,6 +424,19 @@ namespace detail {
 
   void Client::ApplyControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleControl &control) {
     _pimpl->AsyncCall("apply_control_to_vehicle", vehicle, control);
+  }
+
+  void Client::ApplyAckermannControlToVehicle(rpc::ActorId vehicle, const rpc::VehicleAckermannControl &control) {
+    _pimpl->AsyncCall("apply_ackermann_control_to_vehicle", vehicle, control);
+  }
+
+  rpc::AckermannControllerSettings Client::GetAckermannControllerSettings(
+      rpc::ActorId vehicle) const {
+    return _pimpl->CallAndWait<carla::rpc::AckermannControllerSettings>("get_ackermann_controller_settings", vehicle);
+  }
+
+  void Client::ApplyAckermannControllerSettings(rpc::ActorId vehicle, const rpc::AckermannControllerSettings &settings) {
+    _pimpl->AsyncCall("apply_ackermann_controller_settings", vehicle, settings);
   }
 
   void Client::EnableCarSim(rpc::ActorId vehicle, std::string simfile_path) {
@@ -593,6 +608,10 @@ namespace detail {
 
   void Client::UpdateServerLightsState(std::vector<rpc::LightState>& lights, bool discard_client) const {
     _pimpl->AsyncCall("update_lights_state", _pimpl->endpoint, std::move(lights), discard_client);
+  }
+
+  void Client::UpdateDayNightCycle(const bool active) const {
+    _pimpl->AsyncCall("update_day_night_cycle", _pimpl->endpoint, active);
   }
 
   std::vector<geom::BoundingBox> Client::GetLevelBBs(uint8_t queried_tag) const {

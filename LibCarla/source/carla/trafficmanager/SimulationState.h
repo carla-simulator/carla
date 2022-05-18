@@ -21,6 +21,7 @@ struct KinematicState {
   float speed_limit;
   bool physics_enabled;
   bool is_dormant;
+  cg::Location hybrid_end_location;
 };
 using KinematicStateMap = std::unordered_map<ActorId, KinematicState>;
 
@@ -71,9 +72,13 @@ public :
 
   void UpdateKinematicState(ActorId actor_id, KinematicState state);
 
+  void UpdateKinematicHybridEndLocation(ActorId actor_id, cg::Location location);
+
   void UpdateTrafficLightState(ActorId actor_id, TrafficLightState state);
 
   cg::Location GetLocation(const ActorId actor_id) const;
+
+  cg::Location GetHybridEndLocation(const ActorId actor_id) const;
 
   cg::Rotation GetRotation(const ActorId actor_id) const;
 
