@@ -1973,7 +1973,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
-    if (CarlaActor)
+    if (!CarlaActor)
     {
       return RespondError(
           "get_light_boxes",
@@ -2004,6 +2004,40 @@ void FCarlaServer::FPimpl::BindActions()
           static_cast<uint8>(carla::rpc::CityObjectLabel::TrafficLight));
       return MakeVectorFromTArray<cg::BoundingBox>(Result);
     }
+  };
+
+  // ~~ GBuffer tokens ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  BIND_SYNC(get_gbuffer_token) << [this](const cr::ActorId ActorId, uint32_t GBufferId) -> R<std::vector<unsigned char>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor)
+    {
+      return RespondError(
+          "get_gbuffer_token",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "get_gbuffer_token",
+          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ASceneCaptureSensor* Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());
+    if (!Sensor)
+    {
+      return RespondError(
+        "get_gbuffer_token",
+        ECarlaServerResponse::ActorTypeMismatch,
+        " Actor Id: " + FString::FromInt(ActorId));
+    }
+    // switch case GBufferId
+    const auto &Token = Sensor->CameraGBuffers.SceneColor.GetToken();
+    std::vector<unsigned char> TokenData(std::begin(Token.data), std::end(Token.data));
+    // const auto &Token = Sensor->GetToken();
+    return TokenData;
   };
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

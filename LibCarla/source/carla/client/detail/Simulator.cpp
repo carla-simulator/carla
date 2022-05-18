@@ -378,6 +378,18 @@ namespace detail {
           cb(std::move(data));
         });
   }
+  
+  void Simulator::SubscribeToGBuffer(
+      Actor &actor,
+      uint32_t GBufferId,
+      std::function<void(SharedPtr<sensor::SensorData>)> callback) {
+    _client.SubscribeToGBuffer(actor.GetId(), GBufferId,
+        [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
+          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          data->_episode = ep.TryLock();
+          cb(std::move(data));
+        });
+  }
 
   void Simulator::UnSubscribeFromSensor(const Sensor &sensor) {
     _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());

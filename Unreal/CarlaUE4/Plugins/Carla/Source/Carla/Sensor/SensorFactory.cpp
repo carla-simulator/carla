@@ -10,6 +10,7 @@
 #include "Carla/Game/CarlaGameInstance.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/SceneCaptureSensor.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/sensor/SensorRegistry.h>
@@ -136,6 +137,11 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     Sensor->SetEpisode(*Episode);
     Sensor->Set(Description);
     Sensor->SetDataStream(GameInstance->GetServer().OpenStream());
+    ASceneCaptureSensor * SceneCaptureSensor = Cast<ASceneCaptureSensor>(Sensor);
+    if(SceneCaptureSensor)
+    {
+      SceneCaptureSensor->CameraGBuffers.SceneColor.SetDataStream(GameInstance->GetServer().OpenStream());
+    }
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);
   return FActorSpawnResult{Sensor};

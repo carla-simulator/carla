@@ -26,6 +26,8 @@
 #include "carla/sensor/s11n/ObstacleDetectionEventSerializer.h"
 #include "carla/sensor/s11n/RadarSerializer.h"
 #include "carla/sensor/s11n/SemanticLidarSerializer.h"
+#include "carla/sensor/s11n/GBufferUint8Serializer.h"
+#include "carla/sensor/s11n/GBufferFloatSerializer.h"
 
 // 2. Add a forward-declaration of the sensor here.
 class ACollisionSensor;
@@ -45,6 +47,8 @@ class ASemanticSegmentationCamera;
 class AInstanceSegmentationCamera;
 class ARssSensor;
 class FWorldObserver;
+class FCameraGBufferUint8;
+class FCameraGBufferFloat;
 
 namespace carla {
 namespace sensor {
@@ -73,7 +77,9 @@ namespace sensor {
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
-    std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>
+    std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
+    std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
+    std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>
   >;
 
 } // namespace sensor

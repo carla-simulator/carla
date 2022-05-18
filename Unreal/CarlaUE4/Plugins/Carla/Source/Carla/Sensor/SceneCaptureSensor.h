@@ -15,6 +15,81 @@ class UDrawFrustumComponent;
 class UStaticMeshComponent;
 class UTextureRenderTarget2D;
 
+
+struct FCameraGBufferUint8
+{
+  /// Prevent this sensor to be spawned by users.
+  using not_spawnable = void;
+
+  void SetDataStream(FDataStream InStream)
+  {
+    Stream = std::move(InStream);
+  }
+
+  /// Replace the Stream associated with this sensor.
+  void SetStream(FDataMultiStream InStream)
+  {
+    Stream = std::move(InStream);
+  }
+  /// Return the token that allows subscribing to this sensor's stream.
+  auto GetToken() const
+  {
+    return Stream.GetToken();
+  }
+  /// Dummy. Required for compatibility with other sensors only.
+  FTransform GetActorTransform() const
+  {
+    return {};
+  }
+  /// Return the FDataStream associated with this sensor.
+  ///
+  /// You need to provide a reference to self, this is necessary for template
+  /// deduction.
+  template <typename SensorT>
+  FAsyncDataStream GetDataStream(const SensorT &Self)
+  {
+    return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
+  }
+  FDataStream Stream;
+};
+
+struct FCameraGBufferFloat
+{
+  /// Prevent this sensor to be spawned by users.
+  using not_spawnable = void;
+
+  void SetDataStream(FDataStream InStream)
+  {
+    Stream = std::move(InStream);
+  }
+
+  /// Replace the Stream associated with this sensor.
+  void SetStream(FDataMultiStream InStream)
+  {
+    Stream = std::move(InStream);
+  }
+  /// Return the token that allows subscribing to this sensor's stream.
+  auto GetToken() const
+  {
+    return Stream.GetToken();
+  }
+  /// Dummy. Required for compatibility with other sensors only.
+  FTransform GetActorTransform() const
+  {
+    return {};
+  }
+  /// Return the FDataStream associated with this sensor.
+  ///
+  /// You need to provide a reference to self, this is necessary for template
+  /// deduction.
+  template <typename SensorT>
+  FAsyncDataStream GetDataStream(const SensorT &Self)
+  {
+    return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
+  }
+  FDataStream Stream;
+};
+
 /// Base class for sensors using a USceneCaptureComponent2D for rendering the
 /// scene. This class does not capture data, use
 /// `FPixelReader::SendPixelsInRenderThread(*this)` in derived classes.
@@ -295,6 +370,18 @@ public:
     TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::WaitForRenderThreadToFinsih);
     // FlushRenderingCommands();
   }
+
+  struct
+  {
+    FCameraGBufferUint8 SceneColor;
+    FCameraGBufferFloat SceneDepth;
+    FCameraGBufferFloat GBufferA;
+    FCameraGBufferUint8 GBufferB;
+    FCameraGBufferUint8 GBufferC;
+    FCameraGBufferUint8 GBufferD;
+    FCameraGBufferFloat Velocity;
+    FCameraGBufferFloat AmbientOclusion;
+  } CameraGBuffers;
 
 protected:
 
