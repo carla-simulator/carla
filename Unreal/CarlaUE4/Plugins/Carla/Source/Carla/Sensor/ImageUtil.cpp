@@ -38,7 +38,11 @@ namespace ImageUtil
 	        		auto DestPtr = Result.GetData() + Y * DestinationExtent.X;
 	        		for (int32 X = 0; X < DestinationExtent.X; X++)
 	        		{
-	        			*DestPtr = FLinearColor((float)SrcPtr->R, (float)SrcPtr->G, (float)SrcPtr->B, (float)SrcPtr->A).ToFColor(true);
+	        			*DestPtr = FLinearColor(
+							(float)SrcPtr->R,
+							(float)SrcPtr->G,
+							(float)SrcPtr->B,
+							(float)SrcPtr->A).ToFColor(true);
 	        			++SrcPtr;
 	        			++DestPtr;
 	        		}
@@ -88,6 +92,7 @@ namespace ImageUtil
                 check(false);
                 break;
         }
+		Readback->Unlock();
 
         return Result;
     }

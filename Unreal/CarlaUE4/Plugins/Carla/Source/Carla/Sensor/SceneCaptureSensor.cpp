@@ -466,18 +466,17 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
 
   auto GBuffer = new GBufferView::FGBufferData();
   GBuffer->OwningActor = CaptureComponent2D->GetViewOwner();
-  GBuffer->DesiredTexturesMask = UINT64_MAX ^ 2;
-  for (auto& Payload : GBuffer->Payloads)
-    Payload.Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
+  GBuffer->DesiredTexturesMask = 0b1011111101;
+    for (size_t i = 0; i != GBufferView::TextureCount; ++i)
+      if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
+        GBuffer->Payloads[i].Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
   CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
-  FlushRenderingCommands();
 
   static size_t Counter = 0;
   auto CounterValue = Counter;
   ++Counter;
 
-  AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [CounterValue, GBuffer]
-  {
+  AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [CounterValue, GBuffer] {
     static constexpr const TCHAR* TextureNames[] =
     {
       TEXT("SceneColor"),
@@ -499,7 +498,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       auto Name = TextureNames[i];
       if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) == 0)
       {
-        UE_LOG(LogCarla, Log, TEXT("Skipping unrequested texture %s..."), Name);
+        UE_LOG(LogCarla, Log, TEXT("Skipping ignored texture %s..."), Name);
         continue;
       }
       auto& Payload = GBuffer->Payloads[i];
@@ -513,6 +512,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       check(Format != PF_Unknown);
       UE_LOG(LogCarla, Log, TEXT("Attempting to export %s texture (Extent = %ux%u, Format=%u, Frame=%u)..."), Name, Extent.X, Extent.Y, (unsigned)Format, CounterValue);
       auto Pixels = ImageUtil::ExtractTexturePixelsFromReadback(Readback, InternalExtent, Extent, Format);
+      check(Pixels.Num() != 0);
       auto ImageTask = MakeUnique<FImageWriteTask>();
       ImageTask->PixelData = MakeUnique<TImagePixelData<FColor>>(Extent, TArray64<FColor>(MoveTemp(Pixels)));
       ImageTask->Filename = FString::Printf(TEXT("M:\\carla-screenshots\\%u-%s.png"), CounterValue, Name);
