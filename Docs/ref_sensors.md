@@ -803,8 +803,8 @@ The server provides an image with the tag information __encoded in the red chann
 ![ImageInstanceSegmentation](img/instance_tagging_options.png)
 
 Two styles for instance tagging can be selected via client.
-- The `actor_id` style colors objects using Carla's Actor ID, which can be retrieved from clients (e.g., Python API). This allows to match other information of the actors, e.g., the bounding boxes and vehicle types. The objects that are not managed by Carla (e.g., background buildings, plants)
-- The `internal_id` style provides a more detailed segmentation for each objects in the scene, where the color is coded using Unreal's internal 'UniqueID'. 
+- The `actor_id` style colors objects using Carla's Actor ID, which can be retrieved from clients (e.g., Python API). This allows to match other information of the actors, e.g., the bounding boxes and vehicle types. The objects that have no Actor ID (e.g., sky, buildings, plants) will be regarded as `ActorID = 0`.
+- The `internal_id` style provides a more detailed segmentation for each objects in the scene, where the color is coded using Unreal's internal ID.
 
 The tagging style can be toggled by following code.
 ```python
