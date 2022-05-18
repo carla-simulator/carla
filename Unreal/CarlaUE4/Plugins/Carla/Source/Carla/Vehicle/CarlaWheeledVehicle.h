@@ -81,6 +81,14 @@ struct FSphereInMesh
   FTransform OriginalTransform {FVector(0.0f, 0.0f, -1000000.0f)};
 };
 
+USTRUCT()
+struct FCacheBPClasses
+{
+  GENERATED_BODY()
+  FString Path;
+  TSubclassOf<AActor> SpawnedClass = nullptr;
+};
+
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
 class CARLA_API ACarlaWheeledVehicle : public AWheeledVehicle
@@ -393,6 +401,7 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
   TArray<AActor*> SphereOverlappedActors;
 
   TArray<FSphereInMesh> MeshesInSphere;
+  TArray<FCacheBPClasses> FoliageCache;
 
   UFUNCTION()
   const float GetDistanceToInstancedMesh(const FTransform& transform) const
@@ -428,6 +437,32 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
     }
     MeshesInSphere.Add(sim);
     return true;
+  }
+
+  UFUNCTION()
+  bool IsPathInCache(const FString& Path)
+  {
+    for (auto& element : FoliageCache)
+    {
+      if (element.Path == Path)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  UFUNCTION()
+  TSubclassOf<AActor> GetFromCache(const FString& Path)
+  {
+    for (auto& element : FoliageCache)
+    {
+      if (element.Path == Path)
+      {
+        return element.SpawnedClass;
+      }
+    }
+    return nullptr;
   }
 
   UFUNCTION()
@@ -514,49 +549,61 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
   UFUNCTION()
   AActor* SpawnFoliage(const FTransform& OriginalTransform, const FTransform& HideTransform, const FString& Path)
   {
-    TArray< FString > ParsedString;
-    Path.ParseIntoArray(ParsedString, TEXT("/"), false);
-    int Position = ParsedString.Num() - 1;
-    const FString Version = ParsedString[Position];
-    --Position;
-    const FString Folder = ParsedString[Position];
-    ++Position;
-    const FString FullVersion = GetVersionFromFString(Version);
-    if (FullVersion.IsEmpty())
+    TSubclassOf<AActor> SpawnedClass = nullptr;
+    if (IsPathInCache(Path))
     {
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("FAILED TO GET THE VERSION")));
+      SpawnedClass = GetFromCache(Path);
+      if (SpawnedClass == nullptr)
+        return nullptr;      
+    }
+    else
+    {
+      TArray< FString > ParsedString;
+      Path.ParseIntoArray(ParsedString, TEXT("/"), false);
+      int Position = ParsedString.Num() - 1;
+      const FString Version = ParsedString[Position];
+      --Position;
+      const FString Folder = ParsedString[Position];
+      ++Position;
+      const FString FullVersion = GetVersionFromFString(Version);
+      if (FullVersion.IsEmpty())
+      {
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("FAILED TO GET THE VERSION")));
+        FoliageCache.Add({Path, nullptr});
+        return nullptr;
+      }
+      FString ClassPath = "BP_" + Folder + FullVersion;
+      FString FullClassPath = "Blueprint'";
+      for (int i = 0; i < Position; ++i)
+      {
+        FullClassPath += ParsedString[i];
+        FullClassPath += '/';
+      }
+      FullClassPath += ClassPath;
+      FullClassPath += ".";
+      FullClassPath += ClassPath;
+      FullClassPath += "'";
+    
+
+      
+      UObject* LoadedObject = StaticLoadObject(UObject::StaticClass(), nullptr, *FullClassPath);    
+      UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);            
+      if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
+      {
+        SpawnedClass = *CastedBlueprint->GeneratedClass;
+        FoliageCache.Add({Path, SpawnedClass});
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "BP Class found: " + FullClassPath);
+      }
+    }
+    if (SpawnedClass == nullptr)
       return nullptr;
-    }
-    FString ClassPath = "BP_" + Folder + FullVersion;
-    FString FullClassPath = "Blueprint'";
-    for (int i = 0; i < Position; ++i)
-    {
-      FullClassPath += ParsedString[i];
-      FullClassPath += '/';
-    }
-    FullClassPath += ClassPath;
-    FullClassPath += ".";
-    FullClassPath += ClassPath;
-    FullClassPath += "'";
-   
-
-    TSubclassOf<AActor> SpawnedClass;
-    UObject* LoadedObject = StaticLoadObject(UObject::StaticClass(), nullptr, *FullClassPath);    
-    UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);            
-    if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
-    {
-      SpawnedClass = *CastedBlueprint->GeneratedClass;
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "BP Class found: " + FullClassPath);
-
-      AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(SpawnedClass, HideTransform.GetLocation(), HideTransform.Rotator());
-      if (SpawnScale > 1.001f || SpawnScale < 0.999f)
-        SpawnedActor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
-      else
-        SpawnedActor->SetActorScale3D(OriginalTransform.GetScale3D());
-      SpawnedActor->SetActorLocation(OriginalTransform.GetLocation());
-      return SpawnedActor;
-    }
-    return nullptr;
+    AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(SpawnedClass, HideTransform.GetLocation(), HideTransform.Rotator());
+    if (SpawnScale > 1.001f || SpawnScale < 0.999f)
+      SpawnedActor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
+    else
+      SpawnedActor->SetActorScale3D(OriginalTransform.GetScale3D());
+    SpawnedActor->SetActorLocation(OriginalTransform.GetLocation());
+    return SpawnedActor;
   }
 
   UFUNCTION(BlueprintCallable)
