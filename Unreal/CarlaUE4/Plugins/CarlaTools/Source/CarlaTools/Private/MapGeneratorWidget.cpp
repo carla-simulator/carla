@@ -261,12 +261,65 @@ bool UMapGeneratorWidget::LoadWorldByName(FAssetData& WorldAssetData, const FStr
 
 bool UMapGeneratorWidget::DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaInfo& MetaInfo)
 {
-  for(int i = 0; i < MetaInfo.SizeX; i++)
-  {
-    for(int j = 0; j < MetaInfo.SizeY; j++)
-    {
-      const FString MapName = 
-            MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+  // for(int i = 0; i < MetaInfo.SizeX; i++)
+  // {
+  //   for(int j = 0; j < MetaInfo.SizeY; j++)
+  //   {
+  //     const FString MapName = 
+  //           MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+  //     const FString WorldSearchPath = MetaInfo.DestinationPath + "/" + MapName + "." + MapName;
+
+  //     UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Heightmap to %s"), 
+  //         *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
+
+  //     UWorld* PreWorld = LoadObject<UWorld>(nullptr, *WorldSearchPath);
+  //     if(PreWorld == nullptr){
+  //       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error Finding pre-world in: %s"), 
+  //           *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
+  //           return false;
+  //     }
+
+  //     UPackage* ReloadedPackage = ReloadPackage(PreWorld->GetPackage(), ELoadFlags::LOAD_EditorOnly);
+      
+  //     UWorld* World = LoadObject<UWorld>(ReloadedPackage, *WorldSearchPath);
+  //     if(World == nullptr){
+  //       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error Finding world in: %s"), 
+  //           *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
+  //           return false;
+  //     }
+
+  //     // Actor count
+  //     TArray<AActor*> ActorsInWorld;
+  //     UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInWorld);
+
+  //     ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
+  //         World, 
+  //         ALandscape::StaticClass());
+  //     FMapGeneratorTileMetaInfo MetaTileInfo;
+  //     MetaTileInfo.IndexX = i;
+  //     MetaTileInfo.IndexY = j;
+  //     if (Landscape == nullptr)
+  //           UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No landscape found in tile %s %d_%d ------- Actors found: %d"), 
+  //               *CUR_CLASS_FUNC_LINE, *World->GetName(), MetaTileInfo.IndexX, MetaTileInfo.IndexY, ActorsInWorld.Num());
+
+  //     // Landscape->ComponentSizeQuads = 126;
+  //     // Landscape->SubsectionSizeQuads = 63;
+  //     // Landscape->NumSubsections = 4;
+  //     // UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Landscape info %d %d %d"), 
+  //     //       *CUR_CLASS_FUNC_LINE, Landscape->ComponentSizeQuads, Landscape->SubsectionSizeQuads, Landscape->NumSubsections);
+
+  //     AssignLandscapeHeightMap(Landscape, MetaTileInfo);
+
+  //     const FString PackageName = MetaInfo.DestinationPath + "/" + MapName;
+  //     const FString PackageFileName = FPackageName::LongPackageNameToFilename(
+  //         PackageName, 
+  //         FPackageName::GetMapPackageExtension());
+  //     UPackage::SavePackage(World->GetPackage(), World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+  //         *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  //   }
+  // }
+
+      const FString MapName = MetaInfo.MapName;
       const FString WorldSearchPath = MetaInfo.DestinationPath + "/" + MapName + "." + MapName;
 
       UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Heightmap to %s"), 
@@ -296,8 +349,8 @@ bool UMapGeneratorWidget::DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaI
           World, 
           ALandscape::StaticClass());
       FMapGeneratorTileMetaInfo MetaTileInfo;
-      MetaTileInfo.IndexX = i;
-      MetaTileInfo.IndexY = j;
+      // MetaTileInfo.IndexX = i;
+      // MetaTileInfo.IndexY = j;
       if (Landscape == nullptr)
             UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No landscape found in tile %s %d_%d ------- Actors found: %d"), 
                 *CUR_CLASS_FUNC_LINE, *World->GetName(), MetaTileInfo.IndexX, MetaTileInfo.IndexY, ActorsInWorld.Num());
@@ -316,8 +369,6 @@ bool UMapGeneratorWidget::DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaI
           FPackageName::GetMapPackageExtension());
       UPackage::SavePackage(World->GetPackage(), World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
           *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-    }
-  }
 
   return true;
 }
@@ -495,6 +546,24 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
       // Landscape Material
 
+      // Height Render Target
+      UTextureRenderTarget2D* HeightRT = MetaInfo.GlobalHeightmap;
+      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Heightmap detected with dimensions %dx%d"), 
+            *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
+      TArray<uint16> HeightData;
+      FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
+      FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
+      // FIntRect Rect = FIntRect(0, 0, FMath::Min(1 + MaxX - MinX, HeightRT->SizeX), FMath::Min(1 + MaxY - MinY, HeightRT->SizeY));
+      TArray<FLinearColor> HeightmapColor;
+      HeightmapColor.Reserve(Rect.Width() * Rect.Height());
+      RenderTargetResource->ReadLinearColorPixels(HeightmapColor, FReadSurfaceDataFlags(RCM_MinMax, CubeFace_MAX), Rect);
+      HeightData.Reserve(HeightmapColor.Num());
+
+      for(FLinearColor LinearColor : HeightmapColor)
+      {
+        HeightData.Add((uint16)LinearColor.R);
+      }
+
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
@@ -502,12 +571,12 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       TMap<FGuid, TArray<uint16>> HeightmapDataPerLayers;
 	    TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayer;
 
-      TArray<uint16> HeightData;
-      HeightData.Init(0, 4033*4033);
+      // TArray<uint16> HeightData;
+      // HeightData.Init(0, 4033*4033);
       HeightmapDataPerLayers.Add(FGuid(), HeightData);
       MaterialLayerDataPerLayer.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
 	
-      Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, 4033-1, 4033-1, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
+      Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, HeightRT->SizeX-1, HeightRT->SizeY-1, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
           HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
 
 

@@ -37,6 +37,9 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
+
+  UPROPERTY(BlueprintReadWrite)
+  UTextureRenderTarget2D* GlobalHeightmap;
 };
 
 /// Struct used as container of basic tile information
@@ -74,6 +77,10 @@ public:
   /// @a metaTileInfo contains some useful info to execute this function
   UFUNCTION(BlueprintImplementableEvent)
   void AssignLandscapeHeightMap(ALandscape* Landscape, FMapGeneratorTileMetaInfo TileMetaInfo);
+
+  // UFUNCTION(Category="Map Generator", BlueprintImplementableEvent)
+  // void GetTileHeigtmapRT(FMapGeneratorTileMetaInfo TileMetaInfo, UTextureRenderTarget2D& OutRT);
+
 
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath
