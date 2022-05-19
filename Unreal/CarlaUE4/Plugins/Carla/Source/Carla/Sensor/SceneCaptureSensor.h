@@ -60,6 +60,8 @@ struct FCameraGBufferUint8
   FDataStream Stream;
 };
 
+
+
 struct FCameraGBufferFloat
 {
   /// Prevent this sensor to be spawned by users.
@@ -96,6 +98,11 @@ struct FCameraGBufferFloat
   }
   FDataStream Stream;
 };
+
+
+
+
+
 
 /// Base class for sensors using a USceneCaptureComponent2D for rendering the
 /// scene. This class does not capture data, use
