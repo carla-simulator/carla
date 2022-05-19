@@ -108,6 +108,10 @@ public:
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
+      const FMapGeneratorMetaInfo& MetaInfo, const FString Weather);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
   void LandscapePostEditEvent(ALandscape* Landscape);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)

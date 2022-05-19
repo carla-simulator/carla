@@ -142,6 +142,35 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
   return RiverActor;
 }
 
+AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
+    const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Generating Weather to %s"), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+
+  // Check if map is valid
+  const FString MapCompletePath = MetaInfo.DestinationPath + "/" + MetaInfo.MapName;
+  const FString MapPackageFileName = FPackageName::LongPackageNameToFilename(
+      MapCompletePath, 
+      FPackageName::GetMapPackageExtension());
+    
+  if(!FPaths::FileExists(*MapPackageFileName))
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Weather cannot be applied to a non existing map"), 
+        *CUR_CLASS_FUNC_LINE);
+    return nullptr;
+  }
+
+  // Instantiate Weather Actor in main map
+  const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName;
+  UWorld* World = LoadObject<UWorld>(nullptr, *WorldToLoadPath);
+
+  AActor* WeatherActor = World->SpawnActor<AActor>(WeatherActorClass);
+
+  return WeatherActor;  
+
+}
+
 void UMapGeneratorWidget::LandscapePostEditEvent(ALandscape* Landscape)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Landscape Post Edit Event Called"), 
@@ -455,8 +484,27 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating %s main large map in %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, *MetaInfo.DestinationPath);
   FAssetData WorldAssetData;
-  bool bLoaded = LoadBaseLargeMapWorld(WorldAssetData);
-  bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MetaInfo.MapName, true);
+  // bool bLoaded = LoadBaseLargeMapWorld(WorldAssetData);
+  // bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MetaInfo.MapName, true);
+
+  const FString BaseWorldSearchPath = TEXT("/CarlaTools/MapGenerator/BaseMap/MainLargeMap/MapGeneratorBaseLargeMap.MapGeneratorBaseLargeMap");
+  UWorld* BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldSearchPath);
+  const FString PackageName = MetaInfo.DestinationPath + "/" + MetaInfo.MapName;
+
+  UPackage* BaseMapPackage = CreatePackage(*PackageName);
+  FObjectDuplicationParameters Parameters(BaseWorld, BaseMapPackage);
+  Parameters.DestName = FName(*MetaInfo.MapName);
+  Parameters.DestClass = BaseWorld->GetClass();
+  Parameters.DuplicateMode = EDuplicateMode::World;
+  Parameters.PortFlags = PPF_Duplicate;
+
+  UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
+
+  const FString PackageFileName = FPackageName::LongPackageNameToFilename(
+      PackageName, 
+      FPackageName::GetMapPackageExtension());
+  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 
   return true;
 }
@@ -531,7 +579,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       Parameters.PortFlags = PPF_Duplicate;
       // Parameters.PortFlags = PPF_DuplicateForPIE;
 
-       UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
+      UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
       if (World == nullptr)
         UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No world found in tile %s %d_%d"), 
@@ -563,6 +611,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       {
         HeightData.Add((uint16)LinearColor.R);
       }
+      ///////////////////////
 
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
