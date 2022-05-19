@@ -8,8 +8,8 @@
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "ImageUtil.h"
+
 /*
-#include "Async/Async.h"
 #include "Components/DrawFrustumComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "ContentStreaming.h"
@@ -20,7 +20,6 @@
 #include "Misc/CoreDelegates.h"
 #include "RHICommandList.h"
 */
-#include "Renderer/Public/GBufferView.h"
 
 #include <mutex>
 #include <atomic>
@@ -465,10 +464,10 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
-  auto GBuffer = new GBufferView::FGBufferData();
+  auto GBuffer = new FGBufferData();
   GBuffer->OwningActor = CaptureComponent2D->GetViewOwner();
-  GBuffer->DesiredTexturesMask = 0b1011111101;
-    for (size_t i = 0; i != GBufferView::TextureCount; ++i)
+  GBuffer->DesiredTexturesMask = 0b0000000010;
+    for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
       if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
         GBuffer->Payloads[i].Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
   CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
@@ -492,9 +491,9 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
       TEXT("SSAO")
     };
 
-    static_assert(sizeof(TextureNames) / sizeof(TextureNames[0]) == GBufferView::TextureCount, "");
+    static_assert(sizeof(TextureNames) / sizeof(TextureNames[0]) == FGBufferData::TextureCount, "");
 
-    for (size_t i = 0; i != GBufferView::TextureCount; ++i)
+    for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
     {
       auto Name = TextureNames[i];
       if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) == 0)

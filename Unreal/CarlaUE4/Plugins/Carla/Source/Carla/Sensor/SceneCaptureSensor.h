@@ -9,11 +9,18 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
 #include "UE4_Overridden/SceneCaptureComponent_CARLA.h"
+
+#include "Async/Async.h"
+#include "Renderer/Public/GBufferView.h"
+
 #include "SceneCaptureSensor.generated.h"
+
+
 
 class UDrawFrustumComponent;
 class UStaticMeshComponent;
 class UTextureRenderTarget2D;
+
 
 
 struct FCameraGBufferUint8

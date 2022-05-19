@@ -5,15 +5,13 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+#include "CoreMinimal.h"
 
 #include "Components/SceneCaptureComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/SceneCaptureComponentCube.h"
 
 #include "SceneCaptureComponent_CARLA.generated.h"
-
-class AActor;
-class FObjectInitializer;
 
 
 
