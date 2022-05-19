@@ -711,8 +711,18 @@ namespace road {
     for (const auto &pair : _data.GetRoads()) {
       const auto &road = pair.second;
       ForEachDrivableLane(road, [&](auto &&waypoint) {
-        for (auto &&successor : GetSuccessors(waypoint)) {
-          result.push_back({waypoint, successor});
+        auto successors = GetSuccessors(waypoint);
+        if (successors.size() == 0){
+          auto distance = static_cast<float>(GetDistanceAtEndOfLane(GetLane(waypoint)));
+          auto last_waypoint = GetWaypoint(waypoint.road_id, waypoint.lane_id, distance);
+          if (last_waypoint.has_value()){
+            result.push_back({waypoint, *last_waypoint});
+          }
+        }
+        else{
+          for (auto &&successor : GetSuccessors(waypoint)) {
+            result.push_back({waypoint, successor});
+          }
         }
       });
     }

@@ -100,6 +100,20 @@ UBoxComponent* USignComponent::GenerateTriggerBox(const FTransform &BoxTransform
   return BoxComponent;
 }
 
+UBoxComponent* USignComponent::GenerateTriggerBox(const FTransform &BoxTransform,
+    const FVector &BoxSize)
+{
+  AActor *ParentActor = GetOwner();
+  UBoxComponent *BoxComponent = NewObject<UBoxComponent>(ParentActor);
+  BoxComponent->RegisterComponent();
+  BoxComponent->AttachToComponent(
+      ParentActor->GetRootComponent(),
+      FAttachmentTransformRules::KeepRelativeTransform);
+  BoxComponent->SetWorldTransform(BoxTransform);
+  BoxComponent->SetBoxExtent(BoxSize, true);
+  return BoxComponent;
+}
+
 void USignComponent::AddEffectTriggerVolume(UBoxComponent* TriggerVolume)
 {
   EffectTriggerVolumes.Add(TriggerVolume);

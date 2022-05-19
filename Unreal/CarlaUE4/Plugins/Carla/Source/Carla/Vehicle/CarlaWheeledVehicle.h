@@ -31,6 +31,9 @@
 #endif
 //-------------------------------------------
 
+#include <utility>
+
+#include "carla/rpc/VehicleFailureState.h"
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
@@ -183,6 +186,8 @@ public:
   void SetWheelCollisionNW(UWheeledVehicleMovementComponentNW *VehicleNW, const FVehiclePhysicsControl &PhysicsControl);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
+
+  void SetFailureState(const carla::rpc::VehicleFailureState &FailureState);
 
   UFUNCTION(BlueprintNativeEvent)
   bool IsTwoWheeledVehicle();
@@ -342,6 +347,12 @@ private:
   bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
+  float RolloverBehaviorForce = 0.35;
+  int RolloverBehaviorTracker = 0;
+  float RolloverFlagTime = 5.0f;
+
+  carla::rpc::VehicleFailureState FailureState = carla::rpc::VehicleFailureState::None;
+
 public:
 
   /// Set the rotation of the car wheels indicated by the user
@@ -375,6 +386,10 @@ public:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
   bool bIsNWVehicle = false;
 
+  void SetRolloverFlag();
+
+  carla::rpc::VehicleFailureState GetFailureState() const;
+
 private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
@@ -397,4 +412,12 @@ private:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPrimitiveComponent*, UPhysicsConstraintComponent*> CollisionDisableConstraints;
 
+  /// Rollovers tend to have too much angular velocity, resulting in the vehicle doing a full 360º flip.
+  /// This function progressively reduces the vehicle's angular velocity so that it ends up upside down instead.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ApplyRolloverBehavior();
+
+  void CheckRollover(const float roll, const std::pair<float, float> threshold_roll);
+
+  FTimerHandle TimerHandler;
 };

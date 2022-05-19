@@ -61,6 +61,9 @@ public:
   {
     return Lights;
   }
+
+  void SetDayNightCycle(const bool active);
+
 private:
 
   void SetClientStatesdirty(FString ClientThatUpdate);

@@ -94,6 +94,11 @@ public:
         tm->SetPercentageSpeedDifference(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
+      /// Set a vehicle's exact desired velocity.
+      server->bind("set_desired_speed", [=](carla::rpc::Actor actor, const float value) {
+        tm->SetDesiredSpeed(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), value);
+      });
+
       /// Method to set the automatic management of the vehicle lights
       server->bind("update_vehicle_lights", [=](carla::rpc::Actor actor, const bool do_update) {
         tm->SetUpdateVehicleLights(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), do_update);

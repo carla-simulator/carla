@@ -44,6 +44,18 @@ void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float
 
   float new_percentage = std::min(100.0f, percentage);
   percentage_difference_from_speed_limit.AddEntry({actor->GetId(), new_percentage});
+  if (exact_desired_speed.Contains(actor->GetId())) {
+    exact_desired_speed.RemoveEntry(actor->GetId());
+  }
+}
+
+void Parameters::SetDesiredSpeed(const ActorPtr &actor, const float value) {
+
+  float new_value = std::max(0.0f, value);
+  exact_desired_speed.AddEntry({actor->GetId(), new_value});
+  if (percentage_difference_from_speed_limit.Contains(actor->GetId())) {
+    percentage_difference_from_speed_limit.RemoveEntry(actor->GetId());
+  }
 }
 
 void Parameters::SetGlobalPercentageSpeedDifference(const float percentage) {
@@ -235,6 +247,8 @@ float Parameters::GetVehicleTargetVelocity(const ActorId &actor_id, const float 
 
   if (percentage_difference_from_speed_limit.Contains(actor_id)) {
     percentage_difference = percentage_difference_from_speed_limit.GetValue(actor_id);
+  } else if (exact_desired_speed.Contains(actor_id)) {
+    return exact_desired_speed.GetValue(actor_id);
   }
 
   return speed_limit * (1.0f - percentage_difference / 100.0f);

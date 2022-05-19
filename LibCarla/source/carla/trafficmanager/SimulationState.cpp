@@ -38,12 +38,20 @@ void SimulationState::UpdateKinematicState(ActorId actor_id, KinematicState stat
   kinematic_state_map.at(actor_id) = state;
 }
 
+void SimulationState::UpdateKinematicHybridEndLocation(ActorId actor_id, cg::Location location) {
+  kinematic_state_map.at(actor_id).hybrid_end_location = location;
+}
+
 void SimulationState::UpdateTrafficLightState(ActorId actor_id, TrafficLightState state) {
   tl_state_map.at(actor_id) = state;
 }
 
 cg::Location SimulationState::GetLocation(ActorId actor_id) const {
   return kinematic_state_map.at(actor_id).location;
+}
+
+cg::Location SimulationState::GetHybridEndLocation(ActorId actor_id) const {
+  return kinematic_state_map.at(actor_id).hybrid_end_location;
 }
 
 cg::Rotation SimulationState::GetRotation(ActorId actor_id) const {

@@ -610,6 +610,10 @@ namespace detail {
     _pimpl->AsyncCall("update_lights_state", _pimpl->endpoint, std::move(lights), discard_client);
   }
 
+  void Client::UpdateDayNightCycle(const bool active) const {
+    _pimpl->AsyncCall("update_day_night_cycle", _pimpl->endpoint, active);
+  }
+
   std::vector<geom::BoundingBox> Client::GetLevelBBs(uint8_t queried_tag) const {
     using return_t = std::vector<geom::BoundingBox>;
     return _pimpl->CallAndWait<return_t>("get_all_level_BBs", queried_tag);

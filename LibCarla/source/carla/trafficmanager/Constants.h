@@ -31,8 +31,8 @@ static const double DELTA_TIME_BETWEEN_DESTRUCTIONS = 10.0;
 } // namespace VehicleRemoval
 
 namespace HybridMode {
-static const float HYBRID_MODE_DT_FL = 0.1f;
-static const double HYBRID_MODE_DT = 0.1;
+static const float HYBRID_MODE_DT_FL = 0.05f;
+static const double HYBRID_MODE_DT = 0.05;
 static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
@@ -108,8 +108,8 @@ static float const STRAIGHT_DEG = 19.0f;
 } // namespace Map
 
 namespace TrafficLight {
-static const uint64_t NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
-static const double DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL = 5.0;
+static const double MINIMUM_STOP_TIME = 2.0;
+static const double EXIT_JUNCTION_THRESHOLD = 0;  // Dot product of 90º
 } // namespace TrafficLight
 
 namespace MotionPlan {

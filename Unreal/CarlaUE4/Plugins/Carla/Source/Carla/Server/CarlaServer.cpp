@@ -740,6 +740,21 @@ void FCarlaServer::FPimpl::BindActions()
     return true;
   };
 
+  BIND_SYNC(console_command) << [this](std::string cmd) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    APlayerController* PController= UGameplayStatics::GetPlayerController(Episode->GetWorld(), 0);
+    if( PController )
+    {
+        auto result = PController->ConsoleCommand(UTF8_TO_TCHAR(cmd.c_str()), true);
+        return !(
+          result.Contains(FString(TEXT("Command not recognized"))) ||
+          result.Contains(FString(TEXT("Error")))
+        );
+    }
+    return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
+  };
+
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(set_actor_location) << [this](
@@ -1484,9 +1499,9 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     std::vector<carla::rpc::BoneTransformDataOut> BoneData;
-    for (auto Bone : Bones.BoneTransforms) 
+    for (auto Bone : Bones.BoneTransforms)
     {
       carla::rpc::BoneTransformDataOut Data;
       Data.bone_name = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
@@ -1522,7 +1537,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -1548,7 +1563,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -1573,7 +1588,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -2115,11 +2130,12 @@ void FCarlaServer::FPimpl::BindActions()
           ActorId id = result.Get().id;
           auto set_id = carla::Functional::MakeOverload(
               [](C::SpawnActor &) {},
+              [](C::ConsoleCommand &) {},
               [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after)
           {
-            boost::apply_visitor(set_id, command.command);
-            boost::apply_visitor(self, command.command);
+            boost::variant2::visit(set_id, command.command);
+            boost::variant2::visit(self, command.command);
           }
           return id;
         }
@@ -2145,7 +2161,11 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::SetVehicleLightState &c) { MAKE_RESULT(set_vehicle_light_state(c.actor, c.light_state)); },
 //      [=](auto, const C::OpenVehicleDoor &c) {      MAKE_RESULT(open_vehicle_door(c.actor, c.door_idx)); },
 //      [=](auto, const C::CloseVehicleDoor &c) {     MAKE_RESULT(close_vehicle_door(c.actor, c.door_idx)); },
-      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
+      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); },
+      [=](auto, const C::ConsoleCommand& c) -> CR {       return console_command(c.cmd); },
+      [=](auto, const C::SetTrafficLightState& c) { MAKE_RESULT(set_traffic_light_state(c.actor, c.traffic_light_state)); },
+      [=](auto, const C::ApplyLocation& c)        { MAKE_RESULT(set_actor_location(c.actor, c.location)); }
+  );
 
 #undef MAKE_RESULT
 
@@ -2157,7 +2177,7 @@ void FCarlaServer::FPimpl::BindActions()
     result.reserve(commands.size());
     for (const auto &command : commands)
     {
-      result.emplace_back(boost::apply_visitor(command_visitor, command.command));
+      result.emplace_back(boost::variant2::visit(command_visitor, command.command));
     }
     if (do_tick_cue)
     {
@@ -2188,6 +2208,18 @@ void FCarlaServer::FPimpl::BindActions()
     if(World) {
       UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
       CarlaLightSubsystem->SetLights(FString(client.c_str()), lights, discard_client);
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(update_day_night_cycle) << [this]
+    (std::string client, const bool active) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    if(World) {
+      UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+      CarlaLightSubsystem->SetDayNightCycle(active);
     }
     return R<void>::Success();
   };

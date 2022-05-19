@@ -48,7 +48,7 @@ rem -- Local Variables ---------------------------------------------------------
 rem ============================================================================
 
 set ZLIB_BASENAME=zlib
-set ZLIB_VERSION=1.2.11
+set ZLIB_VERSION=1.2.12
 
 set ZLIB_TEMP_FOLDER=%ZLIB_BASENAME%-%ZLIB_VERSION%
 set ZLIB_TEMP_FILE=%ZLIB_TEMP_FOLDER%.zip

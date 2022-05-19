@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 
 #include "Carla/Traffic/TrafficSignBase.h"

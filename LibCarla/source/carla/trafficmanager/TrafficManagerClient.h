@@ -81,6 +81,12 @@ public:
     _client->call("set_percentage_speed_difference", std::move(_actor), percentage);
   }
 
+  /// Set a vehicle's exact desired velocity.
+  void SetDesiredSpeed(const carla::rpc::Actor &_actor, const float value) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_desired_speed", std::move(_actor), value);
+  }
+
   /// Method to set a global % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(const float percentage) {

@@ -177,6 +177,14 @@ public:
     }
   }
 
+  /// Set a vehicle's exact desired velocity.
+  void SetDesiredSpeed(const ActorPtr &actor, const float value) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetDesiredSpeed(actor, value);
+    }
+  }
+
   /// Set a global % decrease in velocity with respect to the speed limit.
   /// If less than 0, it's a % increase.
   void SetGlobalPercentageSpeedDifference(float const percentage){

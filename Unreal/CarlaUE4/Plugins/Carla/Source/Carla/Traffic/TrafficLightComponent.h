@@ -68,7 +68,7 @@ private:
 
   void GenerateTrafficLightBox(
       const FTransform BoxTransform,
-      float BoxSize);
+      const FVector BoxSize);
 
   UPROPERTY(Category = "Traffic Light", EditAnywhere)
   ETrafficLightState LightState;
