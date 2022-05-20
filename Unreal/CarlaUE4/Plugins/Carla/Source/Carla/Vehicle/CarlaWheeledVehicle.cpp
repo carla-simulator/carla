@@ -201,21 +201,23 @@ void ACarlaWheeledVehicle::BeginPlay()
   //InitFoliagePool();
 }
 
-void ACarlaWheeledVehicle::UpdateSphereOverlap()
+void ACarlaWheeledVehicle::UpdateProceduralFoliage()
 {
-  //TODO (luis): sphere overlap
   const TArray<TEnumAsByte< EObjectTypeQuery >>ToCollide { UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic) };
   TArray<AActor*> ToIgnore;
   GetOwner()->GetAllChildActors(ToIgnore, true);
   ToIgnore.Add(GetOwner());
+  
+  const FVector OwnerLocation = GetActorLocation();
+  FoliageBoundingBox = FBox(OwnerLocation - DetectionSize, OwnerLocation + DetectionSize);
 
-  UKismetSystemLibrary::SphereOverlapActors(GetWorld(),
+  UKismetSystemLibrary::BoxOverlapActors(GetWorld(),
  			GetActorLocation(),
- 			SphereRadius,
+ 			DetectionSize,
  			ToCollide,
  			nullptr,
  			ToIgnore,
- 			SphereOverlappedActors);
+ 			OverlappedActors);
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()

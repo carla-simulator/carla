@@ -72,13 +72,14 @@ enum class EVehicleDoor : uint8 {
 };
 
 USTRUCT()
-struct FSphereInMesh
+struct FSpawnedFoliage
 {
   GENERATED_BODY()
-  AActor* SpawnedActor {nullptr};
-  int ComponentID {0};
-  int InstanceIndex {0};
-  FTransform OriginalTransform {FVector(0.0f, 0.0f, -1000000.0f)};
+  AActor* Actor {nullptr};
+  UInstancedStaticMeshComponent* Owner {nullptr};
+  int InstanceIndex {-1};
+  FString FoliageType {FString()};
+  FTransform Transform {FVector(0.0f, 0.0f, -1000000.0f)};
 };
 
 USTRUCT()
@@ -375,12 +376,15 @@ private:
   int RolloverBehaviorTracker = 0;
 
 public:
-
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void UpdateSphereOverlap();
-UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
-  float SphereRadius = 1000.0f;
+  void UpdateProceduralFoliage();
+    
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
+  FVector DetectionSize { 3.0f, 5.0f, 1.0f};
   
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
+  FBox FoliageBoundingBox;
+
   //Filters for debug, improving performance
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
   bool SpawnBushes = true;
@@ -397,48 +401,12 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
   float SpawnScale = 0.0f;
 
-  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
-  TArray<AActor*> SphereOverlappedActors;
-
-  TArray<FSphereInMesh> MeshesInSphere;
+  TArray<AActor*> OverlappedActors;
   TArray<FCacheBPClasses> FoliageCache;
+  TArray<FSpawnedFoliage> MeshesCloseToVehicle;
+  TMap<FString, TArray<AActor*>> MeshesPool;
 
-  UFUNCTION()
-  const float GetDistanceToInstancedMesh(const FTransform& transform) const
-  {
-    const FVector OtherLocation = transform.GetLocation();
-    const FVector OwnLocation = GetActorLocation();
-
-    const float Result = FVector::Distance(OwnLocation, OtherLocation);
-    return Result;
-  }
-
-  UFUNCTION()
-  bool IsMeshInList(const FSphereInMesh& sim)
-  {
-    for (const auto& element : MeshesInSphere)
-    {
-      if (element.ComponentID == sim.ComponentID && element.InstanceIndex == sim.InstanceIndex && element.SpawnedActor != nullptr)
-        return true;
-    }
-    return false;
-  }
-
-  UFUNCTION()
-  bool AddElementToList(const FSphereInMesh& sim)
-  {
-    for (auto& element : MeshesInSphere)
-    {
-      if (element.SpawnedActor == nullptr)
-      {
-        element = sim;
-        return true;
-      }
-    }
-    MeshesInSphere.Add(sim);
-    return true;
-  }
-
+  //Cache functions
   UFUNCTION()
   bool IsPathInCache(const FString& Path)
   {
@@ -465,6 +433,273 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
     return nullptr;
   }
 
+  //List with items near vehicle functions.
+  UFUNCTION()
+  bool IsInMeshesCloseToVehicle(const FSpawnedFoliage& SpawnedFoliage)
+  {
+    for (const auto& element : MeshesCloseToVehicle)
+    {
+      if (element.Actor != nullptr && element.Actor->IsActorTickEnabled() && element.Owner == SpawnedFoliage.Owner && element.InstanceIndex ==  SpawnedFoliage.InstanceIndex)
+        return true;
+    }
+    return false;
+  }
+
+  UFUNCTION()
+  bool AddToMeshesCloseToVehicle(const FSpawnedFoliage& SpawnedFoliage)
+  {
+    for (auto& element : MeshesCloseToVehicle)
+    {
+      if (element.Actor == nullptr || !element.Actor->IsActorTickEnabled())
+      {
+        element = SpawnedFoliage;
+        return true;
+      }
+    }
+    MeshesCloseToVehicle.Add(SpawnedFoliage);
+    return true;
+  }
+
+  //Spawner system functions.
+  UFUNCTION(BlueprintCallable)
+  void SpawnSkeletalMeshesInDetectionRange()
+  {
+    for (AActor* OverlappedActor : OverlappedActors)
+    {
+      const TSet<UActorComponent*>& Components = OverlappedActor->GetComponents();
+      for (UActorComponent* Component : Components)
+      {
+        if (UInstancedStaticMeshComponent* Mesh = Cast<UInstancedStaticMeshComponent>(Component))
+        {
+          const FString Path = Mesh->GetStaticMesh()->GetPathName();
+          const TArray<int32> InstancesInOverlapping = Mesh->GetInstancesOverlappingBox(FoliageBoundingBox);
+          for (int32 i : InstancesInOverlapping)
+          {
+            if (!IsFoliageTypeEnabled(Path))
+              continue;
+            
+            FSpawnedFoliage SpawnedFoliage;
+            SpawnedFoliage.Owner = Mesh;
+            SpawnedFoliage.InstanceIndex = i;
+
+            if (!IsInMeshesCloseToVehicle(SpawnedFoliage))
+            {
+              FTransform Transform {};
+              Mesh->GetInstanceTransform(i, Transform, false);
+              SpawnedFoliage.Transform = Transform;
+              SpawnedFoliage.Actor = GetFoliageFromPool(SpawnedFoliage, Path);
+              if (SpawnedFoliage.Actor)
+              {
+                SpawnedFoliage.FoliageType = GetClassFromPath(Path);
+                bool added = AddToMeshesCloseToVehicle(SpawnedFoliage);
+                Transform.SetLocation({0.0f, 0.0f, -1000000.0f});
+                Mesh->UpdateInstanceTransform(i, Transform);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void HideSkeletalMeshesOutOfDetectionRange()
+  {
+    for (FSpawnedFoliage& element : MeshesCloseToVehicle)
+    {
+      if (element.Actor == nullptr || !element.Actor->IsActorTickEnabled())
+        continue;
+      if (!IsValid(element.Owner))
+      {
+        AddFoliageBackToPool(element.Actor);
+        element = FSpawnedFoliage();
+      }
+      else
+      {
+        if(!FoliageBoundingBox.IsInside(element.Transform.GetLocation()))
+        {
+          element.Owner->UpdateInstanceTransform(element.InstanceIndex, element.Transform);
+          AddFoliageBackToPool(element.Actor);
+          element = FSpawnedFoliage();
+        }
+      }
+    }
+  }
+
+  UFUNCTION()
+  void AddFoliageBackToPool(AActor* Actor)
+  {
+    DisableActor(Actor);
+  }
+
+  UFUNCTION()
+  AActor* GetFoliageFromPool(const FSpawnedFoliage& Foliage, const FString& Path)
+  {
+    TArray<AActor*>* Values = MeshesPool.Find(Path);    
+    if (Values)
+    {
+      const FString BPClassName = GetClassFromPath(Path);
+      for (AActor* Value : *Values)
+      {
+        if (Value->IsActorTickEnabled())
+          continue;
+        
+        EnableActor(Value, Foliage.Transform);
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::White, "Get Element from Pool: " + BPClassName);
+        return Value;
+      }
+      AActor* SpawnedActor = SpawnFoliage(Path, Foliage.Transform);
+      if (SpawnedActor)
+      {
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::White, "Added Element to Pool " + BPClassName);
+        Values->Add(SpawnedActor);
+
+        for (int i = 0; i < 4; ++i)
+        {
+          AActor* Aux = SpawnFoliage(Path, Foliage.Transform);
+          DisableActor(Aux);
+          Values->Add(Aux);
+        }
+        return SpawnedActor;
+      }
+      else
+      {
+        return nullptr;
+      } 
+    }
+    else
+    {
+      AActor* SpawnedActor = SpawnFoliage(Path, Foliage.Transform);
+      if (SpawnedActor)
+      {
+        const FString BPClassName = GetClassFromPath(Path);
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, "Added New Element to Pool " + BPClassName);
+        TArray<AActor*> NewArray { SpawnedActor};
+        for (int i = 0; i < 4; ++i)
+        {
+          AActor* Aux = SpawnFoliage(Path, Foliage.Transform);
+          DisableActor(Aux);
+          NewArray.Add(Aux);
+        }
+        MeshesPool.Add(Path, NewArray);
+        return SpawnedActor;
+      }
+      return nullptr;      
+    }
+  }
+
+  UFUNCTION()
+  AActor* SpawnFoliage(const FString& Path, const FTransform& Transform)
+  {
+    TSubclassOf<AActor> SpawnedClass = nullptr;
+    if (IsPathInCache(Path))
+    {
+      SpawnedClass = GetFromCache(Path);
+      if (SpawnedClass == nullptr)
+        return nullptr;      
+    }
+    else
+    {
+      FString FullClassPath = GetClassFromPath(Path);
+      if (FullClassPath.IsEmpty())
+      {
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("FAILED TO GET THE VERSION")));
+        FoliageCache.Add({Path, nullptr});
+        return nullptr;
+      }
+      
+      UObject* LoadedObject = StaticLoadObject(UObject::StaticClass(), nullptr, *FullClassPath);    
+      UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);            
+      if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
+      {
+        SpawnedClass = *CastedBlueprint->GeneratedClass;
+        FoliageCache.Add({Path, SpawnedClass});
+        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "BP Class found: " + FullClassPath);
+      }
+    }
+    if (SpawnedClass == nullptr)
+      return nullptr;
+    AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(SpawnedClass, Transform.GetLocation(), Transform.Rotator());
+    if (SpawnScale > 1.001f || SpawnScale < 0.999f)
+      SpawnedActor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
+    else
+      SpawnedActor->SetActorScale3D(Transform.GetScale3D());
+    return SpawnedActor;
+  }
+
+  UFUNCTION()
+  void EnableActor(AActor* Actor, const FTransform& Transform)
+  {
+    Actor->SetActorRotation(Transform.Rotator());
+    Actor->SetActorLocation(Transform.GetLocation());
+    if (SpawnScale > 1.001f || SpawnScale < 0.999f)
+      Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
+    else
+      Actor->SetActorScale3D(Transform.GetScale3D());
+    Actor->SetTickableWhenPaused(true);
+    Actor->SetActorTickEnabled(true);
+    Actor->SetActorHiddenInGame(false);
+    Actor->SetActorEnableCollision(true);
+  }
+
+  UFUNCTION()
+  void DisableActor(AActor* Actor)
+  {
+    Actor->SetActorLocation({0.0f, 0.0f, -1000000.0f});
+    Actor->SetActorEnableCollision(false);
+    Actor->SetActorHiddenInGame(true);
+    Actor->SetTickableWhenPaused(false);
+    Actor->SetActorTickEnabled(false);
+  }
+
+  UFUNCTION()
+  FString GetClassFromPath(const FString& Path)
+  {
+    TArray< FString > ParsedString;
+    Path.ParseIntoArray(ParsedString, TEXT("/"), false);
+    int Position = ParsedString.Num() - 1;
+    const FString Version = ParsedString[Position];
+    --Position;
+    const FString Folder = ParsedString[Position];
+    ++Position;
+    const FString FullVersion = GetVersionFromFString(Version);
+    if (FullVersion.IsEmpty())
+    {
+      return FString();
+    }
+    FString ClassPath = "BP_" + Folder + FullVersion;
+    FString FullClassPath = "Blueprint'";
+    for (int i = 0; i < Position; ++i)
+    {
+      FullClassPath += ParsedString[i];
+      FullClassPath += '/';
+    }
+    FullClassPath += ClassPath;
+    FullClassPath += ".";
+    FullClassPath += ClassPath;
+    FullClassPath += "'";
+
+    return FullClassPath;
+  }
+
+  UFUNCTION()
+  bool IsFoliageTypeEnabled(const FString& Path)
+  {
+    if (!SpawnRocks)
+      if (Path.Contains("Rock"))
+        return false;
+    if (!SpawnTrees)
+      if (Path.Contains("Tree"))
+        return false;
+    if (!SpawnBushes)
+      if (Path.Contains("Bush"))
+        return false;
+    if (!SpawnPlants)
+      if (Path.Contains("Plant"))
+        return false;
+    return true;
+  }
+  //Debug
   UFUNCTION()
   FString GetVersionFromFString(const FString& string)
   {
@@ -499,194 +734,39 @@ UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere, BlueprintReadWrite)
   }
 
   UFUNCTION(BlueprintCallable)
-  void HideOverlappedMeshes(AActor* actor)
+  TArray<FString> GetPoolsState()
   {
-    const TSet<UActorComponent*>& Components = actor->GetComponents();
-    for (UActorComponent* Component : Components)
+    TArray<FString> Results;
+    for (const auto& Pool : MeshesPool)
     {
-      if (UInstancedStaticMeshComponent* Mesh = Cast<UInstancedStaticMeshComponent>(Component))
+      const FString PoolName = GetClassFromPath(Pool.Key);
+      int Elements = 0;
+      int Active = 0;
+      for (AActor* Actor : Pool.Value)
       {
-        UObject* Object = Mesh->GetStaticMesh();
-        const FString Path = Object->GetPathName();
-        TArray<int32> InstancesInOverlappingSphere = Mesh->GetInstancesOverlappingSphere(GetActorLocation(), SphereRadius, false);
-        for (int32 i : InstancesInOverlappingSphere)
-        {
-          if (!SpawnRocks)
-            if (Path.Contains("Rock"))
-              continue;
-          if (!SpawnTrees)
-            if (Path.Contains("Tree"))
-              continue;
-          if (!SpawnBushes)
-            if (Path.Contains("Bush"))
-              continue;
-          if (!SpawnPlants)
-            if (Path.Contains("Plant"))
-              continue;
-
-          FTransform OriginalTransform;
-          Mesh->GetInstanceTransform(i, OriginalTransform, false);
-          FSphereInMesh sim;
-          sim.ComponentID = Mesh->GetUniqueID();
-          sim.InstanceIndex = i;
-          sim.OriginalTransform = OriginalTransform;
-          if (!IsMeshInList(sim))
-          {
-            FTransform HideTransform {OriginalTransform};
-            HideTransform.SetLocation({0.0f, 0.0f, -1000000.0f});
-            sim.SpawnedActor = SpawnFoliage(OriginalTransform, HideTransform, Path);
-            if (sim.SpawnedActor)
-            {
-              bool added = AddElementToList(sim);
-              Mesh->UpdateInstanceTransform(i, HideTransform);
-            }
-          }
-        }
+        if (Actor->IsActorTickEnabled())
+          ++Active;
+        ++Elements;
       }
+      const FString Result = PoolName + ": " + FString::FromInt(Elements) + " Elements. (" + FString::FromInt(Active) + " Active and " + FString::FromInt(Elements - Active) + " inActive)";
+      Results.Add(Result);
     }
-  }
-
-  UFUNCTION()
-  AActor* SpawnFoliage(const FTransform& OriginalTransform, const FTransform& HideTransform, const FString& Path)
-  {
-    TSubclassOf<AActor> SpawnedClass = nullptr;
-    if (IsPathInCache(Path))
-    {
-      SpawnedClass = GetFromCache(Path);
-      if (SpawnedClass == nullptr)
-        return nullptr;      
-    }
-    else
-    {
-      TArray< FString > ParsedString;
-      Path.ParseIntoArray(ParsedString, TEXT("/"), false);
-      int Position = ParsedString.Num() - 1;
-      const FString Version = ParsedString[Position];
-      --Position;
-      const FString Folder = ParsedString[Position];
-      ++Position;
-      const FString FullVersion = GetVersionFromFString(Version);
-      if (FullVersion.IsEmpty())
-      {
-        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("FAILED TO GET THE VERSION")));
-        FoliageCache.Add({Path, nullptr});
-        return nullptr;
-      }
-      FString ClassPath = "BP_" + Folder + FullVersion;
-      FString FullClassPath = "Blueprint'";
-      for (int i = 0; i < Position; ++i)
-      {
-        FullClassPath += ParsedString[i];
-        FullClassPath += '/';
-      }
-      FullClassPath += ClassPath;
-      FullClassPath += ".";
-      FullClassPath += ClassPath;
-      FullClassPath += "'";
-    
-
-      
-      UObject* LoadedObject = StaticLoadObject(UObject::StaticClass(), nullptr, *FullClassPath);    
-      UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);            
-      if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
-      {
-        SpawnedClass = *CastedBlueprint->GeneratedClass;
-        FoliageCache.Add({Path, SpawnedClass});
-        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "BP Class found: " + FullClassPath);
-      }
-    }
-    if (SpawnedClass == nullptr)
-      return nullptr;
-    AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(SpawnedClass, HideTransform.GetLocation(), HideTransform.Rotator());
-    if (SpawnScale > 1.001f || SpawnScale < 0.999f)
-      SpawnedActor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
-    else
-      SpawnedActor->SetActorScale3D(OriginalTransform.GetScale3D());
-    SpawnedActor->SetActorLocation(OriginalTransform.GetLocation());
-    return SpawnedActor;
+    return Results;
   }
 
   UFUNCTION(BlueprintCallable)
-  void ShowNonOverlappedMeshes(AActor* actor)
+  TArray<FString> GetDetectionState()
   {
-    const TSet<UActorComponent*>& components = actor->GetComponents();
-    for (UActorComponent* component : components)
+    TArray<FString> Results;
+    int Count = 0;
+    Results.Add(FString::FromInt(Count));
+    for (const auto& Element : MeshesCloseToVehicle)
     {
-      if (UInstancedStaticMeshComponent* Mesh = Cast<UInstancedStaticMeshComponent>(component))
-      {
-        for (FSphereInMesh& element : MeshesInSphere)
-        {
-          if (element.ComponentID == Mesh->GetUniqueID())
-          {
-            const float DistanceToOriginalMesh = GetDistanceToInstancedMesh(element.OriginalTransform);
-            if (DistanceToOriginalMesh > SphereRadius)
-            {
-              Mesh->UpdateInstanceTransform(element.InstanceIndex, element.OriginalTransform);
-              element.SpawnedActor->Destroy();
-              element = FSphereInMesh();
-            }
-          }
-        }
-      }
+      ++Count;
+      Results.Add(Element.FoliageType);
     }
-  }
-
-  UFUNCTION(BlueprintCallable)
-  FORCEINLINE bool IsAnyActorInSphere()
-  {
-    return SphereOverlappedActors.Num() > 0;
-  }
-
-  UFUNCTION(BlueprintCallable)
-  FORCEINLINE int GetSphereOverlappedActorsNum()
-  {
-    return static_cast<int>(SphereOverlappedActors.Num() - 1);
-  }
-
-  UFUNCTION(BlueprintCallable)
-  FORCEINLINE TArray<int32> GetSphereOverlappedActorsIDs()
-  {
-    TArray<int32> results;
-    for (const AActor* const actor : SphereOverlappedActors)
-    {
-      results.Add(actor->GetUniqueID());
-    }
-    return results;
-  }
-
-  UFUNCTION(BlueprintCallable)
-  FORCEINLINE TArray<FString> GetSphereOverlappedActorsNames()
-  {
-    TArray<FString> results;
-    for (const AActor* const actor : SphereOverlappedActors)
-    {
-      results.Add(actor->GetName());
-    }
-    return results;
-  }
-
-  UFUNCTION(BlueprintCallable)
-  FORCEINLINE TArray<UClass*> GetSphereOverlappedActorsClasses()
-  {
-    TArray<UClass*> results;
-    for (const AActor* const actor : SphereOverlappedActors)
-    {
-      results.Add(actor->GetClass());
-    }
-    return results;
-  }
-
-  UFUNCTION(BlueprintCallable)
-  FORCEINLINE TArray<FString> GetActorComponents(const AActor* actor)
-  {
-    TArray<FString> results;
-    const TSet<UActorComponent*>& components = actor->GetComponents(); 
-
-    for (const auto* component : components)
-    {
-      results.Add(component->GetReadableName());
-    }
-    return results;
+    Results[0] = "Total Meshes in the Detection Range: " + FString::FromInt(Count);
+    return Results;
   }
 
   /// Set the rotation of the car wheels indicated by the user
