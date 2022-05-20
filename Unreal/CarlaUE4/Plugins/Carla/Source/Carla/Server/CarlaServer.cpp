@@ -2083,7 +2083,7 @@ void FCarlaServer::FPimpl::BindActions()
       }
       case 9:
       {
-        const auto &Token = Sensor->CameraGBuffers.AmbientOclusion.GetToken();
+        const auto &Token = Sensor->CameraGBuffers.SSAO.GetToken();
         return std::vector<unsigned char>(std::begin(Token.data), std::end(Token.data));
       }
       default:

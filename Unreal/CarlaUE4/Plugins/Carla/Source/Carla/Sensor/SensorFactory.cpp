@@ -149,7 +149,7 @@ FActorSpawnResult ASensorFactory::SpawnActor(
       SceneCaptureSensor->CameraGBuffers.GBufferE.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.GBufferF.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.Velocity.SetDataStream(GameInstance->GetServer().OpenStream());
-      SceneCaptureSensor->CameraGBuffers.AmbientOclusion.SetDataStream(GameInstance->GetServer().OpenStream());
+      SceneCaptureSensor->CameraGBuffers.SSAO.SetDataStream(GameInstance->GetServer().OpenStream());
     }
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);

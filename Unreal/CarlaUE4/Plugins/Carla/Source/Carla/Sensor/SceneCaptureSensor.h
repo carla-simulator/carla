@@ -41,8 +41,10 @@ struct FCameraGBufferUint8
   /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {
+    bIsUsed = true;
     return Stream.GetToken();
   }
+
   /// Dummy. Required for compatibility with other sensors only.
   FTransform GetActorTransform() const
   {
@@ -57,6 +59,8 @@ struct FCameraGBufferUint8
   {
     return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
   }
+
+  mutable bool bIsUsed = false;
   FDataStream Stream;
 };
 
@@ -80,6 +84,7 @@ struct FCameraGBufferFloat
   /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {
+    bIsUsed = true;
     return Stream.GetToken();
   }
   /// Dummy. Required for compatibility with other sensors only.
@@ -96,6 +101,8 @@ struct FCameraGBufferFloat
   {
     return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
   }
+  
+  mutable bool bIsUsed = false;
   FDataStream Stream;
 };
 
@@ -388,15 +395,15 @@ public:
   struct
   {
     FCameraGBufferUint8 SceneColor;
-    FCameraGBufferFloat SceneDepth;
-    FCameraGBufferFloat GBufferA;
+    FCameraGBufferUint8 SceneDepth;
+    FCameraGBufferUint8 GBufferA;
     FCameraGBufferUint8 GBufferB;
     FCameraGBufferUint8 GBufferC;
     FCameraGBufferUint8 GBufferD;
     FCameraGBufferUint8 GBufferE;
     FCameraGBufferUint8 GBufferF;
-    FCameraGBufferFloat Velocity;
-    FCameraGBufferFloat AmbientOclusion;
+    FCameraGBufferUint8 Velocity;
+    FCameraGBufferUint8 SSAO;
   } CameraGBuffers;
 
 protected:

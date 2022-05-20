@@ -32,7 +32,7 @@ void export_sensor() {
 
   class_<cc::ServerSideSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::ServerSideSensor>>
       ("ServerSideSensor", no_init)
-    .def("listen_to_gbuffer", &SubscribeToGBuffer, (arg("gbuffer_id")=0, arg("callback")))
+    .def("listen_to_gbuffer", &SubscribeToGBuffer, (arg("gbuffer_id"), arg("callback")))
     .def(self_ns::str(self_ns::self))
   ;
 
