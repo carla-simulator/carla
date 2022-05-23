@@ -14,8 +14,10 @@ static void SubscribeToStream(carla::client::Sensor &self, boost::python::object
   self.Listen(MakeCallback(std::move(callback)));
 }
 
-static void SubscribeToGBuffer(carla::client::ServerSideSensor &self, 
-    uint32_t GBufferId, boost::python::object callback) {
+static void SubscribeToGBuffer(
+  carla::client::ServerSideSensor &self,
+  uint32_t GBufferId,
+  boost::python::object callback) {
   self.ListenToGBuffer(GBufferId, MakeCallback(std::move(callback)));
 }
 

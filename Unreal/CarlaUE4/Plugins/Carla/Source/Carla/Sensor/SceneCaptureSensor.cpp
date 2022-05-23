@@ -480,36 +480,32 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 
-  uint64 DesiredMask = 0;
-#if 0
-  GBuffer->DesiredTexturesMask = 0b0000000010;
-#else
+  uint64 Mask = 0;
   if (CameraGBuffers.SceneColor.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 0;
+    Mask |= UINT64_C(1) << 0;
   if (CameraGBuffers.SceneDepth.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 1;
+    Mask |= UINT64_C(1) << 1;
   if (CameraGBuffers.GBufferA.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 2;
+    Mask |= UINT64_C(1) << 2;
   if (CameraGBuffers.GBufferB.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 3;
+    Mask |= UINT64_C(1) << 3;
   if (CameraGBuffers.GBufferC.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 4;
+    Mask |= UINT64_C(1) << 4;
   if (CameraGBuffers.GBufferD.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 5;
+    Mask |= UINT64_C(1) << 5;
   if (CameraGBuffers.GBufferE.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 6;
+    Mask |= UINT64_C(1) << 6;
   if (CameraGBuffers.GBufferF.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 7;
+    Mask |= UINT64_C(1) << 7;
   if (CameraGBuffers.Velocity.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 8;
+    Mask |= UINT64_C(1) << 8;
   if (CameraGBuffers.SSAO.bIsUsed)
-    DesiredMask |= UINT64_C(1) << 9;
-#endif
+    Mask |= UINT64_C(1) << 9;
 
-  if (DesiredMask != 0)
+  if (Mask != 0)
   {
     auto GBuffer = new FGBufferData();
-    GBuffer->DesiredTexturesMask = DesiredMask;
+    GBuffer->DesiredTexturesMask = Mask;
     GBuffer->OwningActor = CaptureComponent2D->GetViewOwner();
     for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
       if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
@@ -517,28 +513,11 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
     CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
 
     AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this, GBuffer] {
-      static constexpr const TCHAR* TextureNames[] =
-      {
-        TEXT("SceneColor"),
-        TEXT("SceneDepth"),
-        TEXT("GBufferA"),
-        TEXT("GBufferB"),
-        TEXT("GBufferC"),
-        TEXT("GBufferD"),
-        TEXT("GBufferE"),
-        TEXT("GBufferF"),
-        TEXT("Velocity"),
-        TEXT("SSAO")
-      };
-
-      static_assert(sizeof(TextureNames) / sizeof(TextureNames[0]) == FGBufferData::TextureCount, "");
 
       for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
       {
-        auto Name = TextureNames[i];
         if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) == 0)
         {
-          UE_LOG(LogCarla, Log, TEXT("Skipping ignored texture %s..."), Name);
           continue;
         }
         auto& Payload = GBuffer->Payloads[i];
@@ -558,10 +537,8 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
         auto InternalExtent = Payload.InternalExtent;
         auto Format = Payload.Format;
         check(Format != PF_Unknown);
-        UE_LOG(LogCarla, Log, TEXT("Attempting to export %s texture (Extent = %ux%u, Format=%u)..."), Name, Extent.X, Extent.Y, (unsigned)Format);
         auto Pixels = ImageUtil::ExtractTexturePixelsFromReadback(Readback, InternalExtent, Extent, Format);
         check(Pixels.Num() != 0);
-  #if 1
         switch (i)
         {
           case 0:
@@ -597,19 +574,6 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
           default:
             check(false);
         }
-  #else
-        static int Counter;
-        ++Counter;
-        auto ImageTask = MakeUnique<FImageWriteTask>();
-        ImageTask->PixelData = MakeUnique<TImagePixelData<FColor>>(Extent, TArray64<FColor>(MoveTemp(Pixels)));
-        ImageTask->Filename = FString::Printf(TEXT("M:\\carla-screenshots\\%u-%s.png"), Counter, Name);
-        ImageTask->Format = EImageFormat::PNG;
-        ImageTask->CompressionQuality = (int32)EImageCompressionQuality::Default;
-        ImageTask->bOverwriteFile = true;
-        ImageTask->PixelPreProcessors.Add(TAsyncAlphaWrite<FColor>(255));
-        FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
-        check(HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask)).Get());
-  #endif
       }
       delete GBuffer;
     });
