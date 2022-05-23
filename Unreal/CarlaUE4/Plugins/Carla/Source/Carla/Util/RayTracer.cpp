@@ -30,7 +30,15 @@ std::vector<crp::LabelledPoint> URayTracer::CastRay(
     UPrimitiveComponent* Component = Hit.GetComponent();
     crp::CityObjectLabel ComponentTag =
         ATagger::GetTagOfTaggedComponent(*Component);
-    result.emplace_back(crp::LabelledPoint(Hit.Location, ComponentTag));
+
+    FVector UELocation = Hit.Location;
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      UELocation = LargeMap->LocalToGlobalLocation(UELocation);
+    }
+    result.emplace_back(crp::LabelledPoint(UELocation, ComponentTag));
   }
   return result;
 }
@@ -52,7 +60,15 @@ std::pair<bool, crp::LabelledPoint> URayTracer::ProjectPoint(
     UPrimitiveComponent* Component = Hit.GetComponent();
     crp::CityObjectLabel ComponentTag =
         ATagger::GetTagOfTaggedComponent(*Component);
-    return std::make_pair(bDidHit, crp::LabelledPoint(Hit.Location, ComponentTag));
+
+    FVector UELocation = Hit.Location;
+    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
+    ALargeMapManager* LargeMap = GameMode->GetLMManager();
+    if (LargeMap)
+    {
+      UELocation = LargeMap->LocalToGlobalLocation(UELocation);
+    }
+    return std::make_pair(bDidHit, crp::LabelledPoint(UELocation, ComponentTag));
   }
   return std::make_pair(bDidHit, crp::LabelledPoint(FVector(0.0f,0.0f,0.0f), crp::CityObjectLabel::None));
 }
