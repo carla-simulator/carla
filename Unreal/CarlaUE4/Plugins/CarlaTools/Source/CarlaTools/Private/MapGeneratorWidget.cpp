@@ -117,7 +117,7 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
   //////*****************************/////
 
   float ActorZCoord = GetLandscapeSurfaceHeight(World, 0, 0, false);
-  FVector Location(0, 0, ActorZCoord);
+  FVector Location(20000, 20000, ActorZCoord); // Auxiliar values for x and y coords
   FRotator Rotation(0,0,0);
   FActorSpawnParameters SpawnInfo;
   
@@ -771,10 +771,10 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
       *CUR_CLASS_FUNC_LINE, *World->GetMapName());
 
   // TODO PROV : Fix World *********************/
-  // ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
-  //     World, 
-  //     ALandscape::StaticClass());
-  // LandscapePostEditEvent(Landscape);
+  ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
+      World, 
+      ALandscape::StaticClass());
+  LandscapePostEditEvent(Landscape);
   /********************************************/
 
   // For each spawner create a procedural foliage volume and simulates the vegetation
@@ -783,7 +783,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     ULevel* Level = World->GetCurrentLevel();
 
     VectorRegister	Rotation{ 0,0,0 };
-    VectorRegister	Translation{ 0.0,0.0,0.0 };
+    VectorRegister	Translation{ 200000.0, 200000.0, 0.0 };
     VectorRegister Scale3D{ 2500,2500,900 };
     EObjectFlags InObjectFlags = RF_Transactional;
     FName InName = NAME_None;
