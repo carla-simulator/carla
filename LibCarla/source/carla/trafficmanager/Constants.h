@@ -108,8 +108,8 @@ static float const STRAIGHT_DEG = 19.0f;
 } // namespace Map
 
 namespace TrafficLight {
-static const uint64_t NO_SIGNAL_PASSTHROUGH_INTERVAL = 5u;
-static const double DOUBLE_NO_SIGNAL_PASSTHROUGH_INTERVAL = 5.0;
+static const double MINIMUM_STOP_TIME = 2.0;
+static const double EXIT_JUNCTION_THRESHOLD = 0;  // Dot product of 90º
 } // namespace TrafficLight
 
 namespace MotionPlan {

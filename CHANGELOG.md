@@ -1,5 +1,14 @@
 ## Latest
 
+  * Fixed bug causing the `world.ground_projection()` function to return an incorrect location at large maps.
+  * Added failure state to vehicles, which can be retrieved by using `Vehicle.get_failure_state()`. Only Rollover failure state is currently supported.
+  * Fixed bug causing the TM to block the simulation when another client teleported a vehicle with no physics.
+  * Fixed bug causing the TM to block the simulation when travelling through a short roads that looped on themselves.
+  * Improved the TM's handling of non signalized junctions, resulting in a more fluid overall behavior.
+  * Added check to avoid adding procedural trigger boxes inside intersections.
+  * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
+  * Python agents now have a function to lane change.
+  * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
   * Added new ConstantVelocityAgent
   * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
   * Added 4 new attributes to all vehicles:
@@ -18,6 +27,8 @@
   * Added new API function: `set_day_night_cycle` at the LightManager, to (de)activate the automatic switch of the lights when the simulation changes from day to night mode, and viceversa.
   * Switch to boost::variant2 for rpc::Command as that allows more than 20 RPC commands
   * Added post process effects for rainy and dusty weathers.
+  * Switched data type of the dust storm weather parameter from bool to float.
+  * Check for the version of the installed Clang compiler during build.
 
 ## CARLA 0.9.13
 

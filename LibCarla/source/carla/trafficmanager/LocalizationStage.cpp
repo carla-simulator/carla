@@ -206,6 +206,10 @@ void LocalizationStage::Update(const unsigned long index) {
       }
       SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
       PushWaypoint(actor_id, track_traffic, waypoint_buffer, next_wp_selection);
+      if (next_wp_selection->GetId() == waypoint_buffer.front()->GetId()){
+        // Found a loop, stop. Don't use zero distance as there can be two waypoints at the same location
+        break;
+      }
     }
   }
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);

@@ -10,12 +10,13 @@ It can also make use of the global route planner to follow a specifed route
 """
 
 import carla
-from enum import Enum
 from shapely.geometry import Polygon
 
-from agents.navigation.local_planner import LocalPlanner
+from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.tools.misc import get_speed, is_within_distance, get_trafficlight_trigger_location, compute_distance
+from agents.tools.misc import (get_speed, is_within_distance,
+                               get_trafficlight_trigger_location,
+                               compute_distance)
 
 
 class BasicAgent(object):
@@ -26,7 +27,7 @@ class BasicAgent(object):
     as well as to change its parameters in case a different driving mode is desired.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}):
+    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
         """
         Initialization the agent paramters, the local and the global planner.
 
@@ -34,10 +35,20 @@ class BasicAgent(object):
             :param target_speed: speed (in Km/h) at which the vehicle will move
             :param opt_dict: dictionary in case some of its parameters want to be changed.
                 This also applies to parameters related to the LocalPlanner.
+            :param map_inst: carla.Map instance to avoid the expensive call of getting it.
+            :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
+
         """
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
-        self._map = self._world.get_map()
+        if map_inst:
+            if isinstance(map_inst, carla.Map):
+                self._map = map_inst
+            else:
+                print("Warning: Ignoring the given map as it is not a 'carla.Map'")
+                self._map = self._world.get_map()
+        else:
+            self._map = self._world.get_map()
         self._last_traffic_light = None
 
         # Base parameters
@@ -68,8 +79,15 @@ class BasicAgent(object):
             self._max_steering = opt_dict['max_brake']
 
         # Initialize the planners
-        self._local_planner = LocalPlanner(self._vehicle, opt_dict=opt_dict)
-        self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
+        self._local_planner = LocalPlanner(self._vehicle, opt_dict=opt_dict, map_inst=self._map)
+        if grp_inst:
+            if isinstance(grp_inst, GlobalRoutePlanner):
+                self._global_planner = grp_inst
+            else:
+                print("Warning: Ignoring the given map as it is not a 'carla.Map'")
+                self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
+        else:
+            self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
 
     def add_emergency_stop(self, control):
         """
@@ -199,6 +217,28 @@ class BasicAgent(object):
     def ignore_vehicles(self, active=True):
         """(De)activates the checks for stop signs"""
         self._ignore_vehicles = active
+
+    def lane_change(self, direction, same_lane_time=0, other_lane_time=0, lane_change_time=2):
+        """
+        Changes the path so that the vehicle performs a lane change.
+        Use 'direction' to specify either a 'left' or 'right' lane change,
+        and the other 3 fine tune the maneuver
+        """
+        speed = self._vehicle.get_velocity().length()
+        path = self._generate_lane_change_path(
+            self._map.get_waypoint(self._vehicle.get_location()),
+            direction,
+            same_lane_time * speed,
+            other_lane_time * speed,
+            lane_change_time * speed,
+            False,
+            1,
+            self._sampling_resolution
+        )
+        if not path:
+            print("WARNING: Ignoring the lane change as no path was found")
+
+        self.set_global_plan(path)
 
     def _affected_by_traffic_light(self, lights_list=None, max_distance=None):
         """
@@ -354,3 +394,76 @@ class BasicAgent(object):
                 return (False, None, -1)
 
         return (False, None, -1)
+
+    def _generate_lane_change_path(self, waypoint, direction='left', distance_same_lane=10,
+                                distance_other_lane=25, lane_change_distance=25,
+                                check=True, lane_changes=1, step_distance=2):
+        """
+        This methods generates a path that results in a lane change.
+        Use the different distances to fine-tune the maneuver.
+        If the lane change is impossible, the returned path will be empty.
+        """
+
+        plan = []
+        plan.append((waypoint, RoadOption.LANEFOLLOW))  # start position
+
+        option = RoadOption.LANEFOLLOW
+
+        # Same lane
+        distance = 0
+        while distance < distance_same_lane:
+            next_wps = plan[-1][0].next(step_distance)
+            if not next_wps:
+                return []
+            next_wp = next_wps[0]
+            distance += next_wp.transform.location.distance(plan[-1][0].transform.location)
+            plan.append((next_wp, RoadOption.LANEFOLLOW))
+
+        if direction == 'left':
+            option = RoadOption.CHANGELANELEFT
+        elif direction == 'right':
+            option = RoadOption.CHANGELANERIGHT
+        else:
+            # ERROR, input value for change must be 'left' or 'right'
+            return []
+
+        lane_changes_done = 0
+        lane_change_distance = lane_change_distance / lane_changes
+
+        # Lane change
+        while lane_changes_done < lane_changes:
+
+            # Move forward
+            next_wps = plan[-1][0].next(lane_change_distance)
+            if not next_wps:
+                return []
+            next_wp = next_wps[0]
+
+            # Get the side lane
+            if direction == 'left':
+                if check and str(next_wp.lane_change) not in ['Left', 'Both']:
+                    return []
+                side_wp = next_wp.get_left_lane()
+            else:
+                if check and str(next_wp.lane_change) not in ['Right', 'Both']:
+                    return []
+                side_wp = next_wp.get_right_lane()
+
+            if not side_wp or side_wp.lane_type != carla.LaneType.Driving:
+                return []
+
+            # Update the plan
+            plan.append((side_wp, option))
+            lane_changes_done += 1
+
+        # Other lane
+        distance = 0
+        while distance < distance_other_lane:
+            next_wps = plan[-1][0].next(step_distance)
+            if not next_wps:
+                return []
+            next_wp = next_wps[0]
+            distance += next_wp.transform.location.distance(plan[-1][0].transform.location)
+            plan.append((next_wp, RoadOption.LANEFOLLOW))
+
+        return plan

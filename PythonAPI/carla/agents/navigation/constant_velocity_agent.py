@@ -22,7 +22,7 @@ class ConstantVelocityAgent(BasicAgent):
     wait for a bit, and then start again.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}):
+    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
         """
         Initialization the agent parameters, the local and the global planner.
 
@@ -30,13 +30,16 @@ class ConstantVelocityAgent(BasicAgent):
             :param target_speed: speed (in Km/h) at which the vehicle will move
             :param opt_dict: dictionary in case some of its parameters want to be changed.
                 This also applies to parameters related to the LocalPlanner.
+            :param map_inst: carla.Map instance to avoid the expensive call of getting it.
+            :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
         """
-        super(ConstantVelocityAgent, self).__init__(vehicle, target_speed, opt_dict=opt_dict)
+        super().__init__(vehicle, target_speed, opt_dict=opt_dict, map_inst=map_inst, grp_inst=grp_inst)
 
         self._use_basic_behavior = False  # Whether or not to use the BasicAgent behavior when the constant velocity is down
         self._target_speed = target_speed / 3.6  # [m/s]
         self._current_speed = vehicle.get_velocity().length()  # [m/s]
         self._constant_velocity_stop_time = None
+        self._collision_sensor = None
 
         self._restart_time = float('inf')  # Time after collision before the constant velocity behavior starts again
 
@@ -52,7 +55,7 @@ class ConstantVelocityAgent(BasicAgent):
         self._set_constant_velocity(target_speed)
 
     def set_target_speed(self, speed):
-        """Changes the target speed of the agent"""
+        """Changes the target speed of the agent [km/h]"""
         self._target_speed = speed / 3.6
         self._local_planner.set_speed(speed)
 
@@ -119,3 +122,8 @@ class ConstantVelocityAgent(BasicAgent):
         blueprint = self._world.get_blueprint_library().find('sensor.other.collision')
         self._collision_sensor = self._world.spawn_actor(blueprint, carla.Transform(), attach_to=self._vehicle)
         self._collision_sensor.listen(lambda event: self.stop_constant_velocity())
+
+    def destroy_sensor(self):
+        if self._collision_sensor:
+            self._collision_sensor.destroy()
+            self._collision_sensor = None

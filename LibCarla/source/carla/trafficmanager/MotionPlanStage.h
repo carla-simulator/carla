@@ -22,7 +22,7 @@ using TLMap = std::unordered_map<std::string, SharedPtr<client::Actor>>;
 class MotionPlanStage: Stage {
 private:
   const std::vector<ActorId> &vehicle_id_list;
-  const SimulationState &simulation_state;
+  SimulationState &simulation_state;
   const Parameters &parameters;
   const BufferMap &buffer_map;
   TrackTraffic &track_traffic;
@@ -70,7 +70,7 @@ private:
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
-                  const SimulationState &simulation_state,
+                  SimulationState &simulation_state,
                   const Parameters &parameters,
                   const BufferMap &buffer_map,
                   TrackTraffic &track_traffic,

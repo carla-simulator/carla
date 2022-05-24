@@ -247,6 +247,12 @@ void LightManager::SetLightState(LightId id, const LightState& new_state) {
   _dirty = true;
 }
 
+void LightManager::SetLightStateNoLock(LightId id, const LightState& new_state) {
+  LightState& state = const_cast<LightState&>(RetrieveLightState(id));
+  state = new_state;
+  _lights_changes[id] = state;
+}
+
 void LightManager::SetLightGroup(LightId id, LightGroup group) {
   std::lock_guard<std::mutex> lock(_mutex);
   LightState& state = const_cast<LightState&>(RetrieveLightState(id));
@@ -317,7 +323,7 @@ void LightManager::UpdateServerLightsState(bool discard_client) {
 void LightManager::ApplyChanges() {
   std::lock_guard<std::mutex> lock(_mutex);
   for(const auto& it : _lights_changes) {
-    SetLightState(it.first, it.second);
+    SetLightStateNoLock(it.first, it.second);
   }
 }
 
