@@ -1,8 +1,9 @@
+#
 # Copyright (c) 2022 Intel Corporation.
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-
+#
 
 from dataclasses import dataclass, field
 from typing import Optional
@@ -10,10 +11,12 @@ from omegaconf import MISSING
 from typing import List, Dict
 import sys
 
+
 @dataclass
 class Sync:
     fps: float = 0.2
     timeout: float = 2.0
+
 
 @dataclass
 class Carla:
@@ -33,11 +36,13 @@ class Location:
     y: float = 0.0
     z: float = 0.0
 
+
 @dataclass
 class Rotation:
     roll: float = 0.0
     pitch: float = 0.0
     yaw: float = 0.0
+
 
 @dataclass
 class Weather:
@@ -51,17 +56,25 @@ class Weather:
     fog_distance: float = 0.0
     wetness: float = 0.0
 
+
 @dataclass
 class Transform:
     location: Location = Location()
     rotation: Rotation = Rotation()
 
+
 @dataclass
 class Blueprint:
     name: str = MISSING
-    attr: Optional[Dict[str, str]] = field(default_factory=lambda: {"image_size_x": 800, "image_size_y": 600, "gamma": 2.2})
-    pace: Optional[str] = MISSING
-    
+    attr: Optional[Dict[str, str]] = field(default_factory=lambda: {
+                                           "image_size_x": 800, "image_size_y": 600, "gamma": 2.2})
+    speed: Optional[float] = 1.4
+
+@dataclass
+class Motion:
+    jitter_magnitude: Optional[Dict[str, float]] = field(default_factory=lambda: {
+                                           "x": 0, "y": 0, "z": 0})
+
 @dataclass
 class Actor:
     blueprint: Blueprint = Blueprint()
@@ -69,10 +82,12 @@ class Actor:
     destination_transform: Transform = Transform()
     attach_to: Optional[str] = MISSING
     attachment: str = "rigid"
+    sensor_motion: Optional[Motion] = Motion()
 
 @dataclass
 class SpawnActors(Actor):
     sensors: Optional[List[Actor]] = MISSING
+
 
 @dataclass
 class ConfigSchema:

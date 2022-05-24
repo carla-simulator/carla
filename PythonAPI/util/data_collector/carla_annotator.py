@@ -126,7 +126,9 @@ def extract_masks(im, category_ids, combine_twowheeled=False, twowheeled_as_pede
             continue
 
         for label in labels:
-            extract_obj_binary = np.zeros_like(img_label)
+            extract_obj_binary = np.zeros_like(
+                img_label
+            )  # Fortran order required for RLE tools
             extract_obj_binary[np.where((img_label == label) & (obj_ids == obj_id))] = 1
             if closing:
                 extract_obj_binary = ndimage.binary_fill_holes(extract_obj_binary).astype(np.uint8)
@@ -535,6 +537,7 @@ if __name__ == "__main__":
                 if instance_dir is not None and camera_dir is not None:
                     dir_pairs.append((instance_dir, camera_dir))
                     camera_dir = None
+            logger.info(dir_pairs)
 
     if args.format in ["mots_png", "mots_txt"]:
         convert_instancemaps_to_mots_format(

@@ -18,6 +18,7 @@ import json
 import logging
 import coloredlogs
 import fnmatch
+import math
 from packaging import version
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ class CarlaSyncMode(object):
                 data = sync_mode.tick(timeout=1.0)
     """
 
-    def __init__(self, client, *sensors, tm_port=8000, fps=30, respawn=True):
+    def __init__(self, client, *sensors, tm_port=8000, tm_seed=30, fps=30, respawn=True):
         self.world = client.get_world()
         self.sensors = sensors
         logger.info(f"Init sensors: {self.sensors}, kwargs: {fps}")
@@ -49,6 +50,7 @@ class CarlaSyncMode(object):
         self._settings = None
         self.traffic_manager = client.get_trafficmanager(tm_port)
         self.traffic_manager.set_respawn_dormant_vehicles(respawn)
+        self.tm_seed = tm_seed
 
     def __enter__(self):
         self._settings = self.world.get_settings()
@@ -57,6 +59,7 @@ class CarlaSyncMode(object):
             synchronous_mode=True,
             fixed_delta_seconds=self.delta_seconds))
         self.traffic_manager.set_synchronous_mode(True)
+        self.traffic_manager.set_random_device_seed(self.tm_seed)
         time.sleep(1)
 
         def make_queue(register_event, actor_id=None):
@@ -99,8 +102,106 @@ def conf_to_carla_transform(conf):
     return transform
 
 
+def calculate_sensor_step_diff(conf, actor):
+    start = conf.get("transform", None)
+    if start is None:
+        start = actor.get_transform()
+    dest = conf.get("destination_transform", None)
+    speed = conf.blueprint.get("speed", 0.5)
+    sensor_motion = conf.get("sensor_motion", None)
+
+    motion_step_dict = {}
+    if not sensor_motion:
+        return
+
+    jitter = sensor_motion.get("jitter_magnitude", None)
+    if jitter is not None:
+
+        motion_step_dict["jitter_bound_min"] = carla.Location(x=-1*jitter.get('x', 0.0), y=-1*jitter.get('y', 0.0), z=-1*jitter.get('x', 0.0))
+        motion_step_dict["jitter_bound_max"] = carla.Location(x=jitter.get('x', 0.0), y=jitter.get('y', 0.0), z=jitter.get('x', 0.0))
+        motion_step_dict["jitter_magnitude"] = jitter
+
+    # Calculate linear motion steps:
+    if start is not None and dest is not None:
+        start_loc = start.location
+        dest_loc = dest.location
+        x_dist = dest_loc.get('x', 0.0) - start_loc.get('x', 0.0)
+        y_dist = dest_loc.get('y', 0.0) - start_loc.get('y', 0.0)
+        z_dist = dest_loc.get('z', 0.0) - start_loc.get('z', 0.0)
+        time = math.ceil(math.sqrt((x_dist)**2 + (y_dist)**2 + (z_dist)**2))/speed
+
+        x_step = x_dist/time
+        y_step = y_dist/time
+        z_step = z_dist/time
+
+        motion_step_dict["linear_motion_step"] = carla.Location(x=x_step, y=y_step, z=z_step)
+        motion_step_dict["linear_motion_time"] = time
+        motion_step_dict["destination"] = carla.Location(x=dest_loc.get('x', 0.0), y=dest_loc.get('y', 0.0), z=dest_loc.get('z', 0.0))
+    return motion_step_dict
+
+
+def step_sensor(sensor, sensor_motion_dicts, local_time_step):
+    """Function to step sensors that have a specified motion configured (as per <config.yaml>)
+
+    Args:
+        sensor (carla.Sensor): The carla sensor to move by a step
+        sensor_motion_dict (dict(sensor_id: dict()): Dictionary containing the configured motion specifications
+        local_time_step (int): Current time step, if time step % rotation_period == 0, revert rotation
+    """
+    if not sensor_motion_dicts:
+        return
+
+    if sensor.id not in sensor_motion_dicts.keys():
+        return
+
+    sensor_motion_dict = sensor_motion_dicts[sensor.id]
+    location_step = sensor_motion_dict["linear_motion_step"]
+    linear_motion_time = sensor_motion_dict["linear_motion_time"]
+    jitter = sensor_motion_dict["jitter_magnitude"]
+    sensor_transform = sensor.get_transform()
+
+    sensor_old_loc = sensor_transform.location
+    sensor_old_rot = sensor_transform.rotation
+    new_x = sensor_old_loc.x
+    new_y = sensor_old_loc.y
+    new_z = sensor_old_loc.z
+
+    if location_step is not None:
+        logger.info("Stepping sensor with Sensor ID: " + str(sensor.id))
+        if local_time_step <= linear_motion_time:
+            new_x += location_step.x
+            new_y += location_step.y
+            new_z += location_step.z
+
+    if jitter is not None:
+        # Calculate jitter:
+        x_mag = jitter.get("x", 0.0)
+        y_mag = jitter.get("y", 0.0)
+        z_mag = jitter.get("z", 0.0)
+        jitter_x = random.uniform(-1*x_mag, x_mag)
+        jitter_y = random.uniform(-1*y_mag, y_mag)
+        jitter_z = random.uniform(-1*z_mag, z_mag)
+        if local_time_step == 1:
+            sensor_motion_dict["jitter_prev"] = carla.Location(x=jitter_x, y=jitter_y, z=jitter_z)
+        else:
+            old_jitter = sensor_motion_dict["jitter_prev"]
+            new_x -= old_jitter.x
+            new_y -= old_jitter.y
+            new_z -= old_jitter.z
+            sensor_motion_dict["jitter_prev"] = carla.Location(x=jitter_x, y=jitter_y, z=jitter_z)
+            new_x += jitter_x
+            new_y += jitter_y
+            new_z += jitter_z
+
+    sensor_loc = carla.Location(x=new_x, y=new_y, z=new_z)
+    sensor.set_transform(carla.Transform(sensor_loc, sensor_old_rot))
+
+    return
+
+
 def spawn_actors(conf, world, parent=None):
-    actors = {} #{id: (actor, should_destroy)}
+    actors = {}  # {id: (actor, should_destroy)}
+    sensor_motion = {}  # {id: {<motion_config>: <value>}}
 
     for actor_conf in conf:
         # Pass parent because...
@@ -116,15 +217,20 @@ def spawn_actors(conf, world, parent=None):
             else:
                 actors[actor.id] = (actor, True, None)
                 derived_parent = actor.parent
+                if fnmatch.fnmatch(actor.type_id, "sensor.*"):
+                    motion_dict = calculate_sensor_step_diff(actor_conf, actor)
+                    if motion_dict:
+                        sensor_motion[actor.id] = motion_dict
             if derived_parent is not None and (fnmatch.fnmatch(derived_parent.type_id, "vehicle.*") or fnmatch.fnmatch(derived_parent.type_id, "walker.pedestrian.*")):
                 # If actor has a parent and it's parent is not the default parent, then it was spawned by another script and we should not destroy this actor
                 actors[derived_parent.id] = (derived_parent, derived_parent == parent, None)
                 logger.info(f"Found actor : {derived_parent.type_id} with id: {derived_parent.id} to enable autopilot")
 
-        attached_actors = spawn_actors(actor_conf.get("sensors", []), world, parent=actor)
+        attached_actors, sensor_motion_steps = spawn_actors(actor_conf.get("sensors", []), world, parent=actor)
         actors.update(attached_actors)
+        sensor_motion.update(sensor_motion_steps)
 
-    return actors
+    return actors, sensor_motion
 
 
 def conf_to_actor(conf, world, parent=None):
@@ -148,16 +254,19 @@ def conf_to_actor(conf, world, parent=None):
         dest_transform = conf_to_carla_transform(conf.destination_transform).location
 
     actor = world.spawn_actor(blueprint, transform, attach_to=attach_to, attachment_type=attachment)
+    world.tick()
     # Spawn a walker controller to control the walker
     if fnmatch.fnmatch(actor.type_id, "walker.pedestrian.*"):
         walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
         walker_controller = world.spawn_actor(walker_controller_bp, carla.Transform(), attach_to=actor)
+        world.tick()
         walker_speed = conf.blueprint.get("speed", float(blueprint.get_attribute('speed').recommended_values[1])) # Set default value to walking speed 1.7 m/s
         logger.debug("Recommended value for walker speed: " + str(blueprint.get_attribute('speed').recommended_values))  # Recommended values
 
         return [actor, (walker_controller, dest_transform, walker_speed)]
 
     return [actor]
+
 
 def conf_to_blueprint(conf, library):
     blueprints = library.filter(conf.name)
@@ -323,6 +432,7 @@ def save_actors_dynamic_metadata(actors, worldsnapshot, world):
 
     return actors_data
 
+
 # ==============================================================================
 # -- data_saver_loop() ---------------------------------------------------------------
 # ==============================================================================
@@ -335,6 +445,9 @@ def data_saver_loop(conf):
     # Try connecting "retry" (default = 10) times
     client = None
     retry = conf.carla.get("retry", 10)
+    tm_port = conf.carla.get("traffic_manager_port", 8000)
+    fps = conf.carla.get("fps", 30)
+
     for i in range(retry):
         try:
             client = carla.Client(conf.carla.host, conf.carla.port)
@@ -348,11 +461,28 @@ def data_saver_loop(conf):
             assert client_version == server_version, "CARLA server and client should have same version"
             assert version.parse(client_version) >= version.parse('0.9.13'), "CARLA version needs be >= '0.9.13'"
 
+            world = client.get_world()
+            world.apply_settings(carla.WorldSettings(
+                no_rendering_mode=False,
+                synchronous_mode=True,
+                fixed_delta_seconds=1.0/fps))
+            traffic_manager = client.get_trafficmanager(tm_port)
+            traffic_manager.set_synchronous_mode(True)
+            traffic_manager.set_random_device_seed(conf.carla.seed)
+
+            world.tick()
             if conf.carla.get("townmap"):
                 logger.info(f"Loading map {conf.carla.townmap}.")
-                world = client.load_world(conf.carla.townmap)
+                world = client.load_world(conf.carla.townmap, reset_settings=False)
             else:
-                world = client.get_world()
+                world = client.reload_world(reset_settings=False)
+            # Check if synchronous:
+            t_prev = world.get_snapshot().timestamp.elapsed_seconds
+            world.tick()
+            t_curr = world.get_snapshot().timestamp.elapsed_seconds
+            t_between_ticks = t_curr - t_prev
+            logger.info("Time between ticks: " + str(t_between_ticks) + " and Delta seconds: " + str(world.get_settings().fixed_delta_seconds))
+
             break
 
         except RuntimeError:
@@ -361,8 +491,6 @@ def data_saver_loop(conf):
             time.sleep(5)
 
     max_frames = conf.get("max_frames", sys.maxsize)
-    tm_port = conf.carla.get("traffic_manager_port", 8000)
-    fps = conf.carla.get("fps", 30)
     respawn = conf.carla.get("respawn", True)
 
     logger.info("Setting weather.")
@@ -371,10 +499,13 @@ def data_saver_loop(conf):
             sun_azimuth_angle=conf.weather.sun_azimuth_angle, sun_altitude_angle=conf.weather.sun_altitude_angle, \
             fog_density=conf.weather.fog_density, fog_distance=conf.weather.fog_distance, wetness=conf.weather.wetness)
     world.set_weather(weather)
+    world.set_pedestrians_seed(conf.carla.seed)
 
     actor_dict = {}
     try:
-        actor_dict = spawn_actors(conf.spawn_actors, world)
+        actor_dict, sensor_motion_dict = spawn_actors(conf.spawn_actors, world)
+        logger.info("Retrieved sensor motion dict after spawning all actors" + str(sensor_motion_dict))
+        world.tick()
         # actor_dict: {actor_id: (actor, should_destroy, (destination, speed))}
         for actor, _, walker_attr in actor_dict.values():
             if walker_attr:
@@ -388,7 +519,7 @@ def data_saver_loop(conf):
                 actor.set_light_state(carla.VehicleLightState.NONE)
 
         sensor_list = list(map(lambda x: x[0], filter(lambda a: fnmatch.fnmatch(a[0].type_id, "sensor.*"), actor_dict.values())))
-        sensor_id_to_sensor_type =  {actor.id: actor.type_id for actor in sensor_list}
+        sensor_id_to_sensor_type = {actor.id: actor.type_id for actor in sensor_list}
 
         metadata_path = os.path.join(conf.output_dir, 'metadata')
         if not os.path.exists(metadata_path):
@@ -406,7 +537,7 @@ def data_saver_loop(conf):
 
         local_frame_num = 0
         # Create a synchronous mode context.
-        with CarlaSyncMode(client, *sensor_list, tm_port=tm_port, fps=fps, respawn=respawn) as sync_mode:
+        with CarlaSyncMode(client, *sensor_list, tm_port=tm_port, tm_seed=conf.carla.seed, fps=fps, respawn=respawn) as sync_mode:
             while True:
                 local_frame_num += 1
                 logging.info("Begin sync_mode.tick")
@@ -440,6 +571,7 @@ def data_saver_loop(conf):
 
                     # CARLA's default file format for saving LIDAR data is ply, which can take a lot of disk space
                     data.save_to_disk(path)
+                    step_sensor(world.get_actor(sensor_id), sensor_motion_dict, local_frame_num)
 
                 metadata_dynamic_file = f"{metadata_path}/{local_frame_num:08}.json"
                 with open(metadata_dynamic_file, 'w') as f:

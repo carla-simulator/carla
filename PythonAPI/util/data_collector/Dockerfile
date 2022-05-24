@@ -1,14 +1,14 @@
 # Copyright (c) 2022 Intel Corporation.
 #
-# SPDX-License-Identifier: MIT
-
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
 FROM carlasim/carla:0.9.13
 USER root
 RUN rm /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/nvidia-ml.list
 RUN apt-get update
 RUN apt-get install -y build-essential
 RUN apt-get install -y libjpeg-dev libtiff-dev
-RUN apt-get install -y python3.7 python3.7-dev python3-distutils
+RUN apt-get install -y python3.7 python3.7-dev python3-distutils 
 RUN apt-get install -y python3-pip
 RUN apt-get install -y git
 RUN apt-get install -y xdg-user-dirs xdg-utils

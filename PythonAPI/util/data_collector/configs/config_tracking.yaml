@@ -59,9 +59,9 @@ spawn_actors:
       attr: {role_name: "hero2", is_invincible: "false"}
       speed: 2.0
     transform:
-      location: {x: -91, y: 150, z: 0.6}
+      location: {x: -93, y: 150, z: 0.6}
       rotation: {yaw: 90.0}
     destination_transform:
-      location: {x: -91, y: 170, z: 0.6}
+      location: {x: -93, y: 170, z: 0.6}
 
 
