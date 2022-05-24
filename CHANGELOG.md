@@ -1,5 +1,6 @@
 ## Latest
 
+  * Fixed bug causing the scene lights to return an incorrect location at large maps.
   * Fixed bug causing the `world.ground_projection()` function to return an incorrect location at large maps.
   * Added failure state to vehicles, which can be retrieved by using `Vehicle.get_failure_state()`. Only Rollover failure state is currently supported.
   * Fixed bug causing the TM to block the simulation when another client teleported a vehicle with no physics.
