@@ -109,7 +109,7 @@ public:
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
-      const FMapGeneratorMetaInfo& MetaInfo, const FString Weather);
+      const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   void LandscapePostEditEvent(ALandscape* Landscape);
