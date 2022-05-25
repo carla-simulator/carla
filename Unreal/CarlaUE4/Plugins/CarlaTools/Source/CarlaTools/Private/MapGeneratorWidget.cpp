@@ -384,12 +384,6 @@ bool UMapGeneratorWidget::DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaI
             UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No landscape found in tile %s %d_%d ------- Actors found: %d"), 
                 *CUR_CLASS_FUNC_LINE, *World->GetName(), MetaTileInfo.IndexX, MetaTileInfo.IndexY, ActorsInWorld.Num());
 
-      // Landscape->ComponentSizeQuads = 126;
-      // Landscape->SubsectionSizeQuads = 63;
-      // Landscape->NumSubsections = 4;
-      // UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Landscape info %d %d %d"), 
-      //       *CUR_CLASS_FUNC_LINE, Landscape->ComponentSizeQuads, Landscape->SubsectionSizeQuads, Landscape->NumSubsections);
-
       AssignLandscapeHeightMap(Landscape, MetaTileInfo);
 
       const FString PackageName = MetaInfo.DestinationPath + "/" + MapName;
@@ -484,8 +478,6 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating %s main large map in %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, *MetaInfo.DestinationPath);
   FAssetData WorldAssetData;
-  // bool bLoaded = LoadBaseLargeMapWorld(WorldAssetData);
-  // bool bSaved = SaveWorld(WorldAssetData, MetaInfo.DestinationPath, MetaInfo.MapName, true);
 
   const FString BaseWorldSearchPath = TEXT("/CarlaTools/MapGenerator/BaseMap/MainLargeMap/MapGeneratorBaseLargeMap.MapGeneratorBaseLargeMap");
   UWorld* BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldSearchPath);
@@ -521,47 +513,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
     {
       UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating tile map %s (%d_%d)"), 
           *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, i, j);
-      
-      // const FString BaseWorldSearchPath = TEXT("/CarlaTools/MapGenerator/BaseMap/Tiles/MapGeneratorBaseMap.MapGeneratorBaseMap");
-
-      // UWorld* BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldSearchPath);
-
-
-      // const FString MapName = 
-      //     MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);  
-      // const FString PackageName = MetaInfo.DestinationPath + "/" + MapName;
-
-      // UPackage* TilePackage = CreatePackage(*PackageName);
-
-
-      // FObjectDuplicationParameters Parameters(BaseWorld, TilePackage);
-      // Parameters.DestName = FName(*MapName);
-      // Parameters.DestClass = BaseWorld->GetClass();
-      // Parameters.DuplicateMode = EDuplicateMode::World;
-      // Parameters.PortFlags = PPF_Duplicate;
-      // // Parameters.PortFlags = PPF_DuplicateForPIE;
-
-      // UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
-
-      // if (World == nullptr)
-      //   UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No world found in tile %s %d_%d"), 
-      //       *CUR_CLASS_FUNC_LINE, *World->GetName(), i, j);    
-
-      // const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-      //     PackageName, 
-      //     FPackageName::GetMapPackageExtension());
-      // UPackage::SavePackage(TilePackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      //     *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-
-      // // TODO PROV
-      // FText ErrorUnloadingStr;
-      // bool bUnload = FEditorFileUtils::AttemptUnloadInactiveWorldPackage(BaseWorld->GetPackage(),ErrorUnloadingStr);
-      // if(!bUnload){
-      //   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error unloading Base map: %s"), 
-      //       *CUR_CLASS_FUNC_LINE, *ErrorUnloadingStr.ToString());
-      //   return false;
-      // }
-
 
       const FString BaseWorldSearchPath = TEXT("/CarlaTools/MapGenerator/BaseMap/TilesEmpty/BaseTileEmpty.BaseTileEmpty");
 
@@ -585,12 +536,19 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No world found in tile %s %d_%d"), 
             *CUR_CLASS_FUNC_LINE, *World->GetName(), i, j);
 
-      
+      // 4033 x 4033
       ALandscape* Landscape = World->SpawnActor<ALandscape>();
-      Landscape->ComponentSizeQuads = 126;
-      Landscape->SubsectionSizeQuads = 63;
-      Landscape->NumSubsections = 2;
+      Landscape->ComponentSizeQuads = 126; // Component Size
+      Landscape->SubsectionSizeQuads = 63; // Quads / Section
+      Landscape->NumSubsections = 2;       // (1 for 1x1 , 2 for 2x2)
       Landscape->SetLandscapeGuid(FGuid::NewGuid());
+
+      // 2017 x 2017
+      // ALandscape* Landscape = World->SpawnActor<ALandscape>();
+      // Landscape->ComponentSizeQuads = 63;
+      // Landscape->SubsectionSizeQuads = 63;
+      // Landscape->NumSubsections = 1;
+      // Landscape->SetLandscapeGuid(FGuid::NewGuid());
 
       // Landscape Material
 
@@ -599,20 +557,34 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Heightmap detected with dimensions %dx%d"), 
             *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
       TArray<uint16> HeightData;
+      // FTextureRenderTargetResource* RenderTargetResource = HeightRT->GetRenderTargetResource();
       FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
       FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
       // FIntRect Rect = FIntRect(0, 0, FMath::Min(1 + MaxX - MinX, HeightRT->SizeX), FMath::Min(1 + MaxY - MinY, HeightRT->SizeY));
       TArray<FLinearColor> HeightmapColor;
+      ////
+      // TArray<uint16> HeightData;
+      // HeightData.Init(0, 2017*2017);
+      // HeightmapColor.Reserve(2017*2017);
+      ////
       HeightmapColor.Reserve(Rect.Width() * Rect.Height());
       RenderTargetResource->ReadLinearColorPixels(HeightmapColor, FReadSurfaceDataFlags(RCM_MinMax, CubeFace_MAX), Rect);
       HeightData.Reserve(HeightmapColor.Num());
 
+      // int IterCount = 0;
       for(FLinearColor LinearColor : HeightmapColor)
       {
-        HeightData.Add((uint16)LinearColor.R);
+        // HeightData.Add((uint16)(LinearColor.R * 255 + LinearColor.G));
+        HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
+        // HeightData.Add(((uint16)LinearColor.R << 8) | (uint16)LinearColor.G);
+        // HeightData.Add((uint16)LinearColor.R);
+        // if(IterCount % 10 == 0)
+        //  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Color: %d"), 
+        //     *CUR_CLASS_FUNC_LINE, HeightData.Last());
       }
-      ///////////////////////
+      
 
+      // FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f*255);
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
@@ -620,13 +592,13 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       TMap<FGuid, TArray<uint16>> HeightmapDataPerLayers;
 	    TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayer;
 
-      // TArray<uint16> HeightData;
-      // HeightData.Init(0, 4033*4033);
       HeightmapDataPerLayers.Add(FGuid(), HeightData);
       MaterialLayerDataPerLayer.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
 	
       Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, HeightRT->SizeX-1, HeightRT->SizeY-1, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
           HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
+      // Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, 2016, 2016, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
+      //     HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
 
 
       FVector LandscapeOrigin;
