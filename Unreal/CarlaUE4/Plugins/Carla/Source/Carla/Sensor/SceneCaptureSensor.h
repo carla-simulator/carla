@@ -444,4 +444,6 @@ protected:
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
 
+  FGBufferData GBuffer;
+
 };

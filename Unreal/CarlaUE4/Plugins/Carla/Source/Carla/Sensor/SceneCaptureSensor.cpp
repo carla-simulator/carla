@@ -52,7 +52,7 @@ namespace SceneCaptureSensor_local_ns {
 // =============================================================================
 
 ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer)
-  : Super(ObjectInitializer)
+  : Super(ObjectInitializer), GBuffer()
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -460,26 +460,12 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
   return CaptureComponent2D->PostProcessSettings.ChromaticAberrationStartOffset;
 }
 
-template <typename T>
-static void SendGBuffer(ASceneCaptureSensor& self, T& CameraGBuffer, TArray<FColor>& Pixels, FIntPoint Extent)
-{
-  auto GBufferStream = CameraGBuffer.GetDataStream(self);
-  auto Buffer = GBufferStream.PopBufferFromPool();
-  auto Offset = carla::sensor::SensorRegistry::get<FCameraGBufferUint8*>::type::header_offset;
-
-  Buffer.copy_from(Offset, Pixels);
-  if (Buffer.data())
-  {
-    SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-    GBufferStream.Send(CameraGBuffer, std::move(Buffer), Extent.X, Extent.Y, self.GetFOVAngle());
-  }
-}
-
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-
+  #if 0
+  CaptureComponent2D->CaptureScene();
+  #else
   uint64 Mask = 0;
   if (CameraGBuffers.SceneColor.bIsUsed)
     Mask |= UINT64_C(1) << 0;
@@ -504,84 +490,18 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
 
   if (Mask != 0)
   {
-    auto GBuffer = new FGBufferData();
-    GBuffer->DesiredTexturesMask = Mask;
-    GBuffer->OwningActor = CaptureComponent2D->GetViewOwner();
+    GBuffer.DesiredTexturesMask = Mask;
+    GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
     for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
-      if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
-        GBuffer->Payloads[i].Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
-    CaptureComponent2D->CaptureSceneWithGBuffer(*GBuffer);
-
-    AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this, GBuffer] {
-
-      for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
-      {
-        if ((GBuffer->DesiredTexturesMask & (UINT64_C(1) << i)) == 0)
-        {
-          continue;
-        }
-        auto& Payload = GBuffer->Payloads[i];
-        auto Readback = Payload.Readback.Get();
-        check(Readback != nullptr);
-        bool ignore = false;
-        while (!Readback->IsReady())
-        {
-          ignore = Payload.is_dummy_texture.load(std::memory_order_acquire);
-          if (ignore)
-            break;
-          std::this_thread::yield();
-        }
-        if (ignore)
-          continue;
-        auto Extent = Payload.Extent;
-        auto InternalExtent = Payload.InternalExtent;
-        auto Format = Payload.Format;
-        check(Format != PF_Unknown);
-        auto Pixels = ImageUtil::ExtractTexturePixelsFromReadback(Readback, InternalExtent, Extent, Format);
-        check(Pixels.Num() != 0);
-        switch (i)
-        {
-          case 0:
-            SendGBuffer(*this, CameraGBuffers.SceneColor, Pixels, Extent);
-            break;
-          case 1:
-            SendGBuffer(*this, CameraGBuffers.SceneDepth, Pixels, Extent);
-            break;
-          case 2:
-            SendGBuffer(*this, CameraGBuffers.GBufferA, Pixels, Extent);
-            break;
-          case 3:
-            SendGBuffer(*this, CameraGBuffers.GBufferB, Pixels, Extent);
-            break;
-          case 4:
-            SendGBuffer(*this, CameraGBuffers.GBufferC, Pixels, Extent);
-            break;
-          case 5:
-            SendGBuffer(*this, CameraGBuffers.GBufferD, Pixels, Extent);
-            break;
-          case 6:
-            SendGBuffer(*this, CameraGBuffers.GBufferE, Pixels, Extent);
-            break;
-          case 7:
-            SendGBuffer(*this, CameraGBuffers.GBufferF, Pixels, Extent);
-            break;
-          case 8:
-            SendGBuffer(*this, CameraGBuffers.Velocity, Pixels, Extent);
-            break;
-          case 9:
-            SendGBuffer(*this, CameraGBuffers.SSAO, Pixels, Extent);
-            break;
-          default:
-            check(false);
-        }
-      }
-      delete GBuffer;
-    });
+      if ((GBuffer.DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
+        GBuffer.Payloads[i].Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
+    CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
   }
   else
   {
     CaptureComponent2D->CaptureScene();
   }
+  #endif
 }
 
 void ASceneCaptureSensor::BeginPlay()

@@ -6,6 +6,7 @@
 namespace ImageUtil
 {
     TArray<FColor> ExtractTexturePixelsFromReadback(
+		FRHICommandListImmediate& RHICmdList,
 		FRHIGPUTextureReadback* Readback,
         FIntPoint SourceExtent,
         FIntPoint DestinationExtent,
@@ -23,7 +24,7 @@ namespace ImageUtil
         
         void* MappedPtr;
         int32 SourcePitch;
-        Readback->LockTexture(FRHICommandListExecutor::GetImmediateCommandList(), MappedPtr, SourcePitch);
+        Readback->LockTexture(RHICmdList, MappedPtr, SourcePitch);
 		check(MappedPtr != nullptr);
         auto Data = (uint8*)MappedPtr;
 		SourcePitch *= BlockBytes;
