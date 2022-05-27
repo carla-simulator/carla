@@ -48,6 +48,11 @@
 #define OTHER_LOG(...)
 #endif
 
+template <class T>
+static T GetSign(T n)
+{
+  return n < 0.0f ? -1.0f : 1.0f;
+}
  
 template <class T>
 static FString EigenToFString(T& t)
@@ -833,21 +838,21 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
 
     if (abs(NewPitch) > MaxPitch){
-      NewPitch = FClangPlatformMath::Sign(NewPitch) * MaxPitch;
+      NewPitch = GetSign(NewPitch) * MaxPitch;
 
       NewAngularVelocity.Pitch = 0.0f;
       NewAngularAccel.Pitch = 0.0f;
     }
 
     if (abs(NewYaw) > MaxYaw){
-      NewYaw = FClangPlatformMath::Sign(NewYaw) * MaxYaw;
+      NewYaw = GetSign(NewYaw) * MaxYaw;
 
       NewAngularVelocity.Yaw = 0.0f;
       NewAngularAccel.Yaw = 0.0f;
     }
 
     if (abs(NewRoll) > MaxRoll){
-      NewRoll = FClangPlatformMath::Sign(NewRoll) * MaxRoll;
+      NewRoll = GetSign(NewRoll) * MaxRoll;
       NewAngularVelocity.Roll = 0.0f;
       NewAngularAccel.Roll = 0.0f;
     }
