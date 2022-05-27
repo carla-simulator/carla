@@ -15,7 +15,7 @@
 #include <cmath>
 #include <sstream>
 
-#define SPRINGVEGETATIONLOGS 1
+#define SPRINGVEGETATIONLOGS 0
 #define SOLVERLOGS 0
 #define COLLISIONLOGS 1
 #define ACCUMULATIONLOGS 0
@@ -824,33 +824,30 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     Eigen::Vector3d FinalNewTheta = U*NewTheta;
     Eigen::Vector3d FinalNewThetaVelocity = U*NewThetaVelocity;
     Eigen::Vector3d FinalNewThetaAccel = U*NewThetaAccel;
-    //TODO: que el mathradianstodegrees no se pase de un maximo de rotación.
-    //finalnewtheta devuelve la diferecnia con respecto al hueso en reposo.
-    //finalnewtheta está en radianes y los rotator en grados.
-    //float maxAngle editable desde editor en grados.
-    //mirar Fmathclamp
-    //si se pasa de angulo cambiar angular velocity y angular acceleration a 0
-    //si se pasa el new angle.yaw setear solo angular vel y angular acce a 0, pero el resto no
+
     auto NewPitch = FMath::RadiansToDegrees(FinalNewTheta(1));
     auto NewYaw = FMath::RadiansToDegrees(FinalNewTheta(2));
     auto NewRoll = FMath::RadiansToDegrees(FinalNewTheta(0));
     
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
-    if (NewPitch > MaxPitch){
-      NewPitch = MaxPitch;
+
+    if (abs(NewPitch) > MaxPitch){
+      NewPitch = FClangPlatformMath::Sign(NewPitch) * MaxPitch;
+
       NewAngularVelocity.Pitch = 0.0f;
       NewAngularAccel.Pitch = 0.0f;
     }
 
-    if (NewYaw > MaxYaw){
-      NewYaw = MaxYaw;
+    if (abs(NewYaw) > MaxYaw){
+      NewYaw = FClangPlatformMath::Sign(NewYaw) * MaxYaw;
+
       NewAngularVelocity.Yaw = 0.0f;
       NewAngularAccel.Yaw = 0.0f;
     }
 
-    if (NewRoll > MaxRoll){
-      NewRoll = MaxRoll;
+    if (abs(NewRoll) > MaxRoll){
+      NewRoll = FClangPlatformMath::Sign(NewRoll) * MaxRoll;
       NewAngularVelocity.Roll = 0.0f;
       NewAngularAccel.Roll = 0.0f;
     }

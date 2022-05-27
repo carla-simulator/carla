@@ -197,8 +197,6 @@ void ACarlaWheeledVehicle::BeginPlay()
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
   }
-
-  //InitFoliagePool();
 }
 
 void ACarlaWheeledVehicle::UpdateProceduralFoliage()
@@ -208,12 +206,18 @@ void ACarlaWheeledVehicle::UpdateProceduralFoliage()
   GetOwner()->GetAllChildActors(ToIgnore, true);
   ToIgnore.Add(GetOwner());
   
+  const FTransform OwnerTransform = GetActorTransform();
   const FVector OwnerLocation = GetActorLocation();
-  FoliageBoundingBox = FBox(OwnerLocation - DetectionSize, OwnerLocation + DetectionSize);
+  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
+  FBox Box = FBox(-Vec, Vec);
+  FTransform Transform {};
+  Transform.CopyRotation(OwnerTransform);
+  Transform.CopyTranslation(OwnerTransform);
+  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
 
   UKismetSystemLibrary::BoxOverlapActors(GetWorld(),
- 			GetActorLocation(),
- 			DetectionSize,
+ 			OwnerLocation,
+ 			FoliageBoundingBox.GetExtent(),
  			ToCollide,
  			nullptr,
  			ToIgnore,
