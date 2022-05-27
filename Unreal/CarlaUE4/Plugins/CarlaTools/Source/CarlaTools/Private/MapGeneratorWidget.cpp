@@ -572,16 +572,28 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       HeightData.Reserve(HeightmapColor.Num());
 
       // int IterCount = 0;
+      // float R = 1.0f;
+      // float G = 1.0f;
       for(FLinearColor LinearColor : HeightmapColor)
       {
-        // HeightData.Add((uint16)(LinearColor.R * 255 + LinearColor.G));
+      //   if(IterCount % HeightRT->SizeX == 0)
+      //   {
+      //     R -= 0.001f;
+      //     // G -= 0.01f;
+      //   }
+      //   HeightData.Add((uint16)(R * 255 * 255 + G * 255));
+      //   IterCount++;
         HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
-        // HeightData.Add(((uint16)LinearColor.R << 8) | (uint16)LinearColor.G);
-        // HeightData.Add((uint16)LinearColor.R);
-        // if(IterCount % 10 == 0)
-        //  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Color: %d"), 
-        //     *CUR_CLASS_FUNC_LINE, HeightData.Last());
+      //   // // HeightData.Add((uint16)(LinearColor.R * 255 + LinearColor.G));
+      //   // // HeightData.Add(((uint16)LinearColor.R << 8) | (uint16)LinearColor.G);
+      //   // // HeightData.Add((uint16)LinearColor.R);
+      //   // // if(IterCount % 10 == 0)
+      //   // //  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Color: %d"), 
+      //   // //     *CUR_CLASS_FUNC_LINE, HeightData.Last());
       }
+
+      // HeightmapGenerator HMGenerator();
+      // HeightData = UHeightmapGenerator::GenerateHeightmap(Rect.Width());
       
 
       // FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f*255);
