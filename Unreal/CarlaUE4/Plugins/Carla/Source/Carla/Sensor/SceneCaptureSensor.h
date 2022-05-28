@@ -32,6 +32,7 @@ class CARLA_API ASceneCaptureSensor : public ASensor
 
   friend class ACarlaGameModeBase;
   friend class FPixelReader;
+  friend class FPixelReader2;
 
 public:
 
