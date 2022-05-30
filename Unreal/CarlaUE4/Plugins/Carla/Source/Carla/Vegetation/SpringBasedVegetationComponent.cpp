@@ -293,24 +293,6 @@ void USpringBasedVegetationComponent::BeginPlay()
   // set callbacks
   SkeletalMesh->OnComponentHit.AddDynamic(this, &USpringBasedVegetationComponent::OnCollisionEvent);
   
-  // // Get skeleton hierarchy
-  // TArray<FName> BoneNames;
-  // SkeletalMesh->GetBoneNames(BoneNames);
-  // Skeleton.Clear();
-  // for (int32 i = 0; i < BoneNames.Num(); i++)
-  // {
-  //   FName& BoneName = BoneNames[i];
-  //   FString BoneNameString = BoneName.ToString();
-  //   bool bIsFixedJoint = FixedJointsList.Contains(BoneNameString) || 
-  //       (DebugJointsToSimulate.Num() && !DebugJointsToSimulate.Contains(BoneNameString));
-  //   FName ParentBoneName = SkeletalMesh->GetParentBone(BoneName);
-  //   int32 ParentIndex = SkeletalMesh->GetBoneIndex(ParentBoneName);
-  //   Skeleton.Joints.Add(FSkeletonJoint{i, ParentIndex, BoneNameString, bIsFixedJoint});
-  //   OTHER_LOG(Log, "Added bone %s with id %d and parent %d", *BoneNameString, i, ParentIndex);
-  // }
-
-  // Skeleton.ComputeChildrenJointsAndBones();
-  // Skeleton.ComputeEndJoints();
   if (!Skeleton.Joints.Num())
   {
     GenerateSkeletonHierarchy();
@@ -405,16 +387,11 @@ void USpringBasedVegetationComponent::ComputeSpringStrengthForBranches()
     float HorizontalDistance = FMath::PointDistToLine(JointLocation, TreeAxis, RootLocation, ClosestPoint);
     float VerticalDistance = FVector::Distance(ClosestPoint, RootLocation);
 
-    // Joint.SpringStrength = BaseSpringStrength*
-    //     FMath::Exp(-HorizontalFallof*HorizontalDistance - VerticalFallof*VerticalDistance);
     Joint.SpringStrength = FMath::Max(
           BaseSpringStrength - HorizontalFallof*HorizontalDistance - VerticalFallof*VerticalDistance,
           MinSpringStrength);
 
     OTHER_LOG(Log, "Joint: %s, location %s, Strength %f", *Joint.JointName, *JointLocation.ToString(), Joint.SpringStrength);
-    // DrawDebugLine(GetWorld(), RootLocation, ClosestPoint, FColor(0,255,0), false, 100.f, 0, 2);
-    // DrawDebugLine(GetWorld(), ClosestPoint, JointLocation, FColor(0,0,255), false, 100.f, 0, 2);
-    // DrawDebugPoint(GetWorld(), JointLocation, 5, FColor(255,0,0), false, 100.f);
   }
   
 }
@@ -641,9 +618,6 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       Eigen::Vector3d ColliderPosition = ToEigenVector(Primitive->GetComponentLocation())/100.f;
       Eigen::Vector3d CollisionTorque = Eigen::Vector3d::Zero();
 
-      // CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(CollisionImpulse + CollisionForces);
-
-      //const float SpringStrength = std::max(Joint.SpringStrength - (DistanceToRoot * 3.0f, 0.0f);
       const float SpringStrength = Joint.SpringStrength;
       
       // Contact forces due to spring strength
@@ -659,32 +633,12 @@ void USpringBasedVegetationComponent::ResolveContactsAndCollisions(
       
       const Eigen::Vector3d Multiplier {XMultiplier, YMultiplier, -ZMultiplier};
       Eigen::Vector3d RepulsionForce = SpringForce.cwiseProduct(Multiplier);      
-      //Primitive->AddForce(-ToUnrealVector(RepulsionForce)*100.f);
       Primitive->AddForceAtLocation(-ToUnrealVector(RepulsionForce)*100.f, Capsule->GetComponentLocation());
       
       // force to repel geometry overlapping
       Eigen::Vector3d OverlappingForces = (CapsulePosition - ColliderPosition).normalized()*CollisionForceParameter;
       OverlappingForces = OverlappingForces.cwiseProduct(Multiplier);
-      
-      //Primitive->AddForce(-ToUnrealVector(OverlappingForces)*100.f);      
       Primitive->AddForceAtLocation(-ToUnrealVector(OverlappingForces)*100.f, Capsule->GetComponentLocation());
-
-      // FRotator CurrRotator = Joint.Transform.Rotator();
-      // FRotator RestRotator = Joint.RestingAngles;
-      // FRotator DeltaRotator (
-      //     CurrRotator.Pitch - RestRotator.Pitch, 
-      //     CurrRotator.Yaw - RestRotator.Yaw, 
-      //     CurrRotator.Roll - RestRotator.Roll);
-      // Eigen::Vector3d SpringTorque = Joint.SpringStrength*RotatorToEigenVector(DeltaRotator);
-      // Eigen::Vector3d JointCapsuleVector = JointGlobalPosition - CapsulePosition;
-      // Eigen::Vector3d SpringForce = SpringTorque.cross(JointCapsuleVector)*JointCapsuleVector.squaredNorm();
-      // Eigen::Vector3d NormalizedForceDirection = SpringForce.normalized();
-      // float ProjectedSpeed = NormalizedForceDirection.dot(ColliderVelocity);
-      // float ProportionalFactor = FGenericPlatformMath::Max(ProjectedSpeed/CollisionForceMinVel + 1, 0.f);
-      // Eigen::Vector3d RepulsionForce = (SpringForce * ProportionalFactor);
-      // Primitive->AddForce(-ToUnrealVector(RepulsionForce)*100.f);
-
-      // JointProperties.Force += (RepulsionForce + CollisionImpulse + OverlappingForces);
       CollisionTorque += (JointProperties.CenterOfMass - JointGlobalPosition).cross(RepulsionForce + CollisionImpulse + OverlappingForces);
       JointProperties.Torque += CollisionTorque;
       // COLLISION_LOG(Log, "Joint: %s \n ProjectedSpeed %f, ProportionalFactor %f \n RepulsionForce %s \n", *Joint.JointName,ProjectedSpeed,ProportionalFactor,*EigenToFString(RepulsionForce),*EigenToFString(CollisionTorque));
@@ -951,7 +905,6 @@ void USpringBasedVegetationComponent::OnEndOverlapEvent(
   {
     return;
   }
-  // OverlappingActors.RemoveSingle(OtherActor);
   TArray<UPrimitiveComponent*>& OverlappingCapsules = OverlappingActors.FindOrAdd(OtherActor);
   OverlappingCapsules.RemoveSingle(OverlapComponent);
   if (OverlappingCapsules.Num() == 0)
@@ -1001,7 +954,6 @@ void USpringBasedVegetationComponent::UpdateGlobalTransform()
   FSkeletonJoint& RootJoint = Skeleton.Joints[0];
   RootJoint.GlobalTransform = RootJoint.Transform * InitialTransform;
   RootJoint.GolbalInverseTransform = RootJoint.GlobalTransform.Inverse();
-  // RootJoint.GlobalAngularVelocity = RootJoint.GlobalTransform.TransformRotation(FQuat(RootJoint.AngularVelocity)).Rotator();
   for (int i = 1; i < Skeleton.RootToEndOrder.Num(); i++)
   {
     int Id = Skeleton.RootToEndOrder[i];

@@ -199,29 +199,33 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 }
 
-void ACarlaWheeledVehicle::UpdateProceduralFoliage()
+UFUNCTION()
+bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
-  const TArray<TEnumAsByte< EObjectTypeQuery >>ToCollide { UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_WorldStatic) };
-  TArray<AActor*> ToIgnore;
-  GetOwner()->GetAllChildActors(ToIgnore, true);
-  ToIgnore.Add(GetOwner());
-  
-  const FTransform OwnerTransform = GetActorTransform();
-  const FVector OwnerLocation = GetActorLocation();
   const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
   FBox Box = FBox(-Vec, Vec);
-  FTransform Transform {};
-  Transform.CopyRotation(OwnerTransform);
-  Transform.CopyTranslation(OwnerTransform);
   FoliageBoundingBox = Box.TransformBy(GetActorTransform());
+  return FoliageBoundingBox.IsInsideOrOn(Location);
+  //const FVector OtherLocation = Location;
+  //const FVector OwnLocation = GetActorLocation();
+  //const float Result = FVector::Distance(OwnLocation, OtherLocation);
+  //return Result < (DetectionSize * 2.0f);
+}
 
-  UKismetSystemLibrary::BoxOverlapActors(GetWorld(),
- 			OwnerLocation,
- 			FoliageBoundingBox.GetExtent(),
- 			ToCollide,
- 			nullptr,
- 			ToIgnore,
- 			OverlappedActors);
+TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
+{  
+  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
+  FBox Box = FBox(-Vec, Vec);
+  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
+  return Component->GetInstancesOverlappingBox(FoliageBoundingBox);
+}
+
+void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
+{
+  const FVector& Center = FoliageBoundingBox.GetCenter();
+  const FVector& Extent = FoliageBoundingBox.GetExtent();
+  const FQuat& Rotation = GetActorQuat();
+  DrawDebugBox(GetWorld(), Center, Extent, Rotation, FColor::Magenta, false, 0.0f, 0, 5.0f);
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
