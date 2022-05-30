@@ -487,7 +487,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
     Mask |= UINT64_C(1) << 8;
   if (CameraGBuffers.SSAO.bIsUsed)
     Mask |= UINT64_C(1) << 9;
-
+  
   if (Mask != 0)
   {
     GBuffer.DesiredTexturesMask = Mask;

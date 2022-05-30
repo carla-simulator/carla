@@ -23,9 +23,10 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer &ObjectInitial
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
 }
 
-template <typename T>
-static void SendGBuffer(ASceneCaptureSensor& self, T& CameraGBuffer, FGBufferData& GBuffer, size_t index)
+template <typename T, typename U>
+static void SendGBuffer(U& self, T& CameraGBuffer, FGBufferData& GBuffer, size_t index)
 {
+#if 1
   static constexpr const TCHAR* TextureNames[] =
   {
     TEXT("SceneColor"),
@@ -46,7 +47,7 @@ static void SendGBuffer(ASceneCaptureSensor& self, T& CameraGBuffer, FGBufferDat
   auto Readback = Payload.Readback.Get();
   while (!Readback->IsReady())
   {
-    if (Payload.is_dummy_texture.load(std::memory_order_acquire))
+    if (Payload.bIsDummyTexture.load(std::memory_order_acquire))
       return;
     std::this_thread::yield();
   }
@@ -75,7 +76,6 @@ static void SendGBuffer(ASceneCaptureSensor& self, T& CameraGBuffer, FGBufferDat
   check(HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask)).Get());
 #else
   Buffer.copy_from(carla::sensor::SensorRegistry::get<T*>::type::header_offset, Pixels);
-  UE_LOG(LogCarla, Log, TEXT("Sending GBuffer (%u, %u)"), DestinationExtent.X, DestinationExtent.Y);
   if (!Buffer.empty())
   {
     SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
@@ -85,6 +85,24 @@ static void SendGBuffer(ASceneCaptureSensor& self, T& CameraGBuffer, FGBufferDat
   else
   {
     UE_LOG(LogCarla, Log, TEXT("Failed to send GBuffer due to empty temporary buffer"));
+  }
+#endif
+#else
+  {
+    auto GBufferStream = CameraGBuffer.GetDataStream(self);
+    auto Buffer = GBufferStream.PopBufferFromPool();
+    TArray<FColor> SceneColorPixels;
+    SceneColorPixels.SetNum(self.GetImageWidth() * self.GetImageHeight());
+    for (FColor& color : SceneColorPixels)
+      color = FColor(255, 128, 64, 200);
+    auto Offset = carla::sensor::SensorRegistry::get<T*>::type::header_offset;
+    Buffer.copy_from(Offset, SceneColorPixels);
+    if(Buffer.data())
+    {
+      SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
+      GBufferStream.Send(CameraGBuffer, std::move(Buffer), self.GetImageWidth(), self.GetImageHeight(), self.GetFOVAngle());
+    }
   }
 #endif
 }
@@ -111,7 +129,6 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     }
   }
 #else
-  UE_LOG(LogCarla, Log, TEXT("FRenderCommandFence wait finished."));
   //AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this] {
   //ENQUEUE_RENDER_COMMAND(SendGBufferTask)([this](auto& RHICmdList) {
     for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
@@ -151,7 +168,7 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
           SendGBuffer(*this, CameraGBuffers.SSAO, GBuffer, i);
           break;
         default:
-          check(false);
+          abort();
       }
     }
   //});
