@@ -13,9 +13,14 @@
 void AVegetationSpawner::BeginPlay()
 {
   Super::BeginPlay();
+  CheckForProcedurals();
+}
 
+void AVegetationSpawner::CheckForProcedurals()
+{
   const UObject* World = GetWorld();
   TArray<AActor*> Spawners;
+  TArray<FSpawnedFoliage> FrameFound;
   UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), Spawners);
   for (const AActor* Spawner : Spawners)
   {
@@ -24,6 +29,8 @@ void AVegetationSpawner::BeginPlay()
     {
       UInstancedStaticMeshComponent* Mesh = Cast<UInstancedStaticMeshComponent>(Component);
       if (Mesh == nullptr)
+        continue;
+      if (IsInstancedStaticMeshComponentLoaded(Mesh))
         continue;
       const int32 NumOfInstances = Mesh->GetInstanceCount();
       TArray<int32> SpawnerOverlappingInstances;
@@ -40,19 +47,36 @@ void AVegetationSpawner::BeginPlay()
         SpawnerOverlappingTransforms[i] = Transform;
       }
       FSpawnedFoliage Aux;
+      Aux.InUse = true;
       Aux.Mesh = Mesh;
       Aux.Indices = SpawnerOverlappingInstances;
       Aux.Transforms = SpawnerOverlappingTransforms;
       Aux.SpawnedActors = SpawnedActors;
       ProceduralInstances.Add(Aux);
+      FrameFound.Add(Aux);
     }
+  }
+
+  for (auto& Element : ProceduralInstances)
+  {
+    if (Element.InUse == false)
+      continue;
+    bool Found = false;
+    for (const FSpawnedFoliage& NewElement : FrameFound)
+    {
+      if (Element.Mesh == NewElement.Mesh)
+      {
+        Found = true;
+        break;
+      }
+    }
+    Element.InUse = Found;
   }
 }
 
 void AVegetationSpawner::Tick(float DeltaTime)
 {
   Super::Tick(DeltaTime);
-
   UpdateVehiclesInLevel();
   if (VehiclesInLevel.Num() == 0)
   {
@@ -61,6 +85,7 @@ void AVegetationSpawner::Tick(float DeltaTime)
     Defaulted = true;
     return;
   }
+  CheckForProcedurals();
   Defaulted = false;
   UpdateProceduralInstanceCount();
 
@@ -79,6 +104,8 @@ void AVegetationSpawner::UpdateProceduralInstanceCount()
   TArray<int32> ProceduralInstanceCount;
   for (FSpawnedFoliage& Foliage : ProceduralInstances)
   {
+    if (!Foliage.InUse)
+      continue;
     const int32 NumOfInstances = Foliage.Mesh->GetInstanceCount();
     TArray<int32> SpawnerOverlappingInstances;
     SpawnerOverlappingInstances.Init(0, NumOfInstances);
@@ -199,6 +226,7 @@ void AVegetationSpawner::Default()
   for (FSpawnedFoliage& Foliage : ProceduralInstances)
   {
     const int32 NumOfInstances = Foliage.Mesh->GetInstanceCount();
+    Foliage.InUse = false;
     Foliage.Indices.Init(0, NumOfInstances);
     Foliage.SpawnedActors.Init(nullptr, NumOfInstances);
   }
@@ -263,5 +291,17 @@ FString AVegetationSpawner::GetVersionFromFString(const FString& string)
     return Version;
   }
   return FString();
+}
+
+bool AVegetationSpawner::IsInstancedStaticMeshComponentLoaded(const UInstancedStaticMeshComponent* Mesh)
+{
+  for(const FSpawnedFoliage& Instance : ProceduralInstances)
+  {
+    if (Instance.Mesh == Mesh && Instance.InUse == true)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 

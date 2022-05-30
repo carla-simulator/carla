@@ -16,6 +16,7 @@ USTRUCT()
 struct FSpawnedFoliage
 {
   GENERATED_BODY()
+  bool InUse {false};
   UInstancedStaticMeshComponent* Mesh {nullptr};
   TArray<int32> Indices {};
   TArray<FTransform> Transforms {};
@@ -82,6 +83,7 @@ protected:
 
 
 private:
+  void CheckForProcedurals();
   void UpdateVehiclesInLevel();
   void UpdateProceduralInstanceCount();
   void UpdateFoliage(FSpawnedFoliage& Foliage, TArray<int32>& VehiclesDetection);
@@ -91,6 +93,7 @@ private:
   FFoliageBlueprintCache GetClassFromPath(const FString& Path);
   bool IsFoliageTypeEnabled(const FString& Path);
   FString GetVersionFromFString(const FString& string);
+  bool IsInstancedStaticMeshComponentLoaded(const UInstancedStaticMeshComponent* Mesh);
 
 
 private:
