@@ -110,11 +110,12 @@ void FPixelReader2::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitForma
       if (!Sensor.IsPendingKill())
       {
 
-        std::function<void(std::unique_ptr<FRHIGPUTextureReadback>, EPixelFormat, FIntPoint, uint32)> FuncForSending = [&Sensor](std::unique_ptr<FRHIGPUTextureReadback> Readback, EPixelFormat BackBufferPixelFormat, FIntPoint BackBufferSize, uint32 Offset)
+        std::function<void(std::unique_ptr<FRHIGPUTextureReadback>, EPixelFormat, FIntPoint, uint32)> FuncForSending = [&Sensor, Frame = FCarlaEngine::GetFrameCounter()](std::unique_ptr<FRHIGPUTextureReadback> Readback, EPixelFormat BackBufferPixelFormat, FIntPoint BackBufferSize, uint32 Offset)
         {
           if (Sensor.IsPendingKill()) return;
 
           auto Stream = Sensor.GetDataStream(Sensor);
+          Stream.SetFrameNumber(Frame);
           auto Buffer = Stream.PopBufferFromPool();
 
           {
