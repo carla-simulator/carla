@@ -206,10 +206,6 @@ bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
   FBox Box = FBox(-Vec, Vec);
   FoliageBoundingBox = Box.TransformBy(GetActorTransform());
   return FoliageBoundingBox.IsInsideOrOn(Location);
-  //const FVector OtherLocation = Location;
-  //const FVector OwnLocation = GetActorLocation();
-  //const float Result = FVector::Distance(OwnLocation, OtherLocation);
-  //return Result < (DetectionSize * 2.0f);
 }
 
 TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const

@@ -229,13 +229,7 @@ AActor* AVegetationSpawner::SpawnFoliage(const FFoliageBlueprintCache& CacheBPCl
   {
     AActor* Actor = GetWorld()->SpawnActor<AActor>(CacheBPClass.SpawnedClass,
       FoliageTransform.GetLocation(), FoliageTransform.Rotator());
-    if (Actor)
-    {
-      if (SpawnScale > 1.001f || SpawnScale < 0.999f)
-        Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
-      else
-        Actor->SetActorScale3D(FoliageTransform.GetScale3D());
-    }
+    Actor->SetActorScale3D(FoliageTransform.GetScale3D());
     return Actor;
   }
 
