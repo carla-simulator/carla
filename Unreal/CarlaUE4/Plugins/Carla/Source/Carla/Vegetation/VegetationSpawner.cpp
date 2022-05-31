@@ -5,10 +5,26 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 #include "Carla/Vegetation/VegetationSpawner.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
- 	
+
 
 #include "ProceduralFoliageVolume.h"
 #include "Kismet/GameplayStatics.h"
+
+void FFoliageBlueprintCache::GetBPName()
+{
+    FString Left;
+    FString Right;
+    FString Aux = Path;
+    Aux.Split(".BP", &Left, &Right, ESearchCase::CaseSensitive, ESearchDir::FromEnd);
+    if (Right.IsEmpty())
+    {
+      BPClassName = Path;
+      return;
+    }
+    Right = "BP" + Right;
+    Right.RemoveFromEnd("'", ESearchCase::IgnoreCase);
+    BPClassName = Right;
+  }
 
 void AVegetationSpawner::BeginPlay()
 {
@@ -39,7 +55,7 @@ void AVegetationSpawner::CheckForProcedurals()
       SpawnerOverlappingInstances.Init(0, NumOfInstances);
       SpawnerOverlappingTransforms.SetNum(NumOfInstances);
       SpawnedActors.Init(nullptr, NumOfInstances);
-      
+
       for (int32 i = 0; i < NumOfInstances; ++i)
       {
         FTransform Transform;
@@ -112,7 +128,7 @@ void AVegetationSpawner::UpdateProceduralInstanceCount()
 
     for (int32 i = 0; i < NumOfInstances; ++i)
     {
-      const FVector Location = Foliage.Transforms[i].GetLocation();      
+      const FVector Location = Foliage.Transforms[i].GetLocation();
       for (const AActor* Vehicle : VehiclesInLevel)
       {
         const ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(Vehicle);
@@ -121,9 +137,9 @@ void AVegetationSpawner::UpdateProceduralInstanceCount()
         if (CarlaVehicle->IsInVehicleRange(Location))
         {
           SpawnerOverlappingInstances[i]++;
-        }           
+        }
       }
-    }    
+    }
     UpdateFoliage(Foliage, SpawnerOverlappingInstances);
   }
 }
@@ -132,7 +148,8 @@ void AVegetationSpawner::UpdateFoliage(FSpawnedFoliage& Foliage, TArray<int32>& 
 {
   auto FoliageIterator = Foliage.Indices.CreateIterator();
   auto VehicleDetectionIterator = VehiclesDetection.CreateConstIterator();
-  for (int32 i = 0; FoliageIterator && VehicleDetectionIterator; ++i, ++FoliageIterator, ++VehicleDetectionIterator)
+  for (int32 i = 0; FoliageIterator && VehicleDetectionIterator;
+    ++i, ++FoliageIterator, ++VehicleDetectionIterator)
   {
     if (*FoliageIterator > 0 && *VehicleDetectionIterator == 0)
     {
@@ -160,7 +177,7 @@ void AVegetationSpawner::UpdateFoliage(FSpawnedFoliage& Foliage, TArray<int32>& 
 }
 
   FFoliageBlueprintCache AVegetationSpawner::GetClassFromPath(const FString& Path)
-  {    
+  {
     FFoliageBlueprintCache Result = FindInCache(Path);
     if (!Result.Path.IsEmpty())
       return Result;
@@ -178,7 +195,7 @@ void AVegetationSpawner::UpdateFoliage(FSpawnedFoliage& Foliage, TArray<int32>& 
     if (FullVersion.IsEmpty())
     {
       Result.BPClassName = Path;
-      FoliageCache.Add(Result);
+      FoliageCache.Add(Path, Result);
       return Result;
     }
     FString ClassPath = "BP_" + Folder + FullVersion;
@@ -197,20 +214,21 @@ void AVegetationSpawner::UpdateFoliage(FSpawnedFoliage& Foliage, TArray<int32>& 
     UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);
 
     Result.GetBPName();
-             
+
     if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
     {
       Result.SpawnedClass = *CastedBlueprint->GeneratedClass;
     }
 
-    FoliageCache.Add(Result);
+    FoliageCache.Add(Path, Result);
 
     return Result;
   }
 
 AActor* AVegetationSpawner::SpawnFoliage(const FFoliageBlueprintCache& CacheBPClass, const FTransform& FoliageTransform)
   {
-    AActor* Actor = GetWorld()->SpawnActor<AActor>(CacheBPClass.SpawnedClass, FoliageTransform.GetLocation(), FoliageTransform.Rotator());
+    AActor* Actor = GetWorld()->SpawnActor<AActor>(CacheBPClass.SpawnedClass,
+      FoliageTransform.GetLocation(), FoliageTransform.Rotator());
     if (Actor)
     {
       if (SpawnScale > 1.001f || SpawnScale < 0.999f)
@@ -234,13 +252,9 @@ void AVegetationSpawner::Default()
 
 FFoliageBlueprintCache AVegetationSpawner::FindInCache(const FString& Path)
 {
-  for (const FFoliageBlueprintCache& Element : FoliageCache)
-  {
-    if (Element.Path == Path)
-    {
-      return Element;
-    }
-  }
+  const FFoliageBlueprintCache* Element = FoliageCache.Find(Path);
+  if(Element)
+    return *Element;
   return FFoliageBlueprintCache();
 }
 

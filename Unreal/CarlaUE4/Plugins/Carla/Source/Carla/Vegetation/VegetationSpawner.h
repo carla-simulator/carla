@@ -31,21 +31,7 @@ struct FFoliageBlueprintCache
   FString BPClassName {};
   TSubclassOf<AActor> SpawnedClass { nullptr };
 
-  void GetBPName()
-  {
-    FString Left;
-    FString Right;
-    FString Aux = Path;
-    Aux.Split(".BP", &Left, &Right, ESearchCase::CaseSensitive, ESearchDir::FromEnd);
-    if (Right.IsEmpty())
-    {
-      BPClassName = Path;
-      return;
-    }
-    Right = "BP" + Right;
-    Right.RemoveFromEnd("'", ESearchCase::IgnoreCase);
-    BPClassName = Right;
-  }
+  void GetBPName();
 };
 
 UCLASS()
@@ -99,7 +85,7 @@ private:
 private:
   TArray<AActor*> VehiclesInLevel;
   TArray<FSpawnedFoliage> ProceduralInstances;
-  TArray<FFoliageBlueprintCache> FoliageCache;
+  TMap<FString, FFoliageBlueprintCache> FoliageCache;
   bool Defaulted {false};
 
 };
