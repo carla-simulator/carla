@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, dev ]
+  pull_request:
+    branches: [ master, dev ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: install
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++-7 clang-8 ninja-build python3-pip libboost-python-dev libtiff5-dev libjpeg-dev libgeos-dev
+    - name: requirements
+      run: |
+        pip3 install -q --user setuptools
+        pip3 install -q --user -r PythonAPI/test/requirements.txt
+        pip3 install -q --user -r PythonAPI/carla/requirements.txt
+    - name: setup
+      run: make setup
+    - name: lib
+      run: make LibCarla
+    - name: python
+      run: make PythonAPI
+    - name: examples
+      run: make examples
+    - name: check
+      run: make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
