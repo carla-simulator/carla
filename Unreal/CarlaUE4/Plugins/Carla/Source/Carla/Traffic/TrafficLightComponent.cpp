@@ -93,7 +93,8 @@ void UTrafficLightComponent::GenerateTrafficLightBox(const FTransform BoxTransfo
     const FVector BoxSize)
 {
   UBoxComponent* BoxComponent = GenerateTriggerBox(BoxTransform, BoxSize);
-  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UTrafficLightComponent::OnOverlapTriggerBox);
+  BoxComponent->OnComponentBeginOverlap.AddDynamic(this, &UTrafficLightComponent::OnBeginOverlapTriggerBox);
+  BoxComponent->OnComponentEndOverlap.AddDynamic(this, &UTrafficLightComponent::OnEndOverlapTriggerBox);
   AddEffectTriggerVolume(BoxComponent);
 }
 
@@ -116,15 +117,7 @@ void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
     if (Controller != nullptr)
     {
       Controller->SetTrafficLightState(LightState);
-      if (LightState == ETrafficLightState::Green)
-      {
-        Controller->SetTrafficLight(nullptr);
-      }
     }
-  }
-  if (LightState == ETrafficLightState::Green)
-  {
-    Vehicles.Empty();
   }
 }
 
@@ -161,7 +154,7 @@ const UTrafficLightController* UTrafficLightComponent::GetController() const
   return TrafficLightController;
 }
 
-void UTrafficLightComponent::OnOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+void UTrafficLightComponent::OnBeginOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
     AActor *OtherActor,
     UPrimitiveComponent *OtherComp,
     int32 OtherBodyIndex,
@@ -176,12 +169,27 @@ void UTrafficLightComponent::OnOverlapTriggerBox(UPrimitiveComponent *Overlapped
     if (VehicleController)
     {
       VehicleController->SetTrafficLightState(LightState);
-      if (LightState != ETrafficLightState::Green)
-      {
-        Vehicles.Add(VehicleController);
-        VehicleController->SetTrafficLight(
-            Cast<ATrafficLightBase>(GetOwner()));
-      }
+      Vehicles.Add(VehicleController);
+      VehicleController->SetTrafficLight(Cast<ATrafficLightBase>(GetOwner()));
+    }
+  }
+}
+
+void UTrafficLightComponent::OnEndOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+    AActor *OtherActor,
+    UPrimitiveComponent *OtherComp,
+    int32 OtherBodyIndex)
+{
+  ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
+  if (Vehicle)
+  {
+    AWheeledVehicleAIController* VehicleController =
+        Cast<AWheeledVehicleAIController>(Vehicle->GetController());
+    if (VehicleController)
+    {
+      VehicleController->SetTrafficLightState(ETrafficLightState::Green);
+      VehicleController->SetTrafficLight(nullptr);
+      Vehicles.Remove(VehicleController);
     }
   }
 }

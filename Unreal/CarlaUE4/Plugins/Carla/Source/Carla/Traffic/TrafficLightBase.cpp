@@ -78,11 +78,8 @@ void ATrafficLightBase::NotifyWheeledVehicle(ACarlaWheeledVehicle *Vehicle)
     if (Controller != nullptr)
     {
       Controller->SetTrafficLightState(GetTrafficLightState());
-      if (GetTrafficLightState() != ETrafficLightState::Green)
-      {
-        Vehicles.Add(Controller);
-        Controller->SetTrafficLight(this);
-      }
+      Vehicles.Add(Controller);
+      Controller->SetTrafficLight(this);
     }
   }
 }
