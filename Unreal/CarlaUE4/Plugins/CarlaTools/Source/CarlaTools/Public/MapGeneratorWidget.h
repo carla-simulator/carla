@@ -159,6 +159,9 @@ private:
   UFUNCTION()
   bool CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaInfo);
 
+  UFUNCTION()
+  bool CreateOpenDriveFile(const FMapGeneratorMetaInfo& MetaInfo);
+
   /// Takes @a MetaInfo as input and generates all tiles based on the
   /// dimensions specified for the map
   /// The funtions return true is success, otherwise false

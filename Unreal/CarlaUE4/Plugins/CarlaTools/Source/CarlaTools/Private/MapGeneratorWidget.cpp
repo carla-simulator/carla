@@ -12,6 +12,8 @@
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
+#include "GenericPlatform/GenericPlatformFile.h"
+#include "HAL/PlatformFilemanager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Landscape.h"
@@ -40,15 +42,21 @@ void UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo
       *CUR_CLASS_FUNC_LINE, *MetaInfo.DestinationPath, *MetaInfo.MapName);
 
   // // 1. Creating tiles terrain
-  bool bTIlesSuccess = CreateTilesMaps(MetaInfo);
-  if(!bTIlesSuccess)
+  bool bTilesSuccess = CreateTilesMaps(MetaInfo);
+  if(!bTilesSuccess)
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Creating Tile for %s"), 
         *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
 
   // 2. Create Main Large map
-  bool BLargeMapSuccess = CreateMainLargeMap(MetaInfo);
-  if(!BLargeMapSuccess)
+  bool bLargeMapSuccess = CreateMainLargeMap(MetaInfo);
+  if(!bLargeMapSuccess)
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error creating Main Large Map for %s"), 
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+
+  // 3. Opendrive auxiliary file
+  bool bOpenDriveCopySuccess = CreateOpenDriveFile(MetaInfo);
+  if(!bOpenDriveCopySuccess)
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error creating OpenDrive file for %s"), 
         *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
 
   
@@ -544,6 +552,27 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 
   return true;
+}
+
+bool UMapGeneratorWidget::CreateOpenDriveFile(const FMapGeneratorMetaInfo& MetaInfo)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Warning,
+      TEXT("%s: Creating OpenDrive file for %s. This is needed but deprecated for offroad maps."), 
+      *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+  
+  FString PrunedPath = MetaInfo.DestinationPath.Replace(TEXT("/Game/"), TEXT(""));
+  const FString DestinationPath = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectContentDir().Append(PrunedPath + "/Opendrive/"));
+  const FString DestinationPathWithFile = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectContentDir().Append(PrunedPath + "/Opendrive/" + MetaInfo.MapName + ".xodr"));
+  const FString SourcePath = FPaths::ProjectPluginsDir()
+      .Append(TEXT("CarlaTools/Content/MapGenerator/Misc/OpenDrive/TemplateOpenDrive.xodr"));
+  ;
+
+  IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+  
+  return FileManager.CreateDirectory(*DestinationPath)
+      && FileManager.CopyFile(*DestinationPathWithFile,*SourcePath, EPlatformFileRead::None, EPlatformFileWrite::None);
 }
 
 bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
