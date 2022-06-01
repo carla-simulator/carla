@@ -104,6 +104,9 @@ public:
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   FString SanitizeDirectory(FString InDirectory);
 
+  UFUNCTION(Category="Map Generator", BlueprintCallable)
+  bool LoadMapInfoFromPath(FString InDirectory, int& OutMapSize, FString& OutFoundMapName);
+
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
@@ -141,7 +144,7 @@ private:
   /// returns them in @a WorldAssetsData.
   /// The function returns true if success, otherwise false
   UFUNCTION()
-  bool LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath);
+  bool LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive = true);
 
   /// Saves a world contained in @a WorldToBeSaved, in the path defined in @a DestinationPath
   /// named as @a WorldName, as a package .umap
