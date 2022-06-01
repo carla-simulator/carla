@@ -53,9 +53,6 @@ public:
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   bool SpawnPlants {true};
 
-  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
-  float SpawnScale {1.0f};
-
   /// @}
   // ===========================================================================
   /// @name Overriden from AActor
