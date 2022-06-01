@@ -13,6 +13,7 @@
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Landscape.h"
 #include "LandscapeProxy.h"
 #include "ProceduralFoliageComponent.h"
@@ -99,6 +100,60 @@ FString UMapGeneratorWidget::SanitizeDirectory(FString InDirectory)
     }
   }
   return InDirectory;
+}
+
+bool UMapGeneratorWidget::LoadMapInfoFromPath(FString InDirectory, int& OutMapSize, FString& OutFoundMapName)
+{
+  TArray<FAssetData> DirectoryAssets;
+  bool bLoaded = LoadWorlds(DirectoryAssets, InDirectory, false);
+
+  FString MainMapName;
+  FString MapNameInTiles;
+
+  if(bLoaded && DirectoryAssets.Num() > 0)
+  {
+    for(FAssetData AssetData : DirectoryAssets) // Find name in tiles
+    {
+      const FString AssetName = AssetData.AssetName.ToString();
+      FString Name, Coordinates;
+      if(AssetName.Split(TEXT("_Tile_"), &Name, &Coordinates))
+      {
+        MapNameInTiles = Name;
+        break;
+      }
+    }
+
+    if(MapNameInTiles.IsEmpty()) // No tiles found
+    {
+      return false;
+    }
+
+    for(FAssetData AssetData : DirectoryAssets)
+    {
+      const FString AssetName = AssetData.AssetName.ToString();
+      if(!AssetName.Contains("_Tile_") && AssetName == MapNameInTiles) // Find Main Map
+      {
+        MainMapName = AssetName;
+        break;
+      }
+    }
+
+    if(MainMapName.IsEmpty()) // No main map found
+    {
+      return false;
+    }
+
+    int NumberOfTiles = DirectoryAssets.Num() - 1;
+    OutFoundMapName = MainMapName;
+    OutMapSize = (int)UKismetMathLibrary::Sqrt((float)NumberOfTiles);
+  }
+  else
+  {
+    // No Map Found
+    return false;
+  }
+
+  return true;
 }
 
 AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
@@ -254,15 +309,9 @@ bool UMapGeneratorWidget::LoadWorldByName(FAssetData& WorldAssetData, const FStr
 
   // Loading all and search for the matching name 
   TArray<FAssetData> AssetsData;
-  // FString CompleteName = BaseMapPath + "/" + MapName + "." + MapName;
-  // bool success = LoadWorlds(AssetsData, CompleteName);
-  bool success = LoadWorlds(AssetsData, BaseMapPath);
+  bool bSuccess = LoadWorlds(AssetsData, BaseMapPath);
 
-  // FString Num = FString::FromInt(AssetsData.Num());
-  // UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: NOMMMM M M M M M World is load  %s -> %s"), 
-  //         *CUR_CLASS_FUNC_LINE, *Num, *CompleteName);
-
-  if(success && AssetsData.Num() > 0)
+  if(bSuccess && AssetsData.Num() > 0)
   {
     for(FAssetData AssetData : AssetsData)
     {
@@ -282,10 +331,6 @@ bool UMapGeneratorWidget::LoadWorldByName(FAssetData& WorldAssetData, const FStr
       *CUR_CLASS_FUNC_LINE, *BaseMapPath);
     return false;
   }
-
-
-  // Searching a specific asset
-
 }
 
 bool UMapGeneratorWidget::DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaInfo& MetaInfo)
@@ -397,7 +442,7 @@ bool UMapGeneratorWidget::DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaI
 }
 
 
-bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath)
+bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading Worlds from %s"), 
       *CUR_CLASS_FUNC_LINE, *BaseMapPath);
@@ -407,6 +452,7 @@ bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const 
 
   // Loading Map from folder using object library
   MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
+  MapObjectLibrary->bRecursivePaths = bRecursive;
   MapObjectLibrary->AddToRoot();
   MapObjectLibrary->LoadAssetDataFromPath(*BaseMapPath);
   MapObjectLibrary->LoadAssetsFromAssetData();
@@ -416,7 +462,6 @@ bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const 
   {
     // Return whole list of world assets found in directory
     WorldAssetsData = AssetsData;
-    // MapObjectLibrary->ClearLoaded();
     return true;
   }
   else
@@ -443,8 +488,6 @@ bool UMapGeneratorWidget::SaveWorld(
   // Create Package
   UPackage *Package = WorldToBeSaved.GetPackage();
   Package->SetFolderName(*WorldName);
-  // Package->SetFolderName(*PackagePath);
-  // Package->SetFolderName("MapGeneratorPackage");
   Package->FullyLoad();
   Package->MarkPackageDirty();
   FAssetRegistryModule::AssetCreated(World);
@@ -491,6 +534,8 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   Parameters.PortFlags = PPF_Duplicate;
 
   UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
+
+
 
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
       PackageName, 
