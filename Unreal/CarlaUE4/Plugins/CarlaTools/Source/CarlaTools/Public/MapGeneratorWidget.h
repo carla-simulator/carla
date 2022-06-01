@@ -81,6 +81,8 @@ public:
   // UFUNCTION(Category="Map Generator", BlueprintImplementableEvent)
   // void GetTileHeigtmapRT(FMapGeneratorTileMetaInfo TileMetaInfo, UTextureRenderTarget2D& OutRT);
 
+  UFUNCTION(BlueprintImplementableEvent)
+  void AssignLandscapeMaterial(ALandscape* Landscape);
 
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath

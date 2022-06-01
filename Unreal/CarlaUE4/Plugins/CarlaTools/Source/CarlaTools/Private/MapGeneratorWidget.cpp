@@ -668,6 +668,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       Landscape->CreateLandscapeInfo();
       Landscape->SetActorLabel("Landscape");
 
+      // Apply material
+      AssignLandscapeMaterial(Landscape);
 
       const FString PackageFileName = FPackageName::LongPackageNameToFilename(
           PackageName, 
