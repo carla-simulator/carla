@@ -124,7 +124,14 @@ void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
 
 FVector UCarlaLight::GetLocation() const
 {
-  return GetOwner()->GetActorLocation();
+  auto Location = GetOwner()->GetActorLocation();
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+  ALargeMapManager* LargeMap = GameMode->GetLMManager();
+  if (LargeMap)
+  {
+    Location = LargeMap->LocalToGlobalLocation(Location);
+  }
+  return Location;
 }
 
 int UCarlaLight::GetId() const
