@@ -264,8 +264,9 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
+    auto Current = FCarlaEngine::GetFrameCounter();
     (void)TickCuesReceived.fetch_add(1, std::memory_order_release);
-    return FCarlaEngine::GetFrameCounter();
+    return Current + 1;
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

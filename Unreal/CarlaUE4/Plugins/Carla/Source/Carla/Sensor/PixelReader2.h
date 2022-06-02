@@ -74,7 +74,7 @@ private:
       UTextureRenderTarget2D &RenderTarget,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,
-      std::function<void(std::unique_ptr<FRHIGPUTextureReadback>, EPixelFormat, FIntPoint, uint32)> FuncForSending,
+      std::function<void(void *, uint32, uint32)> FuncForSending,
       bool use16BitFormat = false);
 
 };
@@ -110,7 +110,7 @@ void FPixelReader2::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitForma
       if (!Sensor.IsPendingKill())
       {
 
-        std::function<void(std::unique_ptr<FRHIGPUTextureReadback>, EPixelFormat, FIntPoint, uint32)> FuncForSending = [&Sensor, Frame = FCarlaEngine::GetFrameCounter()](std::unique_ptr<FRHIGPUTextureReadback> Readback, EPixelFormat BackBufferPixelFormat, FIntPoint BackBufferSize, uint32 Offset)
+        std::function<void(void *, uint32, uint32)> FuncForSending = [&Sensor, Frame = FCarlaEngine::GetFrameCounter()](void *LockedData, uint32 Count, uint32 Offset)
         {
           if (Sensor.IsPendingKill()) return;
 
@@ -120,13 +120,7 @@ void FPixelReader2::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitForma
 
           {
             TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
-            FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
-            int32 Count = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
-            // carla::log_info("Texture: x.", BackBufferSize.X, " y.", BackBufferSize.Y, " b.", PixelFormat.BlockBytes, " c.", Count);
-            void* LockedData = Readback->Lock(Count);
             Buffer.copy_from(Offset, boost::asio::buffer(LockedData, Count));
-            Readback->Unlock();       
-            Readback.reset();
           }
           {
             // send

@@ -45,7 +45,7 @@ static void WritePixelsToBuffer_Vulkan2(
     const UTextureRenderTarget2D &RenderTarget,
     uint32 Offset,
     FRHICommandListImmediate &RHICmdList,
-    std::function<void(std::unique_ptr<FRHIGPUTextureReadback>, EPixelFormat, FIntPoint, uint32)> FuncForSending)
+    std::function<void(void *, uint32, uint32)> FuncForSending)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   check(IsInRenderingThread());
@@ -69,17 +69,22 @@ static void WritePixelsToBuffer_Vulkan2(
     RHICmdList.Transition(FRHITransitionInfo(Texture, ERHIAccess::CopySrc, ERHIAccess::Present));
   }
 
-  AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [=, Readback = std::move(BackBufferReadback), FuncForSending = std::move(FuncForSending)]() mutable
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
+
+  FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+  int32 Count = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
+  while (1)
   {
+    void* LockedData = BackBufferReadback->Lock(Count);
+    if (LockedData)
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
-      while (!Readback->IsReady())
-      {
-        continue;
-      }
+      FuncForSending(LockedData, Count, Offset);
+      break;
     }
-    FuncForSending(std::move(Readback), BackBufferPixelFormat, BackBufferSize, Offset);
-  });
+  }
+  
+  BackBufferReadback->Unlock();       
+  BackBufferReadback.reset();
 }
 
 // Temporal; this avoid allocating the array each time
@@ -183,7 +188,7 @@ void FPixelReader2::WritePixelsToBuffer(
     UTextureRenderTarget2D &RenderTarget,
     uint32 Offset,
     FRHICommandListImmediate &InRHICmdList,
-    std::function<void(std::unique_ptr<FRHIGPUTextureReadback>, EPixelFormat, FIntPoint, uint32)> FuncForSending,
+    std::function<void(void *, uint32, uint32)> FuncForSending,
     bool use16BitFormat)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
