@@ -61,7 +61,7 @@ void TrafficLightStage::Update(const unsigned long index) {
       }
       else {
         auto junction_id = junction->GetId();
-        if (exiting_vehicles_map.find(junction_id) != exiting_vehicles_map.end()){
+        if (exiting_vehicles_map.find(junction_id) != exiting_vehicles_map.end()) {
           auto& exiting_vehicles = exiting_vehicles_map.at(junction_id);
           if (std::find(exiting_vehicles.begin(), exiting_vehicles.end(), ego_actor_id) != exiting_vehicles.end()) {
             // The vehicle is exitting the junction.
@@ -117,47 +117,39 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
   bool traffic_light_hazard = false;
   auto junction_id = junction->GetId();
 
-  if (entering_vehicles_map.find(junction_id) == entering_vehicles_map.end())
-  {
-    auto& entering_vehicles = entering_vehicles_map.at(junction_id);
+  auto& entering_vehicles = entering_vehicles_map.at(junction_id);
 
-    if (exiting_vehicles_map.find(junction_id) == exiting_vehicles_map.end())
-    {
-      auto& exiting_vehicles = exiting_vehicles_map.at(junction_id);
+  if (vehicle_stop_time.find(ego_actor_id) == vehicle_stop_time.end()) {
+    // Ensure the vehicle stops before doing anything else
+    if (simulation_state.GetVelocity(ego_actor_id).Length() < EPSILON_RELATIVE_SPEED) {
+      vehicle_stop_time.insert({ego_actor_id, timestamp});
+    }
+    traffic_light_hazard = true;
+  }
 
-      if (vehicle_stop_time.find(ego_actor_id) == vehicle_stop_time.end()) {
-        // Ensure the vehicle stops before doing anything else
-        if (simulation_state.GetVelocity(ego_actor_id).Length() < EPSILON_RELATIVE_SPEED) {
-          vehicle_stop_time.insert({ego_actor_id, timestamp});
-        }
-        traffic_light_hazard = true;
-      }
+  else if (entering_vehicles.front() == ego_actor_id) {
+    auto entry_elapsed_seconds = vehicle_stop_time.at(ego_actor_id).elapsed_seconds;
+    if (timestamp.elapsed_seconds - entry_elapsed_seconds < MINIMUM_STOP_TIME) {
+      // Wait at least the minimum amount of time before entering the junction
+      traffic_light_hazard = true;
+    }
+    else {
+      // Track the first actor until it has passed the mid-point
+      cg::Transform actor_transform = waypoint_buffer.front()->GetTransform();
+      cg::Vector3D forward_vec = actor_transform.GetForwardVector();
+      cg::Vector3D to_center_vec = junction->GetBoundingBox().location - actor_transform.location;
 
-      else if (entering_vehicles.front() == ego_actor_id) {
-        auto entry_elapsed_seconds = vehicle_stop_time.at(ego_actor_id).elapsed_seconds;
-        if (timestamp.elapsed_seconds - entry_elapsed_seconds < MINIMUM_STOP_TIME) {
-          // Wait at least the minimum amount of time before entering the junction
-          traffic_light_hazard = true;
-        }
-        else {
-          // Track the first actor until it has passed the mid-point
-          cg::Transform actor_transform = waypoint_buffer.front()->GetTransform();
-          cg::Vector3D forward_vec = actor_transform.GetForwardVector();
-          cg::Vector3D to_center_vec = junction->GetBoundingBox().location - actor_transform.location;
-
-          if (cg::Math::Dot(forward_vec, to_center_vec) < EXIT_JUNCTION_THRESHOLD) {
-            // Remove it from the entry data, letting the next one enter it
-            entering_vehicles.pop_front();
-            vehicle_stop_time.erase(ego_actor_id);
-            exiting_vehicles.push_back(ego_actor_id);
-          }
-        }
-
-      } else {
-        // Only one vehicle can be entering the junction, so stop the rest.
-        traffic_light_hazard = true;
+      if (cg::Math::Dot(forward_vec, to_center_vec) < EXIT_JUNCTION_THRESHOLD) {
+        // Remove it from the entry data, letting the next one enter it
+        entering_vehicles.pop_front();
+        vehicle_stop_time.erase(ego_actor_id);
+        exiting_vehicles_map.at(junction_id).push_back(ego_actor_id);
       }
     }
+
+  } else {
+    // Only one vehicle can be entering the junction, so stop the rest.
+    traffic_light_hazard = true;
   }
   return traffic_light_hazard;
 }
