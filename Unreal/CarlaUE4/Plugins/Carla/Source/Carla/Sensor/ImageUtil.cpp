@@ -31,33 +31,39 @@ namespace ImageUtil
 
         switch (Format)
         {
-	        case PF_FloatRGBA:
-	        case PF_R16G16B16A16_UNORM:
-	        case PF_R16G16B16A16_SNORM:
-				ConvertRawR16G16B16A16FDataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
-	        	break;
             case PF_G16:
 			case PF_R16_UINT:
 			case PF_R16_SINT:
 				ConvertRawR16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
 	        	break;
-	        case PF_R8G8B8A8:
+			case PF_R8G8B8A8:
 				ConvertRawR8G8B8A8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
 				break;
-	        case PF_B8G8R8A8:
+			case PF_B8G8R8A8:
 				ConvertRawB8G8R8A8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
 				break;
-	        case PF_A2B10G10R10:
+			case PF_A2B10G10R10:
 				ConvertRawR10G10B10A2DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+				break;
+	        case PF_FloatRGBA:
+	        case PF_R16G16B16A16_UNORM:
+	        case PF_R16G16B16A16_SNORM:
+				ConvertRawR16G16B16A16FDataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
 	        	break;
+			case PF_FloatR11G11B10:
+				ConvertRawR11G11B10DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
+				break;
+			case PF_A32B32G32R32F:
+				ConvertRawR32G32B32A32DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
+				break;
 			case PF_A16B16G16R16:
 				ConvertRawR16G16B16A16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
 				break;
-	        case PF_FloatR11G11B10:
-				ConvertRawR11G11B10DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
-	        	break;
-			case PF_A32B32G32R32F:
-				ConvertRawR32G32B32A32DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), false);
+			case PF_G16R16:
+				ConvertRawR16G16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
+				break;
+			case PF_DepthStencil:
+				ConvertRawD32S8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), FReadSurfaceDataFlags());
 				break;
 	        case PF_X24_G8:
 				ConvertRawR24G8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), FReadSurfaceDataFlags());
@@ -69,14 +75,7 @@ namespace ImageUtil
 	        case PF_R16G16B16A16_SINT:
 				ConvertRawR16G16B16A16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
 	        	break;
-			case PF_R16G16_UINT:
-				ConvertRawR16G16DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
-	        	break;
-			case PF_DepthStencil:
-				ConvertRawD32S8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData(), FReadSurfaceDataFlags());
-	        	break;
             case PF_G8:
-                UE_LOG(LogCarla, Warning, TEXT("PING"));
 				ConvertRawR8DataToFColor(DestinationExtent.X, DestinationExtent.Y, Data, SourcePitch, Result.GetData());
 	        	break;
 	        default:

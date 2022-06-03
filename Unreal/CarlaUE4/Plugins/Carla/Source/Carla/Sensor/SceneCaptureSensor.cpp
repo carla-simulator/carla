@@ -52,7 +52,7 @@ namespace SceneCaptureSensor_local_ns {
 // =============================================================================
 
 ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitializer)
-  : Super(ObjectInitializer), GBuffer()
+  : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -72,7 +72,6 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureComponent2D->ViewActor = this;
   CaptureComponent2D->SetupAttachment(RootComponent);
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
-
   CaptureComponent2D->bCaptureOnMovement = false;
   CaptureComponent2D->bCaptureEveryFrame = false;
   CaptureComponent2D->bAlwaysPersistRenderingState = true;
@@ -463,45 +462,79 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-  #if 0
+#if 0
   CaptureComponent2D->CaptureScene();
-  #else
-  uint64 Mask = 0;
-  if (CameraGBuffers.SceneColor.bIsUsed)
-    Mask |= UINT64_C(1) << 0;
-  if (CameraGBuffers.SceneDepth.bIsUsed)
-    Mask |= UINT64_C(1) << 1;
-  if (CameraGBuffers.GBufferA.bIsUsed)
-    Mask |= UINT64_C(1) << 2;
-  if (CameraGBuffers.GBufferB.bIsUsed)
-    Mask |= UINT64_C(1) << 3;
-  if (CameraGBuffers.GBufferC.bIsUsed)
-    Mask |= UINT64_C(1) << 4;
-  if (CameraGBuffers.GBufferD.bIsUsed)
-    Mask |= UINT64_C(1) << 5;
-  if (CameraGBuffers.GBufferE.bIsUsed)
-    Mask |= UINT64_C(1) << 6;
-  if (CameraGBuffers.GBufferF.bIsUsed)
-    Mask |= UINT64_C(1) << 7;
-  if (CameraGBuffers.Velocity.bIsUsed)
-    Mask |= UINT64_C(1) << 8;
-  if (CameraGBuffers.SSAO.bIsUsed)
-    Mask |= UINT64_C(1) << 9;
-  
-  if (Mask != 0)
-  {
-    GBuffer.DesiredTexturesMask = Mask;
-    GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
-    for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
-      if ((GBuffer.DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
-        GBuffer.Payloads[i].Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
-    CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
-  }
-  else
-  {
-    CaptureComponent2D->CaptureScene();
-  }
-  #endif
+#else
+  CaptureSceneCustom();
+#endif
+}
+
+static constexpr auto           max_transfers_active = 3;
+static std::atomic_ptrdiff_t    num_transfers_active;
+
+void ASceneCaptureSensor::CaptureSceneCustom()
+{
+    while (true)
+    {
+        if (num_transfers_active.load(std::memory_order_acquire) < max_transfers_active)
+        {
+            auto n = num_transfers_active.fetch_add(1, std::memory_order_acquire);
+            if (n < max_transfers_active)
+                break;
+        }
+        
+        (void)num_transfers_active.fetch_sub(1, std::memory_order_relaxed);
+
+        if (IsPendingKill())
+            return;
+
+        std::this_thread::yield();
+    }
+
+    uint64 Mask = 0;
+#if 1
+    if (CameraGBuffers.SceneColor.bIsUsed)  Mask |= UINT64_C(1) << 0;
+    if (CameraGBuffers.SceneDepth.bIsUsed)  Mask |= UINT64_C(1) << 1;
+    if (CameraGBuffers.GBufferA.bIsUsed)    Mask |= UINT64_C(1) << 2;
+    if (CameraGBuffers.GBufferB.bIsUsed)    Mask |= UINT64_C(1) << 3;
+    if (CameraGBuffers.GBufferC.bIsUsed)    Mask |= UINT64_C(1) << 4;
+    if (CameraGBuffers.GBufferD.bIsUsed)    Mask |= UINT64_C(1) << 5;
+    if (CameraGBuffers.GBufferE.bIsUsed)    Mask |= UINT64_C(1) << 6;
+    if (CameraGBuffers.GBufferF.bIsUsed)    Mask |= UINT64_C(1) << 7;
+    if (CameraGBuffers.Velocity.bIsUsed)    Mask |= UINT64_C(1) << 8;
+    if (CameraGBuffers.SSAO.bIsUsed)        Mask |= UINT64_C(1) << 9;
+#else
+    Mask = 4;
+#endif
+    auto GBufferPtr = new FGBufferData();
+    auto& GBuffer = *GBufferPtr;
+    if (Mask != 0)
+    {
+        GBuffer.DesiredTexturesMask = Mask;
+        GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
+        for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
+            if ((GBuffer.DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
+                GBuffer.Payloads[i].Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
+        CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
+#if 1
+        AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [this, GBufferPtr]
+        {
+            SendGBufferTexture(GBufferPtr);
+            (void)num_transfers_active.fetch_sub(1, std::memory_order_release);
+        });
+#else
+        SendGBufferTexture(GBufferPtr);
+#endif
+    }
+    else
+    {
+        CaptureComponent2D->CaptureScene();
+    }
+}
+
+void ASceneCaptureSensor::SendGBufferTexture(FGBufferData* GBuffer)
+{
+    SendGBufferTextures(*this, *GBuffer);
 }
 
 void ASceneCaptureSensor::BeginPlay()

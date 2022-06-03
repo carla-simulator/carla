@@ -25,6 +25,8 @@ public:
   ASceneCaptureCamera(const FObjectInitializer &ObjectInitializer);
 
 protected:
+	
+  virtual void SendGBufferTexture(FGBufferData* GBuffer) override;
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 

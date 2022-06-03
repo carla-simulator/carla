@@ -407,6 +407,9 @@ public:
   } CameraGBuffers;
 
 protected:
+    
+  void CaptureSceneCustom();
+  virtual void SendGBufferTexture(FGBufferData* GBuffer);
 
   virtual void BeginPlay() override;
 
@@ -444,6 +447,87 @@ protected:
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
 
-  FGBufferData GBuffer;
+  template <typename T, typename U>
+  static void SendGBufferTexture(U& self, T& CameraGBuffer, FGBufferData& GBuffer, size_t index)
+  {
+      auto GBufferStream = CameraGBuffer.GetDataStream(self);
+      auto Buffer = GBufferStream.PopBufferFromPool();
+      auto& Payload = GBuffer.Payloads[index];
+
+      while (!Payload.Readback->IsReady())
+      {
+          if (Payload.bIsDummyTexture.load(std::memory_order_acquire))
+              return;
+          std::this_thread::yield();
+      }
+
+      auto Pixels = ImageUtil::ExtractTexturePixelsFromReadback(
+          Payload.Readback.Get(),
+          Payload.InternalExtent,
+          Payload.Extent,
+          Payload.Format);
+
+      Buffer.copy_from(
+          carla::sensor::SensorRegistry::get<T*>::type::header_offset,
+          Pixels);
+
+      if (!Buffer.empty())
+      {
+          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
+          GBufferStream.Send(
+              CameraGBuffer,
+              std::move(Buffer),
+              Payload.Extent.X,
+              Payload.Extent.Y,
+              self.GetFOVAngle());
+      }
+  }
+
+  template <typename T>
+  void SendGBufferTextures(T& self, FGBufferData& GBuffer)
+  {
+      for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
+      {
+          if ((GBuffer.DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
+          {
+              switch (i)
+              {
+              case 0:
+                  SendGBufferTexture(self, CameraGBuffers.SceneColor, GBuffer, i);
+                  break;
+              case 1:
+                  SendGBufferTexture(self, CameraGBuffers.SceneDepth, GBuffer, i);
+                  break;
+              case 2:
+                  SendGBufferTexture(self, CameraGBuffers.GBufferA, GBuffer, i);
+                  break;
+              case 3:
+                  SendGBufferTexture(self, CameraGBuffers.GBufferB, GBuffer, i);
+                  break;
+              case 4:
+                  SendGBufferTexture(self, CameraGBuffers.GBufferC, GBuffer, i);
+                  break;
+              case 5:
+                  SendGBufferTexture(self, CameraGBuffers.GBufferD, GBuffer, i);
+                  break;
+              case 6:
+                  SendGBufferTexture(self, CameraGBuffers.GBufferE, GBuffer, i);
+                  break;
+              case 7:
+                  SendGBufferTexture(self, CameraGBuffers.GBufferF, GBuffer, i);
+                  break;
+              case 8:
+                  SendGBufferTexture(self, CameraGBuffers.Velocity, GBuffer, i);
+                  break;
+              case 9:
+                  SendGBufferTexture(self, CameraGBuffers.SSAO, GBuffer, i);
+                  break;
+              default:
+                  abort();
+              }
+          }
+      }
+  }
 
 };
