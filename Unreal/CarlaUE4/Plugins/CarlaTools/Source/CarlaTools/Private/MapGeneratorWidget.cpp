@@ -8,6 +8,7 @@
 
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
+#include "Carla/MapGen/LargeMapManager.h"
 #include "Components/SplineComponent.h"
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
@@ -33,6 +34,9 @@
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
 #define CUR_CLASS_FUNC_LINE (CUR_CLASS_FUNC + "::" + CUR_LINE)
+
+#undef CreateDirectory
+#undef CopyFile
 
 DEFINE_LOG_CATEGORY(LogCarlaToolsMapGenerator);
 
@@ -543,6 +547,13 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
+  AActor* LargeMapManagerActor = UGameplayStatics::GetActorOfClass(World, ALargeMapManager::StaticClass());
+  ALargeMapManager* LargeMapManager = StaticCast<ALargeMapManager*>(LargeMapManagerActor);
+
+  LargeMapManager->LargeMapTilePath = MetaInfo.DestinationPath;
+  LargeMapManager->LargeMapName = MetaInfo.MapName;
+  // LargeMapManager->AssetsPath = MetaInfo.DestinationPath;
+  // LargeMapManager->TileSide = 2.0f * 1000.0f * 100.0f; 
 
 
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
@@ -562,15 +573,15 @@ bool UMapGeneratorWidget::CreateOpenDriveFile(const FMapGeneratorMetaInfo& MetaI
   
   FString PrunedPath = MetaInfo.DestinationPath.Replace(TEXT("/Game/"), TEXT(""));
   const FString DestinationPath = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectContentDir().Append(PrunedPath + "/Opendrive/"));
+      FPaths::ProjectContentDir().Append(PrunedPath + "/OpenDrive/"));
   const FString DestinationPathWithFile = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectContentDir().Append(PrunedPath + "/Opendrive/" + MetaInfo.MapName + ".xodr"));
+      FPaths::ProjectContentDir().Append(PrunedPath + "/OpenDrive/" + MetaInfo.MapName + ".xodr"));
   const FString SourcePath = FPaths::ProjectPluginsDir()
       .Append(TEXT("CarlaTools/Content/MapGenerator/Misc/OpenDrive/TemplateOpenDrive.xodr"));
   ;
 
   IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-  
+
   return FileManager.CreateDirectory(*DestinationPath)
       && FileManager.CopyFile(*DestinationPathWithFile,*SourcePath, EPlatformFileRead::None, EPlatformFileWrite::None);
 }
