@@ -547,18 +547,44 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
+  const FString PackageFileName = FPackageName::LongPackageNameToFilename(
+      PackageName, 
+      FPackageName::GetMapPackageExtension());
+  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
+      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+
+
+  bool bLoadedSuccess = FEditorFileUtils::LoadMap(*PackageName, false, true);
+    if(!bLoadedSuccess){
+      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Loading %s"),
+          *CUR_CLASS_FUNC_LINE, *PackageName);
+      return false;
+    }
+
   AActor* LargeMapManagerActor = UGameplayStatics::GetActorOfClass(World, ALargeMapManager::StaticClass());
+  if(LargeMapManagerActor == nullptr)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, 
+        TEXT("%s: Could not find LargeMapManager Actor in %s."),
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName); 
+    return false;
+  }
+
   ALargeMapManager* LargeMapManager = StaticCast<ALargeMapManager*>(LargeMapManagerActor);
+  if(LargeMapManager == nullptr)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, 
+        TEXT("%s: Failed to cast Large Map Actor in %s."),
+        *MetaInfo.MapName); 
+    return false;
+  }
 
   LargeMapManager->LargeMapTilePath = MetaInfo.DestinationPath;
   LargeMapManager->LargeMapName = MetaInfo.MapName;
   // LargeMapManager->AssetsPath = MetaInfo.DestinationPath;
   // LargeMapManager->TileSide = 2.0f * 1000.0f * 100.0f; 
+  LargeMapManager->GenerateMap_Editor();
 
-
-  const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-      PackageName, 
-      FPackageName::GetMapPackageExtension());
   UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
       *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
 
@@ -591,6 +617,12 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating %s tiles maps in %s"), 
       *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, *MetaInfo.DestinationPath);
 
+   const FString BaseWorldSearchPath = TEXT("/CarlaTools/MapGenerator/BaseMap/TilesEmpty/BaseTileEmpty.BaseTileEmpty");
+
+   UWorld* BaseWorld;
+   UWorld* World;
+
+
 // CREATION OF TILES USING FASSETDATA 
   for(int i = 0; i < MetaInfo.SizeX; i++)
   {
@@ -599,9 +631,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating tile map %s (%d_%d)"), 
           *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, i, j);
 
-      const FString BaseWorldSearchPath = TEXT("/CarlaTools/MapGenerator/BaseMap/TilesEmpty/BaseTileEmpty.BaseTileEmpty");
-
-      UWorld* BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldSearchPath);
+      BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldSearchPath);
 
       const FString MapName = 
           MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);  
@@ -615,7 +645,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       Parameters.PortFlags = PPF_Duplicate;
       // Parameters.PortFlags = PPF_DuplicateForPIE;
 
-      UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
+      World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
       if (World == nullptr)
         UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No world found in tile %s %d_%d"), 
@@ -643,6 +673,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
       TArray<uint16> HeightData;
       // FTextureRenderTargetResource* RenderTargetResource = HeightRT->GetRenderTargetResource();
+      // TODO: UTexture2D and GetMipData
       FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
       FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
       // FIntRect Rect = FIntRect(0, 0, FMath::Min(1 + MaxX - MinX, HeightRT->SizeX), FMath::Min(1 + MaxY - MinY, HeightRT->SizeY));
@@ -683,7 +714,9 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
       // FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f*255);
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
+      // FVector LandscapeScaleVector(1.0f, 1.0f, 1.0f);
       Landscape->CreateLandscapeInfo();
+      // Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector::ZeroVector, FVector::OneVector));
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
 
       TMap<FGuid, TArray<uint16>> HeightmapDataPerLayers;
