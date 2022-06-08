@@ -731,10 +731,10 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       //     HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
 
 
-      FVector LandscapeOrigin;
-      FVector LandscapeBounds;
-      Landscape->GetActorBounds(false, LandscapeOrigin, LandscapeBounds);
-      Landscape->SetActorLocation(FVector(0.0f, 0.0f, LandscapeBounds.Z));
+      // FVector LandscapeOrigin;
+      // FVector LandscapeBounds;
+      // Landscape->GetActorBounds(false, LandscapeOrigin, LandscapeBounds);
+      // Landscape->SetActorLocation(FVector(0.0f, 0.0f, LandscapeBounds.Z));
 
       Landscape->ReregisterAllComponents();
 
