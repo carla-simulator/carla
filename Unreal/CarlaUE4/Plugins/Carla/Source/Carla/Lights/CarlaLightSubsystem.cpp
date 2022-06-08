@@ -32,6 +32,7 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
     }
     Lights.Add(LightId, CarlaLight);
   }
+  SetClientStatesdirty("");
 }
 
 void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
@@ -40,6 +41,7 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
   {
     Lights.Remove(CarlaLight->GetId());
   }
+  SetClientStatesdirty("");
 }
 
 bool UCarlaLightSubsystem::IsUpdatePending() const

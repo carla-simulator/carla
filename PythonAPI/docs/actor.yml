@@ -403,6 +403,12 @@
       note: >
         Returns the angle based on the physics of the wheel, not the visual angle.
     # --------------------------------------
+    - def_name: get_failure_state
+      return: carla.VehicleFailureState
+      doc: >
+        Vehicle have failure states, to  indicate that it is incapable of continuing its route. This function returns the vehicle's specific failure state, or in other words, the cause that resulted in it.
+    # --------------------------------------
+
 
   - class_name: Walker
     parent: carla.Actor
@@ -710,4 +716,16 @@
       doc: >
         Represents all doors.
     # --------------------------------------
+
+  - class_name: VehicleFailureState
+    # - DESCRIPTION ------------------------
+    doc: >
+      Enum containing the different failure states of a vehicle, from which the it cannot recover. These are returned by __<font color="#7fb800">get_failure_state()</font>__ and only Rollover is currently implemented.
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+    - var_name: Rollover
+    - var_name: Engine
+    - var_name: TirePuncture
 ...
