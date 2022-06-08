@@ -9,7 +9,9 @@
 #include <string>
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "UnrealString.h"
+#include <compiler/enable-ue4-macros.h>
+#include "UnrealString.h"
+#include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {

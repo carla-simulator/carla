@@ -14,6 +14,15 @@
 
 #include "Misc/CoreDelegates.h"
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/multigpu/router.h>
+#include <carla/multigpu/primaryCommands.h>
+#include <carla/multigpu/secondary.h>
+#include <carla/multigpu/secondaryCommands.h>
+#include <compiler/enable-ue4-macros.h>
+
+#include <mutex>
+
 class UCarlaSettings;
 struct FEpisodeSettings;
 
@@ -93,4 +102,14 @@ private:
   FDelegateHandle OnPostTickHandle;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
+
+  bool bIsPrimaryServer = true;
+
+  std::unordered_map<uint32_t, uint32_t> MappedId;
+
+  std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
+  std::shared_ptr<carla::multigpu::Secondary> Secondary;
+ 
+  std::vector<FFrameData> FramesToProcess;
+  std::mutex FrameToProcessMutex;
 };

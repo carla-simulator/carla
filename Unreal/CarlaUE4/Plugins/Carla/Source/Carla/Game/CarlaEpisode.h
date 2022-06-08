@@ -13,6 +13,8 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Game/FrameData.h"
+#include "Carla/Sensor/SensorManager.h"
 
 #include "GameFramework/Pawn.h"
 
@@ -233,6 +235,11 @@ public:
 
   bool DestroyActor(carla::rpc::ActorId ActorId)
   {
+    if (bIsPrimaryServer)
+    {
+      GetFrameData().AddEvent(
+          CarlaRecorderEventDel{ActorId});
+    }
     if (Recorder->IsEnabled())
     {
       // recorder event
@@ -289,6 +296,12 @@ public:
 
   void SetCurrentMapOrigin(const FIntVector& NewOrigin) { CurrentMapOrigin = NewOrigin; }
 
+  FFrameData& GetFrameData() { return FrameData; }
+
+  FSensorManager& GetSensorManager() { return SensorManager; }
+
+  bool bIsPrimaryServer = true;
+
 private:
 
   friend class ACarlaGameModeBase;
@@ -340,4 +353,8 @@ private:
   carla::geom::GeoLocation MapGeoReference;
 
   FIntVector CurrentMapOrigin;
+
+  FFrameData FrameData;
+
+  FSensorManager SensorManager;
 };

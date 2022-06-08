@@ -68,6 +68,9 @@ install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include
 file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
 install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_carla_multigpu_headers "${libcarla_source_path}/carla/multigpu/*.h")
+install(FILES ${libcarla_carla_multigpu_headers} DESTINATION include/carla/multigpu)
+
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
 if(WIN32)
@@ -109,8 +112,9 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/streaming/detail/*.cpp"
     "${libcarla_source_path}/carla/streaming/detail/*.h"
     "${libcarla_source_path}/carla/streaming/detail/tcp/*.cpp"
-    "${libcarla_source_path}/carla/streaming/detail/tcp/*.h"
     "${libcarla_source_path}/carla/streaming/low_level/*.h"
+    "${libcarla_source_path}/carla/multigpu/*.h"
+    "${libcarla_source_path}/carla/multigpu/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.h"
     "${libcarla_source_thirdparty_path}/moodycamel/*.cpp"
