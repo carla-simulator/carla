@@ -32,6 +32,7 @@ class CARLA_API ASceneCaptureSensor : public ASensor
 
   friend class ACarlaGameModeBase;
   friend class FPixelReader;
+  friend class FPixelReader2;
 
 public:
 
@@ -289,12 +290,18 @@ public:
     return CaptureComponent2D;
   }
 
+  UFUNCTION(BlueprintCallable)
+  UTextureRenderTarget2D *GetCaptureRenderTarget()
+  {
+    return CaptureRenderTarget;
+  }
+
   /// Immediate enqueues render commands of the scene at the current time.
   void EnqueueRenderSceneImmediate();
 
   /// Blocks until the render thread has finished all it's tasks.
-  void WaitForRenderThreadToFinsih() {
-    TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::WaitForRenderThreadToFinsih);
+  void WaitForRenderThreadToFinish() {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::WaitForRenderThreadToFinish);
     // FlushRenderingCommands();
   }
 

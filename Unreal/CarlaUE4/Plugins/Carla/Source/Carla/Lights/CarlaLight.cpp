@@ -50,6 +50,7 @@ void UCarlaLight::EndPlay(const EEndPlayReason::Type EndPlayReason)
     UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
     CarlaLightSubsystem->UnregisterLight(this);
   }
+  Super::EndPlay(EndPlayReason);
 }
 
 void UCarlaLight::SetLightIntensity(float Intensity)

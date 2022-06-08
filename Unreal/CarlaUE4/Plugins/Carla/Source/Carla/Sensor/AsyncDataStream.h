@@ -57,6 +57,16 @@ public:
   template <typename SensorT, typename... ArgsT>
   void Send(SensorT &Sensor, ArgsT &&... Args);
 
+  /// allow to change the frame number of the header
+  void SetFrameNumber(uint64_t FrameNumber)
+  {
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr = reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    if (HeaderStr) 
+    {
+      HeaderStr->frame = FrameNumber;
+    }
+  }
+
 private:
 
   friend class FDataStreamTmpl<T>;
