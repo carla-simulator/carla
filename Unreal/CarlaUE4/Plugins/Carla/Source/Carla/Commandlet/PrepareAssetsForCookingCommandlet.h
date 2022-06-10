@@ -160,49 +160,122 @@ private:
   UPROPERTY()
   UWorld *World;
 
-  /// Workaround material for the RoadNode mesh
+  /// CARLA Materials for the Road Nodes
+  UPROPERTY()
+  UMaterialInstance *RoadRuralMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *RoadBoulevardMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *RoadAvenueMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *RoadCityMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *RoadElectricPoleMaterial;
+
   UPROPERTY()
   UMaterialInstance *RoadNodeMaterial;
 
-  /// Material to apply to curbs on the road
   UPROPERTY()
-  UMaterialInstance *CurbNodeMaterialInstance;
+  UMaterialInstance *RoadParkingMaterial;
 
-  /// Material to apply to gutters on the road
   UPROPERTY()
-  UMaterialInstance *GutterNodeMaterialInstance;
+  UMaterialInstance *RoadMaterial;
 
-  /// Workaround material for the center lane markings
+  /// CARLA Materials for the Lane Marking Nodes
   UPROPERTY()
-  UMaterialInstance *MarkingNodeYellow1;
+  UMaterialInstance *MarkingYellowAsphaltMaterial;
 
-  /// Workaround material for the center lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeYellow2;
+  UMaterialInstance *MarkingYellowResidentialMaterial;
 
-  /// Workaround material for the center lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeYellow3;
+  UMaterialInstance *MarkingYellowRuralMaterial;
 
-  /// Workaround material for exterior lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeWhite1;
+  UMaterialInstance *MarkingAsphaltMaterial;
 
-  /// Workaround material for exterior lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeWhite2;
+  UMaterialInstance *MarkingResidentialMaterial;
 
-  /// Workaround material for exterior lane markings
   UPROPERTY()
-  UMaterialInstance *MarkingNodeWhite3;
+  UMaterialInstance *MarkingRuralMaterial;
 
-  /// Workaround material for the TerrainNodes
   UPROPERTY()
-  UMaterialInstance *TerrainNodeMaterialInstance;
+  UMaterialInstance *MarkingParkingMaterial;
 
-  /// Workaround material for the SidewalkNodes
   UPROPERTY()
-  UMaterialInstance *SidewalkNodeMaterialInstance;
+  UMaterialInstance *MarkingYellowMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *MarkingMaterial;
+
+  /// CARLA Materials for the Curb Nodes
+  UPROPERTY()
+  UMaterialInstance *CurbMaterial;
+
+  /// CARLA Materials for the Gutter Nodes
+  UPROPERTY()
+  UMaterialInstance *GutterMaterial;
+
+  /// CARLA Materials for the Sidewalk Nodes
+  UPROPERTY()
+  UMaterialInstance *SidewalkResidentialMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *SidewalkResidentialGrassMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *SidewalkSkyscrapersMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *SidewalkApartmentMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *SidewalkCommunityMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *SidewalkMaterial;
+
+  /// CARLA Materials for the Terrain Nodes
+  UPROPERTY()
+  UMaterialInstance *TerrainHighwayMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainInterurbanMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainMountainMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainRuralMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainGrassMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainWaterLakeMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainParkMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainSkyscrapersMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainApartmentMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainCommunityMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainResidentialMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *TerrainMaterial;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder
