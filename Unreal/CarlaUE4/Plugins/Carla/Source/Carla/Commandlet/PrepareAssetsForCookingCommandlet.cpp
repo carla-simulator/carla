@@ -175,6 +175,14 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/00_MastersOpt/Large_Maps/materials/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass'"));
   TerrainMaterial = (UMaterialInstance *) TerrainNode.Object;
 
+  // Guardrail
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GuardrailPostNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRail.MI_GuardRail'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GuardrailMetalNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRailPost.MI_GuardRailPost'"));
+  GuardrailPostMaterial = (UMaterialInstance *) GuardrailPostNode.Object;
+  GuardrailMetalMaterial = (UMaterialInstance *) GuardrailMetalNode.Object;
+
 #endif
 }
 #if WITH_EDITORONLY_DATA
@@ -543,6 +551,26 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
               {
                 std::cout << " -> Default Terrain" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, TerrainMaterial);
+              }
+            }
+            MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
+          }
+          else if (AssetName.Contains(SSTags::R_GUARDRAIL))
+          {
+            std::cout << ">> Asset is a Guardrail" << std::endl;
+            for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
+            {
+              auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
+              std::cout << ">>> Material name: " << TCHAR_TO_UTF8(*MaterialName);
+              if (MaterialName.Contains("M_GuardRailPost_Prop"))
+              {  // Rocky ground with some grass
+                std::cout << " -> Guardrail Post" << std::endl;
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, GuardrailPostMaterial);
+              }
+              else if (MaterialName.Contains("Metal1_Marking"))
+              {  // Ground with a lot of grass and some ground
+                std::cout << " -> Guardrail Metal" << std::endl;
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, GuardrailMetalMaterial);
               }
             }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;

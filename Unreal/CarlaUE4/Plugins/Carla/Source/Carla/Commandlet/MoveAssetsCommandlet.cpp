@@ -49,6 +49,7 @@ namespace SSTags {
   static const FString R_GUTTER1   = TEXT("Road_Gutter");
   static const FString R_GUTTER2   = TEXT("Roads_Gutter");
   static const FString R_TERRAIN   = TEXT("Terrain");
+  static const FString R_GUARDRAIL = TEXT("PropsNode");
 }
 
 FMovePackageParams UMoveAssetsCommandlet::ParseParams(const FString &InParams) const
@@ -188,7 +189,7 @@ void UMoveAssetsCommandlet::MoveAssetsFromMapForSemanticSegmentation(
   for (const auto &Elem : AssetDataMap)
   {
     FString DestPath = TEXT("/Game/") + PackageName + TEXT("/Static/") + Elem.Key + "/" + MapName;
-    
+
     MoveFiles(Elem.Value, DestPath);
   }
 }

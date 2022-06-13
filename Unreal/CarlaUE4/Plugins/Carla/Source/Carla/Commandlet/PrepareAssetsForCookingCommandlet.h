@@ -277,6 +277,13 @@ private:
   UPROPERTY()
   UMaterialInstance *TerrainMaterial;
 
+  // Guardrail materials
+  UPROPERTY()
+  UMaterialInstance *GuardrailPostMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *GuardrailMetalMaterial;
+
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder
   bool SavePackage(const FString &PackagePath, UPackage *Package) const;
