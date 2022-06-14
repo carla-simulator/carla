@@ -555,7 +555,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
             }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
           }
-          else if (AssetName.Contains(SSTags::R_GUARDRAIL))
+          else if (AssetName.Contains(SSTags::R_PROP))
           {
             std::cout << ">> Asset is a Guardrail" << std::endl;
             for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)

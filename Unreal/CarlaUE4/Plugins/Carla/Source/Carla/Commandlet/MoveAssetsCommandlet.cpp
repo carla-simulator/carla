@@ -49,7 +49,7 @@ namespace SSTags {
   static const FString R_GUTTER1   = TEXT("Road_Gutter");
   static const FString R_GUTTER2   = TEXT("Roads_Gutter");
   static const FString R_TERRAIN   = TEXT("Terrain");
-  static const FString R_GUARDRAIL = TEXT("Props");
+  static const FString R_PROP      = TEXT("Prop");
 }
 
 FMovePackageParams UMoveAssetsCommandlet::ParseParams(const FString &InParams) const
