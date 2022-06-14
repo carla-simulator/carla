@@ -177,9 +177,9 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
 
   // Guardrail
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GuardrailPostNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRail.MI_GuardRail'"));
-  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GuardrailMetalNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRailPost.MI_GuardRailPost'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GuardrailMetalNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRail.MI_GuardRail'"));
   GuardrailPostMaterial = (UMaterialInstance *) GuardrailPostNode.Object;
   GuardrailMetalMaterial = (UMaterialInstance *) GuardrailMetalNode.Object;
 
