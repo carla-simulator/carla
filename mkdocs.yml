@@ -18,7 +18,6 @@ nav:
   - 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
 
-
 - CARLA topics:
   - 'Foundations': 'foundations.md'
   - 'Actors': 'core_actors.md'

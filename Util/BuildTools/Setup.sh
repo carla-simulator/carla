@@ -37,16 +37,24 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-8 >/dev/null 2>&1 || {
-  echo >&2 "clang 8 is required, but it's not installed.";
+CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/')")
+
+if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
+  fatal_error "Failed to retrieve the installed version of the clang compiler."
+else
+  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
+fi
+
+source $(dirname "$0")/Environment.sh
+
+command -v /usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR >/dev/null 2>&1 || {
+  echo >&2 "clang-$CARLA_LLVM_VERSION_MAJOR is required, but it's not installed.";
   exit 1;
 }
 
-CXX_TAG=c8
-export CC=/usr/bin/clang-8
-export CXX=/usr/bin/clang++-8
-
-source $(dirname "$0")/Environment.sh
+CXX_TAG=c$CARLA_LLVM_VERSION_MAJOR
+export CC=/usr/bin/clang-$CARLA_LLVM_VERSION_MAJOR
+export CXX=/usr/bin/clang++-$CARLA_LLVM_VERSION_MAJOR
 
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
@@ -70,6 +78,7 @@ else
 
   log "Retrieving libc++."
 
+  # TODO URGENT: These links are out of date! LLVM has moved to https://github.com/llvm/llvm-project.
   git clone --depth=1 -b release_80  https://github.com/llvm-mirror/llvm.git ${LLVM_BASENAME}-source
   git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxx.git ${LLVM_BASENAME}-source/projects/libcxx
   git clone --depth=1 -b release_80  https://github.com/llvm-mirror/libcxxabi.git ${LLVM_BASENAME}-source/projects/libcxxabi
@@ -148,7 +157,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-8.0"
+    BOOST_TOOLSET="clang-$CARLA_LLVM_VERSION_MAJOR.0"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
@@ -468,6 +477,39 @@ fi
 
 mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
 cp ${XERCESC_LIB} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/lib/
+
+# ==============================================================================
+# -- Get Eigen headers 3.1.0 (CARLA dependency) -------------------------------------
+# ==============================================================================
+
+EIGEN_VERSION=3.1.0
+EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
+EIGEN_BASENAME=eigen-${EIGEN_VERSION}
+
+EIGEN_SRC_DIR=eigen-${EIGEN_VERSION}-src
+EIGEN_INSTALL_DIR=eigen-${EIGEN_VERSION}-install
+EIGEN_INCLUDE=${EIGEN_INSTALL_DIR}/include
+
+
+if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
+  log "Eigen already installed."
+else
+  log "Retrieving Eigen."
+  wget ${EIGEN_REPO}
+
+  log "Extracting Eigen."
+  tar -xzf ${EIGEN_BASENAME}.tar.gz
+  mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
+  mkdir -p ${EIGEN_INCLUDE}/unsupported
+  mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
+  mv ${EIGEN_SRC_DIR}/unsupported/Eigen ${EIGEN_INCLUDE}/unsupported/Eigen
+
+  rm -Rf ${EIGEN_BASENAME}.tar.gz
+  rm -Rf ${EIGEN_SRC_DIR}
+fi
+
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
 
 if ${USE_CHRONO} ; then
 

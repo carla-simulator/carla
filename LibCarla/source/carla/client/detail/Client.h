@@ -302,7 +302,7 @@ namespace detail {
         const rpc::WalkerBoneControlIn &bones);
 
     void BlendPose(
-        rpc::ActorId walker, 
+        rpc::ActorId walker,
         float blend);
 
     void GetPoseFromAnimation(
@@ -387,6 +387,8 @@ namespace detail {
     void UpdateServerLightsState(
         std::vector<rpc::LightState>& lights,
         bool discard_client = false) const;
+
+    void UpdateDayNightCycle(const bool active) const;
 
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const;

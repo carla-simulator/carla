@@ -650,6 +650,25 @@ ECarlaServerResponse FVehicleActor::GetPhysicsControl(FVehiclePhysicsControl& Ph
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::GetFailureState(carla::rpc::VehicleFailureState& FailureState)
+{
+  if (IsDormant())
+  {
+    FVehicleData* ActorData = GetActorData<FVehicleData>();
+    FailureState = ActorData->FailureState;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    FailureState = Vehicle->GetFailureState();
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::GetVehicleLightState(FVehicleLightState& LightState)
 {
   if (IsDormant())

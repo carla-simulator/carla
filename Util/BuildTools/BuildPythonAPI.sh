@@ -48,10 +48,22 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+CARLA_LLVM_VERSION_MAJOR=$(cut -d'.' -f1 <<<"$(clang --version | head -n 1 | sed -r 's/^([^.]+).*$/\1/; s/^[^0-9]*([0-9]+).*$/\1/')")
+
+if [ -z "$CARLA_LLVM_VERSION_MAJOR" ] ; then
+  fatal_error "Failed to retrieve the installed version of the clang compiler."
+else
+  echo "Using clang-$CARLA_LLVM_VERSION_MAJOR as the CARLA compiler."
+fi
+
 source $(dirname "$0")/Environment.sh
 
-export CC=clang-8
-export CXX=clang++-8
+if [[ -z "${CARLA_LLVM_VERSION_MAJOR}" ]]; then
+  fatal_error "Missing clang version variable."
+fi
+
+export CC=clang-$CARLA_LLVM_VERSION_MAJOR
+export CXX=clang++-$CARLA_LLVM_VERSION_MAJOR
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_PYTHONAPI} ; }; then
   fatal_error "Nothing selected to be done."

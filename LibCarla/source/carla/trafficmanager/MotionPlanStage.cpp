@@ -28,7 +28,7 @@ using constants::Collision::EPSILON;
 
 MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
-  const SimulationState &simulation_state,
+  SimulationState &simulation_state,
   const Parameters &parameters,
   const BufferMap &buffer_map,
   TrackTraffic &track_traffic,
@@ -257,6 +257,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
       // Constructing the actuation signal.
       output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
+      simulation_state.UpdateKinematicHybridEndLocation(actor_id, teleportation_transform.location);
     }
   }
 }

@@ -616,6 +616,11 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
+        - `base_type` (_String_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.audi.etron</font>**  
@@ -624,6 +629,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.audi.tt</font>**  
@@ -632,6 +641,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.bh.crossbike</font>**  
@@ -641,6 +654,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.bmw.grandtourer</font>**  
@@ -649,6 +666,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.carlamotors.carlacola</font>**  
@@ -657,6 +678,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.carlamotors.firetruck</font>**  
@@ -665,6 +690,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.chevrolet.impala</font>**  
@@ -673,6 +702,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.citroen.c3</font>**  
@@ -681,6 +714,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.diamondback.century</font>**  
@@ -690,6 +727,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.dodge.charger_2020</font>**  
@@ -698,6 +739,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.dodge.charger_police</font>**  
@@ -706,6 +751,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.dodge.charger_police_2020</font>**  
@@ -714,6 +763,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.ford.ambulance</font>**  
@@ -722,6 +775,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.ford.crown</font>**  
@@ -730,6 +787,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.ford.mustang</font>**  
@@ -738,6 +799,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.gazelle.omafiets</font>**  
@@ -747,6 +812,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.harley-davidson.low_rider</font>**  
@@ -756,6 +825,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.jeep.wrangler_rubicon</font>**  
@@ -764,6 +837,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.kawasaki.ninja</font>**  
@@ -773,6 +850,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.lincoln.mkz_2017</font>**  
@@ -781,6 +862,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.lincoln.mkz_2020</font>**  
@@ -790,6 +875,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mercedes.coupe</font>**  
@@ -798,6 +887,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mercedes.coupe_2020</font>**  
@@ -806,6 +899,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mercedes.sprinter</font>**  
@@ -814,6 +911,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.micro.microlino</font>**  
@@ -822,6 +923,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mini.cooper_s</font>**  
@@ -830,6 +935,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.mini.cooper_s_2021</font>**  
@@ -838,6 +947,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.nissan.micra</font>**  
@@ -846,6 +959,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.nissan.patrol</font>**  
@@ -854,6 +971,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.nissan.patrol_2021</font>**  
@@ -862,6 +983,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.seat.leon</font>**  
@@ -870,6 +995,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.tesla.cybertruck</font>**  
@@ -877,6 +1006,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.tesla.model3</font>**  
@@ -885,6 +1018,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.toyota.prius</font>**  
@@ -893,6 +1030,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.vespa.zx125</font>**  
@@ -902,6 +1043,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.volkswagen.t2</font>**  
@@ -910,6 +1055,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.volkswagen.t2_2021</font>**  
@@ -918,6 +1067,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 - **<font color="#498efc">vehicle.yamaha.yzf</font>**  
@@ -927,6 +1080,10 @@ Check out the [introduction to blueprints](core_actors.md).
         - `generation` (_Int_)
         - `number_of_wheels` (_Int_)
         - `object_type` (_String_)
+        - `base_type` (_String_)
+        - `special_type` (_String_)
+        - `has_dynamic_doors` (_Bool_)
+        - `has_lights` (_Bool_)
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
 
