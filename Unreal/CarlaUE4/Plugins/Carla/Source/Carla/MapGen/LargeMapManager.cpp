@@ -234,6 +234,11 @@ void ALargeMapManager::SetTileSize(float Size)
   TileSide = Size;
 }
 
+float ALargeMapManager::GetTileSize()
+{
+  return TileSide;
+}
+
 void ALargeMapManager::SetLayerStreamingDistance(float Distance)
 {
   LayerStreamingDistance = Distance;

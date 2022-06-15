@@ -148,6 +148,8 @@ public:
 
   void SetTileSize(float Size);
 
+  float GetTileSize();
+
   void SetLayerStreamingDistance(float Distance);
 
   void SetActorStreamingDistance(float Distance);
