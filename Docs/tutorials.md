@@ -38,3 +38,8 @@ Here you will find the multitude of tutorials available to help you understand h
 [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Modify the suspension system of a vehicle.  
 [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Create detailed colliders for vehicles.  
 [__Make a release__](tuto_D_make_release.md) — How to make a release of CARLA
+
+## Video tutorials
+
+[__Fundamentals__](https://www.youtube.com/watch?v=pONr1R1dy88) — Learn the fundamental concepts of CARLA and start your first script. [__CODE__](https://carla-releases.s3.eu-west-3.amazonaws.com/Docs/Fundamentals.ipynb)  
+[__An in depth look at CARLA's sensors__](https://www.youtube.com/watch?v=om8klsBj4rc) — An in depth look at CARLA's sensors and how to use them. [__CODE__](https://carla-releases.s3.eu-west-3.amazonaws.com/Docs/Sensors_code.zip)

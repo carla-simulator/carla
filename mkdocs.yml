@@ -15,9 +15,8 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
-  - 'Content authoring':
-    - 'Authoring maps': 'tuto_content_authoring_maps.md'
-    - 'Authoring vehicles': 'tuto_content_authoring_vehicles.md'
+  - 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
+  - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
 
 
 - CARLA topics:
@@ -37,18 +36,17 @@ nav:
   - 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
-  - 'ROS': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
-  - 'MathWorks': 'large_map_roadrunner.md'
-  - 'SUMO': 'adv_sumo.md'
-  - 'Scenic': 'tuto_G_scenic.md'
+  - 'ANSYS': 'ecosys_ansys.md'
+  - 'AWS': 'tuto_G_rllib_integration.md'
   - 'CarSIM': 'tuto_G_carsim_integration.md'
   - 'Chrono': 'tuto_G_chrono.md'
+  - 'MathWorks': 'large_map_roadrunner.md'
   - 'OpenDRIVE': 'adv_opendrive.md'
   - 'PTV Vissim': 'adv_ptv.md'
   - 'RSS': 'adv_rss.md'
-  - 'AWS': 'tuto_G_rllib_integration.md'
-  - 'ANSYS': 'ecosys_ansys.md'
-  
+  - 'ROS': 'https://carla.readthedocs.io/projects/ros-bridge/en/latest/'
+  - 'Scenic': 'tuto_G_scenic.md'
+  - 'SUMO': 'adv_sumo.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
