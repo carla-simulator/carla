@@ -100,6 +100,12 @@ public:
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   void CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
+  UFUNCTION(Category="Map Generator", BlueprintCallable)
+  bool RecalculateCollision(FString MapPath = "");
+
+  UFUNCTION(Category = "MapGenerator", BlueprintCallable)
+      void CookTilesCollisions(const FMapGeneratorMetaInfo& MetaInfo);
+
   /// Utils funtion to format @a InDirectory so it gets sanitized in a 
   /// format that unreal can access the directory, deleting unnecesary 
   /// characters such as final '/' or '\'
@@ -167,6 +173,8 @@ private:
   /// The funtions return true is success, otherwise false
   UFUNCTION()
   bool CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo);
+
+
 
   /// Searches for the specified map in the specified path in @a MetaInfo
   /// and starts the vegetation cooking process for each of the tile.

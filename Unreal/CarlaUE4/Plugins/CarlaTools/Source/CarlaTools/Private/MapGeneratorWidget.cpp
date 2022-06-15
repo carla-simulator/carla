@@ -95,6 +95,85 @@ void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFo
         *CUR_CLASS_FUNC_LINE);
 }
 
+bool UMapGeneratorWidget::RecalculateCollision(FString MapPath)
+{
+  UWorld* World = GEditor->GetEditorWorldContext().World();
+  // UWorld* World = GEngine->GetWorld();
+  if(World == nullptr)
+    return false;
+    
+  ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
+      World, 
+      ALandscape::StaticClass());
+  // LandscapePostEditEvent(Landscape);
+
+  FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
+   int32* PropertyValue = PropertyToUpdate->ContainerPtrToValuePtr<int32>(Landscape);
+   if(!PropertyToUpdate){
+     UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
+       *CUR_CLASS_FUNC_LINE);
+       return false;
+   }
+
+   *PropertyValue += 1; // Increment
+
+   FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate);
+   Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
+   Landscape->PostEditChange();
+
+  
+  Landscape->RecreateCollisionComponents();
+
+  if (MapPath == "")
+  { 
+      MapPath = World->GetPathName();
+  }
+  Landscape->ReregisterAllComponents();
+   /* bool bSaveMapSuccess = FEditorFileUtils::SaveMap(World,
+        World->GetPathName());*/
+  UEditorAssetLibrary::SaveAsset(World->GetPathName(), true);
+  bool bSuccess = FEditorFileUtils::SaveDirtyPackages(true, true, true, true, true, true);
+
+  return true;
+}
+
+void UMapGeneratorWidget::CookTilesCollisions(const FMapGeneratorMetaInfo& MetaInfo)
+{
+    for (int i = 0; i < MetaInfo.SizeX; i++)
+    {
+        for (int j = 0; j < MetaInfo.SizeY; j++)
+        {
+            const FString MapName =
+                MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+            const FString MapNameToLoad = MetaInfo.DestinationPath + "/" + MapName + "." + MapName;
+
+            bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
+
+            if (!bLoadedSuccess)
+                UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Error loading to %s tiles"),
+                    *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+
+            UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
+
+            UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: HERE! %s -- %s to %s tiles"),
+                *CUR_CLASS_FUNC_LINE, *MapNameToLoad, *GEditor->GetEditorWorldContext().World()->GetName(), *MetaInfo.MapName);
+
+            bool bRecalculateResult = RecalculateCollision(MapNameToLoad);
+
+            if (!bRecalculateResult)
+                UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error recalculating to %s tiles"),
+                    *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+
+            //bool bSaveMapSuccess = FEditorFileUtils::SaveMap(GEditor->GetEditorWorldContext().World(), 
+                //MapNameToLoad);
+
+            //if(!bSaveMapSuccess)
+              //UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Saving to %s tiles"), 
+                  //*CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+       }
+    }
+}
+
 FString UMapGeneratorWidget::SanitizeDirectory(FString InDirectory)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Sanitazing directory: %s"), 
@@ -729,7 +808,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
           HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
       // Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, 2016, 2016, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
       //     HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
-
+      
 
       // FVector LandscapeOrigin;
       // FVector LandscapeBounds;
@@ -743,6 +822,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
       // Apply material
       AssignLandscapeMaterial(Landscape);
+
+      Landscape->RecreateCollisionComponents();
 
       const FString PackageFileName = FPackageName::LongPackageNameToFilename(
           PackageName, 
@@ -761,6 +842,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       
     }
   }
+
+  CookTilesCollisions(MetaInfo);
 
   return true;
 }
