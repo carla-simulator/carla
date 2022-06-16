@@ -130,9 +130,6 @@ void UMapGeneratorWidget::CookTilesCollisions(const FMapGeneratorMetaInfo& MetaI
 
       UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
 
-      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: HERE! %s -- %s to %s tiles"),
-          *CUR_CLASS_FUNC_LINE, *MapNameToLoad, *GEditor->GetEditorWorldContext().World()->GetName(), *MetaInfo.MapName);
-
       bool bRecalculateResult = RecalculateCollision();
 
       if (!bRecalculateResult)
@@ -446,6 +443,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
       TArray<uint16> HeightData;
       // TODO: UTexture2D and GetMipData
+      UpdateTileRT(i, MetaInfo.SizeY-j-1);
       FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
       FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
       TArray<FLinearColor> HeightmapColor;
@@ -557,8 +555,6 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
           *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
       return false;
     }
-
-
     SaveWorld(World);
   }
 

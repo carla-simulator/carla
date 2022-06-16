@@ -70,9 +70,13 @@ class CARLATOOLS_API UMapGeneratorWidget : public UEditorUtilityWidget
   GENERATED_BODY()
 
 public:
-
+  /// Sets the specified material to @a Landscape
   UFUNCTION(BlueprintImplementableEvent)
   void AssignLandscapeMaterial(ALandscape* Landscape);
+
+  /// PROVISIONAL
+  UFUNCTION(BlueprintImplementableEvent)
+  void UpdateTileRT(int OffsetX, int OffsetY);
 
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath
@@ -90,9 +94,12 @@ public:
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   void CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
+  /// Recalculate the collisions of the loaded map
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   bool RecalculateCollision();
 
+  /// Traverse all tiles of map in @a MetaInfo and recalculates
+  /// the collisions of all of them. Can be called from blueprints
   UFUNCTION(Category = "MapGenerator", BlueprintCallable)
   void CookTilesCollisions(const FMapGeneratorMetaInfo& MetaInfo);
 
@@ -102,12 +109,17 @@ public:
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   FString SanitizeDirectory(FString InDirectory);
 
+  /// Used to find if the @a InDirectory contains a map. If does return true and
+  /// @a OutMapSize and @OutFoundMapName stores the information of the found map 
   UFUNCTION(Category="Map Generator", BlueprintCallable)
   bool LoadMapInfoFromPath(FString InDirectory, int& OutMapSize, FString& OutFoundMapName);
 
+  /// Spawns rivers of types @a RiverClass
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
+  /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
+  /// to the map specified in @a MetaInfo
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
@@ -119,7 +131,8 @@ private:
   UFUNCTION()
   bool LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive = true);
 
-  
+  /// Saves @a WorldToBeSaved. It also saves all dirty packages to asure
+  /// a correct managements of landscapes
   UFUNCTION()
   bool SaveWorld(UWorld* WorldToBeSaved);
 
@@ -128,6 +141,8 @@ private:
   UFUNCTION()
   bool CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaInfo);
 
+  /// Creates an Opendrive file for the created map map 
+  /// specified in @a MetaInfo
   UFUNCTION()
   bool CreateOpenDriveFile(const FMapGeneratorMetaInfo& MetaInfo);
 
@@ -155,6 +170,8 @@ private:
   UFUNCTION()
   UWorld* GetWorldFromAssetData(FAssetData& WorldAssetData);
 
+  /// Returns the Z coordinate of the landscape located in @a World at position
+  /// @a x and @a y.
   UFUNCTION()
   float GetLandscapeSurfaceHeight(UWorld* World, float x, float y, bool bDrawDebugLines);
 };
