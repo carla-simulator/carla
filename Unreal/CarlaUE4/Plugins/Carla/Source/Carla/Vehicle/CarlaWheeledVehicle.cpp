@@ -10,6 +10,8 @@
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "UObject/UObjectGlobals.h"
+#include "DrawDebugHelpers.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 #include "PhysXPublic.h"
 #include "PhysXVehicleManager.h"
@@ -41,9 +43,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
-
-  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
-
+  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent")); 
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -197,6 +197,31 @@ void ACarlaWheeledVehicle::BeginPlay()
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
   }
+}
+
+UFUNCTION()
+bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
+{
+  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
+  FBox Box = FBox(-Vec, Vec);
+  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
+  return FoliageBoundingBox.IsInsideOrOn(Location);
+}
+
+TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
+{  
+  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
+  FBox Box = FBox(-Vec, Vec);
+  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
+  return Component->GetInstancesOverlappingBox(FoliageBoundingBox);
+}
+
+void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
+{
+  const FVector& Center = FoliageBoundingBox.GetCenter();
+  const FVector& Extent = FoliageBoundingBox.GetExtent();
+  const FQuat& Rotation = GetActorQuat();
+  DrawDebugBox(GetWorld(), Center, Extent, Rotation, FColor::Magenta, false, 0.0f, 0, 5.0f);
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -526,6 +551,8 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
           GetVehicleMovement());
     check(Vehicle4W != nullptr);
 
+    
+
     // Engine Setup
     Vehicle4W->EngineSetup.TorqueCurve.EditorCurveData = PhysicsControl.TorqueCurve;
     Vehicle4W->EngineSetup.MaxRPM = PhysicsControl.MaxRPM;
@@ -732,6 +759,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsContr
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
+  
 }
 
 void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector &Velocity)
