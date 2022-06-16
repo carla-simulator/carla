@@ -70,16 +70,6 @@ class CARLATOOLS_API UMapGeneratorWidget : public UEditorUtilityWidget
   GENERATED_BODY()
 
 public:
-  /// This function invokes a blueprint event defined in widget blueprint 
-  /// event graph, which sets a heightmap to the @a Landscape using
-  /// ALandscapeProxy::LandscapeImportHeightMapFromRenderTarget(...)
-  /// function, which is not exposed to be used in C++ code, only blueprints
-  /// @a metaTileInfo contains some useful info to execute this function
-  UFUNCTION(BlueprintImplementableEvent)
-  void AssignLandscapeHeightMap(ALandscape* Landscape, FMapGeneratorTileMetaInfo TileMetaInfo);
-
-  // UFUNCTION(Category="Map Generator", BlueprintImplementableEvent)
-  // void GetTileHeigtmapRT(FMapGeneratorTileMetaInfo TileMetaInfo, UTextureRenderTarget2D& OutRT);
 
   UFUNCTION(BlueprintImplementableEvent)
   void AssignLandscapeMaterial(ALandscape* Landscape);
@@ -101,10 +91,10 @@ public:
   void CookVegetationToCurrentTile(const TArray<UProceduralFoliageSpawner*> FoliageSpawners);
 
   UFUNCTION(Category="Map Generator", BlueprintCallable)
-  bool RecalculateCollision(FString MapPath = "");
+  bool RecalculateCollision();
 
   UFUNCTION(Category = "MapGenerator", BlueprintCallable)
-      void CookTilesCollisions(const FMapGeneratorMetaInfo& MetaInfo);
+  void CookTilesCollisions(const FMapGeneratorMetaInfo& MetaInfo);
 
   /// Utils funtion to format @a InDirectory so it gets sanitized in a 
   /// format that unreal can access the directory, deleting unnecesary 
@@ -122,43 +112,16 @@ public:
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
 
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
-  void LandscapePostEditEvent(ALandscape* Landscape);
-
-  UFUNCTION(Category="MapGenerator", BlueprintCallable)
-  bool DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaInfo& MetaInfo);
-
 private:  
-  /// Loads the base tile map and stores it in @a WorldAssetData
-  /// The funtions return true is success, otherwise false
-  UFUNCTION()
-  bool LoadBaseTileWorld(FAssetData& WorldAssetData);
-
-  /// Loads the base large map and stores it in @a WorldAssetData
-  /// The funtions return true is success, otherwise false
-  UFUNCTION()
-  bool LoadBaseLargeMapWorld(FAssetData& WorldAssetData);
-
-  /// Loads a UWorld object from @a BaseMapPath and returns 
-  /// it in @a WorldAssetData
-  /// The funtion returns true is success, otherwise false
-  UFUNCTION()
-  bool LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath);
-
-  UFUNCTION()
-  bool LoadWorldByName(FAssetData& WorldAssetData, const FString& BaseMapPath, const FString& MapName);
-
   /// Loads a bunch of world objects located in @a BaseMapPath and 
   /// returns them in @a WorldAssetsData.
   /// The function returns true if success, otherwise false
   UFUNCTION()
   bool LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive = true);
 
-  /// Saves a world contained in @a WorldToBeSaved, in the path defined in @a DestinationPath
-  /// named as @a WorldName, as a package .umap
+  
   UFUNCTION()
-  bool SaveWorld(FAssetData& WorldToBeSaved, const FString& DestinationPath, 
-      const FString& WorldName, bool bCheckFileExists = false);
+  bool SaveWorld(UWorld* WorldToBeSaved);
 
   /// Takes the name of the map from @a MetaInfo and created the main map
   /// including all the actors needed by large map system
@@ -174,8 +137,6 @@ private:
   UFUNCTION()
   bool CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo);
 
-
-
   /// Searches for the specified map in the specified path in @a MetaInfo
   /// and starts the vegetation cooking process for each of the tile.
   /// IMPORTANT: Only maps with '_Tile_' tag in it name are processed as
@@ -183,13 +144,6 @@ private:
   /// The function returns true if success, otherwise false
   UFUNCTION()
   bool CookVegetationToTiles(const FMapGeneratorMetaInfo& MetaInfo);
-
-  /// Gets the Landscape from the input world @a WorldAssetData and
-  /// applies the heightmap to it. The tile index is indexX and indexY in
-  /// @a TileMetaInfo argument
-  /// The funtions return true is success, otherwise false
-  UFUNCTION()
-  bool ApplyHeightMapToLandscape(FAssetData& WorldAssetData, FMapGeneratorTileMetaInfo TileMetaInfo);
 
   /// Instantiate a procedural foliage volume for each element in @a FoliageSpawners
   /// and cooks the corresponding vegetation to @a World

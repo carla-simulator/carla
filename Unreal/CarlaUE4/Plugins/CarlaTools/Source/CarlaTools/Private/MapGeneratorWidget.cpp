@@ -63,7 +63,6 @@ void UMapGeneratorWidget::GenerateMapFiles(const FMapGeneratorMetaInfo& MetaInfo
     UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error creating OpenDrive file for %s"), 
         *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
 
-  
 }
 
 void UMapGeneratorWidget::CookVegetation(const FMapGeneratorMetaInfo& MetaInfo)
@@ -95,83 +94,52 @@ void UMapGeneratorWidget::CookVegetationToCurrentTile(const TArray<UProceduralFo
         *CUR_CLASS_FUNC_LINE);
 }
 
-bool UMapGeneratorWidget::RecalculateCollision(FString MapPath)
+bool UMapGeneratorWidget::RecalculateCollision()
 {
   UWorld* World = GEditor->GetEditorWorldContext().World();
-  // UWorld* World = GEngine->GetWorld();
   if(World == nullptr)
     return false;
     
   ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
       World, 
       ALandscape::StaticClass());
-  // LandscapePostEditEvent(Landscape);
 
-  FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
-   int32* PropertyValue = PropertyToUpdate->ContainerPtrToValuePtr<int32>(Landscape);
-   if(!PropertyToUpdate){
-     UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
-       *CUR_CLASS_FUNC_LINE);
-       return false;
-   }
-
-   *PropertyValue += 1; // Increment
-
-   FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate);
-   Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
-   Landscape->PostEditChange();
-
-  
   Landscape->RecreateCollisionComponents();
-
-  if (MapPath == "")
-  { 
-      MapPath = World->GetPathName();
-  }
   Landscape->ReregisterAllComponents();
-   /* bool bSaveMapSuccess = FEditorFileUtils::SaveMap(World,
-        World->GetPathName());*/
-  UEditorAssetLibrary::SaveAsset(World->GetPathName(), true);
-  bool bSuccess = FEditorFileUtils::SaveDirtyPackages(true, true, true, true, true, true);
+
+  SaveWorld(World);
 
   return true;
 }
 
 void UMapGeneratorWidget::CookTilesCollisions(const FMapGeneratorMetaInfo& MetaInfo)
 {
-    for (int i = 0; i < MetaInfo.SizeX; i++)
+  for (int i = 0; i < MetaInfo.SizeX; i++)
+  {
+    for (int j = 0; j < MetaInfo.SizeY; j++)
     {
-        for (int j = 0; j < MetaInfo.SizeY; j++)
-        {
-            const FString MapName =
-                MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
-            const FString MapNameToLoad = MetaInfo.DestinationPath + "/" + MapName + "." + MapName;
+      const FString MapName =
+          MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
+      const FString MapNameToLoad = MetaInfo.DestinationPath + "/" + MapName + "." + MapName;
 
-            bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
+      bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
 
-            if (!bLoadedSuccess)
-                UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Error loading to %s tiles"),
-                    *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
+      if (!bLoadedSuccess)
+        UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Error loading to %s tiles"),
+            *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
 
-            UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
+      UWorld* EditorWorld = GEditor->GetEditorWorldContext().World();
 
-            UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: HERE! %s -- %s to %s tiles"),
-                *CUR_CLASS_FUNC_LINE, *MapNameToLoad, *GEditor->GetEditorWorldContext().World()->GetName(), *MetaInfo.MapName);
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: HERE! %s -- %s to %s tiles"),
+          *CUR_CLASS_FUNC_LINE, *MapNameToLoad, *GEditor->GetEditorWorldContext().World()->GetName(), *MetaInfo.MapName);
 
-            bool bRecalculateResult = RecalculateCollision(MapNameToLoad);
+      bool bRecalculateResult = RecalculateCollision();
 
-            if (!bRecalculateResult)
-                UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error recalculating to %s tiles"),
-                    *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
-
-            //bool bSaveMapSuccess = FEditorFileUtils::SaveMap(GEditor->GetEditorWorldContext().World(), 
-                //MapNameToLoad);
-
-            //if(!bSaveMapSuccess)
-              //UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Saving to %s tiles"), 
-                  //*CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
-       }
+      if (!bRecalculateResult)
+        UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error recalculating to %s tiles"),
+            *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName);
     }
+  }
 }
 
 FString UMapGeneratorWidget::SanitizeDirectory(FString InDirectory)
@@ -254,14 +222,6 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
 
   UWorld* World = GetWorld();
 
-  ///////********** TODO PROV ***********//////
-  ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
-      World, 
-      ALandscape::StaticClass());
-  LandscapePostEditEvent(Landscape);
-
-  //////*****************************/////
-
   float ActorZCoord = GetLandscapeSurfaceHeight(World, 0, 0, false);
   FVector Location(20000, 20000, ActorZCoord); // Auxiliar values for x and y coords
   FRotator Rotation(0,0,0);
@@ -317,222 +277,6 @@ AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> W
 
 }
 
-void UMapGeneratorWidget::LandscapePostEditEvent(ALandscape* Landscape)
-{
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Landscape Post Edit Event Called"), 
-      *CUR_CLASS_FUNC_LINE);
-  
-  // FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
-  // if(!PropertyToUpdate){
-  //   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
-  //     *CUR_CLASS_FUNC_LINE);
-  // }
-  // FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate, EPropertyChangeType::Interactive);
-  // Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
-
-  // static const FName PropertyName(TEXT("CollisionMipLevel"));
-  // FObjectEditorUtils::SetPropertyValue<ALandscape, int32>(Landscape, PropertyName, 1);
-
-
-  // Post edit event
-  // FProperty* PropertyToUpdate = Landscape->GetClass()->FindPropertyByName(TEXT("CollisionMipLevel"));
-  // int32* PropertyValue = PropertyToUpdate->ContainerPtrToValuePtr<int32>(Landscape);
-  // if(!PropertyToUpdate){
-  //   UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Could not found the specified property"), 
-  //     *CUR_CLASS_FUNC_LINE);
-  //     return;
-  // }
-
-  // *PropertyValue += 1; // Increment
-
-  // FPropertyChangedEvent LandscapeCustomPropertyChangedEvent(PropertyToUpdate);
-  // Landscape->PostEditChangeProperty(LandscapeCustomPropertyChangedEvent);
-  // Landscape->PostEditChange();
-
-
-  // Recreate Collision Components
-  // Landscape->PostDuplicate(false);
-  // Landscape->PostDuplicate(EDuplicateMode::Type::World);
-  Landscape->RecreateCollisionComponents();
-
-
-}
-
-bool UMapGeneratorWidget::LoadBaseTileWorld(FAssetData& WorldAssetData)
-{
-  const FString BaseMapPath = TEXT("/CarlaTools/MapGenerator/BaseMap/Tiles");
-  const FString MapName = TEXT("MapGeneratorBaseMap");
-  // return LoadWorldByName(WorldAssetData, BaseMapPath, MapName);
-  return LoadWorld(WorldAssetData, BaseMapPath);
-}
-
-bool UMapGeneratorWidget::LoadBaseLargeMapWorld(FAssetData& WorldAssetData)
-{
-  const FString BaseMapPath= TEXT("/CarlaTools/MapGenerator/BaseMap/MainLargeMap");
-  return LoadWorld(WorldAssetData, BaseMapPath);
-}
-
-bool UMapGeneratorWidget::LoadWorld(FAssetData& WorldAssetData, const FString& BaseMapPath)
-{
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading World from %s"), 
-      *CUR_CLASS_FUNC_LINE, *BaseMapPath);
-
-  TArray<FAssetData> AssetsData;
-  bool success = LoadWorlds(AssetsData, BaseMapPath);
-
-  if(success && AssetsData.Num() > 0)
-  {
-    WorldAssetData = AssetsData.Pop();
-    return true; 
-  }
-  else
-  {
-    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error getting worlds from %s"), 
-      *CUR_CLASS_FUNC_LINE, *BaseMapPath);
-    return false;
-  }
-}
-
-bool UMapGeneratorWidget::LoadWorldByName(FAssetData& WorldAssetData, const FString& BaseMapPath, const FString& MapName)
-{
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading World named %s from %s"), 
-      *CUR_CLASS_FUNC_LINE, *MapName, *BaseMapPath);
-
-  // Loading all and search for the matching name 
-  TArray<FAssetData> AssetsData;
-  bool bSuccess = LoadWorlds(AssetsData, BaseMapPath);
-
-  if(bSuccess && AssetsData.Num() > 0)
-  {
-    for(FAssetData AssetData : AssetsData)
-    {
-      if(MapName.Equals(AssetData.AssetName.ToString(), ESearchCase::CaseSensitive))
-      {
-        WorldAssetData = AssetData;
-        UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: World is load  %s"), 
-          *CUR_CLASS_FUNC_LINE, WorldAssetData.IsAssetLoaded() ? TEXT("YES") : TEXT("NO"));
-        return true;
-      }
-    }
-    return false; // Asset not found
-  }
-  else
-  {
-    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error getting worlds from %s"), 
-      *CUR_CLASS_FUNC_LINE, *BaseMapPath);
-    return false;
-  }
-}
-
-bool UMapGeneratorWidget::DUBUG_LandscapeApplyHeightmap(const FMapGeneratorMetaInfo& MetaInfo)
-{
-  // for(int i = 0; i < MetaInfo.SizeX; i++)
-  // {
-  //   for(int j = 0; j < MetaInfo.SizeY; j++)
-  //   {
-  //     const FString MapName = 
-  //           MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);
-  //     const FString WorldSearchPath = MetaInfo.DestinationPath + "/" + MapName + "." + MapName;
-
-  //     UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Heightmap to %s"), 
-  //         *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
-
-  //     UWorld* PreWorld = LoadObject<UWorld>(nullptr, *WorldSearchPath);
-  //     if(PreWorld == nullptr){
-  //       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error Finding pre-world in: %s"), 
-  //           *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
-  //           return false;
-  //     }
-
-  //     UPackage* ReloadedPackage = ReloadPackage(PreWorld->GetPackage(), ELoadFlags::LOAD_EditorOnly);
-      
-  //     UWorld* World = LoadObject<UWorld>(ReloadedPackage, *WorldSearchPath);
-  //     if(World == nullptr){
-  //       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error Finding world in: %s"), 
-  //           *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
-  //           return false;
-  //     }
-
-  //     // Actor count
-  //     TArray<AActor*> ActorsInWorld;
-  //     UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInWorld);
-
-  //     ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
-  //         World, 
-  //         ALandscape::StaticClass());
-  //     FMapGeneratorTileMetaInfo MetaTileInfo;
-  //     MetaTileInfo.IndexX = i;
-  //     MetaTileInfo.IndexY = j;
-  //     if (Landscape == nullptr)
-  //           UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No landscape found in tile %s %d_%d ------- Actors found: %d"), 
-  //               *CUR_CLASS_FUNC_LINE, *World->GetName(), MetaTileInfo.IndexX, MetaTileInfo.IndexY, ActorsInWorld.Num());
-
-  //     // Landscape->ComponentSizeQuads = 126;
-  //     // Landscape->SubsectionSizeQuads = 63;
-  //     // Landscape->NumSubsections = 4;
-  //     // UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Landscape info %d %d %d"), 
-  //     //       *CUR_CLASS_FUNC_LINE, Landscape->ComponentSizeQuads, Landscape->SubsectionSizeQuads, Landscape->NumSubsections);
-
-  //     AssignLandscapeHeightMap(Landscape, MetaTileInfo);
-
-  //     const FString PackageName = MetaInfo.DestinationPath + "/" + MapName;
-  //     const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-  //         PackageName, 
-  //         FPackageName::GetMapPackageExtension());
-  //     UPackage::SavePackage(World->GetPackage(), World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-  //         *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-  //   }
-  // }
-
-      const FString MapName = MetaInfo.MapName;
-      const FString WorldSearchPath = MetaInfo.DestinationPath + "/" + MapName + "." + MapName;
-
-      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Heightmap to %s"), 
-          *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
-
-      UWorld* PreWorld = LoadObject<UWorld>(nullptr, *WorldSearchPath);
-      if(PreWorld == nullptr){
-        UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error Finding pre-world in: %s"), 
-            *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
-            return false;
-      }
-
-      UPackage* ReloadedPackage = ReloadPackage(PreWorld->GetPackage(), ELoadFlags::LOAD_EditorOnly);
-      
-      UWorld* World = LoadObject<UWorld>(ReloadedPackage, *WorldSearchPath);
-      if(World == nullptr){
-        UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Error Finding world in: %s"), 
-            *CUR_CLASS_FUNC_LINE, *WorldSearchPath);
-            return false;
-      }
-
-      // Actor count
-      TArray<AActor*> ActorsInWorld;
-      UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInWorld);
-
-      ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
-          World, 
-          ALandscape::StaticClass());
-      FMapGeneratorTileMetaInfo MetaTileInfo;
-      // MetaTileInfo.IndexX = i;
-      // MetaTileInfo.IndexY = j;
-      if (Landscape == nullptr)
-            UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No landscape found in tile %s %d_%d ------- Actors found: %d"), 
-                *CUR_CLASS_FUNC_LINE, *World->GetName(), MetaTileInfo.IndexX, MetaTileInfo.IndexY, ActorsInWorld.Num());
-
-      AssignLandscapeHeightMap(Landscape, MetaTileInfo);
-
-      const FString PackageName = MetaInfo.DestinationPath + "/" + MapName;
-      const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-          PackageName, 
-          FPackageName::GetMapPackageExtension());
-      UPackage::SavePackage(World->GetPackage(), World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
-
-  return true;
-}
-
-
 bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading Worlds from %s"), 
@@ -563,48 +307,14 @@ bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const 
   }
 }
 
-bool UMapGeneratorWidget::SaveWorld(
-    FAssetData& WorldToBeSaved, 
-    const FString& DestinationPath, 
-    const FString& WorldName,
-    bool bCheckFileExists)
+bool UMapGeneratorWidget::SaveWorld(UWorld* WorldToBeSaved)
 {
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Saving World to %s as %s"), 
-      *CUR_CLASS_FUNC_LINE, *DestinationPath, *WorldName);
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Saving World to %s"), 
+      *CUR_CLASS_FUNC_LINE, *WorldToBeSaved->GetPathName());
 
-  UWorld* World = GetWorldFromAssetData(WorldToBeSaved);
-
-  const FString PackagePath = DestinationPath + "/" + WorldName;
-
-  // Create Package
-  UPackage *Package = WorldToBeSaved.GetPackage();
-  Package->SetFolderName(*WorldName);
-  Package->FullyLoad();
-  Package->MarkPackageDirty();
-  FAssetRegistryModule::AssetCreated(World);
-  
-  // Rename new World
-  World->Rename(*WorldName, World->GetOuter());
-  
-  FAssetRegistryModule::AssetRenamed(World, *PackagePath);
-  World->MarkPackageDirty();
-  World->GetOuter()->MarkPackageDirty();
-
-  // Saving Package
-  const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-    PackagePath, 
-    FPackageName::GetMapPackageExtension());
-
-  if(bCheckFileExists && FPaths::FileExists(*PackageFileName))
-  {
-    UE_LOG(LogCarlaToolsMapGenerator, Error, 
-        TEXT("%s: Could not save %s because it already exists."),
-        *PackageFileName); 
-    return false;
-  }
-  return UPackage::SavePackage(
-      Package, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  bool bSaveAssetSuccess = UEditorAssetLibrary::SaveAsset(WorldToBeSaved->GetPathName(), true);
+  bool bSaveDirtySuccess = FEditorFileUtils::SaveDirtyPackages(true, true, true, true, true, true);
+  return bSaveAssetSuccess && bSaveDirtySuccess;
 }
 
 bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaInfo)
@@ -660,8 +370,7 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   LargeMapManager->LargeMapTilePath = MetaInfo.DestinationPath;
   LargeMapManager->LargeMapName = MetaInfo.MapName;
-  // LargeMapManager->AssetsPath = MetaInfo.DestinationPath;
-  // LargeMapManager->TileSide = 2.0f * 1000.0f * 100.0f; 
+   
   LargeMapManager->GenerateMap_Editor();
 
   UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
@@ -698,11 +407,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
    const FString BaseWorldSearchPath = TEXT("/CarlaTools/MapGenerator/BaseMap/TilesEmpty/BaseTileEmpty.BaseTileEmpty");
 
-   UWorld* BaseWorld;
-   UWorld* World;
-
-
-// CREATION OF TILES USING FASSETDATA 
   for(int i = 0; i < MetaInfo.SizeX; i++)
   {
     for(int j = 0; j < MetaInfo.SizeY; j++)
@@ -710,7 +414,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating tile map %s (%d_%d)"), 
           *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName, i, j);
 
-      BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldSearchPath);
+      UWorld* BaseWorld = LoadObject<UWorld>(nullptr, *BaseWorldSearchPath);
 
       const FString MapName = 
           MetaInfo.MapName + "_Tile_" + FString::FromInt(i) + "_" + FString::FromInt(j);  
@@ -722,80 +426,41 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       Parameters.DestClass = BaseWorld->GetClass();
       Parameters.DuplicateMode = EDuplicateMode::World;
       Parameters.PortFlags = PPF_Duplicate;
-      // Parameters.PortFlags = PPF_DuplicateForPIE;
 
-      World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
+      UWorld* World = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
       if (World == nullptr)
         UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No world found in tile %s %d_%d"), 
             *CUR_CLASS_FUNC_LINE, *World->GetName(), i, j);
 
-      // 4033 x 4033
+      // 2017 x 2017
       ALandscape* Landscape = World->SpawnActor<ALandscape>();
       Landscape->ComponentSizeQuads = 126; // Component Size
       Landscape->SubsectionSizeQuads = 63; // Quads / Section
       Landscape->NumSubsections = 2;       // (1 for 1x1 , 2 for 2x2)
       Landscape->SetLandscapeGuid(FGuid::NewGuid());
 
-      // 2017 x 2017
-      // ALandscape* Landscape = World->SpawnActor<ALandscape>();
-      // Landscape->ComponentSizeQuads = 63;
-      // Landscape->SubsectionSizeQuads = 63;
-      // Landscape->NumSubsections = 1;
-      // Landscape->SetLandscapeGuid(FGuid::NewGuid());
-
-      // Landscape Material
-
       // Height Render Target
       UTextureRenderTarget2D* HeightRT = MetaInfo.GlobalHeightmap;
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Heightmap detected with dimensions %dx%d"), 
             *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
       TArray<uint16> HeightData;
-      // FTextureRenderTargetResource* RenderTargetResource = HeightRT->GetRenderTargetResource();
       // TODO: UTexture2D and GetMipData
       FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
       FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
-      // FIntRect Rect = FIntRect(0, 0, FMath::Min(1 + MaxX - MinX, HeightRT->SizeX), FMath::Min(1 + MaxY - MinY, HeightRT->SizeY));
       TArray<FLinearColor> HeightmapColor;
-      ////
-      // TArray<uint16> HeightData;
-      // HeightData.Init(0, 2017*2017);
-      // HeightmapColor.Reserve(2017*2017);
-      ////
+
       HeightmapColor.Reserve(Rect.Width() * Rect.Height());
       RenderTargetResource->ReadLinearColorPixels(HeightmapColor, FReadSurfaceDataFlags(RCM_MinMax, CubeFace_MAX), Rect);
       HeightData.Reserve(HeightmapColor.Num());
 
-      // int IterCount = 0;
-      // float R = 1.0f;
-      // float G = 1.0f;
       for(FLinearColor LinearColor : HeightmapColor)
       {
-      //   if(IterCount % HeightRT->SizeX == 0)
-      //   {
-      //     R -= 0.001f;
-      //     // G -= 0.01f;
-      //   }
-      //   HeightData.Add((uint16)(R * 255 * 255 + G * 255));
-      //   IterCount++;
         HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
-      //   // // HeightData.Add((uint16)(LinearColor.R * 255 + LinearColor.G));
-      //   // // HeightData.Add(((uint16)LinearColor.R << 8) | (uint16)LinearColor.G);
-      //   // // HeightData.Add((uint16)LinearColor.R);
-      //   // // if(IterCount % 10 == 0)
-      //   // //  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Color: %d"), 
-      //   // //     *CUR_CLASS_FUNC_LINE, HeightData.Last());
       }
-
-      // HeightmapGenerator HMGenerator();
-      // HeightData = UHeightmapGenerator::GenerateHeightmap(Rect.Width());
       
-
-      // FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f*255);
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
-      // FVector LandscapeScaleVector(1.0f, 1.0f, 1.0f);
       Landscape->CreateLandscapeInfo();
-      // Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector::ZeroVector, FVector::OneVector));
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
 
       TMap<FGuid, TArray<uint16>> HeightmapDataPerLayers;
@@ -806,17 +471,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 	
       Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, HeightRT->SizeX-1, HeightRT->SizeY-1, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
           HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
-      // Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, 2016, 2016, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
-      //     HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
-      
-
-      // FVector LandscapeOrigin;
-      // FVector LandscapeBounds;
-      // Landscape->GetActorBounds(false, LandscapeOrigin, LandscapeBounds);
-      // Landscape->SetActorLocation(FVector(0.0f, 0.0f, LandscapeBounds.Z));
 
       Landscape->ReregisterAllComponents();
-
       Landscape->CreateLandscapeInfo();
       Landscape->SetActorLabel("Landscape");
 
@@ -902,50 +558,9 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
       return false;
     }
 
-    // Save world with vegetation spawned
-    bool bSaved = SaveWorld(AssetData, MetaInfo.DestinationPath, World->GetMapName());
-    if(!bSaved){
-      UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Saving after Cooking Vegetation in %s"),
-          *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
-      return false;
-    }
+
+    SaveWorld(World);
   }
-
-  return true;
-}
-
-bool UMapGeneratorWidget::ApplyHeightMapToLandscape(
-    FAssetData& WorldAssetData, 
-    FMapGeneratorTileMetaInfo TileMetaInfo)
-{
-  UWorld* World = GetWorldFromAssetData(WorldAssetData);
-  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Applying Heigthmap to %s tile (%d_%d)"), 
-      *CUR_CLASS_FUNC_LINE, *World->GetMapName(), TileMetaInfo.IndexX, TileMetaInfo.IndexY);
-
-  /****** TODO PROV Loading World  ******/
-  // UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Loading %s tile to Editor (%d_%d)"), 
-  //     *CUR_CLASS_FUNC_LINE, *World->GetMapName(), TileMetaInfo.IndexX, TileMetaInfo.IndexY);
-  // const FString TilesPath = TileMetaInfo.MapMetaInfo.DestinationPath;
-  // const FString MapNameToLoad = TilesPath + "/" + World->GetMapName() + "." + World->GetMapName();
-  // bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
-  // if(!bLoadedSuccess){
-  //   UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Loading %s"),
-  //       *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
-  //   return false;
-  // }
-  /****************************/
-
-  ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
-      World, 
-      ALandscape::StaticClass());
-  if (Landscape == nullptr)
-        UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error. No landscape found in tile %s %d_%d"), 
-            *CUR_CLASS_FUNC_LINE, *World->GetName(), TileMetaInfo.IndexX, TileMetaInfo.IndexY);
-  AssignLandscapeHeightMap(Landscape, TileMetaInfo);
-
-  // LandscapePostEditEvent(Landscape);
-
-  // FEditorFileUtils::SaveCurrentLevel();
 
   return true;
 }
@@ -956,13 +571,6 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Cooking vegetation to %s"), 
       *CUR_CLASS_FUNC_LINE, *World->GetMapName());
-
-  // TODO PROV : Fix World *********************/
-  ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
-      World, 
-      ALandscape::StaticClass());
-  LandscapePostEditEvent(Landscape);
-  /********************************************/
 
   // For each spawner create a procedural foliage volume and simulates the vegetation
   for(auto Spawner : FoliageSpawners)
@@ -976,7 +584,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     FName InName = NAME_None;
     
     FTransform Transform{ Rotation,Translation,Scale3D };
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Creating Volume...");
+    
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
     AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(
         AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
