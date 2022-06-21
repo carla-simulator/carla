@@ -1,0 +1,8 @@
+# These files are changed when doing the "import" command
+# due to Unreal's automatic checking/cooking ".uasset" files.
+
+# This is why we ignore all the shader files in this folder
+# since they are rarely changed:
+
+*
+!.gitignore

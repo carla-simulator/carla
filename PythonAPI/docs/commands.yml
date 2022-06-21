@@ -1,0 +1,540 @@
+---
+- module_name: command
+
+  classes:
+  - class_name: Response
+    # - DESCRIPTION ------------------------
+    doc: >
+      States the result of executing a command as either the ID of the actor to whom the command was applied to (when succeeded) or an error string (when failed). 
+      actor ID, depending on whether or not the command succeeded. The method __<font color="#7fb800">apply_batch_sync()</font>__ in carla.Client returns a list of these to summarize the execution of a batch. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor to whom the command was applied to. States that the command was successful.
+    - var_name: error
+      type: str
+      doc: >
+        A string stating the command has failed. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: has_error
+      return: bool
+      params:
+      doc: >
+        Returns <b>True</b> if the command execution fails, and <b>False</b> if it was successful. 
+    # --------------------------------------
+
+  - class_name: SpawnActor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">spawn_actor()</font>__ in carla.World. Spawns an actor into the world based on the blueprint provided and the transform. If a parent is provided, the actor is attached to it.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Transform to be applied. 
+    - var_name: parent_id
+      type: int
+      doc: >
+        Identificator of the parent actor.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+    # --------------------------------------
+    - def_name: __init__
+      params:
+      - param_name: blueprint
+        type: carla.ActorBlueprint
+      - param_name: transform
+        type: carla.Transform
+    # --------------------------------------
+    - def_name: __init__
+      params:
+      - param_name: blueprint
+        type: carla.ActorBlueprint
+      - param_name: transform
+        type: carla.Transform
+      - param_name: parent
+        type: carla.Actor or int     
+    # --------------------------------------
+    - def_name: then
+      params:
+      - param_name: command
+        type: any carla Command
+        doc: > 
+          a Carla command.
+      doc: >
+        Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
+    # --------------------------------------
+
+  - class_name: DestroyActor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">destroy()</font>__ in carla.Actor that tells the simulator to destroy this actor. It has no effect if the actor was already destroyed. When executed with __<font color="#7fb800">apply_batch_sync()</font>__ in carla.Client there will be a <b>command.Response</b> that will return a boolean stating whether the actor was successfully destroyed.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+    # --------------------------------------
+
+  - class_name: ApplyVehiclePhysicsControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">apply_physics_control()</font>__ in carla.Vehicle. Applies a new physics control to a vehicle,
+      modifying its physical parameters.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Vehicle actor affected by the command.
+    - var_name: control
+      type: carla.VehiclePhysicsControl
+      doc: >
+        Physics control to be applied.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: control
+        type: carla.VehiclePhysicsControl
+    # --------------------------------------
+
+  - class_name: ApplyVehicleControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">apply_control()</font>__ in carla.Vehicle. Applies a certain control to a vehicle.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Vehicle actor affected by the command.
+    - var_name: control
+      type: carla.VehicleControl
+      doc: >
+        Vehicle control to be applied.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: control
+        type: carla.VehicleControl
+    # --------------------------------------
+
+  - class_name: ApplyWalkerControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">apply_control()</font>__ in carla.Walker. Applies a control to a walker.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Walker actor affected by the command. 
+    - var_name: control
+      type: carla.WalkerControl
+      doc: >
+        Walker control to be applied. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: control
+        type: carla.WalkerControl
+    # --------------------------------------
+
+  - class_name: ApplyTransform
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_transform()</font>__ in carla.Actor. Sets a new transform to an actor. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command.
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Transformation to be applied.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: transform
+        type: carla.Transform
+    # --------------------------------------
+
+  - class_name: ApplyWalkerState
+    # - DESCRIPTION ------------------------
+    doc: >
+      Apply a state to the walker actor. Specially useful to initialize an actor them with a specific location, orientation and speed. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Walker actor affected by the command. 
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Transform to be applied.
+    - var_name: speed
+      type: float
+      var_units: m/s
+      doc: >
+        Speed to be applied.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: transform
+        type: carla.Transform
+      - param_name: speed
+        type: float
+        param_units: m/s
+    # --------------------------------------
+
+  - class_name: ApplyTargetVelocity
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_target_velocity()</font>__ in carla.Actor.  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command.
+    - var_name: velocity
+      type: carla.Vector3D
+      var_units: m/s
+      doc: >
+        The 3D velocity applied to the actor.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: velocity
+        type: carla.Vector3D
+        param_units: m/s
+        doc: > 
+          Velocity vector applied to the actor. 
+    # --------------------------------------
+
+  - class_name: ApplyTargetAngularVelocity
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_target_angular_velocity()</font>__ in carla.Actor. Sets the actor's angular velocity vector.  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command. 
+    - var_name: angular_velocity
+      type: carla.Vector3D
+      var_units: deg/s
+      doc: >
+        The 3D angular velocity that will be applied to the actor. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: angular_velocity
+        type: carla.Vector3D
+        param_units: deg/s
+        doc: > 
+          Angular velocity vector applied to the actor. 
+    # --------------------------------------
+
+  - class_name: ApplyImpulse
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">add_impulse()</font>__ in carla.Actor. Applies an impulse to an actor.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command. 
+    - var_name: impulse
+      type: carla.Vector3D
+      var_units: N*s
+      doc: >
+        Impulse applied to the actor. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: impulse
+        type: carla.Vector3D
+        param_units: N*s
+    # --------------------------------------
+
+  - class_name: ApplyForce
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">add_force()</font>__ in carla.Actor. Applies a force to an actor.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command. 
+    - var_name: force
+      type: carla.Vector3D
+      doc: >
+        Force applied to the actor over time. 
+      var_units: N
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: force
+        type: carla.Vector3D
+        param_units: N 
+    # --------------------------------------
+
+  - class_name: ApplyAngularImpulse
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">add_angular_impulse()</font>__ in carla.Actor. Applies an angular impulse to an actor.  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command.
+    - var_name: impulse
+      type: carla.Vector3D
+      var_units: degrees*s
+      doc: >
+        Angular impulse applied to the actor.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: impulse
+        type: carla.Vector3D
+        param_units: degrees*s
+    # --------------------------------------
+
+  - class_name: ApplyTorque
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">add_torque()</font>__ in carla.Actor. Applies a torque to an actor.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command. 
+    - var_name: torque
+      type: carla.Vector3D
+      doc: >
+        Torque applied to the actor over time. 
+      var_units: degrees
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: torque
+        type: carla.Vector3D
+        param_units: degrees
+    # --------------------------------------
+
+  - class_name: SetSimulatePhysics
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_simulate_physics()</font>__ in carla.Actor. Determines whether an actor will be affected by physics or not.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor affected by the command. 
+    - var_name: enabled
+      type: bool
+      doc: >
+        If physics should be activated or not. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: enabled
+        type: bool
+    # --------------------------------------
+
+  - class_name: SetAutopilot
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_autopilot()</font>__ in carla.Vehicle. Turns on/off the vehicle's autopilot mode.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor that is affected by the command.
+    - var_name: enabled
+      type: bool
+      doc: >
+        If autopilot should be activated or not.
+    - var_name: port
+      type: uint16
+      doc: >
+        Port of the Traffic Manager where the vehicle is to be registered or unlisted. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to. 
+      - param_name: enabled
+        type: bool
+      - param_name: port
+        type: uint16
+        default: 8000
+        doc: >
+          The Traffic Manager port where the vehicle is to be registered or unlisted. If __None__ is passed, it will consider a TM at default port `8000`. 
+    # --------------------------------------
+
+  - class_name: SetVehicleLightState
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_light_state()</font>__ in carla.Vehicle. Sets the light state of a vehicle.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: int
+      doc: >
+        Actor that is affected by the command.
+    - var_name: light_state
+      type: carla.VehicleLightState
+      doc: >
+        Defines the light state of a vehicle.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or its ID to whom the command will be applied to.
+      - param_name: light_state
+        type: carla.VehicleLightState
+        doc: >
+          Recaps the state of the lights of a vehicle, these can be used as a flags.
+    # --------------------------------------
+
+  - class_name: SetEnableGravity
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">set_enable_gravity()</font>__ in carla.Actor. Enables or disables gravity on an actor.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: carla.Actor or int
+      doc: >
+        Actor that is affected by the command.
+    - var_name: enabled
+      type: bool
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or Actor ID to which the command will be applied to. 
+      - param_name: enabled
+        type: bool
+    # --------------------------------------
+
+  - class_name: ShowDebugTelemetry
+    # - DESCRIPTION ------------------------
+    doc: >
+      Command adaptation of __<font color="#7fb800">show_debug_telemetry()</font>__ in carla.Actor. Displays vehicle control telemetry data.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: actor_id
+      type: carla.Actor or int
+      doc: >
+        Actor that is affected by the command.
+    - var_name: enabled
+      type: bool
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: actor
+        type: carla.Actor or int
+        doc: > 
+          Actor or Actor ID to which the command will be applied to. 
+      - param_name: enabled
+        type: bool
+    # --------------------------------------
+...

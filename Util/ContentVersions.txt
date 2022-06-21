@@ -1,0 +1,38 @@
+# Here we keep a list of the Google Drive id's of the Content files. The last id
+# in the list it's picked up by the Setup.sh script to download the last version
+# of the contents.
+#
+# You can download it directly from
+#
+#     https://drive.google.com/open?id=PUT_FILE_ID_HERE
+
+0.5.4: 0B2HFV-VuKn3PYUFFanlmZ2VMTW8
+0.6.0: 1Gw8sw01hDEV4FtpHEZZwvS-6XN0jmaLT
+0.7.0: 11PKC_lG7L80L1ZxiMlzV17utU45UcRnT
+0.7.1: 1gf3YaFIjwr1EaK6qxq2V-a510Brt9Imq
+0.8.0: 1tA-WwKA0RNhBoENYunqF3-F_wg11dL86
+0.8.1: 1su5wQH7KJphAcirMA8VEDLndGigQ9tzq
+0.8.2: 1llrBkZDvJmxXYh4r3jz0wuwz8Q8jRQeZ
+0.8.3: 1z2XKOk9LoKI-EhxcrpI31W5TeYo2-jjn
+0.8.4: 1mFNS-w5atQ45yegiTepRIeKBYVm8N8He
+0.9.0: 1FtC00CrDb7Kz5StBAwb6vqOGbzZtpROx
+0.9.1: 1IZDzNQNVL67h8UlGyKuGegLH612Ifd7H
+0.9.2: 1RKRGB22U5t80q4zwYXBJvxQXhzNjaaDf
+0.9.3: 1jJlStNHpey62CrMkWVfmtQcJGO7PaD0R
+0.9.4: 10Tc0DMXpfH7W28zwagXsVTjpkhGx3Klz
+
+# Newer asset Content is stored in AWS.
+#
+# You can download it directly from
+#
+#     http://carla-assets.s3.amazonaws.com/PUT_FILE_ID_HERE.tar.gz
+
+0.9.5: 20190404_c7b464a
+0.9.6: 20190710_0097e66
+0.9.7: 20191221_c88604b
+0.9.8: 20200306_06b6cb1
+0.9.9: 20200422_ea5179a
+0.9.10: 20200925_88f9ceb
+0.9.11: 20201222_232b876
+0.9.12: 20210730_564bcdc
+0.9.13: 20211112_d5cfa12

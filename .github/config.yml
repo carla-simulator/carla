@@ -1,0 +1,11 @@
+# Configuration for update-docs - https://github.com/behaviorbot/update-docs
+
+# Comment to be posted to on PRs that don't update the changelog
+updateDocsComment: >
+  Thanks for opening this pull request! The maintainers of this repository would appreciate it if you would update our **CHANGELOG.md** based on your changes.
+
+updateDocsWhiteList:
+  - documentation
+
+updateDocsTargetFiles:
+  - CHANGELOG.md

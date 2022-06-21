@@ -1,0 +1,510 @@
+---
+- module_name: carla
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: VehicleControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Manages the basic movement of a vehicle using typical driving controls.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: throttle
+      type: float
+      doc: >
+        A scalar value to control the vehicle throttle [0.0, 1.0]. Default is 0.0.
+    # --------------------------------------
+    - var_name: steer
+      type: float
+      doc: >
+        A scalar value to control the vehicle steering [-1.0, 1.0]. Default is 0.0.
+    # --------------------------------------
+    - var_name: brake
+      type: float    
+      doc: >
+        A scalar value to control the vehicle brake [0.0, 1.0]. Default is 0.0.
+    # --------------------------------------
+    - var_name: hand_brake
+      type: bool
+      doc: >
+        Determines whether hand brake will be used. Default is <b>False</b>.
+    # --------------------------------------
+    - var_name: reverse
+      type: bool
+      doc: >
+        Determines whether the vehicle will move backwards. Default is <b>False</b>. 
+    # --------------------------------------
+    - var_name: manual_gear_shift
+      type: bool
+      doc: >
+        Determines whether the vehicle will be controlled by changing gears manually. Default is <b>False</b>.
+    # --------------------------------------
+    - var_name: gear
+      type: int
+      doc: >
+        States which gear is the vehicle running on.
+
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: throttle
+        type: float
+        default: 0.0
+        doc: Scalar value between [0.0,1.0]
+      - param_name: steer
+        type: float
+        default: 0.0
+        doc: Scalar value between [0.0,1.0]
+      - param_name: brake
+        type: float
+        default: 0.0
+        doc: Scalar value between [0.0,1.0]
+      - param_name: hand_brake
+        type: bool
+        default: False
+      - param_name: reverse
+        type: bool
+        default: False
+      - param_name: manual_gear_shift
+        type: bool
+        default: False
+      - param_name: gear
+        type: int
+        default: 0
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.VehicleControl
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.VehicleControl
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: WalkerControl
+    doc: >
+      This class defines specific directions that can be commanded to a carla.Walker to control it via script.
+        
+        AI control can be settled for walkers, but the control used to do so is carla.WalkerAIController. 
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: direction
+      type: carla.Vector3D
+      doc: >
+        Vector using global coordinates that will correspond to the direction of the walker.
+    # --------------------------------------
+    - var_name: speed
+      type: float
+      var_units: m/s
+      doc: >
+        A scalar value to control the walker's speed.
+    # --------------------------------------
+    - var_name: jump
+      type: bool
+      doc: >
+        If <b>True</b>, the walker will perform a jump.
+
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: direction
+        default: [1.0, 0.0, 0.0]
+        type: carla.Vector3D
+      - param_name: speed
+        default: 0.0
+        param_units: m/s
+        type: float
+      - param_name: jump
+        default: False
+        type: bool
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.WalkerControl
+      doc: >
+        Compares every variable with `other` and returns <b>True</b> if these are all the same.
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.WalkerControl
+      doc: >
+        Compares every variable with `other` and returns <b>True</b> if any of these differ.
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: WalkerBoneControlOut
+    # - DESCRIPTION ------------------------
+    doc: >
+       This class is used to return all bone positions of a pedestrian. For each bone we get its _name_ and its transform in three different spaces (world, actor and relative).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: bone_transforms
+      type: list([name,world, actor, relative])
+      doc: >
+        List of one entry per bone with this information:
+          - name: bone name
+          - world: transform in world coordinates
+          - component: transform based on the pivot of the actor
+          - relative: transform based on the bone parent
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: WalkerBoneControlIn
+    # - DESCRIPTION ------------------------
+    doc: >
+       This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](tuto_G_control_walker_skeletons.md) to learn more on how to create a walker and define its movement.  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: bone_transforms
+      type: list([name,transform])
+      doc: >
+        List with the data for each bone we want to set:
+          - name: bone name
+          - relative: transform based on the bone parent       
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: 'list(name,transform)'
+        type: tuple
+      doc: >
+        Initializes an object containing moves to be applied on tick. These are listed with the name of the bone and the transform that will be applied to it. 
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: GearPhysicsControl
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that provides access to vehicle transmission details by defining a gear and when to run on it. This will be later used by carla.VehiclePhysicsControl to help simulate physics. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: ratio
+      type: float
+      doc: >
+        The transmission ratio of the gear.
+    # --------------------------------------
+    - var_name: down_ratio
+      type: float
+      doc: >
+        Quotient between current RPM and MaxRPM where the autonomous gear box should shift down.
+    # --------------------------------------
+    - var_name: up_ratio
+      type: float
+      doc: >
+        Quotient between current RPM and MaxRPM where the autonomous gear box should shift up.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: ratio
+        type: float 
+        default: 1.0
+      - param_name: down_ratio
+        type: float
+        default: 0.5
+      - param_name: up_ratio
+        type: float 
+        default: 0.65
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.GearPhysicsControl
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.GearPhysicsControl
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: VehiclePhysicsControl
+    doc: >
+      Summarizes the parameters that will be used to simulate a carla.Vehicle as a physical object. The specific settings for the wheels though are stipulated using carla.WheelPhysicsControl.
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: torque_curve
+      type: list(carla.Vector2D)
+      doc: >
+        Curve that indicates the torque measured in Nm for a specific RPM of the vehicle's engine.
+    # --------------------------------------
+    - var_name: max_rpm
+      type: float
+      doc: >
+        The maximum RPM of the vehicle's engine.
+    # --------------------------------------
+    - var_name: moi
+      type: float
+      var_units: kg*m<sup>2</sup>
+      doc: >
+        The moment of inertia of the vehicle's engine.
+    # --------------------------------------
+    - var_name: damping_rate_full_throttle
+      type: float
+      doc: >
+        Damping ratio when the throttle is maximum.
+    # --------------------------------------
+    - var_name: damping_rate_zero_throttle_clutch_engaged
+      type: float
+      doc: >
+        Damping ratio when the throttle is zero with clutch engaged.
+    # --------------------------------------
+    - var_name: damping_rate_zero_throttle_clutch_disengaged
+      type: float
+      doc: >
+        Damping ratio when the throttle is zero with clutch disengaged.
+    # --------------------------------------
+    - var_name: use_gear_autobox
+      type: bool
+      doc: >
+        If <b>True</b>, the vehicle will have an automatic transmission.
+    # --------------------------------------
+    - var_name: gear_switch_time
+      type: float
+      var_units: seconds
+      doc: >
+        Switching time between gears.
+    # --------------------------------------
+    - var_name: clutch_strength
+      type: float
+      var_units: kg*m<sup>2</sup>/s
+      doc: >
+        Clutch strength of the vehicle.
+    # --------------------------------------
+    - var_name: final_ratio
+      type: float
+      doc: >
+        Fixed ratio from transmission to wheels.
+    # --------------------------------------
+    - var_name: forward_gears
+      type: list(carla.GearPhysicsControl)
+      doc: >
+        List of objects defining the vehicle's gears.
+    # --------------------------------------
+    - var_name: mass
+      type: float
+      var_units: kilograms
+      doc: >
+        Mass of the vehicle.
+    # --------------------------------------
+    - var_name: drag_coefficient
+      type: float
+      doc: >
+        Drag coefficient of the vehicle's chassis.
+    # --------------------------------------
+    - var_name: center_of_mass
+      type: carla.Vector3D
+      var_units: meters
+      doc: >
+        Center of mass of the vehicle.
+    # --------------------------------------
+    - var_name: steering_curve
+      type: list(carla.Vector2D)
+      doc: >
+        Curve that indicates the maximum steering for a specific forward speed.
+    # --------------------------------------
+    - var_name: use_sweep_wheel_collision
+      type: bool
+      doc: >
+        Enable the use of sweep for wheel collision. By default, it is disabled and it uses a
+        simple raycast from the axis to the floor for each wheel. This option provides a better
+        collision model in which the full volume of the wheel is checked against collisions.
+    # --------------------------------------
+    - var_name: wheels
+      type: list(carla.WheelPhysicsControl)
+      doc: >
+        List of wheel physics objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.
+
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: torque_curve
+        default: [[0.0,500.0], [5000.0, 500.0]]
+        type: list(carla.Vector2D)
+      - param_name: max_rpm
+        default: 5000.0
+        type: float
+      - param_name: moi
+        default: 1.0
+        type: float
+        param_units: kg*m<sup>2</sup>
+      - param_name: damping_rate_full_throttle
+        default: 0.15
+        type: float
+      - param_name: damping_rate_zero_throttle_clutch_engaged
+        default: 2.0
+        type: float
+      - param_name: damping_rate_zero_throttle_clutch_disengaged
+        default: 0.35
+        type: float
+      - param_name: use_gear_autobox
+        default: True
+        type: bool
+      - param_name: gear_switch_time
+        default: 0.5
+        type: float
+        param_units: seconds
+      - param_name: clutch_strength
+        default: 10.0
+        type: float
+        param_units: kg*m<sup>2</sup>/s
+      - param_name: final_ratio
+        default: 4.0
+        type: float
+      - param_name: forward_gears
+        default: list()
+        type: list(carla.GearPhysicsControl)
+      - param_name: drag_coefficient
+        default: 0.3
+        type: float
+      - param_name: center_of_mass
+        default: [0.0, 0.0, 0.0]
+        type: carla.Vector3D
+      - param_name: steering_curve
+        default: [[0.0, 1.0],[10.0, 0.5]]
+        type: carla.Vector2D
+      - param_name: wheels
+        default: list()
+        type: list(carla.WheelPhysicsControl)
+      - param_name: use_sweep_wheel_collision
+        default: False
+        type: bool
+      - param_name: mass
+        default: 1000.0
+        type: float
+        param_units: kilograms
+      doc: >
+        VehiclePhysicsControl constructor
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.VehiclePhysicsControl
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.VehiclePhysicsControl
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: WheelPhysicsControl
+    doc: >
+      Class that defines specific physical parameters for wheel objects that will be part of a carla.VehiclePhysicsControl to simulate vehicle it as a material object.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: tire_friction
+      type: float
+      doc: >
+        A scalar value that indicates the friction of the wheel.
+    # --------------------------------------
+    - var_name: damping_rate
+      type: float
+      doc: >
+        Damping rate of the wheel.
+    # --------------------------------------
+    - var_name: max_steer_angle
+      type: float
+      var_units: degrees
+      doc: >
+        Maximum angle that the wheel can steer.
+    # --------------------------------------
+    - var_name: radius
+      type: float
+      var_units: centimeters
+      doc: >
+        Radius of the wheel.
+    # --------------------------------------
+    - var_name: max_brake_torque
+      type: float
+      var_units: N*m
+      doc: >
+        Maximum brake torque.
+    # --------------------------------------
+    - var_name: max_handbrake_torque
+      type: float
+      var_units: N*m
+      doc: >
+        Maximum handbrake torque.
+    # --------------------------------------
+    - var_name: position
+      type: carla.Vector3D
+      doc: >
+        World position of the wheel. This is a read-only parameter.
+    # --------------------------------------
+    - var_name: long_stiff_value
+      type: float
+      var_units: kg per radian
+      doc: >
+        Tire longitudinal stiffness per unit gravitational acceleration. Each vehicle has a custom value.
+    # --------------------------------------
+    - var_name: lat_stiff_max_load
+      type: float
+      doc: >
+        Maximum normalized tire load at which the tire can deliver no more lateral stiffness no matter how much extra load is applied to the tire. Each vehicle has a custom value.
+    # --------------------------------------
+    - var_name: lat_stiff_value
+      type: float
+      doc: >
+        Maximum stiffness per unit of lateral slip. Each vehicle has a custom value.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: tire_friction
+        default: 2.0
+        type: float
+      - param_name: damping_rate
+        default: 0.25
+        type: float
+      - param_name: max_steer_angle
+        default: 70.0
+        type: float
+        param_units: degrees
+      - param_name: radius
+        default: 30.0
+        type: float
+        param_units: centimerers
+      - param_name: max_brake_torque
+        default: 1500.0
+        type: float
+        param_units: N*m
+      - param_name: max_handbrake_torque
+        default: 3000.0
+        type: float
+        param_units: N*m
+      - param_name: position
+        default: (0.0,0.0,0.0)
+        type: carla.Vector3D
+        param_units: meters
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.WheelPhysicsControl
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.WheelPhysicsControl
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+...

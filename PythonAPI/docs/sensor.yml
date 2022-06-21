@@ -1,0 +1,201 @@
+---
+- module_name: carla
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Sensor
+    parent: carla.Actor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at carla.World to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from carla.SensorData (depending on the sensor).
+
+        Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in carla.BlueprintLibrary. All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.
+        <br><b>Receive data on every tick.</b>
+        - [Depth camera](ref_sensors.md#depth-camera).
+        - [Gnss sensor](ref_sensors.md#gnss-sensor).
+        - [IMU sensor](ref_sensors.md#imu-sensor).
+        - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
+        - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
+        - [Radar](ref_sensors.md#radar-sensor).
+        - [RGB camera](ref_sensors.md#rgb-camera).
+        - [RSS sensor](ref_sensors.md#rss-sensor).
+        - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
+        <br><b>Only receive data when triggered.</b>
+        - [Collision detector](ref_sensors.md#collision-detector).
+        - [Lane invasion detector](ref_sensors.md#lane-invasion-detector).
+        - [Obstacle detector](ref_sensors.md#obstacle-detector).
+
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: is_listening
+      type: boolean
+      doc: >
+        When <b>True</b> the sensor will be waiting for data.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: listen
+      params:
+      - param_name: callback
+        type: function
+        doc: >
+          The called function with one argument containing the sensor data.
+      doc: >
+        The function the sensor will be calling to every time a new measurement is received. This function needs for an argument containing an object type carla.SensorData to work with.
+    # --------------------------------------
+    - def_name: stop
+      doc: >
+        Commands the sensor to stop listening for data.
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: RssSensor
+    parent: carla.Sensor
+    # - DESCRIPTION ------------------------
+    doc: >
+      This sensor works a bit differently than the rest. Take look at the [specific documentation](adv_rss.md), and the [rss sensor reference](ref_sensors.md#rss-sensor) to gain full understanding of it.
+
+
+      The RSS sensor uses world information, and a [RSS library](https://github.com/intel/ad-rss-lib) to make safety checks on a vehicle. The output retrieved by the sensor is a carla.RssResponse. This will be used by a carla.RssRestrictor to modify a carla.VehicleControl before applying it to a vehicle.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: ego_vehicle_dynamics
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>
+      doc: >
+        States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the ego vehicle if no actor constellation callback is registered.
+    - var_name: other_vehicle_dynamics
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>
+      doc: >
+        States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for the rest of vehicles if no actor constellation callback is registered.
+    - var_name: pedestrian_dynamics
+      type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1RssDynamics.html">ad.rss.world.RssDynamics</a>
+      doc: >
+        States the [RSS parameters](https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/) that the sensor will consider for pedestrians if no actor constellation callback is registered.
+    - var_name: road_boundaries_mode
+      type: carla.RssRoadBoundariesMode
+      doc: >
+        Switches the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. By default is __Off__.
+    - var_name: routing_targets
+      type: vector<carla.Transform>
+      doc: >
+        The current list of targets considered to route the vehicle. If no routing targets are defined, a route is generated at random.
+      # - METHODS ----------------------------
+    methods:
+    - def_name: append_routing_target
+      params:
+      - param_name: routing_target
+        type: carla.Transform
+        doc: >
+          New target point for the route. Choose these after the intersections to force the route to take the desired turn.
+      doc: >
+        Appends a new target position to the current route of the vehicle.
+    - def_name: reset_routing_targets
+      doc: >
+        Erases the targets that have been appended to the route.
+    - def_name: drop_route
+      doc: >
+        Discards the current route. If there are targets remaining in **<font color="#f8805a">routing_targets</font>**, creates a new route using those. Otherwise, a new route is created at random.
+    - def_name: register_actor_constellation_callback
+      params:
+      - param_name: callback
+        doc: >
+          The function to be called whenever a RSS situation is about to be calculated.
+      doc: >
+        Register a callback to customize a carla.RssActorConstellationResult. By this callback the settings of RSS parameters are done per actor constellation and the settings (ego_vehicle_dynamics, other_vehicle_dynamics and pedestrian_dynamics) have no effect.
+    - def_name: set_log_level
+      params:
+      - param_name: log_level
+        type: carla.RssLogLevel
+        doc: >
+          New log level.
+      doc: >
+        Sets the log level.
+    - def_name: set_map_log_level
+      params:
+      - param_name: log_level
+        type: carla.RssLogLevel
+        doc: >
+          New map log level.
+      doc: >
+        Sets the map log level.
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: RssRestrictor
+    parent:
+    # - DESCRIPTION ------------------------
+    doc: >
+      These objects apply restrictions to a carla.VehicleControl. It is part of the CARLA implementation of the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib). This class works hand in hand with a [rss sensor](ref_sensors.md#rss-sensor), which provides the data of the restrictions to be applied.
+    # - PROPERTIES -------------------------
+    instance_variables:
+
+      # - METHODS ----------------------------
+    methods:
+    - def_name: restrict_vehicle_control
+      params:
+      - param_name: vehicle_control
+        type: carla.VehicleControl
+        doc: >
+          The input vehicle control to be restricted.
+      - param_name: proper_response
+        type: <a href="https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html">ad.rss.state.ProperResponse</a>
+        doc: >
+          Part of the response generated by the sensor. Contains restrictions to be applied to the acceleration of the vehicle.
+      - param_name: ego_dynamics_on_route
+        type: carla.RssEgoDynamicsOnRoute
+        doc: >
+          Part of the response generated by the sensor. Contains dynamics and heading of the vehicle regarding its route.
+      - param_name: vehicle_physics
+        type: carla.VehiclePhysicsControl
+        doc: >
+          The current physics of the vehicle. Used to apply the restrictions properly.
+      return:
+        carla.VehicleControl
+      doc: >
+        Applies the safety restrictions given by a carla.RssSensor to a carla.VehicleControl.
+    - def_name: set_log_level
+      params:
+      - param_name: log_level
+        type: carla.RssLogLevel
+        doc: >
+          New log level.
+      doc: >
+        Sets the log level.
+    # --------------------------------------
+
+  - class_name: RssRoadBoundariesMode
+    # - DESCRIPTION ------------------------
+    doc: >
+      Enum declaration used in carla.RssSensor to enable or disable the [stay on road](https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries/) feature. In summary, this feature considers the road boundaries as virtual objects. The minimum safety distance check is applied to these virtual walls, in order to make sure the vehicle does not drive off the road.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: 'On'
+      doc: >
+        Enables the _stay on road_ feature.
+    # --------------------------------------
+    - var_name: 'Off'
+      doc: >
+        Disables the _stay on road_ feature.
+    # --------------------------------------
+
+  - class_name: RssLogLevel
+    # - DESCRIPTION ------------------------
+    doc: >
+      Enum declaration used in carla.RssSensor to set the log level.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: 'trace'
+    # --------------------------------------
+    - var_name: 'debug'
+    # --------------------------------------
+    - var_name: 'info'
+    # --------------------------------------
+    - var_name: 'warn'
+    # --------------------------------------
+    - var_name: 'err'
+    # --------------------------------------
+    - var_name: 'critical'
+    # --------------------------------------
+    - var_name: 'off'
+    # --------------------------------------
+...

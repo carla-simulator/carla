@@ -1,0 +1,173 @@
+---
+- module_name: carla
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: WeatherParameters
+    # - DESCRIPTION ------------------------
+    doc: >
+      This class defines objects containing lighting and weather specifications that can later be applied in carla.World. So far, these conditions only intervene with [sensor.camera.rgb](ref_sensors.md#rgb-camera). They neither affect the actor's physics nor other sensors.        
+        Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/dynamic_weather.py). 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: cloudiness
+      type: float
+      doc: >
+        Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds. 
+    # --------------------------------------
+    - var_name: precipitation
+      type: float
+      doc: >
+        Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain. 
+    # --------------------------------------
+    - var_name: precipitation_deposits
+      type: float
+      doc: >
+        Determines the creation of puddles. Values range from 0 to 100, being 0 none at all and 100 a road completely capped with water. Puddles are created with static noise, meaning that they will always appear at the same locations. 
+    # --------------------------------------
+    - var_name: wind_intensity
+      type: float
+      doc: >
+        Controls the strenght of the wind with values from 0, no wind at all, to 100, a strong wind. The wind does affect rain direction and leaves from trees, so this value is restricted to avoid animation issues. 
+    # --------------------------------------
+    - var_name: sun_azimuth_angle
+      type: float
+      var_units: degrees
+      doc: >
+        The azimuth angle of the sun. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine. 
+    # --------------------------------------
+    - var_name: sun_altitude_angle
+      type: float
+      var_units: degrees
+      doc: >
+        Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each.
+    # --------------------------------------
+    - var_name: fog_density
+      type: float
+      doc: >
+        Fog concentration or thickness. It only affects the RGB camera sensor. Values range from 0 to 100.
+    # --------------------------------------
+    - var_name: fog_distance
+      type: float
+      var_units: meters
+      doc: >
+        Fog start distance. Values range from 0 to infinite.
+    # --------------------------------------
+    - var_name: wetness
+      type: float
+      doc: >
+        Wetness intensity. It only affects the RGB camera sensor. Values range from 0 to 100.
+    # --------------------------------------
+    - var_name: fog_falloff
+      type: float
+      doc: >
+        Density of the fog (as in specific mass) from 0 to infinity. The bigger the value, the more dense and heavy it will be, and the fog will reach smaller heights. Corresponds to <a href="https://docs.unrealengine.com/en-US/Engine/Actors/FogEffects/HeightFog/index.html#:~:text=Using%20Exponential%20Height%20Fog%20Features,-The%20sections%20below&text=Add%20a%20second%20fog%20layer,height%20falloff%2C%20and%20height%20offset">Fog Height Falloff</a> in the UE docs. <br> If the value is 0, the fog will be lighter than air, and will cover the whole scene. <br> A value of 1 is approximately as dense as the air, and reaches normal-sized buildings. <br> For values greater than 5, the air will be so dense that it will be compressed on ground level. 
+    # --------------------------------------
+    - var_name: scattering_intensity
+      type: float
+      doc: >
+        Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.
+    # --------------------------------------
+    - var_name: mie_scattering_scale
+      type: float
+      doc: >
+        Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.
+    # --------------------------------------
+    - var_name: rayleigh_scattering_scale
+      type: float
+      doc: >
+          Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: cloudiness
+        type: float
+        default: 0.0
+        doc: >
+          0 is a clear sky, 100 complete overcast. 
+      - param_name: precipitation
+        type: float
+        default: 0.0
+        doc: >
+          0 is no rain at all, 100 a heavy rain. 
+      - param_name: precipitation_deposits
+        type: float
+        default: 0.0
+        doc: >
+          0 means no puddles on the road, 100 means roads completely capped by rain. 
+      - param_name: wind_intensity
+        type: float
+        default: 0.0
+        doc: >
+          0 is calm, 100 a strong wind. 
+      - param_name: sun_azimuth_angle
+        type: float
+        default: 0.0
+        param_units: degrees
+        doc: >
+          0 is an arbitrary North, 180 its corresponding South.  
+      - param_name: sun_altitude_angle
+        type: float
+        default: 0.0
+        param_units: degrees
+        doc: >
+          90 is midday, -90 is midnight.  
+      - param_name: fog_density
+        type: float
+        default: 0.0
+        doc: >
+          Concentration or thickness of the fog, from 0 to 100.  
+      - param_name: fog_distance
+        type: float
+        default: 0.0
+        param_units: meters
+        doc: >
+          Distance where the fog starts in meters.  
+      - param_name: wetness
+        type: float
+        default: 0.0
+        doc: >
+          Humidity percentages of the road, from 0 to 100.  
+      - param_name: fog_falloff
+        type: float
+        default: 0.0
+        doc: >
+          Density (specific mass) of the fog, from 0 to infinity.  
+      - param_name: scattering_intensity
+        type: float
+        default: 0.0
+        doc: >
+          Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.
+      - param_name: mie_scattering_scale
+        type: float
+        default: 0.0
+        doc: >
+          Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.
+      - param_name: rayleigh_scattering_scale
+        type: float
+        default: 0.0331
+        doc: >
+          Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
+      note: >
+        ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
+      doc: >
+        Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below. 
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+      return: bool
+      doc: >
+        Returns <b>True</b> if both objects' variables are the same. 
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+      return: bool
+      doc: >
+        Returns <b>True</b> if both objects' variables are different. 
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+...

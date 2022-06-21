@@ -1,0 +1,23 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "CarlaExporter",
+	"Description": "Export geometry for using in Recast",
+	"Category": "Other",
+	"CreatedBy": "Carla Team",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "CarlaExporter",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}

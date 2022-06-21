@@ -1,0 +1,93 @@
+---
+- module_name: carla
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Osm2Odr
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    # - METHODS ----------------------------
+    methods:
+    - def_name: convert
+      static:
+        True
+      return: str
+      doc: >
+        The converted OpenDRIVE xml data.
+      params:
+      - param_name: osm_file
+        type: str
+        doc: >
+          The content of the input OpenStreetMap file parsed as string.
+      - param_name: settings
+        type: carla.OSM2ODRSettings
+        doc: >
+          Parameterization for the conversion.
+      doc: >
+        Takes the content of an <code>.osm</code> file (OpenStreetMap format) and returns the content of the <code>.xodr</code> (OpenDRIVE format) describing said map. Some parameterization is passed to do the conversion.
+  # --------------------------------------
+  - class_name: Osm2OdrSettings
+    # - DESCRIPTION ------------------------
+    doc: >
+      Helper class that contains the parameterization that will be used by carla.Osm2Odr to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
+    instance_variables:
+    - var_name: use_offsets
+      type: bool
+      doc: >
+        Enables the use of offset for the conversion. The offset will move the origin position of the map. Default value is __False__.
+    - var_name: offset_x
+      type: float
+      var_units: meters
+      doc: >
+        Offset in the X axis.  Default value is __0.0__.
+    - var_name: offset_y
+      type: float
+      var_units: meters
+      doc: >
+        Offset in the Y axis.  Default value is __0.0__.
+    - var_name: default_lane_width
+      type: float
+      var_units: meters
+      doc: >
+        Width of the lanes described in the resulting XODR map. Default value is __4.0__.
+    - var_name: elevation_layer_height
+      type: float
+      var_units: meters
+      doc: >
+        Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.
+    - var_name: center_map
+      type: bool
+      doc: >
+        When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounding box of the entire road map.
+    - var_name: proj_string
+      type: str
+      doc: >
+        Defines the [proj4](https://github.com/OSGeo/proj.4) string that will be used to compute the projection from geocoordinates to cartesian coordinates. This string will be written in the resulting OpenDRIVE unless the options `use_offsets` or `center_map` are enabled as these options override some of the definitions in the string.
+    - var_name: generate_traffic_lights
+      type: bool
+      doc: >
+        Indicates wether to generate traffic light data in the OpenDRIVE. Road types defined by `set_traffic_light_excluded_way_types(way_types)` will not generate traffic lights.
+    - var_name: all_junctions_with_traffic_lights
+      type: bool
+      doc: >
+        When disabled, the converter will generate traffic light data from the OpenStreetMaps data only. When enabled, all junctions will generate traffic lights.
+    methods:
+    - def_name: set_osm_way_types
+      doc: >
+        Defines the OpenStreetMaps road types that will be imported to OpenDRIVE. By default the road types imported are `motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link, unclassified, residential`. For a full list of road types check [here](https://wiki.openstreetmap.org/wiki/Main_Page).
+      params:
+      - param_name: way_types
+        type: list(str)
+        doc: >
+          The list of road types.
+    - def_name: set_traffic_light_excluded_way_types
+      doc: >
+        Defines the OpenStreetMaps road types that will not generate traffic lights even if `generate_traffic_lights` is enabled. By default the road types excluded are `motorway_link, primary_link, secondary_link, tertiary_link`
+      params:
+      - param_name: way_types
+        type: list(str)
+        doc: >
+          The list of road types.

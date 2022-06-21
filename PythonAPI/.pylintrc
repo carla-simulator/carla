@@ -1,0 +1,6 @@
+[MESSAGES CONTROL]
+max-line-length=120
+[MASTER]
+disable=I0011,I0013,E1121,E1126
+[TYPECHECK]
+ignored-modules=carla,carla.command,libcarla,pygame,numpy,configparser,ConfigParser,libad_rss_python2,libad_rss_python3,libad_map_access_python2,libad_map_access_python3,libad_rss_map_integration_python2,libad_rss_map_integration_python3

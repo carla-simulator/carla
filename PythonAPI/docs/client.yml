@@ -1,0 +1,643 @@
+---
+- module_name: carla
+  doc: >
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Client
+    # - DESCRIPTION ------------------------
+    doc: >
+      The Client connects CARLA to the server which runs the simulation. Both server and client contain a CARLA library (libcarla) with some differences that allow communication between them. Many clients can be created and each of these will connect to the RPC server inside the simulation to send commands. The simulation runs server-side. Once the connection is established, the client will only receive data retrieved from the simulation. Walkers are the exception. The client is in charge of managing pedestrians so, if you are running a simulation with multiple clients, some issues may arise. For example, if you spawn walkers through different clients, collisions may happen, as each client is only aware of the ones it is in charge of.
+
+        The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](adv_recorder.md) is some information about how to use this recorder.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: host
+        type: str
+        default: '127.0.0.1'
+        doc: >
+          IP address where a CARLA Simulator instance is running. Default is localhost (127.0.0.1).
+      - param_name: port
+        type: int
+        default: 2000
+        doc: >
+          TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001.
+      - param_name: worker_threads
+        type: int
+        default: 0
+        doc: >
+          Number of working threads used for background updates. If 0, use all
+          available concurrency.
+      doc: >
+        Client constructor
+    # --------------------------------------
+    - def_name: apply_batch
+      params:
+      - param_name: commands
+        type: list
+        doc: >
+          A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
+      doc: >
+        Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.
+        [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in carla.ActorList all at once.
+    # --------------------------------------
+    - def_name: apply_batch_sync
+      params:
+      - param_name: commands
+        type: list
+        doc: >
+          A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.
+      - param_name: due_tick_cue
+        type: bool
+        default: false
+        doc: >
+          A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default.
+      return: list(command.Response)
+      doc: >
+        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.
+    # --------------------------------------
+    - def_name: generate_opendrive_world
+      params:
+      - param_name: opendrive
+        type: str
+        doc: >
+          Content of an OpenDRIVE file as `string`, __not the path to the `.xodr`__.
+      - param_name: parameters
+        type: carla.OpendriveGenerationParameters
+        default: (2.0, 50.0, 1.0, 0.6, true, true)
+        doc: >
+           Additional settings for the mesh generation. If none are provided, default values will be used.
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+          This is useful to keep sync mode when changing map and to keep deterministic scenarios.
+      doc: >
+        Loads a new world with a basic 3D topology generated from the content of an OpenDRIVE file. This content is passed as a `string` parameter.
+        It is similar to `client.load_world(map_name)` but allows for custom OpenDRIVE maps in server side.
+        Cars can drive around the map, but there are no graphics besides the road and sidewalks.
+    # --------------------------------------
+    - def_name: load_world
+      params:
+      - param_name: map_name
+        type: str
+        doc: >
+          Name of the map to be used in this world. Accepts both full paths and map names, e.g.
+          '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+          This is useful to keep sync mode when changing map and to keep deterministic scenarios.
+      - param_name: map_layers
+        type: carla.MapLayer
+        default: carla.MapLayer.All
+        doc: >
+          Layers of the map that will be loaded. By default all layers are loaded.
+          This parameter works like a flag mask.
+      warning: >
+        `map_layers` are only available for "Opt" maps
+      doc: >
+        Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
+    # --------------------------------------
+    - def_name: reload_world
+      params:
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+          This is useful to keep sync mode when changing map and to keep deterministic scenarios.
+      raises: RuntimeError when corresponding.
+      doc: >
+        Reload the current world, note that a new world is created with default
+        settings using the same map. All actors present in the world will be
+        destroyed, __but__ traffic manager instances will stay alive.
+    # --------------------------------------
+    - def_name: replay_file
+      params:
+      - param_name: name
+        type: str
+        doc: >
+          Name of the file containing the information of the simulation.
+      - param_name: start
+        type: float
+        param_units: seconds
+        doc: >
+          Time where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.
+      - param_name: duration
+        type: float
+        param_units: seconds
+        doc: >
+          Time that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.
+      - param_name: follow_id
+        type: int
+        doc: >
+          ID of the actor to follow. If this is 0 then camera is disabled.
+      - param_name: replay_sensors
+        type: bool
+        doc: >
+          Flag to enable or disable the spawn of sensors during playback.
+      doc: >
+        Load a new world with default settings using `map_name` map. All actors
+        present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
+    # --------------------------------------
+    - def_name: stop_replayer
+      params:
+      - param_name: keep_actors
+        type: bool
+        doc: >
+          True if you want autoremove all actors from the replayer, or False to keep them.
+      doc: >
+        Stop current replayer.
+    # --------------------------------------
+    - def_name: show_recorder_actors_blocked
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the recorded file to load
+      - param_name: min_time
+        type: float
+        param_units: seconds
+        doc: >
+          Minimum time the actor has to move a minimum distance before being considered blocked. Default is 60 seconds.
+      - param_name: min_distance
+        type: float
+        param_units: centimeters
+        doc: >
+          Minimum distance the actor has to move to not be considered blocked. Default is 100 centimeters.
+      return: string
+      doc: >
+        The terminal will show the information registered for actors considered blocked. An actor is considered blocked when it does not move a minimum distance in a period of time, being these `min_distance` and `min_time`.
+     # --------------------------------------
+    - def_name: show_recorder_collisions
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name or absolute path of the file recorded, depending on your previous choice.
+      - param_name: category1
+        type: single char
+        doc: >
+          Character variable specifying a first type of actor involved in the collision.
+      - param_name: category2
+        type: single char
+        doc: >
+          Character variable specifying the second type of actor involved in the collision.
+      return: string
+      doc: >
+        The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved.
+        The categories will be specified in `category1` and `category2` as follows:
+          'h' = Hero, the one vehicle that can be controlled manually or managed by the user.
+          'v' = Vehicle
+          'w' = Walker
+          't' = Traffic light
+          'o' = Other
+          'a' = Any
+        If you want to see only collisions between a vehicles and a walkers, use for `category1` as 'v' and `category2` as 'w' or vice versa.
+        If you want to see all the collisions (filter off) you can use 'a' for both parameters.
+    # --------------------------------------
+    - def_name: show_recorder_file_info
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name or absolute path of the file recorded, depending on your previous choice.
+      - param_name: show_all
+        type: bool
+        doc: >
+          If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.
+      return: string
+      doc: >
+        The information saved by the recorder will be parsed and shown in your terminal as text (frames, times, events, state, positions...). The information shown can be specified by using the `show_all` parameter. [Here](ref_recorder_binary_file_format.md) is some more information about how to read the recorder file.
+    # --------------------------------------
+    - def_name: start_recorder
+      params:
+      - param_name: filename
+        type: str
+        doc: >
+          Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
+      - param_name: additional_data
+        type: bool
+        default: False
+        doc: >
+          Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc)
+      doc: >
+        Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
+    # --------------------------------------
+    - def_name: stop_recorder
+      params:
+      doc: >
+        Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.
+    # --------------------------------------
+    - def_name: get_available_maps
+      params:
+      return: list(str)
+      doc: >
+        Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
+          ['/Game/Carla/Maps/Town01',
+          '/Game/Carla/Maps/Town02',
+          '/Game/Carla/Maps/Town03',
+          '/Game/Carla/Maps/Town04',
+          '/Game/Carla/Maps/Town05',
+          '/Game/Carla/Maps/Town06',
+          '/Game/Carla/Maps/Town07']
+    # --------------------------------------
+    - def_name: get_client_version
+      params:
+      return: str
+      doc: >
+        Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.
+    # --------------------------------------
+    - def_name: get_server_version
+      params:
+      return: str
+      doc: >
+        Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.
+    # --------------------------------------
+    - def_name: get_trafficmanager
+      params:
+      - param_name: client_connection
+        type: int
+        default: 8000
+        doc: >
+          Port that will be used by the traffic manager. Default is `8000`.
+      return: carla.TrafficManager
+      doc: >
+        Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.
+    # --------------------------------------
+    - def_name: get_world
+      params:
+      return: carla.World
+      doc: >
+        Returns the world object currently active in the simulation. This world will be later used for example to load maps.
+    # --------------------------------------
+    - def_name: set_replayer_time_factor
+      params:
+      - param_name: time_factor
+        type: float
+        default: 1.0
+        doc: >
+            1.0 means normal time speed. Greater than 1.0 means fast motion (2.0 would be double speed) and lesser means slow motion (0.5 would be half speed).
+      doc: >
+        When used, the time speed of the reenacted simulation is modified at will. It can be used several times while a playback is in curse.
+    # --------------------------------------
+    - def_name: set_timeout
+      params:
+      - param_name: seconds
+        type: float
+        param_units: seconds
+        doc: >
+          New timeout value. Default is 5 seconds.
+      doc: >
+        Sets the maxixum time a network call is allowed before blocking it and raising a timeout exceeded error.
+     # --------------------------------------
+    - def_name: set_replayer_ignore_hero
+      params:
+      - param_name: ignore_hero
+        type: bool
+        doc: >
+          Enables or disables playback of the hero vehicle during a playback of a recorded simulation.
+     # --------------------------------------
+    - def_name: set_files_base_folder
+      params:
+      - param_name: path
+        type: str
+        doc: >
+           Specifies the base folder where the local cache for required files will be placed.
+     # --------------------------------------
+    - def_name: get_required_files
+      params:
+      - param_name: folder
+        type: str
+        doc: >
+          Folder where files required by the client will be downloaded to.
+      - param_name: download
+        type: bool
+        default: True
+        doc: >
+          If True, downloads files that are not already in cache.
+      doc: >
+         Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.
+     # --------------------------------------
+    - def_name: request_file
+      params:
+      - param_name: name
+        type: str
+        doc: >
+          Name of the file you are requesting.
+      doc: >
+        Requests one of the required files returned by carla.Client.get_required_files.
+
+  - class_name: TrafficManager
+    # - DESCRIPTION ------------------------
+    doc: >
+      The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.
+
+      In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    # - METHODS ----------------------------
+    methods:
+    - def_name: auto_lane_change
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The vehicle whose settings are changed.
+      - param_name: enable
+        type: bool
+        doc: >
+          __True__ is default and enables lane changes. __False__ will disable them.
+      doc: >
+        Turns on or off lane changing behaviour for a vehicle.
+    # --------------------------------------
+    - def_name: collision_detection
+      params:
+      - param_name: reference_actor
+        type: carla.Actor
+        doc: >
+          Vehicle that is going to ignore collisions.
+      - param_name: other_actor
+        type: carla.Actor
+        doc: >
+          The actor that `reference_actor` is going to ignore collisions with.
+      - param_name: detect_collision
+        type: bool
+        doc: >
+          __True__ is default and enables collisions. __False__ will disable them.
+      doc: >
+        Tunes on/off collisions between a vehicle and another specific actor. In order to ignore all other vehicles, traffic lights or walkers, use the specific __ignore__ methods described in this same section.
+    # --------------------------------------
+    - def_name: distance_to_leading_vehicle
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose minimum distance is being changed.
+      - param_name: distance
+        type: float
+        param_units: meters
+        doc: >
+          Meters between both vehicles.
+      doc: >
+        Sets the minimum distance in meters that a vehicle has to keep with the others. The distance is in meters and will affect the minimum moving distance. It is computed from front to back of the vehicle objects.
+    # --------------------------------------
+    - def_name: force_lane_change
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle being forced to change lanes.
+      - param_name: direction
+        type: bool
+        doc: >
+          Destination lane. __True__ is the one on the right and __False__ is the left one.
+      doc: >
+        Forces a vehicle to change either to the lane on its left or right, if existing, as indicated in `direction`. This method applies the lane change no matter what, disregarding possible collisions.
+    # --------------------------------------
+    - def_name: global_percentage_speed_difference
+      params:
+      - param_name: percentage
+        type: float
+        doc: >
+          Percentage difference between intended speed and the current limit.
+      doc: >
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
+
+        Default is 30. Exceeding a speed limit can be done using negative percentages.
+    # --------------------------------------
+    - def_name: ignore_lights_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that is going to ignore traffic lights.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times traffic lights will be ignored.
+      doc: >
+        During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle.
+    # --------------------------------------
+    - def_name: ignore_signs_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The actor that is going to ignore stop signs.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times stop signs will be ignored.
+      doc: >
+        During the traffic light stage, which runs every frame, this method sets the percent chance that stop signs will be ignored for a vehicle.
+    # --------------------------------------
+    - def_name: ignore_vehicles_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The vehicle that is going to ignore other vehicles.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times collisions will be ignored.
+      doc: >
+        During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with another vehicle will be ignored for a vehicle.
+    # --------------------------------------
+    - def_name: ignore_walkers_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          The vehicle that is going to ignore walkers on scene.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times collisions will be ignored.
+      doc: >
+        During the collision detection stage, which runs every frame, this method sets a percent chance that collisions with walkers will be ignored for a vehicle.
+    # --------------------------------------
+    - def_name: vehicle_percentage_speed_difference
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose speed behaviour is being changed.
+      - param_name: percentage
+        type: float
+        doc: >
+          Percentage difference between intended speed and the current limit.
+      doc: >
+        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
+
+        Default is 30. Exceeding a speed limit can be done using negative percentages.
+    # --------------------------------------
+    - def_name: update_vehicle_lights
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose lights status is being changed.
+      - param_name: do_update
+        type: bool
+        doc: >
+          If __True__ the traffic manager will manage the vehicle lights for the specified vehicle.
+      doc: >
+        Sets if the Traffic Manager is responsible of updating the vehicle lights, or not.
+
+        Default is __False__. The traffic manager will not change the vehicle light status of a vehicle, unless its auto_update_status is st to __True__.
+    # --------------------------------------
+    - def_name: get_port
+      params:
+      return: uint16
+      doc: >
+        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.
+    # --------------------------------------
+    - def_name: set_global_distance_to_leading_vehicle
+      params:
+      - param_name: distance
+        type: float
+        param_units: meters
+        doc: >
+          Meters between vehicles.
+      doc: >
+        Sets the minimum distance in meters that vehicles have to keep with the rest. The distance is in meters and will affect the minimum moving distance. It is computed from center to center of the vehicle objects.
+    # --------------------------------------
+    - def_name: set_hybrid_physics_mode
+      params:
+      - param_name: enabled
+        type: bool
+        default: False
+        doc: >
+          If __True__, enables the hybrid physics.
+      doc: >
+        Enables or disables the hybrid physics mode. In this mode, vehicle's farther than a certain radius from the ego vehicle will have their physics disabled. Computation cost will be reduced by not calculating vehicle dynamics. Vehicles will be teleported.
+    # --------------------------------------
+    - def_name: set_hybrid_physics_radius
+      params:
+      - param_name: r
+        type: float
+        default: 50.0
+        param_units: meters
+        doc: >
+          New radius where physics are enabled.
+      doc: >
+        With hybrid physics on, changes the radius of the area of influence where physics are enabled.
+    # --------------------------------------
+    - def_name: set_osm_mode
+      params:
+      - param_name: mode_switch
+        type: bool
+        default: true
+        doc: >
+          If __True__, the OSM mode is enabled.
+      doc: >
+        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
+    # --------------------------------------
+    - def_name: keep_right_rule_percentage
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle whose behaviour is being changed.
+      - param_name: perc
+        type: float
+        doc: >
+          Between 0 and 100. Amount of times the vehicle will follow the keep right rule.
+      doc: >
+        During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.
+    # --------------------------------------
+    - def_name: set_random_device_seed
+      params:
+      - param_name: value
+        type: int
+        doc: >
+          Seed value for the random number generation of the Traffic Manager.
+      doc: >
+        Sets a specific random seed for the Traffic Manager, thereby setting it to be deterministic.
+    # --------------------------------------
+    - def_name: set_synchronous_mode
+      params:
+      - param_name: mode_switch
+        type: bool
+        default: true
+        doc: >
+          If __True__, the TM synchronous mode is enabled.
+      doc: >
+        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
+      warning: >
+        If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick.
+    # --------------------------------------
+    - def_name: set_respawn_dormant_vehicles
+      params:
+      - param_name: mode_switch
+        type: bool
+        default: false
+      doc: >
+        If __True__, vehicles in large maps will respawn near the hero vehicle when they become dormant. Otherwise, they will stay dormant until they are within `actor_active_distance` of the hero vehicle again.
+    # --------------------------------------
+    - def_name: set_boundaries_respawn_dormant_vehicles
+      params:
+      - param_name: lower_bound
+        type: float
+        default: 25.0
+        doc: >
+          The minimum distance in meters from the hero vehicle that a dormant actor will be respawned.
+      - param_name: upper_bound
+        type: float
+        default: actor_active_distance
+        doc: >
+          The maximum distance in meters from the hero vehicle that a dormant actor will be respawned.
+      doc: >
+        Sets the upper and lower boundaries for dormant actors to be respawned near the hero vehicle.
+      warning: >
+        The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than 25.
+    # --------------------------------------
+
+  - class_name: OpendriveGenerationParameters
+    # - DESCRIPTION ------------------------
+    doc: >
+      This class defines the parameters used when generating a world using an OpenDRIVE file.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: vertex_distance
+      type: float
+      param_units: meters
+      doc: >
+        Distance between vertices of the mesh generated. __Default is `2.0`__.
+    - var_name: max_road_length
+      type: float
+      param_units: meters
+      doc: >
+        Max road length for a single mesh portion. The mesh of the map is divided into portions, in order to avoid propagating issues. __Default is `50.0`__.
+    - var_name: wall_height
+      type: float
+      param_units: meters
+      doc: >
+        Height of walls created on the boundaries of the road. These prevent vehicles from falling off the road. __Default is `1.0`__.
+    - var_name: additional_width
+      type: float
+      param_units: meters
+      doc: >
+        Additional with applied junction lanes. Complex situations tend to occur at junctions, and a little increase can prevent vehicles from falling off the road.  __Default is `0.6`__.
+    - var_name: smooth_junctions
+      type: bool
+      doc: >
+        If __True__, the mesh at junctions will be smoothed to prevent issues where roads blocked other roads. __Default is `True`__.
+    - var_name: enable_mesh_visibility
+      type: bool
+      doc: >
+        If __True__, the road mesh will be rendered. Setting this to __False__ should reduce the rendering overhead.  __Default is `True`__.
+    - var_name: enable_pedestrian_navigation
+      type: bool
+      doc: >
+        If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recomended to disable this option. __Default is `True`__.

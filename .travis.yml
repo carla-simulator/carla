@@ -1,0 +1,90 @@
+language: cpp
+compiler: clang
+
+os: linux
+dist: xenial
+sudo: false
+
+matrix:
+  include:
+
+    - env: TEST="Unit Tests"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-8
+          packages:
+            - g++-7 # we need this one for the libstdc++.
+            - clang-8
+            - ninja-build
+            - python
+            - python-pip
+            - python3
+            - python3-pip
+            - libboost-python-dev
+            - libtiff5-dev
+            - libjpeg-dev
+      install:
+        - pip2 install -q --user setuptools
+        - pip2 install -q --user -r PythonAPI/test/requirements.txt
+        - pip2 install -q --user -r PythonAPI/carla/requirements.txt
+        - pip3 install -q --user setuptools
+        - pip3 install -q --user -r PythonAPI/test/requirements.txt
+        - pip3 install -q --user -r PythonAPI/carla/requirements.txt
+      script:
+        - while sleep 2m; do echo "still building..."; done &
+        - make setup >> build.log 2>&1
+        - make LibCarla >> build.log 2>&1
+        - make PythonAPI >> build.log 2>&1
+        - make examples >> build.log 2>&1
+        - kill %1
+        - make check ARGS="--all --gtest_args=--gtest_filter=-*_mt"
+      after_failure:
+        - tail --lines=2000 build.log
+
+    - env: TEST="Pylint 2"
+      addons:
+        apt:
+          packages:
+            - python
+            - python-pip
+      install:
+        - pip2 install -q --user pylint
+        - pip2 install -q --user -r PythonAPI/carla/requirements.txt
+        - pip2 install -q --user -r PythonAPI/examples/requirements.txt
+        - pip2 install -q --user -r PythonAPI/test/requirements.txt
+        - pip2 install -q --user -r PythonAPI/util/requirements.txt
+      script:
+        - shopt -s globstar
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/BuildTools/*.py
+
+    - env: TEST="Pylint 3"
+      addons:
+        apt:
+          packages:
+            - python3
+            - python3-pip
+      install:
+        - pip3 install -q --user setuptools
+        - pip3 install -q astroid==2.2.5 pylint==2.3.1
+        - pip3 install -q --user -r PythonAPI/carla/requirements.txt
+        - pip3 install -q --user -r PythonAPI/examples/requirements.txt
+        - pip3 install -q --user -r PythonAPI/test/requirements.txt
+        - pip3 install -q --user -r PythonAPI/util/requirements.txt
+        - pip3 install -q --user -r Util/Docker/requirements.txt
+      script:
+        - shopt -s globstar
+        - pylint --disable=R,C --rcfile=PythonAPI/.pylintrc PythonAPI/**/*.py Util/Docker/*.py Util/BuildTools/*.py
+
+    - env: TEST="MkDocs"
+      install:
+        - pip install -q --user -r PythonAPI/docs/requirements.txt
+        - pip install -q --user mkdocs
+      script:
+        - make PythonAPI.docs
+        - git diff --quiet HEAD --; if [ ! $? -eq 0 ]; then echo "Python API reference changed, forgot to run \"make PythonAPI.docs\"?"; exit 1; fi
+        - mkdocs build --verbose --clean --strict --site-dir _site
+
+notifications:
+  email: false

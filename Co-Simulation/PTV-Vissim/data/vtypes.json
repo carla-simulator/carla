@@ -1,0 +1,43 @@
+{
+    "100": [
+        "vehicle.audi.a2",
+        "vehicle.audi.tt",
+        "vehicle.bmw.grandtourer",
+        "vehicle.citroen.c3",
+        "vehicle.jeep.wrangler_rubicon",
+        "vehicle.lincoln.mkz_2017",
+        "vehicle.mercedes.coupe",
+        "vehicle.mini.cooper_s",
+        "vehicle.ford.mustang",
+        "vehicle.nissan.micra",
+        "vehicle.nissan.patrol",
+        "vehicle.seat.leon",
+        "vehicle.volkswagen.t2",
+        "vehicle.toyota.prius",
+        "vehicle.tesla.model3",
+        "vehicle.audi.etron"
+    ],
+    "200": [
+        "vehicle.carlamotors.carlacola"
+    ],
+    "300": [],
+    "400": [],
+    "510": [],
+    "520": [],
+    "610": [
+        "vehicle.yamaha.yzf",
+        "vehicle.harley-davidson.low_rider",
+        "vehicle.kawasaki.ninja",
+        "vehicle.gazelle.omafiets",
+        "vehicle.diamondback.century",
+        "vehicle.bh.crossbike"
+    ],
+    "620": [
+        "vehicle.yamaha.yzf",
+        "vehicle.harley-davidson.low_rider",
+        "vehicle.kawasaki.ninja",
+        "vehicle.gazelle.omafiets",
+        "vehicle.diamondback.century",
+        "vehicle.bh.crossbike"
+    ]
+}

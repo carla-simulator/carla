@@ -1,0 +1,625 @@
+---
+- module_name: carla
+  classes:
+  - class_name: Vector2D
+    # - DESCRIPTION ------------------------
+    doc: >
+      Helper class to perform 2D operations.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+      doc: >
+        X-axis value.
+    - var_name: 'y'
+      type: float
+      doc: >
+        Y-axis value.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0.0
+      - param_name: y
+        type: float
+        default: 0.0
+    # --------------------------------------
+    - def_name: length
+      return: float
+      params:
+      doc: >
+        Computes the length of the vector.
+    # --------------------------------------
+    - def_name: squared_length
+      return: float
+      params:
+      doc: >
+        Computes the squared length of the vector.
+    # --------------------------------------
+    - def_name: make_unit_vector
+      return: carla.Vector3D
+      params:
+      doc: >
+        Returns a vector with the same direction and unitary length.
+    # --------------------------------------
+    - def_name: __add__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __sub__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __mul__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __truediv__
+      params:
+      - param_name: other
+        type: carla.Vector2D
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.Vector2D
+      doc: >
+        Returns __True__ if values for every axis are equal.
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+      - param_name: bool
+        type: carla.Vector2D
+      doc: >
+        Returns __True__ if the value for any axis is different.
+    # --------------------------------------
+    - def_name: __str__
+      return: str
+      doc: >
+        Returns the axis values for the vector parsed as string.
+    # --------------------------------------
+
+  - class_name: Vector3D
+    # - DESCRIPTION ------------------------
+    doc: >
+      Helper class to perform 3D operations.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+      doc: >
+        X-axis value.
+    - var_name: 'y'
+      type: float
+      doc: >
+        Y-axis value.
+    - var_name: z
+      type: float
+      doc: >
+        Z-axis value.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0.0
+      - param_name: 'y'
+        type: float
+        default: 0.0
+      - param_name: z
+        type: float
+        default: 0.0
+    # --------------------------------------
+    - def_name: length
+      return: float
+      params:
+      doc: >
+        Computes the length of the vector.
+    # --------------------------------------
+    - def_name: squared_length
+      return: float
+      params:
+      doc: >
+        Computes the squared length of the vector.
+    # --------------------------------------
+    - def_name: make_unit_vector
+      return: carla.Vector3D
+      params:
+      doc: >
+        Returns a vector with the same direction and unitary length.
+    # --------------------------------------
+    - def_name: cross
+      return: carla.Vector3D
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the cross product between two vectors.
+    # --------------------------------------
+    - def_name: dot
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the dot product between two vectors.
+    # --------------------------------------
+    - def_name: distance
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the distance between two vectors.
+    # --------------------------------------
+    - def_name: distance_squared
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the squared distance between two vectors.
+    # --------------------------------------
+    - def_name: dot_2d
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the 2-dimensional dot product between two vectors.
+    # --------------------------------------
+    - def_name: distance_2d
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the 2-dimensional distance between two vectors.
+    # --------------------------------------
+    - def_name: distance_squared_2d
+      return: float
+      params:
+      - param_name: vector
+        type: carla.Vector3D
+      doc: >
+        Computes the 2-dimensional squared distance between two vectors.
+    # --------------------------------------
+    - def_name: __add__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __sub__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __mul__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __truediv__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+      return: bool
+      doc: >
+        Returns __True__ if values for every axis are equal.
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Vector3D
+      return: bool
+      doc: >
+        Returns __True__ if the value for any axis is different.
+    # --------------------------------------
+    - def_name: __str__
+      return: str
+      doc: >
+        Returns the axis values for the vector parsed as string.
+    # --------------------------------------
+    - def_name: __abs__
+      return: carla.Vector3D
+      doc: >
+        Returns a Vector3D with the absolute value of the components x, y and z.
+    # --------------------------------------
+
+  - class_name: Location
+    parent: carla.Vector3D
+  # - DESCRIPTION ------------------------
+    doc: >
+      Represents a spot in the world.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+      var_units: meters
+      doc: >
+        Distance from origin to spot on X axis.
+    - var_name: 'y'
+      type: float
+      var_units: meters
+      doc: >
+        Distance from origin to spot on Y axis.
+    - var_name: z
+      type: float
+      var_units: meters
+      doc: >
+        Distance from origin to spot on Z axis.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0.0
+      - param_name: 'y'
+        type: float
+        default: 0.0
+      - param_name: z
+        type: float
+        default: 0.0
+    # --------------------------------------
+    - def_name: distance
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          The other point to compute the distance with.
+      return: float
+      return_units: meters
+      doc: >
+        Returns Euclidean distance from this location to another one.
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.Location
+      doc: >
+        Returns __True__ if both locations are the same point in space.
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.Location
+      doc: >
+        Returns __True__ if both locations are different points in space.
+    # --------------------------------------
+    - def_name: __str__
+      return: str
+      doc: >
+        Parses the axis' values to string.
+    # --------------------------------------
+    - def_name: __abs__
+      return: carla.Location
+      doc: >
+        Returns a Location with the absolute value of the components x, y and z.
+    # --------------------------------------
+
+
+  - class_name: Rotation
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
+
+      <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br>
+      <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
+      *Unreal Engine's coordinates system*
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: pitch
+      type: float
+      var_units: degrees
+      doc: >
+        Y-axis rotation angle.
+    - var_name: yaw
+      type: float
+      var_units: degrees
+      doc: >
+        Z-axis rotation angle.
+    - var_name: roll
+      type: float
+      var_units: degrees
+      doc: >
+        X-axis rotation angle.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: pitch
+        type: float
+        default: 0.0
+        param_units: degrees
+        doc: >
+          Y-axis rotation angle.
+      - param_name: yaw
+        type: float
+        default: 0.0
+        param_units: degrees
+        doc: >
+          Z-axis rotation angle.
+      - param_name: roll
+        type: float
+        default: 0.0
+        param_units: degrees
+        doc: >
+          X-axis rotation angle.
+      warning: The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations.
+    # --------------------------------------
+    - def_name: get_forward_vector
+      params:
+      return: carla.Vector3D
+      doc: >
+        Computes the vector pointing forward according to the rotation of the object.
+    # --------------------------------------
+    - def_name: get_right_vector
+      params:
+      return: carla.Vector3D
+      doc: >
+        Computes the vector pointing to the right according to the rotation of the object.
+    # --------------------------------------
+    - def_name: get_up_vector
+      params:
+      return: carla.Vector3D
+      doc: >
+        Computes the vector pointing upwards according to the rotation of the object.
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.Rotation
+      doc: >
+        Returns __True__ if both rotations represent the same orientation for every axis.
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Rotation
+      return: bool
+      doc: >
+        Returns __True__ if both rotations represent the same orientation for every axis.
+    # --------------------------------------
+    - def_name: __str__
+      doc: >
+        Parses the axis' orientations to string.
+    # --------------------------------------
+
+  - class_name: Transform
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines a transformation, a combination of location and rotation, without scaling.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      type: carla.Location
+      doc: >
+        Describes a point in the coordinate system.
+    - var_name: rotation
+      type: carla.Rotation
+      var_units: degrees (pitch, yaw, roll)
+      doc: >
+        Describes a rotation for an object according to Unreal Engine's axis system.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: location
+        type: carla.Location
+      - param_name: rotation
+        type: carla.Rotation
+        param_units: degrees (pitch, yaw, roll)
+    # --------------------------------------
+    - def_name: transform
+      params:
+      - param_name: in_point
+        type: carla.Location
+        doc: >
+          Location in the space to which the transformation will be applied.
+      doc: >
+        Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
+    # --------------------------------------
+    - def_name: get_forward_vector
+      return: carla.Vector3D
+      doc: >
+        Computes a forward vector using the rotation of the object.
+    # --------------------------------------
+    - def_name: get_right_vector
+      return: carla.Vector3D
+      doc: >
+        Computes a right vector using the rotatio of the object.
+    # --------------------------------------
+    - def_name: get_up_vector
+      return: carla.Vector3D
+      doc: >
+        Computes an up vector using the rotation of the object.
+    # --------------------------------------
+    - def_name: get_matrix
+      return: list(list(float))
+      doc: >
+        Computes the 4-matrix representation of the transformation.
+    # --------------------------------------
+    - def_name: get_inverse_matrix
+      return: list(list(float))
+      doc: >
+        Computes the 4-matrix representation of the inverse transformation.
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.Transform
+      doc: >
+        Returns __True__ if both location and rotation are equal for this and `other`.
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.Transform
+      doc: >
+        Returns __True__ if any location and rotation are not equal for this and `other`.
+    # --------------------------------------
+    - def_name: __str__
+      return: str
+      doc: >
+        Parses both location and rotation to string.
+    # --------------------------------------
+
+  - class_name: BoundingBox
+    # - DESCRIPTION ------------------------
+    doc: >
+      Bounding boxes contain the geometry of an actor or an element in the scene. They can be used by carla.DebugHelper or a carla.Client to draw their shapes for debugging. Check out the snipet in carla.DebugHelper.draw_box where a snapshot of the world is used to draw bounding boxes for traffic lights.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: extent
+      type: carla.Vector3D
+      var_units: meters
+      doc: >
+        Vector from the center of the box to one vertex. The value in each axis equals half the size of the box for that axis.
+
+        `extent.x * 2` would return the size of the box in the X-axis.
+    - var_name: location
+      type: carla.Location
+      var_units: meters
+      doc: >
+        The center of the bounding box.
+    - var_name: rotation
+      type: carla.Rotation
+      doc: >
+        The orientation of the bounding box.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: location
+        type: carla.Location
+        var_units: meters
+        doc: >
+          Center of the box, relative to its parent.
+      - param_name: extent
+        type: carla.Vector3D
+        param_units: meters
+        doc: >
+          Vector containing half the size of the box for every axis.
+    # --------------------------------------
+    - def_name: contains
+      return: bool
+      params:
+      - param_name: world_point
+        type: carla.Location
+        param_units: meters
+        doc: >
+          The point in world space to be checked.
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          Contains location and rotation needed to convert this object's local space to world space.
+      doc: >
+        Returns **True** if a point passed in world space is inside this bounding box.
+    # --------------------------------------
+    - def_name: get_local_vertices
+      return: list(carla.Location)
+      doc: >
+        Returns a list containing the locations of this object's vertices in local space.
+    # --------------------------------------
+    - def_name: get_world_vertices
+      return: list(carla.Location)
+      params:
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          Contains location and rotation needed to convert this object's local space to world space.
+      doc: >
+        Returns a list containing the locations of this object's vertices in world space.
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.BoundingBox
+      doc: >
+        Returns true if both location and extent are equal for this and `other`.
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.BoundingBox
+      doc: >
+        Returns true if either location or extent are different for this and `other`.
+    # --------------------------------------
+    - def_name: __str__
+      return: str
+      doc: >
+        Parses the location and extent of the bounding box to string.
+    # --------------------------------------
+
+  - class_name: GeoLocation
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that contains geographical coordinates simulated data. The carla.Map can convert simulation locations by using the <b><georeference></b> tag in the OpenDRIVE file.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: latitude
+      type: float
+      var_units: degrees
+      doc: >
+        North/South value of a point on the map.
+    - var_name: longitude
+      type: float
+      var_units: degrees
+      doc: >
+        West/East value of a point on the map.
+    - var_name: altitude
+      type: float
+      var_units: meters
+      doc: >
+        Height regarding ground level.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: latitude
+        type: float
+        default: 0.0
+        param_units: degrees
+      - param_name: longitude
+        type: float
+        default: 0.0
+        param_units: degrees
+      - param_name: altitude
+        type: float
+        default: 0.0
+        param_units: meters
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.GeoLocation
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.GeoLocation
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+...

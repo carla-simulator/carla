@@ -1,0 +1,104 @@
+---
+- module_name: carla
+  # - CLASSES ------------------------------
+
+  classes:
+  - class_name: WorldSnapshot
+    # - DESCRIPTION ------------------------
+    doc: >
+      This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of carla.ActorSnapshot. The client recieves a new snapshot on every tick that cannot be stored.  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        A value unique for every snapshot to differenciate them. 
+    - var_name: frame
+      type: int
+      doc: >
+        Simulation frame in which the snapshot was taken. 
+    - var_name: timestamp
+      type: carla.Timestamp
+      var_units: seconds
+      doc: >
+         Precise moment in time when snapshot was taken. This class works in seconds as given by the operative system. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: find
+      return: carla.ActorSnapshot
+      params: 
+        - param_name: actor_id
+          type: int
+      doc: > 
+        Given a certain actor ID, returns its corresponding snapshot or <b>None</b> if it is not found. 
+    # --------------------------------------
+    - def_name: has_actor
+      return: bool
+      params:
+        - param_name: actor_id
+          type: int
+      doc: >
+        Given a certain actor ID, checks if there is a snapshot corresponding it and so, if the actor was present at that moment.
+    # --------------------------------------
+    - def_name: __iter__
+      doc: >
+        Iterate over the carla.ActorSnapshot stored in the snapshot.  
+    # --------------------------------------
+    - def_name: __len__
+      return: int
+      doc: >
+        Returns the amount of carla.ActorSnapshot present in this snapshot.
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+        Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same. 
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+        - param_name: other
+          type: carla.WorldSnapshot
+      doc: >
+        Returns <b>True</b> if both **<font color="#f8805a">timestamp</font>** are different. 
+    # --------------------------------------
+
+  - class_name: ActorSnapshot
+    # - DESCRIPTION ------------------------
+    doc: >
+      A class that comprises all the information for an actor at a certain moment in time. These objects are contained in a carla.WorldSnapshot and sent to the client once every tick. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        An identifier for the snapshot itself. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_acceleration
+      return: carla.Vector3D
+      return_units: m/s<sup>2</sup>
+      doc: >
+        Returns the acceleration vector registered for an actor in that tick. 
+    # --------------------------------------
+    - def_name: get_angular_velocity
+      return: carla.Vector3D
+      return_units: rad/s
+      doc: >
+        Returns the angular velocity vector registered for an actor in that tick.
+    # --------------------------------------
+    - def_name: get_transform
+      return: carla.Transform
+      doc: >
+        Returns the actor's transform (location and rotation) for an actor in that tick. 
+    # --------------------------------------
+    - def_name: get_velocity
+      return: carla.Vector3D
+      return_units: m/s
+      doc: > 
+        Returns the velocity vector registered for an actor in that tick.
+    # --------------------------------------
+...

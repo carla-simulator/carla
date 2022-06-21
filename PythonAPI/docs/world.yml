@@ -1,0 +1,1051 @@
+---
+- module_name: carla
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: Timestamp
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that contains time information for simulated data. This information is automatically retrieved as part of the carla.WorldSnapshot the client gets on every frame, but might also be used in many other situations such as a carla.Sensor retrieveing data. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: frame
+      type: int
+      doc: >
+        The number of frames elapsed since the simulator was launched.
+    - var_name: elapsed_seconds
+      type: float
+      var_units: seconds
+      doc: >
+        Simulated seconds elapsed since the beginning of the current episode.
+    - var_name: delta_seconds
+      type: float
+      var_units: seconds
+      doc: >
+        Simulated seconds elapsed since the previous frame.
+    - var_name: platform_timestamp
+      type: float
+      var_units: seconds
+      doc: >
+        Time register of the frame at which this measurement was taken given by the OS in seconds. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: frame
+        type: int
+      - param_name: elapsed_seconds
+        type: float
+        param_units: seconds
+      - param_name: delta_seconds
+        type: float
+        param_units: seconds
+      - param_name: platform_timestamp
+        type: float
+        param_units: seconds
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Timestamp
+        param_units: seconds
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Timestamp
+        param_units: seconds
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: ActorList
+    # - DESCRIPTION ------------------------
+    doc: >
+      A class that contains every actor present on the scene and provides access to them. The list is automatically created and updated by the server and it can be returned using carla.World. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: filter
+      return: list
+      params:
+      - param_name: wildcard_pattern
+        type: str
+      doc: >
+        Filters a list of Actors matching `wildcard_pattern` against their variable __<font color="#f8805a">type_id</font>__ (which identifies the blueprint used to spawn them). Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.  
+    # --------------------------------------
+    - def_name: find
+      return: carla.Actor
+      params:
+      - param_name: actor_id
+        type: int
+      doc: >
+        Finds an actor using its identifier and returns it or <b>None</b> if it is not present. 
+    # --------------------------------------
+    - def_name: __getitem__
+      return: carla.Actor
+      params:
+      - param_name: pos
+        type: int
+      doc: >
+        Returns the actor corresponding to `pos` position in the list. 
+    # --------------------------------------
+    - def_name: __iter__
+      doc: >
+        Iterate over the carla.Actor contained in the list.  
+    # --------------------------------------
+    - def_name: __len__
+      return: int
+      doc: >
+        Returns the amount of actors listed. 
+    # --------------------------------------
+    - def_name: __str__
+      return: str
+      doc: >
+        Parses to the ID for every actor listed.  
+    # --------------------------------------
+
+  - class_name: WorldSettings
+    # - DESCRIPTION ------------------------
+    doc: >
+      The simulation has some advanced configuration options that are contained in this class and can be managed using carla.World and its methods. These allow the user to choose between client-server synchrony/asynchrony, activation of "no rendering mode" and either if the simulation should run with a fixed or variable time-step. Check [this](adv_synchrony_timestep.md) out if you want to learn about it. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: synchronous_mode
+      type: bool
+      doc: >
+        States the synchrony between client and server. When set to true, the server will wait for a client tick in order to move forward. It is false by default. 
+    - var_name: no_rendering_mode
+      type: bool
+      doc: >
+        When enabled, the simulation will run no rendering at all. This is mainly used to avoid overhead during heavy traffic simulations. It is false by default. 
+    - var_name: fixed_delta_seconds
+      type: float
+      doc: >
+        Ensures that the time elapsed between two steps of the simulation is fixed. Set this to <b>0.0</b> to work with a variable time-step, as happens by default.
+    - var_name: substepping
+      type: bool
+      doc: >
+        Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of carla.WorldSettings.max_substep and carla.WorldSettings.max_substep_delta_time. These last two parameters need to be compatible with carla.WorldSettings.fixed_delta_seconds. Enabled by default.
+    - var_name: max_substep_delta_time
+      type: float
+      doc: >
+       Maximum delta time of the substeps. If the carla.WorldSettingsmax_substep is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01.
+    - var_name: max_substeps
+      type: int
+      doc: >
+        The maximum number of physics substepping that are allowed. By default, the value is set to 10.
+    - var_name: max_culling_distance
+      type: float
+      doc: >
+        Configure the max draw distance for each mesh of the level.  
+    - var_name: deterministic_ragdolls
+      type: bool
+      doc: >
+        Defines wether to use deterministic physics for pedestrian death animations or physical ragdoll simulation. 
+        When enabled, pedestrians have less realistic death animation but ensures determinism. 
+        When disabled, pedestrians are simulated as ragdolls with more realistic simulation and collision but no determinsm can be ensured.
+    - var_name: tile_stream_distance
+      type: float
+      doc: >
+        Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps. Regions of the map within this range will be visible (and capable of simulating physics). Regions outside this region will not be loaded.
+    - var_name: actor_active_distance
+      type: float
+      doc: >
+        Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: synchronous_mode
+        type: bool
+        default: False
+        doc: >
+          Set this to true to enable client-server synchrony. 
+      - param_name: no_rendering_mode
+        type: bool
+        default: False
+        doc: >
+          Set this to true to completely disable rendering in the simulation.
+      - param_name: fixed_delta_seconds
+        type: float
+        default: 0.0
+        param_units: seconds
+        doc: >
+          Set a fixed time-step in between frames. <code>0.0</code> means variable time-step and it is the default mode. 
+      doc: >
+        Creates an object containing desired settings that could later be applied through carla.World and its method __<font color="#7fb800">apply_settings()</font>__.
+    # --------------------------------------
+    - def_name: __eq__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.WorldSettings
+        doc: > 
+          Settings to be compared with. 
+      doc: >
+        Returns <b>True</b> if both objects' variables are the same. 
+    # --------------------------------------
+    - def_name: __ne__
+      return: bool
+      params:
+      - param_name: other
+        type: carla.WorldSettings
+        doc: > 
+          Settings to be compared with. 
+      doc: >
+        Returns <b>True</b> if both objects' variables are different. 
+    # --------------------------------------
+    - def_name: __str__
+      return: str
+      doc: > 
+        Parses the established settings to a string and shows them in command line. 
+    # --------------------------------------
+
+  - class_name: EnvironmentObject
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents a geometry in the level, this geometry could be part of an actor formed with other EnvironmentObjects (ie: buildings).  
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Contains the location and orientation of the EnvironmentObject in world space. 
+    - var_name: bounding_box
+      type: carla.BoundingBox
+      doc: >
+        Object containing a location, rotation and the length of a box for every axis in world space. 
+    - var_name: id
+      type: int
+      doc: >
+        Unique ID to identify the object in the level. 
+    - var_name: name
+      type: string
+      doc: >
+        Name of the EnvironmentObject.
+    - var_name: type
+      type: carla.CityObjectLabel
+      doc: >
+        Semantic tag. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      return: str
+      doc: > 
+        Parses the EnvironmentObject to a string and shows them in command line. 
+    # --------------------------------------
+
+  - class_name: AttachmentType
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. The snipet in carla.World.spawn_actor shows some sensors being attached to a car when spawned. Note that the attachment type is declared as an enum within the class. 
+      
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Rigid
+      doc: >
+        With this fixed attatchment the object follow its parent position strictly. This is the recommended attachment to retrieve precise data from the simulation.  
+    - var_name: SpringArm
+      doc: >
+        An attachment that expands or retracts the position of the actor, depending on its parent. This attachment is only recommended to record videos from the simulation where a smooth movement is needed. SpringArms are an Unreal Engine component so [check the UE docs](https://docs.unrealengine.com/en-US/Gameplay/HowTo/UsingCameras/SpringArmComponents/index.html) to learn more about them. <br><b style="color:red;">Warning:</b> The <b>SpringArm</b> attachment presents weird behaviors when an actor is spawned with a relative translation in the Z-axis (e.g. <code>child_location = Location(0,0,2)</code>).  
+    # --------------------------------------
+
+  - class_name: LabelledPoint
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represent a position in space with a semantic label.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      doc: >
+        Position in 3D space.
+    - var_name: label
+      doc: >
+        Semantic tag of the point.
+    # --------------------------------------
+  
+  - class_name: MapLayer
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents each manageable layer of the map. Can be used as flags.
+      __WARNING: Only "Opt" maps are able to work with map layers.__
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: NONE
+      doc: >
+        No layers selected
+    - var_name: Buildings
+    - var_name: Decals
+    - var_name: Foliage
+    - var_name: Ground
+    - var_name: ParkedVehicles
+    - var_name: Particles
+    - var_name: Props
+    - var_name: StreetLights
+    - var_name: Walls
+    - var_name: All
+      doc: >
+        All layers selected
+    # --------------------------------------
+
+  - class_name: MaterialParameter
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents material parameters. Not all objects in the scene contain all parameters.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Normal
+      doc: >
+        The Normal map of the object. Present in all objects.
+    - var_name: Diffuse
+      doc: >
+        The Diffuse texture of the object. Present in all objects.
+    - var_name: AO_Roughness_Metallic_Emissive
+      doc: >
+        A texture where each color channel represent a property of the material (R: Ambien oclusion, G: Roughness, B: Metallic, A: Emissive/Height map in some objects)
+    - var_name: Emissive
+      doc: >
+        Emissive texture. Present in a few objects.
+    # --------------------------------------
+
+  - class_name: TextureColor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class representing a texture object to be uploaded to the server. Pixel format is RGBA, uint8 per channel.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: width
+      type: int
+      doc: >
+        X-coordinate size of the texture.
+    - var_name: height
+      type: int
+      doc: >
+        Y-coordinate size of the texture.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Initializes a the texture with a (`width`, `height`) size.
+    - def_name: set_dimensions
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Resizes the texture to te specified dimensions.
+    - def_name: get
+      return: carla.Color
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      doc: >
+        Get the (x,y) pixel data.
+    - def_name: set
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      - param_name: value
+        type: carla.Color
+      doc: >
+        Sets the (x,y) pixel data with `value`.
+    # --------------------------------------
+
+  - class_name: TextureFloatColor
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class representing a texture object to be uploaded to the server. Pixel format is RGBA, float per channel.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: width
+      type: int
+      doc: >
+        X-coordinate size of the texture.
+    - var_name: height
+      type: int
+      doc: >
+        Y-coordinate size of the texture.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Initializes a the texture with a (`width`, `height`) size.
+    - def_name: set_dimensions
+      params:
+      - param_name: width
+        type: int
+      - param_name: height
+        type: int
+      doc: >
+        Resizes the texture to te specified dimensions.
+    - def_name: get
+      return: carla.FloatColor
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      doc: >
+        Get the (x,y) pixel data.
+    - def_name: set
+      params:
+      - param_name: x
+        type: int
+      - param_name: y
+        type: int
+      - param_name: value
+        type: carla.FloatColor
+      doc: >
+        Sets the (x,y) pixel data with `value`.
+    # --------------------------------------
+
+  - class_name: World
+    # - DESCRIPTION ------------------------
+    doc: >
+      World objects are created by the client to have a place for the simulation to happen. The world contains the map we can see, meaning the asset, not the navigation map. Navigation maps are part of the carla.Map class. It also manages the weather and actors present in it. There can only be one world per simulation, but it can be changed anytime. 
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        The ID of the episode associated with this world. Episodes are different sessions of a simulation. These change everytime a world is disabled or reloaded. Keeping track is useful to avoid possible issues.  
+    - var_name: debug
+      type: carla.DebugHelper
+      doc: >
+        Responsible for creating different shapes for debugging. Take a look at its class to learn more about it. 
+    # - METHODS ----------------------------
+    methods:    
+    - def_name: apply_settings
+      return: int
+      params:
+      - param_name: world_settings
+        type: carla.WorldSettings
+      doc: >
+        This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented. 
+      warning: >
+        If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it. 
+    # --------------------------------------
+    - def_name: on_tick
+      return: int
+      params:
+      - param_name: callback
+        type: carla.WorldSnapshot
+        doc: > 
+          Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
+      doc: >
+        This method is used in [__asynchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a carla.WorldSnapshot as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.
+    # --------------------------------------
+    - def_name: remove_on_tick
+      params:
+      - param_name: callback_id
+        type: callback
+        doc: > 
+          The callback to be removed. The ID is returned when creating the callback.  
+      doc: >
+        Stops the callback for `callback_id` started with __<font color="#7fb800">on_tick()</font>__.
+    # --------------------------------------
+    - def_name: tick
+      return: int
+      params:
+      - param_name: seconds
+        type: float
+        default: 10.0
+        param_units: seconds
+        doc: > 
+          Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
+      doc: >
+        This method is used in [__synchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server. 
+      note: > 
+        If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/) to learn more.  
+    # --------------------------------------
+    - def_name: wait_for_tick
+      return: carla.WorldSnapshot
+      params:
+      - param_name: seconds
+        type: float
+        default: 10.0
+        param_units: seconds
+        doc: > 
+          Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
+      doc: >
+        This method is used in [__asynchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world. 
+    # --------------------------------------
+    - def_name: spawn_actor
+      return: carla.Actor
+      params:
+      - param_name: blueprint
+        type: carla.ActorBlueprint
+        doc: >
+          The reference from which the actor will be created. 
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          Contains the location and orientation the actor will be spawned with. 
+      - param_name: attach_to 
+        type: carla.Actor
+        default: None
+        doc: > 
+          The parent object that the spawned actor will follow around. 
+      - param_name: attachment 
+        type: carla.AttachmentType
+        default: Rigid
+        doc: > 
+          Determines how fixed and rigorous should be the changes in position according to its parent object. 
+      doc: >
+        The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type. 
+    # --------------------------------------
+    - def_name: try_spawn_actor
+      return: carla.Actor
+      params:
+      - param_name: blueprint
+        type: carla.ActorBlueprint
+        doc: >
+          The reference from which the actor will be created. 
+      - param_name: transform
+        type: carla.Transform
+        doc: >
+          Contains the location and orientation the actor will be spawned with. 
+      - param_name: attach_to 
+        type: carla.Actor
+        default: None
+        doc: > 
+          The parent object that the spawned actor will follow around. 
+      - param_name: attachment 
+        type: carla.AttachmentType
+        default: Rigid
+        doc: > 
+          Determines how fixed and rigorous should be the changes in position according to its parent object. 
+      doc: >
+        Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> on failure instead of throwing an exception.
+    # --------------------------------------
+    - def_name: get_actor
+      return: carla.Actor
+      params:
+      - param_name: actor_id
+        type: int
+      doc: >
+        Looks up for an actor by ID and returns <b>None</b> if not found.
+    # --------------------------------------
+    - def_name: get_actors
+      return: carla.ActorList
+      params:
+      - param_name: actor_ids
+        type: list
+        default: None
+        doc: >
+          The IDs of the actors being searched. By default it is set to <b>None</b> and returns every actor on scene. 
+      doc: >
+        Retrieves a list of carla.Actor elements, either using a list of IDs provided or just listing everyone on stage. If an ID does not correspond with any actor, it will be excluded from the list returned, meaning that both the list of IDs and the list of actors may have different lengths. 
+    # --------------------------------------
+    - def_name: get_blueprint_library
+      return: carla.BlueprintLibrary
+      doc: >
+        Returns a list of actor blueprints available to ease the spawn of these into the world.
+    # --------------------------------------
+    - def_name: get_vehicles_light_states
+      return: dict
+      doc: >
+        Returns a dict where the keys are carla.Actor IDs and the values are carla.VehicleLightState of that vehicle.
+    # --------------------------------------
+    - def_name: get_level_bbs
+      params:
+      - param_name: actor_type
+        type: carla.CityObjectLabel
+        default: Any
+        doc: > 
+          Semantic tag of the elements contained in the bounding boxes that are returned. 
+      return: array(carla.BoundingBox)
+      doc: >
+        Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`. 
+    # --------------------------------------
+    - def_name: get_environment_objects
+      params:
+      - param_name: object_type
+        type: carla.CityObjectLabel
+        default: Any
+        doc: > 
+          Semantic tag of the EnvironmentObjects that are returned. 
+      return: array(carla.EnvironmentObject)
+      doc: >
+        Returns a list of EnvironmentObject with the requested semantic tag. 
+        The method returns all the EnvironmentObjects in the level by default, but the query can be filtered by semantic tags with the argument `object_type`. 
+    # --------------------------------------
+    - def_name: enable_environment_objects
+      params:
+      - param_name: env_objects_ids
+        type: set(int)
+        doc: > 
+          Set of EnvironmentObject ids to change.
+      - param_name: enable
+        type: bool
+        doc: > 
+          State to be applied to all the EnvironmentObject of the set.
+      doc: >
+        Enable or disable a set of EnvironmentObject identified by their id. These objects will appear or disappear from the level.
+    # --------------------------------------
+    - def_name: get_lightmanager
+      return: carla.LightManager
+      doc: >
+        Returns an instance of carla.LightManager that can be used to handle the lights in the scene. 
+    # --------------------------------------
+    - def_name: freeze_all_traffic_lights
+      params:
+        - param_name: frozen
+          type: bool
+      doc: >
+        Freezes or unfreezes all traffic lights in the scene. Frozen traffic lights can be modified by the user but the time will not update them until unfrozen. 
+    # --------------------------------------
+    - def_name: reset_all_traffic_lights
+      doc: >
+        Resets the cycle of all traffic lights in the map to the initial state.
+    # --------------------------------------
+    - def_name: get_map
+      return: carla.Map
+      doc: >
+        Asks the server for the XODR containing the map file, and returns this parsed as a carla.Map.
+      warning: >
+        This method does call the simulation. It is expensive, and should only be called once.  
+    # --------------------------------------
+    - def_name: get_traffic_light
+      return: carla.TrafficLight
+      params:
+      - param_name: landmark
+        type: carla.Landmark
+        doc: >
+          The landmark object describing a traffic light. 
+      doc: >
+        Provided a landmark, returns the traffic light object it describes. 
+    # --------------------------------------
+    - def_name: get_traffic_light_from_opendrive_id
+      return: carla.TrafficLight
+      params:
+      - param_name: traffic_light_id
+        type: str
+        doc: >
+          The OpenDRIVE id.
+      doc: >
+        Returns the traffic light actor corresponding to the indicated OpenDRIVE id.
+    # --------------------------------------
+    - def_name: get_traffic_lights_from_waypoint
+      return: list(carla.TrafficLight)
+      params:
+      - param_name: waypoint
+        type: carla.Waypoint
+        doc: >
+          The input waypoint.
+      - param_name: distance
+        type: float
+        doc: >
+          Search distance.
+      doc: >
+        This function performs a search along the road in front of the specified waypoint and returns a list of traffic light actors found in the specified search distance.
+    # --------------------------------------
+    - def_name: get_traffic_lights_in_junction
+      return: list(carla.TrafficLight)
+      params:
+      - param_name: junction_id
+        type: int
+        doc: >
+          The id of the junction.
+      doc: >
+        Returns the list of traffic light actors affecting the junction indicated in `junction_id`.
+    # --------------------------------------
+    - def_name: get_traffic_sign
+      return: carla.TrafficSign
+      params:
+      - param_name: landmark
+        type: carla.Landmark
+        doc: >
+          The landmark object describing a traffic sign. 
+      doc: >
+        Provided a landmark, returns the traffic sign object it describes. 
+    # --------------------------------------
+    - def_name: get_random_location_from_navigation
+      return: carla.Location
+      doc: >
+        This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`generate_traffic.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) for an example.
+    # --------------------------------------
+    - def_name: get_settings
+      return: carla.WorldSettings
+      doc: >
+        Returns an object containing some data about the simulation such as synchrony between client and server or rendering mode.
+    # --------------------------------------
+    - def_name: get_snapshot
+      return: carla.WorldSnapshot
+      doc: >
+        Returns a snapshot of the world at a certain moment comprising all the information about the actors.
+    # --------------------------------------
+    - def_name: get_spectator
+      return: carla.Actor
+      doc: >
+        Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.
+    # --------------------------------------
+    - def_name: get_weather
+      return: carla.WeatherParameters
+      doc: >
+        Retrieves an object containing weather parameters currently active in the simulation, mainly cloudiness, precipitation, wind and sun position.
+    # --------------------------------------
+    - def_name: set_weather
+      params: 
+      - param_name: weather
+        type: carla.WeatherParameters
+        doc: > 
+          New conditions to be applied. 
+      doc: >
+        Changes the weather parameteres ruling the simulation to another ones defined in an object. 
+    # --------------------------------------
+    - def_name: cast_ray
+      return: list(carla.LabelledPoint)
+      params:
+      - param_name: initial_location
+        type: carla.Location
+        doc: >
+          The initial position of the ray.
+      - param_name: final_location
+        type: carla.Location
+        doc: >
+          The final position of the ray.
+      doc: >
+        Casts a ray from the specified initial_location to final_location. The function then detects all geometries intersecting the ray and returns a list of carla.LabelledPoint in order.
+    # --------------------------------------
+    - def_name: project_point
+      return: carla.LabelledPoint
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          The point to be projected.
+      - param_name: direction
+        type: carla.Vector3D
+        doc: >
+          The direction of projection.
+      - param_name: search_distance
+        type: float
+        doc: >
+          The maximum distance to perform the projection
+      doc: >
+        Projects the specified point to the desired direction in the scene. The functions casts a ray from location in a direction and returns a carla.Labelled object with the first geometry this ray intersects. If no geometry is found in the search_distance range the function returns `None`.
+    # --------------------------------------
+    - def_name: ground_projection
+      return: carla.LabelledPoint
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          The point to be projected.
+      - param_name: search_distance
+        type: float
+        doc: >
+          The maximum distance to perform the projection
+      doc: >
+        Projects the specified point downwards in the scene. The functions casts a ray from location in the direction (0,0,-1) (downwards) and returns a carla.Labelled object with the first geometry this ray intersects (usually the ground). If no geometry is found in the search_distance range the function returns `None`.
+    # --------------------------------------
+    - def_name: load_map_layer
+      params: 
+      - param_name: map_layers
+        type: carla.MapLayer
+        doc: > 
+          Mask of level layers to be loaded. 
+      doc: >
+        Loads the selected layers to the level.
+        If the layer is already loaded the call has no effect.
+      warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
+    # --------------------------------------
+    - def_name: unload_map_layer
+      params: 
+      - param_name: map_layers
+        type: carla.MapLayer
+        doc: > 
+          Mask of level layers to be unloaded. 
+      doc: >
+        Unloads the selected layers to the level.
+        If the layer is already unloaded the call has no effect.
+      warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
+    # --------------------------------------
+    - def_name: set_pedestrians_cross_factor
+      params:
+      - param_name: percentage
+        type: float
+        doc: >
+          Sets the percentage of pedestrians that can walk on the road or cross at any point on the road. Value should be between `0.0` and `1.0`. For example, a value of `0.1` would allow 10% of pedestrians to walk on the road. __Default is `0.0`__.
+      note: >
+        Should be set before pedestrians are spawned.
+    # --------------------------------------
+    - def_name: set_pedestrians_seed
+      params:
+      - param_name: seed
+        type: int
+        doc: >
+          Sets the seed to use for any random number generated in relation to pedestrians.
+      note: >
+        Should be set before pedestrians are spawned.
+        If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
+    # --------------------------------------
+    - def_name: apply_color_texture_to_object
+      params:
+      - param_name: object_name
+        type: str
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.
+    # --------------------------------------
+    - def_name: apply_float_color_texture_to_object
+      params:
+      - param_name: object_name
+        type: str
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureFloatColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to `object_name`.
+    # --------------------------------------
+    - def_name: apply_textures_to_object
+      params:
+      - param_name: object_name
+        type: str
+      - param_name: diffuse_texture
+        type: TextureColor
+      - param_name: emissive_texture
+        type: TextureFloatColor
+      - param_name: normal_texture
+        type: TextureFloatColor
+      - param_name: ao_roughness_metallic_emissive_texture
+        type: TextureFloatColor
+      doc: >
+        Applies all texture fields in carla.MaterialParameter to the object `object_name`. Empty textures here will not be applied.
+    # --------------------------------------
+    - def_name: apply_color_texture_to_objects
+      params:
+      - param_name: objects_name_list
+        type: list(str)
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.
+    # --------------------------------------
+    - def_name: apply_float_color_texture_to_objects
+      params:
+      - param_name: objects_name_list
+        type: list(str)
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+      - param_name: texture
+        type: TextureFloatColor
+      doc: >
+        Applies a `texture` object in the field corresponfing to `material_parameter` (normal, diffuse, etc) to the object in the scene corresponding to all objects in `objects_name_list`.
+    # --------------------------------------
+    - def_name: apply_textures_to_objects
+      params:
+      - param_name: objects_name_list
+        type: list(str)
+      - param_name: diffuse_texture
+        type: TextureColor
+      - param_name: emissive_texture
+        type: TextureFloatColor
+      - param_name: normal_texture
+        type: TextureFloatColor
+      - param_name: ao_roughness_metallic_emissive_texture
+        type: TextureFloatColor
+      doc: >
+        Applies all texture fields in carla.MaterialParameter to all objects in `objects_name_list`. Empty textures here will not be applied.
+    # --------------------------------------
+    - def_name: get_names_of_all_objects
+      return: list(str)
+      doc: >
+        Returns a list of the names of all objects in the scene that can be painted with the apply texture functions.
+    # --------------------------------------
+    - def_name: __str__
+      return:
+        string
+      doc: >
+        The content of the world is parsed and printed as a brief report of its current state. 
+    # --------------------------------------
+
+  - class_name: DebugHelper
+    # - DESCRIPTION ------------------------
+    doc: >
+      Helper class part of carla.World that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Take a look at the snipets available for this class to learn how to debug easily in CARLA.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: draw_arrow
+      params:
+      - param_name: begin
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the arrow starts. 
+      - param_name: end
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the arrow ends and points towards to. 
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the line.  
+      - param_name: arrow_size
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Size of the tip of the arrow. 
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default. 
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
+      doc: >
+        Draws an arrow from `begin` to `end` pointing in that direction.
+
+    # --------------------------------------
+    - def_name: draw_box
+      params:
+      - param_name: box
+        type: carla.BoundingBox
+        doc: >
+          Object containing a location and the length of a box for every axis. 
+      - param_name: rotation
+        type: carla.Rotation
+        param_units: degrees (pitch,yaw,roll)
+        doc: >
+          Orientation of the box according to Unreal Engine's axis system. 
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the lines that define the box. 
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default. 
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
+      doc: >
+        Draws a box, ussually to act for object colliders. 
+        
+    # --------------------------------------
+    - def_name: draw_line
+      params:
+      - param_name: begin
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the line starts. 
+      - param_name: end
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Spot in the coordinate system where the line ends. 
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the line.  
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
+      doc: >
+        Draws a line in between `begin` and `end`.
+    # --------------------------------------
+    - def_name: draw_point
+      params: 
+      - param_name: location
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Spot in the coordinate system to center the object. 
+      - param_name: size
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the point.  
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default. 
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
+      doc: >
+        Draws a point `location`.
+    # --------------------------------------
+    - def_name: draw_string
+      params: 
+      - param_name: location
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Spot in the simulation where the text will be centered. 
+      - param_name: text
+        type: str
+        doc: >
+          Text intended to be shown in the world. 
+      - param_name: draw_shadow
+        type: bool
+        default: False
+        doc: >
+          Casts a shadow for the string that could help in visualization. It is disabled by default.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the string. Red by default. 
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
+      doc: >
+        Draws a string in a given location of the simulation which can only be seen server-side.
+    # --------------------------------------
+...

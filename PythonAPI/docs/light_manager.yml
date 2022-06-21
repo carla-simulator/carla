@@ -1,0 +1,390 @@
+---
+- module_name: carla
+
+  # - CLASSES ------------------------------
+  classes:
+  - class_name: LightGroup
+    # - DESCRIPTION ------------------------
+    doc: >
+      This class categorizes the lights on scene into different groups. These groups available are provided as a enum values that can be used as flags.  
+
+
+      __Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as carla.Light objects. These have to be managed using carla.Vehicle and carla.VehicleLightState.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: None
+      doc: >
+        All lights.
+    - var_name: Vehicle
+    - var_name: Street
+    - var_name: Building
+    - var_name: Other
+    # --------------------------------------
+
+  - class_name: LightState
+    # - DESCRIPTION ------------------------
+    doc: >
+      This class represents all the light variables except the identifier and the location, which are should to be static. Using this class allows to manage all the parametrization of the light in one call. 
+    instance_variables:
+    - var_name: intensity
+      type: float
+      var_units: lumens
+      doc: >
+        Intensity of a light.
+    # --------------------------------------
+    - var_name: color
+      type: carla.Color
+      doc: >
+        Color of a light.
+    # --------------------------------------
+    - var_name: group
+      type: carla.LightGroup
+      doc: >
+        Group a light belongs to.
+    # --------------------------------------
+    - var_name: active
+      type: bool
+      doc: >
+        Switch of a light. It is __True__ when the light is on. 
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: intensity
+        type: float
+        default: 0.0
+        param_units: lumens
+        doc: >
+          Intensity of the light. Default is `0.0`.
+    # --------------------------------------
+      - param_name: color
+        type: carla.Color
+        default: carla.Color()
+        doc: >
+          Color of the light. Default is black.
+    # --------------------------------------
+      - param_name: group
+        type: carla.LightGroup
+        default: carla.LightGroup.None
+        doc: >
+          Group the light belongs to. Default is the generic group `None`.
+    # --------------------------------------
+      - param_name: active
+        type: bool
+        default: False
+        doc: >
+          Swith of the light. Default is `False`, light is off.
+    # --------------------------------------
+
+  - class_name: Light
+    # - DESCRIPTION ------------------------
+    doc: >
+      This class exposes the lights that exist in the scene, except for vehicle lights. The properties of a light can be queried and changed at will.
+      
+      Lights are automatically turned on when the simulator enters night mode (sun altitude is below zero).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: color
+      type: carla.Color
+      doc: >
+        Color of the light.
+    # --------------------------------------
+    - var_name: id
+      type: int
+      doc: >
+        Identifier of the light.
+    # --------------------------------------
+    - var_name: intensity
+      type: float
+      var_units: lumens
+      doc: >
+        Intensity of the light.
+    # --------------------------------------
+    - var_name: is_on
+      type: bool
+      doc: >
+        Switch of the light. It is __True__ when the light is on. When the night mode starts, this is set to __True__.
+    # --------------------------------------
+    - var_name: location
+      type: carla.Location
+      var_units: meters
+      doc: >
+        Position of the light.
+    # --------------------------------------
+    - var_name: light_group
+      type: carla.LightGroup
+      doc: >
+        Group the light belongs to.
+    # --------------------------------------
+    - var_name: light_state
+      type: carla.LightState
+      doc: >
+        State of the light. Summarizes its attributes, group, and if it is on/off.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: turn_off
+      doc: >
+        Switches off the light.
+    # --------------------------------------
+    - def_name: turn_on
+      doc: >
+        Switches on the light.
+    # --------------------------------------
+    - def_name: set_color
+      doc: >
+        Changes the color of the light to `color`. 
+      params:
+      - param_name: color
+        type: carla.Color
+    # --------------------------------------
+    - def_name: set_intensity
+      doc: >
+        Changes the intensity of the light to `intensity`. 
+      params:
+      - param_name: intensity
+        type: float
+        param_units: lumens
+    # --------------------------------------
+    - def_name: set_light_group
+      doc: >
+        Changes the light to the group `light_group`. 
+      params:
+      - param_name: light_group
+        type: carla.LightGroup
+    # --------------------------------------
+    - def_name: set_light_state
+      doc: >
+        Changes the state of the light to `light_state`. This may change attributes, group and turn the light on/off all at once. 
+      params:
+      - param_name: light_state
+        type: carla.LightState
+    # --------------------------------------
+
+  - class_name: LightManager
+    # - DESCRIPTION ------------------------
+    doc: >
+      This class handles the lights in the scene. Its main use is to get and set the state of groups or lists of lights in one call. An instance of this class can be retrieved by the carla.World.get_lightmanager().  
+
+
+      __Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as carla.Light objects. These have to be managed using carla.Vehicle and carla.VehicleLightState.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: is_active
+      doc: >
+        Returns a list with booleans stating if the elements in `lights` are switched on/off. 
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be queried.
+      return: list(bool)
+    # --------------------------------------
+    - def_name: turn_off
+      doc: >
+        Switches off all the lights in `lights`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be switched off.
+    # --------------------------------------
+    - def_name: turn_on
+      doc: >
+        Switches on all the lights in `lights`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be switched on.
+    # --------------------------------------
+    - def_name: get_all_lights
+      doc: >
+        Returns a list containing the lights in a certain group. By default, the group is `None`.
+      params:
+      - param_name: light_group
+        type: carla.LightGroup
+        default: carla.LightGroup.None
+        doc: >
+          Group to filter the lights returned. Default is `None`. 
+      return: list(carla.Light)
+    # --------------------------------------
+    - def_name: get_color
+      doc: >
+        Returns a list with the colors of every element in `lights`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be queried.
+      return: list(carla.Color)
+    # --------------------------------------
+    - def_name: get_intensity
+      doc: >
+        Returns a list with the intensity of every element in `lights`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be queried.
+      return: list(float)
+      return_units: lumens
+    # --------------------------------------
+    - def_name: get_light_group
+      doc: >
+        Returns a list with the group of every element in `lights`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be queried.
+      return: list(carla.LightGroup)
+    # --------------------------------------
+    - def_name: get_light_state
+      doc: >
+        Returns a list with the state of all the attributes of every element in `lights`. 
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be queried.
+      return: list(carla.LightState)
+    # --------------------------------------
+    - def_name: get_turned_off_lights
+      doc: >
+        Returns a list containing lights switched off in the scene, filtered by group.
+      params:
+      - param_name: light_group
+        type: carla.LightGroup
+        doc:
+          List of lights to be queried.
+      return: list(carla.Light)
+    # --------------------------------------
+    - def_name: get_turned_on_lights
+      doc: >
+        Returns a list containing lights switched on in the scene, filtered by group.
+      params:
+      - param_name: light_group
+        type: carla.LightGroup
+        doc:
+          List of lights to be queried.
+      return: list(carla.Light)
+    # --------------------------------------
+    - def_name: set_active
+      doc: >
+        Switches on/off the elements in `lights`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be switched on/off.
+      - param_name: active
+        type: list(bool)
+        doc:
+          List of booleans to be applied. 
+    # --------------------------------------
+    - def_name: set_color
+      doc: >
+        Changes the color of the elements in `lights` to `color`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: color
+        type: carla.Color
+        doc:
+          Color to be applied.
+    # --------------------------------------
+    - def_name: set_colors
+      doc: >
+        Changes the color of each element in `lights` to the corresponding in `colors`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: colors
+        type: list(carla.Color)
+        doc:
+          List of colors to be applied.
+    # --------------------------------------
+    - def_name: set_intensity
+      doc: >
+        Changes the intensity of every element in `lights` to `intensity`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: intensity
+        type: float
+        param_units: lumens
+        doc:
+          Intensity to be applied.
+    # --------------------------------------
+    - def_name: set_intensities
+      doc: >
+        Changes the intensity of each element in `lights` to the corresponding in `intensities`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: intensities
+        type: list(float)
+        param_units: lumens
+        doc:
+          List of intensities to be applied.
+    # --------------------------------------
+    - def_name: set_light_group
+      doc: >
+        Changes the group of every element in `lights` to `light_group`. 
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: light_group
+        type: carla.LightGroup
+        doc:
+          Group to be applied.
+    # --------------------------------------
+    - def_name: set_light_groups
+      doc: >
+        Changes the group of each element in `lights` to the corresponding in `light_groups`.
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: light_groups
+        type: list(carla.LightGroup)
+        doc:
+          List of groups to be applied.
+    # --------------------------------------
+    - def_name: set_light_state
+      doc: >
+        Changes the state of the attributes of every element in `lights` to `light_state`. 
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: light_state
+        type: carla.LightState
+        doc:
+          State of the attributes to be applied.
+    # --------------------------------------
+    - def_name: set_light_states
+      doc: >
+        Changes the state of the attributes of each element in `lights` to the corresponding in `light_states`. 
+      params:
+      - param_name: lights
+        type: list(carla.Light)
+        doc:
+          List of lights to be changed.
+      - param_name: light_states
+        type: list(carla.LightState)
+        doc:
+          List of state of the attributes to be applied.
+    # --------------------------------------

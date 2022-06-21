@@ -1,0 +1,36 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.9.13",
+	"FriendlyName": "CARLA",
+	"Description": "Open-source simulator for autonomous driving research.",
+	"Category": "Science",
+	"CreatedBy": "Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB)",
+	"CreatedByURL": "http://carla.org",
+	"DocsURL": "http://carla.readthedocs.io",
+	"MarketplaceURL": "",
+	"SupportURL": "https://github.com/carla-simulator/carla/issues",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "Carla",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "PhysXVehicles",
+			"Enabled": true
+		},
+		{
+			"Name": "ProceduralMeshComponent",
+			"Enabled": true
+		}
+	]
+}
