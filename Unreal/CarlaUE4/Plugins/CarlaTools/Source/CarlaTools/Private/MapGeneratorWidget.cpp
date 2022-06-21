@@ -462,7 +462,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
 
       TMap<FGuid, TArray<uint16>> HeightmapDataPerLayers;
-	    TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayer;
+	            TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayer;
 
       HeightmapDataPerLayers.Add(FGuid(), HeightData);
       MaterialLayerDataPerLayer.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
@@ -576,7 +576,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     VectorRegister Scale3D{ 2500,2500,900 };
     EObjectFlags InObjectFlags = RF_Transactional;
     FName InName = NAME_None;
-    
+
     FTransform Transform{ Rotation,Translation,Scale3D };
 
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
