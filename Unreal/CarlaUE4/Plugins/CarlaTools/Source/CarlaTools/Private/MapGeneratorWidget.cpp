@@ -456,7 +456,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       {
         HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
       }
-      
+
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
@@ -466,7 +466,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
 
       HeightmapDataPerLayers.Add(FGuid(), HeightData);
       MaterialLayerDataPerLayer.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
-	
       Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, HeightRT->SizeX-1, HeightRT->SizeY-1, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
           HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
 
@@ -493,7 +492,6 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, *ErrorUnloadingStr.ToString());
         return false;
       }
-      
     }
   }
 
@@ -539,7 +537,7 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
     }
 
     const FString MapNameToLoad = TilesPath + "/" + World->GetMapName() + "." + World->GetMapName();
-    
+
     // Load Map to editor. Required to spawn simulatee procedural foliage
     bool bLoadedSuccess = FEditorFileUtils::LoadMap(*MapNameToLoad, false, true);
     if(!bLoadedSuccess){
@@ -580,7 +578,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     FName InName = NAME_None;
     
     FTransform Transform{ Rotation,Translation,Scale3D };
-    
+
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
     AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(
         AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
@@ -602,7 +600,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
       OverrideGeometryFilter.bAllowFoliage = FoliageComponent->bAllowFoliage;
       OverrideGeometryFilter.bAllowTranslucent = FoliageComponent->bAllowTranslucent;
 
-      FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);					
+      FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);
     }
     else
     {
