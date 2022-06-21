@@ -1,84 +1,15 @@
-# Introduction to Docute
+------
+### carla笔记 :feet:
 
-The fastest way to create a documentation site for your project.
+------
+本文是基于[carla 中文站](https://bbs.carla.org.cn/document/34876387b64845899a948fbf8c2a73be)修改而来:heartpulse:
 
-## What is Docute
+使用过程中我会修改文档中有问题的地方。:heartpulse:
 
-Docute is basically a JavaScript file that fetches Markdown files and renders them as a single-page application.
+如果你在文档中发现有错，可能是我操作过程中没有这个bug，或者我还没有操作到这一步。:heartpulse:
 
-It's totally runtime-driven so there's no server-side components involved which also means there's no build process. You only need to create an HTML file and a bunch of Markdown documents and your website is almost ready!
+如果你在文档中发现有错，请及时联系我。:heartpulse:
 
-## How does it work
+邮箱：ngfukgin@gmail.com :heartpulse:
 
-In short: URL is the API.
-
-We fetch and render corresponding markdown file for the URL you visit:
-
-```
-/         => /README.md
-/foo      => /foo.md
-/foo/     => /foo/README.md
-/foo/bar  => /foo/bar.md
-```
-
-## Quick Start
-
-Let's say you have following files in `./my-docs` folder:
-
-```bash
-.
-├── README.md
-└── index.html
-```
-
-The `index.html` looks like:
-
-```html {highlight:[7,'10-16']}
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>My Docs</title>
-    <link rel="stylesheet" href="https://unpkg.com/docute@4/dist/docute.css">
-  </head>
-  <body>
-    <div id="docute"></div>
-    <script src="https://unpkg.com/docute@4/dist/docute.js"></script>
-    <script>
-      new Docute({
-        target: '#docute'
-      })
-    </script>
-  </body>
-</html>
-```
-
-Then you can serve this folder as a static website on your machine using:
-
-- Node.js: `npm i -g serve && serve .`
-- Python: `python -m SimpleHTTPServer`
-- Golang: `caddy`
-- ..or whatever static web server
-
-Next, you may want to use [sidebar](./options.md#sidebar), [nav](./options.md#nav) or other [options](./options.md) to customize the website.
-
-Here's a [REPL](https://repl.it/@egoist/docute-starter) where you can try Docute online or [download](https://repl.it/@egoist/docute-starter.zip) it to run locally.
-
-## Comparisons
-
-### VuePress / GitBook / Hexo
-
-They all generate static HTML at build time, which is good for SEO.
-
-If you care about SEO, you may like using [presite](https://github.com/egoist/presite) to prerender your website.
-
-### Docsify
-
-[Docsify](https://docsify.js.org/#/) and Docute are pretty much the same, but with different UI and different usages.
-
-Docute (60kB) is 3 times bigger than Docisfy (20kB), because we use Vue, Vue Router and Vuex while Docsify uses vanilla JavaScript under the hood.
-
-## Browser Compatibility
-
-Docute supports all ever-green browsers, i.e. No IE support!
+原创不易，请大家尽量访问原网站获取内容，感谢你的理解与支持 :heartpulse:

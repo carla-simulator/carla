@@ -1,0 +1,268 @@
+.build-buttons{
+    text-align: center;
+}
+
+.build-buttons > p {
+    display: inline-block;
+    vertical-align: top;
+    padding: 5px;
+}
+
+.vector-zero {
+    text-align: center;
+}
+
+/************************* NAV BAR **************************/
+
+.caption {
+	/* background-color: #d6d6d6;
+	color: #404040; */
+	text-decoration: underline;
+}
+
+/************************* DEFAULT TABLES **************************/
+
+table {
+  border: 1px solid #242424;
+  background-color: #f3f6f6;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+table thead {
+  background: #ffffff; 
+  border-bottom: 1px solid #444444;
+}
+
+table tr:nth-child(even) {
+  background: #ffffff;
+}
+
+table thead th {
+  padding: 7px 13px;
+}
+
+table tbody td{
+  padding: 7px 13px;
+}
+
+/************************* INHERITED PYTHON API LINE **************************/
+
+.Inherited {
+	padding-left:30px;
+	margin-top:-20px
+}
+
+/************************* TOWN SLIDER **************************/
+
+ * {box-sizing:border-box}
+
+/* Container */
+.townslider-container {
+  max-width: 1000px;
+  position: relative;
+  margin: auto;
+}
+
+/* Hide the images by default */
+.townslide {
+  display: none;
+  text-align: center;
+
+}
+
+/* Fading animation for slides */
+.fade {
+  -webkit-animation-name: fade;
+  -webkit-animation-duration: 1.5s;
+  animation-name: fade;
+  animation-duration: 1.5s;
+}
+
+@-webkit-keyframes fade {
+  from {opacity: .4}
+  to {opacity: 1}
+}
+
+@keyframes fade {
+  from {opacity: .4}
+  to {opacity: 1}
+}
+
+/* "next" and "previous" buttons */
+.prev, .next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  margin-top: -22px;
+  padding: 16px;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  transition: 0.6s ease;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+}
+
+/* Position the "next" button*/
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+/* Black background color to buttons when hovering*/
+.prev:hover, .next:hover {
+  background-color: rgba(0,0,0,0.8);
+}
+
+/* Caption text for towns */
+.text {
+  color: #f2f2f2;
+  font-size: 15px;
+  padding: 8px 12px;
+  position: absolute;
+  bottom: 8px;
+  width: 100%;
+  text-align: center;
+  /*background-color:rgba(0,0,0,0.5);*/
+}
+
+/* The dot indicators for slides */
+.dot {
+  cursor: pointer;
+  height: 15px;
+  width: 15px;
+  margin: 0 2px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.6s ease;
+}
+
+.active, .dot:hover {
+  background-color: #717171;
+}
+
+/************************* COPY SCRIPT BUTTON **************************/
+
+.CopyScript {
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background:linear-gradient(to bottom, #ffffff 5%, #f6f6f6 100%);
+	background-color:#ffffff;
+	border-radius:6px;
+	border:1px solid #dcdcdc;
+	display:inline-block;
+	cursor:pointer;
+	color:#666666;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	padding:6px 6px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #ffffff;
+	margin-left: 2px;
+}
+.CopyScript:hover {
+	background:linear-gradient(to bottom, #f6f6f6 5%, #ffffff 100%);
+	background-color:#f6f6f6;
+}
+.CopyScript:active {
+	position:relative;
+	top:1px;
+}
+
+/************************* CLOSE SNIPET BUTTON **************************/
+
+.CloseSnipet {
+	box-shadow:inset 0px 1px 0px 0px #ffffff;
+	background:linear-gradient(to bottom, #ffffff 5%, #f6f6f6 100%);
+	background-color:#ffffff;
+	border-radius:6px;
+	border:1px solid #dcdcdc;
+	display:inline-block;
+	cursor:pointer;
+	color:#666666;
+	font-family:Arial;
+	font-size:15px;
+	font-weight:bold;
+	padding:6px 6px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #ffffff;
+	margin-left: 2px;
+}
+.CloseSnipet:hover {
+	background:linear-gradient(to bottom, #ffe6e6 5%, #ffffff 100%);
+	background-color:#ffffff;
+}
+.CloseSnipet:active {
+	position:relative;
+	top:1px;
+}
+
+/************************* SNIPET TITLE **************************/
+
+.SnipetFont {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 16px;
+	letter-spacing: 0.4px;
+	margin-left: 10px;
+	margin-bottom: 0px;
+	word-spacing: -2.2px;
+	color: #4675B1;
+	font-weight: 700;
+	text-decoration: rgb(68, 68, 68);
+	font-style: normal;
+	font-variant: normal;
+	text-transform: none;
+}
+
+/************************* SNIPET BUTTON **************************/
+
+.SnipetButton {
+	background-color: #476e9e;
+	border-radius:42px;
+	border:0px;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:12px;
+	padding:2px 3px;
+	text-decoration:none;
+	text-shadow:0px 1px 0px #2f6627;
+}
+
+/************************* SNIPET CONTENT **************************/
+
+.SnipetContent {
+	width: calc(100vw - 1150px);
+	margin-left: 10px;
+}
+
+/************************* SNIPET CONTAINER **************************/
+
+.Container {
+	position: fixed;
+	margin-left: 0px;
+	overflow-y: auto;
+	padding-left: 10px;
+	height: 95%;
+	top: 70px;
+	left: 1100px;
+}
+
+/************************* LATEST WARNING BANNER **************************/
+
+.dev-version-warning {
+	padding-top: 15px;
+	padding-bottom: 15px;
+	padding-left: 15px;
+	padding-right: 15px;
+	margin-bottom: 8px;
+	color: #404040;
+	font-weight: bold;
+	background-color: #f55c47;
+	text-align: center;
+	border-radius: 5px;
+}
