@@ -1,0 +1,1317 @@
+
+#Blueprint Library
+The Blueprint Library ([`carla.BlueprintLibrary`](../python_api/#carlablueprintlibrary-class)) is a summary of all [`carla.ActorBlueprint`](../python_api/#carla.ActorBlueprint) and its attributes ([`carla.ActorAttribute`](../python_api/#carla.ActorAttribute)) available to the user in CARLA.  
+
+Here is an example code for printing all actor blueprints and their attributes:  
+```py
+blueprints = [bp for bp in world.get_blueprint_library().filter('*')]
+for blueprint in blueprints:
+   print(blueprint.id)
+   for attr in blueprint:
+       print('  - {}'.format(attr))
+```
+  
+Check out the [introduction to blueprints](core_actors.md).  
+
+### controller
+- **<font color="#498efc">controller.ai.walker</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+
+### sensor
+- **<font color="#498efc">sensor.camera.depth</font>**  
+    - **Attributes:**
+        - `fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `image_size_x` (_Int_) <sub>_- Modifiable_</sub>
+        - `image_size_y` (_Int_) <sub>_- Modifiable_</sub>
+        - `lens_circle_falloff` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_multiplier` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_k` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_kcube` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_x_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_y_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.camera.dvs</font>**  
+    - **Attributes:**
+        - `black_clip` (_Float_) <sub>_- Modifiable_</sub>
+        - `blade_count` (_Int_) <sub>_- Modifiable_</sub>
+        - `bloom_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `blur_amount` (_Float_) <sub>_- Modifiable_</sub>
+        - `blur_radius` (_Float_) <sub>_- Modifiable_</sub>
+        - `calibration_constant` (_Float_) <sub>_- Modifiable_</sub>
+        - `chromatic_aberration_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `chromatic_aberration_offset` (_Float_) <sub>_- Modifiable_</sub>
+        - `enable_postprocess_effects` (_Bool_) <sub>_- Modifiable_</sub>
+        - `exposure_compensation` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_max_bright` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_min_bright` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_mode` (_String_) <sub>_- Modifiable_</sub>
+        - `exposure_speed_down` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_speed_up` (_Float_) <sub>_- Modifiable_</sub>
+        - `focal_distance` (_Float_) <sub>_- Modifiable_</sub>
+        - `fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `fstop` (_Float_) <sub>_- Modifiable_</sub>
+        - `gamma` (_Float_) <sub>_- Modifiable_</sub>
+        - `image_size_x` (_Int_) <sub>_- Modifiable_</sub>
+        - `image_size_y` (_Int_) <sub>_- Modifiable_</sub>
+        - `iso` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_falloff` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_multiplier` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_flare_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_k` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_kcube` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_x_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_y_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `log_eps` (_Float_) <sub>_- Modifiable_</sub>
+        - `min_fstop` (_Float_) <sub>_- Modifiable_</sub>
+        - `motion_blur_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `motion_blur_max_distortion` (_Float_) <sub>_- Modifiable_</sub>
+        - `motion_blur_min_object_screen_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `negative_threshold` (_Float_) <sub>_- Modifiable_</sub>
+        - `positive_threshold` (_Float_) <sub>_- Modifiable_</sub>
+        - `refractory_period_ns` (_Int_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+        - `shoulder` (_Float_) <sub>_- Modifiable_</sub>
+        - `shutter_speed` (_Float_) <sub>_- Modifiable_</sub>
+        - `sigma_negative_threshold` (_Float_) <sub>_- Modifiable_</sub>
+        - `sigma_positive_threshold` (_Float_) <sub>_- Modifiable_</sub>
+        - `slope` (_Float_) <sub>_- Modifiable_</sub>
+        - `temp` (_Float_) <sub>_- Modifiable_</sub>
+        - `tint` (_Float_) <sub>_- Modifiable_</sub>
+        - `toe` (_Float_) <sub>_- Modifiable_</sub>
+        - `use_log` (_Bool_) <sub>_- Modifiable_</sub>
+        - `white_clip` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.camera.optical_flow</font>**  
+    - **Attributes:**
+        - `fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `image_size_x` (_Int_) <sub>_- Modifiable_</sub>
+        - `image_size_y` (_Int_) <sub>_- Modifiable_</sub>
+        - `lens_circle_falloff` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_multiplier` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_k` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_kcube` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_x_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_y_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.camera.rgb</font>**  
+    - **Attributes:**
+        - `black_clip` (_Float_) <sub>_- Modifiable_</sub>
+        - `blade_count` (_Int_) <sub>_- Modifiable_</sub>
+        - `bloom_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `blur_amount` (_Float_) <sub>_- Modifiable_</sub>
+        - `blur_radius` (_Float_) <sub>_- Modifiable_</sub>
+        - `calibration_constant` (_Float_) <sub>_- Modifiable_</sub>
+        - `chromatic_aberration_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `chromatic_aberration_offset` (_Float_) <sub>_- Modifiable_</sub>
+        - `enable_postprocess_effects` (_Bool_) <sub>_- Modifiable_</sub>
+        - `exposure_compensation` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_max_bright` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_min_bright` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_mode` (_String_) <sub>_- Modifiable_</sub>
+        - `exposure_speed_down` (_Float_) <sub>_- Modifiable_</sub>
+        - `exposure_speed_up` (_Float_) <sub>_- Modifiable_</sub>
+        - `focal_distance` (_Float_) <sub>_- Modifiable_</sub>
+        - `fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `fstop` (_Float_) <sub>_- Modifiable_</sub>
+        - `gamma` (_Float_) <sub>_- Modifiable_</sub>
+        - `image_size_x` (_Int_) <sub>_- Modifiable_</sub>
+        - `image_size_y` (_Int_) <sub>_- Modifiable_</sub>
+        - `iso` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_falloff` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_multiplier` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_flare_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_k` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_kcube` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_x_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_y_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `min_fstop` (_Float_) <sub>_- Modifiable_</sub>
+        - `motion_blur_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `motion_blur_max_distortion` (_Float_) <sub>_- Modifiable_</sub>
+        - `motion_blur_min_object_screen_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+        - `shoulder` (_Float_) <sub>_- Modifiable_</sub>
+        - `shutter_speed` (_Float_) <sub>_- Modifiable_</sub>
+        - `slope` (_Float_) <sub>_- Modifiable_</sub>
+        - `temp` (_Float_) <sub>_- Modifiable_</sub>
+        - `tint` (_Float_) <sub>_- Modifiable_</sub>
+        - `toe` (_Float_) <sub>_- Modifiable_</sub>
+        - `white_clip` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.camera.semantic_segmentation</font>**  
+    - **Attributes:**
+        - `fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `image_size_x` (_Int_) <sub>_- Modifiable_</sub>
+        - `image_size_y` (_Int_) <sub>_- Modifiable_</sub>
+        - `lens_circle_falloff` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_circle_multiplier` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_k` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_kcube` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_x_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `lens_y_size` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.lidar.ray_cast</font>**  
+    - **Attributes:**
+        - `atmosphere_attenuation_rate` (_Float_) <sub>_- Modifiable_</sub>
+        - `channels` (_Int_) <sub>_- Modifiable_</sub>
+        - `dropoff_general_rate` (_Float_) <sub>_- Modifiable_</sub>
+        - `dropoff_intensity_limit` (_Float_) <sub>_- Modifiable_</sub>
+        - `dropoff_zero_intensity` (_Float_) <sub>_- Modifiable_</sub>
+        - `horizontal_fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `lower_fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_seed` (_Int_) <sub>_- Modifiable_</sub>
+        - `noise_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `points_per_second` (_Int_) <sub>_- Modifiable_</sub>
+        - `range` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `rotation_frequency` (_Float_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+        - `upper_fov` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.lidar.ray_cast_semantic</font>**  
+    - **Attributes:**
+        - `channels` (_Int_) <sub>_- Modifiable_</sub>
+        - `horizontal_fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `lower_fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `points_per_second` (_Int_) <sub>_- Modifiable_</sub>
+        - `range` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `rotation_frequency` (_Float_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+        - `upper_fov` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.collision</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.gnss</font>**  
+    - **Attributes:**
+        - `noise_alt_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_alt_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lat_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lat_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lon_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lon_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_seed` (_Int_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.imu</font>**  
+    - **Attributes:**
+        - `noise_accel_stddev_x` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_accel_stddev_y` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_accel_stddev_z` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_gyro_bias_x` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_gyro_bias_y` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_gyro_bias_z` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_gyro_stddev_x` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_gyro_stddev_y` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_gyro_stddev_z` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_seed` (_Int_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.lane_invasion</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.obstacle</font>**  
+    - **Attributes:**
+        - `debug_linetrace` (_Bool_) <sub>_- Modifiable_</sub>
+        - `distance` (_Float_) <sub>_- Modifiable_</sub>
+        - `hit_radius` (_Float_) <sub>_- Modifiable_</sub>
+        - `only_dynamics` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.radar</font>**  
+    - **Attributes:**
+        - `horizontal_fov` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_seed` (_Int_) <sub>_- Modifiable_</sub>
+        - `points_per_second` (_Int_) <sub>_- Modifiable_</sub>
+        - `range` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+        - `vertical_fov` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.rss</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+
+### static
+- **<font color="#498efc">static.prop.advertisement</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.atm</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.barbeque</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.barrel</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.bench01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.bench02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.bench03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.bike helmet</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.bin</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.box01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.box02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.box03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.briefcase</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.brokentile01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.brokentile02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.brokentile03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.brokentile04</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.busstop</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.calibrator</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.chainbarrier</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.chainbarrierend</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.clothcontainer</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.clothesline</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.colacan</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.constructioncone</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.container</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.creasedbox01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.creasedbox02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.creasedbox03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.dirtdebris01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.dirtdebris02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.dirtdebris03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.doghouse</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.fountain</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.garbage01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.garbage02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.garbage03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.garbage04</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.garbage05</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.garbage06</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.gardenlamp</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.glasscontainer</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.gnome</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.guitarcase</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.ironplank</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.kiosk_01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.mailbox</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.maptable</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.mesh</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">static.prop.mobile</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.motorhelmet</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.omri-0</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.omri-1</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.pergola</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot04</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot05</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot06</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot07</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plantpot08</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plasticbag</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plasticchair</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.plastictable</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.platformgarbage01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.purse</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.shoppingbag</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.shoppingcart</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.shoppingtrolley</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.slide</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.streetbarrier</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.streetfountain</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.streetsign</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.streetsign01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.streetsign04</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.swing</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.swingcouch</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.table</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trafficcone01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trafficcone02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trafficwarning</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trampoline</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trashbag</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trashcan01</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trashcan02</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trashcan03</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trashcan04</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.trashcan05</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.travelcase</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.vendingmachine</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.prop.wateringcan</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `size` (_String_)
+- **<font color="#498efc">static.trigger.friction</font>**  
+    - **Attributes:**
+        - `extent_x` (_Float_) <sub>_- Modifiable_</sub>
+        - `extent_y` (_Float_) <sub>_- Modifiable_</sub>
+        - `extent_z` (_Float_) <sub>_- Modifiable_</sub>
+        - `friction` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+
+### vehicle
+- **<font color="#498efc">vehicle.audi.a2</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.audi.etron</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.audi.tt</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.bh.crossbike</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.bmw.grandtourer</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.carlamotors.carlacola</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.carlamotors.firetruck</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.chevrolet.impala</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.citroen.c3</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.diamondback.century</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.dodge.charger_2020</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.dodge.charger_police</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.dodge.charger_police_2020</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.ford.ambulance</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.ford.crown</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.ford.mustang</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.gazelle.omafiets</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.harley-davidson.low_rider</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.jeep.wrangler_rubicon</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.kawasaki.ninja</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.lincoln.mkz_2017</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.lincoln.mkz_2020</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.mercedes.coupe</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.mercedes.coupe_2020</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.mercedes.sprinter</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.micro.microlino</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.mini.cooper_s</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.mini.cooper_s_2021</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.nissan.micra</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.nissan.patrol</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.nissan.patrol_2021</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.seat.leon</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.tesla.cybertruck</font>**  
+    - **Attributes:**
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.tesla.model3</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.toyota.prius</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.vespa.zx125</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.volkswagen.t2</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.volkswagen.t2_2021</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">vehicle.yamaha.yzf</font>**  
+    - **Attributes:**
+        - `color` (_RGBColor_) <sub>_- Modifiable_</sub>
+        - `driver_id` (_Int_) <sub>_- Modifiable_</sub>
+        - `generation` (_Int_)
+        - `number_of_wheels` (_Int_)
+        - `object_type` (_String_)
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `sticky_control` (_Bool_) <sub>_- Modifiable_</sub>
+
+### walker
+- **<font color="#498efc">walker.pedestrian.0001</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0002</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0003</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0004</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0005</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0006</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0007</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0008</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0009</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0010</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0011</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0012</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0013</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0014</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0015</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0016</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0017</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0018</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0019</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0020</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0021</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0022</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0023</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0024</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0025</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0026</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0027</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0028</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0029</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0030</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0031</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0032</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0033</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0034</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0035</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0036</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0037</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0038</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0039</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0040</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0041</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0042</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0043</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0044</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0045</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0046</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0047</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">walker.pedestrian.0048</font>**  
+    - **Attributes:**
+        - `age` (_String_)
+        - `gender` (_String_)
+        - `generation` (_Int_)
+        - `is_invincible` (_Bool_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `speed` (_Float_) <sub>_- Modifiable_</sub>

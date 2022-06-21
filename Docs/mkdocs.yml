@@ -1,0 +1,99 @@
+site_name: CARLA Simulator
+repo_url: https://github.com/carla-simulator/carla
+docs_dir: Docs
+edit_uri: 'edit/master/Docs/'
+theme: readthedocs
+extra_css: [extra.css]
+extra_javascript: [extra.js]
+
+nav:
+- Home: 'index.md'
+- Getting started:
+  - 'Introduction': 'start_introduction.md'
+  - 'Quick start package installation': 'start_quickstart.md'
+- Building CARLA:
+  - 'Linux build': 'build_linux.md'
+  - 'Windows build': 'build_windows.md'
+  - 'Update CARLA': 'build_update.md'
+  - 'Build system': 'build_system.md'
+  - 'CARLA in Docker': 'build_docker.md'
+  - 'F.A.Q.': 'build_faq.md'
+- First steps:
+  - 'Core concepts': 'core_concepts.md'
+  - '1st- World and client': 'core_world.md'
+  - '2nd- Actors and blueprints': 'core_actors.md'
+  - '3rd- Maps and navigation': 'core_map.md'
+  - '4th- Sensors and data': 'core_sensors.md'
+- Advanced concepts:
+  - 'OpenDRIVE standalone mode': 'adv_opendrive.md'
+  - 'PTV-Vissim co-simulation': 'adv_ptv.md'
+  - 'Recorder': 'adv_recorder.md'
+  - 'Rendering options': 'adv_rendering_options.md'
+  - 'RSS': 'adv_rss.md'
+  - 'Synchrony and time-step': 'adv_synchrony_timestep.md'
+  - 'Benchmarking Performance': 'adv_benchmarking.md'
+  - 'CARLA Agents': 'adv_agents.md'
+- Traffic Simulation:
+  - 'Traffic Simulation Overview': 'ts_traffic_simulation_overview.md'
+  - 'Traffic Manager': 'adv_traffic_manager.md'
+  - 'SUMO co-simulation': 'adv_sumo.md'
+  - 'Scenic': 'tuto_G_scenic.md'
+- References:
+  - 'Python API reference': 'python_api.md'
+  - 'Blueprint Library': 'bp_library.md'
+  - 'C++ reference' : 'ref_cpp.md'
+  - 'Recorder binary file format': 'ref_recorder_binary_file_format.md'
+  - "Sensors reference": 'ref_sensors.md'  
+- Plugins:
+  - 'carlaviz — web visualizer': 'plugins_carlaviz.md'
+- ROS bridge:
+  - 'ROS bridge documentation': 'ros_documentation.md'
+- Custom Maps:
+  - 'Overview of custom maps in CARLA': 'tuto_M_custom_map_overview.md'
+  - 'Create a map in RoadRunner': 'tuto_M_generate_map.md'
+  - 'Import map in CARLA package': 'tuto_M_add_map_package.md'
+  - 'Import map in CARLA source build': 'tuto_M_add_map_source.md'
+  - 'Alternative ways to import maps': 'tuto_M_add_map_alternative.md'
+  - 'Manually prepare map package': 'tuto_M_manual_map_package.md'
+  - 'Customizing maps: Layered maps': 'tuto_M_custom_layers.md'
+  - 'Customizing maps: Traffic lights and signs': 'tuto_M_custom_add_tl.md'
+  - 'Customizing maps: Road painter': 'tuto_M_custom_road_painter.md'
+  - 'Customizing maps: Procedural Buildings': 'tuto_M_custom_buildings.md'
+  - 'Customizing maps: Weather and landscape': 'tuto_M_custom_weather_landscape.md'
+  - 'Generate pedestrian navigation': 'tuto_M_generate_pedestrian_navigation.md'
+- Large Maps:
+  - 'Large maps overview': 'large_map_overview.md'
+  - 'Create a large map in RoadRunner': 'large_map_roadrunner.md'
+  - 'Import/Package a large map': 'large_map_import.md'
+- Tutorials (general):
+  - 'Add friction triggers': "tuto_G_add_friction_triggers.md"
+  - 'Control vehicle physics': "tuto_G_control_vehicle_physics.md"
+  - 'Control walker skeletons': "tuto_G_control_walker_skeletons.md"
+  - 'Generate maps with OpenStreetMap': 'tuto_G_openstreetmap.md'
+  - 'Retrieve simulation data': "tuto_G_retrieve_data.md"
+  - 'CarSim Integration': "tuto_G_carsim_integration.md"
+  - 'RLlib Integration': "tuto_G_rllib_integration.md"
+  - 'Chrono Integration': 'tuto_G_chrono.md'
+  - 'Build Unreal and CARLA in Docker': 'build_docker_unreal.md'
+- Tutorials (assets):
+  - 'Add a new vehicle': 'tuto_A_add_vehicle.md'
+  - 'Add new props': 'tuto_A_add_props.md'
+  - 'Create standalone packages': 'tuto_A_create_standalone.md'
+  - "Material customization": 'tuto_A_material_customization.md'
+- Tutorials (developers):
+  - 'How to upgrade content': 'tuto_D_contribute_assets.md'
+  - 'Create a sensor': 'tuto_D_create_sensor.md'
+  - 'Create semantic tags': 'tuto_D_create_semantic_tags.md'
+  - 'Customize vehicle suspension': 'tuto_D_customize_vehicle_suspension.md'
+  - 'Generate detailed colliders': 'tuto_D_generate_colliders.md'
+  - 'Make a release': 'tuto_D_make_release.md'
+- CARLA Ecosystem:
+  - 'Ansys Real Time Radar Model': 'ecosys_ansys.md'
+- Contributing:
+  - 'Contribution guidelines': 'cont_contribution_guidelines.md'
+  - 'Code of conduct': 'cont_code_of_conduct.md'
+  - 'Coding standard': 'cont_coding_standard.md'
+  - 'Documentation standard': 'cont_doc_standard.md'
+
+markdown_extensions:
+  - admonition
