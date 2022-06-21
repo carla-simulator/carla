@@ -462,7 +462,7 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
 
       TMap<FGuid, TArray<uint16>> HeightmapDataPerLayers;
-	            TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayer;
+      TMap<FGuid, TArray<FLandscapeImportLayerInfo>> MaterialLayerDataPerLayer;
 
       HeightmapDataPerLayers.Add(FGuid(), HeightData);
       MaterialLayerDataPerLayer.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
