@@ -557,12 +557,13 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           }
           else if (AssetName.Contains(SSTags::R_PROP))
           {
+            // This might missidentify some props if the materials are the same as the guardrail ones
             std::cout << ">> Asset is a Guardrail" << std::endl;
             for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
             {
               auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
               std::cout << ">>> Material name: " << TCHAR_TO_UTF8(*MaterialName);
-              if (MaterialName.Contains("M_GuardRailPost_Prop"))
+              if (MaterialName.Contains("M_GuardRail_Prop"))
               {  // Rocky ground with some grass
                 std::cout << " -> Guardrail Post" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, GuardrailPostMaterial);
