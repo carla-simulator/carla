@@ -51,6 +51,7 @@ nav:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
   - 'Coding standards': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
+  - '': ''
  
 markdown_extensions:
   - admonition 
