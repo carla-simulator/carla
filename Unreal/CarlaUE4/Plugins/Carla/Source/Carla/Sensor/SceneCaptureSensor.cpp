@@ -474,57 +474,28 @@ static std::atomic_ptrdiff_t    num_transfers_active;
 
 void ASceneCaptureSensor::CaptureSceneCustom()
 {
-    while (true)
-    {
-        if (num_transfers_active.load(std::memory_order_acquire) < max_transfers_active)
-        {
-            auto n = num_transfers_active.fetch_add(1, std::memory_order_acquire);
-            if (n < max_transfers_active)
-                break;
-        }
-        
-        (void)num_transfers_active.fetch_sub(1, std::memory_order_relaxed);
-
-        if (IsPendingKill())
-            return;
-
-        std::this_thread::yield();
-    }
-
-    uint64 Mask = 0;
-#if 1
-    if (CameraGBuffers.SceneColor.bIsUsed)  Mask |= UINT64_C(1) << 0;
-    if (CameraGBuffers.SceneDepth.bIsUsed)  Mask |= UINT64_C(1) << 1;
-    if (CameraGBuffers.GBufferA.bIsUsed)    Mask |= UINT64_C(1) << 2;
-    if (CameraGBuffers.GBufferB.bIsUsed)    Mask |= UINT64_C(1) << 3;
-    if (CameraGBuffers.GBufferC.bIsUsed)    Mask |= UINT64_C(1) << 4;
-    if (CameraGBuffers.GBufferD.bIsUsed)    Mask |= UINT64_C(1) << 5;
-    if (CameraGBuffers.GBufferE.bIsUsed)    Mask |= UINT64_C(1) << 6;
-    if (CameraGBuffers.GBufferF.bIsUsed)    Mask |= UINT64_C(1) << 7;
-    if (CameraGBuffers.Velocity.bIsUsed)    Mask |= UINT64_C(1) << 8;
-    if (CameraGBuffers.SSAO.bIsUsed)        Mask |= UINT64_C(1) << 9;
-#else
-    Mask = 4;
-#endif
     auto GBufferPtr = new FGBufferData();
     auto& GBuffer = *GBufferPtr;
-    if (Mask != 0)
+    if (CameraGBuffers.SceneColor.bIsUsed)      GBuffer.MarkAsRequested(EGBufferTextureID::SceneColor);
+    if (CameraGBuffers.SceneDepth.bIsUsed)      GBuffer.MarkAsRequested(EGBufferTextureID::SceneDepth);
+    if (CameraGBuffers.SceneStencil.bIsUsed)    GBuffer.MarkAsRequested(EGBufferTextureID::SceneStencil);
+    if (CameraGBuffers.GBufferA.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferA);
+    if (CameraGBuffers.GBufferB.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferB);
+    if (CameraGBuffers.GBufferC.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferC);
+    if (CameraGBuffers.GBufferD.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferD);
+    if (CameraGBuffers.GBufferE.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferE);
+    if (CameraGBuffers.GBufferF.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferF);
+    if (CameraGBuffers.Velocity.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::Velocity);
+    if (CameraGBuffers.SSAO.bIsUsed)            GBuffer.MarkAsRequested(EGBufferTextureID::SSAO);
+    if (CameraGBuffers.CustomDepth.bIsUsed)     GBuffer.MarkAsRequested(EGBufferTextureID::CustomDepth);
+    if (CameraGBuffers.CustomStencil.bIsUsed)   GBuffer.MarkAsRequested(EGBufferTextureID::CustomStencil);
+
+    if (GBuffer.DesiredTexturesMask != 0)
     {
-        GBuffer.DesiredTexturesMask = Mask;
         GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
-        for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
-            if ((GBuffer.DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
-                GBuffer.Payloads[i].Readback.Reset(new FRHIGPUTextureReadback(TEXT("GBUFFER READBACK")));
         CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
-#if 1
-        AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [this, GBufferPtr]
-        {
-            SendGBufferTexture(GBufferPtr);
-            (void)num_transfers_active.fetch_sub(1, std::memory_order_release);
-        });
-#else
-        SendGBufferTexture(GBufferPtr);
-#endif
+        // SendGBufferTextures(GBufferPtr);
+        AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [this, GBufferPtr] { SendGBufferTextures(GBufferPtr); });
     }
     else
     {
@@ -532,9 +503,9 @@ void ASceneCaptureSensor::CaptureSceneCustom()
     }
 }
 
-void ASceneCaptureSensor::SendGBufferTexture(FGBufferData* GBuffer)
+void ASceneCaptureSensor::SendGBufferTextures(FGBufferData* GBuffer)
 {
-    SendGBufferTextures(*this, *GBuffer);
+    SendGBufferTexturesInternal(*this, *GBuffer);
 }
 
 void ASceneCaptureSensor::BeginPlay()

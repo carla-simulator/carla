@@ -26,7 +26,7 @@ public:
 
 protected:
 	
-  virtual void SendGBufferTexture(FGBufferData* GBuffer) override;
+  virtual void SendGBufferTextures(FGBufferData* GBuffer) override;
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 

@@ -6,19 +6,19 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Components/SceneCaptureComponent.h"
+#include "Components/SceneCaptureComponent2D.h"
 
-#include "SceneCaptureComponent_CARLA.generated.h"
+#include "SceneCaptureComponent2D_CARLA.generated.h"
 
 
 
 UCLASS(hidecategories=(Collision, Object, Physics, SceneComponent, Mobility))
-class CARLA_API USceneCaptureComponent_CARLA : public USceneCaptureComponent
+class CARLA_API USceneCaptureComponent2D_CARLA : public USceneCaptureComponent2D
 {
 	GENERATED_BODY()
 public:
 
-    USceneCaptureComponent_CARLA(const FObjectInitializer& = FObjectInitializer::Get());
+    USceneCaptureComponent2D_CARLA(const FObjectInitializer& = FObjectInitializer::Get());
 
     const AActor* ViewActor;
 

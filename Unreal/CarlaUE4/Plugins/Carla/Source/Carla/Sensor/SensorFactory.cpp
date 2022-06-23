@@ -142,6 +142,7 @@ FActorSpawnResult ASensorFactory::SpawnActor(
     {
       SceneCaptureSensor->CameraGBuffers.SceneColor.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.SceneDepth.SetDataStream(GameInstance->GetServer().OpenStream());
+      SceneCaptureSensor->CameraGBuffers.SceneStencil.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.GBufferA.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.GBufferB.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.GBufferC.SetDataStream(GameInstance->GetServer().OpenStream());
@@ -150,6 +151,8 @@ FActorSpawnResult ASensorFactory::SpawnActor(
       SceneCaptureSensor->CameraGBuffers.GBufferF.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.Velocity.SetDataStream(GameInstance->GetServer().OpenStream());
       SceneCaptureSensor->CameraGBuffers.SSAO.SetDataStream(GameInstance->GetServer().OpenStream());
+      SceneCaptureSensor->CameraGBuffers.CustomDepth.SetDataStream(GameInstance->GetServer().OpenStream());
+      SceneCaptureSensor->CameraGBuffers.CustomStencil.SetDataStream(GameInstance->GetServer().OpenStream());
     }
   }
   UGameplayStatics::FinishSpawningActor(Sensor, Transform);

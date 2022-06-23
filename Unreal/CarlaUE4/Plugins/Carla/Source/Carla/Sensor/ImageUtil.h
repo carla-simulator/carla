@@ -7,21 +7,21 @@ class FRHIGPUTextureReadback;
 
 namespace ImageUtil
 {
-    TArray<FColor> ExtractTexturePixelsFromReadback(
-        FRHICommandListImmediate& RHICommandList,
-        FRHIGPUTextureReadback* Readback,
+    void DecodePixelsByFormat(
+        void* PixelData,
+        int32 SourcePitch,
         FIntPoint SourceExtent,
         FIntPoint DestinationExtent,
-        EPixelFormat Format);
-    
-    inline TArray<FColor> ExtractTexturePixelsFromReadback(
-        FRHIGPUTextureReadback* Readback,
+        EPixelFormat Format,
+        FReadSurfaceDataFlags Flags,
+        TArrayView<FColor> Out);
+
+    void DecodePixelsByFormat(
+        void* PixelData,
+        int32 SourcePitch,
         FIntPoint SourceExtent,
         FIntPoint DestinationExtent,
-        EPixelFormat Format)
-    {
-        return ExtractTexturePixelsFromReadback(
-            FRHICommandListExecutor::GetImmediateCommandList(),
-            Readback, SourceExtent, DestinationExtent, Format);
-    }
+        EPixelFormat Format,
+        FReadSurfaceDataFlags Flags,
+        TArrayView<FLinearColor> Out);
 }
