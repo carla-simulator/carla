@@ -466,10 +466,10 @@ private:
       FGBufferData& GBufferData,
       EGBufferTextureID TextureID)
   {
-      using PixelType = std::conditional_t<
-          std::is_same_v<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>,
+      using PixelType = typename std::conditional<
+          std::is_same<std::remove_reference_t<CameraGBufferT>, FCameraGBufferUint8>::value,
             FColor,
-            FLinearColor>;
+            FLinearColor>::type;
       if (!GBufferData.WaitForTextureTransfer(TextureID))
           return;
       void* PixelData;
