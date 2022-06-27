@@ -100,6 +100,27 @@ ATrafficLightManager::ATrafficLightManager()
     TSubclassOf<AActor> SpeedLimitModel = SpeedLimit90Finder.Class;
     SpeedLimitModels.Add("90", SpeedLimitModel);
   }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit100Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit100" ) );
+  if (SpeedLimit100Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit100Finder.Class;
+    SpeedLimitModels.Add("100", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit110Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit110" ) );
+  if (SpeedLimit110Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit110Finder.Class;
+    SpeedLimitModels.Add("110", SpeedLimitModel);
+  }
+  static ConstructorHelpers::FClassFinder<AActor> SpeedLimit120Finder(
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_SpeedLimit120" ) );
+  if (SpeedLimit120Finder.Succeeded())
+  {
+    TSubclassOf<AActor> SpeedLimitModel = SpeedLimit120Finder.Class;
+    SpeedLimitModels.Add("120", SpeedLimitModel);
+  }
   TrafficLightGroupMissingId = -2;
 }
 
