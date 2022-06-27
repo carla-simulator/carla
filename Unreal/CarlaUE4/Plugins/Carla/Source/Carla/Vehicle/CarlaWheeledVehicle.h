@@ -22,7 +22,9 @@
 #include "VehicleAnimInstance.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
+ 	
 
+#include "FoliageInstancedStaticMeshComponent.h"
 #include "CoreMinimal.h"
 
 //-----CARSIM--------------------------------
@@ -327,7 +329,7 @@ private:
   ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
-  UBoxComponent *VehicleBounds;
+  UBoxComponent *VehicleBounds;  
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   UVehicleVelocityControl* VelocityControl;
@@ -354,6 +356,20 @@ private:
   carla::rpc::VehicleFailureState FailureState = carla::rpc::VehicleFailureState::None;
 
 public:
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
+  float DetectionSize {200.0f};
+  
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
+  mutable FBox FoliageBoundingBox;
+
+  UFUNCTION()
+  TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;  
+
+  UFUNCTION(BlueprintCallable)
+  void DrawFoliageBoundingBox() const;
+
+  UFUNCTION()
+  bool IsInVehicleRange(const FVector& Location) const;
 
   /// Set the rotation of the car wheels indicated by the user
   /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
@@ -384,7 +400,7 @@ public:
 //-------------------------------------------
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
-  bool bIsNWVehicle = false;
+  bool bIsNWVehicle = false;  
 
   void SetRolloverFlag();
 

@@ -55,12 +55,20 @@ public:
 protected:
 
   UFUNCTION(BlueprintCallable)
-  void OnOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+  void OnBeginOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
       AActor *OtherActor,
       UPrimitiveComponent *OtherComp,
       int32 OtherBodyIndex,
       bool bFromSweep,
       const FHitResult &SweepResult);
+
+  UFUNCTION(BlueprintCallable)
+  void OnEndOverlapTriggerBox(UPrimitiveComponent *OverlappedComp,
+      AActor *OtherActor,
+      UPrimitiveComponent *OtherComp,
+      int32 OtherBodyIndex);
+
+
 
 private:
 

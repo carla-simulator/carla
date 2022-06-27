@@ -53,22 +53,24 @@ void TrafficLightStage::Update(const unsigned long index) {
     }
     // The vehicle is currently at a non signalized junction, so handle its priorities.
     // Don't use the next condition as bounding boxes might switch to green
-    else if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end()){
-
+    else if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end())
+    {
       if (!look_ahead_point->CheckJunction()) {
         // Very close to the junction exit, forget about it.
         RemoveActor(ego_actor_id);
       }
       else {
         auto junction_id = junction->GetId();
-        auto& exiting_vehicles = exiting_vehicles_map.at(junction_id);
-        if (std::find(exiting_vehicles.begin(), exiting_vehicles.end(), ego_actor_id) != exiting_vehicles.end()) {
-          // The vehicle is exitting the junction.
-          traffic_light_hazard =  false;
-        }
-        else {
-          // Vehicle entering the junction, handle it
-          traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction, waypoint_buffer, current_timestamp);
+        if (exiting_vehicles_map.find(junction_id) != exiting_vehicles_map.end()) {
+          auto& exiting_vehicles = exiting_vehicles_map.at(junction_id);
+          if (std::find(exiting_vehicles.begin(), exiting_vehicles.end(), ego_actor_id) != exiting_vehicles.end()) {
+            // The vehicle is exitting the junction.
+            traffic_light_hazard =  false;
+          }
+          else {
+            // Vehicle entering the junction, handle it
+            traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction, waypoint_buffer, current_timestamp);
+          }
         }
       }
     }
@@ -116,7 +118,6 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
   auto junction_id = junction->GetId();
 
   auto& entering_vehicles = entering_vehicles_map.at(junction_id);
-  auto& exiting_vehicles = exiting_vehicles_map.at(junction_id);
 
   if (vehicle_stop_time.find(ego_actor_id) == vehicle_stop_time.end()) {
     // Ensure the vehicle stops before doing anything else
@@ -142,7 +143,7 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
         // Remove it from the entry data, letting the next one enter it
         entering_vehicles.pop_front();
         vehicle_stop_time.erase(ego_actor_id);
-        exiting_vehicles.push_back(ego_actor_id);
+        exiting_vehicles_map.at(junction_id).push_back(ego_actor_id);
       }
     }
 
@@ -150,7 +151,6 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
     // Only one vehicle can be entering the junction, so stop the rest.
     traffic_light_hazard = true;
   }
-
   return traffic_light_hazard;
 }
 
