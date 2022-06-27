@@ -4,34 +4,51 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#pragma once
+#pragma onceFoliages
 
 #include "GameFramework/Actor.h"
-#include "Components/StaticMeshComponent.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Components/StaticMeshComponent.h"	
 
+#include "Containers/Array.h"
 #include "VegetationSpawner.generated.h"
-
-
-USTRUCT()
-struct FSpawnedFoliage
-{
-  GENERATED_BODY()
-  bool InUse {false};
-  UInstancedStaticMeshComponent* Mesh {nullptr};
-  TArray<int32> Indices {};
-  TArray<FTransform> Transforms {};
-  TArray<AActor*> SpawnedActors {};
-};
 
 USTRUCT()
 struct FFoliageBlueprintCache
 {
   GENERATED_BODY()
-  FString Path {};
   FString BPClassName {};
   TSubclassOf<AActor> SpawnedClass { nullptr };
 
-  void GetBPName();
+  FFoliageBlueprintCache() = default;
+  FFoliageBlueprintCache(const FString& Path);
+  bool IsValid() const;
+
+private:
+  void Init(const FString& Path);
+  FString GetVersionFromFString(const FString& String);
+};
+
+USTRUCT()
+struct FLevelFoliage
+{
+  GENERATED_BODY()
+  UInstancedStaticMeshComponent* Mesh {nullptr};
+  TArray<int32> IndicesInUse {};
+  TArray<FTransform> Transforms {};
+  TArray<AActor*> SpawnedActors {};
+};
+
+
+USTRUCT()
+struct FPooledFoliage
+{
+  GENERATED_BODY()
+  AActor* Actor { nullptr };
+  bool InUse { false };
+
+  void EnableActor();
+  void DisableActor();
 };
 
 UCLASS()
@@ -53,6 +70,12 @@ public:
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   bool SpawnPlants {true};
 
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  float SpawnScale {1.0f};
+
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  int32 InitialPoolSize {5};
+
   /// @}
   // ===========================================================================
   /// @name Overriden from AActor
@@ -64,26 +87,25 @@ protected:
   virtual void BeginPlay() override;
   virtual void Tick(float DeltaTime) override;
 
-
 private:
-  void CheckForProcedurals();
-  void UpdateVehiclesInLevel();
-  void UpdateProceduralInstanceCount();
-  void UpdateFoliage(FSpawnedFoliage& Foliage, TArray<int32>& VehiclesDetection);
-  void Default();
-  FFoliageBlueprintCache FindInCache(const FString& Path);
-  AActor* SpawnFoliage(const FFoliageBlueprintCache& CacheBPClass, const FTransform& FoliageTransform);
-  FFoliageBlueprintCache GetClassFromPath(const FString& Path);
+  void GetVehiclesInLevel();
+  void GetFoliageTypesInLevel();
+  void CreatePools();
   bool IsFoliageTypeEnabled(const FString& Path);
-  FString GetVersionFromFString(const FString& string);
-  bool IsInstancedStaticMeshComponentLoaded(const UInstancedStaticMeshComponent* Mesh);
+  bool FindInCache(const FString& Path) const;
+  FFoliageBlueprintCache GetBlueprintFromCache(const FString& Path) const;
+  bool StillInUse(const FTransform& Transform);
+  AActor* GetFoliageFromPool(const FFoliageBlueprintCache& FoliageBlueprint);
+  void HideFoliage(const FFoliageBlueprintCache& FoliageBlueprint, AActor* Actor);
+  FPooledFoliage CreatePooledFoliage(const FFoliageBlueprintCache& FoliageBlueprint) const;
+  void SpawnFoliage(AActor* Actor, const FTransform& FoliageTransform);
+  bool AddFoliageToCache(const FFoliageBlueprintCache& NewElement);
 
+  AActor* CreateFoliage(const FFoliageBlueprintCache& CacheBPClass, const FTransform& FoliageTransform);
 
 private:
   TArray<AActor*> VehiclesInLevel;
-  TArray<FSpawnedFoliage> ProceduralInstances;
-  TMap<FString, FFoliageBlueprintCache> FoliageCache;
-  bool Defaulted {false};
-
+  TArray<FLevelFoliage> FoliageTypesInLevel;
+  TArray<FFoliageBlueprintCache> FoliageCache;
+  TMap<FString, TArray<FPooledFoliage>> FoliagePool;
 };
-

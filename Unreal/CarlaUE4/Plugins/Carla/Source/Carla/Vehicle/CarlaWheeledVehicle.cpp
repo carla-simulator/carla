@@ -199,20 +199,22 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 }
 
-UFUNCTION()
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);  
+  return FoliageBoundingBox.IsInsideOrOn(Location);
+}
+
+void ACarlaWheeledVehicle::UpdateDetectionBox()
 {
   const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
   FBox Box = FBox(-Vec, Vec);
   FoliageBoundingBox = Box.TransformBy(GetActorTransform());
-  return FoliageBoundingBox.IsInsideOrOn(Location);
 }
 
-TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
+const TArray<int32> ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const
 {  
-  const FVector Vec { DetectionSize, DetectionSize, DetectionSize};
-  FBox Box = FBox(-Vec, Vec);
-  FoliageBoundingBox = Box.TransformBy(GetActorTransform());
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::GetFoliageInstancesCloseToVehicle);
   return Component->GetInstancesOverlappingBox(FoliageBoundingBox);
 }
 

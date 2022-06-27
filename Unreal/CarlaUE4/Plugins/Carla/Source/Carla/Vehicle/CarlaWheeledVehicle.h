@@ -360,10 +360,13 @@ public:
   float DetectionSize {200.0f};
   
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
-  mutable FBox FoliageBoundingBox;
+  FBox FoliageBoundingBox;
 
   UFUNCTION()
-  TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;  
+  void UpdateDetectionBox();
+
+  UFUNCTION()
+  const TArray<int32> GetFoliageInstancesCloseToVehicle(const UInstancedStaticMeshComponent* Component) const;  
 
   UFUNCTION(BlueprintCallable)
   void DrawFoliageBoundingBox() const;

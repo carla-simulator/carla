@@ -249,15 +249,5 @@ private:
 
   UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   float MaxRoll = 180.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float XMultiplier = 1.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float YMultiplier = 1.0f;
-
-  UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
-  float ZMultiplier = 1.0f;
-
 };
 
