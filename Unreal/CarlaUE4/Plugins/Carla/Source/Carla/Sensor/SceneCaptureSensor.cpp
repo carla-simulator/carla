@@ -7,7 +7,7 @@
 #include "Carla.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "ImageUtil.h"
+#include "Carla/Sensor/ImageUtil.h"
 
 /*
 #include "Components/DrawFrustumComponent.h"

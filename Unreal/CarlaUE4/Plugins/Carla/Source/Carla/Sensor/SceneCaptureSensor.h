@@ -15,6 +15,7 @@
 
 #include <type_traits>
 
+#include "Carla/Sensor/ImageUtil.h"
 #include "SceneCaptureSensor.generated.h"
 
 
