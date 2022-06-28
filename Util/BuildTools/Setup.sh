@@ -724,6 +724,70 @@ mkdir -p ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 cp ${PATCHELF_EXE} ${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin/
 
 # ==============================================================================
+# -- Download libtorch and dependencies --------------------------------------------------
+# ==============================================================================
+
+LIBTORCH_BASENAME=libtorch
+
+LIBTORCH_PATH=${PWD}/${LIBTORCH_BASENAME}
+LIBTORCH_INCLUDE=${LIBTORCH_PATH}/include
+LIBTORCH_LIB=${LIBTORCH_PATH}/lib
+
+function build_torch_extension {
+
+  LIB_SOURCE=$1
+  LIB_INSTALL=$2
+  LIB_REPO=$3
+  if [[ ! -d ${LIB_INSTALL} ]] ; then
+    if [[ ! -d ${LIB_SOURCE} ]] ; then
+      mkdir -p ${LIB_SOURCE}
+      log "${LIB_REPO}"
+      git clone ${LIB_REPO} ${LIB_SOURCE}
+      mkdir -p ${LIB_SOURCE}/build
+    fi
+    pushd ${LIB_SOURCE}/build >/dev/null
+
+    cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DCMAKE_PREFIX_PATH="${LIBTORCH_PATH}" \
+        -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
+        -DCMAKE_INSTALL_PREFIX="${LIB_INSTALL}" \
+        -DWITH_CUDA=ON \
+        ..
+    
+    make
+    make install
+    popd >/dev/null
+  fi
+
+}
+
+#LibtorchScatter
+LIBTORCHSCATTER_BASENAME=libtorchscatter
+LIBTORCHSCATTER_SOURCE_DIR=${PWD}/${LIBTORCHSCATTER_BASENAME}-source
+LIBTORCHSCATTER_INSTALL_DIR=${PWD}/${LIBTORCHSCATTER_BASENAME}-install
+LIBTORCHSCATTER_INCLUDE=${LIBTORCHSCATTER_INSTALL_DIR}/include
+LIBTORCHSCATTER_LIB=${LIBTORCHSCATTER_INSTALL_DIR}/lib
+LIBTORCHSCATTER_REPO="-b 2.0.9 https://github.com/rusty1s/pytorch_scatter.git"
+
+# build_torch_extension ${LIBTORCHSCATTER_SOURCE_DIR} ${LIBTORCHSCATTER_INSTALL_DIR} "${LIBTORCHSCATTER_REPO}"
+
+LIBTORCHCLUSTER_BASENAME=libtorchcluster
+LIBTORCHCLUSTER_SOURCE_DIR=${PWD}/${LIBTORCHCLUSTER_BASENAME}-source
+LIBTORCHCLUSTER_INSTALL_DIR=${PWD}/${LIBTORCHCLUSTER_BASENAME}-install
+LIBTORCHCLUSTER_INCLUDE=${LIBTORCHCLUSTER_INSTALL_DIR}/include
+LIBTORCHCLUSTER_LIB=${LIBTORCHCLUSTER_INSTALL_DIR}/lib
+LIBTORCHCLUSTER_REPO="-b 2.0.9 https://github.com/rusty1s/pytorch_cluster.git"
+
+LIBTORCHSPARSE_BASENAME=libtorchsparse
+LIBTORCHSPARSE_SOURCE_DIR=${PWD}/${LIBTORCHSPARSE_BASENAME}-source
+LIBTORCHSPARSE_INSTALL_DIR=${PWD}/${LIBTORCHSPARSE_BASENAME}-install
+LIBTORCHSPARSE_INCLUDE=${LIBTORCHSPARSE_INSTALL_DIR}/include
+LIBTORCHSPARSE_LIB=${LIBTORCHSPARSE_INSTALL_DIR}/lib
+LIBTORCHSPARSE_REPO="-b 2.0.9 https://github.com/rusty1s/pytorch_sparse.git"
+
+
+
+
+# ==============================================================================
 # -- Generate Version.h --------------------------------------------------------
 # ==============================================================================
 
@@ -761,7 +825,7 @@ set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wduplicate-enum -Wnon-virtual-dtor -Wh
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wconversion -Wfloat-overflow-conversion" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
-set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O0 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -810,6 +874,11 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHCLUSTER_INSTALL_DIR}")
+  list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSPARSE_INSTALL_DIR}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBSTDCXX_INCLUDE}")

@@ -100,6 +100,7 @@ if ${REMOVE_INTERMEDIATE} ; then
   log "Cleaning intermediate files and folders."
 
   rm -Rf ${LIBCARLA_BUILD_SERVER_FOLDER}* ${LIBCARLA_BUILD_CLIENT_FOLDER}*
+  rm -Rf ${LIBCARLA_BUILD_PYTORCH_FOLDER}* ${LIBCARLA_BUILD_PYTORCH_FOLDER}*
   rm -Rf ${LIBCARLA_INSTALL_SERVER_FOLDER} ${LIBCARLA_INSTALL_CLIENT_FOLDER}
 
 fi
@@ -117,13 +118,17 @@ function build_libcarla {
   CMAKE_EXTRA_OPTIONS=''
 
   if [ $1 == Server ] ; then
-    M_TOOLCHAIN=${LIBCPP_TOOLCHAIN_FILE}
+    M_TOOLCHAIN=""
     M_BUILD_FOLDER=${LIBCARLA_BUILD_SERVER_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == Client ] ; then
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_BUILD_CLIENT_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_CLIENT_FOLDER}
+  elif [ $1 == Pytorch ] ; then
+    M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
+    M_BUILD_FOLDER=${LIBCARLA_BUILD_PYTORCH_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
+    M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ClientRSS ] ; then
     BUILD_TYPE='Client'
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
@@ -197,6 +202,7 @@ fi
 if { ${BUILD_SERVER} && ${BUILD_OPTION_RELEASE}; }; then
 
   build_libcarla Server Release
+  build_libcarla Pytorch Release
 
 fi
 

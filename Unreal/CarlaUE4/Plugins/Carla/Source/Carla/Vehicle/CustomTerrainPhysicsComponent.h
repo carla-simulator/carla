@@ -10,6 +10,10 @@
 #include "Components/PrimitiveComponent.h"
 #include "Carla/Math/DVector.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Engine/TextureRenderTarget2D.h"
+THIRD_PARTY_INCLUDES_START
+#include <carla/pytorch/pytorch.h>
+THIRD_PARTY_INCLUDES_END
 
 #include <unordered_map>
 #include <vector>
@@ -35,13 +39,11 @@ private:
 };
 struct FDenseTile
 {
-  using FRtree = carla::geom::PointCloudRtree<FParticle>;
 
   void InitializeTile(float ParticleSize, float Depth, 
       FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   std::vector<FParticle> Particles;
-  FRtree Rtree;
   FDVector TilePosition;
 };
 class FSparseHighDetailMap
@@ -94,6 +96,8 @@ class UCustomTerrainPhysicsComponent : public UActorComponent
 
 public:
 
+  UCustomTerrainPhysicsComponent(const FObjectInitializer& ObjectInitializer);
+
   virtual void BeginPlay() override;
   virtual void TickComponent(float DeltaTime,
       ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
@@ -114,6 +118,9 @@ public:
     UTexture2D *HeightMap;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UTexture2D *TextureToUpdate;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString NeuralModelFile = "";
 private:
 
@@ -132,5 +139,6 @@ private:
   FSparseHighDetailMap SparseMap;
 
   TArray<ACarlaWheeledVehicle*> Vehicles;
+  carla::learning::NeuralModel TerramechanicsModel;
 
 };

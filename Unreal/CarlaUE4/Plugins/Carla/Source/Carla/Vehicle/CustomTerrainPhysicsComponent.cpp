@@ -10,7 +10,9 @@
 #include "CollisionQueryParams.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
-// #include <carla/pytorch/pytorch.h>
+#include "Engine/Texture2D.h"
+#include "Rendering/Texture2DResource.h"
+#include "Engine/TextureRenderTarget2D.h"
 
 #include <algorithm>
 
@@ -197,11 +199,9 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   // torch::Tensor tensor = torch::rand({2, 3});
   // std::cout << tensor << std::endl;
   
-  // carla::learning::test_learning();
-  // carla::learning::NeuralModel Model;
-  // Model.LoadModel(TCHAR_TO_ANSI(*NeuralModelFile));
+  carla::learning::test_learning();
+  TerramechanicsModel.LoadModel(TCHAR_TO_ANSI(*NeuralModelFile));
 
- 
   SparseMap.Clear();
   RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
   if (!RootComponent)
@@ -220,14 +220,57 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,0.f), WorldSize/100.f);
 }
 
+UCustomTerrainPhysicsComponent::UCustomTerrainPhysicsComponent(const FObjectInitializer& ObjectInitializer)
+  : Super(ObjectInitializer)
+{
+  PrimaryComponentTick.bCanEverTick = true;
+}
+
 void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime, 
     ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent);
   Super::TickComponent(DeltaTime,TickType,ThisTickFunction);
+  TerramechanicsModel.Forward();
   for (ACarlaWheeledVehicle* Vehicle : Vehicles)
   {
 
   }
+  
+  if(!TextureToUpdate)
+  {
+    UE_LOG(LogCarla, Log, TEXT("Missing texture"));
+    return;
+  }
+
+  UE_LOG(LogCarla, Log, TEXT("Updating texture gamethread with %d Pixels"), TextureToUpdate->GetSizeX()*TextureToUpdate->GetSizeY());
+  TArray<uint8_t> Data;
+  {
+  TRACE_CPUPROFILER_EVENT_SCOPE(SetupData);
+  Data.SetNum(TextureToUpdate->GetSizeX()*TextureToUpdate->GetSizeY());
+  // for(int i = 0; i < Data.Num(); i++)
+  // {
+  //   Data[i] = static_cast<uint8_t>(FMath::RandRange(0,255));
+  // }
+  }
+  ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
+  (
+	[Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
+    FUpdateTextureRegion2D region;
+    region.SrcX = 0;
+    region.SrcY = 0;
+    region.DestX = 0;
+    region.DestY = 0;
+    region.Width = Texture->GetSizeX();
+    region.Height = Texture->GetSizeY();
+
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    RHIUpdateTexture2D(
+        resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &Data[0]);
+    UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
+	});
 }
 
 // TArray<FHitResult> UCustomTerrainPhysicsComponent::SampleTerrainRayCast(
