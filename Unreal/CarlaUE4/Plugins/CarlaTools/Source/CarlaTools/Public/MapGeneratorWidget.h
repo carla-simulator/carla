@@ -118,6 +118,9 @@ public:
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  bool GenerateWaterFromWorld(const FString RiverPresetMapName, TSubclassOf<class AActor> RiverClass);
+
   /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
   /// to the map specified in @a MetaInfo
   UFUNCTION(Category="MapGenerator", BlueprintCallable)

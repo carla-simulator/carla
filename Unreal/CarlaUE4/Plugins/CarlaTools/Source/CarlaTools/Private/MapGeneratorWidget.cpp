@@ -219,9 +219,14 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
 
   UWorld* World = GetWorld();
 
-  float ActorZCoord = GetLandscapeSurfaceHeight(World, 0, 0, false);
-  FVector Location(20000, 20000, ActorZCoord); // Auxiliar values for x and y coords
-  FRotator Rotation(0,0,0);
+  float XCoord = 2000;
+  float YCoord = 2000;
+
+  float ZRot = 50;
+
+  float ActorZCoord = GetLandscapeSurfaceHeight(World, XCoord, YCoord, false);
+  FVector Location(XCoord, YCoord, ActorZCoord+5); // Auxiliar values for x and y coords
+  FRotator Rotation(0, ZRot, 0);
   FActorSpawnParameters SpawnInfo;
   
   
@@ -243,6 +248,50 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
   }
 
   return RiverActor;
+}
+
+bool GenerateWaterFromWorld(const FString RiverPresetMapName, TSubclassOf<class AActor> RiverClass)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Generating Rivers from world %s"), 
+        *CUR_CLASS_FUNC_LINE, *RiverPresetMapName);
+
+  UWorld* RiverPresetWorld =  LoadObject<UWorld>(nullptr, *RiverPresetMapName);
+
+  TArray<AActor*> RiverPresetActors;
+
+  UGameplayStatics::GetAllActorsOfClass(RiverPresetWorld, RiverClass, RiverPresetActors);
+
+  // UWorld* World = GetWorld();
+
+  // float XCoord = 2000;
+  // float YCoord = 2000;
+
+  // float ZRot = 50;
+
+  // float ActorZCoord = GetLandscapeSurfaceHeight(World, XCoord, YCoord, false);
+  // FVector Location(XCoord, YCoord, ActorZCoord+5); // Auxiliar values for x and y coords
+  // FRotator Rotation(0, ZRot, 0);
+  // FActorSpawnParameters SpawnInfo;
+  
+  
+  // AActor* RiverActor =  World->SpawnActor<AActor>(
+  //     RiverClass, 
+  //     Location, 
+  //     Rotation, 
+  //     SpawnInfo);
+
+  // USplineComponent* RiverSpline = RiverActor->FindComponentByClass<USplineComponent>();
+
+  // int NumberOfPoints = RiverSpline->GetNumberOfSplinePoints();
+
+  // for(int i = 0; i < NumberOfPoints; i++)
+  // {
+  //   FVector PointPosition = RiverSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::World);
+  //   PointPosition.Z = GetLandscapeSurfaceHeight(World, PointPosition.X, PointPosition.Y, false);
+  //   RiverSpline->SetLocationAtSplinePoint(i, PointPosition, ESplineCoordinateSpace::World, true);
+  // }
+
+  return true;
 }
 
 AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
