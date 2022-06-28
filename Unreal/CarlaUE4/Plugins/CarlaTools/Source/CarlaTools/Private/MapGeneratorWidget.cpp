@@ -250,7 +250,7 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
   return RiverActor;
 }
 
-bool GenerateWaterFromWorld(const FString RiverPresetMapName, TSubclassOf<class AActor> RiverClass)
+bool UMapGeneratorWidget::GenerateWaterFromWorld(const FString RiverPresetMapName, TSubclassOf<class AActor> RiverClass)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Generating Rivers from world %s"), 
         *CUR_CLASS_FUNC_LINE, *RiverPresetMapName);
