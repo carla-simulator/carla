@@ -487,7 +487,7 @@ void ASceneCaptureSensor::CaptureSceneCustom()
     if (CameraGBuffers.CustomDepth.bIsUsed)     GBufferPtr->MarkAsRequested(EGBufferTextureID::CustomDepth);
     if (CameraGBuffers.CustomStencil.bIsUsed)   GBufferPtr->MarkAsRequested(EGBufferTextureID::CustomStencil);
 
-    if (GBufferPtr->DesiredTexturesMask != 0)
+    if (GBufferPtr->DesiredTexturesMask == 0)
     {
         CaptureComponent2D->CaptureScene();
         return;
