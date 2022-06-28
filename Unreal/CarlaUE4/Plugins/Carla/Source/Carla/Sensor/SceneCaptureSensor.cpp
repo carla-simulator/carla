@@ -469,38 +469,36 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
 #endif
 }
 
-static constexpr auto           max_transfers_active = 3;
-static std::atomic_ptrdiff_t    num_transfers_active;
-
 void ASceneCaptureSensor::CaptureSceneCustom()
 {
-    auto GBufferPtr = new FGBufferData();
-    auto& GBuffer = *GBufferPtr;
-    if (CameraGBuffers.SceneColor.bIsUsed)      GBuffer.MarkAsRequested(EGBufferTextureID::SceneColor);
-    if (CameraGBuffers.SceneDepth.bIsUsed)      GBuffer.MarkAsRequested(EGBufferTextureID::SceneDepth);
-    if (CameraGBuffers.SceneStencil.bIsUsed)    GBuffer.MarkAsRequested(EGBufferTextureID::SceneStencil);
-    if (CameraGBuffers.GBufferA.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferA);
-    if (CameraGBuffers.GBufferB.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferB);
-    if (CameraGBuffers.GBufferC.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferC);
-    if (CameraGBuffers.GBufferD.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferD);
-    if (CameraGBuffers.GBufferE.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferE);
-    if (CameraGBuffers.GBufferF.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::GBufferF);
-    if (CameraGBuffers.Velocity.bIsUsed)        GBuffer.MarkAsRequested(EGBufferTextureID::Velocity);
-    if (CameraGBuffers.SSAO.bIsUsed)            GBuffer.MarkAsRequested(EGBufferTextureID::SSAO);
-    if (CameraGBuffers.CustomDepth.bIsUsed)     GBuffer.MarkAsRequested(EGBufferTextureID::CustomDepth);
-    if (CameraGBuffers.CustomStencil.bIsUsed)   GBuffer.MarkAsRequested(EGBufferTextureID::CustomStencil);
+    auto GBufferPtr = MakeUnique<FGBufferData>();
 
-    if (GBuffer.DesiredTexturesMask != 0)
-    {
-        GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
-        CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
-        // SendGBufferTextures(GBufferPtr);
-        AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [this, GBufferPtr] { SendGBufferTextures(GBufferPtr); });
-    }
-    else
+    if (CameraGBuffers.SceneColor.bIsUsed)      GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneColor);
+    if (CameraGBuffers.SceneDepth.bIsUsed)      GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneDepth);
+    if (CameraGBuffers.SceneStencil.bIsUsed)    GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneStencil);
+    if (CameraGBuffers.GBufferA.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferA);
+    if (CameraGBuffers.GBufferB.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferB);
+    if (CameraGBuffers.GBufferC.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferC);
+    if (CameraGBuffers.GBufferD.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferD);
+    if (CameraGBuffers.GBufferE.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferE);
+    if (CameraGBuffers.GBufferF.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferF);
+    if (CameraGBuffers.Velocity.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::Velocity);
+    if (CameraGBuffers.SSAO.bIsUsed)            GBufferPtr->MarkAsRequested(EGBufferTextureID::SSAO);
+    if (CameraGBuffers.CustomDepth.bIsUsed)     GBufferPtr->MarkAsRequested(EGBufferTextureID::CustomDepth);
+    if (CameraGBuffers.CustomStencil.bIsUsed)   GBufferPtr->MarkAsRequested(EGBufferTextureID::CustomStencil);
+
+    if (GBufferPtr->DesiredTexturesMask != 0)
     {
         CaptureComponent2D->CaptureScene();
+        return;
     }
+
+    GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
+    CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
+    AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]
+        {
+            SendGBufferTextures(GBuffer.Get());
+        });
 }
 
 void ASceneCaptureSensor::SendGBufferTextures(FGBufferData* GBuffer)
