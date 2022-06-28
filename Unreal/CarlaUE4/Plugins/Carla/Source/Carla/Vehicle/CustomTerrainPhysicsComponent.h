@@ -8,45 +8,67 @@
 
 #include "Components/ActorComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "Misc/ScopeLock.h"
+
 #include "Carla/Math/DVector.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include <unordered_map>
 #include <vector>
+#include <string>
 
 #include "CustomTerrainPhysicsComponent.generated.h"
 
 struct FParticle
 {
+  // It formats particle data to "XValue YValue ZValue RadiusValue \n"
+  std::string ToString() const;
+
+  // String received must have format "XValue YValue ZValue RadiusValue \n"
+  void ModifyDataFromString(const std::string& BaseString);
+
   FDVector Position; // position in m
   float Radius = 0.02f;
+
 };
+
 struct FHeightMapData
 {
   void InitializeHeightmap(UTexture2D* Texture, FDVector Size, FDVector Origin);
   float GetHeight(FDVector Position) const; // get height at a given global 2d position
   void Clear();
-private:
+// private:
   FDVector WorldSize;
   FDVector Offset;
   uint32_t Size_X;
   uint32_t Size_Y;
   std::vector<float> Pixels;
 };
+
 struct FDenseTile
 {
-  using FRtree = carla::geom::PointCloudRtree<FParticle>;
-
   void InitializeTile(float ParticleSize, float Depth, 
       FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
+  
+  // Format DenseTile to "PosX PosY PosZ\n Particles"
+  // WARNING LookAt ParticlesFormat
+  std::string ToString() const;
+
+  // String received must have format "PosX PosY PosZ\n ParticlesList"
+  void ModifyDataFromString(const std::string& BaseString);
+
   std::vector<FParticle> Particles;
-  FRtree Rtree;
   FDVector TilePosition;
+
 };
 class FSparseHighDetailMap
 {
 public:
+
+  inline float GetTileSize() const {
+    return TileSize;
+  }
 
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
 
@@ -66,14 +88,25 @@ public:
   void InitializeMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size = 1.f);
 
+  void LoadTilesAtPosition(FDVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+  
+  void Update(FVector Position, float RadiusX, float RadiusY);
+
+  void SaveMap();
+
   void Clear();
 
 private:
   std::unordered_map<uint64_t, FDenseTile> Map;
+  std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
   FDVector Extension;
   float TileSize = 1.f; // 1m per tile
   FHeightMapData Heightmap;
+  FVector PositionToUpdate;
+  FCriticalSection Lock_Map; // UE4 Mutex
+  FCriticalSection Lock_Position; // UE4 Mutex
+
 };
 
 USTRUCT(BlueprintType)
@@ -87,14 +120,20 @@ struct FForceAtLocation
   FVector Location;
 };
 
+
+
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UCustomTerrainPhysicsComponent : public UActorComponent
 {
   GENERATED_BODY()
 
 public:
-
+  UCustomTerrainPhysicsComponent();
+  
   virtual void BeginPlay() override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+  
   virtual void TickComponent(float DeltaTime,
       ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction);
 
@@ -110,11 +149,16 @@ public:
   UFUNCTION(BlueprintCallable)
   FVector GetTileCenter(FVector Position);
 
+  UFUNCTION(BlueprintCallable, Category="Tiles")
+  void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    UTexture2D *HeightMap;
+  UTexture2D *HeightMap;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString NeuralModelFile = "";
+  
+  FVector LastUpdatedPosition;
 private:
 
   void ApplyForces();
@@ -127,10 +171,28 @@ private:
   float RayCastRange = 10.0f;
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(1000,1000,1000);
+  UPROPERTY(EditAnywhere)
+  FVector Radius = FVector(10,10,10);
 
 
   FSparseHighDetailMap SparseMap;
-
   TArray<ACarlaWheeledVehicle*> Vehicles;
 
+	class FRunnableThread* Thread;
+	struct FTilesWorker* TilesWorker;
+};
+
+struct FTilesWorker : public FRunnable
+{
+	FTilesWorker(class UCustomTerrainPhysicsComponent* TerrainComp, FVector NewPosition, float NewRadiusX, float NewRadiusY );
+
+	virtual ~FTilesWorker() override;
+
+	virtual uint32 Run() override; 
+
+  class UCustomTerrainPhysicsComponent* CustomTerrainComp;
+  FVector Position;
+  float RadiusX; 
+  float RadiusY;
+  bool bShouldContinue = true;
 };
