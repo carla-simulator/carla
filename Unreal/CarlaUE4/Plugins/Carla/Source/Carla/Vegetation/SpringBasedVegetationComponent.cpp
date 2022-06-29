@@ -48,6 +48,24 @@
 #define OTHER_LOG(...)
 #endif
 
+static float ClampToPositiveDegrees(float d)
+{
+  if (d < 0.0f)
+  {
+    while (d < 0.0f)
+    {
+      d += 360.0f;
+    }
+  }
+  else
+  {
+    while (d <= 360.0f)
+    {
+      d -= 360.0f;
+    }
+  }
+  return d;
+}
 template <class T>
 static T GetSign(T n)
 {
@@ -800,27 +818,30 @@ void USpringBasedVegetationComponent::SolveEquationOfMotion(
     
     FRotator NewAngularVelocity = EigenVectorToRotator(FinalNewThetaVelocity);
     FRotator NewAngularAccel = EigenVectorToRotator(FinalNewThetaAccel);
-/*
-    if (abs(NewPitch) > MaxPitch){
-      NewPitch = GetSign(NewPitch) * MaxPitch;
+
+    const float ClampedNewPitch = ClampToPositiveDegrees(NewPitch);
+    const float ClampedNewYaw = ClampToPositiveDegrees(MaxYaw);
+    const float ClampedNewRoll = ClampToPositiveDegrees(MaxRoll);
+
+    if (ClampedNewPitch > MaxPitch){
+      NewPitch = ClampedNewPitch;
 
       NewAngularVelocity.Pitch = 0.0f;
       NewAngularAccel.Pitch = 0.0f;
     }
 
-    if (abs(NewYaw) > MaxYaw){
-      NewYaw = GetSign(NewYaw) * MaxYaw;
+    if (ClampedNewYaw > MaxYaw){
+      NewYaw = ClampedNewYaw;
 
       NewAngularVelocity.Yaw = 0.0f;
       NewAngularAccel.Yaw = 0.0f;
     }
 
-    if (abs(NewRoll) > MaxRoll){
-      NewRoll = GetSign(NewRoll) * MaxRoll;
+    if (ClampedNewRoll > MaxRoll){
+      NewRoll = ClampedNewRoll;
       NewAngularVelocity.Roll = 0.0f;
       NewAngularAccel.Roll = 0.0f;
     }
-    */
 
     FRotator NewAngle(
             RestRotator.Pitch + NewPitch,
