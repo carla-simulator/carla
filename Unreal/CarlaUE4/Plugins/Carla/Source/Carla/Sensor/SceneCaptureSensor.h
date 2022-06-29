@@ -13,6 +13,7 @@
 #include "Async/Async.h"
 #include "Renderer/Public/GBufferView.h"
 
+#include "ImageUtil.h"
 #include <type_traits>
 
 #include "SceneCaptureSensor.generated.h"
