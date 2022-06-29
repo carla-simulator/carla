@@ -410,7 +410,6 @@ public:
     FCameraGBufferUint8 SSAO;
     FCameraGBufferUint8 CustomDepth;
     FCameraGBufferUint8 CustomStencil;
-    FCriticalSection CS[FGBufferData::TextureCount];
   } CameraGBuffers;
 
 protected:
@@ -462,7 +461,6 @@ private:
   static void SendGBuffer(
       SensorT& self,
       CameraGBufferT& CameraGBuffer,
-      FCriticalSection& CS,
       FGBufferData& GBufferData,
       EGBufferTextureID TextureID)
   {
@@ -484,7 +482,6 @@ private:
       Flags.SetLinearToGamma(true);
       ImageUtil::DecodePixelsByFormat(PixelData, SourcePitch, SourceExtent, ViewExtent, Format, Flags, Pixels);
       GBufferData.UnmapTextureData(TextureID);
-      FScopeLock Guard(&CS);
       auto GBufferStream = CameraGBuffer.GetDataStream(self);
       auto Buffer = GBufferStream.PopBufferFromPool();
       Buffer.copy_from(carla::sensor::SensorRegistry::get<CameraGBufferT*>::type::header_offset, Pixels);
@@ -511,19 +508,19 @@ protected:
               auto ID = (EGBufferTextureID)i;
               switch (i)
               {
-              case 0:   SendGBuffer(self, C.SceneColor, C.CS[i], GBD, ID);    break;
-              case 1:   SendGBuffer(self, C.SceneDepth, C.CS[i], GBD, ID);    break;
-              case 2:   SendGBuffer(self, C.SceneStencil, C.CS[i], GBD, ID);  break;
-              case 3:   SendGBuffer(self, C.GBufferA, C.CS[i], GBD, ID);      break;
-              case 4:   SendGBuffer(self, C.GBufferB, C.CS[i], GBD, ID);      break;
-              case 5:   SendGBuffer(self, C.GBufferC, C.CS[i], GBD, ID);      break;
-              case 6:   SendGBuffer(self, C.GBufferD, C.CS[i], GBD, ID);      break;
-              case 7:   SendGBuffer(self, C.GBufferE, C.CS[i], GBD, ID);      break;
-              case 8:   SendGBuffer(self, C.GBufferF, C.CS[i], GBD, ID);      break;
-              case 9:   SendGBuffer(self, C.Velocity, C.CS[i], GBD, ID);      break;
-              case 10:  SendGBuffer(self, C.SSAO, C.CS[i], GBD, ID);          break;
-              case 11:  SendGBuffer(self, C.CustomDepth, C.CS[i], GBD, ID);   break;
-              case 12:  SendGBuffer(self, C.CustomStencil, C.CS[i], GBD, ID); break;
+              case 0:   SendGBuffer(self, C.SceneColor, GBD, ID);    break;
+              case 1:   SendGBuffer(self, C.SceneDepth, GBD, ID);    break;
+              case 2:   SendGBuffer(self, C.SceneStencil, GBD, ID);  break;
+              case 3:   SendGBuffer(self, C.GBufferA, GBD, ID);      break;
+              case 4:   SendGBuffer(self, C.GBufferB, GBD, ID);      break;
+              case 5:   SendGBuffer(self, C.GBufferC, GBD, ID);      break;
+              case 6:   SendGBuffer(self, C.GBufferD, GBD, ID);      break;
+              case 7:   SendGBuffer(self, C.GBufferE, GBD, ID);      break;
+              case 8:   SendGBuffer(self, C.GBufferF, GBD, ID);      break;
+              case 9:   SendGBuffer(self, C.Velocity, GBD, ID);      break;
+              case 10:  SendGBuffer(self, C.SSAO, GBD, ID);          break;
+              case 11:  SendGBuffer(self, C.CustomDepth, GBD, ID);   break;
+              case 12:  SendGBuffer(self, C.CustomStencil, GBD, ID); break;
               default:
                   abort();
               }

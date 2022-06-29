@@ -147,6 +147,26 @@ except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
 
+
+
+gbuffer_names = [
+    'Scene Color',
+    'Scene Depth',
+    'Scene Stencil',
+    'GBuffer A - WorldNormal + Object data)',
+    'GBuffer B - HDR + Shading model + selective output mask)',
+    'GBuffer C - Diffuse + indirect irradiance or ambient occlusion (depending on selective output mask)',
+    'GBuffer D - ...',
+    'GBuffer E - Precomputed shadow factor',
+    'GBuffer F - World tangent + anisotropy',
+    'Velocity',
+    'Screen-Space Ambient Occlusion',
+    'Custom Depth',
+    'Custom Stencil'
+]
+
+
+
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
@@ -466,21 +486,6 @@ class KeyboardControl(object):
                         except Exception:
                             pass
                 elif event.key == K_u:
-                    gbuffer_names = [
-                        'Scene Color',
-                        'Scene Depth',
-                        'Scene Stencil',
-                        'GBuffer A - WorldNormal + Object data)',
-                        'GBuffer B - HDR + Shading model + selective output mask)',
-                        'GBuffer C - Diffuse + indirect irradiance or ambient occlusion (depending on selective output mask)',
-                        'GBuffer D - ...',
-                        'GBuffer E - Precomputed shadow factor',
-                        'GBuffer F - World tangent + anisotropy',
-                        'Velocity',
-                        'Screen-Space Ambient Occlusion',
-                        'Custom Depth',
-                        'Custom Stencil'
-                    ]
                     world.camera_manager.next_gbuffer()
                     world.hud.notification(gbuffer_names[world.camera_manager.gbuffer_index])
                 elif event.key > K_0 and event.key <= K_9:
@@ -1206,7 +1211,7 @@ class CameraManager(object):
             attach_to=self._parent,
             attachment_type=self._camera_transforms[self.transform_index][1])
         weak_self = weakref.ref(self)
-        self.gbuffer_index = (self.gbuffer_index + 1) % 12
+        self.gbuffer_index = (self.gbuffer_index + 1) % len(gbuffer_names)
         self.sensor.listen_to_gbuffer(self.gbuffer_index, lambda image: CameraManager._parse_image(weak_self, image))
 
     def toggle_recording(self):
