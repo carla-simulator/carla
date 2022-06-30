@@ -349,32 +349,32 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
               std::cout << ">>> Material name: " << TCHAR_TO_UTF8(*MaterialName);
               if (MaterialName.Contains("RuralRoad_Road"))
               { // Worn out road with less asphalt and more gravel
-                std::cout << " -> Rural road" << std::endl;
+                std::cout << " -> Rural Road" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, RoadRuralMaterial);
               }
               else if (MaterialName.Contains("Asphalt1_Road"))
               { // City road made of asphalt
-                std::cout << " -> Asphalt road" << std::endl;
+                std::cout << " -> Asphalt Road" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, RoadCityMaterial);
               }
               else if (MaterialName.Contains("BoulevardStreet_Road"))
               { // City road made of asphalt. Used by the procedural decoration
-                std::cout << " -> Boulevard road" << std::endl;
+                std::cout << " -> Boulevard Road" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, RoadBoulevardMaterial);
               }
               else if (MaterialName.Contains("AvenueStreet_Road"))
               { // City road made of asphalt. Used by the procedural decoration
-                std::cout << " -> Avenue road" << std::endl;
+                std::cout << " -> Avenue Road" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, RoadAvenueMaterial);
               }
               else if (MaterialName.Contains("ElectricPole_Road"))
               { // City road made of asphalt. Used by the procedural decoration
-                std::cout << " -> Electric Pole road" << std::endl;
+                std::cout << " -> Electric Pole Road" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, RoadElectricPoleMaterial);
               }
               else
               { // City road made of asphalt. Used by the procedural decoration
-                std::cout << " -> Default road???" << std::endl;
+                std::cout << " -> Default Road???" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, RoadMaterial);
               }
             }
@@ -423,7 +423,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
               }
               else if (MaterialName.Contains("Yellow"))
               {
-                std::cout << " -> Default Yelloe Lane Marking???" << std::endl;
+                std::cout << " -> Default Yellow Lane Marking???" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, MarkingYellowMaterial);
               }
               else
@@ -439,7 +439,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
             for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
             {
               auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
-              std::cout << ">>> Material name: " << TCHAR_TO_UTF8(*MaterialName) << " -> Universal Curb!" << std::endl;
+              std::cout << ">>> Material name: " << TCHAR_TO_UTF8(*MaterialName) << " -> Universal Curb" << std::endl;
               MeshActor->GetStaticMeshComponent()->SetMaterial(i, CurbMaterial);
             }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
@@ -450,7 +450,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
             for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
             {
               auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
-              std::cout << ">>> Material name: " << TCHAR_TO_UTF8(*MaterialName) << " -> Universal Gutter!" << std::endl;
+              std::cout << ">>> Material name: " << TCHAR_TO_UTF8(*MaterialName) << " -> Universal Gutter" << std::endl;
               MeshActor->GetStaticMeshComponent()->SetMaterial(i, GutterMaterial);
             }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
@@ -569,7 +569,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
               }
               else
               {
-                std::cout << " -> Default Terrain" << std::endl;
+                std::cout << " -> Default Terrain???" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, TerrainMaterial);
               }
             }
@@ -578,7 +578,7 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
           else if (AssetName.Contains(SSTags::R_PROP))
           {
             // This might missidentify some props if the materials are the same as the guardrail ones
-            std::cout << ">> Asset is a Guardrail" << std::endl;
+            std::cout << ">> Asset is a Prop" << std::endl;
             for (int32 i = 0; i < MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials.Num(); ++i)
             {
               auto MaterialName = MeshActor->GetStaticMeshComponent()->GetStaticMesh()->StaticMaterials[i].ImportedMaterialSlotName.ToString();
@@ -595,23 +595,27 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
               }
               else if (MaterialName.Contains("Metal_Road"))
               {  // Ground with a lot of grass and some ground
-                std::cout << " -> Bridge Guardrail post" << std::endl;
+                std::cout << " -> Bridge Guardrail Post" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, BridgeGuardrailPostMaterial);
               }
               else if (MaterialName.Contains("Metal1_Prop"))
               {  // Ground with a lot of grass and some ground
-                std::cout << " -> Bridge Guardrail metal" << std::endl;
+                std::cout << " -> Bridge Guardrail Metal" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, BridgeGuardrailMetalMaterial);
               }
-              else if (MaterialName.Contains("Concrete1_Prop"))
+              else if (MaterialName.Contains("Concrete1_Prop") || MaterialName.Contains("Base_BridgeRalling_Prop"))
               {  // Ground with a lot of grass and some ground
-                std::cout << " -> Bridge Guardrail base" << std::endl;
+                std::cout << " -> Bridge Guardrail Base" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, BridgeGuardrailBaseMaterial);
               }
-              else if (MaterialName.Contains("Concrete1_Marking"))
+              else if (MaterialName.Contains("Concrete1_Marking") || MaterialName.Contains("Concrete2_rrx_marking"))
               {  // Ground with a lot of grass and some ground
-                std::cout << " -> Highway wall" << std::endl;
+                std::cout << " -> Highway Wall" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, SafetyWallHighwayMaterial);
+              }
+              else
+              {
+                std::cout << " -> Unidentified Prop???" << std::endl;
               }
             }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
