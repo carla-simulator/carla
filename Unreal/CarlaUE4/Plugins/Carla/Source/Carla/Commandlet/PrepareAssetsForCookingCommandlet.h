@@ -277,12 +277,18 @@ private:
   UPROPERTY()
   UMaterialInstance *TerrainMaterial;
 
+  UPROPERTY()
+  UMaterialInstance *BridgeWallMaterial;
+
   // Guardrail materials
   UPROPERTY()
   UMaterialInstance *GuardrailPostMaterial;
 
   UPROPERTY()
   UMaterialInstance *GuardrailMetalMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *SafetyWallHighwayMaterial;
 
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder

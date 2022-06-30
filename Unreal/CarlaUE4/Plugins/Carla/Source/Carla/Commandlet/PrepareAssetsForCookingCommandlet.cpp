@@ -158,6 +158,8 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainCommunityNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Community.MI_Sidewalk_Community'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> BridgeWallNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Walls/MI_WallBridge.MI_WallBridge'"));
   TerrainHighwayMaterial = (UMaterialInstance *) TerrainHighwayNode.Object;
   TerrainInterurbanMaterial = (UMaterialInstance *) TerrainInterurbanNode.Object;
   TerrainMountainMaterial = (UMaterialInstance *) TerrainMountainNode.Object;
@@ -169,6 +171,7 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   TerrainApartmentMaterial = (UMaterialInstance *) TerrainApartmentNode.Object;
   TerrainCommunityMaterial = (UMaterialInstance *) TerrainCommunityNode.Object;
   TerrainResidentialMaterial = (UMaterialInstance *) TerrainResidentialNode.Object;
+  BridgeWallMaterial = (UMaterialInstance *) BridgeWallNode.Object;
 
   // Previous terrain CARLA material
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainNode(TEXT(
@@ -180,8 +183,11 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
       "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRailPost.MI_GuardRailPost'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GuardrailMetalNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRail.MI_GuardRail'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SafetyWallHighwayNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Walls/MI_SafetyWallHighWay.MI_SafetyWallHighWay'"));
   GuardrailPostMaterial = (UMaterialInstance *) GuardrailPostNode.Object;
   GuardrailMetalMaterial = (UMaterialInstance *) GuardrailMetalNode.Object;
+  SafetyWallHighwayMaterial = (UMaterialInstance *) SafetyWallHighwayNode.Object;
 
 #endif
 }
@@ -547,6 +553,11 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
                 std::cout << " -> Residential Terrain" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, TerrainResidentialMaterial);
               }
+              else if (MaterialName.Contains("Concrete2"))
+              {  // Same as its sidewalk counterpart
+                std::cout << " -> Bridge Wall Terrain" << std::endl;
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, BridgeWallMaterial);
+              }
               else
               {
                 std::cout << " -> Default Terrain" << std::endl;
@@ -572,6 +583,11 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
               {  // Ground with a lot of grass and some ground
                 std::cout << " -> Guardrail Metal" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, GuardrailMetalMaterial);
+              }
+              else if (MaterialName.Contains("Concrete1_Marking"))
+              {  // Ground with a lot of grass and some ground
+                std::cout << " -> Highway wall" << std::endl;
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, SafetyWallHighwayMaterial);
               }
             }
             MeshActor->GetStaticMeshComponent()->bReceivesDecals = false;
