@@ -159,7 +159,7 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainCommunityNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Community.MI_Sidewalk_Community'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> BridgeWallNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Walls/MI_WallBridge.MI_WallBridge'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Wall/MI_WallBridge.MI_WallBridge'"));
   TerrainHighwayMaterial = (UMaterialInstance *) TerrainHighwayNode.Object;
   TerrainInterurbanMaterial = (UMaterialInstance *) TerrainInterurbanNode.Object;
   TerrainMountainMaterial = (UMaterialInstance *) TerrainMountainNode.Object;
@@ -183,10 +183,19 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
       "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRailPost.MI_GuardRailPost'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GuardrailMetalNode(TEXT(
       "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRail.MI_GuardRail'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> BridgeGuardrailPostNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRail.MI_GuardRail'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> BridgeGuardrailMetalNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GuardRail/Materials/GuardRail/MI_GuardRail.MI_GuardRail'"));
+  static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> BridgeGuardrailBaseNode(TEXT(
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Concrete/MI_BaseBridgeRailling.MI_BaseBridgeRailling'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SafetyWallHighwayNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Walls/MI_SafetyWallHighWay.MI_SafetyWallHighWay'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Wall/MI_SafetyWallHighWay.MI_SafetyWallHighWay'"));
   GuardrailPostMaterial = (UMaterialInstance *) GuardrailPostNode.Object;
   GuardrailMetalMaterial = (UMaterialInstance *) GuardrailMetalNode.Object;
+  BridgeGuardrailPostMaterial = (UMaterialInstance *) BridgeGuardrailPostNode.Object;
+  BridgeGuardrailMetalMaterial = (UMaterialInstance *) BridgeGuardrailMetalNode.Object;
+  BridgeGuardrailBaseMaterial = (UMaterialInstance *) BridgeGuardrailBaseNode.Object;
   SafetyWallHighwayMaterial = (UMaterialInstance *) SafetyWallHighwayNode.Object;
 
 #endif
@@ -583,6 +592,21 @@ TArray<AStaticMeshActor *> UPrepareAssetsForCookingCommandlet::SpawnMeshesToWorl
               {  // Ground with a lot of grass and some ground
                 std::cout << " -> Guardrail Metal" << std::endl;
                 MeshActor->GetStaticMeshComponent()->SetMaterial(i, GuardrailMetalMaterial);
+              }
+              else if (MaterialName.Contains("Metal_Road"))
+              {  // Ground with a lot of grass and some ground
+                std::cout << " -> Bridge Guardrail post" << std::endl;
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, BridgeGuardrailPostMaterial);
+              }
+              else if (MaterialName.Contains("Metal1_Prop"))
+              {  // Ground with a lot of grass and some ground
+                std::cout << " -> Bridge Guardrail metal" << std::endl;
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, BridgeGuardrailMetalMaterial);
+              }
+              else if (MaterialName.Contains("Concrete1_Prop"))
+              {  // Ground with a lot of grass and some ground
+                std::cout << " -> Bridge Guardrail base" << std::endl;
+                MeshActor->GetStaticMeshComponent()->SetMaterial(i, BridgeGuardrailBaseMaterial);
               }
               else if (MaterialName.Contains("Concrete1_Marking"))
               {  // Ground with a lot of grass and some ground

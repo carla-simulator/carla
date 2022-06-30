@@ -290,6 +290,15 @@ private:
   UPROPERTY()
   UMaterialInstance *SafetyWallHighwayMaterial;
 
+  UPROPERTY()
+  UMaterialInstance *BridgeGuardrailPostMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *BridgeGuardrailMetalMaterial;
+
+  UPROPERTY()
+  UMaterialInstance *BridgeGuardrailBaseMaterial;
+
   /// Saves @a Package in .umap format in path @a PackagePath inside Unreal
   /// Content folder
   bool SavePackage(const FString &PackagePath, UPackage *Package) const;
