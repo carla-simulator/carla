@@ -249,11 +249,11 @@ There are 2 layers of glass for the appearance of the vehicle from outside and 2
 
 Here we see the glass parts attached to the main bodywork (not the doors or other moving parts) of the Lincoln.
 
-![main_glass](img/tuto_content_authoring_vehicles/main_glass.png)
+![main_glass](img/tuto_content_authoring_vehicles/glass.png)
 
 If we separate the constituent mesh parts, we can see that the glass profile is separated into 4 different layers. 
 
-![main_glass_expanded](img/tuto_content_authoring_vehicles/main_glass_expanded.png)
+![main_glass_expanded](img/tuto_content_authoring_vehicles/glass_expanded.png)
 
 The 4 layers are separated into 2 groups, the exterior layers, with normals facing out of the vehicle and the interior layers, with mesh normals facing into the vehicle interior. The following diagram demonstrates 
 
@@ -315,7 +315,7 @@ Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Veh
 
 Next, in your 3D application, measure the diameter of your wheel. In Blender, the dimensions can be viewed in the properties panel opened by pressing `n` in object mode.
 
-![tire_dimensions](img/tuto_content_authoring_vehicles/tire_dimensions.png)
+![tire_dimensions](img/tuto_content_authoring_vehicles/wheel_dims.png)
 
 Now plug these numbers into the `Wheel` section of the blueprint.Take care to remember to half the diameter for the radius and also that Unreal Editor works in units of centimeters. For the wheel mass, we recommend looking for specifications on the internet, find the right tire model or a similar one to estimate the correct mass (in kilograms).
 
