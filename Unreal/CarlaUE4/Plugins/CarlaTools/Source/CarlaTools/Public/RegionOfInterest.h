@@ -7,6 +7,7 @@
 #include "Containers/Array.h"
 #include "Containers/EnumAsByte.h"
 #include "ProceduralFoliageSpawner.h"
+#include "Templates/UnrealTypeTraits.h"
 #include "UObject/NoExportTypes.h"
 
 #include "RegionOfInterest.generated.h"
@@ -21,33 +22,19 @@ enum ERegionOfInterestType
   VEGETATION_REGION
 };
 
-
-// USTRUCT(BlueprintType)
-// struct CARLATOOLS_API FRegionOfInterest
-// {
-//   GENERATED_USTRUCT_BODY();
-
-  
-
-// }
-
 USTRUCT(BlueprintType)
 struct CARLATOOLS_API FRoiTile
 {
-  GENERATED_USTRUCT_BODY()
+  GENERATED_BODY()
 
-  UPROPERTY()
+  UPROPERTY(BlueprintReadWrite)
   int X;
-  UPROPERTY()
+  UPROPERTY(BlueprintReadWrite)
   int Y;
 
 public:
-  FRoiTile(
-  )
-  {
-    this->X = -1;
-    this->Y = -1;
-  };
+  FRoiTile() : X(-1), Y(-1) 
+  {};
 
   FRoiTile(int X, int Y)
   {
@@ -55,60 +42,125 @@ public:
     this->Y = Y;
   };
 
-  inline bool operator==(FRoiTile other)
+  FRoiTile(const FRoiTile& Other)
+    : FRoiTile(Other.X, Other.Y)
+  {}
+
+  bool operator==(const FRoiTile& Other) const
   {
-    return (this->X == other.X) || (this->Y == other.Y);
+    return Equals(Other);
+  }
+
+  bool Equals(const FRoiTile& Other) const
+  {
+    return (this->X == Other.X) && (this->Y == Other.Y);
   }
 };
+
+FORCEINLINE uint32 GetTypeHash(const FRoiTile& Thing)
+{
+  uint32 Hash = FCrc::MemCrc32(&Thing, sizeof(FRoiTile));
+  return Hash;
+}
 
 /**
  * 
  */
-UCLASS()
-class CARLATOOLS_API URegionOfInterest : public UObject
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FRegionOfInterest
 {
 	GENERATED_BODY()
 
-private:
-  UPROPERTY()
+  UPROPERTY(BlueprintReadWrite)
   TArray<FRoiTile> TilesList;
 
-  UPROPERTY()
+  UPROPERTY(BlueprintReadWrite)
   TEnumAsByte<ERegionOfInterestType> RegionType = ERegionOfInterestType::NONE;
 
-public:
-  URegionOfInterest();
+  FRegionOfInterest()
+  {
+    TilesList.Empty();
+  }
 
-  UFUNCTION()
-  void AddTile(int X, int Y);
+  void AddTile(int X, int Y)
+  {
+    FRoiTile Tile(X,Y);
+    TilesList.Add(Tile);
+  }
 
-  UFUNCTION()
-  TEnumAsByte<ERegionOfInterestType> GetRegionType();
+  TEnumAsByte<ERegionOfInterestType> GetRegionType()
+  {
+    return this->RegionType;
+  }
 
-  UFUNCTION()
-  bool IsTileInRegion(int X, int Y);
+  template <typename R>
+  static FORCEINLINE bool IsTileInRegionsSet(FRoiTile RoiTile, TMap<FRoiTile, R> RoisMap)
+  {
+    static_assert(TIsDerivedFrom<R, FRegionOfInterest>::IsDerived, 
+        "ROIs Map Value type is not an URegionOfInterest derived type.");   
+    return RoisMap.Contains(RoiTile);
+  }
 
 };
 
-UCLASS(BlueprintType)
-class CARLATOOLS_API UVegetationROI : public URegionOfInterest
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FVegetationROI : public FRegionOfInterest
 {
   GENERATED_BODY()
 
-private:
-  UPROPERTY()
+  UPROPERTY(BlueprintReadWrite)
   TArray<UProceduralFoliageSpawner*> FoliageSpawners;
-
-public:
   
-  UVegetationROI();
+  FVegetationROI() : FRegionOfInterest()
+  {
+    this->FoliageSpawners.Empty();
+  }
 
-  UFUNCTION()
-  void AddFoliageSpawner(UProceduralFoliageSpawner* Spawner);
+  void AddFoliageSpawner(UProceduralFoliageSpawner* Spawner)
+  {
+    FoliageSpawners.Add(Spawner);
+  }
 
-  UFUNCTION()
-  void AddFoliageSpawners(TArray<UProceduralFoliageSpawner*> Spawners);
+  void AddFoliageSpawners(TArray<UProceduralFoliageSpawner*> Spawners)
+  {
+    for(UProceduralFoliageSpawner* Spawner : Spawners)
+  {
+    AddFoliageSpawner(Spawner);
+  }
+  }
 
-  UFUNCTION()
-  TArray<UProceduralFoliageSpawner*> GetFoliageSpawners();
+  TArray<UProceduralFoliageSpawner*> GetFoliageSpawners()
+  {
+    return this->FoliageSpawners;
+  }
 };
+
+// UCLASS()
+// class CARLATOOLS_API URegionOfInterestWrapper : public UObject
+// {
+//   GENERATED_BODY()
+
+// private:
+// UPROPERTY()
+//   FRegionOfInterest WrappedRegionOfInterest;
+
+// public:
+//   URegionOfInterestWrapper()
+//   {}
+
+//   URegionOfInterestWrapper(FRegionOfInterest Region) : WrappedRegionOfInterest(Region)
+//   {}
+
+//   FRegionOfInterest GetWrappedROI()
+//   {
+//     return WrappedRegionOfInterest;
+//   }
+
+//   // template <typename R>
+//   // static FORCEINLINE bool IsTileInRegionsSet(FRoiTile RoiTile, TMap<FRoiTile, R*> RoisMap)
+//   // {
+//   //   // static_assert(TIsDerivedFrom<R, FRegionOfInterest>::IsDerived, 
+//   //   //     "ROIs Map Value type is not an URegionOfInterest derived type.");   
+//   //   return RoisMap.Contains(RoiTile);
+//   // }
+// };

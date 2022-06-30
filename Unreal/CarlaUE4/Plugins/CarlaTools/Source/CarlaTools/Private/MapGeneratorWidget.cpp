@@ -323,6 +323,47 @@ AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> W
 
 }
 
+TMap<FRoiTile, FVegetationROI> UMapGeneratorWidget::CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray)
+{
+  TMap<FRoiTile, FVegetationROI> ResultMap;
+  for(FVegetationROI VegetationRoi : VegetationRoisArray)
+  {
+    for(FRoiTile VegetationRoiTile : VegetationRoi.TilesList)
+    {
+      ResultMap.Add(VegetationRoiTile, VegetationRoi);
+    }
+  }
+  return ResultMap;
+}
+
+bool UMapGeneratorWidget::DeleteAllVegetationInMap(const FString Path, const FString MapName)
+{
+  TArray<FAssetData> AssetsData;
+  const FString TilesPath = Path;
+  bool success = LoadWorlds(AssetsData, TilesPath);
+  if(!success || AssetsData.Num() <= 0)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("No Tiles found in %s. Vegetation cooking Aborted!"), *TilesPath);
+    return false;
+  }
+
+  // Cook vegetation for each of the maps
+  for(FAssetData AssetData : AssetsData)
+  {
+    UWorld* World = GetWorldFromAssetData(AssetData);
+    TArray<AActor*> FoliageVolumeActors;
+    UGameplayStatics::GetAllActorsOfClass(World, AProceduralFoliageVolume::StaticClass(), FoliageVolumeActors);
+    for(AActor* FoliageActor : FoliageVolumeActors)
+    {
+      FoliageActor->Destroy();
+    }
+
+    SaveWorld(World);
+  }
+
+  return true;
+}
+
 bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Loading Worlds from %s"), 
@@ -595,8 +636,24 @@ bool UMapGeneratorWidget::CookVegetationToTiles(const FMapGeneratorMetaInfo& Met
       return false;
     }
 
+    // ROI checks
+    int TileIndexX, TileIndexY;
+    ExtractCoordinatedFromMapName(World->GetMapName(), TileIndexX, TileIndexY);
+
+    FRoiTile ThisTileIndex(TileIndexX, TileIndexY);
+    TArray<UProceduralFoliageSpawner*> FoliageSpawnersToCook;
+    if(FRegionOfInterest::IsTileInRegionsSet(ThisTileIndex, MetaInfo.VegetationRoisMap))
+    {
+      FVegetationROI TileRegion = MetaInfo.VegetationRoisMap[ThisTileIndex];
+      FoliageSpawnersToCook = TileRegion.GetFoliageSpawners();
+    }
+    else
+    {
+      FoliageSpawnersToCook = MetaInfo.FoliageSpawners;
+    }
+
     // Cook vegetation to world
-    bool bVegetationSuccess = CookVegetationToWorld(World, MetaInfo.FoliageSpawners);
+    bool bVegetationSuccess = CookVegetationToWorld(World, FoliageSpawnersToCook);
     if(!bVegetationSuccess){
       UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: Error Cooking Vegetation in %s"),
           *CUR_CLASS_FUNC_LINE, *MapNameToLoad);
@@ -678,39 +735,26 @@ float UMapGeneratorWidget::GetLandscapeSurfaceHeight(UWorld* World, float x, flo
 {
   if(World)
   {
-    FVector RayStartingPoint(x, y, 999999);
-    FVector RayEndPoint(x, y, -999999);
-
-    // Raytrace
-    FHitResult HitResult;
-    World->LineTraceSingleByObjectType(
-        OUT HitResult,
-        RayStartingPoint,
-        RayEndPoint,
-        FCollisionObjectQueryParams(ECollisionChannel::ECC_WorldStatic),
-        FCollisionQueryParams());
-
-    // Draw debug line.
-    if (bDrawDebugLines)
-    {
-      FColor LineColor;
-
-      if (HitResult.GetActor()) LineColor = FColor::Red;
-      else LineColor = FColor::Green;
-
-      DrawDebugLine(
-          World,
-          RayStartingPoint,
-          RayEndPoint,
-          LineColor,
-          true,
-          5.f,
-          0.f,
-          10.f);
-    }
-
-    // Return Z Location.
-    if (HitResult.GetActor()) return HitResult.ImpactPoint.Z;
+    ALandscape* Landscape = (ALandscape*) UGameplayStatics::GetActorOfClass(
+        World, 
+        ALandscape::StaticClass());
+    
+    FVector Location(x, y, 0);
+    TOptional<float> Height = Landscape->GetHeightAtLocation(Location);
+    // TODO: Change function return type to TOptional<float>
+    return Height.IsSet() ? Height.GetValue() : 0.0f;
   }
   return 0.0f;
+}
+
+void UMapGeneratorWidget::ExtractCoordinatedFromMapName(const FString MapName, int& X, int& Y)
+{
+  FString Name, Coordinates;
+  MapName.Split(TEXT("_Tile_"), &Name, &Coordinates);
+
+  FString XStr, YStr;
+  Coordinates.Split(TEXT("_"), &XStr, &YStr);
+
+  X = FCString::Atoi(*XStr);
+  Y = FCString::Atoi(*YStr);
 }

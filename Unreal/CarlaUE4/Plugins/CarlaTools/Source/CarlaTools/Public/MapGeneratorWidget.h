@@ -11,6 +11,7 @@
 #include "EditorUtilityWidget.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ProceduralFoliageSpawner.h"
+#include "RegionOfInterest.h"
 #include "UnrealString.h"
 
 #include "MapGeneratorWidget.generated.h"
@@ -40,6 +41,9 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   UTextureRenderTarget2D* GlobalHeightmap;
+
+  UPROPERTY(BlueprintReadWrite)
+  TMap<FRoiTile, FVegetationROI> VegetationRoisMap;
 };
 
 /// Struct used as container of basic tile information
@@ -127,6 +131,12 @@ public:
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
 
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  TMap<FRoiTile, FVegetationROI> CreateVegetationRoisMap(TArray<FVegetationROI> VegetationRoisArray);
+
+  UFUNCTION(Category="MapGenerator", BlueprintCallable)
+  bool DeleteAllVegetationInMap(const FString Path, const FString MapName);
+
 private:  
   /// Loads a bunch of world objects located in @a BaseMapPath and 
   /// returns them in @a WorldAssetsData.
@@ -177,4 +187,7 @@ private:
   /// @a x and @a y.
   UFUNCTION()
   float GetLandscapeSurfaceHeight(UWorld* World, float x, float y, bool bDrawDebugLines);
+
+  UFUNCTION()
+  void ExtractCoordinatedFromMapName(const FString MapName, int& X, int& Y);
 };
