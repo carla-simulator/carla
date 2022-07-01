@@ -492,9 +492,16 @@ void ASceneCaptureSensor::CaptureSceneCustom()
         return;
     }
 
+    
+    bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA; // Temporarily disable TAA to avoid jitter.
+    if (bTAA)
+        CaptureComponent2D->ShowFlags.TemporalAA = false;
     GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
+    if (bTAA)
+        CaptureComponent2D->ShowFlags.TemporalAA = true;
+
     CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
-    AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]
+    AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]
         {
             SendGBufferTextures(GBuffer.Get());
         });
