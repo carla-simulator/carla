@@ -470,7 +470,7 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
 
 void ASceneCaptureSensor::CaptureSceneCustom()
 {
-    auto GBufferPtr = MakeUnique<FGBufferData>();
+    auto GBufferPtr = new FGBufferData();
 
     if (CameraGBuffers.SceneColor.bIsUsed)      GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneColor);
     if (CameraGBuffers.SceneDepth.bIsUsed)      GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneDepth);
@@ -492,18 +492,29 @@ void ASceneCaptureSensor::CaptureSceneCustom()
         return;
     }
 
-    
+
+    GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
     bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA; // Temporarily disable TAA to avoid jitter.
     if (bTAA)
         CaptureComponent2D->ShowFlags.TemporalAA = false;
-    GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
+    CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
     if (bTAA)
         CaptureComponent2D->ShowFlags.TemporalAA = true;
 
-    CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
-    AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]
+    AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBufferPtr]() mutable
         {
-            SendGBufferTextures(GBuffer.Get());
+            SendGBufferTextures(GBufferPtr);
+#if 0
+            delete GBufferPtr;
+#else
+            ENQUEUE_RENDER_COMMAND(ReleaseGBuffers)([GBufferPtr](FRHICommandList& RHICmdList)
+                {
+                    for (auto& e : GBufferPtr->Readbacks)
+                        if (e.IsValid())
+                            e.Release();
+                    delete GBufferPtr;
+                });
+#endif
         });
 }
 
