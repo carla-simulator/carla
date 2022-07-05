@@ -96,20 +96,16 @@ public:
 
   void Clear();
 
-  void UpdateTexture(float RadiusX, float RadiusY);
-private:
   std::unordered_map<uint64_t, FDenseTile> Map;
+  FVector PositionToUpdate;
+private:
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
   FDVector Extension;
   float TileSize = 1.f; // 1m per tile
   FHeightMapData Heightmap;
-  FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_Position; // UE4 Mutex
-  std::vector<double> Data;
-  UTexture2D* TextureToUpdate;
-
 };
 
 USTRUCT(BlueprintType)
@@ -155,8 +151,14 @@ public:
   UFUNCTION(BlueprintCallable, Category="Tiles")
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateTexture(float RadiusX, float RadiusY);
+
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UTexture2D *HeightMap;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UTexture2D* TextureToUpdate;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString NeuralModelFile = "";
@@ -180,6 +182,7 @@ private:
 
   FSparseHighDetailMap SparseMap;
   TArray<ACarlaWheeledVehicle*> Vehicles;
+  std::vector<double> Data;
 
 	class FRunnableThread* Thread;
 	struct FTilesWorker* TilesWorker;

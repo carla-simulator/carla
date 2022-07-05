@@ -364,8 +364,6 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
       Map.erase(it);
     } 
   }
-
-  UpdateTexture(RadiusX, RadiusY);
 }
 
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
@@ -417,13 +415,13 @@ void FSparseHighDetailMap::SaveMap()
 }
 
 // In the component
-void FSparseHighDetailMap::UpdateTexture(float RadiusX, float RadiusY)
+void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
 {
-  FDVector TextureOrigin = PositionToUpdate;
-  TextureOrigin.X -= RadiusX;
-  TextureOrigin.Y -= RadiusY;
+  FDVector TextureOrigin = SparseMap.PositionToUpdate;
+  TextureOrigin.X -= Radius.X;
+  TextureOrigin.Y -= Radius.Y;
   float Limit = RadiusX*2 + RadiusY*2;
-  for(auto it : Map) 
+  for(auto it : SparseMap.Map) 
   {
     for( const FParticle& CurrentParticle : it.second.Particles )
     {
@@ -438,21 +436,24 @@ void FSparseHighDetailMap::UpdateTexture(float RadiusX, float RadiusY)
   ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
   (
     // Not move this, move data
-    [this, Texture=TextureToUpdate](auto &InRHICmdList) mutable
+    [TextureData=Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
-    FUpdateTextureRegion2D region;
-    region.SrcX = 0;
-    region.SrcY = 0;
-    region.DestX = 0;
-    region.DestY = 0;
-    region.Width = Texture->GetSizeX();
-    region.Height = Texture->GetSizeY();
+    if(Texture)
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
+      FUpdateTextureRegion2D region;
+      region.SrcX = 0;
+      region.SrcY = 0;
+      region.DestX = 0;
+      region.DestY = 0;
+      region.Width = Texture->GetSizeX();
+      region.Height = Texture->GetSizeY();
 
-    FTexture2DDynamicResource* resource = (FTexture2DDynamicResource*)Texture->Resource;
-    RHIUpdateTexture2D(
-        resource->GetTexture2DRHI(), 0, region, region.Width * region.Height * sizeof(float), (uint8*)&(this->Data[0]) );
-    UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
+      FTexture2DDynamicResource* resource = (FTexture2DDynamicResource*)Texture->Resource;
+      RHIUpdateTexture2D(
+          resource->GetTexture2DRHI(), 0, region, region.Width * region.Height * sizeof(float), (uint8*)&TextureData[0] );
+      UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
+    }
   });
 }
 
@@ -509,6 +510,8 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     TilesWorker = new FTilesWorker(this, GetOwner()->GetActorLocation(), Radius.X, Radius.Y);
     Thread = FRunnableThread::Create(TilesWorker, TEXT("TilesWorker"));
   }
+
+  TextureToUpdate = UTexture2D::CreateTransient(1024, 1024);
 }
 
 void UCustomTerrainPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason){
