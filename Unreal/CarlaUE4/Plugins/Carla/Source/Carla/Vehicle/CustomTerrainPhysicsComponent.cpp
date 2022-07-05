@@ -16,6 +16,7 @@
 #include "Misc/Paths.h"
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
+#include "GenericPlatform/GenericPlatformFile.h"
 // #include <carla/pytorch/pytorch.h>
 
 #include <algorithm>
