@@ -468,30 +468,70 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
 #endif
 }
 
+constexpr const TCHAR* GBufferNames[] =
+{
+    TEXT("SceneColor"),
+    TEXT("SceneDepth"),
+    TEXT("SceneStencil"),
+    TEXT("GBufferA"),
+    TEXT("GBufferB"),
+    TEXT("GBufferC"),
+    TEXT("GBufferD"),
+    TEXT("GBufferE"),
+    TEXT("GBufferF"),
+    TEXT("Velocity"),
+    TEXT("SSAO"),
+    TEXT("CustomDepth"),
+    TEXT("CustomStencil"),
+};
+
+template <EGBufferTextureID ID, typename T>
+__declspec(noinline) static void CheckGBufferStream(T& GBufferStream, FGBufferData& GBuffer)
+{
+    if (GBufferStream.bIsUsed)
+    {
+        if (!GBufferStream.Stream.AreClientsListening())
+        {
+            UE_LOG(LogCarla, Log, TEXT("Deactivating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
+            GBufferStream.bIsUsed = false;
+        }
+    }
+    else
+    {
+        if (GBufferStream.Stream.AreClientsListening())
+        {
+            UE_LOG(LogCarla, Log, TEXT("Activating gbuffer stream for the texture \"%s\"."), GBufferNames[(int)ID]);
+            GBufferStream.bIsUsed = true;
+        }
+    }
+
+    if (GBufferStream.bIsUsed)
+        GBuffer.MarkAsRequested(ID);
+}
+
 void ASceneCaptureSensor::CaptureSceneCustom()
 {
     auto GBufferPtr = new FGBufferData();
 
-    if (CameraGBuffers.SceneColor.bIsUsed)      GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneColor);
-    if (CameraGBuffers.SceneDepth.bIsUsed)      GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneDepth);
-    if (CameraGBuffers.SceneStencil.bIsUsed)    GBufferPtr->MarkAsRequested(EGBufferTextureID::SceneStencil);
-    if (CameraGBuffers.GBufferA.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferA);
-    if (CameraGBuffers.GBufferB.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferB);
-    if (CameraGBuffers.GBufferC.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferC);
-    if (CameraGBuffers.GBufferD.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferD);
-    if (CameraGBuffers.GBufferE.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferE);
-    if (CameraGBuffers.GBufferF.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::GBufferF);
-    if (CameraGBuffers.Velocity.bIsUsed)        GBufferPtr->MarkAsRequested(EGBufferTextureID::Velocity);
-    if (CameraGBuffers.SSAO.bIsUsed)            GBufferPtr->MarkAsRequested(EGBufferTextureID::SSAO);
-    if (CameraGBuffers.CustomDepth.bIsUsed)     GBufferPtr->MarkAsRequested(EGBufferTextureID::CustomDepth);
-    if (CameraGBuffers.CustomStencil.bIsUsed)   GBufferPtr->MarkAsRequested(EGBufferTextureID::CustomStencil);
+    CheckGBufferStream<EGBufferTextureID::SceneColor>(CameraGBuffers.SceneColor, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::SceneDepth>(CameraGBuffers.SceneDepth, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::SceneStencil>(CameraGBuffers.SceneStencil, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::GBufferA>(CameraGBuffers.GBufferA, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::GBufferB>(CameraGBuffers.GBufferB, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::GBufferC>(CameraGBuffers.GBufferC, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::GBufferD>(CameraGBuffers.GBufferD, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::GBufferE>(CameraGBuffers.GBufferE, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::GBufferF>(CameraGBuffers.GBufferF, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::Velocity>(CameraGBuffers.Velocity, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::SSAO>(CameraGBuffers.SSAO, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, *GBufferPtr);
 
     if (GBufferPtr->DesiredTexturesMask == 0)
     {
         CaptureComponent2D->CaptureScene();
         return;
     }
-
 
     GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
     bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA; // Temporarily disable TAA to avoid jitter.

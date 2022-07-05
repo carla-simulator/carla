@@ -44,7 +44,6 @@ struct FCameraGBufferUint8
   /// Return the token that allows subscribing to this sensor's stream.
   auto GetToken() const
   {
-    bIsUsed = true;
     return Stream.GetToken();
   }
 
