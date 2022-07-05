@@ -60,8 +60,8 @@ struct FDenseTile
 
   std::vector<FParticle> Particles;
   FDVector TilePosition;
-
 };
+
 class FSparseHighDetailMap
 {
 public:
@@ -96,6 +96,7 @@ public:
 
   void Clear();
 
+  void UpdateTexture(float RadiusX, float RadiusY);
 private:
   std::unordered_map<uint64_t, FDenseTile> Map;
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
@@ -106,6 +107,8 @@ private:
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_Position; // UE4 Mutex
+  std::vector<double> Data;
+  UTexture2D* TextureToUpdate;
 
 };
 

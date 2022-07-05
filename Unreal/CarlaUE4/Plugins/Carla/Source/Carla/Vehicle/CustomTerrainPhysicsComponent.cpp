@@ -16,6 +16,7 @@
 #include "Misc/Paths.h"
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
+#include "RHICommandList.h"
 // #include <carla/pytorch/pytorch.h>
 
 #include <algorithm>
@@ -136,7 +137,6 @@ void FDenseTile::InitializeTile(float ParticleSize, float Depth,
         }
       }
     }
-
   }
 }
 
@@ -364,6 +364,8 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
       Map.erase(it);
     } 
   }
+
+  UpdateTexture(RadiusX, RadiusY);
 }
 
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
@@ -412,6 +414,46 @@ void FSparseHighDetailMap::SaveMap()
     WriteStdVector<FParticle> (OutputStream, it.second.Particles);
     OutputStream.close();
   }
+}
+
+// In the component
+void FSparseHighDetailMap::UpdateTexture(float RadiusX, float RadiusY)
+{
+  FDVector TextureOrigin = PositionToUpdate;
+  TextureOrigin.X -= RadiusX;
+  TextureOrigin.Y -= RadiusY;
+  float Limit = RadiusX*2 + RadiusY*2;
+  for(auto it : Map) 
+  {
+    for( const FParticle& CurrentParticle : it.second.Particles )
+    {
+      FDVector LocalPosition = CurrentParticle.Position - TextureOrigin;
+      int32_t Index = LocalPosition.X * (RadiusX * 2.0f) + LocalPosition.Y;
+      if ( Index > 0 && Index < Limit ){
+        Data[Index] = std::max(Data[Index] , CurrentParticle.Position.Z);
+      }
+    }
+  }
+
+  ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
+  (
+    // Not move this, move data
+    [this, Texture=TextureToUpdate](auto &InRHICmdList) mutable
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
+    FUpdateTextureRegion2D region;
+    region.SrcX = 0;
+    region.SrcY = 0;
+    region.DestX = 0;
+    region.DestY = 0;
+    region.Width = Texture->GetSizeX();
+    region.Height = Texture->GetSizeY();
+
+    FTexture2DDynamicResource* resource = (FTexture2DDynamicResource*)Texture->Resource;
+    RHIUpdateTexture2D(
+        resource->GetTexture2DRHI(), 0, region, region.Width * region.Height * sizeof(float), (uint8*)&(this->Data[0]) );
+    UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
+  });
 }
 
 UCustomTerrainPhysicsComponent::UCustomTerrainPhysicsComponent()
