@@ -453,6 +453,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) + LevelName + "_Terrain/";
   // Creating the FileManager
   IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
+#undef CreateDirectory
   if( FileManager.CreateDirectory(*SavePath)){
     UE_LOG(LogCarla, Warning, 
         TEXT("Folder was created at %s"), *SavePath);
