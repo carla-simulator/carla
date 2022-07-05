@@ -6,73 +6,39 @@
 #include "Carla/Vegetation/VegetationSpawner.h"
 
 #include "ProceduralFoliageVolume.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vegetation/SpringBasedVegetationComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-void FPooledFoliage::EnableActor()
+void FPooledActor::EnableActor()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(EnableActor);
-  Actor->SetActorTickEnabled(true);
-  Actor->SetActorEnableCollision(true);
+  TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::EnableActor);
   Actor->SetActorHiddenInGame(false);
+  Actor->SetActorEnableCollision(true);
+  Actor->SetActorTickEnabled(true);
+
+  USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
+  if (Component)
+    Component->SetComponentTickEnabled(true);
 }
 
-void FPooledFoliage::DisableActor()
+void FPooledActor::DisableActor()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(DisableActor);
-  Actor->SetActorTickEnabled(false);
-  Actor->SetActorEnableCollision(false);
+  TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::DisableActor);
   Actor->SetActorHiddenInGame(true);
+  Actor->SetActorEnableCollision(false);
+  Actor->SetActorTickEnabled(false);
+
+  USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
+  if (Component)
+    Component->SetComponentTickEnabled(false);
 }
 
-FFoliageBlueprintCache::FFoliageBlueprintCache(const FString& Path)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(FoliageBlueprintCache::FFoliageBlueprintCache);
-  if (Path.IsEmpty())
-    return;
-  Init(Path);
-}
+FFoliageBlueprintCache::FFoliageBlueprintCache() = default;
 
 bool FFoliageBlueprintCache::IsValid() const
 {
   return SpawnedClass;
-}
-
-void FFoliageBlueprintCache::Init(const FString& Path)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(FoliageBlueprintCache::Init);
-  TArray< FString > ParsedString;
-  Path.ParseIntoArray(ParsedString, TEXT("/"), false);
-  int Position = ParsedString.Num() - 1;
-  const FString Version = ParsedString[Position];
-  const FString FullVersion = GetVersionFromFString(Version);
-  if (FullVersion.IsEmpty())
-    return;
-  const FString Folder = ParsedString[--Position];
-  FString ClassPath = "BP_" + Folder + FullVersion;
-  BPClassName = "Blueprint'";
-  for (int i = 0; i <= Position; ++i)
-  {
-    BPClassName += ParsedString[i];
-    BPClassName += '/';
-  }
-  BPClassName += ClassPath;
-  BPClassName += ".";
-  BPClassName += ClassPath;
-  BPClassName += "'";
-
-  UObject* LoadedObject = StaticLoadObject(UObject::StaticClass(), nullptr, *BPClassName);
-  UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);
-
-  FString Right;
-  BPClassName.Split(".BP", nullptr, &Right, ESearchCase::CaseSensitive, ESearchDir::FromEnd);
-  if (Right.IsEmpty())
-    return;
-  Right = "BP" + Right;
-  Right.RemoveFromEnd("'", ESearchCase::IgnoreCase);
-  BPClassName = Right;
-
-  if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
-    SpawnedClass = *CastedBlueprint->GeneratedClass;  
 }
 
 FString FFoliageBlueprintCache::GetVersionFromFString(const FString& String)
@@ -108,12 +74,52 @@ FString FFoliageBlueprintCache::GetVersionFromFString(const FString& String)
   return FString();
 }
 
+bool FFoliageBlueprintCache::SetBPClassName()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(FoliageBlueprintCache::SetBPClassName);
+  TArray< FString > ParsedString;
+  Path.ParseIntoArray(ParsedString, TEXT("/"), false);
+  int Position = ParsedString.Num() - 1;
+  const FString Version = ParsedString[Position];
+  const FString FullVersion = GetVersionFromFString(Version);
+  if (FullVersion.IsEmpty())
+    return false;
+  const FString Folder = ParsedString[--Position];
+  FString ClassPath = "BP_" + Folder + FullVersion;
+  BPClassName = "Blueprint'";
+  for (int i = 0; i <= Position; ++i)
+  {
+    BPClassName += ParsedString[i];
+    BPClassName += '/';
+  }
+  BPClassName += ClassPath;
+  BPClassName += ".";
+  BPClassName += ClassPath;
+  BPClassName += "'";
+  return true;
+}
+
+bool FFoliageBlueprintCache::SetSpawnedClass()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(FoliageBlueprintCache::SetSpawnedClass);
+  UObject* LoadedObject = StaticLoadObject(UObject::StaticClass(), nullptr, *BPClassName);
+  UBlueprint* CastedBlueprint = Cast<UBlueprint>(LoadedObject);
+  if (CastedBlueprint && CastedBlueprint->GeneratedClass->IsChildOf(AActor::StaticClass()))
+  {
+    SpawnedClass = *CastedBlueprint->GeneratedClass;  
+    return true;
+  }
+  return false;
+}
+
+
 void AVegetationSpawner::BeginPlay()
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::BeginPlay);
   Super::BeginPlay();
-  
-  GetFoliageTypesInLevel();
-  //CreatePools();
+
+  CacheFoliageTypesInLevel();
+  CreatePools();
 }
 
 void AVegetationSpawner::Tick(float DeltaTime)
@@ -123,12 +129,9 @@ void AVegetationSpawner::Tick(float DeltaTime)
     TRACE_CPUPROFILER_EVENT_SCOPE(Parent Tick);
     Super::Tick(DeltaTime);
   }
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(Get Vehicles);
-    GetVehiclesInLevel();
-    if (VehiclesInLevel.Num() == 0)
-      return;
-  }
+  GetVehiclesInLevel();
+  if (VehiclesInLevel.Num() == 0)
+    return;
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(Update Vehicles Detection Boxes);
     for (AActor* Vehicle : VehiclesInLevel)
@@ -138,103 +141,60 @@ void AVegetationSpawner::Tick(float DeltaTime)
         CarlaVehicle->UpdateDetectionBox();
     }
   }
+  for (FLevelFoliage& Foliage : LevelFoliages)
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE(Get Foliage Usage);
-    for (FLevelFoliage& Foliage : FoliageTypesInLevel)
+    TArray<int32> IndicesInUse;
+    const FString Path = Foliage.Mesh->GetStaticMesh()->GetPathName();
+    FFoliageBlueprintCache* Blueprint = FoliageCache.Find(Path);
+    if (!Blueprint->IsValid())
+      continue;
     {
-      for (AActor* Vehicle : VehiclesInLevel)
+      TRACE_CPUPROFILER_EVENT_SCOPE(Get Foliage Usage);
+      for (const AActor* Vehicle : VehiclesInLevel)
       {
-        ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(Vehicle);
+        const ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(Vehicle);
         if (!IsValid(CarlaVehicle))
           continue;
-        //Para un coche solo valdría con Foliage.IndicesInUse = CarlaVehicle->GetFoliageInstancesCloseToVehicle(Foliage.Mesh);
-        Foliage.IndicesInUse = CarlaVehicle->GetFoliageInstancesCloseToVehicle(Foliage.Mesh);
-        //TArray<int32> FrameIndices = CarlaVehicle->GetFoliageInstancesCloseToVehicle(Foliage.Mesh);
-        //for (int32 i : FrameIndices)
-        //  Foliage.IndicesInUse[i] = true;       
+        const TArray<int32> Aux = CarlaVehicle->GetFoliageInstancesCloseToVehicle(Foliage.Mesh);
+        AddFoliageIndicesInUse(IndicesInUse, Aux);
       }
     }
-  }
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(Spawn Skeletal Foliage);
-    for (FLevelFoliage& Foliage : FoliageTypesInLevel)
+
+    /*
+    SetmMin draw distance.
+    virtual bool UpdateInstances
+    (
+        const TArray< int32 > & UpdateInstanceIds,
+        const TArray< FTransform > & UpdateInstanceTransforms,
+        const TArray< FTransform > & UpdateInstancePreviousTransforms,
+        int32 NumCustomFloats,
+        const TArray< float > & CustomFloatData
+    ) 
+    */
     {
-      const FString Path = Foliage.Mesh->GetStaticMesh()->GetPathName();
-      if (!IsFoliageTypeEnabled(Path))
-        continue;
-      const FFoliageBlueprintCache BlueprintCache = GetBlueprintFromCache(Path);
-      if (!BlueprintCache.IsValid())
-        continue;
-      /*for (int32 Index : Foliage.IndicesInUse)
+      for (int32 Index : IndicesInUse)
       {
-        if (IsValid(Foliage.SpawnedActors[Index]))
+        if (IsFoliageIndexInUse(Foliage, Index))
           continue;
-        
-        AActor* Actor = GetFoliageFromPool(BlueprintCache);
-        if (!Actor)
+        if (GetFoliageFromPool(Foliage, Index))
         {
-          GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString("New Actor is NULL"));
-          continue;
-        }
-        //moves the actor to the correct position.
-        SpawnFoliage(Actor, Foliage.Transforms[Index]);
-        //Assign
-        Foliage.SpawnedActors[Index] = Actor;
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(Hide Instance Transform);
-          Foliage.Mesh->UpdateInstanceTransform(Index, {}, true, true, false);
-        }
-      }*/
-      //int32 Index = -1;
-      for (int32 Index : Foliage.IndicesInUse)
-      {
-        //++Index;
-        //if (!InUse)
-          //continue;
-        if (IsValid(Foliage.SpawnedActors[Index]))
-          continue;
-        /*AActor* Actor = GetFoliageFromPool(BlueprintCache);
-        if (!Actor)
-        {
-          GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString("New Actor is NULL"));
-          continue;
-        }
-        //moves the actor to the correct position.
-        SpawnFoliage(Actor, Foliage.Transforms[Index]);
-        //Assign
-        Foliage.SpawnedActors[Index] = Actor;*/
-        Foliage.SpawnedActors[Index] = CreateFoliage(BlueprintCache, Foliage.Transforms[Index]);
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(Hide Instance Transform);
-          Foliage.Mesh->UpdateInstanceTransform(Index, {}, true, true, false);
+          TRACE_CPUPROFILER_EVENT_SCOPE(Hide Static Foliage);
+          //Foliage.Mesh->UpdateInstanceTransform(Index, FTransform(), true, false, false);
         }
       }
     }
-  }
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE(Delete Foliages);
-    for (FLevelFoliage& Foliage : FoliageTypesInLevel)
     {
-      const FString Path = Foliage.Mesh->GetStaticMesh()->GetPathName();
-      if (!IsFoliageTypeEnabled(Path))
-        continue;
-      bool Found = FindInCache(Path);
-      if (!Found)
+      for (FPooledActor& PooledActor : Foliage.FoliagePool)
       {
-        GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString("BlueprintCache Not Found in Cache"));
-        continue;
-      }
-      const FFoliageBlueprintCache BlueprintCache = GetBlueprintFromCache(Path);
-      for (int32 Index : Foliage.IndicesInUse)
-      {
-        if (!IsValid(Foliage.SpawnedActors[Index]))
+        if (!PooledActor.InUse)
           continue;
-        const FVector Location = Foliage.Transforms[Index].GetLocation();
+
+        const FVector Location = PooledActor.Actor->GetActorLocation();
         bool StillInUse = false;
         for (AActor* Vehicle : VehiclesInLevel)
         {
           ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(Vehicle);
-          if (!IsValid(CarlaVehicle))
+          if (!CarlaVehicle)
             continue;
           StillInUse = CarlaVehicle->IsInVehicleRange(Location);
           if (StillInUse)
@@ -242,208 +202,187 @@ void AVegetationSpawner::Tick(float DeltaTime)
         }
         if (!StillInUse)
         {
-          TRACE_CPUPROFILER_EVENT_SCOPE(Destroy Spawned Actor);
-          Foliage.SpawnedActors[Index]->Destroy();
-          Foliage.SpawnedActors[Index] = nullptr;
-          Foliage.Mesh->UpdateInstanceTransform(Index, Foliage.Transforms[Index], true, true, false);
+          PooledActor.InUse = false;
+          PooledActor.DisableActor();
+          {
+            TRACE_CPUPROFILER_EVENT_SCOPE(Show Static Foliage);
+            //Foliage.Mesh->UpdateInstanceTransform(PooledActor.OriginalIndex, PooledActor.OriginalTransform, true, false, false);
+          }
         }
       }
-
-      /*
-      int32 Index = -1;
-      for (AActor* Actor : Foliage.SpawnedActors)
-      {
-        ++Index;
-        if ((Actor == nullptr) || Foliage.IndicesInUse.Contains(Index))
-          continue;
-        //HideFoliage(BlueprintCache, Actor);
-        const FVector Location = Foliage.Transforms[Index].GetLocation();
-        bool StillInUse = false;
-        for (AActor* Vehicle : VehiclesInLevel)
-        {
-          ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(Vehicle);
-          if (!IsValid(CarlaVehicle))
-            continue;
-          StillInUse = CarlaVehicle->IsInVehicleRange(Location);
-          if (StillInUse)
-            break;
-        }
-        if (!StillInUse)
-        {
-          Foliage.SpawnedActors[Index]->Destroy();
-          Foliage.SpawnedActors[Index] = nullptr;
-        }
-        //Actor = nullptr;
-        {
-          TRACE_CPUPROFILER_EVENT_SCOPE(Show Instance Transform);
-          Foliage.Mesh->UpdateInstanceTransform(Index, Foliage.Transforms[Index], true, true, false);
-        }
-      }
-      */
     }
   }
 }
 
-AActor* AVegetationSpawner::GetFoliageFromPool(const FFoliageBlueprintCache& FoliageBlueprint)
+void AVegetationSpawner::GetVehiclesInLevel()
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::GetFoliageFromPool);
-  TArray<FPooledFoliage>* Pool = FoliagePool.Find(FoliageBlueprint.BPClassName);
-  if (!Pool)
-  {
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString("FoliageBlueprintCache not found!"));
-    return nullptr;
-  }
-  //Get the first unusued actor.
-  for (FPooledFoliage& PooledFoliage : *Pool)
-  {
-    if (!PooledFoliage.InUse)
-    {
-      PooledFoliage.InUse = true;
-      PooledFoliage.EnableActor();
-      return PooledFoliage.Actor;
-    }
-  }
-  
-  FPooledFoliage Aux = CreatePooledFoliage(FoliageBlueprint);
-  if (!Aux.Actor)
-    return nullptr;
-  Pool->Add(Aux);
-  return Aux.Actor;
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::GetVehiclesInLevel);
+  TArray<AActor*> FoundVehicles;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACarlaWheeledVehicle::StaticClass(), FoundVehicles);
+  VehiclesInLevel = std::move(FoundVehicles);
 }
 
-void AVegetationSpawner::HideFoliage(const FFoliageBlueprintCache& FoliageBlueprint, AActor* Actor)
+void AVegetationSpawner::AddFoliageIndicesInUse(TArray<int32>& Global, const TArray<int32>& Local)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::HideFoliage);
-  TArray<FPooledFoliage>* Pool = FoliagePool.Find(FoliageBlueprint.BPClassName);
-  if (!Pool)
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::AddFoliageIndicesInUse);
+  for (int32 Index : Local)
   {
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString("FoliageBlueprintCache not found!"));
-    return;
+    if (!Global.Contains(Index))
+      Global.Add(Index);
   }
-  
-  for (FPooledFoliage& PooledFoliage : *Pool)
-  {
-    if (PooledFoliage.Actor == Actor)
-    {
-      PooledFoliage.InUse = false;
-      PooledFoliage.DisableActor();
-      return;
-    }
-  }
-  Actor->Destroy();
 }
 
-void AVegetationSpawner::SpawnFoliage(AActor* Actor, const FTransform& FoliageTransform)
+bool AVegetationSpawner::IsFoliageIndexInUse(const FLevelFoliage& Foliage, int32 Index) const
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::SpawnFoliage);
-  Actor->SetActorLocationAndRotation(FoliageTransform.GetLocation(), FoliageTransform.Rotator(), false, 0, ETeleportType::None);
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::IsFoliageIndexInUse);
+  for (const FPooledActor& Actor : Foliage.FoliagePool)
+  {
+    if (Actor.InUse && Actor.OriginalIndex == Index)
+      return true;
+  }
+  return false;
+}
+
+
+/************* FOLIAGE CREATION AND DESTRUCTION *******************************/
+AActor* AVegetationSpawner::CreateFoliage(const FFoliageBlueprintCache& CacheBPClass, const FTransform& FoliageTransform) const
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::CreateFoliage);
+  AActor* Actor = GetWorld()->SpawnActor<AActor>(CacheBPClass.SpawnedClass,
+    FoliageTransform.GetLocation(), FoliageTransform.Rotator());
   if (SpawnScale <= 1.01f && SpawnScale >= 0.99f)
     Actor->SetActorScale3D(FoliageTransform.GetScale3D());
   else
     Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
+  Actor->SetTickableWhenPaused(false);
+  return Actor;
 }
 
-AActor* AVegetationSpawner::CreateFoliage(const FFoliageBlueprintCache& CacheBPClass, const FTransform& FoliageTransform)
+bool AVegetationSpawner::GetFoliageFromPool(FLevelFoliage& Foliage, int32 Index)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::GetFoliageFromPool);
+  for (FPooledActor& PooledActor : Foliage.FoliagePool)
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::CreateFoliage);
-    AActor* Actor = GetWorld()->SpawnActor<AActor>(CacheBPClass.SpawnedClass,
-      FoliageTransform.GetLocation(), FoliageTransform.Rotator());
-    if (SpawnScale <= 1.01f && SpawnScale >= 0.99f)
-      Actor->SetActorScale3D(FoliageTransform.GetScale3D());
-    else
-      Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});
-    return Actor;
+    if (PooledActor.InUse)
+      continue;
+    bool Ok = false;
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(GetInstanceTransform);
+      Ok = Foliage.Mesh->GetInstanceTransform(Index, PooledActor.OriginalTransform, true);
+    }
+    if (Ok)
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(SetActorLocationAndRotation);
+      PooledActor.InUse = true;
+      PooledActor.OriginalIndex = Index;
+      PooledActor.Actor->SetActorLocationAndRotation(PooledActor.OriginalTransform.GetLocation(), PooledActor.OriginalTransform.Rotator(), true, nullptr, ETeleportType::ResetPhysics);
+      PooledActor.EnableActor();
+      return true;
+    }
+    return false;
   }
+  {
+    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, "Pool lleno");
+    TRACE_CPUPROFILER_EVENT_SCOPE(Add New Foliage to pool);
+    const FString Path = Foliage.Mesh->GetStaticMesh()->GetPathName();
+    FFoliageBlueprintCache* Blueprint = FoliageCache.Find(Path);
+    if (!Blueprint->IsValid())
+      return false;
+    bool Ok = false;
+    FPooledActor NewElement;
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE(GetInstanceTransform);
+      Ok = Foliage.Mesh->GetInstanceTransform(Index, NewElement.OriginalTransform, true);
+    }
+    if (!Ok)
+      return false;
+    NewElement.Actor = CreateFoliage(*Blueprint, NewElement.OriginalTransform);
+    if (!NewElement.Actor)
+      return false;
+    NewElement.InUse = true;
+    NewElement.OriginalIndex = Index;
+    NewElement.EnableActor();
+    Foliage.FoliagePool.Emplace(NewElement);
+  }
+  return true;
+}
+
+/************* FOLIAGE CACHE *******************************/
+
+void AVegetationSpawner::CacheFoliageTypesInLevel()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::CacheFoliageTypesInLevel);
+  const UObject* World = GetWorld();
+  TArray<AActor*> ActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
+  for (const AActor* Actor : ActorsInLevel)
+  {
+    const TSet<UActorComponent*>& ActorComponents = Actor->GetComponents();
+    for (UActorComponent* Component : ActorComponents)
+    {
+      UInstancedStaticMeshComponent* Mesh = Cast<UInstancedStaticMeshComponent>(Component);
+      if (!IsValid(Mesh))
+        continue;
+      const FString Path = Mesh->GetStaticMesh()->GetPathName();
+      if (FoliageCache.Contains(Path))
+        continue;
+      FFoliageBlueprintCache NewFoliageBlueprint;
+      NewFoliageBlueprint.Path = Path;
+      if (!IsFoliageTypeEnabled(Path))
+      {
+        FoliageCache.Emplace(Path, NewFoliageBlueprint);
+        continue;
+      }
+      if (!NewFoliageBlueprint.SetBPClassName())
+      {
+        FoliageCache.Emplace(Path, NewFoliageBlueprint);
+        continue;
+      }
+      if (!NewFoliageBlueprint.SetSpawnedClass())
+      {
+        FoliageCache.Emplace(Path, NewFoliageBlueprint);
+        continue;
+      }
+      FoliageCache.Emplace(Path, NewFoliageBlueprint);
+
+      FLevelFoliage Foliage;
+      Foliage.Mesh = Mesh;
+      LevelFoliages.Emplace(Foliage);
+      //TODO: Remove, only for debug.
+      //Foliage.Mesh->SetCullDistances(MinDistance, MaxDistance);
+      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, NewFoliageBlueprint.BPClassName);
+    }
+  }
+}
 
 void AVegetationSpawner::CreatePools()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::CreatePools);
-  for (const auto& Element : FoliageCache)
+  for (FLevelFoliage& Foliage : LevelFoliages)
   {
-    if (!Element.IsValid())
-      continue;
-
-    TArray<FPooledFoliage>* Exists = FoliagePool.Find(Element.BPClassName);
-    if (Exists)
-    {
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::White, Element.BPClassName + " - Pool ya existe");
-      continue;
-    }
-    TArray<FPooledFoliage> NewPool;
+    const FString Path = Foliage.Mesh->GetStaticMesh()->GetPathName();
+    FFoliageBlueprintCache* Blueprint = FoliageCache.Find(Path);
+    if (!Blueprint->IsValid())
+      continue;    
     for (int32 i = 0; i < InitialPoolSize; ++i)
     {
-      FPooledFoliage NewElement = CreatePooledFoliage(Element);
+      FPooledActor NewElement;
+      NewElement.Actor = CreateFoliage(*Blueprint, FTransform());
       if (NewElement.Actor == nullptr)
-        break;
+          break;
       NewElement.DisableActor();
-      NewPool.Add(NewElement);
+      Foliage.FoliagePool.Emplace(NewElement);
     }
-    if (NewPool.Num() == 0)
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, Element.BPClassName + " Pool vacio");
-    else if (NewPool.Num() == 1)
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, Element.BPClassName + " Pool 1");
-    else if (NewPool.Num() == 2)
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, Element.BPClassName + " Pool 2");
-    else if (NewPool.Num() == 3)
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, Element.BPClassName + " Pool 3");
-    else if (NewPool.Num() == 4)
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, Element.BPClassName + " Pool 4");
-    else if (NewPool.Num() == InitialPoolSize)
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, Element.BPClassName + " - Pool creado");
+    if (Foliage.FoliagePool.Num() == InitialPoolSize)
+      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, Blueprint->BPClassName + " - Pool creado");
+    else if (Foliage.FoliagePool.Num() == 0)      
+      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, Blueprint->BPClassName + " Pool vacio");
     else
-      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::White, Element.BPClassName + FString(" - Pool a mitad ( ") + FString::FromInt(NewPool.Num()) + FString(" )"));
-    FoliagePool.Add(Element.BPClassName, NewPool);
+      GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, Blueprint->BPClassName + FString(" - Pool a mitad ( ") + FString::FromInt(Foliage.FoliagePool.Num()) + FString(" )"));
   }
 }
 
-FPooledFoliage AVegetationSpawner::CreatePooledFoliage(const FFoliageBlueprintCache& FoliageBlueprint) const
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::CreatePooledFoliage);
-  AActor* Actor = GetWorld()->SpawnActor<AActor>(FoliageBlueprint.SpawnedClass, FVector(), FRotator());
-  return { Actor, false };
-}
-
-//NOT USED
-bool AVegetationSpawner::StillInUse(const FTransform& Transform)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::StillInUse);
-  const FVector Location = Transform.GetLocation();
-  for (const AActor* Vehicle : VehiclesInLevel)
-  {
-    const ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(Vehicle);
-    if (!IsValid(CarlaVehicle))
-      continue;
-    if (CarlaVehicle->IsInVehicleRange(Location))
-      return true;
-  }
-  return false;
-}
-
-bool AVegetationSpawner::FindInCache(const FString& Path) const
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::FindInCache);
-  const FFoliageBlueprintCache Aux(Path);
-  for (const auto& Element : FoliageCache)
-  {
-    if (Aux.BPClassName == Element.BPClassName)
-      return true;
-  }
-  return false;
-}
-
-FFoliageBlueprintCache AVegetationSpawner::GetBlueprintFromCache(const FString& Path) const
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::GetBlueprintFromCache);
-  const FFoliageBlueprintCache Aux(Path);
-  for (const auto& Element : FoliageCache)
-  {
-    if (Aux.BPClassName == Element.BPClassName)
-      return Aux;
-  }
-  return FFoliageBlueprintCache();
-}
-
-bool AVegetationSpawner::IsFoliageTypeEnabled(const FString& Path)
+bool AVegetationSpawner::IsFoliageTypeEnabled(const FString& Path) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::IsFoliageTypeEnabled);
   if (!SpawnRocks)
@@ -459,71 +398,4 @@ bool AVegetationSpawner::IsFoliageTypeEnabled(const FString& Path)
     if (Path.Contains("Plant"))
       return false;
   return true;
-}
-
-void AVegetationSpawner::GetVehiclesInLevel()
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::GetVehiclesInLevel);
-  TArray<AActor*> FoundVehicles;
-  const UObject* World = GetWorld();
-  UGameplayStatics::GetAllActorsOfClass(World, ACarlaWheeledVehicle::StaticClass(), FoundVehicles);
-  VehiclesInLevel = std::move(FoundVehicles);
-}
-
-bool AVegetationSpawner::AddFoliageToCache(const FFoliageBlueprintCache& NewElement)
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::AddFoliageToCache);
-  for (const FFoliageBlueprintCache& Foliage : FoliageCache)
-  {
-    if (Foliage.BPClassName == NewElement.BPClassName)
-      return false;
-  }
-  FoliageCache.Add(NewElement);
-  return true;
-}
-
-void AVegetationSpawner::GetFoliageTypesInLevel()
-{
-  TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationSpawner::GetFoliageTypesInLevel);
-  const UObject* World = GetWorld();
-  TArray<AActor*> ActorsInLevel;
-  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
-  for (const AActor* Actor : ActorsInLevel)
-  {
-    const TSet<UActorComponent*>& ActorComponents = Actor->GetComponents();
-    for (UActorComponent* Component : ActorComponents)
-    {
-      UInstancedStaticMeshComponent* Mesh = Cast<UInstancedStaticMeshComponent>(Component);
-      if (!IsValid(Mesh))
-        continue;
-      
-      const FString Path = Mesh->GetStaticMesh()->GetPathName();
-      FFoliageBlueprintCache NewFoliageBlueprint(Path);
-      if (!NewFoliageBlueprint.IsValid())
-        continue;
-      
-      bool Added = AddFoliageToCache(NewFoliageBlueprint);
-      if (!Added)
-        continue;
-      
-      const int32 NumOfInstances = Mesh->GetInstanceCount();
-      {
-        TRACE_CPUPROFILER_EVENT_SCOPE(Init Foliage);        
-        FLevelFoliage Foliage;
-        Foliage.Mesh = Mesh;
-        Foliage.Transforms.Init(FTransform(), NumOfInstances);
-        Foliage.SpawnedActors.Init(nullptr, NumOfInstances);
-        Foliage.IndicesInUse.Init(false, NumOfInstances);
-        for (int32 i = 0; i < NumOfInstances; ++i)
-          Mesh->GetInstanceTransform(i, Foliage.Transforms[i], true);
-        FoliageTypesInLevel.Add(Foliage);        
-      }
-    }
-  }
-
-  for (const auto& Element : FoliageCache)
-  {
-    GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, Element.BPClassName);
-  }
-  GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, "Foliage Cache Begin");
 }

@@ -15,12 +15,12 @@
 #include <cmath>
 #include <sstream>
 
-#define SPRINGVEGETATIONLOGS 1
+#define SPRINGVEGETATIONLOGS 0
 #define SOLVERLOGS 0
-#define COLLISIONLOGS 1
+#define COLLISIONLOGS 0
 #define ACCUMULATIONLOGS 0
 #define FICTITIOUSFORCELOGS 0
-#define OTHERLOGS 1
+#define OTHERLOGS 0
 
 #if SOLVERLOGS && SPRINGVEGETATIONLOGS
 #define SOLVER_LOG(Level, Msg, ...) UE_LOG(LogCarla, Level, TEXT(Msg), ##__VA_ARGS__)
@@ -59,7 +59,7 @@ static float ClampToPositiveDegrees(float d)
   }
   else
   {
-    while (d <= 360.0f)
+    while (d >= 360.0f)
     {
       d -= 360.0f;
     }

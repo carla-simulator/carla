@@ -7,25 +7,27 @@
 #pragma onceFoliages
 
 #include "GameFramework/Actor.h"
-#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Components/StaticMeshComponent.h"	
 
 #include "Containers/Array.h"
+#include "Containers/Map.h"
 #include "VegetationSpawner.generated.h"
 
 USTRUCT()
 struct FFoliageBlueprintCache
 {
   GENERATED_BODY()
+  FString Path {};
   FString BPClassName {};
   TSubclassOf<AActor> SpawnedClass { nullptr };
 
-  FFoliageBlueprintCache() = default;
-  FFoliageBlueprintCache(const FString& Path);
-  bool IsValid() const;
+  FFoliageBlueprintCache();
 
-private:
-  void Init(const FString& Path);
+  bool IsValid() const;
+  bool SetBPClassName();
+  bool SetSpawnedClass();
+
+  private:
   FString GetVersionFromFString(const FString& String);
 };
 
@@ -34,18 +36,17 @@ struct FLevelFoliage
 {
   GENERATED_BODY()
   UInstancedStaticMeshComponent* Mesh {nullptr};
-  TArray<int32> IndicesInUse {};
-  TArray<FTransform> Transforms {};
-  TArray<AActor*> SpawnedActors {};
+  TArray<FPooledActor> FoliagePool {};
 };
 
-
 USTRUCT()
-struct FPooledFoliage
+struct FPooledActor
 {
   GENERATED_BODY()
-  AActor* Actor { nullptr };
   bool InUse { false };
+  AActor* Actor { nullptr };
+  FTransform OriginalTransform { FTransform() };
+  int32 OriginalIndex { -1 };
 
   void EnableActor();
   void DisableActor();
@@ -76,6 +77,12 @@ public:
   UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
   int32 InitialPoolSize {5};
 
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  int32 MinDistance {50};
+
+  UPROPERTY(Category = "CARLA Vegetation Spwaner", EditDefaultsOnly)
+  int32 MaxDistance {1000000000};
+
   /// @}
   // ===========================================================================
   /// @name Overriden from AActor
@@ -89,23 +96,19 @@ protected:
 
 private:
   void GetVehiclesInLevel();
-  void GetFoliageTypesInLevel();
   void CreatePools();
-  bool IsFoliageTypeEnabled(const FString& Path);
-  bool FindInCache(const FString& Path) const;
-  FFoliageBlueprintCache GetBlueprintFromCache(const FString& Path) const;
-  bool StillInUse(const FTransform& Transform);
-  AActor* GetFoliageFromPool(const FFoliageBlueprintCache& FoliageBlueprint);
-  void HideFoliage(const FFoliageBlueprintCache& FoliageBlueprint, AActor* Actor);
-  FPooledFoliage CreatePooledFoliage(const FFoliageBlueprintCache& FoliageBlueprint) const;
-  void SpawnFoliage(AActor* Actor, const FTransform& FoliageTransform);
-  bool AddFoliageToCache(const FFoliageBlueprintCache& NewElement);
 
-  AActor* CreateFoliage(const FFoliageBlueprintCache& CacheBPClass, const FTransform& FoliageTransform);
+  void AddFoliageIndicesInUse(TArray<int32>& Global, const TArray<int32>& Local);
+  bool IsFoliageIndexInUse(const FLevelFoliage& Foliage, int32 Index) const;
+
+  AActor* CreateFoliage(const FFoliageBlueprintCache& CacheBPClass, const FTransform& FoliageTransform) const;
+  bool GetFoliageFromPool(FLevelFoliage& Foliage, int32 Index);
+
+  void CacheFoliageTypesInLevel();
+  bool IsFoliageTypeEnabled(const FString& Path) const;
 
 private:
   TArray<AActor*> VehiclesInLevel;
-  TArray<FLevelFoliage> FoliageTypesInLevel;
-  TArray<FFoliageBlueprintCache> FoliageCache;
-  TMap<FString, TArray<FPooledFoliage>> FoliagePool;
+  TMap<FString, FFoliageBlueprintCache> FoliageCache;
+  TArray<FLevelFoliage> LevelFoliages;
 };
