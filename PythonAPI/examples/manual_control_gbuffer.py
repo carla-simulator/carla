@@ -1203,6 +1203,8 @@ class CameraManager(object):
 
     def next_gbuffer(self):
         if self.sensor is not None:
+            print('destroying sensor...')
+            self.sensor.stop()
             self.sensor.destroy()
             self.surface = None
         self.sensor = self._parent.get_world().spawn_actor(

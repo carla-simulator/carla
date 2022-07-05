@@ -8,12 +8,12 @@
 
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla/Sensor/Sensor.h"
-#include "UE4_Overridden/SceneCaptureComponent2D_CARLA.h"
+#include "Carla/Sensor/UE4_Overridden/SceneCaptureComponent2D_CARLA.h"
+#include "Carla/Sensor/ImageUtil.h"
 
 #include "Async/Async.h"
 #include "Renderer/Public/GBufferView.h"
 
-#include "ImageUtil.h"
 #include <type_traits>
 
 #include "SceneCaptureSensor.generated.h"
