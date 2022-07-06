@@ -12,6 +12,9 @@
 #include <vector>
 #include <numeric>
 
+
+
+
 namespace carla {
 namespace sensor {
 
@@ -51,29 +54,32 @@ namespace data {
   class SemanticLidarDetection {
     public:
       geom::Location point{};
-      float cos_inc_angle{};
+      //float cos_inc_angle{};
+      float v{};
+      //float vy{};
+      //float vz{};
       uint32_t object_idx{};
       uint32_t object_tag{};
-
+      
       SemanticLidarDetection() = default;
 
-      SemanticLidarDetection(float x, float y, float z, float cosTh, uint32_t idx, uint32_t tag) :
-          point(x, y, z), cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
-      SemanticLidarDetection(geom::Location p, float cosTh, uint32_t idx, uint32_t tag) :
-          point(p), cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
+      SemanticLidarDetection(float x, float y, float z, float V, uint32_t idx, uint32_t tag) :
+          point(x, y, z), v{ V }, object_idx{ idx }, object_tag{ tag } { }
+      SemanticLidarDetection(geom::Location p, float V, uint32_t idx, uint32_t tag) :
+          point(p), v{ V }, object_idx{ idx }, object_tag{ tag } { }
 
       void WritePlyHeaderInfo(std::ostream& out) const{
-        out << "property float32 x\n" \
-           "property float32 y\n" \
-           "property float32 z\n" \
-           "property float32 CosAngle\n" \
-           "property uint32 ObjIdx\n" \
-           "property uint32 ObjTag";
+          out << "property float32 x\n" \
+              "property float32 y\n" \
+              "property float32 z\n" \
+              "property float32 v\n" \
+              "property uint32_t object_idx\n" \
+              "property uint32_t object_tag";
       }
 
       void WriteDetection(std::ostream& out) const{
-        out << point.x << ' ' << point.y << ' ' << point.z << ' ' \
-          << cos_inc_angle << ' ' << object_idx << ' ' << object_tag;
+          out << point.x << ' ' << point.y << ' ' << point.z << ' ' \
+              << v << ' '<< object_idx << ' ' << object_tag;
       }
   };
   #pragma pack(pop)

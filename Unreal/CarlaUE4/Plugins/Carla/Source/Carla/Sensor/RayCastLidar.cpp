@@ -122,7 +122,7 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
       return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
   }
 
-  void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
+  void ARayCastLidar::ComputeAndSaveDetections(const FTransform& SensorTransform, const float DeltaTime) {
     for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
       PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
 

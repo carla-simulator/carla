@@ -45,7 +45,7 @@ private:
   void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) override;
   bool PostprocessDetection(FDetection& Detection) const;
 
-  void ComputeAndSaveDetections(const FTransform& SensorTransform) override;
+  void ComputeAndSaveDetections(const FTransform& SensorTransform, const float DeltaTime) override;
 
   FLidarData LidarData;
 

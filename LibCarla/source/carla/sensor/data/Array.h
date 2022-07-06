@@ -133,7 +133,7 @@ namespace data {
       DEBUG_ASSERT(begin() <= end());
     }
 
-    explicit Array(size_t offset, RawData &&data)
+    explicit Array(size_type offset, RawData &&data)
       : Array(std::move(data), [offset](const RawData &) { return offset; }) {}
 
     const RawData &GetRawData() const {
@@ -144,7 +144,7 @@ namespace data {
 
     RawData _data;
 
-    const size_t _offset;
+    const size_type _offset;
   };
 
 } // namespace data

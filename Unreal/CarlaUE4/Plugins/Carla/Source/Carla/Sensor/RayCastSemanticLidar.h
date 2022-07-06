@@ -38,6 +38,9 @@ public:
 
   virtual void Set(const FActorDescription &Description) override;
   virtual void Set(const FLidarDescription &LidarDescription);
+  
+  
+  
 
 protected:
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
@@ -55,7 +58,7 @@ protected:
   virtual void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel);
 
   /// Compute all raw detection information
-  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FSemanticDetection &Detection) const;
+  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FSemanticDetection &Detection, const float DeltaTime);
 
   /// Saving the hits the raycast returns per channel
   void WritePointAsync(uint32_t Channel, FHitResult &Detection);
@@ -65,7 +68,8 @@ protected:
 
   /// This method uses all the saved FHitResults, compute the
   /// RawDetections and then send it to the LidarData structure.
-  virtual void ComputeAndSaveDetections(const FTransform &SensorTransform);
+  virtual void ComputeAndSaveDetections(const FTransform &SensorTransform, const float DeltaTime);
+
 
   UPROPERTY(EditAnywhere)
   FLidarDescription Description;
@@ -75,8 +79,13 @@ protected:
   std::vector<std::vector<FHitResult>> RecordedHits;
   std::vector<std::vector<bool>> RayPreprocessCondition;
   std::vector<uint32_t> PointsPerChannel;
+  FVector CurrentVelocity;
+
+  /// Used to compute the velocity of the radar
+  FVector PrevLocation;
 
 private:
   FSemanticLidarData SemanticLidarData;
+  
 
 };
