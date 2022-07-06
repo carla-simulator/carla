@@ -114,7 +114,6 @@ void UCarlaLightSubsystem::SetDayNightCycle(const bool active) {
       WeatherActor->SetDayNightCycle(active);
     }
   }
-  std::cout << "Calling the server weather to change the day night cycle to " << active << std::endl;
 }
 
 void UCarlaLightSubsystem::SetClientStatesdirty(FString ClientThatUpdate)
