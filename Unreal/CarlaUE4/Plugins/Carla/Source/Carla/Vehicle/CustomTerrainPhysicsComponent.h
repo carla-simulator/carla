@@ -23,6 +23,7 @@ THIRD_PARTY_INCLUDES_END
 struct FParticle
 {
   FDVector Position; // position in m
+  FVector Velocity;
   float Radius = 0.02f;
 };
 struct FHeightMapData
@@ -43,6 +44,8 @@ struct FDenseTile
   void InitializeTile(float ParticleSize, float Depth, 
       FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
+  void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
+  void GetParticlesInBox(FDVector Position, const FBox& Box, std::vector<FParticle*> &ParticlesInRadius);
   std::vector<FParticle> Particles;
   FDVector TilePosition;
 };
@@ -50,7 +53,10 @@ class FSparseHighDetailMap
 {
 public:
 
+  FSparseHighDetailMap(float ParticleDiameter = 0.02f, float Depth = 0.4f)
+    : ParticleSize(ParticleDiameter), TerrainDepth(Depth) {};
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
+  std::vector<FParticle*> GetParticlesInBox(FDVector Position, const FBox& Box);
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& GetTile(FDVector Position);
@@ -76,6 +82,8 @@ private:
   FDVector Extension;
   float TileSize = 1.f; // 1m per tile
   FHeightMapData Heightmap;
+  float ParticleSize = 0.02f;
+  float TerrainDepth = 0.4f;
 };
 
 USTRUCT(BlueprintType)
@@ -122,8 +130,31 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString NeuralModelFile = "";
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  float ForceMulFactor = 1.0;
+  UPROPERTY(EditAnywhere)
+  bool NNVerbose = false;
 private:
 
+  void RunNNPhysicsSimulation(
+      ACarlaWheeledVehicle *Vehicle, float DeltaTime);
+  // TArray<FParticle*> GetParticlesInRange(...);
+  void SetUpParticleArrays(std::vector<FParticle*>& ParticlesIn, 
+      TArray<float>& ParticlePosOut, 
+      TArray<float>& ParticleVelOut);
+  void SetUpWheelArrays(ACarlaWheeledVehicle *Vehicle, int WheelIdx,
+      TArray<float>& WheelPos, 
+      TArray<float>& WheelOrientation, 
+      TArray<float>& WheelLinearVelocity, 
+      TArray<float>& WheelAngularVelocity);
+  void UpdateParticles(
+      std::vector<FParticle*> Particles, std::vector<float> Forces,
+      float DeltaTime);
+  void ApplyForcesToVehicle(
+      ACarlaWheeledVehicle *Vehicle,
+      FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3,
+      FVector TorqueWheel0, FVector TorqueWheel1, FVector TorqueWheel2, FVector TorqueWheel3);
   void ApplyForces();
 
   UPROPERTY(EditAnywhere)
@@ -134,6 +165,16 @@ private:
   float RayCastRange = 10.0f;
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(1000,1000,1000);
+  UPROPERTY(EditAnywhere)
+  float SearchRadius = 100;
+  UPROPERTY(EditAnywhere)
+  float ParticleDiameter = 2;
+  UPROPERTY(EditAnywhere)
+  float TerrainDepth = 40;
+  UPROPERTY(EditAnywhere)
+  AActor *FloorActor = nullptr;
+  UPROPERTY(EditAnywhere)
+  bool bUpdateParticles = false;
 
 
   FSparseHighDetailMap SparseMap;

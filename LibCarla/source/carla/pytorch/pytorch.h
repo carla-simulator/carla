@@ -6,6 +6,7 @@
 #define _GLIBCXX_USE_CXX11_ABI 0
 
 #include <memory>
+#include <vector>
 
 namespace carla {
 namespace learning {
@@ -14,13 +15,49 @@ namespace learning {
 
   struct NeuralModelImpl;
 
-  class Inputs {
+  struct WheelInput {
   public:
-    float in;
+    int num_particles = 0;
+    float* particles_positions;
+    float* particles_velocities;
+    float* wheel_positions;
+    float* wheel_oritentation;
+    float* wheel_linear_velocity;
+    float* wheel_angular_velocity;
   };
-  class Outputs {
+
+  struct Inputs {
   public:
-    float out;
+    WheelInput wheel0;
+    WheelInput wheel1;
+    WheelInput wheel2;
+    WheelInput wheel3;
+    bool verbose = false;
+  };
+
+  struct WheelOutput {
+  public:
+    float wheel_forces_x = 0;
+    float wheel_forces_y = 0;
+    float wheel_forces_z = 0;
+    float wheel_torque_x = 0;
+    float wheel_torque_y = 0;
+    float wheel_torque_z = 0;
+  //   float* GetParticleForceData();
+  //   void SetParticleFloatData(std::vector<float> &data)
+  //   {
+  //     _particle_forces = data;
+  //   }
+  // private:
+  void SetParticleFloatData(std::vector<float> &data);
+    std::vector<float> _particle_forces;
+  };
+  struct Outputs {
+  public:
+    WheelOutput wheel0;
+    WheelOutput wheel1;
+    WheelOutput wheel2;
+    WheelOutput wheel3;
   };
 
   // Interface with the torch implementation
@@ -30,9 +67,10 @@ namespace learning {
     NeuralModel();
     void LoadModel(char* filename);
 
-    void SetIputs(Inputs input);
+    void SetInputs(Inputs input);
+    void Forward_Test();
     void Forward();
-    Outputs GetOutputs();
+    Outputs& GetOutputs();
 
     ~NeuralModel();
 
