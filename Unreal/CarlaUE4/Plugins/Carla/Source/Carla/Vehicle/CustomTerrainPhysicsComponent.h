@@ -98,13 +98,13 @@ public:
 
   std::unordered_map<uint64_t, FDenseTile> Map;
   FVector PositionToUpdate;
+  FCriticalSection Lock_Map; // UE4 Mutex
 private:
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
   FDVector Extension;
   float TileSize = 1.f; // 1m per tile
   FHeightMapData Heightmap;
-  FCriticalSection Lock_Map; // UE4 Mutex
   FCriticalSection Lock_Position; // UE4 Mutex
 };
 
@@ -175,14 +175,14 @@ private:
   UPROPERTY(EditAnywhere)
   float RayCastRange = 10.0f;
   UPROPERTY(EditAnywhere)
-  FVector WorldSize = FVector(1000,1000,1000);
+  FVector WorldSize = FVector(10000,10000,1000);
   UPROPERTY(EditAnywhere)
   FVector Radius = FVector(10,10,10);
 
 
   FSparseHighDetailMap SparseMap;
   TArray<ACarlaWheeledVehicle*> Vehicles;
-  std::vector<double> Data;
+  TArray<uint8_t> Data;
 
 	class FRunnableThread* Thread;
 	struct FTilesWorker* TilesWorker;

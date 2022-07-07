@@ -17,6 +17,8 @@
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "RHICommandList.h"
+#include "TextureResource.h"
+#include "Rendering/Texture2DResource.h"
 // #include <carla/pytorch/pytorch.h>
 
 #include <algorithm>
@@ -324,9 +326,7 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
           uint64_t CurrentTileID = GetTileId(FDVector(X,Y,0));
           if( Map.find(CurrentTileID) != Map.end() )
           {
-            KeysToRemove.erase(std::remove_if( KeysToRemove.begin(), KeysToRemove.end(), [CurrentTileID](const uint64_t& x) { 
-              return x == CurrentTileID; 
-            }), KeysToRemove.end());    
+            KeysToRemove.erase(std::remove( KeysToRemove.begin(), KeysToRemove.end(), CurrentTileID), KeysToRemove.end());    
           }
           else
           {
@@ -362,8 +362,12 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
     for(auto it : KeysToRemove) 
     {
       Map.erase(it);
-    } 
+    }
+    
   }
+
+  UE_LOG(LogCarla, Log, TEXT("Map Tiles %d"), Map.size() );
+
 }
 
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
@@ -414,13 +418,24 @@ void FSparseHighDetailMap::SaveMap()
   }
 }
 
-// In the component
 void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
 {
+  FScopeLock ScopeLock(&SparseMap.Lock_Map);
+  if ( SparseMap.Map.empty() )
+  {
+    UE_LOG( LogCarla, Log, TEXT("Cannot Update texture as map is empty") );
+    return;
+  }
+  
   FDVector TextureOrigin = SparseMap.PositionToUpdate;
   TextureOrigin.X -= Radius.X;
   TextureOrigin.Y -= Radius.Y;
-  float Limit = RadiusX*2 + RadiusY*2;
+  float Limit = TextureToUpdate->GetSizeX() * TextureToUpdate->GetSizeY();
+  Data.SetNum(Limit);
+  FMemory::Memset(Data, 0);
+  float MaxValue = 0;
+  float MinValue = Limit;
+  UE_LOG(LogCarla, Log, TEXT("Updating texture gamethread with %d Pixels"), TextureToUpdate->GetSizeX()*TextureToUpdate->GetSizeY());
   for(auto it : SparseMap.Map) 
   {
     for( const FParticle& CurrentParticle : it.second.Particles )
@@ -428,32 +443,36 @@ void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
       FDVector LocalPosition = CurrentParticle.Position - TextureOrigin;
       int32_t Index = LocalPosition.X * (RadiusX * 2.0f) + LocalPosition.Y;
       if ( Index > 0 && Index < Limit ){
-        Data[Index] = std::max(Data[Index] , CurrentParticle.Position.Z);
+        Data[Index] = FMath::RandRange(0, 255);
+      }
+      if( MaxValue < Index){
+        MaxValue = Index;
+      }
+      if( MinValue > Index ){
+        MinValue = Index;
       }
     }
   }
 
+  UE_LOG(LogCarla, Log, TEXT("MinValue: %d MaxValue %d"), MinValue, MaxValue);
+
   ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
   (
-    // Not move this, move data
-    [TextureData=Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
+    [NewData=Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
   {
-    if(Texture)
-    {
-      TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
-      FUpdateTextureRegion2D region;
-      region.SrcX = 0;
-      region.SrcY = 0;
-      region.DestX = 0;
-      region.DestY = 0;
-      region.Width = Texture->GetSizeX();
-      region.Height = Texture->GetSizeY();
+    TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
+    FUpdateTextureRegion2D region;
+    region.SrcX = 0;
+    region.SrcY = 0;
+    region.DestX = 0;
+    region.DestY = 0;
+    region.Width = Texture->GetSizeX();
+    region.Height = Texture->GetSizeY();
 
-      FTexture2DDynamicResource* resource = (FTexture2DDynamicResource*)Texture->Resource;
-      RHIUpdateTexture2D(
-          resource->GetTexture2DRHI(), 0, region, region.Width * region.Height * sizeof(float), (uint8*)&TextureData[0] );
-      UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
-    }
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    RHIUpdateTexture2D(
+        resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]);
+    UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
   });
 }
 
@@ -510,8 +529,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
     TilesWorker = new FTilesWorker(this, GetOwner()->GetActorLocation(), Radius.X, Radius.Y);
     Thread = FRunnableThread::Create(TilesWorker, TEXT("TilesWorker"));
   }
-
-  TextureToUpdate = UTexture2D::CreateTransient(1024, 1024);
 }
 
 void UCustomTerrainPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason){
@@ -532,16 +549,10 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
   Super::TickComponent(DeltaTime,TickType,ThisTickFunction);
-  
-  FVector LocationVector;
-  LocationVector.X = FMath::FRandRange( 0.0f, 100.0f ) * 0.1;
-  LocationVector.Y = FMath::FRandRange( 0.0f, 100.0f ) * 0.1f;
-  LocationVector.Z = 0.0f;
-   GetOwner()->SetActorLocation(LocationVector);
-
   LastUpdatedPosition = GetOwner()->GetActorLocation();
-  SparseMap.Update( LastUpdatedPosition, Radius.X, Radius.Y );
-
+  SparseMap.Update( GetOwner()->GetActorLocation(), Radius.X, Radius.Y );
+  UE_LOG(LogCarla, Log, TEXT("User At %f %f"), GetOwner()->GetActorLocation().X, GetOwner()->GetActorLocation().Y);
+  UpdateTexture(Radius.X, Radius.Y);
   for (ACarlaWheeledVehicle* Vehicle : Vehicles)
   {
 
@@ -621,9 +632,10 @@ void UCustomTerrainPhysicsComponent::ApplyForces()
 void UCustomTerrainPhysicsComponent::LoadTilesAtPosition(FVector Position, float RadiusX, float RadiusY)
 {
   FDVector PositionTranslated;
-  PositionTranslated.X = -Position.X;
-  PositionTranslated.Y =  Position.Z;
-  PositionTranslated.Z =  Position.Y;
+  PositionTranslated.X =  Position.X;
+  PositionTranslated.Y =  -Position.Y;
+  PositionTranslated.Z =  Position.Z;
+
   SparseMap.LoadTilesAtPosition(PositionTranslated, RadiusX, RadiusY);
 
 }
