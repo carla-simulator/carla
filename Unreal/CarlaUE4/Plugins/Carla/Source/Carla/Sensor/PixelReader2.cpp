@@ -57,34 +57,46 @@ static void WritePixelsToBuffer_Vulkan2(
     return;
   }
 
-  std::unique_ptr<FRHIGPUTextureReadback> BackBufferReadback = std::make_unique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+  auto BackBufferReadback = std::make_unique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
   FIntPoint BackBufferSize = Texture->GetSizeXY();
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
     BackBufferReadback->EnqueueCopy(RHICmdList, Texture, FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
   }
+
+  // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Transition");
-    RHICmdList.Transition(FRHITransitionInfo(Texture, ERHIAccess::CopySrc, ERHIAccess::Present));
+    FRenderQueryRHIRef Query = RHICreateRenderQuery(RQT_AbsoluteTime);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("create query");
+    RHICmdList.EndRenderQuery(Query);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Flush");
+    RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("query result");
+    uint64 OldAbsTime = 0;
+    RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
   }
 
-  TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
-
-  FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
-  int32 Count = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
-  while (1)
-  {
-    void* LockedData = BackBufferReadback->Lock(Count);
+  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback=std::move(BackBufferReadback)]() mutable {
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
+      while (!Readback->IsReady())
+      {
+        std::this_thread::yield();
+      }
+    }
+    
+    FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+    int32 Count = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
+    void* LockedData = Readback->Lock(Count);
     if (LockedData)
     {
       FuncForSending(LockedData, Count, Offset);
-      break;
     }
-  }
+    Readback->Unlock();
+    Readback.reset();
+  });
   
-  BackBufferReadback->Unlock();       
-  BackBufferReadback.reset();
 }
 
 // Temporal; this avoid allocating the array each time

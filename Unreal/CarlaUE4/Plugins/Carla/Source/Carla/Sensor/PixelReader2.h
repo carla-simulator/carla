@@ -115,7 +115,7 @@ void FPixelReader2::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitForma
           if (Sensor.IsPendingKill()) return;
 
           auto Stream = Sensor.GetDataStream(Sensor);
-          Stream.SetFrameNumber(Frame);
+          // Stream.SetFrameNumber(Frame);
           auto Buffer = Stream.PopBufferFromPool();
 
           {
