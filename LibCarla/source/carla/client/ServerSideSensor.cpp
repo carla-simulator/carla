@@ -15,7 +15,6 @@ namespace carla {
 namespace client {
 
   ServerSideSensor::~ServerSideSensor() {
-    log_warning("calling sensor destructor ", GetDisplayId());
     if (IsAlive() && IsListening()) {
       log_warning(
           "sensor object went out of the scope but the sensor is still alive",

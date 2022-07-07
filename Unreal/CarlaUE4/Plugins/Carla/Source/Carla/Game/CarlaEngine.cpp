@@ -99,10 +99,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     {
       // we are secondary server, connecting to primary server
       bIsPrimaryServer = false;
-      Secondary = std::make_shared<carla::multigpu::Secondary>(
-        PrimaryIP, 
-        PrimaryPort, 
-        [=](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
+      
+      // define the commands executor (when a command comes from the primary server)
+      auto CommandExecutor = [=](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
         struct CarlaStreamBuffer : public std::streambuf
         {
             CarlaStreamBuffer(char *buf, std::size_t size) { setg(buf, buf, buf + size); }
@@ -151,7 +150,14 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             break;
           }
         }
-      });
+      };
+
+      Secondary = std::make_shared<carla::multigpu::Secondary>(
+        PrimaryIP, 
+        PrimaryPort, 
+        CommandExecutor
+      );
+
       Secondary->Connect();
       // set this server in synchronous mode
       bSynchronousMode = true;
@@ -216,20 +222,31 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   if (TickType == ELevelTick::LEVELTICK_All)
   {
-    // process RPC commands
+
     if (bIsPrimaryServer)
     {
+      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected()) 
+      {
+        // set synchronous mode
+        CurrentSettings.bSynchronousMode = true;
+        CurrentSettings.FixedDeltaSeconds = 1 / 20.0f;
+        OnEpisodeSettingsChanged(CurrentSettings);
+        CurrentEpisode->ApplySettings(CurrentSettings);
+      }
+
+      // process RPC commands
       do
       {
-        Server.RunSome(10u);
+        Server.RunSome(1u);
       }
       while (bSynchronousMode && !Server.TickCueReceived());
     }
     else
     {
+      // process frame data
       do
       {
-        Server.RunSome(10u);
+        Server.RunSome(1u);
       }
       while (!FramesToProcess.size());
     }
