@@ -60,5 +60,5 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
       TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
     }
   );
-  FPixelReader2::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread(*this);
 }

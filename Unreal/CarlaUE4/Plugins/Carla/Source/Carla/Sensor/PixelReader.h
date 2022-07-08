@@ -11,6 +11,7 @@
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 
 #include <compiler/disable-ue4-macros.h>
+#include <carla/Logging.h>
 #include <carla/Buffer.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
@@ -25,6 +26,8 @@
 class FPixelReader
 {
 public:
+
+  using Payload = std::function<void(void *, uint32, uint32)>;
 
   /// Copy the pixels in @a RenderTarget into @a BitMap.
   ///
@@ -71,9 +74,9 @@ private:
   /// @pre To be called from render-thread.
   static void WritePixelsToBuffer(
       UTextureRenderTarget2D &RenderTarget,
-      carla::Buffer &Buffer,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,
+      FPixelReader::Payload FuncForSending,
       bool use16BitFormat = false);
 
 };
@@ -101,26 +104,43 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   // game-thread.
   ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
   (
-    [&Sensor, Stream=Sensor.GetDataStream(Sensor), use16BitFormat](auto &InRHICmdList) mutable
+    [&Sensor, use16BitFormat](auto &InRHICmdList) mutable
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())
       {
-        auto Buffer = Stream.PopBufferFromPool();
+        FPixelReader::Payload FuncForSending = [&Sensor, Frame = FCarlaEngine::GetFrameCounter()](void *LockedData, uint32 Count, uint32 Offset)
+        {
+          if (Sensor.IsPendingKill()) return;
+
+          auto Stream = Sensor.GetDataStream(Sensor);
+          // Stream.SetFrameNumber(Frame);
+          auto Buffer = Stream.PopBufferFromPool();
+
+          {
+            TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
+            Buffer.copy_from(Offset, boost::asio::buffer(LockedData, Count));
+          }
+          {
+            // send
+            TRACE_CPUPROFILER_EVENT_SCOPE_STR("Sending buffer");
+            if(Buffer.data())
+            {
+              SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
+              TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
+              Stream.Send(Sensor, std::move(Buffer));
+            }
+          }
+        };
+        
         WritePixelsToBuffer(
             *Sensor.CaptureRenderTarget,
-            Buffer,
             carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-            InRHICmdList, use16BitFormat);
-
-        if(Buffer.data())
-        {
-          SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-          TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-          Stream.Send(Sensor, std::move(Buffer));
-        }
+            InRHICmdList, 
+            std::move(FuncForSending),
+            use16BitFormat);
       }
     }
   );
