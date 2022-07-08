@@ -250,16 +250,41 @@ AActor* UMapGeneratorWidget::GenerateWater(TSubclassOf<class AActor> RiverClass)
   return RiverActor;
 }
 
-bool UMapGeneratorWidget::GenerateWaterFromWorld(const FString RiverPresetMapName, TSubclassOf<class AActor> RiverClass)
+bool UMapGeneratorWidget::GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass)
 {
   UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Starting Generating Rivers from world %s"), 
-        *CUR_CLASS_FUNC_LINE, *RiverPresetMapName);
+        *CUR_CLASS_FUNC_LINE, *RiversWorld->GetMapName());
 
-  UWorld* RiverPresetWorld =  LoadObject<UWorld>(nullptr, *RiverPresetMapName);
+  TArray<AActor*> RiversActors;
+  UGameplayStatics::GetAllActorsOfClass(RiversWorld, RiverClass, RiversActors);
 
-  TArray<AActor*> RiverPresetActors;
+  if(RiversActors.Num() <= 0)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Error, TEXT("%s: No Rivers Found in %s"), 
+        *CUR_CLASS_FUNC_LINE, *RiversWorld->GetMapName());
+    return false;
+  }
 
-  UGameplayStatics::GetAllActorsOfClass(RiverPresetWorld, RiverClass, RiverPresetActors);
+  float RiverSurfaceDisplacement = 100.0f;
+  for(AActor* RiverActor : RiversActors)
+  {
+    USplineComponent* RiverSpline = dynamic_cast<USplineComponent*>(RiverActor->GetComponentByClass(USplineComponent::StaticClass()));
+    for(int i = 0; i < RiverSpline->GetNumberOfSplinePoints(); i++)
+    {
+      FVector SplinePosition = RiverSpline->GetWorldLocationAtSplinePoint(i);
+      SplinePosition.Z = GetLandscapeSurfaceHeight(RiversWorld, SplinePosition.X, SplinePosition.Y, false) + RiverSurfaceDisplacement;
+      RiverSpline->SetWorldLocationAtSplinePoint(i, SplinePosition);
+    }
+    
+  }
+
+  // UWorld* RiverPresetWorld =  LoadObject<UWorld>(nullptr, *RiverPresetMapName);
+
+  // TArray<AActor*> RiverPresetActors;
+
+  // UGameplayStatics::GetAllActorsOfClass(RiverPresetWorld, RiverClass, RiverPresetActors);
+
+  // 
 
   // UWorld* World = GetWorld();
 
@@ -533,7 +558,11 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
             *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
       TArray<uint16> HeightData;
       // TODO: UTexture2D and GetMipData
-      UpdateTileRT(i, MetaInfo.SizeY-j-1);
+      FMapGeneratorTileMetaInfo TileMetaInfo;
+      TileMetaInfo.IndexX = i;
+      TileMetaInfo.IndexY = MetaInfo.SizeY-j-1;
+      TileMetaInfo.RiverPreset = "RiverPreset01";
+      UpdateTileRT(TileMetaInfo);
       FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
       FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
       TArray<FLinearColor> HeightmapColor;

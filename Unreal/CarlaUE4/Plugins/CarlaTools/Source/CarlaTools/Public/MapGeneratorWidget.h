@@ -63,6 +63,9 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   int IndexY;
+
+  UPROPERTY(BlueprintReadWrite)
+  FString RiverPreset;
 };
 
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
@@ -80,7 +83,7 @@ public:
 
   /// PROVISIONAL
   UFUNCTION(BlueprintImplementableEvent)
-  void UpdateTileRT(int OffsetX, int OffsetY);
+  void UpdateTileRT(const FMapGeneratorTileMetaInfo& TileMetaInfo);
 
   /// Function called by Widget Blueprint which generates all tiles of map
   /// @a mapName, and saves them in @a destinationPath
@@ -123,7 +126,7 @@ public:
   AActor* GenerateWater(TSubclassOf<class AActor> RiverClass);
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
-  bool GenerateWaterFromWorld(const FString RiverPresetMapName, TSubclassOf<class AActor> RiverClass);
+  bool GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass);
 
   /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
   /// to the map specified in @a MetaInfo
