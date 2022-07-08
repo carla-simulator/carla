@@ -8,6 +8,7 @@
 #include "Carla/Sensor/PixelReader.h"
 
 #include "Engine/TextureRenderTarget2D.h"
+#include "Async/Async.h"
 #include "HighResScreenshot.h"
 #include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
 
@@ -36,18 +37,15 @@ struct LockTexture
 // -- Static local functions ---------------------------------------------------
 // =============================================================================
 
-// Temporal; this avoid allocating the array each time and also avoids checking
-// for a bigger texture, ReadSurfaceData will allocate the space needed.
-TArray<FColor> gPixels;
-
 static void WritePixelsToBuffer_Vulkan(
     const UTextureRenderTarget2D &RenderTarget,
-    carla::Buffer &Buffer,
     uint32 Offset,
-    FRHICommandListImmediate &InRHICmdList)
+    FRHICommandListImmediate &RHICmdList,
+    FPixelReader::Payload FuncForSending)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer_Vulkan");
   check(IsInRenderingThread());
+  
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
@@ -56,21 +54,46 @@ static void WritePixelsToBuffer_Vulkan(
     return;
   }
 
-  FIntPoint Rect = RenderResource->GetSizeXY();
+  auto BackBufferReadback = std::make_unique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+  FIntPoint BackBufferSize = Texture->GetSizeXY();
+  EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
+    BackBufferReadback->EnqueueCopy(RHICmdList, Texture, FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
+  }
 
-  // NS: Extra copy here, don't know how to avoid it.
+  // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Read Surface");
-    InRHICmdList.ReadSurfaceData(
-        Texture,
-        FIntRect(0, 0, Rect.X, Rect.Y),
-        gPixels,
-        FReadSurfaceDataFlags(RCM_UNorm, CubeFace_MAX));
+    FRenderQueryRHIRef Query = RHICreateRenderQuery(RQT_AbsoluteTime);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("create query");
+    RHICmdList.EndRenderQuery(Query);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Flush");
+    RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("query result");
+    uint64 OldAbsTime = 0;
+    RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
   }
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
-    Buffer.copy_from(Offset, gPixels);
-  }
+
+  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback=std::move(BackBufferReadback)]() mutable {
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
+      while (!Readback->IsReady())
+      {
+        std::this_thread::yield();
+      }
+    }
+    
+    FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+    int32 Count = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
+    void* LockedData = Readback->Lock(Count);
+    if (LockedData)
+    {
+      FuncForSending(LockedData, Count, Offset);
+    }
+    Readback->Unlock();
+    Readback.reset();
+  });
+  
 }
 
 // Temporal; this avoid allocating the array each time
@@ -78,12 +101,13 @@ TArray<FFloat16Color> gFloatPixels;
 
 static void WriteFloatPixelsToBuffer_Vulkan(
     const UTextureRenderTarget2D &RenderTarget,
-    carla::Buffer &Buffer,
     uint32 Offset,
-    FRHICommandListImmediate &InRHICmdList)
+    FRHICommandListImmediate &RHICmdList,
+    FPixelReader::Payload FuncForSending)
 {
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer_Vulkan");
   check(IsInRenderingThread());
-  gFloatPixels.Empty();
+  
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
   FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
@@ -92,25 +116,58 @@ static void WriteFloatPixelsToBuffer_Vulkan(
     return;
   }
 
-  FIntPoint Rect = RenderResource->GetSizeXY();
-
-  // NS: Extra copy here, don't know how to avoid it.
-  InRHICmdList.ReadSurfaceFloatData(
-      Texture,
-      FIntRect(0, 0, Rect.X, Rect.Y),
-      gFloatPixels,
-      CubeFace_PosX,0,0);
-
-  TArray<float> IntermediateBuffer;
-  IntermediateBuffer.Reserve(gFloatPixels.Num() * 2);
-  for (FFloat16Color& color : gFloatPixels) {
-    float x = (color.R.GetFloat() - 0.5f)*4.f;
-    float y = (color.G.GetFloat() - 0.5f)*4.f;
-    IntermediateBuffer.Add(x);
-    IntermediateBuffer.Add(y);
+  auto BackBufferReadback = std::make_unique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+  FIntPoint BackBufferSize = Texture->GetSizeXY();
+  EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
+    BackBufferReadback->EnqueueCopy(RHICmdList, Texture, FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
   }
-  Buffer.copy_from(Offset, IntermediateBuffer);
-}
+
+  // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
+  {
+    FRenderQueryRHIRef Query = RHICreateRenderQuery(RQT_AbsoluteTime);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("create query");
+    RHICmdList.EndRenderQuery(Query);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Flush");
+    RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
+    TRACE_CPUPROFILER_EVENT_SCOPE_STR("query result");
+    uint64 OldAbsTime = 0;
+    RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
+  }
+
+  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback=std::move(BackBufferReadback)]() mutable {
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
+      while (!Readback->IsReady())
+      {
+        std::this_thread::yield();
+      }
+    }
+    
+    FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+    int32 Count = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
+    int32 TotalPixels = (BackBufferSize.Y * BackBufferSize.X);
+    void* LockedData = Readback->Lock(Count);
+    if (LockedData)
+    {
+      TArray<float> IntermediateBuffer;
+      FFloat16Color *Data = reinterpret_cast<FFloat16Color *>(LockedData);
+      IntermediateBuffer.Reserve(TotalPixels * 2);
+      for (int i=0; i<TotalPixels; ++i)
+      {
+        float x = (Data->R.GetFloat() - 0.5f) * 4.f;
+        float y = (Data->G.GetFloat() - 0.5f) * 4.f;
+        IntermediateBuffer.Add(x);
+        IntermediateBuffer.Add(y);
+        ++Data;
+      }
+      FuncForSending(reinterpret_cast<void *>(IntermediateBuffer.GetData()), TotalPixels * sizeof(float) * 2 , Offset);
+    }
+    Readback->Unlock();
+    Readback.reset();
+  });
+ }
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
@@ -171,11 +228,10 @@ TFuture<bool> FPixelReader::SavePixelsToDisk(
 
 void FPixelReader::WritePixelsToBuffer(
     UTextureRenderTarget2D &RenderTarget,
-    carla::Buffer &Buffer,
     uint32 Offset,
     FRHICommandListImmediate &InRHICmdList,
-    bool use16BitFormat
-    )
+    FPixelReader::Payload FuncForSending,
+    bool use16BitFormat)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
   check(IsInRenderingThread());
@@ -184,15 +240,15 @@ void FPixelReader::WritePixelsToBuffer(
   {
     if (use16BitFormat)
     {
-      WriteFloatPixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
+      WriteFloatPixelsToBuffer_Vulkan(RenderTarget, Offset, InRHICmdList, std::move(FuncForSending));
     }
     else
     {
-      WritePixelsToBuffer_Vulkan(RenderTarget, Buffer, Offset, InRHICmdList);
+      WritePixelsToBuffer_Vulkan(RenderTarget, Offset, InRHICmdList, std::move(FuncForSending));
     }
     return;
   }
-
+  /*
   FTextureRenderTargetResource* RenderTargetResource = RenderTarget.GetRenderTargetResource();
   if(!RenderTargetResource)
   {
@@ -235,4 +291,5 @@ void FPixelReader::WritePixelsToBuffer(
       Buffer.copy_from(Offset, Source, ExpectedStride * Height);
     }
   }
+  */
 }
