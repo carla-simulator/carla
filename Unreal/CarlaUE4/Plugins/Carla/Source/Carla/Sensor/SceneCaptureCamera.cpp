@@ -29,7 +29,7 @@ void ASceneCaptureCamera::PostPhysTick(UWorld* World, ELevelTick TickType, float
     FPixelReader::SendPixelsInRenderThread(*this);
 }
 
-void ASceneCaptureCamera::SendGBufferTextures(FGBufferData* GBuffer)
+void ASceneCaptureCamera::SendGBufferTextures(FGBufferRequest& GBuffer)
 {
-    SendGBufferTexturesInternal(*this, *GBuffer);
+    SendGBufferTexturesInternal(*this, GBuffer);
 }

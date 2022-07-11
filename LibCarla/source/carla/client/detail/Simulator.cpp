@@ -379,20 +379,24 @@ namespace detail {
         });
   }
   
+  void Simulator::UnSubscribeFromSensor(Actor &sensor) {
+    _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
+#if 0
+    for (int i = 0; i != 13; ++i)
+      _client.UnSubscribeFromGBuffer(sensor.GetId(), i);
+#endif
+  }
+
   void Simulator::SubscribeToGBuffer(
       Actor &actor,
-      uint32_t GBufferId,
+      uint32_t gbuffer_id,
       std::function<void(SharedPtr<sensor::SensorData>)> callback) {
-    _client.SubscribeToGBuffer(actor.GetId(), GBufferId,
+    _client.SubscribeToGBuffer(actor.GetId(), gbuffer_id,
         [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
           auto data = sensor::Deserializer::Deserialize(std::move(buffer));
           data->_episode = ep.TryLock();
           cb(std::move(data));
         });
-  }
-
-  void Simulator::UnSubscribeFromSensor(const Sensor &sensor) {
-    _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
   }
 
   void Simulator::FreezeAllTrafficLights(bool frozen) {

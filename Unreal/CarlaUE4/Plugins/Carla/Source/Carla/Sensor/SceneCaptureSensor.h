@@ -415,7 +415,7 @@ public:
 protected:
     
   void CaptureSceneCustom();
-  virtual void SendGBufferTextures(FGBufferData* GBuffer);
+  virtual void SendGBufferTextures(FGBufferRequest& GBuffer);
 
   virtual void BeginPlay() override;
 
@@ -461,7 +461,7 @@ private:
   static void SendGBuffer(
       SensorT& self,
       CameraGBufferT& CameraGBuffer,
-      FGBufferData& GBufferData,
+      FGBufferRequest& GBufferData,
       EGBufferTextureID TextureID)
   {
       using PixelType = typename std::conditional<
@@ -498,9 +498,9 @@ private:
 protected:
 
   template <typename T>
-  void SendGBufferTexturesInternal(T& self, FGBufferData& GBD)
+  void SendGBufferTexturesInternal(T& self, FGBufferRequest& GBD)
   {
-      for (size_t i = 0; i != FGBufferData::TextureCount; ++i)
+      for (size_t i = 0; i != FGBufferRequest::TextureCount; ++i)
       {
           if ((GBD.DesiredTexturesMask & (UINT64_C(1) << i)) != 0)
           {

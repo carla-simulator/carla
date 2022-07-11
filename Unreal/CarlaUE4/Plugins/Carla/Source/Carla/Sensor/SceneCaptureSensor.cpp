@@ -486,7 +486,7 @@ constexpr const TCHAR* GBufferNames[] =
 };
 
 template <EGBufferTextureID ID, typename T>
-__declspec(noinline) static void CheckGBufferStream(T& GBufferStream, FGBufferData& GBuffer)
+__declspec(noinline) static void CheckGBufferStream(T& GBufferStream, FGBufferRequest& GBuffer)
 {
     if (GBufferStream.bIsUsed)
     {
@@ -509,58 +509,67 @@ __declspec(noinline) static void CheckGBufferStream(T& GBufferStream, FGBufferDa
         GBuffer.MarkAsRequested(ID);
 }
 
+static uint64 Prior = 0;
+
 void ASceneCaptureSensor::CaptureSceneCustom()
 {
-    auto GBufferPtr = new FGBufferData();
+    auto GBufferPtr = MakeUnique<FGBufferRequest>();
+    auto& GBuffer = *GBufferPtr;
 
-    CheckGBufferStream<EGBufferTextureID::SceneColor>(CameraGBuffers.SceneColor, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::SceneDepth>(CameraGBuffers.SceneDepth, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::SceneStencil>(CameraGBuffers.SceneStencil, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::GBufferA>(CameraGBuffers.GBufferA, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::GBufferB>(CameraGBuffers.GBufferB, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::GBufferC>(CameraGBuffers.GBufferC, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::GBufferD>(CameraGBuffers.GBufferD, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::GBufferE>(CameraGBuffers.GBufferE, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::GBufferF>(CameraGBuffers.GBufferF, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::Velocity>(CameraGBuffers.Velocity, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::SSAO>(CameraGBuffers.SSAO, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, *GBufferPtr);
-    CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, *GBufferPtr);
+    CheckGBufferStream<EGBufferTextureID::SceneColor>(CameraGBuffers.SceneColor, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::SceneDepth>(CameraGBuffers.SceneDepth, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::SceneStencil>(CameraGBuffers.SceneStencil, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferA>(CameraGBuffers.GBufferA, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferB>(CameraGBuffers.GBufferB, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferC>(CameraGBuffers.GBufferC, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferD>(CameraGBuffers.GBufferD, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferE>(CameraGBuffers.GBufferE, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::GBufferF>(CameraGBuffers.GBufferF, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::Velocity>(CameraGBuffers.Velocity, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::SSAO>(CameraGBuffers.SSAO, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::CustomDepth>(CameraGBuffers.CustomDepth, GBuffer);
+    CheckGBufferStream<EGBufferTextureID::CustomStencil>(CameraGBuffers.CustomStencil, GBuffer);
 
-    if (GBufferPtr->DesiredTexturesMask == 0)
+    if (GBuffer.DesiredTexturesMask == 0)
     {
         CaptureComponent2D->CaptureScene();
         return;
     }
 
-    GBufferPtr->OwningActor = CaptureComponent2D->GetViewOwner();
+    if (Prior != GBuffer.DesiredTexturesMask)
+        UE_LOG(LogCarla, Log, TEXT("GBuffer selection changed (%llu)."), GBuffer.DesiredTexturesMask);
+    Prior = GBuffer.DesiredTexturesMask;
+
+    GBuffer.OwningActor = CaptureComponent2D->GetViewOwner();
+
+#define CARLA_GBUFFER_DISABLE_TAA
+#ifdef CARLA_GBUFFER_DISABLE_TAA
     bool bTAA = CaptureComponent2D->ShowFlags.TemporalAA; // Temporarily disable TAA to avoid jitter.
     if (bTAA)
         CaptureComponent2D->ShowFlags.TemporalAA = false;
-    CaptureComponent2D->CaptureSceneWithGBuffer(*GBufferPtr);
+#endif
+
+    CaptureComponent2D->CaptureSceneWithGBuffer(GBuffer);
+
+#ifdef CARLA_GBUFFER_DISABLE_TAA
     if (bTAA)
         CaptureComponent2D->ShowFlags.TemporalAA = true;
-
-    AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBufferPtr]() mutable
-        {
-            SendGBufferTextures(GBufferPtr);
-#if 0
-            delete GBufferPtr;
-#else
-            ENQUEUE_RENDER_COMMAND(ReleaseGBuffers)([GBufferPtr](FRHICommandList& RHICmdList)
-                {
-                    for (auto& e : GBufferPtr->Readbacks)
-                        if (e.IsValid())
-                            e.Release();
-                    delete GBufferPtr;
-                });
+#undef CARLA_GBUFFER_DISABLE_TAA
 #endif
+
+    AsyncTask(ENamedThreads::AnyHiPriThreadNormalTask, [this, GBuffer = MoveTemp(GBufferPtr)]() mutable
+    {
+        SendGBufferTextures(*GBuffer);
+        ENQUEUE_RENDER_COMMAND(ReleaseGBufferRequest)([GBuffer = MoveTemp(GBuffer)](auto& Unused) mutable
+        {
+            GBuffer.Release();
         });
+    });
 }
 
-void ASceneCaptureSensor::SendGBufferTextures(FGBufferData* GBuffer)
+void ASceneCaptureSensor::SendGBufferTextures(FGBufferRequest& GBuffer)
 {
-    SendGBufferTexturesInternal(*this, *GBuffer);
+    SendGBufferTexturesInternal(*this, GBuffer);
 }
 
 void ASceneCaptureSensor::BeginPlay()

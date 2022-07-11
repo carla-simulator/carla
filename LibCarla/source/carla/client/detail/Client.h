@@ -375,6 +375,10 @@ namespace detail {
 
     void UnSubscribeFromStream(const streaming::Token &token);
 
+    void UnSubscribeFromGBuffer(
+        rpc::ActorId ActorId,
+        uint32_t GBufferId);
+
     void DrawDebugShape(const rpc::DebugShape &shape);
 
     void ApplyBatch(
