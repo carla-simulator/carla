@@ -65,7 +65,7 @@ struct FDenseTile
 class FSparseHighDetailMap
 {
 public:
-
+  friend struct FTilesWorker;
   inline float GetTileSize() const {
     return TileSize;
   }
@@ -99,13 +99,13 @@ public:
   std::unordered_map<uint64_t, FDenseTile> Map;
   FVector PositionToUpdate;
   FCriticalSection Lock_Map; // UE4 Mutex
+  FCriticalSection Lock_Position; // UE4 Mutex
 private:
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
   FDVector Tile0Position;
   FDVector Extension;
   float TileSize = 1.f; // 1m per tile
   FHeightMapData Heightmap;
-  FCriticalSection Lock_Position; // UE4 Mutex
 };
 
 USTRUCT(BlueprintType)
@@ -126,7 +126,7 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UCustomTerrainPhysicsComponent : public UActorComponent
 {
   GENERATED_BODY()
-
+  friend struct FTilesWorker;
 public:
   UCustomTerrainPhysicsComponent();
   
@@ -152,7 +152,13 @@ public:
   void LoadTilesAtPosition(FVector Position, float RadiusX = 100.0f, float RadiusY = 100.0f);
 
   UFUNCTION(BlueprintCallable, Category="Texture")
+  void InitTexture();
+
+  UFUNCTION(BlueprintCallable, Category="Texture")
   void UpdateTexture(float RadiusX, float RadiusY);
+
+  UFUNCTION(BlueprintCallable, Category="Texture")
+  void UpdateTextureData();
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UTexture2D *HeightMap;
@@ -177,11 +183,12 @@ private:
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(10000,10000,1000);
   UPROPERTY(EditAnywhere)
-  FVector Radius = FVector(10,10,10);
+  FVector Radius = FVector(5,5,0);
 
 
   FSparseHighDetailMap SparseMap;
   TArray<ACarlaWheeledVehicle*> Vehicles;
+
   TArray<uint8_t> Data;
 
 	class FRunnableThread* Thread;

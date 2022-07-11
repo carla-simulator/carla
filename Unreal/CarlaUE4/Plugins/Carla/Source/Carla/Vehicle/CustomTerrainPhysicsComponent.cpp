@@ -19,6 +19,7 @@
 #include "RHICommandList.h"
 #include "TextureResource.h"
 #include "Rendering/Texture2DResource.h"
+#include "GenericPlatform/GenericPlatformProcess.h"
 // #include <carla/pytorch/pytorch.h>
 
 #include <algorithm>
@@ -305,13 +306,14 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition);
   std::vector<uint64_t> KeysToRemove;
   std::vector<uint64_t> KeysToLoad;
-  float MinX = std::max(Position.X - RadiusX, 0.0);
-  float MinY = std::max(Position.Y - RadiusX, 0.0);
-  float MaxX = std::min(Position.X + RadiusX, Extension.X - 1.0 );
-  float MaxY = std::min(Position.Y - RadiusY, Extension.Y - 1.0 );
 
+  double MinX = std::max( Position.X - RadiusX + 1.0, 0.0);
+  double MinY = std::max( Position.Y - RadiusX + 1.0, 0.0);
+  double MaxX = std::min( Position.X + RadiusX - 1.0 , Extension.X - 1.0 );
+  double MaxY = std::min( Position.Y + RadiusY - 1.0 , Extension.Y - 1.0 );
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Process);
+    //UE_LOG(LogCarla, Log, TEXT("Thread2: Loading Tiles MinX %f MinY %f MaxX %f MaxY %f"), MinX, MinY, MaxX, MaxY);
     
     for(auto it : Map) 
     {
@@ -363,20 +365,17 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
     {
       Map.erase(it);
     }
-    
-  }
-
-  UE_LOG(LogCarla, Log, TEXT("Map Tiles %d"), Map.size() );
-
+  }  
 }
 
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
 {
 
-  float MinX = std::max(Position.X - RadiusX, 0.0f);
-  float MinY = std::max(Position.Y - RadiusX, 0.0f);
-  float MaxX = std::min(Position.X + RadiusX, static_cast<float>( Extension.X ) - 1.0f );
-  float MaxY = std::min(Position.Y - RadiusY, static_cast<float>( Extension.Y ) - 1.0f );
+  float MinX = std::max(Position.X - RadiusX + 1.0f, 0.0f);
+  float MinY = std::max(Position.Y - RadiusX + 1.0f, 0.0f);
+  float MaxX = std::min(Position.X + RadiusX - 1.0f, static_cast<float>( Extension.X - 1.0 )  );
+  float MaxY = std::min(Position.Y + RadiusY - 1.0f, static_cast<float>( Extension.Y - 1.0 )  );
+  
   for(float X = MinX; X < MaxX ; X += TileSize ) 
   {
     for(float Y = MinY ; Y < MaxY; Y += TileSize )
@@ -390,15 +389,11 @@ void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY
         Lock_Map.Unlock();
         if (ConditionToStopWaiting)
         {
-          UE_LOG(LogCarla, Log, TEXT("Loop Waiting for Tile %d"), CurrentTileID);
+          UE_LOG(LogCarla, Log, TEXT("Loop Waiting for Tile %d With position: X: %f Y: %f"), CurrentTileID,X,Y);
         }
       }
     }
   }
-
- // Check if tiles are already loaded
- // If they are send position
- // If not wait until loaded
 }
 
 void FSparseHighDetailMap::SaveMap()
@@ -421,45 +416,14 @@ void FSparseHighDetailMap::SaveMap()
 void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
 {
   FScopeLock ScopeLock(&SparseMap.Lock_Map);
-  if ( SparseMap.Map.empty() )
-  {
-    UE_LOG( LogCarla, Log, TEXT("Cannot Update texture as map is empty") );
-    return;
-  }
   
-  FDVector TextureOrigin = SparseMap.PositionToUpdate;
-  TextureOrigin.X -= Radius.X;
-  TextureOrigin.Y -= Radius.Y;
-  float Limit = TextureToUpdate->GetSizeX() * TextureToUpdate->GetSizeY();
-  Data.SetNum(Limit);
-  FMemory::Memset(Data, 0);
-  float MaxValue = 0;
-  float MinValue = Limit;
-  UE_LOG(LogCarla, Log, TEXT("Updating texture gamethread with %d Pixels"), TextureToUpdate->GetSizeX()*TextureToUpdate->GetSizeY());
-  for(auto it : SparseMap.Map) 
-  {
-    for( const FParticle& CurrentParticle : it.second.Particles )
-    {
-      FDVector LocalPosition = CurrentParticle.Position - TextureOrigin;
-      int32_t Index = LocalPosition.X * (RadiusX * 2.0f) + LocalPosition.Y;
-      if ( Index > 0 && Index < Limit ){
-        Data[Index] = FMath::RandRange(0, 255);
-      }
-      if( MaxValue < Index){
-        MaxValue = Index;
-      }
-      if( MinValue > Index ){
-        MinValue = Index;
-      }
-    }
-  }
-
-  UE_LOG(LogCarla, Log, TEXT("MinValue: %d MaxValue %d"), MinValue, MaxValue);
+  UpdateTextureData();
 
   ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
   (
     [NewData=Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
   {
+
     TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
     FUpdateTextureRegion2D region;
     region.SrcX = 0;
@@ -472,8 +436,40 @@ void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
     FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]);
-    UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
+    
+    //UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
   });
+}
+
+void UCustomTerrainPhysicsComponent::InitTexture(){
+  float LimitX = TextureToUpdate->GetSizeX(); 
+  float LimitY = TextureToUpdate->GetSizeY();
+  
+  Data.Init(0, LimitX * LimitY);
+  UpdateTextureData();
+}
+
+void UCustomTerrainPhysicsComponent::UpdateTextureData()
+{
+  float LimitX = TextureToUpdate->GetSizeX(); 
+  float LimitY = TextureToUpdate->GetSizeY();
+  FDVector OriginPosition = SparseMap.PositionToUpdate;
+  OriginPosition.X -= (LimitX * 0.5f);
+  OriginPosition.Y -= (LimitY * 0.5f);  
+  
+  for(auto it : SparseMap.Map)
+  {
+    for( auto it2 : it.second.Particles ) 
+    {
+      FDVector LocalPos = (it2.Position - OriginPosition); 
+     
+      if( LocalPos.X >= 0 && LocalPos.X < (LimitX - 1.0f) && LocalPos.Y >= 0 && LocalPos.Y < (LimitY - 1.0f) )
+      {
+        int32 Index = LocalPos.X + LimitX * LocalPos.Y;
+        Data[Index] = 255 - (it2.Position.Z * 500.0f);
+      }
+    }
+  }
 }
 
 UCustomTerrainPhysicsComponent::UCustomTerrainPhysicsComponent()
@@ -524,6 +520,10 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::InitializeMap);
   SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,0.f), WorldSize/100.f);
 
+  InitTexture();
+
+  UE_LOG(LogCarla, Log, TEXT("MainThread Data ArraySize %d "), Data.Num());
+
   if (TilesWorker == nullptr)
   {
     TilesWorker = new FTilesWorker(this, GetOwner()->GetActorLocation(), Radius.X, Radius.Y);
@@ -550,9 +550,9 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
 {
   Super::TickComponent(DeltaTime,TickType,ThisTickFunction);
   LastUpdatedPosition = GetOwner()->GetActorLocation();
-  SparseMap.Update( GetOwner()->GetActorLocation(), Radius.X, Radius.Y );
-  UE_LOG(LogCarla, Log, TEXT("User At %f %f"), GetOwner()->GetActorLocation().X, GetOwner()->GetActorLocation().Y);
+  SparseMap.Update( LastUpdatedPosition, Radius.X, Radius.Y );
   UpdateTexture(Radius.X, Radius.Y);
+  
   for (ACarlaWheeledVehicle* Vehicle : Vehicles)
   {
 
@@ -633,7 +633,7 @@ void UCustomTerrainPhysicsComponent::LoadTilesAtPosition(FVector Position, float
 {
   FDVector PositionTranslated;
   PositionTranslated.X =  Position.X;
-  PositionTranslated.Y =  -Position.Y;
+  PositionTranslated.Y =  Position.Y;
   PositionTranslated.Z =  Position.Z;
 
   SparseMap.LoadTilesAtPosition(PositionTranslated, RadiusX, RadiusY);
