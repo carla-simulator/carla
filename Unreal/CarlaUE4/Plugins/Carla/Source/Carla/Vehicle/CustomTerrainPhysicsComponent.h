@@ -48,7 +48,7 @@ struct FHeightMapData
 struct FDenseTile
 {
   void InitializeTile(float ParticleSize, float Depth, 
-      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
+      FDVector TileOrigin, FDVector TileEnd, const FString& SavePath, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   
   // Format DenseTile to "PosX PosY PosZ\n Particles"
@@ -96,6 +96,7 @@ public:
 
   void Clear();
 
+  FString SavePath;
 private:
   std::unordered_map<uint64_t, FDenseTile> Map;
   std::unordered_map<uint64_t, FDenseTile> TilesToWrite;
@@ -159,6 +160,8 @@ public:
   FString NeuralModelFile = "";
   
   FVector LastUpdatedPosition;
+
+  FString SavePath; 
 private:
 
   void ApplyForces();
