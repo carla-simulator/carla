@@ -25,7 +25,6 @@
 
 constexpr float ParticleDiameter = 0.04f;
 constexpr float TerrainDepth = 0.40f;
-static FString SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
 
 std::string FParticle::ToString() const{
   return std::string(carla::rpc::FromFString(FString::Printf(TEXT("%.2lf %.2lf %.2lf %.2lf "), 
@@ -101,7 +100,7 @@ void FHeightMapData::Clear()
 }
 
 void FDenseTile::InitializeTile(float ParticleSize, float Depth, 
-      FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap)
+      FDVector TileOrigin, FDVector TileEnd, const FString& SavePath, const FHeightMapData &HeightMap)
 {
   std::string FileName = std::string(TCHAR_TO_UTF8(*( SavePath + TileOrigin.ToString() + ".tile" ) ) );
 
@@ -272,7 +271,7 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
   Tile.InitializeTile(
       ParticleDiameter, TerrainDepth,
       TileCenter, TileCenter + FDVector(TileSize, TileSize, 0.f),
-      Heightmap);
+      SavePath, Heightmap);
   return Tile;
 }
 
@@ -451,6 +450,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   FString LevelName = GetWorld()->GetMapName();
 	LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
   SavePath = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) + LevelName + "_Terrain/";
+  SparseMap.SavePath = SavePath;
   // Creating the FileManager
   IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
 #undef CreateDirectory
@@ -497,6 +497,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
    GetOwner()->SetActorLocation(LocationVector);
 
   LastUpdatedPosition = GetOwner()->GetActorLocation();
+
   SparseMap.Update( LastUpdatedPosition, Radius.X, Radius.Y );
 
   for (ACarlaWheeledVehicle* Vehicle : Vehicles)
