@@ -546,6 +546,9 @@ namespace road {
       const Waypoint waypoint,
       const double distance) const {
     RELEASE_ASSERT(distance > 0.0);
+    if (distance <= EPSILON) {
+      return {waypoint};
+    }
     const auto &lane = GetLane(waypoint);
     const bool forward = (waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
@@ -579,6 +582,9 @@ namespace road {
       const Waypoint waypoint,
       const double distance) const {
     RELEASE_ASSERT(distance > 0.0);
+    if (distance <= EPSILON) {
+      return {waypoint};
+    }
     const auto &lane = GetLane(waypoint);
     const bool forward = !(waypoint.lane_id <= 0);
     const double signed_distance = forward ? distance : -distance;
