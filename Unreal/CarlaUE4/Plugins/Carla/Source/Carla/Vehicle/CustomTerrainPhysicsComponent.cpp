@@ -20,6 +20,7 @@
 #include "TextureResource.h"
 #include "Rendering/Texture2DResource.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
+#include "Materials/MaterialParameterCollection.h"
 // #include <carla/pytorch/pytorch.h>
 
 #include <algorithm>
@@ -437,7 +438,8 @@ void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]);
     
-    //UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
+    UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
+    UE_LOG(LogCarla, Log, TEXT("Updating texture Width %d Height %d"), region.Width, region.Height);
   });
 }
 
@@ -466,7 +468,7 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
       if( LocalPos.X >= 0 && LocalPos.X < (LimitX - 1.0f) && LocalPos.Y >= 0 && LocalPos.Y < (LimitY - 1.0f) )
       {
         int32 Index = LocalPos.X + LimitX * LocalPos.Y;
-        Data[Index] = 255 - (it2.Position.Z * 500.0f);
+        Data[Index] = 255 - (it2.Position.Z * 1000.0f);
       }
     }
   }
@@ -550,6 +552,12 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
 {
   Super::TickComponent(DeltaTime,TickType,ThisTickFunction);
   LastUpdatedPosition = GetOwner()->GetActorLocation();
+  if(MPC){
+    int32 IndexParameter = -1;
+    int32 IndexComponent = -1;
+    MPC->GetParameterIndex(MPC->GetParameterId("PositionToUpdate"), IndexParameter, IndexComponent);
+    MPC->VectorParameters[IndexParameter].DefaultValue = LastUpdatedPosition;
+  }
   SparseMap.Update( LastUpdatedPosition, Radius.X, Radius.Y );
   UpdateTexture(Radius.X, Radius.Y);
   

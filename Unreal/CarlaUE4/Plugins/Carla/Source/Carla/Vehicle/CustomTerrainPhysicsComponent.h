@@ -167,6 +167,9 @@ public:
   UTexture2D* TextureToUpdate;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UMaterialParameterCollection* MPC;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString NeuralModelFile = "";
   
   FVector LastUpdatedPosition;
