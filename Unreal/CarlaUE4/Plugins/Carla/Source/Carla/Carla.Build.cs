@@ -221,7 +221,7 @@ public class Carla : ModuleRules
         bEnableExceptions = true;
       }
 
-      string LibTorchPath = "/home/axel/carla/Build/libtorch";
+      string LibTorchPath = LibCarlaInstallPath;
 
       PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libonnx_proto.a"));
       PublicAdditionalLibraries.Add(Path.Combine(LibTorchPath, "lib", "libfbgemm.a"));
@@ -260,7 +260,6 @@ public class Carla : ModuleRules
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch.so"));
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnnapi_backend.so"));
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libbackend_with_compiler.so"));
-      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_python.so"));
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcaffe2_nvrtc.so"));
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda_cpp.so"));
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libc10_cuda.so"));
@@ -274,11 +273,21 @@ public class Carla : ModuleRules
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorch_cuda_cu.so"));
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchscatter.so"));
       AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libtorchcluster.so"));
-      AddDynamicLibrary("/usr/local/cuda/lib64/stubs/libcuda.so");
-      AddDynamicLibrary("/usr/local/cuda/lib64/libnvrtc.so");
-      AddDynamicLibrary("/usr/local/cuda/lib64/libnvToolsExt.so");
-      AddDynamicLibrary("/usr/local/cuda/lib64/libcudart.so");
-      AddDynamicLibrary("/usr/lib/llvm-10/lib/libgomp.so");
+      // AddDynamicLibrary("/usr/local/cuda/lib64/stubs/libcuda.so");
+      // AddDynamicLibrary("/usr/local/cuda/lib64/libnvrtc.so");
+      // AddDynamicLibrary("/usr/local/cuda/lib64/libnvToolsExt.so");
+      // AddDynamicLibrary("/usr/local/cuda/lib64/libcudart.so");
+      // AddDynamicLibrary("/usr/lib/llvm-10/lib/libgomp.so");
+      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcuda.so"));
+      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnvrtc.so"));
+      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnvToolsExt.so"));
+      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcudart.so"));
+      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libgomp.so"));
+      RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libcudart-a7b20f20.so.11.0"));
+      RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libgomp-a34b3233.so.1"));
+      RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvrtc-builtins-4730a239.so.11.3"));
+      RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvrtc-1ea278b5.so.11.2"));
+      RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvToolsExt-24de1d56.so.1"));
     }
 
     // Include path.

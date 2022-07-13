@@ -27,7 +27,7 @@ struct FParticle
   float Radius = 0.02f;
 };
 struct FHeightMapData
-{
+{ 
   void InitializeHeightmap(UTexture2D* Texture, FDVector Size, FDVector Origin);
   float GetHeight(FDVector Position) const; // get height at a given global 2d position
   void Clear();
@@ -45,7 +45,7 @@ struct FDenseTile
       FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
   void GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius);
-  void GetParticlesInBox(FDVector Position, const FBox& Box, std::vector<FParticle*> &ParticlesInRadius);
+  void GetParticlesInBox(const FOrientedBox& OBox, std::vector<FParticle*> &ParticlesInRadius);
   std::vector<FParticle> Particles;
   FDVector TilePosition;
 };
@@ -56,7 +56,7 @@ public:
   FSparseHighDetailMap(float ParticleDiameter = 0.02f, float Depth = 0.4f)
     : ParticleSize(ParticleDiameter), TerrainDepth(Depth) {};
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
-  std::vector<FParticle*> GetParticlesInBox(FDVector Position, const FBox& Box);
+  std::vector<FParticle*> GetParticlesInBox(const FOrientedBox& OBox);
 
   FDenseTile& GetTile(uint32_t Tile_X, uint32_t Tile_Y);
   FDenseTile& GetTile(FDVector Position);
@@ -155,6 +155,9 @@ private:
       ACarlaWheeledVehicle *Vehicle,
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3,
       FVector TorqueWheel0, FVector TorqueWheel1, FVector TorqueWheel2, FVector TorqueWheel3);
+  void ApplyAccelerationToVehicle(
+      ACarlaWheeledVehicle *Vehicle,
+      FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3);
   void ApplyForces();
 
   UPROPERTY(EditAnywhere)
@@ -175,6 +178,18 @@ private:
   AActor *FloorActor = nullptr;
   UPROPERTY(EditAnywhere)
   bool bUpdateParticles = false;
+  UPROPERTY(EditAnywhere)
+  bool bUseDynamicModel = false;
+
+  UPROPERTY(EditAnywhere)
+  float TireRadius = 33.0229f;
+  UPROPERTY(EditAnywhere)
+  float TireWidth = 21.21f;
+  UPROPERTY(EditAnywhere)
+  float SearchDepth = 20.f;
+
+  UPROPERTY(EditAnywhere)
+  bool DrawDebugInfo = true;
 
 
   FSparseHighDetailMap SparseMap;

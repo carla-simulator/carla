@@ -10,6 +10,7 @@
 #include <torch/script.h>
 #include <torchscatter/scatter.h>
 #include <torchcluster/cluster.h>
+#include <torch/csrc/jit/passes/tensorexpr_fuser.h>
 #include <iostream>
 #include <string>
 #include <istream>
@@ -39,7 +40,6 @@ static at::Tensor read_tensor(std::string filename, int dim = 1) {
       break;
     }
     std::istringstream iss(line);
-    float x, y, z;
     // if (!(iss >> x >> y >> z)) { break; } // error
     // std::cout << x << " " << y << " " << z << " " << std::endl;
     for(int i = 0; i < dim; i++) {
@@ -115,10 +115,7 @@ namespace learning {
          wheel_oritentation_tensor, wheel_linear_velocity_tensor, wheel_angular_velocity_tensor};
     return torch::ivalue::Tuple::create(Tuple);
   }
-  void WheelOutput::SetParticleFloatData(std::vector<float> &data)
-  {
-    _particle_forces = data;
-  }
+
   WheelOutput GetWheelTensorOutput(
       const at::Tensor &particle_forces, 
       const at::Tensor &wheel_forces) {
@@ -145,20 +142,54 @@ namespace learning {
     return result;
   }
 
+  WheelOutput GetWheelTensorOutputDynamic(
+      const at::Tensor &particle_forces, 
+      const at::Tensor &wheel_forces) {
+    WheelOutput result;
+    const float* wheel_forces_data = wheel_forces.data_ptr<float>();
+    result.wheel_forces_x = wheel_forces_data[0];
+    result.wheel_forces_y = wheel_forces_data[1];
+    result.wheel_forces_z = wheel_forces_data[2];
+    const float* particle_forces_data = particle_forces.data_ptr<float>();
+    int num_dimensions = 3;
+    int num_particles = particle_forces.sizes()[0];
+    result._particle_forces.reserve(num_particles*num_dimensions);
+    for (int i = 0; i < num_particles; i++) {
+      result._particle_forces.emplace_back(
+          particle_forces_data[i*num_dimensions + 0]);
+      result._particle_forces.emplace_back(
+          particle_forces_data[i*num_dimensions + 1]);
+      result._particle_forces.emplace_back(
+          particle_forces_data[i*num_dimensions + 2]);
+    }
+    return result;
+  }
+
   // holds the neural network
   struct NeuralModelImpl
   {
+    NeuralModelImpl(){
+      // std::cout << "Creating model" << std::endl;
+    }
     torch::jit::script::Module module;
+    ~NeuralModelImpl(){
+      // std::cout << "Destroying model" << std::endl;
+    }
   };
 
   NeuralModel::NeuralModel() {
     Model = std::make_unique<NeuralModelImpl>();
   }
   void NeuralModel::LoadModel(char* filename) {
+    torch::jit::setTensorExprFuserEnabled(false);
     std::string filename_str(filename);
     std::cout << "loading " << filename_str << std::endl;
-    // Model->module = torch::jit::load(filename_str, c10::DeviceType::CUDA);
-    Model->module = torch::jit::load(filename_str);
+    try {
+      Model->module = torch::jit::load(filename_str);
+    } catch (const c10::Error& e) {
+      std::cout << "Error loading model: " << e.msg() << std::endl;
+    }
+    
     std::cout << "loaded " << filename_str <<  std::endl;
   }
 
@@ -247,7 +278,8 @@ namespace learning {
     TorchInputs.push_back(GetWheelTensorInputs(_input.wheel1));
     TorchInputs.push_back(GetWheelTensorInputs(_input.wheel2));
     TorchInputs.push_back(GetWheelTensorInputs(_input.wheel3));
-    auto drv_inputs = torch::tensor({(float)0, (float)0, (float)0}, torch::kFloat32); //steer, throtle, brake
+    auto drv_inputs = torch::tensor(
+        {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
     TorchInputs.push_back(drv_inputs);
     TorchInputs.push_back(_input.verbose);
 
@@ -263,7 +295,30 @@ namespace learning {
     _output.wheel3 = GetWheelTensorOutput(
         Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu());
   }
+  void NeuralModel::ForwardDynamic() {
+    std::vector<torch::jit::IValue> TorchInputs;
+    TorchInputs.push_back(GetWheelTensorInputs(_input.wheel0));
+    TorchInputs.push_back(GetWheelTensorInputs(_input.wheel1));
+    TorchInputs.push_back(GetWheelTensorInputs(_input.wheel2));
+    TorchInputs.push_back(GetWheelTensorInputs(_input.wheel3));
+    auto drv_inputs = torch::tensor(
+        {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
+    TorchInputs.push_back(drv_inputs);
+    TorchInputs.push_back(_input.verbose);
 
+    torch::jit::IValue Output = Model->module.forward(TorchInputs);
+
+    std::vector<torch::jit::IValue> Tensors =  Output.toTuple()->elements();
+    _output.wheel0 = GetWheelTensorOutputDynamic(
+        Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu());
+    _output.wheel1 = GetWheelTensorOutputDynamic(
+        Tensors[1].toTensor().cpu(), Tensors[5].toTensor().cpu());
+    _output.wheel2 = GetWheelTensorOutputDynamic(
+        Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu());
+    _output.wheel3 = GetWheelTensorOutputDynamic(
+        Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu());
+  }
+  
   Outputs& NeuralModel::GetOutputs() {
     return _output;
   }

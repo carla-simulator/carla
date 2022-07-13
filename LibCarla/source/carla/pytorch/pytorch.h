@@ -32,9 +32,12 @@ namespace learning {
     WheelInput wheel1;
     WheelInput wheel2;
     WheelInput wheel3;
+    float steering = 0;
+    float throttle = 0;
+    float braking = 0;
     bool verbose = false;
   };
-
+ 
   struct WheelOutput {
   public:
     float wheel_forces_x = 0;
@@ -43,13 +46,6 @@ namespace learning {
     float wheel_torque_x = 0;
     float wheel_torque_y = 0;
     float wheel_torque_z = 0;
-  //   float* GetParticleForceData();
-  //   void SetParticleFloatData(std::vector<float> &data)
-  //   {
-  //     _particle_forces = data;
-  //   }
-  // private:
-  void SetParticleFloatData(std::vector<float> &data);
     std::vector<float> _particle_forces;
   };
   struct Outputs {
@@ -59,7 +55,7 @@ namespace learning {
     WheelOutput wheel2;
     WheelOutput wheel3;
   };
-
+ 
   // Interface with the torch implementation
   class NeuralModel {
   public:
@@ -70,6 +66,7 @@ namespace learning {
     void SetInputs(Inputs input);
     void Forward_Test();
     void Forward();
+    void ForwardDynamic();
     Outputs& GetOutputs();
 
     ~NeuralModel();
