@@ -180,13 +180,17 @@ private:
   bool bUpdateParticles = false;
   UPROPERTY(EditAnywhere)
   bool bUseDynamicModel = false;
-
+   
   UPROPERTY(EditAnywhere)
   float TireRadius = 33.0229f;
   UPROPERTY(EditAnywhere)
   float TireWidth = 21.21f;
   UPROPERTY(EditAnywhere)
-  float SearchDepth = 20.f;
+  float BoxSearchForwardDistance = 114.39f;
+  UPROPERTY(EditAnywhere)
+  float BoxSearchLateralDistance = 31.815f;
+  UPROPERTY(EditAnywhere)
+  float BoxSearchDepthDistance = 20.f;
 
   UPROPERTY(EditAnywhere)
   bool DrawDebugInfo = true;

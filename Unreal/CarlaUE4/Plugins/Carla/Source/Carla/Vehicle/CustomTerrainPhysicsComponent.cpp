@@ -287,6 +287,22 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     SearchRadius = MToCM*Value;
   }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-box-search-forward="), Value))
+  {
+    BoxSearchForwardDistance = MToCM*Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-box-search-lateral="), Value))
+  {
+    BoxSearchLateralDistance = MToCM*Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-box-search-depth="), Value))
+  {
+    BoxSearchDepthDistance = MToCM*Value;
+  }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-force-mul-factor="), Value))
+  {
+    ForceMulFactor = Value;
+  }
   if (FParse::Value(FCommandLine::Get(), TEXT("-floor-height="), Value))
   {
     if(FloorActor)
@@ -478,12 +494,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     ACarlaWheeledVehicle *Vehicle, float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(RunNNPhysicsSimulation);
-//   FVector Position = Vehicle->GetActorLocation();
-//   //wheel location from actor center FVector(140, 70, 40)
-//   FVector WheelPosition0 = Position + FVector(140, 70, 40);
-//   FVector WheelPosition1 = Position + FVector(140, -70, 40);
-//   FVector WheelPosition2 = Position + FVector(-140, 70, 40);
-//   FVector WheelPosition3 = Position + FVector(-140, -70, 40);
   FTransform VehicleTransform = Vehicle->GetTransform();
   FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
   FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
@@ -494,9 +504,9 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   BboxWheel0.AxisY = VehicleTransform.GetUnitAxis(EAxis::Y);
   BboxWheel0.AxisZ = VehicleTransform.GetUnitAxis(EAxis::Z);
   BboxWheel0.Center = WheelPosition0 + FVector(0,0,-TireRadius);
-  BboxWheel0.ExtentX = 2.f*FMath::Sqrt(3.f)*TireRadius;
-  BboxWheel0.ExtentY = 1.5f * TireWidth;
-  BboxWheel0.ExtentZ = SearchDepth;
+  BboxWheel0.ExtentX = BoxSearchForwardDistance;
+  BboxWheel0.ExtentY = BoxSearchLateralDistance;
+  BboxWheel0.ExtentZ = BoxSearchDepthDistance;
   FOrientedBox BboxWheel1 = BboxWheel0;
   BboxWheel1.Center = WheelPosition1 + FVector(0,0,-TireRadius);
   FOrientedBox BboxWheel2 = BboxWheel0;
@@ -515,18 +525,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       SparseMap.GetParticlesInBox(BboxWheel2);
   std::vector<FParticle*> ParticlesWheel3 = 
       SparseMap.GetParticlesInBox(BboxWheel3);
-  // std::vector<FParticle*> ParticlesWheel0 = 
-  //     SparseMap.GetParticlesInRadius(
-  //       WheelPosition0*CMToM, SearchRadius*CMToM);
-  // std::vector<FParticle*> ParticlesWheel1 = 
-  //     SparseMap.GetParticlesInRadius(
-  //       WheelPosition1*CMToM, SearchRadius*CMToM);
-  // std::vector<FParticle*> ParticlesWheel2 = 
-  //     SparseMap.GetParticlesInRadius(
-  //       WheelPosition2*CMToM, SearchRadius*CMToM);
-  // std::vector<FParticle*> ParticlesWheel3 = 
-  //     SparseMap.GetParticlesInRadius(
-  //       WheelPosition3*CMToM, SearchRadius*CMToM);
   
   if(DrawDebugInfo)
   {
@@ -582,7 +580,14 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
       WheelPos3.GetData(), WheelOrient3.GetData(),
       WheelLinVel3.GetData(), WheelAngVel3.GetData()};
 
-  carla::learning::Inputs NNInput {Wheel0,Wheel1,Wheel2,Wheel3, 0,0,0, NNVerbose};
+  const FVehicleControl& VehicleControl = Vehicle->GetVehicleControl();
+  carla::learning::Inputs NNInput {Wheel0,Wheel1,Wheel2,Wheel3, 
+      VehicleControl.Steer, VehicleControl.Throttle, VehicleControl.Brake, 
+      NNVerbose};
+  if (VehicleControl.bReverse)
+  {
+    NNInput.throttle *= -1;
+  }
   TerramechanicsModel.SetInputs(NNInput);
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(RunModel);
