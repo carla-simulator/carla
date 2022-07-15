@@ -3,6 +3,7 @@
   * Added `TrafficManager.vehicle_lane_offset(actor, offset)` and `TrafficManager.global_lane_offset(offset)` methods.
   * Some of the warnings shown when building a map will now only be showing when debugging.
   * Fixed bug causing traffic signals at the end points of a road to sometimes create malformed waypoints.
+  * Fixed decals when importing maps. It was using other .json files found in other packages.
   * Added the speed limits for 100, 110 and 120 Km/h.
   * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.
   * Added multi-GPU feature. Now several servers (with dedicated GPU) can render sensors for the same simulation.
