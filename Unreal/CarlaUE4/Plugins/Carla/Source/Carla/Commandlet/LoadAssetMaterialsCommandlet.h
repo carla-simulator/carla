@@ -60,9 +60,9 @@ public:
 
   void LoadAssetsMaterials(const FString &PackageName, const TArray<FMapData> &MapsPaths);
 
-  void ApplyRoadPainterMaterials(const FString &LoadedMapName, bool IsInTiles = false);
+  void ApplyRoadPainterMaterials(const FString &LoadedMapName, const FString &PackageName, bool IsInTiles = false);
 
-  FDecalsProperties ReadDecalsConfigurationFile();
+  FDecalsProperties ReadDecalsConfigurationFile(const FString &PackageName);
 
   /// Main method and entry of the commandlet, taking as input parameters @a
   /// Params.
