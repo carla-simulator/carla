@@ -192,7 +192,7 @@ private:
   FSparseHighDetailMap SparseMap;
   TArray<ACarlaWheeledVehicle*> Vehicles;
 
-  TArray<uint8_t> Data;
+  TArray<uint8> Data;
 
 	class FRunnableThread* Thread;
 	struct FTilesWorker* TilesWorker;

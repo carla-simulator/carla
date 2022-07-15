@@ -424,7 +424,6 @@ void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
   (
     [NewData=Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
   {
-
     TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
     FUpdateTextureRegion2D region;
     region.SrcX = 0;
@@ -436,17 +435,13 @@ void UCustomTerrainPhysicsComponent::UpdateTexture(float RadiusX, float RadiusY)
 
     FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
     RHIUpdateTexture2D(
-        resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]);
-    
-    UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
-    UE_LOG(LogCarla, Log, TEXT("Updating texture Width %d Height %d"), region.Width, region.Height);
+        resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
   });
 }
 
 void UCustomTerrainPhysicsComponent::InitTexture(){
   float LimitX = TextureToUpdate->GetSizeX(); 
   float LimitY = TextureToUpdate->GetSizeY();
-  
   Data.Init(0, LimitX * LimitY);
   UpdateTextureData();
 }
@@ -465,10 +460,10 @@ void UCustomTerrainPhysicsComponent::UpdateTextureData()
     {
       FDVector LocalPos = (it2.Position - OriginPosition); 
      
-      if( LocalPos.X >= 0 && LocalPos.X < (LimitX - 1.0f) && LocalPos.Y >= 0 && LocalPos.Y < (LimitY - 1.0f) )
+      if( LocalPos.X >= 0 && LocalPos.X < LimitX  && LocalPos.Y >= 0 && LocalPos.Y < LimitY )
       {
         int32 Index = LocalPos.X + LimitX * LocalPos.Y;
-        Data[Index] = 255 - (it2.Position.Z * 1000.0f);
+        Data[Index] = (it2.Position.Z * -100.0f)/35.0f * 255000.0f;
       }
     }
   }
@@ -556,7 +551,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     int32 IndexParameter = -1;
     int32 IndexComponent = -1;
     MPC->GetParameterIndex(MPC->GetParameterId("PositionToUpdate"), IndexParameter, IndexComponent);
-    MPC->VectorParameters[IndexParameter].DefaultValue = LastUpdatedPosition;
+    MPC->VectorParameters[IndexParameter - 1].DefaultValue = LastUpdatedPosition;
   }
   SparseMap.Update( LastUpdatedPosition, Radius.X, Radius.Y );
   UpdateTexture(Radius.X, Radius.Y);
