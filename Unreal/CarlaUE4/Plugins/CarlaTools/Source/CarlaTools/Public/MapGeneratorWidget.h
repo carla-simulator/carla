@@ -68,6 +68,86 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
   FString RiverPreset;
 };
 
+USTRUCT(BlueprintType)
+struct CARLATOOLS_API FMapGeneratorWidgetState
+{
+  GENERATED_USTRUCT_BODY();
+
+  // General Fields
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  bool IsPersistentState;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString MapName;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString WorkingPath;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  FString ActiveTabName;
+
+  // Terrain
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralSize;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainGeneralInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallSeed;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallScale;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainOverallInvert;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedSeed;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedScale;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedSlope;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedMinHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedMaxHeight;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MapGenerator|JsonLibrary")
+  float TerrainDetailedInvert;
+};
+
 /// Class UMapGeneratorWidget extends the functionality of UEditorUtilityWidget
 /// to be able to generate and manage maps and largemaps tiles for procedural
 /// map generation
@@ -139,6 +219,12 @@ public:
 
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   bool DeleteAllVegetationInMap(const FString Path, const FString MapName);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
+  bool GenerateWidgetStateFileFromStruct(FMapGeneratorWidgetState WidgetState, const FString JsonPath);
+
+  UFUNCTION(Category="MapGenerator|JsonLibrary", BlueprintCallable)
+  FMapGeneratorWidgetState LoadWidgetStateStructFromFile(const FString JsonPath);
 
 private:  
   /// Loads a bunch of world objects located in @a BaseMapPath and 

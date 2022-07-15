@@ -19,6 +19,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Landscape.h"
 #include "LandscapeProxy.h"
+#include "Misc/FileHelper.h"
+#include "Misc/CString.h"
 #include "ProceduralFoliageComponent.h"
 #include "ProceduralFoliageVolume.h"
 #include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
@@ -30,6 +32,11 @@
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/ObjectMacros.h"
+
+#include "Dom/JsonObject.h"
+#include "JsonObjectConverter.h"
+#include "Serialization/JsonSerializer.h"
+#include "Serialization/JsonReader.h"
 
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
@@ -387,6 +394,44 @@ bool UMapGeneratorWidget::DeleteAllVegetationInMap(const FString Path, const FSt
   }
 
   return true;
+}
+
+bool UMapGeneratorWidget::GenerateWidgetStateFileFromStruct(FMapGeneratorWidgetState WidgetState, const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Widget State JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+
+  TSharedRef<FJsonObject> OutJsonObject = MakeShareable(new FJsonObject());
+  FJsonObjectConverter::UStructToJsonObject(FMapGeneratorWidgetState::StaticStruct(), &WidgetState, OutJsonObject, 0, 0);
+
+  FString OutputJsonString;
+  TSharedRef<TJsonWriter<>> JsonWriter = TJsonWriterFactory<>::Create(&OutputJsonString);
+  FJsonSerializer::Serialize(OutJsonObject, JsonWriter);
+
+  FFileHelper::SaveStringToFile(OutputJsonString, *JsonPath);
+
+  return true;
+}
+
+FMapGeneratorWidgetState UMapGeneratorWidget::LoadWidgetStateStructFromFile(const FString JsonPath)
+{
+  UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating Widget State Struct from JSON"), 
+      *CUR_CLASS_FUNC_LINE);
+
+  FMapGeneratorWidgetState WidgetState;
+  FString File;
+  FFileHelper::LoadFileToString(File, *JsonPath);
+
+  TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(*File);
+  TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
+  bool bDeserializeSuccess = FJsonSerializer::Deserialize(JsonReader, JsonObject, FJsonSerializer::EFlags::None);
+
+  if (bDeserializeSuccess && JsonObject.IsValid())
+	{
+    FJsonObjectConverter::JsonObjectToUStruct(JsonObject.ToSharedRef(), FMapGeneratorWidgetState::StaticStruct(), &WidgetState, 1, 0);
+  }
+
+  return WidgetState;
 }
 
 bool UMapGeneratorWidget::LoadWorlds(TArray<FAssetData>& WorldAssetsData, const FString& BaseMapPath, bool bRecursive)

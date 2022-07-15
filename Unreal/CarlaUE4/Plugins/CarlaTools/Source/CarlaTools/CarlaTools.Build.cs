@@ -60,7 +60,9 @@ public class CarlaTools : ModuleRules
 				"Foliage",
 				"FoliageEdit",
 				"Carla",
-				"PhysXVehicles"
+				"PhysXVehicles",
+        "Json",
+        "JsonUtilities"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
