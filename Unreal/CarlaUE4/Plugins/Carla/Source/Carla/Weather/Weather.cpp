@@ -6,10 +6,20 @@
 
 #include "Carla.h"
 #include "Carla/Weather/Weather.h"
+#include "carla/Sensor/SceneCaptureCamera.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Kismet/GameplayStatics.h"
+#include "ConstructorHelpers.h"
 
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
+	PrecipitationPostProcessMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
+		TEXT("Material'/Game/Carla/Static/GenericMaterials/00_MastersOpt/Screen_posProcess/M_screenDrops.M_screenDrops'")).Object;
+
+	DustStormPostProcessMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
+		TEXT("Material'/Game/Carla/Static/GenericMaterials/00_MastersOpt/Screen_posProcess/M_screenDust_wind.M_screenDust_wind'")).Object;
+
   PrimaryActorTick.bCanEverTick = false;
   RootComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RootComponent"));
 }
@@ -17,6 +27,31 @@ AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
 void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
 {
   SetWeather(InWeather);
+
+  if (Weather.Precipitation > 0.0f)
+	  ActiveBlendables.Add(MakeTuple(PrecipitationPostProcessMaterial, Weather.Precipitation / 100.0f));
+  else
+	  ActiveBlendables.Remove(PrecipitationPostProcessMaterial);
+
+  if (Weather.DustStorm > 0.0f)
+	  ActiveBlendables.Add(MakeTuple(DustStormPostProcessMaterial, Weather.DustStorm / 100.0f));
+  else
+	  ActiveBlendables.Remove(DustStormPostProcessMaterial);
+
+  for (int32 i = 0; i < Sensors.Num(); i++)
+  {
+	  auto& Sensor = Sensors[i];
+	  
+	  if (!IsValid(Sensor))
+	  {
+		  Sensors.RemoveAtSwap(i);
+		  if (i == Sensors.Num())
+			  break;
+	  }
+
+	  for (auto& ActiveBlendable : ActiveBlendables)
+		  Sensor->GetCaptureComponent2D()->PostProcessSettings.AddBlendable(ActiveBlendable.Key, ActiveBlendable.Value);
+  }
 
 #ifdef CARLA_WEATHER_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Changing weather:"));
@@ -33,16 +68,23 @@ void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
   UE_LOG(LogCarla, Log, TEXT("  - ScatteringIntensity = %.2f"), Weather.ScatteringIntensity);
   UE_LOG(LogCarla, Log, TEXT("  - MieScatteringScale = %.2f"), Weather.MieScatteringScale);
   UE_LOG(LogCarla, Log, TEXT("  - RayleighScatteringScale = %.2f"), Weather.RayleighScatteringScale);
+  UE_LOG(LogCarla, Log, TEXT("  - DustStorm = %.2f"), Weather.DustStorm);
 #endif // CARLA_WEATHER_EXTRA_LOG
 
   // Call the blueprint that actually changes the weather.
   RefreshWeather(Weather);
 }
 
-void AWeather::NotifyWeather()
+void AWeather::NotifyWeather(ASensor* Sensor)
 {
-  // Call the blueprint that actually changes the weather.
-  RefreshWeather(Weather);
+#if 1
+	auto AsSceneCaptureCamera = Cast<ASceneCaptureCamera>(Sensor);
+	if (AsSceneCaptureCamera != nullptr)
+		Sensors.Add(AsSceneCaptureCamera);
+#endif
+
+	// Call the blueprint that actually changes the weather.
+	RefreshWeather(Weather);
 }
 
 void AWeather::SetWeather(const FWeatherParameters &InWeather)
