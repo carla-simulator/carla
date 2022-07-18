@@ -64,8 +64,8 @@ public:
   /// allocated in front of the buffer.
   ///
   /// @pre To be called from game-thread.
-  template <typename TSensor>
-  static void SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat = false);
+  template <typename TSensor, typename TPixel>
+  static void SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat = false, std::function<TArray<TPixel>(void *, uint32)> Conversor = {});
 
 private:
 
@@ -73,11 +73,10 @@ private:
   ///
   /// @pre To be called from render-thread.
   static void WritePixelsToBuffer(
-      UTextureRenderTarget2D &RenderTarget,
+      const UTextureRenderTarget2D &RenderTarget,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,
-      FPixelReader::Payload FuncForSending,
-      bool use16BitFormat = false);
+      FPixelReader::Payload FuncForSending);
 
 };
 
@@ -85,8 +84,8 @@ private:
 // -- FPixelReader::SendPixelsInRenderThread -----------------------------------
 // =============================================================================
 
-template <typename TSensor>
-void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat)
+template <typename TSensor, typename TPixel>
+void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat, std::function<TArray<TPixel>(void *, uint32)> Conversor)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
@@ -104,24 +103,34 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   // game-thread.
   ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
   (
-    [&Sensor, use16BitFormat](auto &InRHICmdList) mutable
+    [&Sensor, use16BitFormat, Conversor = std::move(Conversor)](auto &InRHICmdList) mutable
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())
       {
-        FPixelReader::Payload FuncForSending = [&Sensor, Frame = FCarlaEngine::GetFrameCounter()](void *LockedData, uint32 Count, uint32 Offset)
+        FPixelReader::Payload FuncForSending = [&Sensor, Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset)
         {
           if (Sensor.IsPendingKill()) return;
 
+          TArray<TPixel> Converted;
+          
+          // optional conversion of data
+          if (Conversor)
+          {
+            TRACE_CPUPROFILER_EVENT_SCOPE_STR("Data conversion");
+            Converted = Conversor(LockedData, Size);
+            LockedData = reinterpret_cast<void *>(Converted.GetData());
+            Size = Converted.Num() * Converted.GetTypeSize();
+          }
+  
           auto Stream = Sensor.GetDataStream(Sensor);
-          // Stream.SetFrameNumber(Frame);
           auto Buffer = Stream.PopBufferFromPool();
 
           {
             TRACE_CPUPROFILER_EVENT_SCOPE_STR("Buffer Copy");
-            Buffer.copy_from(Offset, boost::asio::buffer(LockedData, Count));
+            Buffer.copy_from(Offset, boost::asio::buffer(LockedData, Size));
           }
           {
             // send
@@ -139,8 +148,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
             *Sensor.CaptureRenderTarget,
             carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
             InRHICmdList, 
-            std::move(FuncForSending),
-            use16BitFormat);
+            std::move(FuncForSending));
       }
     }
   );
