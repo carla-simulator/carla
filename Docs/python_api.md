@@ -2384,11 +2384,6 @@ Sets the difference the vehicle's intended speed and its current speed limit. Sp
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `percentage` (_float_) - Percentage difference between intended speed and the current limit.  
-- <a name="carla.TrafficManager.global_lane_offset"></a>**<font color="#7fb800">global_lane_offset</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**offset**</font>)  
-Sets a global lane offset displacement from the center line. Positive values imply a right offset while negative ones mean a left one.
-Default is 0. Numbers high enough to cause the vehicle to drive through other lanes might break the controller.
-    - **Parameters:**
-        - `offset` (_float_) - Lane offset displacement from the center line.
 - <a name="carla.TrafficManager.ignore_lights_percentage"></a>**<font color="#7fb800">ignore_lights_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
 During the traffic light stage, which runs every frame, this method sets the percent chance that traffic lights will be ignored for a vehicle.  
     - **Parameters:**
@@ -2415,12 +2410,6 @@ Default is 30. Exceeding a speed limit can be done using negative percentages.
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) - Vehicle whose speed behaviour is being changed.  
         - `percentage` (_float_) - Percentage difference between intended speed and the current limit.  
-- <a name="carla.TrafficManager.vehicle_lane_offset"></a>**<font color="#7fb800">vehicle_lane_offset</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**offset**</font>)  
-Sets a lane offset displacement from the center line. Positive values imply a right offset while negative ones mean a left one.
-Default is 30. Exceeding a speed limit can be done using negative percentages.
-    - **Parameters:**
-        - `actor` (_[carla.Actor](#carla.Actor)_) - Vehicle whose speed behaviour is being changed.  
-        - `offset` (_float_) - Lane offset displacement from the center line.  
 
 ##### Getters
 - <a name="carla.TrafficManager.get_port"></a>**<font color="#7fb800">get_port</font>**(<font color="#00a6ed">**self**</font>)  
