@@ -2381,12 +2381,12 @@ Forces a vehicle to change either to the lane on its left or right, if existing,
         - `direction` (_bool_) - Destination lane. __True__ is the one on the right and __False__ is the left one.  
 - <a name="carla.TrafficManager.global_percentage_speed_difference"></a>**<font color="#7fb800">global_percentage_speed_difference</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  
 Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
-Default is 0. Numbers high enough to cause the vehicle to drive through other lanes might break the controller.  
+Default is 30. Exceeding a speed limit can be done using negative percentages.  
     - **Parameters:**
         - `percentage` (_float_) - Percentage difference between intended speed and the current limit.  
 - <a name="carla.TrafficManager.global_lane_offset"></a>**<font color="#7fb800">global_lane_offset</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**offset**</font>)  
 Sets a global lane offset displacement from the center line. Positive values imply a right offset while negative ones mean a left one.
-Default is 30. Exceeding a speed limit can be done using negative percentages.  
+Default is 0. Numbers high enough to cause the vehicle to drive through other lanes might break the controller.
     - **Parameters:**
         - `offset` (_float_) - Lane offset displacement from the center line.
 - <a name="carla.TrafficManager.ignore_lights_percentage"></a>**<font color="#7fb800">ignore_lights_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
