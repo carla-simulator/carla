@@ -160,12 +160,12 @@ void MotionPlanStage::Update(const unsigned long index) {
                                                   MIN_TARGET_WAYPOINT_DISTANCE);
       const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
       cg::Location target_location = target_waypoint->GetLocation();
-      
+
       float offset = parameters.GetLaneOffset(actor_id);
       auto right_vector = target_waypoint->GetTransform().GetRightVector();
       auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
       target_location = target_location + offset_location;
-      
+
       float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
       float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
       dot_product = acos(dot_product) / PI;
