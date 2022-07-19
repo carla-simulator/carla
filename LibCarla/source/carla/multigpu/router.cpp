@@ -44,19 +44,20 @@ void Router::SetCallbacks() {
     self->DisconnectSession(session); 
   };
 
-  carla::multigpu::Listener::callback_function_type_response on_response = [=](std::shared_ptr<carla::multigpu::Primary> session, carla::Buffer buffer) { 
-    auto self = weak.lock();
-    if (!self) return;
-    std::lock_guard<std::mutex> lock(self->_mutex);
-    auto prom =self-> _promises.find(session.get());
-    if (prom != self->_promises.end()) {
-      log_info("Got data from secondary (with promise): ", buffer.size());
-      prom->second->set_value({session, std::move(buffer)});
-      self->_promises.erase(prom);
-    } else {
-      log_info("Got data from secondary (without promise): ", buffer.size());
-    }
-  };
+  carla::multigpu::Listener::callback_function_type_response on_response = 
+    [=](std::shared_ptr<carla::multigpu::Primary> session, carla::Buffer buffer) { 
+      auto self = weak.lock();
+      if (!self) return;
+      std::lock_guard<std::mutex> lock(self->_mutex);
+      auto prom =self-> _promises.find(session.get());
+      if (prom != self->_promises.end()) {
+        log_info("Got data from secondary (with promise): ", buffer.size());
+        prom->second->set_value({session, std::move(buffer)});
+        self->_promises.erase(prom);
+      } else {
+        log_info("Got data from secondary (without promise): ", buffer.size());
+      }
+    };
 
   _commander.set_router(shared_from_this());
 

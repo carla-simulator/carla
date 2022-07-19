@@ -128,7 +128,8 @@ private:
   // replay event for parenting actors
   bool ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId);
   // reposition actors
-  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime);
+  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, 
+                               CarlaRecorderPosition Pos2, double Per, double DeltaTime);
   // replay event for traffic light state
   bool ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State);
   // set the animation for Vehicles
@@ -140,7 +141,8 @@ private:
   // set scene lights
   void ProcessReplayerLightScene(CarlaRecorderLightScene LightScene);
   // replay finish
-  bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero);
+  bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, 
+                             std::unordered_map<uint32_t, bool> &IsHero);
   // set the camera position to follow an actor
   bool SetCameraPosition(uint32_t Id, FVector Offset, FQuat Rotation);
   // set the velocity of the actor

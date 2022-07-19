@@ -103,11 +103,6 @@ void FFrameData::PlayFrameData(
     MappedId.erase(EventDel.DatabaseId);
   }
 
-  for (const CarlaRecorderEventParent &EventParent : EventsParent.GetEvents())
-  {
-    // ProcessReplayerEventParent(MappedId[EventParent.DatabaseId], MappedId[EventParent.DatabaseIdParent]);
-  }
-
   for (const CarlaRecorderPosition &Position : Positions.GetPositions())
   {
     CarlaRecorderPosition Pos = Position;

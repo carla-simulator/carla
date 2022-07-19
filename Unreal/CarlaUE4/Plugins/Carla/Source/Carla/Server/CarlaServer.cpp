@@ -767,7 +767,8 @@ void FCarlaServer::FPimpl::BindActions()
     return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
   };
 
-  BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type sensor_id) -> R<carla::streaming::Token>
+  BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<carla::streaming::Token>
   {
     REQUIRE_CARLA_EPISODE();
     if (SecondaryServer->HasClientsConnected() && sensor_id > 1)
