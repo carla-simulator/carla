@@ -59,7 +59,9 @@ void FPixelReader::WritePixelsToBuffer(
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
-    BackBufferReadback->EnqueueCopy(RHICmdList, Texture, FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
+    BackBufferReadback->EnqueueCopy(RHICmdList, 
+                                    Texture, 
+                                    FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
   }
 
   // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
@@ -147,20 +149,3 @@ TFuture<bool> FPixelReader::SavePixelsToDisk(
   FHighResScreenshotConfig &HighResScreenshotConfig = GetHighResScreenshotConfig();
   return HighResScreenshotConfig.ImageWriteQueue->Enqueue(MoveTemp(ImageTask));
 }
-
-// void FPixelReader::WritePixelsToBuffer(
-//     UTextureRenderTarget2D &RenderTarget,
-//     uint32 Offset,
-//     FRHICommandListImmediate &InRHICmdList,
-//     FPixelReader::Payload FuncForSending,
-//     bool use16BitFormat)
-// {
-//   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
-//   check(IsInRenderingThread());
-
-//   if (IsVulkanPlatform(GMaxRHIShaderPlatform) || IsD3DPlatform(GMaxRHIShaderPlatform, false))
-//   {
-//     WritePixelsToBuffer(RenderTarget, Offset, InRHICmdList, std::move(FuncForSending));
-//     return;
-//   }
-// }

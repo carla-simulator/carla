@@ -46,7 +46,7 @@ namespace multigpu {
       } else {
         log_error("tcp accept error:", ec.message());
       }
-      
+
       self->OpenSession(timeout, on_opened, on_closed, on_response);
     });
   }
