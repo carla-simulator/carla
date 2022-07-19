@@ -329,7 +329,10 @@ void ULoadAssetMaterialsCommandlet::LoadAssetsMaterials(const FString &PackageNa
   MapObjectLibrary = UObjectLibrary::CreateLibrary(UWorld::StaticClass(), false, GIsEditor);
   const FString DefaultPath = TEXT("/Game/") + PackageName + TEXT("/Maps/");
   MapObjectLibrary->AddToRoot();
-  MapObjectLibrary->LoadAssetDataFromPath(*DefaultPath);
+  for (auto &&data : MapsPaths)
+  {
+    MapObjectLibrary->LoadAssetDataFromPath(*data.Path);
+  }
   MapObjectLibrary->LoadAssetsFromAssetData();
   MapObjectLibrary->GetAssetDataList(AssetDatas);
 
