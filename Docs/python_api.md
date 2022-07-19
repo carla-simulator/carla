@@ -2383,7 +2383,7 @@ Forces a vehicle to change either to the lane on its left or right, if existing,
 Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
 Default is 0. Numbers high enough to cause the vehicle to drive through other lanes might break the controller.  
     - **Parameters:**
-        - `offset` (_float_) - Percentage difference between intended speed and the current limit.  
+        - `percentage` (_float_) - Percentage difference between intended speed and the current limit.  
 - <a name="carla.TrafficManager.global_lane_offset"></a>**<font color="#7fb800">global_lane_offset</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**offset**</font>)  
 Sets a global lane offset displacement from the center line. Positive values imply a right offset while negative ones mean a left one.
 Default is 30. Exceeding a speed limit can be done using negative percentages.  
