@@ -66,7 +66,7 @@ namespace multigpu {
     boost::asio::ip::tcp::endpoint          _endpoint;
     std::vector<std::shared_ptr<Primary>>   _sessions;
     std::shared_ptr<Listener>               _listener;
-    uint                                    _next;
+    uint32_t                                _next;
     std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>>   _promises;
     PrimaryCommands                         _commander;
   };
