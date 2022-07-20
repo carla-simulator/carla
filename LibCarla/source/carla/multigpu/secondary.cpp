@@ -28,12 +28,12 @@ namespace multigpu {
     boost::asio::ip::tcp::endpoint ep,
     SecondaryCommands::callback_type callback) :
       _pool(),
-      _endpoint(ep),
-      _buffer_pool(std::make_shared<BufferPool>()),
       _socket(_pool.io_context()),
+      _endpoint(ep),
       _strand(_pool.io_context()),
-      _connection_timer(_pool.io_context()) { 
-
+      _connection_timer(_pool.io_context()),
+      _buffer_pool(std::make_shared<BufferPool>()) {
+        
       _commander.set_callback(callback);
     }
   
