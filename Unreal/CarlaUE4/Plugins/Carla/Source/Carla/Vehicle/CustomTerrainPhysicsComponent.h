@@ -155,6 +155,9 @@ private:
       ACarlaWheeledVehicle *Vehicle,
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3,
       FVector TorqueWheel0, FVector TorqueWheel1, FVector TorqueWheel2, FVector TorqueWheel3);
+  void ApplyMeanAccelerationToVehicle(
+      ACarlaWheeledVehicle *Vehicle,
+      FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3);
   void ApplyAccelerationToVehicle(
       ACarlaWheeledVehicle *Vehicle,
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3);
@@ -180,7 +183,7 @@ private:
   bool bUpdateParticles = false;
   UPROPERTY(EditAnywhere)
   bool bUseDynamicModel = false;
-   
+
   UPROPERTY(EditAnywhere)
   float TireRadius = 33.0229f;
   UPROPERTY(EditAnywhere)
@@ -191,9 +194,18 @@ private:
   float BoxSearchLateralDistance = 31.815f;
   UPROPERTY(EditAnywhere)
   float BoxSearchDepthDistance = 20.f;
-
+  UPROPERTY(EditAnywhere)
+  bool bDisableVehicleGravity = false;
+  UPROPERTY(EditAnywhere)
+  float MaxForceMagnitude = 1000000.f;
+  UPROPERTY(EditAnywhere)
+  float FloorHeight = 0.f;
+  UPROPERTY(EditAnywhere)
+  bool bUseImpulse = false;
   UPROPERTY(EditAnywhere)
   bool DrawDebugInfo = true;
+  UPROPERTY(EditAnywhere)
+  bool bUseMeanAcceleration = false;
 
 
   FSparseHighDetailMap SparseMap;

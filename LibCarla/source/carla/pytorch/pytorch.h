@@ -64,7 +64,6 @@ namespace learning {
     void LoadModel(char* filename);
 
     void SetInputs(Inputs input);
-    void Forward_Test();
     void Forward();
     void ForwardDynamic();
     Outputs& GetOutputs();

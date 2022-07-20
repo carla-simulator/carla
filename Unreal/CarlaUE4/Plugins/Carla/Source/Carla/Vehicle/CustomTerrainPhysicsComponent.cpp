@@ -27,6 +27,19 @@
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 1.f/100.f;
  
+
+FVector SIToUEFrame(const FVector& In)
+{
+  return MToCM * FVector(In.X, -In.Y, In.Z);
+}
+float SIToUEFrame(const float& In) { return MToCM * In; }
+
+FVector UEFrameToSI(const FVector& In)
+{
+  return CMToM*FVector(In.X, -In.Y, In.Z);
+}
+float UEFrameToSI(const float& In) { return CMToM * In; }
+
 void FHeightMapData::InitializeHeightmap(UTexture2D* Texture, FDVector Size, FDVector Origin)
 {
   WorldSize = Size;
@@ -84,27 +97,28 @@ void FDenseTile::InitializeTile(float ParticleSize, float Depth,
 {
   TilePosition = TileOrigin;
   uint32_t NumParticles_X = (TileEnd.X - TileOrigin.X) / ParticleSize;
-  uint32_t NumParticles_Y = (TileEnd.Y - TileOrigin.Y) / ParticleSize;
+  uint32_t NumParticles_Y = FMath::Abs(TileEnd.Y - TileOrigin.Y) / ParticleSize;
   uint32_t NumParticles_Z = (Depth) / ParticleSize;
-  UE_LOG(LogCarla, Log, TEXT("Initializing Tile with %d particles at location %s, size %f, depth %f. HeightMap at tile origin %f"), 
-      NumParticles_X*NumParticles_Y*NumParticles_Z, *TileOrigin.ToString(), ParticleSize, Depth, HeightMap.GetHeight(TileOrigin));
+  UE_LOG(LogCarla, Log, TEXT("Initializing Tile with (%d,%d,%d) particles at location %s, size %f, depth %f. HeightMap at tile origin %f"), 
+      NumParticles_X,NumParticles_Y,NumParticles_Z, *TileOrigin.ToString(), ParticleSize, Depth, HeightMap.GetHeight(TileOrigin));
   Particles = std::vector<FParticle>(NumParticles_X*NumParticles_Y*NumParticles_Z);
   for(uint32_t i = 0; i < NumParticles_X; i++)
   {
     for(uint32_t j = 0; j < NumParticles_Y; j++)
     {
-      FDVector ParticlePosition = TileOrigin + FDVector(i*ParticleSize,j*ParticleSize, 0.f);
+      FDVector ParticlePosition = TileOrigin + FDVector(i*ParticleSize,-(j*ParticleSize), 0.f);
+      // UE_LOG(LogCarla, Log, TEXT("  Particle position %s"), *ParticlePosition.ToString());
       float Height = HeightMap.GetHeight(ParticlePosition);
       for(uint32_t k = 0; k < NumParticles_Z; k++)
       {
-        ParticlePosition.Z = Height - k*ParticleSize;
+        ParticlePosition.Z = TileOrigin.Z + Height - k*ParticleSize;
         Particles[k*NumParticles_X*NumParticles_Y + j*NumParticles_X + i] = 
             {ParticlePosition, FVector(0), ParticleSize/2.f};
       }
     }
   }
 }
-
+// revise coordinates
 void FDenseTile::GetParticlesInRadius(FDVector Position, float Radius, std::vector<FParticle*> &ParticlesInRadius)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FDenseTile::GetParticlesInRadius);
@@ -116,7 +130,7 @@ void FDenseTile::GetParticlesInRadius(FDVector Position, float Radius, std::vect
     }
   }
 }
-
+// revise coordinates
 std::vector<FParticle*> FDenseTile::GetParticlesInRadius(FDVector Position, float Radius)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FDenseTile::GetParticlesInRadius);
@@ -139,7 +153,7 @@ void FDenseTile::GetParticlesInBox(
   TRACE_CPUPROFILER_EVENT_SCOPE(FDenseTile::GetParticlesInBox);
   for (FParticle& Particle : Particles)
   {
-    FVector PToCenter = MToCM*Particle.Position.ToFVector() - OBox.Center;
+    FVector PToCenter = SIToUEFrame(Particle.Position.ToFVector()) - OBox.Center;
     if((FMath::Abs(FVector::DotProduct(PToCenter, OBox.AxisX)) < OBox.ExtentX) &&
        (FMath::Abs(FVector::DotProduct(PToCenter, OBox.AxisY)) < OBox.ExtentY) &&
        (FMath::Abs(FVector::DotProduct(PToCenter, OBox.AxisZ)) < OBox.ExtentZ))
@@ -149,6 +163,7 @@ void FDenseTile::GetParticlesInBox(
   }
 }
 
+// revise coordinates
 std::vector<FParticle*> FSparseHighDetailMap::
     GetParticlesInRadius(FDVector Position, float Radius)
 {
@@ -173,11 +188,11 @@ std::vector<FParticle*> FSparseHighDetailMap::
     GetParticlesInBox(const FOrientedBox& OBox)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::GetParticlesInBox);
-  uint64_t TileId = GetTileId(OBox.Center*CMToM);
+  uint64_t TileId = GetTileId(UEFrameToSI(OBox.Center));
   uint32_t Tile_X = (uint32_t)(TileId >> 32);
   uint32_t Tile_Y = (uint32_t)(TileId & (uint32_t)(~0));
-  // FDenseTile& Tile = GetTile(TileId);
-  // return Tile.GetParticlesInRadius(Position, Radius);
+  // UE_LOG(LogCarla, Log, TEXT("Searching tile %s, (%d, %d)"), 
+  //     *UEFrameToSI(OBox.Center).ToString(), Tile_X, Tile_Y);
   std::vector<FParticle*> ParticlesInRadius;
   GetTile(Tile_X, Tile_Y).GetParticlesInBox(OBox, ParticlesInRadius);
   GetTile(Tile_X-1, Tile_Y-1).GetParticlesInBox(OBox, ParticlesInRadius);
@@ -197,11 +212,11 @@ uint64_t FSparseHighDetailMap::GetTileId(uint32_t Tile_X, uint32_t Tile_Y)
 uint64_t FSparseHighDetailMap::GetTileId(FDVector Position)
 {
   uint32_t Tile_X = static_cast<uint32_t>((Position.X - Tile0Position.X) / TileSize);
-  uint32_t Tile_Y = static_cast<uint32_t>((Position.Y - Tile0Position.Y) / TileSize);
+  uint32_t Tile_Y = static_cast<uint32_t>((Tile0Position.Y - Position.Y) / TileSize);
   // UE_LOG(LogCarla, Log, TEXT("Getting tile at location %s, (%d, %d)"), *Position.ToString(), Tile_X, Tile_Y);
   return GetTileId(Tile_X, Tile_Y);
 }
-
+ 
 FDVector FSparseHighDetailMap::GetTilePosition(uint64_t TileId)
 {
   uint32_t Tile_X = (uint32_t)(TileId >> 32);
@@ -211,8 +226,12 @@ FDVector FSparseHighDetailMap::GetTilePosition(uint64_t TileId)
 
 FDVector FSparseHighDetailMap::GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y)
 {
-  FDVector Position = Tile0Position + FDVector(Tile_X*TileSize, Tile_Y*TileSize, 0);
-  // UE_LOG(LogCarla, Log, TEXT("Getting location from id (%d, %d) %s"), Tile_X, Tile_Y, *Position.ToString());
+
+  FDVector Position = FDVector(Tile_X*TileSize, Tile_Y*TileSize, 0);
+  Position.Y *= -1;
+  Position = Position + Tile0Position;
+  // UE_LOG(LogCarla, Log, TEXT("Getting location from id (%d, %d) %s"),
+  //     Tile_X, Tile_Y, *(Position).ToString());
   return Position;
 }
 
@@ -249,7 +268,7 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
   FDVector TileCenter = GetTilePosition(TileId);
   Tile.InitializeTile(
       ParticleSize, TerrainDepth,
-      TileCenter, TileCenter + FDVector(TileSize, TileSize, 0.f),
+      TileCenter, TileCenter + FDVector(TileSize, -TileSize, 0.f),
       Heightmap);
   return Tile;
 }
@@ -274,6 +293,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BeginPlay);
   Super::BeginPlay();
+
   float Value;
   if (FParse::Value(FCommandLine::Get(), TEXT("-particle-size="), Value))
   {
@@ -303,22 +323,13 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     ForceMulFactor = Value;
   }
+  if (FParse::Value(FCommandLine::Get(), TEXT("-max-force="), Value))
+  {
+    MaxForceMagnitude = MToCM*Value;
+  }
   if (FParse::Value(FCommandLine::Get(), TEXT("-floor-height="), Value))
   {
-    if(FloorActor)
-    {
-      FVector Location = FloorActor->GetActorLocation();
-      Location.Z = MToCM*Value;
-      FloorActor->SetActorLocation(Location);
-    }
-    else
-    {
-        UE_LOG(LogCarla, Error, TEXT("Floor not set"));
-    }
-  }
-  if (FParse::Value(FCommandLine::Get(), TEXT("-particle-size="), Value))
-  {
-    ForceMulFactor = Value;
+    FloorHeight = MToCM*Value;
   }
   if (FParse::Param(FCommandLine::Get(), TEXT("-update-particles")))
   {
@@ -337,10 +348,24 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bUseDynamicModel = true;
   }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-disable-gravity")))
+  {
+    bDisableVehicleGravity = true;
+  }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-disable-nn-verbose")))
+  {
+    NNVerbose = false;
+  }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-use-impulse")))
+  {
+    bUseImpulse = true;
+  }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-use-mean-acceleration")))
+  {
+    bUseMeanAcceleration = true;
+  }
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
-    // torch::Tensor tensor = torch::rand({2, 3});
-    // std::cout << tensor << std::endl;
     SparseMap = FSparseHighDetailMap(CMToM*ParticleDiameter, CMToM*TerrainDepth);
     SparseMap.Clear();
     RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
@@ -357,7 +382,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
       UE_LOG(LogCarla, Log, 
           TEXT("World Size %s"), *(WorldSize.ToString()));
     }
-    SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,0.f), WorldSize/100.f);
+    SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,CMToM*FloorHeight), WorldSize/100.f);
   }
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(LoadNNModel);
@@ -384,41 +409,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle> (VehicleActor);
     RunNNPhysicsSimulation(Vehicle, DeltaTime);
   }
-  // RunNNPhysicsSimulation(nullptr, DeltaTime);
-  // if(!TextureToUpdate)
-  // {
-  //   UE_LOG(LogCarla, Log, TEXT("Missing texture"));
-  //   return;
-  // }
-
-  // UE_LOG(LogCarla, Log, TEXT("Updating texture gamethread with %d Pixels"), TextureToUpdate->GetSizeX()*TextureToUpdate->GetSizeY());
-  // TArray<uint8_t> Data;
-  // {
-  // TRACE_CPUPROFILER_EVENT_SCOPE(SetupData);
-  // Data.SetNum(TextureToUpdate->GetSizeX()*TextureToUpdate->GetSizeY());
-  // // for(int i = 0; i < Data.Num(); i++)
-  // // {
-  // //   Data[i] = static_cast<uint8_t>(FMath::RandRange(0,255));
-  // // }
-  // }
-  // ENQUEUE_RENDER_COMMAND(UpdateDynamicTextureCode)
-  // (
-	// [Data, Texture=TextureToUpdate](auto &InRHICmdList) mutable
-  // {
-  //   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::TickComponent Renderthread);
-  //   FUpdateTextureRegion2D region;
-  //   region.SrcX = 0;
-  //   region.SrcY = 0;
-  //   region.DestX = 0;
-  //   region.DestY = 0;
-  //   region.Width = Texture->GetSizeX();
-  //   region.Height = Texture->GetSizeY();
-
-  //   FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
-  //   RHIUpdateTexture2D(
-  //       resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &Data[0]);
-  //   UE_LOG(LogCarla, Log, TEXT("Updating texture renderthread with %d Pixels"), Texture->GetSizeX()*Texture->GetSizeY());
-  // });
 }
 
 void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles)
@@ -437,7 +427,7 @@ void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles)
   {
     // DrawDebugPoint(World, MToCM*Particle->Position.ToFVector(),
     //     1.0, FColor(255,0,0), false, 0.3, 0);
-	    LineBatcher->DrawPoint(MToCM*Particle->Position.ToFVector(), 
+	    LineBatcher->DrawPoint(SIToUEFrame(Particle->Position.ToFVector()), 
           FLinearColor(1.f, 0.f, 0.f), 1.0, 0, LifeTime);
   }
 }
@@ -495,10 +485,10 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(RunNNPhysicsSimulation);
   FTransform VehicleTransform = Vehicle->GetTransform();
-  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
-  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
-  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
-  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
+  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
+  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
   FOrientedBox BboxWheel0;
   BboxWheel0.AxisX = VehicleTransform.GetUnitAxis(EAxis::X);
   BboxWheel0.AxisY = VehicleTransform.GetUnitAxis(EAxis::Y);
@@ -539,7 +529,7 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3"), ParticlesWheel3.size());
   if(ParticlesWheel0.size())
     UE_LOG(LogCarla, Log, 
-        TEXT("Wheel0 pos %s particle pos %s"), *(WheelPosition0*CMToM).ToString(), *(ParticlesWheel0[0]->Position.ToString()));
+        TEXT("Wheel0 pos %s particle pos %s"), *(UEFrameToSI(WheelPosition0)).ToString(), *(ParticlesWheel0[0]->Position.ToString()));
   
   TArray<float> ParticlePos0, ParticleVel0, ParticlePos1, ParticleVel1,
                 ParticlePos2, ParticleVel2, ParticlePos3, ParticleVel3;
@@ -610,39 +600,62 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
   }
 
-  ApplyForcesToVehicle(Vehicle, 
-      ForceMulFactor*MToCM*FVector(
-          Output.wheel0.wheel_forces_x,
-          Output.wheel0.wheel_forces_y,
-          Output.wheel0.wheel_forces_z),
-      ForceMulFactor*MToCM*FVector(
-          Output.wheel1.wheel_forces_x,
-          Output.wheel1.wheel_forces_y,
-          Output.wheel1.wheel_forces_z),
-      ForceMulFactor*MToCM*FVector(
-          Output.wheel2.wheel_forces_x,
-          Output.wheel2.wheel_forces_y,
-          Output.wheel2.wheel_forces_z),
-      ForceMulFactor*MToCM*FVector(
-          Output.wheel3.wheel_forces_x,
-          Output.wheel3.wheel_forces_y,
-          Output.wheel3.wheel_forces_z),
-      ForceMulFactor*MToCM*MToCM*FVector(
-          Output.wheel0.wheel_torque_x,
-          Output.wheel0.wheel_torque_y,
-          Output.wheel0.wheel_torque_z),
-      ForceMulFactor*MToCM*MToCM*FVector(
-          Output.wheel1.wheel_torque_x,
-          Output.wheel1.wheel_torque_y,
-          Output.wheel1.wheel_torque_z),
-      ForceMulFactor*MToCM*MToCM*FVector(
-          Output.wheel2.wheel_torque_x,
-          Output.wheel2.wheel_torque_y,
-          Output.wheel2.wheel_torque_z),
-      ForceMulFactor*MToCM*MToCM*FVector(
-          Output.wheel3.wheel_torque_x,
-          Output.wheel3.wheel_torque_y,
-          Output.wheel3.wheel_torque_z));
+  if(bUseMeanAcceleration)
+  {
+    ApplyMeanAccelerationToVehicle(Vehicle, 
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel0.wheel_forces_x,
+            Output.wheel0.wheel_forces_y,
+            Output.wheel0.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel1.wheel_forces_x,
+            Output.wheel1.wheel_forces_y,
+            Output.wheel1.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel2.wheel_forces_x,
+            Output.wheel2.wheel_forces_y,
+            Output.wheel2.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel3.wheel_forces_x,
+            Output.wheel3.wheel_forces_y,
+            Output.wheel3.wheel_forces_z)));
+  }
+  else
+  {
+    ApplyForcesToVehicle(Vehicle, 
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel0.wheel_forces_x,
+            Output.wheel0.wheel_forces_y,
+            Output.wheel0.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel1.wheel_forces_x,
+            Output.wheel1.wheel_forces_y,
+            Output.wheel1.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel2.wheel_forces_x,
+            Output.wheel2.wheel_forces_y,
+            Output.wheel2.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel3.wheel_forces_x,
+            Output.wheel3.wheel_forces_y,
+            Output.wheel3.wheel_forces_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel0.wheel_torque_x,
+            Output.wheel0.wheel_torque_y,
+            Output.wheel0.wheel_torque_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel1.wheel_torque_x,
+            Output.wheel1.wheel_torque_y,
+            Output.wheel1.wheel_torque_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel2.wheel_torque_x,
+            Output.wheel2.wheel_torque_y,
+            Output.wheel2.wheel_torque_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel3.wheel_torque_x,
+            Output.wheel3.wheel_torque_y,
+            Output.wheel3.wheel_torque_z)));
+  }
 }
 
 void UCustomTerrainPhysicsComponent::UpdateParticles(
@@ -650,6 +663,7 @@ void UCustomTerrainPhysicsComponent::UpdateParticles(
     float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UpdateParticles);
+  UE_LOG(LogCarla, Log, TEXT("%d vs %d"), Particles.size(), Forces.size()/3);
   for (size_t i = 0; i < Particles.size(); i++)
   {
     FVector Force = FVector(Forces[3*i + 0], Forces[3*i + 1], Forces[3*i + 2]);
@@ -666,17 +680,12 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
     FVector TorqueWheel0, FVector TorqueWheel1, FVector TorqueWheel2, FVector TorqueWheel3)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::ApplyForcesToVehicle);
-  // FVector Position = Vehicle->GetActorLocation();
-  // //wheel location from actor center FVector(140, 70, 40)
-  // FVector WheelPosition0 = Position + FVector(140, 70, 40) + FVector(0,0,50);
-  // FVector WheelPosition1 = Position + FVector(140, -70, 40)+ FVector(0,0,50);
-  // FVector WheelPosition2 = Position + FVector(-140, 70, 40)+ FVector(0,0,50);
-  // FVector WheelPosition3 = Position + FVector(-140, -70, 40)+ FVector(0,0,50);
+
   FTransform VehicleTransform = Vehicle->GetTransform();
-  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
-  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
-  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
-  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+  FVector WheelPosition0 = VehicleTransform.TransformPosition(FVector(140, -70, 40));
+  FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
+  FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+  FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
   UPrimitiveComponent* PrimitiveComponent = 
       Cast<UPrimitiveComponent>(Vehicle->GetRootComponent());
   if (!PrimitiveComponent)
@@ -684,14 +693,30 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
     UE_LOG(LogCarla, Error, TEXT("ApplyForcesToVehicle Vehicle does not contain UPrimitiveComponent"));
     return;
   }
-  PrimitiveComponent->AddForceAtLocationLocal(ForceWheel0, FVector(140, 70, 40));
-  PrimitiveComponent->AddForceAtLocationLocal(ForceWheel1, FVector(140, -70, 40));
-  PrimitiveComponent->AddForceAtLocationLocal(ForceWheel2, FVector(-140, 70, 40));
-  PrimitiveComponent->AddForceAtLocationLocal(ForceWheel3, FVector(-140, -70, 40));
-  // PrimitiveComponent->AddForceAtLocationLocal(FVector(0,0,ForceWheel0.Z), FVector(140, 70, 40));
-  // PrimitiveComponent->AddForceAtLocationLocal(FVector(0,0,ForceWheel1.Z), FVector(140, -70, 40));
-  // PrimitiveComponent->AddForceAtLocationLocal(FVector(0,0,ForceWheel2.Z), FVector(-140, 70, 40));
-  // PrimitiveComponent->AddForceAtLocationLocal(FVector(0,0,ForceWheel3.Z), FVector(-140, -70, 40));
+  if(bDisableVehicleGravity && PrimitiveComponent->IsGravityEnabled())
+  {
+    PrimitiveComponent->SetEnableGravity(false);
+  }
+  ForceWheel0 = ForceWheel0.GetClampedToMaxSize(MaxForceMagnitude);
+  ForceWheel1 = ForceWheel1.GetClampedToMaxSize(MaxForceMagnitude);
+  ForceWheel2 = ForceWheel2.GetClampedToMaxSize(MaxForceMagnitude);
+  ForceWheel3 = ForceWheel3.GetClampedToMaxSize(MaxForceMagnitude);
+
+  if(bUseImpulse)
+  {
+    PrimitiveComponent->AddImpulseAtLocation(ForceWheel0, WheelPosition0);
+    PrimitiveComponent->AddImpulseAtLocation(ForceWheel1, WheelPosition1);
+    PrimitiveComponent->AddImpulseAtLocation(ForceWheel2, WheelPosition2);
+    PrimitiveComponent->AddImpulseAtLocation(ForceWheel3, WheelPosition3);
+  }
+  else
+  {
+    PrimitiveComponent->AddForceAtLocationLocal(ForceWheel0, FVector(140, -70, 40));
+    PrimitiveComponent->AddForceAtLocationLocal(ForceWheel1, FVector(140, 70, 40));
+    PrimitiveComponent->AddForceAtLocationLocal(ForceWheel2, FVector(-140, -70, 40));
+    PrimitiveComponent->AddForceAtLocationLocal(ForceWheel3, FVector(-140, 70, 40));
+  }
+
   PrimitiveComponent->AddTorqueInRadians(TorqueWheel0);
   PrimitiveComponent->AddTorqueInRadians(TorqueWheel1);
   PrimitiveComponent->AddTorqueInRadians(TorqueWheel2);
@@ -710,33 +735,17 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
       UE_LOG(LogCarla, Error, TEXT("Missing linebatcher"));
     }
     LineBatcher->DrawLine(WheelPosition0 + FVector(0,0,50),
-        WheelPosition0 + FVector(0,0,50)+ ForceWheel0.GetSafeNormal()*ForceMulFactor*10,
+        WheelPosition0 + FVector(0,0,50)+ ForceWheel0.GetSafeNormal()*(5 + ForceMulFactor*10*ForceWheel0.Size()),
         FLinearColor(0.0,1.0,0.0), 0, 3.0, 0.3);
     LineBatcher->DrawLine(WheelPosition1 + FVector(0,0,50),
-        WheelPosition1 + FVector(0,0,50)+ ForceWheel1.GetSafeNormal()*ForceMulFactor*10,
+        WheelPosition1 + FVector(0,0,50)+ ForceWheel1.GetSafeNormal()*(5 + ForceMulFactor*10*ForceWheel1.Size()),
         FLinearColor(0.0,1.0,0.0), 0, 3.0, 0.3);
     LineBatcher->DrawLine(WheelPosition2 + FVector(0,0,50),
-        WheelPosition2 + FVector(0,0,50)+ ForceWheel2.GetSafeNormal()*ForceMulFactor*10,
+        WheelPosition2 + FVector(0,0,50)+ ForceWheel2.GetSafeNormal()*(5 + ForceMulFactor*10*ForceWheel2.Size()),
         FLinearColor(0.0,1.0,0.0), 0, 3.0, 0.3);
     LineBatcher->DrawLine(WheelPosition3 + FVector(0,0,50),
-        WheelPosition3 + FVector(0,0,50)+ ForceWheel3.GetSafeNormal()*ForceMulFactor*10,
+        WheelPosition3 + FVector(0,0,50)+ ForceWheel3.GetSafeNormal()*(5 + ForceMulFactor*10*ForceWheel3.Size()),
         FLinearColor(0.0,1.0,0.0), 0, 3.0, 0.3);
-    // UKismetSystemLibrary::DrawDebugLine(
-    //     GetWorld(), WheelPosition0 + FVector(0,0,50), 
-    //     WheelPosition0 + FVector(0,0,50)+ ForceWheel0.GetSafeNormal()*ForceMulFactor*10,
-    //     FLinearColor(0.0,1.0,0.0), 0.3, 3.0);
-    // UKismetSystemLibrary::DrawDebugLine(
-    //     GetWorld(), WheelPosition1 + FVector(0,0,50), 
-    //     WheelPosition1 + FVector(0,0,50) + ForceWheel1.GetSafeNormal()*ForceMulFactor*10,
-    //     FLinearColor(0.0,1.0,0.0), 0.3, 3.0);
-    // UKismetSystemLibrary::DrawDebugLine(
-    //     GetWorld(), WheelPosition2 + FVector(0,0,50), 
-    //     WheelPosition2 + FVector(0,0,50) + ForceWheel2.GetSafeNormal()*ForceMulFactor*10,
-    //     FLinearColor(0.0,1.0,0.0), 0.3, 3.0);
-    // UKismetSystemLibrary::DrawDebugLine(
-    //     GetWorld(), WheelPosition3 + FVector(0,0,50), 
-    //     WheelPosition3 + FVector(0,0,50) + ForceWheel3.GetSafeNormal()*ForceMulFactor*10,
-    //     FLinearColor(0.0,1.0,0.0), 0.3, 3.0);
   }
   UE_LOG(LogCarla, Log, TEXT("Forces0 %s"), 
       *ForceWheel0.ToString());
@@ -756,13 +765,51 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
       *TorqueWheel3.ToString());
 }
 
+void UCustomTerrainPhysicsComponent::ApplyMeanAccelerationToVehicle(
+      ACarlaWheeledVehicle *Vehicle,
+      FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::ApplyForcesToVehicle);
+  FVector MeanAcceleration = (ForceWheel0 + ForceWheel1 + ForceWheel2 + ForceWheel3)/4.f;
+  UPrimitiveComponent* PrimitiveComponent = 
+      Cast<UPrimitiveComponent>(Vehicle->GetRootComponent());
+  if (!PrimitiveComponent)
+  {
+    UE_LOG(LogCarla, Error, TEXT("ApplyMeanAccelerationToVehicle Vehicle does not contain UPrimitiveComponent"));
+    return;
+  }
+  if(bDisableVehicleGravity && PrimitiveComponent->IsGravityEnabled())
+  {
+    PrimitiveComponent->SetEnableGravity(false);
+  }
+  PrimitiveComponent->AddForce(MeanAcceleration, FName(""), true);
+
+  if (DrawDebugInfo)
+  {
+    float LifeTime = 0.3f;
+    bool bPersistentLines = false;
+    bool bDepthIsForeground = (0 == SDPG_Foreground);
+    UWorld * World = GetWorld();
+    ULineBatchComponent* LineBatcher = 
+        (World ? (bDepthIsForeground ? World->ForegroundLineBatcher : 
+        (( bPersistentLines || (LifeTime > 0.f) ) ? World->PersistentLineBatcher : World->LineBatcher)) : nullptr);
+    if (!LineBatcher)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Missing linebatcher"));
+    }
+    LineBatcher->DrawLine(PrimitiveComponent->GetComponentLocation() + FVector(0,0,200),
+        PrimitiveComponent->GetComponentLocation() + FVector(0,0,200)+ MeanAcceleration.GetSafeNormal()*(1 + MeanAcceleration.Size()),
+        FLinearColor(0.0,1.0,0.0), 0, 3.0, 0.3);
+  }
+}
+
 TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Position, float Radius)
 {
-  std::vector<FParticle*> Particles = SparseMap.GetParticlesInRadius(Position*CMToM, Radius*CMToM);
+  std::vector<FParticle*> Particles = SparseMap.GetParticlesInRadius(UEFrameToSI(Position), Radius*CMToM);
   TArray<FVector> ParticlePositions;
   for(FParticle* Particle : Particles)
   {
-    ParticlePositions.Add(MToCM*Particle->Position.ToFVector());
+    ParticlePositions.Add(SIToUEFrame(Particle->Position.ToFVector()));
   }
   return ParticlePositions;
 }
@@ -770,7 +817,10 @@ TArray<FVector> UCustomTerrainPhysicsComponent::GetParticlesInRadius(FVector Pos
 FVector UCustomTerrainPhysicsComponent::GetTileCenter(FVector Position)
 {
   
-  return 100.f*SparseMap.GetTilePosition(SparseMap.GetTileId(Position/100.f)).ToFVector();
+  return SIToUEFrame(
+      SparseMap.GetTilePosition(
+          SparseMap.GetTileId(
+              UEFrameToSI(Position))).ToFVector());
 }
 
 void UCustomTerrainPhysicsComponent::SetUpParticleArrays(std::vector<FParticle*>& ParticlesIn, 
@@ -787,8 +837,8 @@ void UCustomTerrainPhysicsComponent::SetUpParticleArrays(std::vector<FParticle*>
     ParticlePosOut.Add(static_cast<float>(Particle->Position.Y));
     ParticlePosOut.Add(static_cast<float>(Particle->Position.Z));
     ParticleVelOut.Add(Particle->Velocity.X);
-    ParticleVelOut.Add(Particle->Velocity.X);
-    ParticleVelOut.Add(Particle->Velocity.X);
+    ParticleVelOut.Add(Particle->Velocity.Y);
+    ParticleVelOut.Add(Particle->Velocity.Z);
   }
 }
 
@@ -804,25 +854,29 @@ void UCustomTerrainPhysicsComponent::SetUpWheelArrays(ACarlaWheeledVehicle *Vehi
   switch (WheelIdx)
   {
     case 0:
-      Position = VehicleTransform.TransformPosition(FVector(140, 70, 40));
-      break;
-    case 1:
       Position = VehicleTransform.TransformPosition(FVector(140, -70, 40));
       break;
+    case 1:
+      Position = VehicleTransform.TransformPosition(FVector(140, 70, 40));
+      break;
     case 2:
-      Position = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
+      Position = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
       break;
     case 3:
     default:
-      Position = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
+      Position = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
       break;
   }
-  Position = CMToM*Position;
-  FVector Velocity = CMToM*Vehicle->GetVelocity();
+  Position = UEFrameToSI(Position);
+  FVector Velocity = UEFrameToSI(Vehicle->GetVelocity());
   WheelPos = {Position.X, Position.Y, Position.Z};
-  WheelOrientation = {1,0,0,0};
+  FQuat Quat = VehicleTransform.GetRotation();
+  float sin = FMath::Sin(Quat.W/2.f);
+  WheelOrientation = {FMath::Cos(Quat.W/2.f),sin*Quat.X,sin*Quat.Y,sin*Quat.Z};
   WheelLinearVelocity = {Velocity.X, Velocity.Y, Velocity.Z};
-  WheelAngularVelocity = {0,0,0};
+  FVector LeftVector = -Quat.GetRightVector();
+  LeftVector = LeftVector*(Velocity.Size()/(CMToM*TireRadius));
+  WheelAngularVelocity = {LeftVector.X,LeftVector.Y,LeftVector.Z};
 }
 
 void UCustomTerrainPhysicsComponent::AddForces(

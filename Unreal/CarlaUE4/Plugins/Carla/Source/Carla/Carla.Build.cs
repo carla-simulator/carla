@@ -278,11 +278,16 @@ public class Carla : ModuleRules
       // AddDynamicLibrary("/usr/local/cuda/lib64/libnvToolsExt.so");
       // AddDynamicLibrary("/usr/local/cuda/lib64/libcudart.so");
       // AddDynamicLibrary("/usr/lib/llvm-10/lib/libgomp.so");
-      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcuda.so"));
-      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnvrtc.so"));
-      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnvToolsExt.so"));
-      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcudart.so"));
-      AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libgomp.so"));
+      // AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcuda.so"));
+      // AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnvrtc.so"));
+      // AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libnvToolsExt.so"));
+      // AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libcudart.so"));
+      // AddDynamicLibrary(Path.Combine(LibTorchPath, "lib", "libgomp.so"));
+      PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/stubs/libcuda.so");
+      PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libnvrtc.so");
+      PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libnvToolsExt.so");
+      PublicAdditionalLibraries.Add("/usr/local/cuda/lib64/libcudart.so");
+      PublicAdditionalLibraries.Add("/usr/lib/llvm-10/lib/libgomp.so");
       RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libcudart-a7b20f20.so.11.0"));
       RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libgomp-a34b3233.so.1"));
       RuntimeDependencies.Add(Path.Combine(LibTorchPath, "lib", "libnvrtc-builtins-4730a239.so.11.3"));
@@ -303,6 +308,8 @@ public class Carla : ModuleRules
     PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
     PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
     PublicAdditionalLibraries.Add("stdc++");
+    // PublicAdditionalLibraries.Add("/usr/lib/gcc/x86_64-linux-gnu/9/libstdc++.so");
+    // RuntimeDependencies.Add("/usr/lib/gcc/x86_64-linux-gnu/9/libstdc++.so");
     PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
   }
 }
