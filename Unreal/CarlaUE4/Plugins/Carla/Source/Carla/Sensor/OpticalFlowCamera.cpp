@@ -40,7 +40,7 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
       IntermediateBuffer.Add(y);
       ++Buf;
     }
-    return std::move(IntermediateBuffer);
+    return IntermediateBuffer;
   };
   FPixelReader::SendPixelsInRenderThread<AOpticalFlowCamera, float>(*this, true, Conversor);
   
