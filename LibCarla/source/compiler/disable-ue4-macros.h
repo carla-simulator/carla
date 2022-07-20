@@ -6756,3 +6756,6 @@
 
 #pragma push_macro("RETURN_FALSE_ON_FAIL")
 #undef RETURN_FALSE_ON_FAIL
+
+#pragma push_macro("PI")
+#undef PI
