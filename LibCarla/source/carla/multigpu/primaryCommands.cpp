@@ -31,7 +31,7 @@ void PrimaryCommands::SendFrameData(carla::Buffer buffer) {
 }
 
 // broadcast to all secondary servers the map to load
-void PrimaryCommands::SendLoadMap(std::string map) {
+void PrimaryCommands::SendLoadMap(std::string) {
   // carla::Buffer buf((unsigned char *) map.c_str(), (size_t) map.size());
   log_info("sending load map command");
 }

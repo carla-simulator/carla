@@ -104,23 +104,18 @@ namespace multigpu {
         return;
       }
 
-      auto handle_sent = [weak](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
-        // auto self = weak.lock();
-        // if (!self) return;
-      };
-      
       // sent first size buffer
       self->_deadline.expires_from_now(self->_timeout);
       int this_size = text.size();
       boost::asio::async_write(
           self->_socket,
           boost::asio::buffer(&this_size, sizeof(this_size)),
-          boost::asio::bind_executor(self->_strand, [](const boost::system::error_code &ec, size_t bytes){ }));
+          boost::asio::bind_executor(self->_strand, [](const boost::system::error_code &, size_t bytes){ }));
       // send characters
       boost::asio::async_write(
           self->_socket,
           boost::asio::buffer(text.c_str(), text.size()),
-          boost::asio::bind_executor(self->_strand, handle_sent));
+          boost::asio::bind_executor(self->_strand, [](const boost::system::error_code &, size_t bytes){ }));
     });
   }
 
