@@ -1,5 +1,8 @@
 ## Latest
 
+  * Some of the warnings shown when building a map will now only be showing when debugging.
+  * Fixed bug causing traffic signals at the end points of a road to sometimes create malformed waypoints.
+  * Added the speed limits for 100, 110 and 120 Km/h.
   * Fixed bug at `Vehicle.get_traffic_light_state()` and `Vehicle.is_at_traffic_light()` causing vehicles to temporarily not lose the information of a traffic light if they moved away from it before it turned green.
   * Added multi-GPU feature. Now several servers (with dedicated GPU) can render sensors for the same simulation.
   * Fixed bug causing the `Vehicle.get_traffic_light_state()` function not notify about the green to yellow and yellow to red light state changes.
@@ -13,6 +16,7 @@
   * Added check to avoid adding procedural trigger boxes inside intersections.
   * Python agents now accept a carla.Map and GlobalRoutePlanner instances as inputs, avoiding the need to recompute them.
   * Python agents now have a function to lane change.
+  * Improved Python agents performance for large maps.
   * Fix a bug at `Map.get_topology()`, causing lanes with no successors to not be part of it.
   * Added new ConstantVelocityAgent
   * Added new parameter to the TrafficManager, `set_desired_speed`, to set a vehicle's speed.
