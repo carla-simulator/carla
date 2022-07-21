@@ -62,8 +62,8 @@ namespace detail {
     log_debug("Calling CloseStream for ", id);
     auto search = _stream_map.find(id);
     if (search != _stream_map.end()) {
-      auto stream_state = search->second.lock();
-      if (stream_state != nullptr) {
+      auto stream_state = search->second;
+      if (stream_state) {
         log_debug("Disconnecting all sessions (stream ", id, ")");
         stream_state->ClearSessions();
       }
@@ -76,8 +76,8 @@ namespace detail {
     std::lock_guard<std::mutex> lock(_mutex);
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      auto stream_state = search->second.lock();
-      if (stream_state != nullptr) {
+      auto stream_state = search->second;
+      if (stream_state) {
         log_debug("Connecting session (stream ", session->get_stream_id(), ")");
         stream_state->ConnectSession(std::move(session));
         log_debug("Current streams: ", _stream_map.size());
@@ -94,8 +94,8 @@ namespace detail {
     log_debug("Calling DeregisterSession for ", session->get_stream_id());
     auto search = _stream_map.find(session->get_stream_id());
     if (search != _stream_map.end()) {
-      auto stream_state = search->second.lock();
-      if (stream_state != nullptr) {
+      auto stream_state = search->second;
+      if (stream_state) {
         log_debug("Disconnecting session (stream ", session->get_stream_id(), ")");
         stream_state->DisconnectSession(session);
         log_debug("Current streams: ", _stream_map.size());
