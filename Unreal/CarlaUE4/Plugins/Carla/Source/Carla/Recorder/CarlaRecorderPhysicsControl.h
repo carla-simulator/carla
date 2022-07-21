@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 #include "Carla/Vehicle/VehiclePhysicsControl.h"
@@ -17,9 +17,9 @@ struct CarlaRecorderPhysicsControl
   uint32_t DatabaseId;
   FVehiclePhysicsControl VehiclePhysicsControl;
 
-  void Read(std::ifstream &InFile);
+  void Read(std::istream &InFile);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 };
 #pragma pack(pop)
 
@@ -31,7 +31,7 @@ class CarlaRecorderPhysicsControls
 
   void Clear(void);
 
-  void Write(std::ofstream &OutFile);
+  void Write(std::ostream &OutFile);
 
 private:
 

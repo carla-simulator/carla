@@ -7,10 +7,11 @@
 #include "Carla.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 
 #include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
-
+#include "Misc/FileHelper.h"
 
 FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
 

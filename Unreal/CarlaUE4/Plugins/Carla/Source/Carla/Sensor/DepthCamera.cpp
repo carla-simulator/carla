@@ -31,5 +31,5 @@ ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
 void ADepthCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ADepthCamera::PostPhysTick);
-  FPixelReader::SendPixelsInRenderThread(*this);
+  FPixelReader::SendPixelsInRenderThread<ADepthCamera, FColor>(*this);
 }
