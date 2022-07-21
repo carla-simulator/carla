@@ -74,6 +74,16 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
     auto TrafficSign = Cast<ATrafficSignBase>(Actor);
     if (TrafficSign != nullptr)
     {
+      // first return a merge of the generated trigger boxes, if any
+      auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
+      if (TriggerVolumes.Num() > 0)
+      {
+        FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+        FTransform Transform = Actor->GetTransform();
+        Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
+        return Box;
+      }
+      // try to return the original bounding box
       auto TriggerVolume = TrafficSign->GetTriggerVolume();
       if (TriggerVolume != nullptr)
       {
@@ -584,6 +594,43 @@ FBoundingBox UBoundingBoxCalculator::CombineBBs(const TArray<FBoundingBox>& BBsT
   for(const FBoundingBox& BB : BBsToCombine) {
     FVector MaxVertexOfBB = BB.Origin + BB.Extent;
     FVector MinVertexOfBB = BB.Origin - BB.Extent;
+
+    MaxVertex.X = (MaxVertexOfBB.X > MaxVertex.X) ? MaxVertexOfBB.X : MaxVertex.X;
+    MaxVertex.Y = (MaxVertexOfBB.Y > MaxVertex.Y) ? MaxVertexOfBB.Y : MaxVertex.Y;
+    MaxVertex.Z = (MaxVertexOfBB.Z > MaxVertex.Z) ? MaxVertexOfBB.Z : MaxVertex.Z;
+    MinVertex.X = (MinVertexOfBB.X < MinVertex.X) ? MinVertexOfBB.X : MinVertex.X;
+    MinVertex.Y = (MinVertexOfBB.Y < MinVertex.Y) ? MinVertexOfBB.Y : MinVertex.Y;
+    MinVertex.Z = (MinVertexOfBB.Z < MinVertex.Z) ? MinVertexOfBB.Z : MinVertex.Z;
+  }
+
+  // Calculate box extent
+  FVector Extent (
+    (MaxVertex.X - MinVertex.X) * 0.5f,
+    (MaxVertex.Y - MinVertex.Y) * 0.5f,
+    (MaxVertex.Z - MinVertex.Z) * 0.5f
+  );
+
+  // Calculate middle point
+  FVector Origin (
+    (MinVertex.X + Extent.X),
+    (MinVertex.Y + Extent.Y),
+    (MinVertex.Z + Extent.Z)
+  );
+
+  return {Origin, Extent};
+}
+
+FBoundingBox UBoundingBoxCalculator::CombineBoxes(const TArray<UBoxComponent *>& BBsToCombine)
+{
+  FVector MaxVertex(TNumericLimits<float>::Lowest());
+  FVector MinVertex(TNumericLimits<float>::Max());
+
+  for(const UBoxComponent *BB : BBsToCombine) {
+    auto BoxOrigin = BB->GetComponentLocation();
+    auto BoxExtent = BB->GetScaledBoxExtent();
+    
+    FVector MaxVertexOfBB = BoxOrigin + BoxExtent;
+    FVector MinVertexOfBB = BoxOrigin - BoxExtent;
 
     MaxVertex.X = (MaxVertexOfBB.X > MaxVertex.X) ? MaxVertexOfBB.X : MaxVertex.X;
     MaxVertex.Y = (MaxVertexOfBB.Y > MaxVertex.Y) ? MaxVertexOfBB.Y : MaxVertex.Y;

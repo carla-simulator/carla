@@ -23,11 +23,12 @@ TArray<UBoxComponent*> ATrafficSignBase::GetTriggerVolumes() const
   GetComponents<USignComponent>(Components, false);
   if (Components.Num())
   {
-    USignComponent* SignComponent = Components.Top();
+    USignComponent* SignComponent = Components[0];
     return SignComponent->GetEffectTriggerVolume();
   }
   else
   {
+    UE_LOG(LogCarla, Log, TEXT("returning GetTriggerVolume"));
     TArray<UBoxComponent*> TriggerVolumes;
     TriggerVolumes.Add(GetTriggerVolume());
     return TriggerVolumes;
