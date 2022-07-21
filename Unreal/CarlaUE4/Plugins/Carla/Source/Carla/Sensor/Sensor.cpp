@@ -100,7 +100,10 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
   
   // close all sessions associated to the sensor stream
-  UCarlaStatics::GetGameInstance(GetEpisode().GetWorld())->GetServer().GetStreamingServer().CloseStream(carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id());
+  auto *GameInstance = UCarlaStatics::GetGameInstance(GetEpisode().GetWorld());
+  auto &StreamingServer = GameInstance->GetServer().GetStreamingServer();
+  auto StreamId = carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id();
+  StreamingServer.CloseStream(StreamId);
 
   Stream = FDataStream();
 
