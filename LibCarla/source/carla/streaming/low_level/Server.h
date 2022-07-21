@@ -86,7 +86,7 @@ namespace low_level {
         }
       };
       auto on_session_closed = [this](auto session) {
-        log_info("on_session_closed called");
+        log_debug("on_session_closed called");
         _dispatcher.DeregisterSession(session);
       };
       _server.Listen(on_session_opened, on_session_closed);
