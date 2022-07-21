@@ -45,6 +45,11 @@ public:
     return Server;
   }
 
+  FCarlaServer &GetServer()
+  {
+    return Server;
+  }
+
   UCarlaEpisode *GetCurrentEpisode()
   {
     return CurrentEpisode;
