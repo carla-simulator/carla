@@ -80,6 +80,7 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
       {
         FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
         FTransform Transform = Actor->GetTransform();
+        Box.Origin = Transform.InverseTransformPosition(Box.Origin);
         Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
         return Box;
       }
