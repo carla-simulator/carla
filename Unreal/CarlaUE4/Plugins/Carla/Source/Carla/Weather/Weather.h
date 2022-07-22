@@ -61,13 +61,10 @@ private:
   UPROPERTY(VisibleAnywhere)
   FWeatherParameters Weather;
 
-  UPROPERTY(VisibleAnywhere)
   UMaterial* PrecipitationPostProcessMaterial;
 
-  UPROPERTY(VisibleAnywhere)
   UMaterial* DustStormPostProcessMaterial;
 
-  UPROPERTY(VisibleAnywhere)
   TMap<UMaterial*, float> ActiveBlendables;
 
   UPROPERTY(VisibleAnywhere)
