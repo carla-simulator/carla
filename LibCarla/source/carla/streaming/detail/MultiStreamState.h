@@ -58,8 +58,12 @@ namespace detail {
       }
     }
 
+    void ForceActive() {
+      _force_active = true;
+    }
+
     bool AreClientsListening() {
-      return (_sessions.size() > 0);
+      return (_sessions.size() > 0 || _force_active);
     }
 
     void ConnectSession(std::shared_ptr<Session> session) final {
@@ -84,6 +88,7 @@ namespace detail {
         DEBUG_ASSERT(session == _session.load());
         _session.store(nullptr);
         _sessions.clear();
+        _force_active = false;
         log_warning("Last session disconnected");
       } else {
         _sessions.erase(
@@ -107,6 +112,7 @@ namespace detail {
         }
       }
       _sessions.clear();
+      _force_active = false;
       _session.store(nullptr);
       log_debug("Disconnecting all multistream sessions");
     }
@@ -119,6 +125,7 @@ namespace detail {
     AtomicSharedPtr<Session> _session;
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
+    bool _force_active {false};
   };
 
 } // namespace detail

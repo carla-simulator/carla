@@ -110,6 +110,7 @@ namespace detail {
     if (search != _stream_map.end()) {
       log_debug("Found sensor id: ", sensor_id);
       auto stream_state = search->second;
+      stream_state->ForceActive();
       log_debug("Getting token from stream ", sensor_id, " on port ", stream_state->token().get_port());
       return stream_state->token();
     } else {
@@ -118,6 +119,7 @@ namespace detail {
       temp_token.set_stream_id(sensor_id);
       auto ptr = std::make_shared<MultiStreamState>(temp_token);
       auto result = _stream_map.emplace(std::make_pair(temp_token.get_stream_id(), ptr));
+      ptr->ForceActive();
       if (!result.second) {
         log_debug("Failed to create multistream for stream ", sensor_id, " on port ", temp_token.get_port());
       }
