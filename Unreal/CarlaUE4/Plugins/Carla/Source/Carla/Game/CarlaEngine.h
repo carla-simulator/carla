@@ -24,6 +24,7 @@
 #include <mutex>
 
 class UCarlaSettings;
+class FFrameData;
 struct FEpisodeSettings;
 
 class FCarlaEngine : private NonCopyable
@@ -41,6 +42,11 @@ public:
   void NotifyEndEpisode();
 
   const FCarlaServer &GetServer() const
+  {
+    return Server;
+  }
+
+  FCarlaServer &GetServer()
   {
     return Server;
   }
