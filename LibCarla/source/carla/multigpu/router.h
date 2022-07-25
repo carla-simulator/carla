@@ -38,9 +38,10 @@ namespace multigpu {
     Router(void);
     explicit Router(uint16_t port);
     ~Router();
-
+    
     void Write(MultiGPUCommand id, Buffer &&buffer);
     std::future<SessionInfo> WriteToNext(MultiGPUCommand id, Buffer &&buffer);
+    void Stop();
 
     void SetCallbacks();
     void AsyncRun(size_t worker_threads);

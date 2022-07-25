@@ -16,8 +16,13 @@ Router::Router(void) :
   _next(0) { }
 
 Router::~Router() {
+  Stop();
+}
+
+void Router::Stop() {
   ClearSessions();
   _listener->Stop();
+  _listener.reset();
   _pool.Stop();
 }
 

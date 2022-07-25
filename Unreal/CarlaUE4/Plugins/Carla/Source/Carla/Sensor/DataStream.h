@@ -52,6 +52,7 @@ public:
 
   bool AreClientsListening()
   {
+    check(Stream.has_value());
     return Stream ? Stream->AreClientsListening() : false;
   }
 
