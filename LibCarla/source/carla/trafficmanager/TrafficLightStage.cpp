@@ -33,10 +33,13 @@ void TrafficLightStage::Update(const unsigned long index) {
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
   if (!simulation_state.IsDormant(ego_actor_id)) {
-    const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
-    const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
+    // Check if the vehicle is currently at a non-signalized junction
+    JunctionID current_junction_id = -1;
+    if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end()) {
+      current_junction_id = vehicle_last_junction.at(ego_actor_id);
+    }
+    auto junction_id = GetJunctionId(ego_actor_id);
 
-    const Junction junction = look_ahead_point->GetWaypoint()->GetJunction();
     current_timestamp = world.GetSnapshot().GetTimestamp();
 
     const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
@@ -53,49 +56,33 @@ void TrafficLightStage::Update(const unsigned long index) {
     }
     // The vehicle is currently at a non signalized junction, so handle its priorities.
     // Don't use the next condition as bounding boxes might switch to green
-    else if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end())
+    else if (current_junction_id != -1)
     {
-      if (!look_ahead_point->CheckJunction()) {
-        // Very close to the junction exit, forget about it.
+      if ( junction_id == -1 || junction_id != current_junction_id ) {
         RemoveActor(ego_actor_id);
       }
       else {
-        auto junction_id = junction->GetId();
-        if (exiting_vehicles_map.find(junction_id) != exiting_vehicles_map.end()) {
-          auto& exiting_vehicles = exiting_vehicles_map.at(junction_id);
-          if (std::find(exiting_vehicles.begin(), exiting_vehicles.end(), ego_actor_id) != exiting_vehicles.end()) {
-            // The vehicle is exitting the junction.
-            traffic_light_hazard =  false;
-          }
-          else {
-            // Vehicle entering the junction, handle it
-            traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction, waypoint_buffer, current_timestamp);
-          }
-        }
+        traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_timestamp);
       }
     }
-    else if (look_ahead_point->CheckJunction() &&
+    else if (junction_id != -1 &&
             !is_at_traffic_light &&
             traffic_light_state != TLS::Green &&
             parameters.GetPercentageRunningSign(ego_actor_id) <= random_device.next()) {
 
-      AddActorToNonSignalisedJunction(ego_actor_id, junction);
+      AddActorToNonSignalisedJunction(ego_actor_id, junction_id);
       traffic_light_hazard = true;
     }
   }
   output_array.at(index) = traffic_light_hazard;
 }
 
-void TrafficLightStage::AddActorToNonSignalisedJunction(const ActorId ego_actor_id, const Junction junction) {
-
-  auto junction_id = junction->GetId();
+void TrafficLightStage::AddActorToNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id) {
 
   if (entering_vehicles_map.find(junction_id) == entering_vehicles_map.end()) {
     // Initializing new map entry for the junction with an empty actor deque.
     std::deque<ActorId> entry_deque;
-    std::deque<ActorId> exit_deque;
     entering_vehicles_map.insert({junction_id, entry_deque});
-    exiting_vehicles_map.insert({junction_id, exit_deque});
   }
 
   auto& entering_vehicles = entering_vehicles_map.at(junction_id);
@@ -111,11 +98,10 @@ void TrafficLightStage::AddActorToNonSignalisedJunction(const ActorId ego_actor_
 }
 
 
-bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, const Junction junction,
-                                                    const Buffer &waypoint_buffer, cc::Timestamp timestamp) {
+bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id,
+                                                    cc::Timestamp timestamp) {
 
   bool traffic_light_hazard = false;
-  auto junction_id = junction->GetId();
 
   auto& entering_vehicles = entering_vehicles_map.at(junction_id);
 
@@ -133,25 +119,48 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
       // Wait at least the minimum amount of time before entering the junction
       traffic_light_hazard = true;
     }
-    else {
-      // Track the first actor until it has passed the mid-point
-      cg::Transform actor_transform = waypoint_buffer.front()->GetTransform();
-      cg::Vector3D forward_vec = actor_transform.GetForwardVector();
-      cg::Vector3D to_center_vec = junction->GetBoundingBox().location - actor_transform.location;
-
-      if (cg::Math::Dot(forward_vec, to_center_vec) < EXIT_JUNCTION_THRESHOLD) {
-        // Remove it from the entry data, letting the next one enter it
-        entering_vehicles.pop_front();
-        vehicle_stop_time.erase(ego_actor_id);
-        exiting_vehicles_map.at(junction_id).push_back(ego_actor_id);
-      }
-    }
-
   } else {
     // Only one vehicle can be entering the junction, so stop the rest.
     traffic_light_hazard = true;
   }
   return traffic_light_hazard;
+}
+
+JunctionID TrafficLightStage::GetJunctionId(const ActorId ego_actor_id) {
+    const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
+    const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
+    const auto front_point = waypoint_buffer.front();
+
+    auto look_ahead_junction_id = look_ahead_point->GetJunctionId();
+    auto front_junction_id = front_point->GetJunctionId();
+
+    // Check if the vehicle is currently at a non-signalized junction
+    JunctionID current_junction_id = -1;
+    if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end()) {
+      current_junction_id = vehicle_last_junction.at(ego_actor_id);
+    }
+
+    if (current_junction_id != -1) {
+      // We are currently processing a junction
+      if (current_junction_id == look_ahead_junction_id) {
+        return look_ahead_junction_id;
+      } else {
+        if (look_ahead_junction_id != -1) {
+          // We are detecting a different junction
+          return look_ahead_junction_id;
+        } else {
+          if (current_junction_id == front_junction_id) {
+            // We are still in the same junction
+            return front_junction_id;
+          } else {
+            return -1;
+          }
+        }
+      }
+    } else {
+      // If we are not processing any junction, return the look ahead detected junction
+      return look_ahead_junction_id;
+    }
 }
 
 void TrafficLightStage::RemoveActor(const ActorId actor_id) {
@@ -164,12 +173,6 @@ void TrafficLightStage::RemoveActor(const ActorId actor_id) {
       entering_vehicles.erase(ent_index);
     }
 
-    auto& exiting_vehicles = exiting_vehicles_map.at(junction_id);
-    auto ext_index = std::find(exiting_vehicles.begin(), exiting_vehicles.end(), actor_id);
-    if (ext_index != exiting_vehicles.end()) {
-      exiting_vehicles.erase(ext_index);
-    }
-
     if (vehicle_stop_time.find(actor_id) != vehicle_stop_time.end()) {
       vehicle_stop_time.erase(actor_id);
     }
@@ -180,7 +183,6 @@ void TrafficLightStage::RemoveActor(const ActorId actor_id) {
 
 void TrafficLightStage::Reset() {
   entering_vehicles_map.clear();
-  exiting_vehicles_map.clear();
   vehicle_last_junction.clear();
   vehicle_stop_time.clear();
 }
