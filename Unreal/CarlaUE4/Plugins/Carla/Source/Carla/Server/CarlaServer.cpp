@@ -2310,7 +2310,9 @@ void FCarlaServer::FPimpl::BindActions()
 
 FCarlaServer::FCarlaServer() : Pimpl(nullptr) {}
 
-FCarlaServer::~FCarlaServer() {}
+FCarlaServer::~FCarlaServer() {
+  Stop();
+}
 
 FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort)
 {
@@ -2395,8 +2397,11 @@ bool FCarlaServer::TickCueReceived()
 
 void FCarlaServer::Stop()
 {
-  check(Pimpl != nullptr);
-  Pimpl->Server.Stop();
+  if (Pimpl)
+  {
+    Pimpl->Server.Stop();
+    Pimpl->SecondaryServer->Stop();
+  }
 }
 
 FDataStream FCarlaServer::OpenStream() const
