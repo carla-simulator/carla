@@ -21,11 +21,11 @@
 #include "Rendering/Texture2DResource.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Materials/MaterialParameterCollection.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 // #include <carla/pytorch/pytorch.h>
 
 #include <algorithm>
 #include <fstream>
-
 
 constexpr float ParticleDiameter = 0.04f;
 constexpr float TerrainDepth = 0.40f;
@@ -262,6 +262,13 @@ FDenseTile& FSparseHighDetailMap::GetTile(uint64_t TileId)
   return Iterator->second;
 }
 
+FIntVector FSparseHighDetailMap::GetVectorTileId(FDVector Position)
+{
+  uint32_t Tile_X = static_cast<uint32_t>((Position.X - Tile0Position.X) / TileSize);
+  uint32_t Tile_Y = static_cast<uint32_t>((Position.Y - Tile0Position.Y) / TileSize);
+  return FIntVector(Tile_X, Tile_Y, 0);
+}
+
 FDenseTile& FSparseHighDetailMap::InitializeRegion(uint32_t Tile_X, uint32_t Tile_Y)
 {
   uint64_t TileId = GetTileId(Tile_X, Tile_Y);
@@ -305,35 +312,36 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
   // Translate UE4 Position to our coords
   
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition);
-  std::vector<uint64_t> KeysToRemove;
-  std::vector<uint64_t> KeysToLoad;
+  std::unordered_set<uint64_t> KeysToRemove;
+  std::unordered_set<uint64_t> KeysToLoad;
 
   double MinX = std::max( Position.X - RadiusX + 1.0, 0.0);
   double MinY = std::max( Position.Y - RadiusX + 1.0, 0.0);
   double MaxX = std::min( Position.X + RadiusX - 1.0 , Extension.X - 1.0 );
   double MaxY = std::min( Position.Y + RadiusY - 1.0 , Extension.Y - 1.0 );
+
+  FIntVector MinVector = GetVectorTileId(FDVector(MinX, MinY, 0));
+  FIntVector MaxVector = GetVectorTileId(FDVector(MaxX, MaxY, 0));
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::LoadTilesAtPosition::Process);
-    //UE_LOG(LogCarla, Log, TEXT("Thread2: Loading Tiles MinX %f MinY %f MaxX %f MaxY %f"), MinX, MinY, MaxX, MaxY);
-    
     for(auto it : Map) 
     {
-      KeysToRemove.push_back(it.first);
+      KeysToRemove.emplace(it.first);
     }
     {
       FScopeLock ScopeLock(&Lock_Map);
-      for(float X = MinX; X < MaxX; X+=TileSize )
+      for(uint32_t X = MinVector.X; X <= MaxVector.X; X++ )
       {
-        for(float Y = MinY; Y < MaxY; Y+=TileSize )
+        for(uint32_t Y = MinVector.Y; Y <= MaxVector.X; Y++ )
         {
-          uint64_t CurrentTileID = GetTileId(FDVector(X,Y,0));
+          uint64_t CurrentTileID = GetTileId(X,Y);
           if( Map.find(CurrentTileID) != Map.end() )
           {
-            KeysToRemove.erase(std::remove( KeysToRemove.begin(), KeysToRemove.end(), CurrentTileID), KeysToRemove.end());    
+            KeysToRemove.erase(CurrentTileID);    
           }
           else
           {
-            KeysToLoad.push_back(CurrentTileID);
+            KeysToLoad.insert(CurrentTileID);
             Map.emplace(CurrentTileID, FDenseTile() ); 
           }
         }
@@ -366,31 +374,39 @@ void FSparseHighDetailMap::LoadTilesAtPosition(FDVector Position, float RadiusX 
     {
       Map.erase(it);
     }
-  }  
+
+  } 
 }
 
 void FSparseHighDetailMap::Update(FVector Position, float RadiusX, float RadiusY)
 {
+  Position.Y = -Position.Y;
+  Position *= 0.01f;
 
-  float MinX = std::max(Position.X - RadiusX + 1.0f, 0.0f);
-  float MinY = std::max(Position.Y - RadiusX + 1.0f, 0.0f);
-  float MaxX = std::min(Position.X + RadiusX - 1.0f, static_cast<float>( Extension.X - 1.0 )  );
-  float MaxY = std::min(Position.Y + RadiusY - 1.0f, static_cast<float>( Extension.Y - 1.0 )  );
+  double MinX = std::max( Position.X - RadiusX + 1.0, 0.0);
+  double MinY = std::max( Position.Y - RadiusX + 1.0, 0.0);
+  double MaxX = std::min( Position.X + RadiusX - 1.0 , Extension.X - 1.0 );
+  double MaxY = std::min( Position.Y + RadiusY - 1.0 , Extension.Y - 1.0 );
+
+  FIntVector MinVector = GetVectorTileId(FDVector(MinX, MinY, 0));
+  FIntVector MaxVector = GetVectorTileId(FDVector(MaxX, MaxY, 0));
   
-  for(float X = MinX; X < MaxX ; X += TileSize ) 
+  for(uint32_t X = MinVector.X; X <= MaxVector.X; X++ )
   {
-    for(float Y = MinY ; Y < MaxY; Y += TileSize )
+    for(uint32_t Y = MinVector.Y; Y <= MaxVector.X; Y++ )
     {
       bool ConditionToStopWaiting = true;
+      int32_t Counter = 0;
       while(ConditionToStopWaiting) 
       {
-        uint64_t CurrentTileID = GetTileId(FDVector(X,Y,0));
+        uint64_t CurrentTileID = GetTileId(X,Y);
         Lock_Map.Lock();
         ConditionToStopWaiting = Map.find(CurrentTileID) == Map.end();
         Lock_Map.Unlock();
-        if (ConditionToStopWaiting)
-        {
-          UE_LOG(LogCarla, Log, TEXT("Loop Waiting for Tile %d With position: X: %f Y: %f"), CurrentTileID,X,Y);
+        ++Counter;
+        if( Counter > 1000 ){
+            UE_LOG(LogCarla, Log, TEXT("Waiting long for Tile %lld PosX %d PosY %d"), CurrentTileID, X, Y );
+            Counter = 0;
         }
       }
     }
@@ -520,12 +536,14 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   InitTexture();
 
   UE_LOG(LogCarla, Log, TEXT("MainThread Data ArraySize %d "), Data.Num());
+  UE_LOG(LogCarla, Log, TEXT("Map Size %d "), SparseMap.Map.size() );
 
   if (TilesWorker == nullptr)
   {
     TilesWorker = new FTilesWorker(this, GetOwner()->GetActorLocation(), Radius.X, Radius.Y);
     Thread = FRunnableThread::Create(TilesWorker, TEXT("TilesWorker"));
   }
+
 }
 
 void UCustomTerrainPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayReason){
@@ -546,21 +564,41 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
   Super::TickComponent(DeltaTime,TickType,ThisTickFunction);
-  LastUpdatedPosition = GetOwner()->GetActorLocation();
-  if(MPC){
-    int32 IndexParameter = -1;
-    int32 IndexComponent = -1;
-    MPC->GetParameterIndex(MPC->GetParameterId("PositionToUpdate"), IndexParameter, IndexComponent);
-    MPC->VectorParameters[IndexParameter - 1].DefaultValue = LastUpdatedPosition;
+
+  if( Vehicles.Num() == 0 ){
+    TArray<AActor*> FoundCars;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(),  ACarlaWheeledVehicle::StaticClass(), FoundCars);
+    for( auto Car : FoundCars ){
+      ACarlaWheeledVehicle* CurrentCar = Cast<ACarlaWheeledVehicle>(Car);
+      if( CurrentCar ){
+        Vehicles.Add(CurrentCar);
+      }
+    }
   }
+  if( Vehicles.Num() != 0 ){
+    LastUpdatedPosition = Vehicles[0]->GetActorLocation();
+    /*for (ACarlaWheeledVehicle* Vehicle : Vehicles)
+    {
+    }
+    */
+  }else{
+    LastUpdatedPosition = NextPositionToUpdate;
+  }
+
+  
+  if( MPCInstance == nullptr )
+  {
+    if(MPC){
+      MPCInstance = GetWorld()->GetParameterCollectionInstance( MPC );
+    }
+  }
+
+  if( MPCInstance && UpdateMPC){
+    MPCInstance->SetVectorParameterValue("PositionToUpdate", LastUpdatedPosition);
+  }
+ 
   SparseMap.Update( LastUpdatedPosition, Radius.X, Radius.Y );
   UpdateTexture(Radius.X, Radius.Y);
-  
-  for (ACarlaWheeledVehicle* Vehicle : Vehicles)
-  {
-
-  }
-
 }
 
 // TArray<FHitResult> UCustomTerrainPhysicsComponent::SampleTerrainRayCast(
@@ -635,9 +673,9 @@ void UCustomTerrainPhysicsComponent::ApplyForces()
 void UCustomTerrainPhysicsComponent::LoadTilesAtPosition(FVector Position, float RadiusX, float RadiusY)
 {
   FDVector PositionTranslated;
-  PositionTranslated.X =  Position.X;
-  PositionTranslated.Y =  Position.Y;
-  PositionTranslated.Z =  Position.Z;
+  PositionTranslated.X =  Position.X * 0.01;
+  PositionTranslated.Y = -Position.Y * 0.01;
+  PositionTranslated.Z =  Position.Z * 0.01;
 
   SparseMap.LoadTilesAtPosition(PositionTranslated, RadiusX, RadiusY);
 

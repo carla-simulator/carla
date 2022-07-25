@@ -85,6 +85,7 @@ public:
   FDVector GetTilePosition(uint64_t TileId);
   FDVector GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y);
 
+  FIntVector GetVectorTileId(FDVector Position);
   void InitializeMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size = 1.f);
 
@@ -172,10 +173,19 @@ public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString NeuralModelFile = "";
   
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FVector NextPositionToUpdate = FVector(0,0,0);
+  
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool UpdateMPC = true;
+
   FVector LastUpdatedPosition;
 private:
 
   void ApplyForces();
+
+  UPROPERTY(EditAnywhere)
+  UMaterialParameterCollectionInstance* MPCInstance;
 
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
@@ -186,7 +196,7 @@ private:
   UPROPERTY(EditAnywhere)
   FVector WorldSize = FVector(10000,10000,1000);
   UPROPERTY(EditAnywhere)
-  FVector Radius = FVector(5,5,0);
+  FVector Radius = FVector( 10, 10, 0 );
 
 
   FSparseHighDetailMap SparseMap;
