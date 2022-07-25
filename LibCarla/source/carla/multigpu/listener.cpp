@@ -30,7 +30,6 @@ namespace multigpu {
   void Listener::Stop() {
     _acceptor.cancel();
     _acceptor.close();
-    // _acceptor.get_io_service().stop();
     _io_context.stop();
     _io_context.reset();
   }
@@ -46,11 +45,10 @@ namespace multigpu {
     auto session = std::make_shared<Primary>(_io_context, timeout, *this);
     auto self = shared_from_this();
     
-    auto handle_query = [on_opened, on_closed, on_response, session](const error_code &ec) {
+    auto handle_query = [on_opened, on_closed, on_response, session, self](const error_code &ec) {
     if (!ec) {
-      session->Open(std::move(on_opened), std::move(on_closed), , std::move(on_response));
+      session->Open(std::move(on_opened), std::move(on_closed), std::move(on_response));
     } else {
-      self->_acceptor.get_io_service().stop();
       log_error("tcp accept secondary error:", ec.message());
     }
   };
