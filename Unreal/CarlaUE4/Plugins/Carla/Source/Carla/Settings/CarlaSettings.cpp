@@ -68,8 +68,16 @@ static void LoadSettingsFromConfig(
   // CarlaServer.
   if (bLoadCarlaServerSection)
   {
-    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("WorldPort"), Settings.RPCPort);
-    ConfigFile.GetInt(S_CARLA_SERVER, TEXT("RPCPort"), Settings.RPCPort);
+    ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("WorldPort"), Settings.RPCPort);
+    ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("RPCPort"), Settings.RPCPort);
+    Settings.StreamingPort = Settings.RPCPort + 1u;
+    Settings.SecondaryPort = Settings.RPCPort + 2u;
+    ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("StreamingPort"), Settings.StreamingPort);
+    ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("SecondaryPort"), Settings.SecondaryPort);
+    FString Tmp;
+    ConfigFile.GetString(S_CARLA_SERVER, TEXT("PrimaryIP"), Tmp);
+    Settings.PrimaryIP = TCHAR_TO_UTF8(*Tmp);
+    ConfigFile.GetInt(S_CARLA_SERVER,    TEXT("PrimaryPort"), Settings.PrimaryPort);
   }
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("SynchronousMode"), Settings.bSynchronousMode);
   ConfigFile.GetBool(S_CARLA_SERVER, TEXT("DisableRendering"), Settings.bDisableRendering);
@@ -118,10 +126,25 @@ void UCarlaSettings::LoadSettings()
         FParse::Value(FCommandLine::Get(), TEXT("-carla-world-port="), Value))
     {
       RPCPort = Value;
+      StreamingPort = Value + 1u;
+      SecondaryPort = Value + 2u;
     }
     if (FParse::Value(FCommandLine::Get(), TEXT("-carla-streaming-port="), Value))
     {
       StreamingPort = Value;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-carla-secondary-port="), Value))
+    {
+      SecondaryPort = Value;
+    }
+    FString Tmp;
+    if (FParse::Value(FCommandLine::Get(), TEXT("-carla-primary-host="), Tmp))
+    {
+      PrimaryIP = TCHAR_TO_UTF8(*Tmp);
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-carla-primary-port="), Value))
+    {
+      PrimaryPort = Value;
     }
     FString StringQualityLevel;
     if (FParse::Value(FCommandLine::Get(), TEXT("-quality-level="), StringQualityLevel))
@@ -153,7 +176,8 @@ void UCarlaSettings::LogSettings() const
   UE_LOG(LogCarla, Log, TEXT("Last settings file loaded: %s"), *CurrentFileName);
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_SERVER);
   UE_LOG(LogCarla, Log, TEXT("RPC Port = %d"), RPCPort);
-  UE_LOG(LogCarla, Log, TEXT("Streaming Port = %d"), StreamingPort.Get(RPCPort + 1u));
+  UE_LOG(LogCarla, Log, TEXT("Streaming Port = %d"), StreamingPort);
+  UE_LOG(LogCarla, Log, TEXT("Secondary Port = %d"), SecondaryPort);
   UE_LOG(LogCarla, Log, TEXT("Synchronous Mode = %s"), EnabledDisabled(bSynchronousMode));
   UE_LOG(LogCarla, Log, TEXT("Rendering = %s"), EnabledDisabled(!bDisableRendering));
   UE_LOG(LogCarla, Log, TEXT("[%s]"), S_CARLA_QUALITYSETTINGS);

@@ -31,12 +31,14 @@ namespace client {
   }
 
   void ServerSideSensor::Listen(CallbackFunctionType callback) {
+    log_warning("calling sensor Listen() ", GetDisplayId());
     log_debug(GetDisplayId(), ": subscribing to stream");
     GetEpisode().Lock()->SubscribeToSensor(*this, std::move(callback));
     _is_listening = true;
   }
 
   void ServerSideSensor::Stop() {
+    log_warning("calling sensor Stop() ", GetDisplayId());
     if (!_is_listening) {
       log_warning(
           "attempting to unsubscribe from stream but sensor wasn't listening:",
@@ -48,6 +50,7 @@ namespace client {
   }
 
   bool ServerSideSensor::Destroy() {
+    log_warning("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {
       Stop();
     }

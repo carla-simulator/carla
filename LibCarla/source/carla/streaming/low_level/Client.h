@@ -66,6 +66,7 @@ namespace low_level {
     }
 
     void UnSubscribe(token_type token) {
+      log_warning("calling sensor UnSubscribe()");
       auto it = _clients.find(token.get_stream_id());
       if (it != _clients.end()) {
         it->second->Stop();

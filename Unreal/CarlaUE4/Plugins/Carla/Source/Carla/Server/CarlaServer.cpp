@@ -28,6 +28,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Functional.h>
+#include <carla/multigpu/router.h>
 #include <carla/Version.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
@@ -40,7 +41,7 @@
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
-#include "carla/rpc/LabelledPoint.h"
+#include <carla/rpc/LabelledPoint.h>
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/MapLayer.h>
@@ -61,12 +62,13 @@
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/VehicleWheels.h>
 #include <carla/rpc/WeatherParameters.h>
-#include <carla/streaming/Server.h>
+#include <carla/streaming/detail/Types.h>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
+#include <atomic>
 #include <map>
 #include <tuple>
 
@@ -91,12 +93,19 @@ class FCarlaServer::FPimpl
 {
 public:
 
-  FPimpl(uint16_t RPCPort, uint16_t StreamingPort)
+  FPimpl(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort)
     : Server(RPCPort),
       StreamingServer(StreamingPort),
       BroadcastStream(StreamingServer.MakeStream())
   {
+    // we need to create shared_ptr from the router for some handlers to live
+    SecondaryServer = std::make_shared<carla::multigpu::Router>(SecondaryPort);
+    SecondaryServer->SetCallbacks();
     BindActions();
+  }
+
+  std::shared_ptr<carla::multigpu::Router> GetSecondaryServer() {
+    return SecondaryServer;
   }
 
   /// Map of pairs < port , ip > with all the Traffic Managers active in the simulation
@@ -107,10 +116,12 @@ public:
   carla::streaming::Server StreamingServer;
 
   carla::streaming::Stream BroadcastStream;
+  
+  std::shared_ptr<carla::multigpu::Router> SecondaryServer;
 
   UCarlaEpisode *Episode = nullptr;
 
-  size_t TickCuesReceived = 0u;
+  std::atomic_size_t TickCuesReceived { 0u };
 
 private:
 
@@ -253,8 +264,9 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
-    ++TickCuesReceived;
-    return FCarlaEngine::GetFrameCounter();
+    auto Current = FCarlaEngine::GetFrameCounter();
+    (void)TickCuesReceived.fetch_add(1, std::memory_order_release);
+    return Current + 1;
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -753,6 +765,22 @@ void FCarlaServer::FPimpl::BindActions()
         );
     }
     return GEngine->Exec(Episode->GetWorld(), UTF8_TO_TCHAR(cmd.c_str()));
+  };
+
+  BIND_SYNC(get_sensor_token) << [this](carla::streaming::detail::stream_id_type sensor_id) ->
+                                 R<carla::streaming::Token>
+  {
+    REQUIRE_CARLA_EPISODE();
+    if (SecondaryServer->HasClientsConnected() && sensor_id > 1)
+    {
+      // multi-gpu
+      return SecondaryServer->GetCommander().SendGetToken(sensor_id);
+    }
+    else
+    {
+      // single-gpu
+      return StreamingServer.GetToken(sensor_id);
+    }
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1499,9 +1527,9 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     std::vector<carla::rpc::BoneTransformDataOut> BoneData;
-    for (auto Bone : Bones.BoneTransforms) 
+    for (auto Bone : Bones.BoneTransforms)
     {
       carla::rpc::BoneTransformDataOut Data;
       Data.bone_name = std::string(TCHAR_TO_UTF8(*Bone.Get<0>()));
@@ -1537,7 +1565,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -1563,7 +1591,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -1588,7 +1616,7 @@ void FCarlaServer::FPimpl::BindActions()
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    
+
     return R<void>::Success();
   };
 
@@ -2212,6 +2240,18 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(update_day_night_cycle) << [this]
+    (std::string client, const bool active) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    if(World) {
+      UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
+      CarlaLightSubsystem->SetDayNightCycle(active);
+    }
+    return R<void>::Success();
+  };
+
 
   // ~~ Ray Casting ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2270,18 +2310,23 @@ void FCarlaServer::FPimpl::BindActions()
 
 FCarlaServer::FCarlaServer() : Pimpl(nullptr) {}
 
-FCarlaServer::~FCarlaServer() {}
+FCarlaServer::~FCarlaServer() {
+  Stop();
+}
 
-FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort)
+FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort, uint16_t SecondaryPort)
 {
-  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort);
+  Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort, SecondaryPort);
   StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
+  SecondaryPort = Pimpl->SecondaryServer->GetLocalEndpoint().port();
+
   UE_LOG(
       LogCarlaServer,
       Log,
-      TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d)"),
+      TEXT("Initialized CarlaServer: Ports(rpc=%d, streaming=%d, secondary=%d)"),
       RPCPort,
-      StreamingPort);
+      StreamingPort,
+      SecondaryPort);
   return Pimpl->BroadcastStream;
 }
 
@@ -2302,26 +2347,32 @@ void FCarlaServer::AsyncRun(uint32 NumberOfWorkerThreads)
 {
   check(Pimpl != nullptr);
   /// @todo Define better the number of threads each server gets.
-  int32_t RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
-  int32_t StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+  int ThreadsPerServer = std::max(2u, NumberOfWorkerThreads / 3u);
+  int32_t RPCThreads;
+  int32_t StreamingThreads;
+  int32_t SecondaryThreads;
 
   UE_LOG(LogCarla, Log, TEXT("FCommandLine %s"), FCommandLine::Get());
 
   if(!FParse::Value(FCommandLine::Get(), TEXT("-RPCThreads="), RPCThreads))
   {
-    RPCThreads = std::max(2u, NumberOfWorkerThreads / 2u);
+    RPCThreads = ThreadsPerServer;
   }
   if(!FParse::Value(FCommandLine::Get(), TEXT("-StreamingThreads="), StreamingThreads))
   {
-    StreamingThreads = std::max(2u, NumberOfWorkerThreads - RPCThreads);
+    StreamingThreads = ThreadsPerServer;
+  }
+  if(!FParse::Value(FCommandLine::Get(), TEXT("-SecondaryThreads="), SecondaryThreads))
+  {
+    SecondaryThreads = ThreadsPerServer;
   }
 
-  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d"),
-        NumberOfWorkerThreads, RPCThreads, StreamingThreads);
+  UE_LOG(LogCarla, Log, TEXT("FCarlaServer AsyncRun %d, RPCThreads %d, StreamingThreads %d, SecondaryThreads %d"),
+        NumberOfWorkerThreads, RPCThreads, StreamingThreads, SecondaryThreads);
 
   Pimpl->Server.AsyncRun(RPCThreads);
   Pimpl->StreamingServer.AsyncRun(StreamingThreads);
-
+  Pimpl->SecondaryServer->AsyncRun(SecondaryThreads);
 }
 
 void FCarlaServer::RunSome(uint32 Milliseconds)
@@ -2330,24 +2381,41 @@ void FCarlaServer::RunSome(uint32 Milliseconds)
   Pimpl->Server.SyncRunFor(carla::time_duration::milliseconds(Milliseconds));
 }
 
+void FCarlaServer::Tick()
+{
+  (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
+}
+
 bool FCarlaServer::TickCueReceived()
 {
-  if (Pimpl->TickCuesReceived > 0u)
-  {
-    --(Pimpl->TickCuesReceived);
-    return true;
-  }
-  return false;
+  auto k = Pimpl->TickCuesReceived.fetch_sub(1, std::memory_order_acquire);
+  bool flag = (k > 0);
+  if (!flag)
+    (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
+  return flag;
 }
 
 void FCarlaServer::Stop()
 {
-  check(Pimpl != nullptr);
-  Pimpl->Server.Stop();
+  if (Pimpl)
+  {
+    Pimpl->Server.Stop();
+    Pimpl->SecondaryServer->Stop();
+  }
 }
 
 FDataStream FCarlaServer::OpenStream() const
 {
   check(Pimpl != nullptr);
   return Pimpl->StreamingServer.MakeStream();
+}
+
+std::shared_ptr<carla::multigpu::Router> FCarlaServer::GetSecondaryServer() 
+{
+  return Pimpl->GetSecondaryServer();
+}
+
+carla::streaming::Server &FCarlaServer::GetStreamingServer() 
+{
+  return Pimpl->StreamingServer;
 }

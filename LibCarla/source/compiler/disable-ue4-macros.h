@@ -49,6 +49,7 @@
 #  pragma clang diagnostic ignored "-Wunusable-partial-specialization"
 #  pragma clang diagnostic ignored "-Wundef"
 #  pragma clang diagnostic ignored "-Wall"
+#  pragma clang diagnostic ignored "-Wshadow"
 #endif
 
 #pragma push_macro("GET_AI_CONFIG_VAR")

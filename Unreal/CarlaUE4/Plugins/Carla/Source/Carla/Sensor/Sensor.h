@@ -58,6 +58,13 @@ public:
 
   virtual void PrePhysTick(float DeltaSeconds) {}
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) {}
+  // Small interface to notify sensors when clients are listening
+  virtual void OnFirstClientConnected() {};
+  // Small interface to notify sensors when no clients are listening
+  virtual void OnLastClientDisconnected() {};
+
+  
+  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
@@ -104,9 +111,10 @@ protected:
   UPROPERTY()
   URandomEngine *RandomEngine = nullptr;
 
-private:
+  UPROPERTY()
+  bool bIsActive = false;
 
-  void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
+private:
 
   FDataStream Stream;
 
@@ -116,4 +124,7 @@ private:
 
   /// Allows the sensor to tick with the tick rate from UE4.
   bool ReadyToTick = false;
+
+  bool bClientsListening = false;
+
 };

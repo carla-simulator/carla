@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/streaming/detail/Dispatcher.h"
+#include "carla/streaming/detail/Types.h"
 #include "carla/streaming/Stream.h"
 
 #include <boost/asio/io_context.hpp>
@@ -66,6 +67,10 @@ namespace low_level {
 
     void SetSynchronousMode(bool is_synchro) {
       _server.SetSynchronousMode(is_synchro);
+    }
+
+    carla::streaming::detail::token_type GetToken(carla::streaming::detail::stream_id_type sensor_id) {
+      return _dispatcher.GetToken(sensor_id);
     }
 
   private:
