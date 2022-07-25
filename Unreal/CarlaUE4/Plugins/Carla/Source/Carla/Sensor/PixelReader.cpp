@@ -76,7 +76,7 @@ void FPixelReader::WritePixelsToBuffer(
     RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
   }
 
-  AsyncTask(ENamedThreads::GameThread, [=, Readback=std::move(BackBufferReadback)]() mutable {
+  AsyncTask(ENamedThreads::AnyNormalThreadNormalTask, [=, Readback=std::move(BackBufferReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
       while (!Readback->IsReady())

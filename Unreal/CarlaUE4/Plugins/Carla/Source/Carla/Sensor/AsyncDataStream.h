@@ -66,7 +66,7 @@ public:
     {
       if (HeaderStr->frame != FrameNumber)
       {
-        carla::log_info("Re-framing stream ", HeaderStr->sensor_type, " from ", HeaderStr->frame, " to ", FrameNumber);
+        carla::log_debug("Re-framing sensor type ", HeaderStr->sensor_type, " from ", HeaderStr->frame, " to ", FrameNumber);
         HeaderStr->frame = FrameNumber;
       }
     }
