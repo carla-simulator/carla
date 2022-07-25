@@ -415,6 +415,9 @@ class BasicAgent(object):
         Use the different distances to fine-tune the maneuver.
         If the lane change is impossible, the returned path will be empty.
         """
+        distance_same_lane = max(distance_same_lane, 0.1)
+        distance_other_lane = max(distance_other_lane, 0.1)
+        lane_change_distance = max(lane_change_distance, 0.1)
 
         plan = []
         plan.append((waypoint, RoadOption.LANEFOLLOW))  # start position

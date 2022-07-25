@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 struct CarlaRecorderEventParent
@@ -14,8 +14,8 @@ struct CarlaRecorderEventParent
     uint32_t DatabaseId;
     uint32_t DatabaseIdParent;
 
-    void Read(std::ifstream &InFile);
-    void Write(std::ofstream &OutFile) const;
+    void Read(std::istream &InFile);
+    void Write(std::ostream &OutFile) const;
 };
 
 class CarlaRecorderEventsParent
@@ -24,8 +24,10 @@ class CarlaRecorderEventsParent
     public:
     void Add(const CarlaRecorderEventParent &Event);
     void Clear(void);
-    void Write(std::ofstream &OutFile);
-
+    void Write(std::ostream &OutFile);
+    void Read(std::istream &InFile);
+    const std::vector<CarlaRecorderEventParent>& GetEvents();
+    
     private:
     std::vector<CarlaRecorderEventParent> Events;
 };
