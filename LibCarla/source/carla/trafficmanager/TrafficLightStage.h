@@ -41,8 +41,8 @@ private:
   /// Initialized the vehicle to the non-signalized junction maps
   void AddActorToNonSignalisedJunction(const ActorId ego_actor_id, const JunctionID junction_id);
 
-  /// Get current junction for the vehicle
-  JunctionID GetJunctionId(const ActorId ego_actor_id);
+  /// Get current affected junction id for the vehicle
+  JunctionID GetAffectedJunctionId(const ActorId ego_actor_id);
 
 public:
   TrafficLightStage(const std::vector<ActorId> &vehicle_id_list,

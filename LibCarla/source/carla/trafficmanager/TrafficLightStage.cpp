@@ -33,12 +33,12 @@ void TrafficLightStage::Update(const unsigned long index) {
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
   if (!simulation_state.IsDormant(ego_actor_id)) {
-    // Check if the vehicle is currently at a non-signalized junction
+
     JunctionID current_junction_id = -1;
     if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end()) {
       current_junction_id = vehicle_last_junction.at(ego_actor_id);
     }
-    auto junction_id = GetJunctionId(ego_actor_id);
+    auto affected_junction_id = GetAffectedJunctionId(ego_actor_id);
 
     current_timestamp = world.GetSnapshot().GetTimestamp();
 
@@ -51,26 +51,29 @@ void TrafficLightStage::Update(const unsigned long index) {
         traffic_light_state != TLS::Green &&
         traffic_light_state != TLS::Off &&
         parameters.GetPercentageRunningLight(ego_actor_id) <= random_device.next()) {
-
+      // Remove actor from non-signalized junction if it is affected by a traffic light.
+      if (current_junction_id != -1) {
+        RemoveActor(ego_actor_id);
+      }
       traffic_light_hazard = true;
     }
     // The vehicle is currently at a non signalized junction, so handle its priorities.
     // Don't use the next condition as bounding boxes might switch to green
     else if (current_junction_id != -1)
     {
-      if ( junction_id == -1 || junction_id != current_junction_id ) {
+      if ( affected_junction_id == -1 || affected_junction_id != current_junction_id ) {
         RemoveActor(ego_actor_id);
       }
       else {
-        traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, junction_id, current_timestamp);
+        traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, affected_junction_id, current_timestamp);
       }
     }
-    else if (junction_id != -1 &&
+    else if (affected_junction_id != -1 &&
             !is_at_traffic_light &&
             traffic_light_state != TLS::Green &&
             parameters.GetPercentageRunningSign(ego_actor_id) <= random_device.next()) {
 
-      AddActorToNonSignalisedJunction(ego_actor_id, junction_id);
+      AddActorToNonSignalisedJunction(ego_actor_id, affected_junction_id);
       traffic_light_hazard = true;
     }
   }
@@ -126,7 +129,7 @@ bool TrafficLightStage::HandleNonSignalisedJunction(const ActorId ego_actor_id, 
   return traffic_light_hazard;
 }
 
-JunctionID TrafficLightStage::GetJunctionId(const ActorId ego_actor_id) {
+JunctionID TrafficLightStage::GetAffectedJunctionId(const ActorId ego_actor_id) {
     const Buffer &waypoint_buffer = buffer_map.at(ego_actor_id);
     const SimpleWaypointPtr look_ahead_point = GetTargetWaypoint(waypoint_buffer, JUNCTION_LOOK_AHEAD).first;
     const auto front_point = waypoint_buffer.front();
