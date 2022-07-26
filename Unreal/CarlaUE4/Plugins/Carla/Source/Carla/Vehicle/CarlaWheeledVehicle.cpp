@@ -25,6 +25,7 @@
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Vegetation/VegetationManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 // =============================================================================
@@ -43,7 +44,7 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
-  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent")); 
+  BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 }
 
 ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
@@ -197,12 +198,15 @@ void ACarlaWheeledVehicle::BeginPlay()
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
   }
+
+  AddReferenceToManager();
 }
 
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);  
-  return FoliageBoundingBox.IsInsideOrOn(Location);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
+  float Distance = Distance = FVector::Distance(Location, GetActorLocation());
+  return Distance < DetectionSize * 10.0f;
 }
 
 void ACarlaWheeledVehicle::UpdateDetectionBox()
@@ -224,6 +228,11 @@ void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
   const FVector& Extent = FoliageBoundingBox.GetExtent();
   const FQuat& Rotation = GetActorQuat();
   DrawDebugBox(GetWorld(), Center, Extent, Rotation, FColor::Magenta, false, 0.0f, 0, 5.0f);
+}
+
+FBoxSphereBounds ACarlaWheeledVehicle::GetBoxSphereBounds() const
+{
+  return VehicleBounds->CalcBounds(GetActorTransform());
 }
 
 void ACarlaWheeledVehicle::AdjustVehicleBounds()
@@ -913,6 +922,7 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
+  RemoveReferenceToManager();
 }
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
@@ -1038,4 +1048,34 @@ void ACarlaWheeledVehicle::SetRolloverFlag(){
 
 carla::rpc::VehicleFailureState ACarlaWheeledVehicle::GetFailureState() const{
   return FailureState;
+}
+
+void ACarlaWheeledVehicle::AddReferenceToManager()
+{
+  const UObject* World = GetWorld();
+  TArray<AActor*> ActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
+  for (AActor* Actor : ActorsInLevel)
+  {
+    AVegetationManager* Manager = Cast<AVegetationManager>(Actor);
+    if (!IsValid(Manager))
+      continue;
+    Manager->AddVehicle(this);
+    return;
+  }
+}
+
+void ACarlaWheeledVehicle::RemoveReferenceToManager()
+{
+  const UObject* World = GetWorld();
+  TArray<AActor*> ActorsInLevel;
+  UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), ActorsInLevel);
+  for (AActor* Actor : ActorsInLevel)
+  {
+    AVegetationManager* Manager = Cast<AVegetationManager>(Actor);
+    if (!IsValid(Manager))
+      continue;
+    Manager->RemoveVehicle(this);
+    return;
+  }
 }
