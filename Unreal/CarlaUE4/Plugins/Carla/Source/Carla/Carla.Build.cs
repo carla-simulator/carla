@@ -308,8 +308,6 @@ public class Carla : ModuleRules
     PublicDefinitions.Add("BOOST_DISABLE_ABI_HEADERS");
     PublicDefinitions.Add("BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY");
     PublicAdditionalLibraries.Add("stdc++");
-    // PublicAdditionalLibraries.Add("/usr/lib/gcc/x86_64-linux-gnu/9/libstdc++.so");
-    // RuntimeDependencies.Add("/usr/lib/gcc/x86_64-linux-gnu/9/libstdc++.so");
     PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
   }
 }

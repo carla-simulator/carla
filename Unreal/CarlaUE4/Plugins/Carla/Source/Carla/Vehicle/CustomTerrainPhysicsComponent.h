@@ -28,7 +28,9 @@ struct FParticle
 };
 struct FHeightMapData
 { 
-  void InitializeHeightmap(UTexture2D* Texture, FDVector Size, FDVector Origin);
+  void InitializeHeightmap(
+    UTexture2D* Texture, FDVector Size, FDVector Origin,
+      float MinHeight, float MaxHeight, FDVector Tile0);
   float GetHeight(FDVector Position) const; // get height at a given global 2d position
   void Clear();
 private:
@@ -36,11 +38,14 @@ private:
   FDVector Offset;
   uint32_t Size_X;
   uint32_t Size_Y;
+  float MinHeight = 0.0f;
+  float MaxHeight = 10.0f;
+  FDVector Tile0Position;
   std::vector<float> Pixels;
+
 };
 struct FDenseTile
 {
-
   void InitializeTile(float ParticleSize, float Depth, 
       FDVector TileOrigin, FDVector TileEnd, const FHeightMapData &HeightMap);
   std::vector<FParticle*> GetParticlesInRadius(FDVector Position, float Radius);
@@ -68,11 +73,16 @@ public:
   uint64_t GetTileId(uint32_t Tile_X, uint32_t Tile_Y);
   uint64_t GetTileId(uint64_t TileId);
   uint64_t GetTileId(FDVector Position);
+  FIntVector GetVectorTileId(FDVector Position);
   FDVector GetTilePosition(uint64_t TileId);
   FDVector GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y);
 
+  float GetHeight(FDVector Position) {
+    return Heightmap.GetHeight(Position);
+  }
+
   void InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size = 1.f);
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight);
 
   void Clear();
 
@@ -170,7 +180,7 @@ private:
   UPROPERTY(EditAnywhere)
   float RayCastRange = 10.0f;
   UPROPERTY(EditAnywhere)
-  FVector WorldSize = FVector(1000,1000,1000);
+  FVector WorldSize = FVector(200000,200000,0);
   UPROPERTY(EditAnywhere)
   float SearchRadius = 100;
   UPROPERTY(EditAnywhere)
@@ -206,7 +216,24 @@ private:
   bool DrawDebugInfo = true;
   UPROPERTY(EditAnywhere)
   bool bUseMeanAcceleration = false;
-
+  UPROPERTY(EditAnywhere)
+  bool bShowForces = true;
+  UPROPERTY(EditAnywhere)
+  float MinHeight = 0;
+  UPROPERTY(EditAnywhere)
+  float MaxHeight = 10;
+  UPROPERTY(EditAnywhere)
+  FVector Tile0Origin;
+  UPROPERTY(EditAnywhere)
+  bool bDrawHeightMap = false;
+  UPROPERTY(EditAnywhere)
+  FVector DrawStart = FVector(0);
+  UPROPERTY(EditAnywhere)
+  FVector DrawEnd = FVector(1000, 1000, 0);
+  UPROPERTY(EditAnywhere)
+  FVector DrawInterval = FVector(100,100,0);
+  UPROPERTY(EditAnywhere)
+  int CUDADevice = 0;
 
   FSparseHighDetailMap SparseMap;
 

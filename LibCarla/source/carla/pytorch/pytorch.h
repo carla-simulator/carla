@@ -61,7 +61,7 @@ namespace learning {
   public:
 
     NeuralModel();
-    void LoadModel(char* filename);
+    void LoadModel(char* filename, int device);
 
     void SetInputs(Inputs input);
     void Forward();

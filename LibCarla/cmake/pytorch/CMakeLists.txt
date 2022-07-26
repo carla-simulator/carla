@@ -16,12 +16,10 @@ set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 find_package(Torch REQUIRED)
 find_package(TorchScatter REQUIRED)
 find_package(TorchCluster REQUIRED)
-find_package(TorchSparse REQUIRED)
 find_package(Python3 REQUIRED)
 
-message(${CMAKE_CXX_FLAGS_RELEASE})
 # @todo These flags need to be compatible with setup.py compilation.
-set(CMAKE_CXX_FLAGS_RELEASE "-DDEBUG -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE "-DDEBUG -std=c++14 -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0" CACHE STRING "" FORCE)
  
 # ==============================================================================
 # Create targets for debug and release in the same build type.

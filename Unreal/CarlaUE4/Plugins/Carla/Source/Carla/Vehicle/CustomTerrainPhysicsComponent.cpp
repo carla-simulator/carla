@@ -11,6 +11,7 @@
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Engine/Texture2D.h"
+#include "Engine/Texture.h"
 #include "Rendering/Texture2DResource.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Components/PrimitiveComponent.h"
@@ -40,50 +41,46 @@ FVector UEFrameToSI(const FVector& In)
 }
 float UEFrameToSI(const float& In) { return CMToM * In; }
 
-void FHeightMapData::InitializeHeightmap(UTexture2D* Texture, FDVector Size, FDVector Origin)
+void FHeightMapData::InitializeHeightmap(
+    UTexture2D* Texture, FDVector Size, FDVector Origin,
+    float Min, float Max, FDVector Tile0)
 {
+  Tile0Position = Tile0;
+  MinHeight = Min;
+  MaxHeight = Max;
   WorldSize = Size;
   Offset = Origin;
   Pixels.clear();
-  // const FColor* FormatedImageData = 
-  //     static_cast<const FColor*>(
-  //       Texture->PlatformData->Mips[0].BulkData.LockReadOnly());
-  // const FColor* FormatedImageData = 
-  //     (const FColor*)(Texture->PlatformData->Mips[0].BulkData.LockReadOnly());
-  // Size_X = Texture->GetSizeX();
-  // Size_Y = Texture->GetSizeY();
-  // for(uint32_t j = 0; j < Size_Y; j++)
-  // {
-  //   for(uint32_t i = 0; i < Size_X; i++)
-  //   {
-  //     uint32_t idx = j*Size_X + i;
-  //     float HeightLevel = FormatedImageData[idx].R/255.f;
-  //     // float HeightLevel = FormatedImageData[idx].R.GetFloat();
-  //     Pixels.emplace_back(HeightLevel);
-  //   }
-  // }
-  Size_X = static_cast<uint32_t>(WorldSize.X);
-  Size_Y = static_cast<uint32_t>(WorldSize.Y);
+  // setup required parameters
+  Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
+  Texture->SRGB = false;
+  Texture->UpdateResource();
+  
+  FTexture2DMipMap* TileMipMap = &Texture->PlatformData->Mips[0];
+  FByteBulkData* TileRawImageData = &TileMipMap->BulkData;
+  FColor* FormatedImageData = (FColor*)(TileRawImageData->Lock(LOCK_READ_ONLY));
+  Size_X = Texture->GetSizeX();
+  Size_Y = Texture->GetSizeY();
   for(uint32_t j = 0; j < Size_Y; j++)
   {
     for(uint32_t i = 0; i < Size_X; i++)
     {
       uint32_t idx = j*Size_X + i;
-      float HeightLevel = 0.f;
-      // float HeightLevel = FormatedImageData[idx].R.GetFloat();
+      float HeightLevel = MinHeight + (MaxHeight - MinHeight) * FormatedImageData[idx].R/255.f;
       Pixels.emplace_back(HeightLevel);
     }
   }
-  // Texture->PlatformData->Mips[0].BulkData.Unlock();
+  TileRawImageData->Unlock();
   UE_LOG(LogCarla, Log, 
       TEXT("Height Map initialized with %d pixels"), Pixels.size());
 }
 float FHeightMapData::GetHeight(FDVector Position) const
 {
+  Position = Position - Tile0Position;
   uint32_t Coord_X = (Position.X / WorldSize.X) * Size_X;
   uint32_t Coord_Y = (Position.Y / WorldSize.Y) * Size_Y;
   Coord_X = std::min(Coord_X, Size_X-1);
-  Coord_Y = std::min(Coord_X, Size_Y-1);
+  Coord_Y = std::min(Coord_Y, Size_Y-1);
   return Pixels[Coord_Y*Size_X + Coord_X];
 }
 
@@ -216,7 +213,7 @@ uint64_t FSparseHighDetailMap::GetTileId(FDVector Position)
   // UE_LOG(LogCarla, Log, TEXT("Getting tile at location %s, (%d, %d)"), *Position.ToString(), Tile_X, Tile_Y);
   return GetTileId(Tile_X, Tile_Y);
 }
- 
+
 FDVector FSparseHighDetailMap::GetTilePosition(uint64_t TileId)
 {
   uint32_t Tile_X = (uint32_t)(TileId >> 32);
@@ -274,12 +271,12 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
 }
 
 void FSparseHighDetailMap::InitializeMap(UTexture2D* HeightMapTexture,
-      FDVector Origin, FDVector MapSize, float Size)
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight)
 {
   Tile0Position = Origin;
   TileSize = Size;
   Extension = MapSize;
-  Heightmap.InitializeHeightmap(HeightMapTexture, Extension, Tile0Position);
+  Heightmap.InitializeHeightmap(HeightMapTexture, Extension, Tile0Position, MinHeight, MaxHeight, Tile0Position);
   UE_LOG(LogCarla, Log, 
       TEXT("Sparse Map initialized"));
 }
@@ -294,6 +291,11 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   TRACE_CPUPROFILER_EVENT_SCOPE(UCustomTerrainPhysicsComponent::BeginPlay);
   Super::BeginPlay();
 
+  int IntValue;
+  if (FParse::Value(FCommandLine::Get(), TEXT("-cuda-device="), IntValue))
+  {
+    CUDADevice = IntValue;
+  } 
   float Value;
   if (FParse::Value(FCommandLine::Get(), TEXT("-particle-size="), Value))
   {
@@ -364,6 +366,11 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bUseMeanAcceleration = true;
   }
+  if (FParse::Param(FCommandLine::Get(), TEXT("-hide-debug-forces")))
+  {
+    bShowForces = false;
+  }
+  
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
     SparseMap = FSparseHighDetailMap(CMToM*ParticleDiameter, CMToM*TerrainDepth);
@@ -382,12 +389,13 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
       UE_LOG(LogCarla, Log, 
           TEXT("World Size %s"), *(WorldSize.ToString()));
     }
-    SparseMap.InitializeMap(HeightMap, FDVector(0.f,0.f,CMToM*FloorHeight), WorldSize/100.f);
+    Tile0Origin.Z += FloorHeight;
+    SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize), 1.f, MinHeight, MaxHeight);
   }
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(LoadNNModel);
     carla::learning::test_learning();
-    TerramechanicsModel.LoadModel(TCHAR_TO_ANSI(*NeuralModelFile));
+    TerramechanicsModel.LoadModel(TCHAR_TO_ANSI(*NeuralModelFile), CUDADevice);
   }
 }
 
@@ -408,6 +416,33 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
   {
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle> (VehicleActor);
     RunNNPhysicsSimulation(Vehicle, DeltaTime);
+  }
+  if (bDrawHeightMap)
+  {
+    float LifeTime = 0.3f;
+    bool bPersistentLines = false;
+    bool bDepthIsForeground = (0 == SDPG_Foreground);
+    UWorld* World = GetWorld();
+    ULineBatchComponent* LineBatcher = 
+        (World ? (bDepthIsForeground ? World->ForegroundLineBatcher : 
+        (( bPersistentLines || (LifeTime > 0.f) ) ? World->PersistentLineBatcher : World->LineBatcher)) : nullptr);
+    if (!LineBatcher)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Missing linebatcher"));
+    }
+
+    float DrawPos_X = DrawStart.X;
+    float DrawPos_Y = DrawStart.Y;
+    for (DrawPos_X = DrawStart.X; DrawPos_X < DrawEnd.X; DrawPos_X += DrawInterval.X)
+    {
+      for (DrawPos_Y = DrawStart.Y; DrawPos_Y < DrawEnd.Y; DrawPos_Y += DrawInterval.Y)
+      {
+        float Height = SparseMap.GetHeight(UEFrameToSI(FVector(DrawPos_X, DrawPos_Y, 0)));
+        LineBatcher->DrawPoint(FVector(DrawPos_X, DrawPos_Y, SIToUEFrame(Height)), 
+            FLinearColor(1.f, 0.f, 0.f), 10.0, 0, LifeTime);
+
+      }
+    }
   }
 }
 
@@ -721,7 +756,7 @@ void UCustomTerrainPhysicsComponent::ApplyForcesToVehicle(
   PrimitiveComponent->AddTorqueInRadians(TorqueWheel1);
   PrimitiveComponent->AddTorqueInRadians(TorqueWheel2);
   PrimitiveComponent->AddTorqueInRadians(TorqueWheel3);
-  if (DrawDebugInfo)
+  if (DrawDebugInfo && bShowForces)
   {
     float LifeTime = 0.3f;
     bool bPersistentLines = false;
@@ -784,7 +819,7 @@ void UCustomTerrainPhysicsComponent::ApplyMeanAccelerationToVehicle(
   }
   PrimitiveComponent->AddForce(MeanAcceleration, FName(""), true);
 
-  if (DrawDebugInfo)
+  if (DrawDebugInfo && bShowForces)
   {
     float LifeTime = 0.3f;
     bool bPersistentLines = false;

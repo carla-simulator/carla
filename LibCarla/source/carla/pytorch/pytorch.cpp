@@ -28,7 +28,7 @@ namespace learning {
   void test_learning()
   {
     std::ostringstream ss;
-    std::cout << "cuda version " << cuda_version() << std::endl;
+    std::cout << "cuda version " << cluster::cuda_version() << std::endl;
     std::cout << "cuda version " << scatter::cuda_version() << std::endl;
     // torch::Tensor tensor = torch::eye(3);
     // std::cout << tensor << std::endl;
@@ -69,6 +69,8 @@ namespace learning {
   WheelOutput GetWheelTensorOutput(
       const at::Tensor &particle_forces, 
       const at::Tensor &wheel_forces) {
+    std::ostringstream oss;
+    std::cout << oss.str() << std::endl;
     WheelOutput result;
     const float* wheel_forces_data = wheel_forces.data_ptr<float>();
     result.wheel_forces_x = wheel_forces_data[0];
@@ -140,16 +142,18 @@ namespace learning {
   NeuralModel::NeuralModel() {
     Model = std::make_unique<NeuralModelImpl>();
   }
-  void NeuralModel::LoadModel(char* filename) {
+  void NeuralModel::LoadModel(char* filename, int device) {
     torch::jit::setTensorExprFuserEnabled(false);
     std::string filename_str(filename);
     std::cout << "loading " << filename_str << std::endl;
     try {
       Model->module = torch::jit::load(filename_str);
+      std::string cuda_str = "cuda:" + std::to_string(device);
+      std::cout << "Using CUDA device " << cuda_str << std::endl;
+      Model->module.to(at::Device(cuda_str));
     } catch (const c10::Error& e) {
       std::cout << "Error loading model: " << e.msg() << std::endl;
     }
-    
     std::cout << "loaded " << filename_str <<  std::endl;
   }
 
@@ -171,7 +175,12 @@ namespace learning {
     TorchInputs.push_back(_input.verbose);
     nvtxRangePop();
     nvtxRangePushA("Forward");
-    torch::jit::IValue Output = Model->module.forward(TorchInputs);
+    torch::jit::IValue Output;
+    try {
+      Output = Model->module.forward(TorchInputs);
+    } catch (const c10::Error& e) {
+      std::cout << "Error running model: " << e.msg() << std::endl;
+    }
     nvtxRangePop();
     nvtxRangePushA("Output");
     std::vector<torch::jit::IValue> Tensors =  Output.toTuple()->elements();
@@ -199,7 +208,12 @@ namespace learning {
       TorchInputs.push_back(_input.verbose);
       nvtxRangePop();
       nvtxRangePushA("Forward");
-      torch::jit::IValue Output = Model->module.forward(TorchInputs);
+      torch::jit::IValue Output;
+      try {
+        Output = Model->module.forward(TorchInputs);
+      } catch (const c10::Error& e) {
+        std::cout << "Error running model: " << e.msg() << std::endl;
+      }
       nvtxRangePop();
 
       nvtxRangePushA("Output");
