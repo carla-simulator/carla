@@ -923,6 +923,7 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
   RemoveReferenceToManager();
+  Super::EndPlay(EndPlayReason);
 }
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {

@@ -575,7 +575,9 @@ namespace detail {
   void Client::SubscribeToStream(
       const streaming::Token &token,
       std::function<void(Buffer)> callback) {
-    _pimpl->streaming_client.Subscribe(token, std::move(callback));
+    carla::streaming::detail::token_type thisToken(token);
+    streaming::Token receivedToken = _pimpl->CallAndWait<streaming::Token>("get_sensor_token", thisToken.get_stream_id());
+    _pimpl->streaming_client.Subscribe(receivedToken, std::move(callback));
   }
 
   void Client::UnSubscribeFromStream(const streaming::Token &token) {

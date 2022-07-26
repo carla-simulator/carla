@@ -1059,7 +1059,7 @@ void MapBuilder::CreateController(
         // Displaces signal until it finds a suitable spot
         while(distance_to_road < lane_width * 0.5 && iter < MaxIter) {
           if(iter == 0) {
-            log_warning("Traffic sign",
+            log_debug("Traffic sign",
                 signal->GetSignalId(),
                 "overlaps a driving lane. Moving out of the road...");
           }
@@ -1075,7 +1075,7 @@ void MapBuilder::CreateController(
           iter++;
         }
         if(iter == MaxIter) {
-          log_warning("Failed to find suitable place for signal.");
+          log_debug("Failed to find suitable place for signal.");
         } else {
           // Only perform the displacement if a good location has been found
           signal->_transform.location = signal_position;

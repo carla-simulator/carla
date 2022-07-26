@@ -13,7 +13,7 @@
 #include <compiler/enable-ue4-macros.h>
 
 
-void CarlaRecorderPhysicsControl::Write(std::ofstream &OutFile)
+void CarlaRecorderPhysicsControl::Write(std::ostream &OutFile)
 {
   carla::rpc::VehiclePhysicsControl RPCPhysicsControl(VehiclePhysicsControl);
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
@@ -42,7 +42,7 @@ void CarlaRecorderPhysicsControl::Write(std::ofstream &OutFile)
   WriteStdVector(OutFile, RPCPhysicsControl.wheels);
 }
 
-void CarlaRecorderPhysicsControl::Read(std::ifstream &InFile)
+void CarlaRecorderPhysicsControl::Read(std::istream &InFile)
 {
   carla::rpc::VehiclePhysicsControl RPCPhysicsControl;
   ReadValue<uint32_t>(InFile, this->DatabaseId);
@@ -85,7 +85,7 @@ void CarlaRecorderPhysicsControls::Add(const CarlaRecorderPhysicsControl &InObj)
   PhysicsControls.push_back(InObj);
 }
 
-void CarlaRecorderPhysicsControls::Write(std::ofstream &OutFile)
+void CarlaRecorderPhysicsControls::Write(std::ostream &OutFile)
 {
   if (PhysicsControls.size() == 0)
   {

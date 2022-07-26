@@ -15,7 +15,9 @@
 MSGPACK_ADD_ENUM(carla::rpc::ActorAttributeType);
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#  include "Carla/Actor/ActorAttribute.h"
+#include <compiler/enable-ue4-macros.h>
+#include "Carla/Actor/ActorAttribute.h"
+#include <compiler/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
