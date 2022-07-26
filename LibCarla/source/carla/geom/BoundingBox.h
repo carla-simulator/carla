@@ -90,14 +90,14 @@ namespace geom {
     std::array<Location, 8> GetLocalVerticesNoRotation() const {
 
         return {{
-            location + Location({-extent.x,-extent.y,-extent.z}),
-            location + Location({-extent.x,-extent.y, extent.z}),
-            location + Location({-extent.x, extent.y,-extent.z}),
-            location + Location({-extent.x, extent.y, extent.z}),
-            location + Location({ extent.x,-extent.y,-extent.z}),
-            location + Location({ extent.x,-extent.y, extent.z}),
-            location + Location({ extent.x, extent.y,-extent.z}),
-            location + Location({ extent.x, extent.y, extent.z})
+            location + Location(-extent.x,-extent.y,-extent.z),
+            location + Location(-extent.x,-extent.y, extent.z),
+            location + Location(-extent.x, extent.y,-extent.z),
+            location + Location(-extent.x, extent.y, extent.z),
+            location + Location( extent.x,-extent.y,-extent.z),
+            location + Location( extent.x,-extent.y, extent.z),
+            location + Location( extent.x, extent.y,-extent.z),
+            location + Location( extent.x, extent.y, extent.z)
         }};
     }
 
