@@ -10,6 +10,8 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 
+#include "Carla/Game/CarlaEngine.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Logging.h>
 #include <carla/Buffer.h>
@@ -111,7 +113,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       if (!Sensor.IsPendingKill())
       {
         FPixelReader::Payload FuncForSending = 
-          [&Sensor, Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset)
+          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset)
           {
             if (Sensor.IsPendingKill()) return;
 
@@ -127,6 +129,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
             }
     
             auto Stream = Sensor.GetDataStream(Sensor);
+            Stream.SetFrameNumber(Frame);
             auto Buffer = Stream.PopBufferFromPool();
 
             {

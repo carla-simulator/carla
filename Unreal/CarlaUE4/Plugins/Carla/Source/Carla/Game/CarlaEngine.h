@@ -24,6 +24,7 @@
 #include <mutex>
 
 class UCarlaSettings;
+class FFrameData;
 struct FEpisodeSettings;
 
 class FCarlaEngine : private NonCopyable
