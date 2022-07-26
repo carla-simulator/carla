@@ -9,6 +9,7 @@
 #include "ActorFactories/ActorFactory.h"
 #include "AssetRegistryModule.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Weather/Weather.h"
 #include "Components/SplineComponent.h"
 #include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
@@ -349,7 +350,15 @@ AActor* UMapGeneratorWidget::AddWeatherToExistingMap(TSubclassOf<class AActor> W
   const FString WorldToLoadPath = MapCompletePath + "." + MetaInfo.MapName;
   UWorld* World = LoadObject<UWorld>(nullptr, *WorldToLoadPath);
 
-  AActor* WeatherActor = World->SpawnActor<AActor>(WeatherActorClass);
+  AActor* WeatherActor = UGameplayStatics::GetActorOfClass(World, AWeather::StaticClass());
+
+  if(WeatherActor == nullptr)
+  {
+    UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("%s: Creating a new weather actor to world"), 
+        *CUR_CLASS_FUNC_LINE);
+
+    WeatherActor = World->SpawnActor<AActor>(WeatherActorClass);
+  }
 
   return WeatherActor;  
 
@@ -602,12 +611,26 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("%s: Heightmap detected with dimensions %dx%d"), 
             *CUR_CLASS_FUNC_LINE, HeightRT->SizeX, HeightRT->SizeY);
       TArray<uint16> HeightData;
-      // TODO: UTexture2D and GetMipData
+      
       FMapGeneratorTileMetaInfo TileMetaInfo;
       TileMetaInfo.IndexX = i;
       TileMetaInfo.IndexY = MetaInfo.SizeY-j-1;
+      
+
+      // River Management
+      if(FMath::RandRange(0.0f, 100.0f) < MetaInfo.RiverChanceFactor)
+      {
+        TileMetaInfo.ContainsRiver = true;
+      }
+      else
+      {
+        TileMetaInfo.ContainsRiver = false;
+      }
       TileMetaInfo.RiverPreset = "RiverPreset01";
+
+      // Update and get heightmap from texture
       UpdateTileRT(TileMetaInfo);
+
       FTextureRenderTargetResource* RenderTargetResource = HeightRT->GameThread_GetRenderTargetResource();
       FIntRect Rect = FIntRect(0, 0, HeightRT->SizeX, HeightRT->SizeY);
       TArray<FLinearColor> HeightmapColor;
@@ -625,6 +648,16 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       TArray<uint16> SmoothedData;
       SmoothHeightmap(HeightData, SmoothedData);
       HeightData = SmoothedData;
+
+      // Flatening if contains river
+      if(TileMetaInfo.ContainsRiver)
+      {
+        for(int r = 0; r < HeightData.Num(); r++)
+        {
+          HeightData[r] *= MetaInfo.RiverFlateningFactor;
+        }
+
+      }
 
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();

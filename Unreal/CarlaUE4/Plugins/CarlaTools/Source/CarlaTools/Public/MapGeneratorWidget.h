@@ -44,6 +44,12 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   TMap<FRoiTile, FVegetationROI> VegetationRoisMap;
+
+  UPROPERTY(BlueprintReadWrite)
+  float RiverChanceFactor;
+
+  UPROPERTY(BlueprintReadWrite)
+  float RiverFlateningFactor;
 };
 
 /// Struct used as container of basic tile information
@@ -63,6 +69,9 @@ struct CARLATOOLS_API FMapGeneratorTileMetaInfo
 
   UPROPERTY(BlueprintReadWrite)
   int IndexY;
+
+  UPROPERTY(BlueprintReadWrite)
+  bool ContainsRiver;
 
   UPROPERTY(BlueprintReadWrite)
   FString RiverPreset;
