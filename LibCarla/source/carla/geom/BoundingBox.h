@@ -85,11 +85,28 @@ namespace geom {
     }
 
     /**
+     *  Returns the positions of the 8 vertices of this BoundingBox in local space without its own rotation.
+     */
+    std::array<Location, 8> GetLocalVerticesNoRotation() const {
+
+        return {{
+            location + Location({-extent.x,-extent.y,-extent.z}),
+            location + Location({-extent.x,-extent.y, extent.z}),
+            location + Location({-extent.x, extent.y,-extent.z}),
+            location + Location({-extent.x, extent.y, extent.z}),
+            location + Location({ extent.x,-extent.y,-extent.z}),
+            location + Location({ extent.x,-extent.y, extent.z}),
+            location + Location({ extent.x, extent.y,-extent.z}),
+            location + Location({ extent.x, extent.y, extent.z})
+        }};
+    }
+
+    /**
      * Returns the positions of the 8 vertices of this BoundingBox in world space.
      * @param in_bbox_to_world_transform The Transform from this BoundingBox space to world space.
      */
     std::array<Location, 8> GetWorldVertices(const Transform &in_bbox_to_world_tr) const {
-        auto world_vertices = GetLocalVertices();
+        auto world_vertices = GetLocalVerticesNoRotation();
         std::for_each(world_vertices.begin(), world_vertices.end(), [&in_bbox_to_world_tr](auto &world_vertex) {
           in_bbox_to_world_tr.TransformPoint(world_vertex);
         });
