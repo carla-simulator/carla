@@ -279,4 +279,7 @@ private:
 
   UFUNCTION()
   void ExtractCoordinatedFromMapName(const FString MapName, int& X, int& Y);
+
+  UFUNCTION()
+  void SmoothHeightmap(TArray<uint16> HeightData, TArray<uint16>& OutHeightData);
 };

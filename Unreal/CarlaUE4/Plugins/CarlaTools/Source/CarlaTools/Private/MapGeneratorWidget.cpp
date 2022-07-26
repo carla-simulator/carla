@@ -621,6 +621,11 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
         HeightData.Add((uint16)(LinearColor.R * 255 * 255 + LinearColor.G * 255));
       }
 
+      // Smooth process
+      TArray<uint16> SmoothedData;
+      SmoothHeightmap(HeightData, SmoothedData);
+      HeightData = SmoothedData;
+
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);
       Landscape->CreateLandscapeInfo();
       Landscape->SetActorTransform(FTransform(FQuat::Identity, FVector(), LandscapeScaleVector));
@@ -831,4 +836,51 @@ void UMapGeneratorWidget::ExtractCoordinatedFromMapName(const FString MapName, i
 
   X = FCString::Atoi(*XStr);
   Y = FCString::Atoi(*YStr);
+}
+
+void UMapGeneratorWidget::SmoothHeightmap(TArray<uint16> HeightData, TArray<uint16>& OutHeightData)
+{
+  TArray<uint16> SmoothedData(HeightData);
+
+  // Prepare Gaussian Kernel
+  int KernelSize = 5;
+  int KernelWeight = 273; 
+  float Kernel[] = {1,  4,  7,  4,  1,
+                    4, 16, 26, 16,  4,
+                    7, 26, 41, 26,  7,
+                    4, 16, 26, 16,  4,
+                    1,  4,  7,  4,  1};
+
+  TArray<float> SmoothKernel;
+  for(int i = 0; i < KernelSize*KernelSize; i++)
+  {
+    SmoothKernel.Add(Kernel[i] / KernelWeight);
+  }
+
+  // Apply kernel to height data
+  int TileMargin = 2;
+  int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
+
+  for(int X = TileMargin; X < (TileSize - TileMargin); X++)
+  {
+    for(int Y = TileMargin; Y < (TileSize - TileMargin); Y++)
+    {
+      int Value = 0;
+
+      for(int i = -2; i <= 2; i++)
+      {
+        for(int j = -2; j <=2; j++)
+        {
+          float KernelValue = SmoothKernel[(i+2)*2 + (j+2)];
+          int HeightValue = HeightData[ (X+i) * TileSize + (Y+j) ];
+
+          Value += (int) ( KernelValue * HeightValue );
+        }
+      }
+
+      SmoothedData[(X * TileSize) + Y] = Value;
+    }
+  }
+
+  OutHeightData = SmoothedData;
 }
