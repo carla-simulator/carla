@@ -8,7 +8,6 @@
 #include "Runtime/Core/Public/Async/ParallelFor.h"
 #include "Engine/CollisionProfile.h"
 #include "CollisionQueryParams.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Engine/Texture2D.h"
 #include "Engine/Texture.h"
@@ -20,6 +19,7 @@
 #include "CommandLine.h"
 #include "Components/LineBatchComponent.h"
 #include "Math/OrientedBox.h"
+#include "EngineUtils.h"
 
 #include <algorithm>
 
@@ -55,7 +55,7 @@ void FHeightMapData::InitializeHeightmap(
   Texture->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
   Texture->SRGB = false;
   Texture->UpdateResource();
-  
+
   FTexture2DMipMap* TileMipMap = &Texture->PlatformData->Mips[0];
   FByteBulkData* TileRawImageData = &TileMipMap->BulkData;
   FColor* FormatedImageData = (FColor*)(TileRawImageData->Lock(LOCK_READ_ONLY));
@@ -78,7 +78,7 @@ float FHeightMapData::GetHeight(FDVector Position) const
 {
   Position = Position - Tile0Position;
   uint32_t Coord_X = (Position.X / WorldSize.X) * Size_X;
-  uint32_t Coord_Y = (Position.Y / WorldSize.Y) * Size_Y;
+  uint32_t Coord_Y = (1.f - Position.Y / WorldSize.Y) * Size_Y;
   Coord_X = std::min(Coord_X, Size_X-1);
   Coord_Y = std::min(Coord_Y, Size_Y-1);
   return Pixels[Coord_Y*Size_X + Coord_X];
@@ -103,7 +103,7 @@ void FDenseTile::InitializeTile(float ParticleSize, float Depth,
   {
     for(uint32_t j = 0; j < NumParticles_Y; j++)
     {
-      FDVector ParticlePosition = TileOrigin + FDVector(i*ParticleSize,-(j*ParticleSize), 0.f);
+      FDVector ParticlePosition = TileOrigin + FDVector(i*ParticleSize,(j*ParticleSize), 0.f);
       // UE_LOG(LogCarla, Log, TEXT("  Particle position %s"), *ParticlePosition.ToString());
       float Height = HeightMap.GetHeight(ParticlePosition);
       for(uint32_t k = 0; k < NumParticles_Z; k++)
@@ -209,7 +209,7 @@ uint64_t FSparseHighDetailMap::GetTileId(uint32_t Tile_X, uint32_t Tile_Y)
 uint64_t FSparseHighDetailMap::GetTileId(FDVector Position)
 {
   uint32_t Tile_X = static_cast<uint32_t>((Position.X - Tile0Position.X) / TileSize);
-  uint32_t Tile_Y = static_cast<uint32_t>((Tile0Position.Y - Position.Y) / TileSize);
+  uint32_t Tile_Y = static_cast<uint32_t>((Position.Y - Tile0Position.Y) / TileSize);
   // UE_LOG(LogCarla, Log, TEXT("Getting tile at location %s, (%d, %d)"), *Position.ToString(), Tile_X, Tile_Y);
   return GetTileId(Tile_X, Tile_Y);
 }
@@ -225,7 +225,6 @@ FDVector FSparseHighDetailMap::GetTilePosition(uint32_t Tile_X, uint32_t Tile_Y)
 {
 
   FDVector Position = FDVector(Tile_X*TileSize, Tile_Y*TileSize, 0);
-  Position.Y *= -1;
   Position = Position + Tile0Position;
   // UE_LOG(LogCarla, Log, TEXT("Getting location from id (%d, %d) %s"),
   //     Tile_X, Tile_Y, *(Position).ToString());
@@ -265,7 +264,7 @@ FDenseTile& FSparseHighDetailMap::InitializeRegion(uint64_t TileId)
   FDVector TileCenter = GetTilePosition(TileId);
   Tile.InitializeTile(
       ParticleSize, TerrainDepth,
-      TileCenter, TileCenter + FDVector(TileSize, -TileSize, 0.f),
+      TileCenter, TileCenter + FDVector(TileSize, TileSize, 0.f),
       Heightmap);
   return Tile;
 }
@@ -276,9 +275,21 @@ void FSparseHighDetailMap::InitializeMap(UTexture2D* HeightMapTexture,
   Tile0Position = Origin;
   TileSize = Size;
   Extension = MapSize;
-  Heightmap.InitializeHeightmap(HeightMapTexture, Extension, Tile0Position, MinHeight, MaxHeight, Tile0Position);
+  Heightmap.InitializeHeightmap(
+      HeightMapTexture, Extension, Tile0Position, 
+      MinHeight, MaxHeight, Tile0Position);
   UE_LOG(LogCarla, Log, 
       TEXT("Sparse Map initialized"));
+}
+void FSparseHighDetailMap::UpdateHeightMap(UTexture2D* HeightMapTexture,
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight)
+{
+  Heightmap.Clear();
+  Heightmap.InitializeHeightmap(
+      HeightMapTexture, Extension, Origin, 
+      MinHeight, MaxHeight, Origin);
+  UE_LOG(LogCarla, Log, 
+      TEXT("Height map updated"));
 }
 void FSparseHighDetailMap::Clear()
 {
@@ -370,7 +381,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bShowForces = false;
   }
-  
+  LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
     SparseMap = FSparseHighDetailMap(CMToM*ParticleDiameter, CMToM*TerrainDepth);
@@ -381,13 +392,12 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
       UE_LOG(LogCarla, Error, 
           TEXT("UCustomTerrainPhysicsComponent: Root component is not a UPrimitiveComponent"));
     }
-    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-    if(LargeMap)
+    if(LargeMapManager)
     {
-      FIntVector NumTiles = LargeMap->GetNumTilesInXY();
+      FIntVector NumTiles = LargeMapManager->GetNumTilesInXY();
       // WorldSize = FVector(NumTiles) * LargeMap->GetTileSize();
-      UE_LOG(LogCarla, Log, 
-          TEXT("World Size %s"), *(WorldSize.ToString()));
+      // UE_LOG(LogCarla, Log, 
+      //     TEXT("World Size %s"), *(WorldSize.ToString()));
     }
     Tile0Origin.Z += FloorHeight;
     SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize), 1.f, MinHeight, MaxHeight);
@@ -415,6 +425,56 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
   for (AActor* VehicleActor : VehiclesActors)
   {
     ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle> (VehicleActor);
+    if(LargeMapManager)
+    {
+      FVector GlobalLocation = 
+          LargeMapManager->LocalToGlobalLocation(Vehicle->GetActorLocation());
+      uint64_t TileId = LargeMapManager->GetTileID(GlobalLocation);
+      FIntVector CurrentTileId = 
+          LargeMapManager->GetTileVectorID(GlobalLocation);
+      if(CurrentLargeMapTileId != CurrentTileId)
+      {
+        //load new height map
+        FCarlaMapTile* LargeMapTile = LargeMapManager->GetCarlaMapTile(TileId);
+        if(LargeMapTile)
+        {
+          CurrentLargeMapTileId = CurrentTileId;
+          FString FullTileNamePath = LargeMapTile->Name;
+          FString TileDirectory;
+          FString TileName;
+          FString Extension;
+          FPaths::Split(FullTileNamePath, TileDirectory, TileName, Extension);
+          FString TexturePath = TileDirectory + "/HeightMaps/" + TileName + "." + TileName;
+          UE_LOG(LogCarla, Log, TEXT("Enter tile %s, %s \n %s \n %s \n %s"), *CurrentTileId.ToString(), 
+              *FullTileNamePath, *TileDirectory, *TileName, *Extension);
+
+          UObject* TextureObject = StaticLoadObject(UTexture2D::StaticClass(), nullptr, *(TexturePath));
+          if(TextureObject)
+          {
+            UTexture2D* Texture = Cast<UTexture2D>(TextureObject);
+            if (Texture != nullptr)
+            {
+              HeightMap = Texture;
+              FVector TilePosition = LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
+              UE_LOG(LogCarla, Log, TEXT("Updating height map to location %s in tile location %s"), 
+                  *TilePosition.ToString(), *LargeMapManager->GetTileLocation(CurrentLargeMapTileId).ToString());
+              TilePosition.Z += FloorHeight;
+              SparseMap.UpdateHeightMap(
+                  HeightMap, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
+                    LargeMapManager->GetTileSize(),-LargeMapManager->GetTileSize(), 0)), 
+                  1.f, MinHeight, MaxHeight);
+            }
+          }
+
+          
+        }
+        else
+        {
+          UE_LOG(LogCarla, Log, TEXT("Tile not found %s %s"), 
+              *GlobalLocation.ToString(), *CurrentTileId.ToString());
+        }
+      }
+    }
     RunNNPhysicsSimulation(Vehicle, DeltaTime);
   }
   if (bDrawHeightMap)
@@ -438,7 +498,12 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
       for (DrawPos_Y = DrawStart.Y; DrawPos_Y < DrawEnd.Y; DrawPos_Y += DrawInterval.Y)
       {
         float Height = SparseMap.GetHeight(UEFrameToSI(FVector(DrawPos_X, DrawPos_Y, 0)));
-        LineBatcher->DrawPoint(FVector(DrawPos_X, DrawPos_Y, SIToUEFrame(Height)), 
+        FVector Point = FVector(DrawPos_X, DrawPos_Y, SIToUEFrame(Height));
+        if(LargeMapManager)
+        {
+          Point = LargeMapManager->GlobalToLocalLocation(Point);
+        }
+        LineBatcher->DrawPoint(Point, 
             FLinearColor(1.f, 0.f, 0.f), 10.0, 0, LifeTime);
 
       }
@@ -446,7 +511,7 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
   }
 }
 
-void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles)
+void UCustomTerrainPhysicsComponent::DrawParticles(UWorld* World, std::vector<FParticle*>& Particles)
 {
   float LifeTime = 0.3f;
   bool bPersistentLines = false;
@@ -462,12 +527,17 @@ void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles)
   {
     // DrawDebugPoint(World, MToCM*Particle->Position.ToFVector(),
     //     1.0, FColor(255,0,0), false, 0.3, 0);
-	    LineBatcher->DrawPoint(SIToUEFrame(Particle->Position.ToFVector()), 
+    FVector Point = SIToUEFrame(Particle->Position.ToFVector());
+    if(LargeMapManager)
+    {
+      Point = LargeMapManager->GlobalToLocalLocation(Point);
+    }
+    LineBatcher->DrawPoint(Point, 
           FLinearColor(1.f, 0.f, 0.f), 1.0, 0, LifeTime);
   }
 }
 
-void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes)
+void UCustomTerrainPhysicsComponent::DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes)
 {
   float LifeTime = 0.3f;
   bool bPersistentLines = false;
@@ -485,6 +555,13 @@ void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes)
     TArray<FVector> Vertices;
     Vertices.SetNum(8);
     OBox.CalcVertices(&Vertices[0]);
+    if(LargeMapManager)
+    {
+      for(FVector& Point : Vertices)
+      {
+        Point = LargeMapManager->GlobalToLocalLocation(Point);
+      }
+    }
     LineBatcher->DrawLines({
         FBatchedLine(Vertices[0], Vertices[1], 
             FLinearColor(0.0,0.0,1.0), LifeTime, Thickness, 0),
@@ -524,6 +601,13 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   FVector WheelPosition1 = VehicleTransform.TransformPosition(FVector(140, 70, 40));
   FVector WheelPosition2 = VehicleTransform.TransformPosition(FVector(-140, -70, 40));
   FVector WheelPosition3 = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
+  if(LargeMapManager)
+  {
+    WheelPosition0 = LargeMapManager->LocalToGlobalLocation(WheelPosition0);
+    WheelPosition1 = LargeMapManager->LocalToGlobalLocation(WheelPosition1);
+    WheelPosition2 = LargeMapManager->LocalToGlobalLocation(WheelPosition2);
+    WheelPosition3 = LargeMapManager->LocalToGlobalLocation(WheelPosition3);
+  }
   FOrientedBox BboxWheel0;
   BboxWheel0.AxisX = VehicleTransform.GetUnitAxis(EAxis::X);
   BboxWheel0.AxisY = VehicleTransform.GetUnitAxis(EAxis::Y);
@@ -558,10 +642,10 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
     DrawParticles(GetWorld(), ParticlesWheel2);
     DrawParticles(GetWorld(), ParticlesWheel3);
   }
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0"), ParticlesWheel0.size());
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1"), ParticlesWheel1.size());
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2"), ParticlesWheel2.size());
-  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3"), ParticlesWheel3.size());
+  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 0 %s"), ParticlesWheel0.size(), *WheelPosition0.ToString());
+  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 1 %s"), ParticlesWheel1.size(), *WheelPosition1.ToString());
+  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 2 %s"), ParticlesWheel2.size(), *WheelPosition2.ToString());
+  UE_LOG(LogCarla, Log, TEXT("Found %d particles in wheel 3 %s"), ParticlesWheel3.size(), *WheelPosition3.ToString());
   if(ParticlesWheel0.size())
     UE_LOG(LogCarla, Log, 
         TEXT("Wheel0 pos %s particle pos %s"), *(UEFrameToSI(WheelPosition0)).ToString(), *(ParticlesWheel0[0]->Position.ToString()));
@@ -901,6 +985,10 @@ void UCustomTerrainPhysicsComponent::SetUpWheelArrays(ACarlaWheeledVehicle *Vehi
     default:
       Position = VehicleTransform.TransformPosition(FVector(-140, 70, 40));
       break;
+  }
+  if(LargeMapManager)
+  {
+    Position = LargeMapManager->LocalToGlobalLocation(Position);
   }
   Position = UEFrameToSI(Position);
   FVector Velocity = UEFrameToSI(Vehicle->GetVelocity());

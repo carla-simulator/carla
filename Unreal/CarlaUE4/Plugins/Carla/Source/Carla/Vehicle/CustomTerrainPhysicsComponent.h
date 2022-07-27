@@ -11,6 +11,7 @@
 #include "Carla/Math/DVector.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Carla/MapGen/LargeMapManager.h"
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
 THIRD_PARTY_INCLUDES_END
@@ -27,7 +28,7 @@ struct FParticle
   float Radius = 0.02f;
 };
 struct FHeightMapData
-{ 
+{
   void InitializeHeightmap(
     UTexture2D* Texture, FDVector Size, FDVector Origin,
       float MinHeight, float MaxHeight, FDVector Tile0);
@@ -42,7 +43,6 @@ private:
   float MaxHeight = 10.0f;
   FDVector Tile0Position;
   std::vector<float> Pixels;
-
 };
 struct FDenseTile
 {
@@ -82,6 +82,9 @@ public:
   }
 
   void InitializeMap(UTexture2D* HeightMapTexture,
+      FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight);
+  
+  void UpdateHeightMap(UTexture2D* HeightMapTexture,
       FDVector Origin, FDVector MapSize, float Size, float MinHeight, float MaxHeight);
 
   void Clear();
@@ -173,6 +176,9 @@ private:
       FVector ForceWheel0, FVector ForceWheel1, FVector ForceWheel2, FVector ForceWheel3);
   void ApplyForces();
 
+  void DrawParticles(UWorld* World, std::vector<FParticle*>& Particles);
+  void DrawOrientedBox(UWorld* World, const TArray<FOrientedBox>& Boxes);
+
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
   UPROPERTY(EditAnywhere)
@@ -234,6 +240,16 @@ private:
   FVector DrawInterval = FVector(100,100,0);
   UPROPERTY(EditAnywhere)
   int CUDADevice = 0;
+  UPROPERTY(EditAnywhere)
+  FVector HeightMapScaleFactor = FVector(1, 1, 1);
+  UPROPERTY(EditAnywhere)
+  FVector HeightMapOffset = FVector(0, 0, 0);
+  
+  UPROPERTY(VisibleAnywhere)
+  FIntVector CurrentLargeMapTileId = FIntVector(-1,-1,0);
+
+  UPROPERTY(VisibleAnywhere)
+  ALargeMapManager* LargeMapManager = nullptr;
 
   FSparseHighDetailMap SparseMap;
 
