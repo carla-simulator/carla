@@ -6,7 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Weather/Weather.h"
-#include "carla/Sensor/SceneCaptureCamera.h"
+#include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Kismet/GameplayStatics.h"
 #include "ConstructorHelpers.h"
