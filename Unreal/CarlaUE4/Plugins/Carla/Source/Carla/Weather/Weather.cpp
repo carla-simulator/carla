@@ -24,10 +24,8 @@ AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
   RootComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RootComponent"));
 }
 
-void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
+static void CheckWeatherPostProcessEffects(AWeather& self)
 {
-  SetWeather(InWeather);
-
   if (Weather.Precipitation > 0.0f)
 	  ActiveBlendables.Add(MakeTuple(PrecipitationPostProcessMaterial, Weather.Precipitation / 100.0f));
   else
@@ -52,6 +50,12 @@ void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
 	  for (auto& ActiveBlendable : ActiveBlendables)
 		  Sensor->GetCaptureComponent2D()->PostProcessSettings.AddBlendable(ActiveBlendable.Key, ActiveBlendable.Value);
   }
+}
+
+void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
+{
+  SetWeather(InWeather);
+  CheckWeatherPostProcessEffects(*this);
 
 #ifdef CARLA_WEATHER_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Changing weather:"));
@@ -77,21 +81,11 @@ void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
 
 void AWeather::NotifyWeather(ASensor* Sensor)
 {
-#if 1
 	auto AsSceneCaptureCamera = Cast<ASceneCaptureCamera>(Sensor);
 	if (AsSceneCaptureCamera != nullptr)
 		Sensors.Add(AsSceneCaptureCamera);
-#endif
 
-  if (Weather.Precipitation > 0.0f)
-	  ActiveBlendables.Add(MakeTuple(PrecipitationPostProcessMaterial, Weather.Precipitation / 100.0f));
-  else
-	  ActiveBlendables.Remove(PrecipitationPostProcessMaterial);
-
-  if (Weather.DustStorm > 0.0f)
-	  ActiveBlendables.Add(MakeTuple(DustStormPostProcessMaterial, Weather.DustStorm / 100.0f));
-  else
-	  ActiveBlendables.Remove(DustStormPostProcessMaterial);
+  CheckWeatherPostProcessEffects(*this);
 
 	// Call the blueprint that actually changes the weather.
 	RefreshWeather(Weather);
