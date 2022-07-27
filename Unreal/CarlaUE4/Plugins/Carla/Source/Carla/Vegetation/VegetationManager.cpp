@@ -627,7 +627,7 @@ TArray<FString> AVegetationManager::GetTilesInUse()
     if (!IsValid(TileData.InstancedFoliageActor) || !IsValid(TileData.ProceduralFoliageVolume))
     {
       TileDataCache.Remove(Element.Key);
-      return Resutls;
+      return Results;
     }
     const AProceduralFoliageVolume* Procedural = TileData.ProceduralFoliageVolume;
     if (!Procedural)
