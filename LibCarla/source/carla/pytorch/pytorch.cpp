@@ -61,7 +61,7 @@ namespace learning {
 
     std::vector<torch::jit::IValue> Tuple 
         {particles_position_tensor, particles_velocity_tensor, wheel_positions_tensor, 
-         wheel_oritentation_tensor, wheel_linear_velocity_tensor, wheel_angular_velocity_tensor};
+         wheel_oritentation_tensor, wheel_linear_velocity_tensor, wheel_angular_velocity_tensor, wheel.terrain_type};
     std::cout << "Input: " <<  wheel.num_particles << " particles" << std::endl;
     return torch::ivalue::Tuple::create(Tuple);
   }
