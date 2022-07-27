@@ -12,7 +12,6 @@
 #include <torchcluster/cluster.h>
 #include <torch/csrc/jit/passes/tensorexpr_fuser.h>
 #include <c10/cuda/CUDACachingAllocator.h>
-#include "/opt/nvidia/nsight-systems/2022.1.3/target-linux-x64/nvtx/include/nvtx3/nvToolsExt.h"
 #include <string>
 #include <vector>
 #include <ostream>
@@ -62,7 +61,7 @@ namespace learning {
     std::vector<torch::jit::IValue> Tuple 
         {particles_position_tensor, particles_velocity_tensor, wheel_positions_tensor, 
          wheel_oritentation_tensor, wheel_linear_velocity_tensor, wheel_angular_velocity_tensor, wheel.terrain_type};
-    std::cout << "Input: " <<  wheel.num_particles << " particles" << std::endl;
+    // std::cout << "Input: " <<  wheel.num_particles << " particles" << std::endl;
     return torch::ivalue::Tuple::create(Tuple);
   }
 
@@ -123,7 +122,7 @@ namespace learning {
     {
       std::cout << particle_forces_data[0] << " " << particle_forces_data[1] << " " << particle_forces_data[0] << std::endl;
     }
-    std::cout << "Output: " <<  result._particle_forces.size()/3 << " particles" << std::endl;
+    // std::cout << "Output: " <<  result._particle_forces.size()/3 << " particles" << std::endl;
     return result;
   }
 
@@ -163,7 +162,6 @@ namespace learning {
 
 
   void NeuralModel::Forward() {
-    nvtxRangePushA("Input IValue");
     std::vector<torch::jit::IValue> TorchInputs;
     TorchInputs.push_back(GetWheelTensorInputs(_input.wheel0));
     TorchInputs.push_back(GetWheelTensorInputs(_input.wheel1));
@@ -173,16 +171,14 @@ namespace learning {
         {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
     TorchInputs.push_back(drv_inputs);
     TorchInputs.push_back(_input.verbose);
-    nvtxRangePop();
-    nvtxRangePushA("Forward");
+
     torch::jit::IValue Output;
     try {
       Output = Model->module.forward(TorchInputs);
     } catch (const c10::Error& e) {
       std::cout << "Error running model: " << e.msg() << std::endl;
     }
-    nvtxRangePop();
-    nvtxRangePushA("Output");
+
     std::vector<torch::jit::IValue> Tensors =  Output.toTuple()->elements();
     _output.wheel0 = GetWheelTensorOutput(
         Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu());
@@ -192,11 +188,11 @@ namespace learning {
         Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu());
     _output.wheel3 = GetWheelTensorOutput(
         Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu());
-    nvtxRangePop();
+
   }
   void NeuralModel::ForwardDynamic() {
     {
-      nvtxRangePushA("Input IValue");
+
       std::vector<torch::jit::IValue> TorchInputs;
       TorchInputs.push_back(GetWheelTensorInputs(_input.wheel0));
       TorchInputs.push_back(GetWheelTensorInputs(_input.wheel1));
@@ -206,17 +202,14 @@ namespace learning {
           {_input.steering, _input.throttle, _input.braking}, torch::kFloat32); //steer, throtle, brake
       TorchInputs.push_back(drv_inputs);
       TorchInputs.push_back(_input.verbose);
-      nvtxRangePop();
-      nvtxRangePushA("Forward");
+
       torch::jit::IValue Output;
       try {
         Output = Model->module.forward(TorchInputs);
       } catch (const c10::Error& e) {
         std::cout << "Error running model: " << e.msg() << std::endl;
       }
-      nvtxRangePop();
 
-      nvtxRangePushA("Output");
       std::vector<torch::jit::IValue> Tensors =  Output.toTuple()->elements();
       _output.wheel0 = GetWheelTensorOutputDynamic(
           Tensors[0].toTensor().cpu(), Tensors[4].toTensor().cpu());
@@ -226,11 +219,11 @@ namespace learning {
           Tensors[2].toTensor().cpu(), Tensors[6].toTensor().cpu());
       _output.wheel3 = GetWheelTensorOutputDynamic(
           Tensors[3].toTensor().cpu(), Tensors[7].toTensor().cpu());
-      nvtxRangePop();
+
     }
-    nvtxRangePushA("Clear cache");
+
     c10::cuda::CUDACachingAllocator::emptyCache();
-    nvtxRangePop();
+
   }
   
   Outputs& NeuralModel::GetOutputs() {
