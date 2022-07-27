@@ -58,6 +58,8 @@ protected:
 
 private:
 
+  void CheckWeatherPostProcessEffects();
+
   UPROPERTY(VisibleAnywhere)
   FWeatherParameters Weather;
 

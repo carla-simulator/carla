@@ -24,7 +24,7 @@ AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
   RootComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RootComponent"));
 }
 
-static void CheckWeatherPostProcessEffects(AWeather& self)
+void AWeather::CheckWeatherPostProcessEffects()
 {
   if (Weather.Precipitation > 0.0f)
 	  ActiveBlendables.Add(MakeTuple(PrecipitationPostProcessMaterial, Weather.Precipitation / 100.0f));
@@ -55,7 +55,7 @@ static void CheckWeatherPostProcessEffects(AWeather& self)
 void AWeather::ApplyWeather(const FWeatherParameters &InWeather)
 {
   SetWeather(InWeather);
-  CheckWeatherPostProcessEffects(*this);
+  CheckWeatherPostProcessEffects();
 
 #ifdef CARLA_WEATHER_EXTRA_LOG
   UE_LOG(LogCarla, Log, TEXT("Changing weather:"));
@@ -85,7 +85,7 @@ void AWeather::NotifyWeather(ASensor* Sensor)
 	if (AsSceneCaptureCamera != nullptr)
 		Sensors.Add(AsSceneCaptureCamera);
 
-  CheckWeatherPostProcessEffects(*this);
+  CheckWeatherPostProcessEffects();
 
 	// Call the blueprint that actually changes the weather.
 	RefreshWeather(Weather);
