@@ -616,7 +616,7 @@ bool AVegetationManager::CheckForNewTiles() const
   return false;
 }
 
-TArray<FString> AVegetationManager::GetTilesInUse() const
+TArray<FString> AVegetationManager::GetTilesInUse()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::GetTilesInUse);
   TArray<FString> Results;
@@ -624,7 +624,15 @@ TArray<FString> AVegetationManager::GetTilesInUse() const
   for (const TPair<FString, FTileData>& Element : TileDataCache)
   {
     const FTileData& TileData = Element.Value;
+    if (!IsValid(TileData.InstancedFoliageActor) || !IsValid(TileData.ProceduralFoliageVolume))
+    {
+      TileDataCache.Remove(Element.Key);
+      return Results;
+    }
     const AProceduralFoliageVolume* Procedural = TileData.ProceduralFoliageVolume;
+    if (!Procedural)
+      continue;
+    
     const FString TileName = Procedural->GetLevel()->GetOuter()->GetName();
     const FBox Box = Procedural->ProceduralComponent->GetBounds();
 

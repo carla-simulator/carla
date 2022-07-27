@@ -106,7 +106,7 @@ private:
   bool IsFoliageTypeEnabled(const FString& Path) const;
   bool CheckIfAnyVehicleInLevel() const;
   bool CheckForNewTiles() const;
-  TArray<FString> GetTilesInUse() const;
+  TArray<FString> GetTilesInUse();
 
   void UpdateVehiclesDetectionBoxes();
   void UpdateMaterials(TArray<FString>& Tiles);
