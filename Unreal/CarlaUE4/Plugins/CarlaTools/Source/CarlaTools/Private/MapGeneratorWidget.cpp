@@ -650,13 +650,40 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       HeightData = SmoothedData;
 
       // Flatening if contains river
+      // TODO: Move this if to a function
       if(TileMetaInfo.ContainsRiver)
       {
-        for(int r = 0; r < HeightData.Num(); r++)
-        {
-          HeightData[r] *= MetaInfo.RiverFlateningFactor;
-        }
+        int FlateningMargin = 30;   // Not flatened
+        int FlateningFalloff = 100; // Transition from actual and flat value
+        int TileSize = 1009; // Should be calculated by sqrt(HeightData.Num())
 
+        for(int X = FlateningMargin; X < (TileSize - FlateningMargin); X++)
+        {
+          for(int Y = FlateningMargin; Y < (TileSize - FlateningMargin); Y++)
+          {
+            float TransitionFactor = 1.0f;
+
+            if(X < (FlateningMargin + FlateningFalloff))
+                // || Y > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= (X - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(Y < (FlateningMargin + FlateningFalloff))
+            {
+              TransitionFactor *= (Y - FlateningMargin) / (float) FlateningFalloff;
+            }
+            if(X > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((X - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            if(Y > (TileSize - FlateningMargin - FlateningFalloff))
+            {
+              TransitionFactor *= 1 - ((Y - (TileSize - FlateningMargin - FlateningFalloff)) / (float) FlateningFalloff);
+            }
+            
+            HeightData[(X * TileSize) + Y] = (HeightData[(X * TileSize) + Y] * MetaInfo.RiverFlateningFactor) * TransitionFactor +  HeightData[(X * TileSize) + Y] * (1-TransitionFactor);
+          }
+        }
       }
 
       FVector LandscapeScaleVector(100.0f, 100.0f, 100.0f);

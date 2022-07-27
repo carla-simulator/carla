@@ -218,7 +218,8 @@ public:
   bool GenerateWaterFromWorld(UWorld* RiversWorld, TSubclassOf<class AActor> RiverClass);
 
   /// Adds weather actor of type @a WeatherActorClass and sets the @a SelectedWeather
-  /// to the map specified in @a MetaInfo
+  /// to the map specified in @a MetaInfo. Ifthe actor already exists on the map
+  /// then it is returned so only one weather actor is spawned in each map
   UFUNCTION(Category="MapGenerator", BlueprintCallable)
   AActor* AddWeatherToExistingMap(TSubclassOf<class AActor> WeatherActorClass, 
       const FMapGeneratorMetaInfo& MetaInfo, const FString SelectedWeather);
