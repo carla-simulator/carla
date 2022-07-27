@@ -138,6 +138,8 @@ public:
 
   void GenerateCollisionCapsules();
 
+  void ResetComponent();
+
   UFUNCTION(CallInEditor, Category = "Spring Based Vegetation Component")
   void ComputeSpringStrengthForBranches();
 

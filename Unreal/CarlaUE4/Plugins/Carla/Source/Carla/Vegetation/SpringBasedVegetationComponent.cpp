@@ -208,7 +208,7 @@ void FSkeletonHierarchy::AddForce(const FString& BoneName, const FVector& Force)
   {
     if(Joint.JointName == BoneName)
     {
-      Joint.ExternalForces += Force;
+      Joint.ExternalForces += Force * 0.001f;
     }
   }
 }
@@ -369,6 +369,33 @@ void USpringBasedVegetationComponent::BeginPlay()
   {
     ComputeSpringStrengthForBranches();
   }
+}
+
+void USpringBasedVegetationComponent::ResetComponent()
+{
+  Skeleton.ClearExternalForces();
+  // Get resting pose for bones
+  auto *AnimInst = SkeletalMesh->GetAnimInstance();
+  if (!AnimInst)
+  {
+    OTHER_LOG(Error, "Could not get animation instance.");
+    return;
+  }
+  UWalkerAnim *WalkerAnim = Cast<UWalkerAnim>(AnimInst);
+  if (!WalkerAnim)
+  {
+    OTHER_LOG(Error, "Could not get UWalkerAnim.");
+    return;
+  }
+
+   // get current pose
+  FPoseSnapshot TempSnapshot;
+  SkeletalMesh->SnapshotPose(TempSnapshot);
+
+  // copy pose
+  WalkerAnim->Snap = TempSnapshot;
+
+  UpdateGlobalTransform();
 }
 
 void USpringBasedVegetationComponent::GenerateCollisionCapsules()
