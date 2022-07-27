@@ -608,6 +608,16 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   {
     bShowForces = false;
   }
+  if (Path == "")
+  {
+    NeuralModelFile = FPaths::ProjectContentDir() + NeuralModelFile;
+  }
+  bUpdateParticles = true;
+  if (FParse::Param(FCommandLine::Get(), TEXT("-disable-terramechanics")))
+  {
+    SetComponentTickEnabled(false);
+    return;
+  }
   LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(InitializeDenseMap);
@@ -652,8 +662,8 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   }
   if (TilesWorker == nullptr)
   {
-    TilesWorker = new FTilesWorker(this, GetOwner()->GetActorLocation(), Radius.X, Radius.Y);
-    Thread = FRunnableThread::Create(TilesWorker, TEXT("TilesWorker"));
+    // TilesWorker = new FTilesWorker(this, GetOwner()->GetActorLocation(), Radius.X, Radius.Y);
+    // Thread = FRunnableThread::Create(TilesWorker, TEXT("TilesWorker"));
   }
 }
 
@@ -965,84 +975,84 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   {
     NNInput.throttle *= -1;
   }
-  // TerramechanicsModel.SetInputs(NNInput);
-  // {
-  //   TRACE_CPUPROFILER_EVENT_SCOPE(RunModel);
-  //   if(bUseDynamicModel)
-  //   {
-  //     TerramechanicsModel.ForwardDynamic();
-  //   }
-  //   else 
-  //   {
-  //     TerramechanicsModel.Forward();
-  //   }
-  // }
-  // carla::learning::Outputs& Output = TerramechanicsModel.GetOutputs();
+  TerramechanicsModel.SetInputs(NNInput);
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(RunModel);
+    if(bUseDynamicModel)
+    {
+      TerramechanicsModel.ForwardDynamic();
+    }
+    else 
+    {
+      TerramechanicsModel.Forward();
+    }
+  }
+  carla::learning::Outputs& Output = TerramechanicsModel.GetOutputs();
 
-  // if(bUpdateParticles)
-  // {
-  //   UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
-  //   UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
-  //   UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
-  //   UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
-  // }
+  if(bUpdateParticles)
+  {
+    UpdateParticles(ParticlesWheel0, Output.wheel0._particle_forces, DeltaTime);
+    UpdateParticles(ParticlesWheel1, Output.wheel1._particle_forces, DeltaTime);
+    UpdateParticles(ParticlesWheel2, Output.wheel2._particle_forces, DeltaTime);
+    UpdateParticles(ParticlesWheel3, Output.wheel3._particle_forces, DeltaTime);
+  }
 
-  // if(bUseMeanAcceleration)
-  // {
-  //   ApplyMeanAccelerationToVehicle(Vehicle, 
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel0.wheel_forces_x,
-  //           Output.wheel0.wheel_forces_y,
-  //           Output.wheel0.wheel_forces_z)),
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel1.wheel_forces_x,
-  //           Output.wheel1.wheel_forces_y,
-  //           Output.wheel1.wheel_forces_z)),
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel2.wheel_forces_x,
-  //           Output.wheel2.wheel_forces_y,
-  //           Output.wheel2.wheel_forces_z)),
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel3.wheel_forces_x,
-  //           Output.wheel3.wheel_forces_y,
-  //           Output.wheel3.wheel_forces_z)));
-  // }
-  // else
-  // {
-  //   ApplyForcesToVehicle(Vehicle, 
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel0.wheel_forces_x,
-  //           Output.wheel0.wheel_forces_y,
-  //           Output.wheel0.wheel_forces_z)),
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel1.wheel_forces_x,
-  //           Output.wheel1.wheel_forces_y,
-  //           Output.wheel1.wheel_forces_z)),
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel2.wheel_forces_x,
-  //           Output.wheel2.wheel_forces_y,
-  //           Output.wheel2.wheel_forces_z)),
-  //       ForceMulFactor*SIToUEFrame(FVector(
-  //           Output.wheel3.wheel_forces_x,
-  //           Output.wheel3.wheel_forces_y,
-  //           Output.wheel3.wheel_forces_z)),
-  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
-  //           Output.wheel0.wheel_torque_x,
-  //           Output.wheel0.wheel_torque_y,
-  //           Output.wheel0.wheel_torque_z)),
-  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
-  //           Output.wheel1.wheel_torque_x,
-  //           Output.wheel1.wheel_torque_y,
-  //           Output.wheel1.wheel_torque_z)),
-  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
-  //           Output.wheel2.wheel_torque_x,
-  //           Output.wheel2.wheel_torque_y,
-  //           Output.wheel2.wheel_torque_z)),
-  //       ForceMulFactor*MToCM*SIToUEFrame(FVector(
-  //           Output.wheel3.wheel_torque_x,
-  //           Output.wheel3.wheel_torque_y,
-  //           Output.wheel3.wheel_torque_z)));
-  // }
+  if(bUseMeanAcceleration)
+  {
+    ApplyMeanAccelerationToVehicle(Vehicle, 
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel0.wheel_forces_x,
+            Output.wheel0.wheel_forces_y,
+            Output.wheel0.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel1.wheel_forces_x,
+            Output.wheel1.wheel_forces_y,
+            Output.wheel1.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel2.wheel_forces_x,
+            Output.wheel2.wheel_forces_y,
+            Output.wheel2.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel3.wheel_forces_x,
+            Output.wheel3.wheel_forces_y,
+            Output.wheel3.wheel_forces_z)));
+  }
+  else
+  {
+    ApplyForcesToVehicle(Vehicle, 
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel0.wheel_forces_x,
+            Output.wheel0.wheel_forces_y,
+            Output.wheel0.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel1.wheel_forces_x,
+            Output.wheel1.wheel_forces_y,
+            Output.wheel1.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel2.wheel_forces_x,
+            Output.wheel2.wheel_forces_y,
+            Output.wheel2.wheel_forces_z)),
+        ForceMulFactor*SIToUEFrame(FVector(
+            Output.wheel3.wheel_forces_x,
+            Output.wheel3.wheel_forces_y,
+            Output.wheel3.wheel_forces_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel0.wheel_torque_x,
+            Output.wheel0.wheel_torque_y,
+            Output.wheel0.wheel_torque_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel1.wheel_torque_x,
+            Output.wheel1.wheel_torque_y,
+            Output.wheel1.wheel_torque_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel2.wheel_torque_x,
+            Output.wheel2.wheel_torque_y,
+            Output.wheel2.wheel_torque_z)),
+        ForceMulFactor*MToCM*SIToUEFrame(FVector(
+            Output.wheel3.wheel_torque_x,
+            Output.wheel3.wheel_torque_y,
+            Output.wheel3.wheel_torque_z)));
+  }
 }
 
 void UCustomTerrainPhysicsComponent::UpdateParticles(
