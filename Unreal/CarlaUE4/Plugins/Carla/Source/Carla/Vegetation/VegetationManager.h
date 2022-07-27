@@ -57,6 +57,7 @@ struct FPooledActor
   GENERATED_BODY()
   bool InUse { false };
   AActor* Actor { nullptr };
+  FTransform GlobalTransform {FTransform()};
 
   void EnableActor();
   void DisableActor();

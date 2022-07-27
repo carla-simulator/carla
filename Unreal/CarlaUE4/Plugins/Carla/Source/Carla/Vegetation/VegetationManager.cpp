@@ -56,13 +56,17 @@ void FPooledActor::EnableActor()
 
   USpringBasedVegetationComponent* Component = Actor->FindComponentByClass<USpringBasedVegetationComponent>();
   if (Component)
+  {
+    Component->ResetComponent();
     Component->SetComponentTickEnabled(true);
+  }
 }
 
 void FPooledActor::DisableActor()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FPooledActor::DisableActor);
   InUse = false;
+  Actor->SetActorTransform(FTransform());
   Actor->SetActorHiddenInGame(true);
   Actor->SetActorEnableCollision(false);
   Actor->SetActorTickEnabled(false);
@@ -380,6 +384,9 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::GetElementsToSpawn);
   TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> Results;
+  ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(GetWorld());
+      check(LargeMap);
   for (const FString& TileKey : Tiles)
   {
     FTileData* Tile = TileDataCache.Find(TileKey);
@@ -398,13 +405,13 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
       TArray<int32> Indices = VehiclesInLevel[0]->GetFoliageInstancesCloseToVehicle(InstancedStaticMeshComponent);
       if (Indices.Num() == 0)
         continue;
-      for (int32& IndexInUse : Element.IndicesInUse)
+      for (int32 i = 0; i < Element.IndicesInUse.Num(); ++i)
       {
-        if (IndexInUse == -1)
+        if (Element.IndicesInUse[i] == -1)
           continue;
-        if (Indices.Contains(IndexInUse))
+        if (Indices.Contains(Element.IndicesInUse[i]))
           continue;
-        IndexInUse = -1;
+        Element.IndicesInUse[i] = -1;
       }
       TPair<FFoliageBlueprint, TArray<FTransform>> NewElement {};
       NewElement.Key = *BP;
@@ -415,14 +422,15 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
           continue;
         FTransform Transform;
         InstancedStaticMeshComponent->GetInstanceTransform(Index, Transform, true);
-        Transforms.Emplace(Transform);
+        FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(Transform);
+        Transforms.Emplace(GlobalTransform);
         bool Found = false;
         //Add Index to Array
-        for (int32& IndexInUse : Element.IndicesInUse)
+        for (int32 i = 0; i < Element.IndicesInUse.Num(); ++i)
         {
-          if (IndexInUse == -1)
+          if (Element.IndicesInUse[i] == -1)
           {
-            IndexInUse = Index;
+            Element.IndicesInUse[i] = Index;
             Found = true;
             break;
           }
@@ -444,6 +452,9 @@ TArray<TPair<FFoliageBlueprint, TArray<FTransform>>> AVegetationManager::GetElem
 void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, TArray<FTransform>>>& ElementsToSpawn)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::SpawnSkeletalFoliages);
+  ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(GetWorld());
+      check(LargeMap);
   for (TPair<FFoliageBlueprint, TArray<FTransform>>& Element : ElementsToSpawn)
   {
     FFoliageBlueprint BP = Element.Key;
@@ -462,7 +473,9 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, T
       else
       {
         FPooledActor NewElement;
-        NewElement.Actor = CreateFoliage(BP, Transform);
+        NewElement.GlobalTransform = Transform;
+        FTransform LocalTransform = LargeMap->GlobalToLocalTransform(Transform);
+        NewElement.Actor = CreateFoliage(BP, LocalTransform);
         if (IsValid(NewElement.Actor))
         {
           NewElement.EnableActor();
@@ -477,8 +490,9 @@ void AVegetationManager::SpawnSkeletalFoliages(TArray<TPair<FFoliageBlueprint, T
 void AVegetationManager::DestroySkeletalFoliages()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::DestroySkeletalFoliages);
-  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  check(LargeMap);
+  ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(GetWorld());
+      check(LargeMap);
   for (TPair<FString, TArray<FPooledActor>>& Element : ActorPool)
   {
     TArray<FPooledActor>& Pool = Element.Value;
@@ -486,15 +500,8 @@ void AVegetationManager::DestroySkeletalFoliages()
     {
       if (!Actor.InUse)
           continue;
-      const FVector Location = Actor.Actor->GetActorLocation();
-      bool StillInUse = false;
-      for (const ACarlaWheeledVehicle* Vehicle : VehiclesInLevel)
-      {
-        StillInUse = Vehicle->IsInVehicleRange(Location);
-        if (StillInUse)
-          break;
-      }
-      if (!StillInUse)
+      const FVector Location = Actor.GlobalTransform.GetLocation();
+      if (!VehiclesInLevel[0]->IsInVehicleRange(Location))
       {
         Actor.DisableActor();
         UE_LOG(LogCarla, Display, TEXT("Disabled Actor from pool"));
@@ -505,14 +512,19 @@ void AVegetationManager::DestroySkeletalFoliages()
 
 bool AVegetationManager::EnableActorFromPool(const FTransform& Transform, TArray<FPooledActor>& Pool)
 {
+  ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(GetWorld());
+      check(LargeMap);
   for (FPooledActor& PooledActor : Pool)
   {
     if (PooledActor.InUse)
       continue;
+    PooledActor.GlobalTransform = Transform;
+    FTransform LocalTransform = LargeMap->GlobalToLocalTransform(Transform);
     PooledActor.EnableActor();
-    PooledActor.Actor->SetActorLocationAndRotation(Transform.GetLocation(), Transform.Rotator(), true, nullptr, ETeleportType::ResetPhysics);
+    PooledActor.Actor->SetActorLocationAndRotation(LocalTransform.GetLocation(), LocalTransform.Rotator(), true, nullptr, ETeleportType::ResetPhysics);
     if (SpawnScale <= 1.01f && SpawnScale >= 0.99f)
-      PooledActor.Actor->SetActorScale3D(Transform.GetScale3D());
+      PooledActor.Actor->SetActorScale3D(LocalTransform.GetScale3D());
     else
       PooledActor.Actor->SetActorScale3D({SpawnScale, SpawnScale, SpawnScale});    
     return true;

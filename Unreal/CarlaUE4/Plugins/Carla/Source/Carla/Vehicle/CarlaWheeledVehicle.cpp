@@ -205,7 +205,11 @@ void ACarlaWheeledVehicle::BeginPlay()
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
-  float Distance = Distance = FVector::Distance(Location, GetActorLocation());
+  ALargeMapManager* LargeMap =
+        UCarlaStatics::GetLargeMapManager(GetWorld());
+  check(LargeMap);
+  FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
+  float Distance = Distance = FVector::Distance(Location, GlobalTransform.GetLocation());
   return Distance < DetectionSize * 10.0f;
 }
 
