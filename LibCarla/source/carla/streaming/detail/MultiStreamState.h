@@ -89,7 +89,7 @@ namespace detail {
         _session.store(nullptr);
         _sessions.clear();
         _force_active = false;
-        log_warning("Last session disconnected");
+        log_debug("Last session disconnected");
       } else {
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),
