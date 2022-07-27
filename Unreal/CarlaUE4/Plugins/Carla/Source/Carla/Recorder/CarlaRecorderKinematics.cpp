@@ -8,14 +8,14 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
-void CarlaRecorderKinematics::Write(std::ofstream &OutFile)
+void CarlaRecorderKinematics::Write(std::ostream &OutFile)
 {
   WriteValue<uint32_t>(OutFile, this->DatabaseId);
   WriteFVector(OutFile, this->LinearVelocity);
   WriteFVector(OutFile, this->AngularVelocity);
 }
 
-void CarlaRecorderKinematics::Read(std::ifstream &InFile)
+void CarlaRecorderKinematics::Read(std::istream &InFile)
 {
   ReadValue<uint32_t>(InFile, this->DatabaseId);
   ReadFVector(InFile, this->LinearVelocity);
@@ -34,7 +34,7 @@ void CarlaRecorderActorsKinematics::Add(const CarlaRecorderKinematics &InObj)
   Kinematics.push_back(InObj);
 }
 
-void CarlaRecorderActorsKinematics::Write(std::ofstream &OutFile)
+void CarlaRecorderActorsKinematics::Write(std::ostream &OutFile)
 {
   if (Kinematics.size() == 0)
   {
